@@ -27,6 +27,10 @@ namespace anitmt{
     return type_name;
   }
 
+  #warning *******************************************
+  #warning ** MAAAARRTIIINNN!!!!!!! PLEASE FIX THAT **
+  #warning *******************************************
+  #if 0
   std::map<values::String,Object_Interface> Ani_Scene::get_objects()
   {
     std::map<values::String,Object_Interface> ret;
@@ -43,7 +47,7 @@ namespace anitmt{
     return ret;
   }
 
-  std::map< values::String, Scalar_Interface > Ani_Scene::get_scalars();
+  std::map< values::String, Scalar_Interface > Ani_Scene::get_scalars()
   {
     std::map<values::String,Scalar_Interface> ret;
 
@@ -58,6 +62,7 @@ namespace anitmt{
 
     return ret;
   }
+  #endif
 
   Ani_Scene::Ani_Scene( std::string name, Animation *ani ) 
     : Prop_Tree_Node( type_name, name, ani ),
