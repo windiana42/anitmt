@@ -83,9 +83,10 @@ const TaskSourceFactory_Local::PerFrameTaskInfo *TaskSourceFactory_Local::
 	//        (to next block which has rdesc || fdesc). 
 	// If we have unlimited frames and this is the master block, 
 	// then we may run into trouble. 
-	if(fi==&master_fi)
+	if(fi==&master_fi && nframes<0)
 	{
 		// See if there are non-empty blocks following: 
+		// (startframe-1 is a special value)
 		if(next_pfbs<startframe)  return(NULL);  // no more tasks to do
 	}
 	
@@ -93,21 +94,50 @@ const TaskSourceFactory_Local::PerFrameTaskInfo *TaskSourceFactory_Local::
 }
 
 // next_pfbs: saves next per-frame block start frame number (or startframe-1). 
-// Only valid of return value is &master_fi. 
+// Only valid if return value is &master_fi. 
 TaskSourceFactory_Local::PerFrameTaskInfo *TaskSourceFactory_Local::
 	_DoGetPerFrameTaskInfo(int frame_no,int *next_pfbs)
 {
 	*next_pfbs=startframe-1;
 	
 	// NOTE!! last_looked_up may !!NEVER!! be master_fi. 
-	if(!last_looked_up)  last_looked_up=fi_list.first();
-	if(!last_looked_up)  return(&master_fi);
 	
-	// Check if it is still the same info block: 
-	if(frame_no>=last_looked_up->first_frame_no && 
-	   frame_no<(last_looked_up->first_frame_no+last_looked_up->nframes) )
-	{  return(last_looked_up);  }
+	// First, the fast path: 
+	if(last_looked_up)
+	{
+		// Check if it is still the same info block: 
+		bool above_start = (frame_no>=last_looked_up->first_frame_no);
+		bool below_end = 
+			(frame_no<(last_looked_up->first_frame_no+last_looked_up->nframes));
+		if(above_start && below_end)
+		{  return(last_looked_up);  }
+		// Check neighbouring block: 
+		if(above_start && last_looked_up->next && 
+		   frame_no>=last_looked_up->next->first_frame_no && 
+		   frame_no<(last_looked_up->next->first_frame_no+last_looked_up->next->nframes) )
+		{  last_looked_up=last_looked_up->next;  return(last_looked_up);  }
+		else if(below_end && last_looked_up->prev && 
+		   frame_no>=last_looked_up->prev->first_frame_no && 
+		   frame_no<(last_looked_up->prev->first_frame_no+last_looked_up->prev->nframes) )
+		{  last_looked_up=last_looked_up->prev;  return(last_looked_up);  }
+	}
+	else if(!fi_list.first())
+	{  return(&master_fi);  }
 	
+	#if 1  /* NEW METHOD: SLOWER BUT LESS ERROR-PRONE. */
+	// Do a linear search: 
+	// There are faster ways but they are error-prone. 
+	PerFrameTaskInfo *special=NULL;
+	for(PerFrameTaskInfo *fi=fi_list.first(); fi; fi=fi->next)
+	{
+		if(frame_no<fi->first_frame_no)   // gone too far
+		{  special=fi;  break;  }
+		else if(frame_no<(fi->first_frame_no+fi->nframes) )
+		{  last_looked_up=fi;  return(fi);  }
+	}
+	if(special)  // There is a next block to come. 
+	{  *next_pfbs=special->first_frame_no;  }
+	#else  /* OLD METHOD: FASTER BUT MAYBE BUGGY. */
 	// Check previous and next ones: 
 	if(frame_no<last_looked_up->first_frame_no)
 	{
@@ -130,13 +160,16 @@ TaskSourceFactory_Local::PerFrameTaskInfo *TaskSourceFactory_Local::
 			return(fi);
 		}
 	}
-	
 	assert(last_looked_up);
+	
 	if(last_looked_up->next)
 	{
 		*next_pfbs=last_looked_up->next->first_frame_no;
-		assert(*next_pfbs>frame_no);
+		fprintf(stderr,"<%d,%d %d:%d>\n",*next_pfbs,frame_no,
+			last_looked_up->next->first_frame_no,last_looked_up->next->nframes);
+		assert(*next_pfbs>frame_no);  OOPS...
 	}
+	#endif
 	
 	return(&master_fi);
 }
@@ -144,6 +177,7 @@ TaskSourceFactory_Local::PerFrameTaskInfo *TaskSourceFactory_Local::
 
 // Check if the passed pattern is something containing EXACTLY ONE 
 // %d - modifier, e.g. "%123d" or "%07x" or "%03X". 
+// Return value: 0 -> OK; 1 -> error
 int TaskSourceFactory_Local::_CheckFramePattern(
 	RefString *s,const char *name,const PerFrameTaskInfo *fi)
 {
@@ -244,6 +278,7 @@ int TaskSourceFactory_Local::_Param_ParseInSizeString(PerFrameTaskInfo *fi)
 			_FrameInfoLocationString(fi),fi->ii->size_string.str());
 		return(1);
 	}
+	fi->set_flags|=SF_size;
 	return(0);
 }
 
@@ -251,7 +286,7 @@ int TaskSourceFactory_Local::_Param_ParseOutputFormat(PerFrameTaskInfo *fi)
 {
 	const char *str=fi->ii->oformat_string.str();
 	if(!str)
-	{  return(0);  }  // useing default
+	{  return(0);  }  // using default
 	
 	fi->oformat=component_db()->FindImageFormatByName(str);
 	if(!fi->oformat)
@@ -260,6 +295,7 @@ int TaskSourceFactory_Local::_Param_ParseOutputFormat(PerFrameTaskInfo *fi)
 			"(try -list-imgfmt).\n",_FrameInfoLocationString(fi),str);
 		return(1);
 	}
+	fi->set_flags|=SF_oformat;
 	return(0);
 }
 
@@ -277,29 +313,24 @@ int TaskSourceFactory_Local::_Param_ParseRenderDesc(
 	
 	// Parse renderer to use: 
 	fi->rdesc=component_db()->FindRenderDescByName(rstr);
-	if(!fi->rdesc)
+	if(!fi->rdesc && strcmp(rstr,"none"))
 	{
 		Error("Local: %s: Unknown render DESC named \"%s\".\n",
 			_FrameInfoLocationString(fi),rstr);
 		return(1);
 	}
+	fi->set_flags|=SF_rdesc;
 	
 	if(!IsSet(fi->ii->render_resume_pi))
 	{
 		// Default: yes, if rdesc supports it: 
 		if(fi==&master_fi)
-		{  fi->render_resume_flag=fi->rdesc->can_resume_render;  }
+		{  fi->render_resume_flag=fi->rdesc ? fi->rdesc->can_resume_render : 0;  }
 		else
 		{  fi->render_resume_flag=master_fi.render_resume_flag;  }
 	}
-	if(fi->render_resume_flag && !fi->rdesc->can_resume_render)
-	{
-		Warning("Local: %s: Disabled render resume feature (-rcont) "
-			"(no support by renderer / %s driver).",
-			_FrameInfoLocationString(fi),
-			fi->rdesc->dfactory->DriverName());
-		fi->render_resume_flag=false;
-	}
+	else
+	{  fi->set_flags|=SF_r_resume_flag;  }
 	
 	return(0);
 }	
@@ -312,13 +343,13 @@ int TaskSourceFactory_Local::_Param_ParseFilterDesc(PerFrameTaskInfo *fi)
 	
 	// Parse filter to use: 
 	fi->fdesc=component_db()->FindFilterDescByName(fstr);
-	if(!fi->fdesc)
+	if(!fi->fdesc && strcmp(fstr,"none"))
 	{
 		Error("Local: %s: Unknown filter DESC named \"%s\".\n",
 			_FrameInfoLocationString(fi),fstr);
 		return(1);
 	}
-	
+	fi->set_flags|=SF_fdesc;
 	return(0);
 }
 
@@ -370,7 +401,7 @@ void TaskSourceFactory_Local::_VPrintFrameInfo(PerFrameTaskInfo *fi,
 		{  Verbose(TSI,"[unspecified]\n");  }
 	}
 	
-	if(fi->rdesc)
+	//if(fi->rdesc)
 	{
 		if(!compare_to || 
 		   (fi->render_resume_flag!=compare_to->render_resume_flag || 
@@ -408,7 +439,7 @@ void TaskSourceFactory_Local::_VPrintFrameInfo(PerFrameTaskInfo *fi,
 		{  Verbose(TSI,"[not filtering]\n");  }
 	}
 	
-	if(fi->fdesc)
+	//if(fi->fdesc)
 	{
 		if(!compare_to || fi->fdir!=compare_to->fdir)
 		{  Verbose(TSI,"      Filter dir: %s\n",fi->fdir.str() ? fi->fdir.str() : "[cwd]");  }
@@ -441,11 +472,15 @@ void TaskSourceFactory_Local::_VPrintFrameInfo(PerFrameTaskInfo *fi,
 }
 
 
-static void _DeleteStrListFirstNULLRef(RefStrList *l)
+// Return value: 0 -> deleted NULL ref; 1 -> NULL ref was not there
+static int _DeleteStrListFirstNULLRef(RefStrList *l)
 {
-	if(!l->first())  return;
-	if(!l->first()->str())
-	{  l->popfirst();  }
+	if(l->first() && !l->first()->str())
+	{
+		delete l->popfirst();
+		return(0);
+	}
+	return(1);
 }
 static void _AppendOverrideStrListArgs(RefStrList *l,RefStrList *m)
 {
@@ -453,9 +488,14 @@ static void _AppendOverrideStrListArgs(RefStrList *l,RefStrList *m)
 	{
 		// First NULL-ref is still there. Delete it and 
 		// prepend list m: 
-		l->popfirst();
+		delete l->popfirst();
 		_CheckAllocFail(l->insert(m));
 	}
+}
+static inline bool _StrListModified(RefStrList *l)
+{
+	// Not modified if it contains exactly one element which is a NULL ref. 
+	return(!(l->first() && !l->first()->next && !l->first()->str()));
 }
 
 static void _PathAppendSlashIfNeeded(RefString *s)
@@ -471,18 +511,6 @@ static void _PathAppendSlashIfNeeded(RefString *s)
 static const char *_ltsrt_str="local task source render timeout";
 static const char *_ltsft_str="local task source filter timeout";
 
-// timeout: timeout in SECONDS or -1 or UnsetNegMagic. 
-// master_timeout: override timeout for UnsetNegMagic in MSEC
-// Returned new timeout in timeout in MSEC. 
-static void _FrameBlockTimeoutOverride(long *timeout,TaskDriverType dtype,
-	long master_timeout)
-{
-	if((*timeout)==UnsetNegMagic)
-	{  *timeout=master_timeout;  }  // master_timeout already in msec
-	else
-	{  ConvertTimeout2MSec(timeout,dtype==DTRender ? _ltsrt_str : _ltsft_str);  }
-}
-
 
 // Check if the per-frame block f0,n will ever be used (1) or not (0): 
 inline int TaskSourceFactory_Local::_CheckWillUseFrameBlock(int f0,int n)
@@ -491,11 +519,295 @@ inline int TaskSourceFactory_Local::_CheckWillUseFrameBlock(int f0,int n)
 }
 
 
+// These are helper functions for _MergePerFrameBlock(): 
+// Return value: -1 -> error; 0 -> no value for dest; 1 -> dest assigned 
+int TaskSourceFactory_Local::_PFBMergePtr(const void **dest,
+	const void *sa,bool set_a,const void *sb,bool set_b)
+{
+	if(!set_a && !set_b)  return(0);
+	if(set_a && set_b && sa!=sb)  return(-1);
+	*dest=(set_a ? sa : sb);
+	return(1);
+}
+int TaskSourceFactory_Local::_PFBMergeString(RefString *dest,
+	const RefString *sa,bool set_a,const RefString *sb,bool set_b)
+{
+	assert(sa && sb);
+	
+	if(!set_a && !set_b)  return(0);
+	if(set_a && set_b && (*sa)!=(*sb))  return(-1);
+	*dest=(set_a ? *sa : *sb);
+	return(1);
+}
+int TaskSourceFactory_Local::_PFBMergeStrList(RefStrList *dest,
+	const RefStrList *sa,bool set_a,const RefStrList *sb,bool set_b)
+{
+	assert(sa && sb);
+	
+	if(!set_a && !set_b)  return(0);
+	if(set_a && set_b && !sa->exact_compare(sb))  return(-1);
+	dest->clear();  // be sure...
+	_CheckAllocFail(dest->append(set_a ? sa : sb));
+	return(1);
+}
+int TaskSourceFactory_Local::_PFBMergeInt(long *dest,
+	long sa,bool set_a,long sb,bool set_b)
+{
+	if(!set_a && !set_b)  return(0);
+	if(set_a && set_b && sa!=sb)  return(-1);
+	*dest=(set_a ? sa : sb);
+	return(1);
+}
+int TaskSourceFactory_Local::_PFBMergeBool(bool *dest,
+	bool sa,bool set_a,bool sb,bool set_b)
+{
+	if(!set_a && !set_b)  return(0);
+	if(set_a && set_b && sa!=sb)  return(-1);
+	*dest=(set_a ? sa : sb);
+	return(1);
+}
+int TaskSourceFactory_Local::_PFBMergeSize(int *dest_w,int *dest_h,
+	int sa_w,int sa_h,bool set_a,int sb_w,int sb_h,bool set_b)
+{
+	if(!set_a && !set_b)  return(0);
+	if(set_a && set_b && (sa_w!=sb_w || sa_h!=sb_h))  return(-1);
+	*dest_w=(set_a ? sa_w : sb_w);
+	*dest_h=(set_a ? sa_h : sb_h);
+	return(1);
+}
+
+static inline void _PFBMergeHelper(int merge_retval,int flag,
+	int *failed,int *set_flags)
+{
+	if(merge_retval<0)
+	{  *failed|=flag;  }
+	else if(merge_retval>0)
+	{  *set_flags|=flag;  }
+}
+
+// Merge sources *sa and *sb into *dest. 
+// {dest,sa,sb}->ii does not get merged or interpreted in any way. 
+// Return value: 0 -> OK; else: SF_* mask of failed params 
+int TaskSourceFactory_Local::_MergePerFrameBlock(PerFrameTaskInfo *dest,
+	const PerFrameTaskInfo *sa,const PerFrameTaskInfo *sb)
+{
+	assert(dest && sa && sb);
+	// In the current concept, the fi->ii stuff should be NULL here. 
+	assert(!dest->ii && !sa->ii && !sb->ii);
+	
+	// NOTE: dest->first_frame_no, dest->nframes is not set here. 
+	
+	int failed=0;
+	dest->set_flags=0;  // be sure...
+	
+	_PFBMergeHelper(_PFBMergeSize(&dest->width,&dest->height,
+		sa->width,sa->height,sa->set_flags & SF_size,
+		sb->width,sb->height,sb->set_flags & SF_size),
+		SF_size,&failed,&dest->set_flags);
+	_PFBMergeHelper(_PFBMergePtr(&(const void*)dest->oformat,
+		sa->oformat,sa->set_flags & SF_oformat,
+		sb->oformat,sb->set_flags & SF_oformat),
+		SF_oformat,&failed,&dest->set_flags);
+	_PFBMergeHelper(_PFBMergePtr(&(const void*)dest->rdesc,
+		sa->rdesc,sa->set_flags & SF_rdesc,
+		sb->rdesc,sb->set_flags & SF_rdesc),
+		SF_rdesc,&failed,&dest->set_flags);
+	_PFBMergeHelper(_PFBMergeStrList(&dest->radd_args,
+		&sa->radd_args,sa->set_flags & SF_radd_args,
+		&sb->radd_args,sb->set_flags & SF_radd_args),
+		SF_radd_args,&failed,&dest->set_flags);
+	_PFBMergeHelper(_PFBMergeString(&dest->rdir,
+		&sa->rdir,sa->set_flags & SF_rdir,
+		&sb->rdir,sb->set_flags & SF_rdir),
+		SF_rdir,&failed,&dest->set_flags);
+	_PFBMergeHelper(_PFBMergeString(&dest->rinfpattern,
+		&sa->rinfpattern,sa->set_flags & SF_rinfpattern,
+		&sb->rinfpattern,sb->set_flags & SF_rinfpattern),
+		SF_rinfpattern,&failed,&dest->set_flags);
+	_PFBMergeHelper(_PFBMergeString(&dest->routfpattern,
+		&sa->routfpattern,sa->set_flags & SF_routfpattern,
+		&sb->routfpattern,sb->set_flags & SF_routfpattern),
+		SF_routfpattern,&failed,&dest->set_flags);
+	_PFBMergeHelper(_PFBMergeBool(&dest->render_resume_flag,
+		sa->render_resume_flag,sa->set_flags & SF_r_resume_flag,
+		sb->render_resume_flag,sb->set_flags & SF_r_resume_flag),
+		SF_r_resume_flag,&failed,&dest->set_flags);
+	_PFBMergeHelper(_PFBMergeInt(&dest->rtimeout,
+		sa->rtimeout,sa->set_flags & SF_rtimeout,
+		sb->rtimeout,sb->set_flags & SF_rtimeout),
+		SF_rtimeout,&failed,&dest->set_flags);
+	_PFBMergeHelper(_PFBMergeStrList(&dest->radd_files,
+		&sa->radd_files,sa->set_flags & SF_radd_files,
+		&sb->radd_files,sb->set_flags & SF_radd_files),
+		SF_radd_files,&failed,&dest->set_flags);
+	
+	_PFBMergeHelper(_PFBMergePtr(&(const void*)dest->fdesc,
+		sa->fdesc,sa->set_flags & SF_fdesc,
+		sb->fdesc,sb->set_flags & SF_fdesc),
+		SF_fdesc,&failed,&dest->set_flags);
+	_PFBMergeHelper(_PFBMergeStrList(&dest->fadd_args,
+		&sa->fadd_args,sa->set_flags & SF_fadd_args,
+		&sb->fadd_args,sb->set_flags & SF_fadd_args),
+		SF_fadd_args,&failed,&dest->set_flags);
+	_PFBMergeHelper(_PFBMergeString(&dest->fdir,
+		&sa->fdir,sa->set_flags & SF_fdir,
+		&sb->fdir,sb->set_flags & SF_fdir),
+		SF_fdir,&failed,&dest->set_flags);
+	_PFBMergeHelper(_PFBMergeString(&dest->foutfpattern,
+		&sa->foutfpattern,sa->set_flags & SF_foutfpattern,
+		&sb->foutfpattern,sb->set_flags & SF_foutfpattern),
+		SF_foutfpattern,&failed,&dest->set_flags);
+	_PFBMergeHelper(_PFBMergeInt(&dest->ftimeout,
+		sa->ftimeout,sa->set_flags & SF_ftimeout,
+		sb->ftimeout,sb->set_flags & SF_ftimeout),
+		SF_ftimeout,&failed,&dest->set_flags);
+	_PFBMergeHelper(_PFBMergeStrList(&dest->fadd_files,
+		&sa->fadd_files,sa->set_flags & SF_fadd_files,
+		&sb->fadd_files,sb->set_flags & SF_fadd_files),
+		SF_fadd_files,&failed,&dest->set_flags);
+	
+	return(failed);
+}
+
+
+// InternalInfo (fi->ii) is not compared. 
+// first_frame_no and nframes are NOT compared. 
+// Return value: operator==(), i.e. true if equal.
+bool TaskSourceFactory_Local::_ComparePerFrameInfo(
+	const PerFrameTaskInfo *a,const PerFrameTaskInfo *b)
+{
+	assert(!a->ii && !b->ii);
+	
+	// first_frame_no and nframes are NOT compared. 
+	// set_flags are not compared, of course, because they are 
+	// not interesting. 
+	return(
+		a->width == b->width &&
+		a->height == b->height &&
+		a->oformat == b->oformat &&
+		a->rdesc == b->rdesc &&
+		a->radd_args.exact_compare(&b->radd_args) &&
+		a->rdir == b->rdir &&
+		a->rinfpattern == b->rinfpattern &&
+		a->routfpattern == b->routfpattern &&
+		a->render_resume_flag == b->render_resume_flag &&
+		a->rtimeout == b->rtimeout &&
+		a->radd_files.exact_compare(&b->radd_files) &&
+
+		a->fdesc == b->fdesc &&
+		a->fadd_args.exact_compare(&b->fadd_args) &&
+		a->fdir == b->fdir &&
+		a->foutfpattern == b->foutfpattern &&
+		a->ftimeout == b->ftimeout &&
+		a->fadd_files.exact_compare(&b->fadd_files) );
+}
+
+
+// Fill in the set_flags for all vars not corresponding to 
+// param args in fi->ii (for those, this is done by the parsing 
+// functions). 
+void TaskSourceFactory_Local::_FillIn_SetFlags(PerFrameTaskInfo *fi)
+{
+	// Note... radd_args and fadd_args contain one NULL ref by 
+	//         default to see if they were modified. Delete that. 
+	if(_StrListModified(&fi->radd_args))
+	{  fi->set_flags|=SF_radd_args;  }
+	if(_StrListModified(&fi->radd_files))
+	{  fi->set_flags|=SF_radd_files;  }
+	if(_StrListModified(&fi->fadd_args))
+	{  fi->set_flags|=SF_fadd_args;  }
+	if(_StrListModified(&fi->fadd_files))
+	{  fi->set_flags|=SF_fadd_files;  }
+	
+	if(fi->rtimeout!=UnsetNegMagic)
+	{  fi->set_flags|=SF_rtimeout;  }
+	if(fi->ftimeout!=UnsetNegMagic)
+	{  fi->set_flags|=SF_ftimeout;  }
+	
+	// The "!!"-thingy is due to the fact that I use RefString::operator!(). 
+	if(!!fi->rdir)  // KEEP "!!"
+	{  fi->set_flags|=SF_rdir;  }
+	if(!!fi->fdir)  // KEEP "!!"
+	{  fi->set_flags|=SF_fdir;  }
+	
+	if(!!fi->rinfpattern)  // KEEP "!!"
+	{  fi->set_flags|=SF_rinfpattern;  }
+	if(!!fi->routfpattern)  // KEEP "!!"
+	{  fi->set_flags|=SF_routfpattern;  }
+	if(!!fi->foutfpattern)  // KEEP "!!"
+	{  fi->set_flags|=SF_foutfpattern;  }
+}
+
+
+int TaskSourceFactory_Local::_FixupPerFrameBlock(PerFrameTaskInfo *fi)
+{
+	if(fi->rdesc && fi->render_resume_flag && !fi->rdesc->can_resume_render)
+	{
+		Warning("Local: %s: Disabled render resume feature (-rcont) "
+			"(no support by renderer / %s driver).",
+			_FrameInfoLocationString(fi),
+			fi->rdesc ? fi->rdesc->dfactory->DriverName() : "[none]");
+		fi->render_resume_flag=false;
+	}
+	
+	if(fi->rtimeout<-1)  {  fi->rtimeout=-1;  }
+	if(fi->ftimeout<-1)  {  fi->ftimeout=-1;  }
+	
+	return(0);
+}
+
+// Insert passed PerFrameTaskInfo (which may NOT be in the fi_list) 
+// at the correct position so that the list stays sorted. 
+inline void TaskSourceFactory_Local::_InsertPFIAtCorrectPos(
+	PerFrameTaskInfo *fi)
+{
+	// Could be optimized because during per-frame block splitting/merging 
+	// we know the position pretty well (but not exactly). 
+	for(PerFrameTaskInfo *i=fi_list.first(); i; i=i->next)
+	{
+		if(i->first_frame_no<fi->first_frame_no)  continue;
+		if(i->first_frame_no==fi->first_frame_no && 
+		   i->nframes<=fi->nframes)  continue;
+		fi_list.queuebefore(fi,i);
+		return;
+	}
+	fi_list.append(fi);
+}
+
+
+int TaskSourceFactory_Local::_DeleteNeverUsedPerFrameBlocks()
+{
+	int never_used_warned=0;
+	for(PerFrameTaskInfo *_fi=fi_list.first(); _fi; )
+	{
+		PerFrameTaskInfo *fi=_fi;
+		_fi=_fi->next;
+
+		if(_CheckWillUseFrameBlock(fi->first_frame_no,fi->nframes))
+		{  continue;  }
+
+		if(!never_used_warned)
+		{  Verbose(TSP,"Local: Deleting never used per-frame info "
+			"blocks: %d:%d",fi->first_frame_no,fi->nframes);  }
+		else
+		{  Verbose(TSP," %d:%d",fi->first_frame_no,fi->nframes);  }
+		++never_used_warned;
+
+		delete fi_list.dequeue(fi);
+	}
+	if(never_used_warned)
+	{  Verbose(TSP," [%d blocks]\n",never_used_warned);  }
+	return(never_used_warned);
+}
+
+
 int TaskSourceFactory_Local::FinalInit()
 {
 	int mfailed=0;  // "master failed"
 	
 	// MASTER FRAME INFO...
+	_FillIn_SetFlags(&master_fi);
+	
 	// Parse rdesc to use: 
 	mfailed+=_Param_ParseRenderDesc(&master_fi,1);
 	
@@ -536,6 +848,8 @@ int TaskSourceFactory_Local::FinalInit()
 		assert(master_fi.rinfpattern.str());
 		assert(master_fi.routfpattern.str());
 		assert(master_fi.foutfpattern.str());
+		
+		mfailed+=_FixupPerFrameBlock(&master_fi);
 	}
 	
 	if(mfailed)
@@ -543,8 +857,11 @@ int TaskSourceFactory_Local::FinalInit()
 		"skipping per-frame info.\n");  }
 	int failed=mfailed;
 	
-	// Okay: check if the per-frame info overlaps: 
-	// Also, get rid of per-frame info which will never be used. 
+	// Get rid of internal info for param system: 
+	delete master_fi.ii;
+	master_fi.ii=NULL;
+	
+	// Okay, get rid of per-frame info which will never be used. 
 	// AND, sort it in ascenting order. 
 	if(!failed)
 	{
@@ -576,16 +893,12 @@ int TaskSourceFactory_Local::FinalInit()
 				goto cfailed;
 			}
 			
-			if(!_CheckWillUseFrameBlock(fi->first_frame_no,fi->nframes))
-			{  ++never_used;  goto cdelete;  }
-			
 			continue;
 			cfailed:  ++failed;
 			cdelete:  delete fi_list.dequeue(fi);
 		}
-		if(never_used)
-		{  Verbose(TSP,"Local: Deleted %d per-frame info blocks as they "
-			"will not be used.\n",never_used);  }
+		
+		_DeleteNeverUsedPerFrameBlocks();
 		
 		// Then, sort them: 
 		LinkedList<PerFrameTaskInfo> srclist;
@@ -596,46 +909,25 @@ int TaskSourceFactory_Local::FinalInit()
 			if(!fi)  break;
 			
 			// Insert at correct position: 
-			for(PerFrameTaskInfo *i=fi_list.first(); i; i=i->next)
-			{
-				if(fi->first_frame_no>=i->first_frame_no)  continue;
-				fi_list.queuebefore(fi,i);
-				goto enqueued;
-			}
-			fi_list.append(fi);
-			enqueued:;
+			_InsertPFIAtCorrectPos(fi);
 		}
 	}
 	
 	if(!failed)
 	{
 		// PER-FRAME FRAME INFO...
-		// Also get rid of the fi->ii stuff: 
-			
+		// Get rid of the fi->ii stuff early; it's only used for arg 
+		// parsing: 
+		// Also check if some params/opts were set or not. 
 		for(PerFrameTaskInfo *fi=fi_list.first(); fi; fi=fi->next)
 		{
-			// Set defaults...
-			fi->oformat=master_fi.oformat;
-			fi->rdesc=master_fi.rdesc;
-			//NOTE: render_resume_flag treated/copied correctly 
-			//      by _Param_ParseRenderDesc()
-			fi->fdesc=master_fi.fdesc;
+			_FillIn_SetFlags(fi);
 			
-			// ...and parse it: 
+			// These set the apropriate set_flags (SF_*): 
 			failed+=_Param_ParseOutputFormat(fi);
 			failed+=_Param_ParseRenderDesc(fi,0);
 			failed+=_Param_ParseFilterDesc(fi);
-			
-			// Check frame patterns: 
-			if(!fi->rinfpattern)
-			{  fi->rinfpattern=master_fi.rinfpattern;  }
-			int pfailed=_CheckFramePattern(&fi->rinfpattern,"input",fi);
-			failed+=pfailed;
-			if(!pfailed)
-			{
-				// Check other patterns or assign reasonable defaults: 
-				failed+=_SetUpAndCheckOutputFramePatterns(fi);
-			}
+			failed+=_Param_ParseInSizeString(fi);
 			
 			// Delete unneeded internal info: 
 			if(fi->ii->section)
@@ -644,58 +936,11 @@ int TaskSourceFactory_Local::FinalInit()
 		}
 	}
 	
+	// Okay, now, the fi->ii stuff now longer exists and we did set 
+	// up sf->flags. Best time to do the per-frame block splitting/merging. 
 	if(!failed)
 	{
-		// Note... radd_args and fadd_args contain one NULL ref by 
-		//         default to see if they were modified. Delete that. 
-		_DeleteStrListFirstNULLRef(&master_fi.radd_args);
-		_DeleteStrListFirstNULLRef(&master_fi.radd_files);
-		_DeleteStrListFirstNULLRef(&master_fi.fadd_args);
-		_DeleteStrListFirstNULLRef(&master_fi.fadd_files);
-		
-		// Okay, now set up the rest of the members in the per-frame 
-		// info structures: 
-		for(PerFrameTaskInfo *_fi=fi_list.first(); _fi; )
-		{
-			PerFrameTaskInfo *fi=_fi;
-			_fi=_fi->next;
-			
-			// First, the easy part: 
-			if(!fi->rdir)  fi->rdir=master_fi.rdir;
-			else  _PathAppendSlashIfNeeded(&fi->rdir);
-			if(!fi->fdir)  fi->fdir=master_fi.fdir;
-			else  _PathAppendSlashIfNeeded(&fi->fdir);
-			
-			_FrameBlockTimeoutOverride(&fi->rtimeout,DTRender,
-				master_fi.rtimeout);
-			_FrameBlockTimeoutOverride(&fi->ftimeout,DTFilter,
-				master_fi.ftimeout);
-			
-			// If the first NULL-string is still there, we prepend 
-			// the master params, else we override. 
-			_AppendOverrideStrListArgs(&fi->radd_args,&master_fi.radd_args);
-			_AppendOverrideStrListArgs(&fi->radd_files,&master_fi.radd_files);
-			_AppendOverrideStrListArgs(&fi->fadd_args,&master_fi.fadd_args);
-			_AppendOverrideStrListArgs(&fi->fadd_files,&master_fi.fadd_files);
-			
-			// NOTE: We will NOT delete fdesc=rdesc=NULL blocks UNLESS the 
-			//       master block is also fdesc=rdesc=NULL. This allows to 
-			//       specify blocks which shall not be processed. 
-			if(!fi->rdesc && !fi->fdesc && 
-			   !master_fi.rdesc && !master_fi.fdesc)
-			{
-				delete fi_list.dequeue(fi);
-				continue;
-			}
-			
-			Error("*** Check if it is possible to create invalid per-frame block if no action for master block (or invalid data for master block such as wicth=-1) ***\n");
-			
-		}
-	}
-	
-	if(!failed)
-	{
-		// Finally, check for overlapping blocks and split them: 
+		// Good -- check for overlapping blocks and split/merge them: 
 		if(fi_list.first() && fi_list.first()->next)  // need at least 2 elems
 		{
 			for(PerFrameTaskInfo *_fi=fi_list.first(); (_fi && _fi->next); )
@@ -709,60 +954,250 @@ int TaskSourceFactory_Local::FinalInit()
 				{  continue;  }
 				
 				// So they overlap. 
+				// s_type: 
+				//   type 0: xxxxxxxx   |  type 1: xxxxxxxx
+				//             xxxx     |             xxxxxxx
+				PerFrameTaskInfo *fi_next=fi->next;
+				int s_type=(fi->first_frame_no+fi->nframes < 
+						fi_next->first_frame_no+fi_next->nframes);
 				// There can be up to three resulting per-frame blocks: 
 				int s0_f0=fi->first_frame_no;
-				int s0_n=fi->next->first_frame_no-fi->first_frame_no;
-				int s1_f0=fi->next->first_frame_no;
-				int s1_n=fi->first_frame_no+fi->nframes-fi->next->first_frame_no;
-				int s2_f0=fi->first_frame_no+fi->nframes;
-				int s2_n=fi->next->first_frame_no+fi->next->nframes-
-					(fi->first_frame_no+fi->nframes);
+				int s0_n=fi_next->first_frame_no-fi->first_frame_no;
+				int s1_f0=fi_next->first_frame_no;
+				int s1_n = s_type ? 
+					(fi->first_frame_no+fi->nframes-fi_next->first_frame_no) : 
+					fi_next->nframes;
+				int s2_f0 = s_type ? (fi->first_frame_no+fi->nframes) : 
+					(fi_next->first_frame_no+fi_next->nframes);
+				int s2_n = (fi_next->first_frame_no+fi_next->nframes-
+						(fi->first_frame_no+fi->nframes)) * (s_type ? 1 : (-1));
+				int err_flags=0;
 				Verbose(TSP,"Local: %s: Per-frame info overlaps with %d:%d; "
-					"splitting into:",
+					"%s into:",
 					_FrameInfoLocationString(fi),
-					fi->next->first_frame_no,fi->next->nframes);
-				// We do not generate blocks which will neber ne used. 
+					fi_next->first_frame_no,fi_next->nframes,
+					(s0_n<=0 && s2_n<=0) ? "merging" : "splitting");
+				// We do not generate blocks which will never ne used. 
 				if(s1_n>0 && _CheckWillUseFrameBlock(s1_f0,s1_n))
 				{
-					Verbose(TSP," %d,%d",s1_f0,s1_n);
+					Verbose(TSP," %d:%d",s1_f0,s1_n);
 					
 					PerFrameTaskInfo *s1=NEW<PerFrameTaskInfo>();
 					_CheckAllocFail(!s1);
 					delete s1->ii;  s1->ii=NULL;
 					
 					// Okay, actually merge it: 
-					Error("Merging overlapping per-frame blocks not yet supported.\n");
-					hack_assert(0);
-					
 					s1->first_frame_no=s1_f0;
 					s1->nframes=s1_n;
+					err_flags=_MergePerFrameBlock(s1,fi,fi_next);
+					// Report error if one occured. 
+					if(err_flags)
+					{
+						Verbose(TSP," <- failed\n");
+						Error("Local: Conflicts merging per-frame blocks "
+							"%d:%d and %d:%d:",
+							fi->first_frame_no,fi->nframes,
+							fi_next->first_frame_no,fi_next->nframes);
+						for(int i=1; i<SF_ALL_FLAGS; i<<=1)
+						{
+							if(err_flags & i)
+							{  Error(" %s",SF_FlagString(i));  }
+						}
+						Error("\n");
+						
+						++failed;
+					}
 					
-					fi_list.queueafter(s1,fi);
+					_InsertPFIAtCorrectPos(s1);
 				}
 				// DONT CHANGE THIS ORDER. 
 				if(s2_n>0 && _CheckWillUseFrameBlock(s2_f0,s2_n))
 				{
-					Verbose(TSP," %d,%d",s2_f0,s2_n);
-					fi->next->first_frame_no=s2_f0;
-					fi->next->nframes=s2_n;
+					if(!err_flags)  Verbose(TSP," %d:%d",s2_f0,s2_n);
+					if(s_type)
+					{
+						fi_next->first_frame_no=s2_f0;
+						fi_next->nframes=s2_n;
+					}
+					else
+					{
+						// s2 as copy of fi. 
+						PerFrameTaskInfo *s2=NEW1<PerFrameTaskInfo>(fi);
+						_CheckAllocFail(!s2);
+						delete s2->ii;  s2->ii=NULL;
+						
+						s2->first_frame_no=s2_f0;
+						s2->nframes=s2_n;
+						
+						_InsertPFIAtCorrectPos(s2);
+						delete fi_list.dequeue(fi_next);
+					}
 				}
 				else
-				{  delete fi_list.dequeue(fi->next);  }
+				{  delete fi_list.dequeue(fi_next);  }
 				// DONT CHANGE THIS ORDER. 
 				_fi=fi->prev;  // May be NULL, yes... (see below)
 				if(s0_n>0 && _CheckWillUseFrameBlock(s0_f0,s0_n))
 				{
-					Verbose(TSP," %d,%d",s0_f0,s0_n);
+					if(!err_flags)  Verbose(TSP," %d:%d",s0_f0,s0_n);
 					fi->first_frame_no=s0_f0;
 					fi->nframes=s0_n;
 				}
 				else
 				{  delete fi_list.dequeue(fi);  }
-				Verbose(TSP,"\n");
+				if(!err_flags)  Verbose(TSP,"\n");
 				if(!_fi)  _fi=fi_list.first();
+				
+				// Dump list; very useful in debugging. 
+				//fprintf(stderr,"LIST:");
+				//for(PerFrameTaskInfo *i=fi_list.first(); i; i=i->next)
+				//{  fprintf(stderr," %d:%d",i->first_frame_no,i->nframes);  }
+				//fprintf(stderr,"\n");
 			}
 		}
 	}
+	
+	// Now, after the splitting/merging, we have more per-frame 
+	// blocks set up just as if the user had specified them without 
+	// any overlapping conditions. Go on setting defaults from the 
+	// master frame block. 
+	if(!failed)	
+	{
+		// Note... radd_args and fadd_args contain one NULL ref by 
+		//         default to see if they were modified. Delete that 
+		//         (NULL ref still there -> append; else: override).
+		_DeleteStrListFirstNULLRef(&master_fi.radd_args);
+		_DeleteStrListFirstNULLRef(&master_fi.radd_files);
+		_DeleteStrListFirstNULLRef(&master_fi.fadd_args);
+		_DeleteStrListFirstNULLRef(&master_fi.fadd_files);
+		
+		// Okay, now set up the rest of the members in the per-frame 
+		// info structures: 
+		for(PerFrameTaskInfo *fi=fi_list.first(); fi; fi=fi->next)
+		{
+			// Per-frame blocks may no longer overlap. If this fails, there is 
+			// a bug in the split/merge code above. 
+			assert(!fi->next || fi->first_frame_no+fi->nframes<=fi->next->first_frame_no);
+			// Also, they have to stay sorted. 
+			assert(!fi->next || fi->next->first_frame_no>=fi->first_frame_no);
+			
+			// Set "defaults" from master frame info if needed: 
+			if(!(fi->set_flags & SF_oformat)) fi->oformat=master_fi.oformat;
+			if(!(fi->set_flags & SF_rdesc))   fi->rdesc=master_fi.rdesc;
+			if(!(fi->set_flags & SF_r_resume_flag))   // Hmm.... hm...
+				fi->render_resume_flag=master_fi.render_resume_flag;
+			if(!(fi->set_flags & SF_fdesc))   fi->fdesc=master_fi.fdesc;
+			
+			if(!(fi->set_flags & SF_size))
+			{  fi->width=master_fi.width;  fi->height=master_fi.height;  }
+			
+			// Check frame patterns (and use defaults from master 
+			// if needed): 
+			if(!(fi->set_flags & SF_rinfpattern))
+			{  fi->rinfpattern=master_fi.rinfpattern;  }
+			int pfailed=_CheckFramePattern(&fi->rinfpattern,"input",fi);
+			failed+=pfailed;
+			if(!pfailed)
+			{
+				// Check other patterns or assign reasonable defaults: 
+				failed+=_SetUpAndCheckOutputFramePatterns(fi);
+			}
+			
+			if(!(fi->set_flags & SF_rdir))  fi->rdir=master_fi.rdir;
+			else  _PathAppendSlashIfNeeded(&fi->rdir);
+			if(!(fi->set_flags & SF_fdir))  fi->fdir=master_fi.fdir;
+			else  _PathAppendSlashIfNeeded(&fi->fdir);
+			
+			if(fi->set_flags & SF_rtimeout)
+			{  ConvertTimeout2MSec(&fi->rtimeout,_ltsrt_str);  }
+			else
+			{  fi->rtimeout=master_fi.rtimeout;  }  // master_timeout already in msec
+			if(fi->set_flags & SF_ftimeout)
+			{  ConvertTimeout2MSec(&fi->ftimeout,_ltsft_str);  }
+			else
+			{  fi->ftimeout=master_fi.ftimeout;  }  // master_timeout already in msec
+			
+			// If the first NULL-string is still there, we prepend 
+			// the master params, else we override. 
+			_AppendOverrideStrListArgs(&fi->radd_args,&master_fi.radd_args);
+			_AppendOverrideStrListArgs(&fi->radd_files,&master_fi.radd_files);
+			_AppendOverrideStrListArgs(&fi->fadd_args,&master_fi.fadd_args);
+			_AppendOverrideStrListArgs(&fi->fadd_files,&master_fi.fadd_files);
+		}
+	}
+	
+	if(!failed)
+	{
+		// Tidy up a bit and do some checks: 
+		for(PerFrameTaskInfo *_fi=fi_list.first(); _fi; )
+		{
+			PerFrameTaskInfo *fi=_fi;
+			_fi=_fi->next;
+			
+			// NOTE: We will NOT delete fdesc=rdesc=NULL blocks UNLESS the 
+			//       master block is also fdesc=rdesc=NULL. This allows to 
+			//       specify blocks which shall not be processed. 
+			if(!fi->rdesc && !fi->fdesc && 
+			   !master_fi.rdesc && !master_fi.fdesc)
+			{
+				delete fi_list.dequeue(fi);
+				continue;
+			}
+			
+			assert(!fi->ii);
+			
+			failed+=_FixupPerFrameBlock(fi);
+		}
+		
+		// Okay, merge blocks if we can: 
+		int cnt=0;
+		for(PerFrameTaskInfo *_fi=fi_list.first(); _fi && _fi->next; )
+		{
+			PerFrameTaskInfo *fi=_fi;
+			_fi=_fi->next;
+			
+			if(fi->first_frame_no+fi->nframes!=fi->next->first_frame_no || 
+			   !_ComparePerFrameInfo(fi,fi->next))
+			{  continue;  }
+			
+			fi->nframes+=fi->next->nframes;
+			delete fi_list.dequeue(fi->next);
+			++cnt;
+			
+			_fi=fi->prev;
+			if(!_fi)  _fi=fi_list.first();
+		}
+		if(cnt)
+		{  Verbose(TSP,"Local: Merged equal per-frame info blocks "
+			"(%d merged).\n",cnt);  }
+		
+		// Merge per-frame blocks with master if we can: 
+		int warned=0;
+		for(PerFrameTaskInfo *_fi=fi_list.first(); _fi; )
+		{
+			PerFrameTaskInfo *fi=_fi;
+			_fi=_fi->next;
+			
+			if(!_ComparePerFrameInfo(fi,&master_fi))  continue;
+			
+			if(!warned)
+			{  Verbose(TSP,"Local: Merging per-frame info blocks with "
+				"master: %d:%d",fi->first_frame_no,fi->nframes);  }
+			else
+			{  Verbose(TSP," %d:%d",fi->first_frame_no,fi->nframes);  }
+			++warned;
+			
+			delete fi_list.dequeue(fi);
+		}
+		if(warned)
+		{  Verbose(TSP,"\n");  }
+		
+		// This should not be necessary here, but it won't hurt a lot: 
+		if(_DeleteNeverUsedPerFrameBlocks())
+		{  Error("OOPS! This should not happen. (Please bugreport)\n");  }
+	}
+	
+	// Puh, per-frame block processing is now done. 
 	
 	if(!failed)
 	{
@@ -800,6 +1235,7 @@ int TaskSourceFactory_Local::FinalInit()
 		}
 	}
 	
+	// Dump useful info to the user: 
 	if(!failed)
 	{
 		char nf_tmp[24];
@@ -810,7 +1246,7 @@ int TaskSourceFactory_Local::FinalInit()
 		Verbose(TSI,"  Continuing: %s\n",
 			cont_flag ? "yes" : "no");
 		
-		Verbose(TSI,"  Master frame info:\n");
+		Verbose(TSI,"  Master frame info (complete dump):\n");
 		_VPrintFrameInfo(&master_fi,NULL);
 		
 		for(PerFrameTaskInfo *fi=fi_list.first(); fi; fi=fi->next)
@@ -1115,6 +1551,29 @@ int TaskSourceFactory_Local::_RegisterFrameInfoParams(PerFrameTaskInfo *fi,
 	return(0);
 }
 
+const char *TaskSourceFactory_Local::SF_FlagString(int flag)
+{
+	switch(flag)
+	{
+		case SF_size:          return("size");
+		case SF_oformat:       return("oformat");
+		case SF_rdesc:         return("renderer");
+		case SF_radd_args:     return("rargs");
+		case SF_rdir:          return("rdir");
+		case SF_rinfpattern:   return("rifpattern");
+		case SF_routfpattern:  return("rofpattern");
+		case SF_r_resume_flag: return("rcont");
+		case SF_rtimeout:      return("rtimeout");
+		case SF_radd_files:    return("rfiles");
+		case SF_fdesc:         return("filter");
+		case SF_fadd_args:     return("fargs");
+		case SF_fdir:          return("fdir");
+		case SF_foutfpattern:  return("fofpattern");
+		case SF_ftimeout:      return("ftimeout");
+		case SF_fadd_files:    return("ffiles");
+	}
+	return("???");
+}
 
 // Called on program start to set up the TaskSourceFactory_Local. 
 // TaskSourceFactory_Local registers at ComponentDataBase. 
@@ -1179,7 +1638,7 @@ TaskSourceFactory_Local::~TaskSourceFactory_Local()
 
 TaskSourceFactory_Local::PerFrameTaskInfo::PerFrameTaskInfo(int *failflag) : 
 	LinkedListBase<PerFrameTaskInfo>(),
-	// !!DONT FORGET THE COPY CONSTRUCTOR BELOW!!
+	// !! DONT FORGET THE COPY CONSTRUCTOR BELOW AND _MergePerFrameBlock() !!
 	radd_args(failflag),
 	rdir(failflag),
 	rinfpattern(failflag),
@@ -1195,18 +1654,24 @@ TaskSourceFactory_Local::PerFrameTaskInfo::PerFrameTaskInfo(int *failflag) :
 	
 	first_frame_no=-1;
 	nframes=0;
-	tobe_rendered=0;
-	tobe_filtered=0;
+	set_flags=0;
 	
 	width=-1;
 	height=-1;
 	oformat=NULL;
 	rdesc=NULL;
 	render_resume_flag=true;
-	rtimeout=-1;
+	rtimeout=UnsetNegMagic;
 	
 	fdesc=NULL;
-	ftimeout=-1;
+	ftimeout=UnsetNegMagic;
+	
+	// Append NULL ref (detection if params have to be appended). 
+	RefString nullref;
+	if(radd_args.append(nullref))   {  --(*failflag);  }
+	if(radd_files.append(nullref))  {  --(*failflag);  }
+	if(fadd_args.append(nullref))   {  --(*failflag);  }
+	if(fadd_files.append(nullref))  {  --(*failflag);  }
 	
 	ii=NEW<PerFrameTaskInfo_Internal>();
 	if(!ii)
@@ -1215,7 +1680,7 @@ TaskSourceFactory_Local::PerFrameTaskInfo::PerFrameTaskInfo(int *failflag) :
 
 TaskSourceFactory_Local::PerFrameTaskInfo::PerFrameTaskInfo(
 	PerFrameTaskInfo *c,int *failflag) : 
-	// !!DONT FORGET THE NORMAL CONSTRUCTOR ABOVE!!
+	// !! DONT FORGET THE NORMAL CONSTRUCTOR ABOVE AND _MergePerFrameBlock() !!
 	LinkedListBase<PerFrameTaskInfo>(),
 	radd_args(failflag),
 	rdir(failflag),
@@ -1236,8 +1701,7 @@ TaskSourceFactory_Local::PerFrameTaskInfo::PerFrameTaskInfo(
 	
 	first_frame_no=c->first_frame_no;
 	nframes=c->nframes;
-	tobe_rendered=c->tobe_rendered;
-	tobe_filtered=c->tobe_filtered;
+	set_flags=c->set_flags;
 	
 	width=c->width;
 	height=c->height;

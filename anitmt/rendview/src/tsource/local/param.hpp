@@ -29,6 +29,31 @@ class TaskSourceFactory_Local :
 {
 	friend class TaskSource_Local;
 	public:
+		// enum for PerFrameTaskInfo::set_flags: 
+		enum
+		{
+			SF_size=         0x0000001,
+			SF_oformat=      0x0000002,
+			SF_rdesc=        0x0000004,
+			SF_radd_args=    0x0000008,
+			SF_rdir=         0x0000010,
+			SF_rinfpattern=  0x0000020,
+			SF_routfpattern= 0x0000040,
+			SF_r_resume_flag=0x0000080,
+			SF_rtimeout=     0x0000100,
+			SF_radd_files=   0x0000200,
+			SF_fdesc=        0x0000400,
+			SF_fadd_args=    0x0000800,
+			SF_fdir=         0x0001000,
+			SF_foutfpattern= 0x0002000,
+			SF_ftimeout=     0x0004000,
+			SF_fadd_files=   0x0008000,
+			SF_ALL_FLAGS=    0x000ffff   // <-- don't forget
+		};
+		// Return string representation of flag which must have 
+		// set EXACTLY ONE SF_* flag bit. 
+		static const char *SF_FlagString(int flag);
+		
 		// This is needed for the param system: 
 		struct PerFrameTaskInfo_Internal
 		{
@@ -49,9 +74,14 @@ class TaskSourceFactory_Local :
 		{
 			// For which frames this record is valid: 
 			int first_frame_no,nframes;
-			int tobe_rendered : 1;
-			int tobe_filtered : 1;
-			int : (sizeof(int)*8 - 2);   // <-- Use modulo if more than 16 bits. 
+			// Flags: Which params were explicitly set by the user?
+			// NOTE: set_flags can have SF_rdesc set although 
+			//       rdesc is NULL if rendering is switched off for 
+			//       the corresponding frame range. 
+			// Be careful with radd_args,radd_files,... because 
+			// these can be appended or overridden depending if 
+			// the NULL ref is still there. 
+			int set_flags;
 			
 			// Render stuff: 
 			int width,height;            // image size
@@ -123,6 +153,30 @@ class TaskSourceFactory_Local :
 		int _Param_ParseOutputFormat(PerFrameTaskInfo *fi);
 		int _Param_ParseRenderDesc(PerFrameTaskInfo *fi,int warn_unspec);
 		int _Param_ParseFilterDesc(PerFrameTaskInfo *fi);
+		
+		void _FillIn_SetFlags(PerFrameTaskInfo *fi);
+		inline void _InsertPFIAtCorrectPos(PerFrameTaskInfo *fi);
+		int _FixupPerFrameBlock(PerFrameTaskInfo *fi);
+		int _DeleteNeverUsedPerFrameBlocks();
+		// first_frame_no and nframes are NOT compared. 
+		// Return value: operator==(), i.e. true if equal.
+		bool _ComparePerFrameInfo(const PerFrameTaskInfo *a,
+			const PerFrameTaskInfo *b);
+		
+		int _PFBMergePtr(const void **dest,
+			const void *sa,bool set_a,const void *sb,bool set_b);
+		int _PFBMergeString(RefString *dest,
+			const RefString *sa,bool set_a,const RefString *sb,bool set_b);
+		int _PFBMergeStrList(RefStrList *dest,
+			const RefStrList *sa,bool set_a,const RefStrList *sb,bool set_b);
+		int _PFBMergeInt(long *dest,
+			long sa,bool set_a,long sb,bool set_b);
+		int _PFBMergeBool(bool *dest,
+			bool sa,bool set_a,bool sb,bool set_b);
+		int _PFBMergeSize(int *dest_w,int *dest_h,
+			int sa_w,int sa_h,bool set_a,int sb_w,int sb_h,bool set_b);
+		int _MergePerFrameBlock(PerFrameTaskInfo *dest,
+			const PerFrameTaskInfo *sa,const PerFrameTaskInfo *sb);
 		
 		void _VPrintFrameInfo_DumpListIfNeeded(const char *title,
 			const RefStrList *compare_to,const RefStrList *list);

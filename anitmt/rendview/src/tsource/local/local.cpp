@@ -275,6 +275,10 @@ assert(dtype!=DTFilter || (frame_action!='c' && unf_action=='\0'));
 int TaskSource_Local::_GetNextFrameToProcess(FrameToProcessInfo *ftpi)
 {
 	const PerFrameTaskInfo *fi;
+	int retval=1;
+	// I do not want to report a "neither rendered nor filtered" 
+	// for each frame. Instead I do it for a range start..end: 
+	int nrnf_start=-1,nrnf_end=-1;
 	for(;;next_frame_no+=p->fjump)
 	{
 		fi=p->GetPerFrameTaskInfo(next_frame_no);
@@ -285,8 +289,13 @@ int TaskSource_Local::_GetNextFrameToProcess(FrameToProcessInfo *ftpi)
 		ftpi->tobe_filtered=fi->fdesc ? 1 : 0;
 		if(!ftpi->tobe_rendered && !ftpi->tobe_filtered)
 		{
-			Warning("Local: Frame %d shall neither be rendered nor filtered.\n",
-				next_frame_no);
+			if(nrnf_start<0)
+			{  nrnf_start=nrnf_end=next_frame_no;  }
+			else if(nrnf_start>next_frame_no)
+			{  nrnf_start=next_frame_no;  }
+			else if(nrnf_end<next_frame_no)
+			{  nrnf_end=next_frame_no;  }
+			else assert(0);  // huh?
 			continue;
 		}
 		ftpi->fi=fi;
@@ -300,9 +309,19 @@ int TaskSource_Local::_GetNextFrameToProcess(FrameToProcessInfo *ftpi)
 		
 		// Finally, switch on one frame: 
 		next_frame_no+=p->fjump;
-		return(0);
+		retval=0;
+		break;
 	}
-	return(1);
+	if(nrnf_start>=0)
+	{
+		if(nrnf_start==nrnf_end)
+		{  Warning("Local: Frame %d shall neither be rendered nor filtered.\n",
+			nrnf_start);  }
+		else
+		{  Warning("Local: Frames %d..%d (jump %d) shall neither be rendered "
+			"nor filtered.\n",nrnf_start,nrnf_end,p->fjump);  }
+	}
+	return(retval);
 }
 
 
