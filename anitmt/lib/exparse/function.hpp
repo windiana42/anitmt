@@ -1,5 +1,5 @@
 /*
- * ilfunction.hpp
+ * function.hpp
  * 
  * Copyright (c) 2001 by Wolfgang Wieser (wwieser@gmx.de) 
  * 

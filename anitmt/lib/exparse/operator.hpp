@@ -1,5 +1,5 @@
 /*
- * iloperator.hpp
+ * operator.hpp
  * 
  * Abstraction of operator tree node in expression tree 
  * for input lib / exparse. 
