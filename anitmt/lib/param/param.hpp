@@ -35,9 +35,9 @@ namespace param
   class Parameter_Source {
   public:
     virtual ~Parameter_Source() {}
-  private:
+  protected:
     Parameter_Manager *manager;
-
+  private:
     friend class Parameter_Manager;
     void set_manager( Parameter_Manager *manager );
     virtual int read_parameters() = 0;
