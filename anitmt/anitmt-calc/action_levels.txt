@@ -1,0 +1,14 @@
+// pushes
+
+1	endtime->starttime
+2	starttime->endtime
+5	endvalue->startvalue
+6	startvalue->endvalue
+
+// defaults
+130	first.starttime = 0
+131	last.endtime = global.endtime
+140	acceleration = 0
+150	speed = 0
+160	first.startvalue = 0
+170	value = 0
