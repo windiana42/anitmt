@@ -58,6 +58,10 @@ AC_MSG_CHECKING([for _SC_NPROCESSORS_ONLN/CONF])
 ])
 
 
+# If needed: Check if pow,log are in -lm: 
+AC_CHECK_LIB([m],[pow])
+AC_CHECK_LIB([m],[log])
+
 # FIXME: more checks for lib functions missing
 
 # Check if socket is in -lsocket: 
