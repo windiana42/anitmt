@@ -46,21 +46,27 @@ AC_HEADER_TIME
 AC_HEADER_TIOCGWINSZ
 AC_HEADER_SYS_WAIT
 
-AC_CHECK_TYPES([u_int8_t,u_int16_t,u_int32_t,u_int64_t,int8_t,int16_t,int32_t,int64_t],,\
+AC_CHECK_TYPES([u_int8_t,u_int16_t,u_int32_t,u_int64_t,int8_t,int16_t,int32_t,int64_t],,
 	[AC_MSG_WARN([Oh... if you're not using gcc, expect trouble.])])
 
-AC_CHECK_TYPES([ssize_t],,\
+AC_CHECK_TYPES([ssize_t],,
 	[AC_MSG_WARN([You don't have ssize_t. Using signed int. (grmbl...)])])
 
-AC_CHECK_TYPES([socklen_t],,\
-	[AC_MSG_WARN([No socklen_t. Uh...])])
+AC_CHECK_TYPES([socklen_t],,
+	[AC_MSG_WARN([No socklen_t. Uh...])],
+	[#if HAVE_SYS_SOCKET_H
+	 # include <sys/socket.h>
+	 #endif
+	 #if HAVE_SYS_TYPES_H
+	 # include <sys/types.h>
+	 #endif] )
 
-AC_CHECK_TYPES([siginfo_t],, \
+AC_CHECK_TYPES([siginfo_t],,
 	[AC_MSG_WARN([Providing crippled siginfo_t replacement.])],
 	[#include <signal.h>
 	 #include <sys/signal.h>] )
 
-AC_CHECK_TYPES([struct pollfd],, \
+AC_CHECK_TYPES([struct pollfd],,
 	[AC_MSG_WARN([Providing struct pollfd. You seem to lack poll(2)...])],
 	[#include <sys/poll.h>] )
 
@@ -87,22 +93,22 @@ AC_FUNC_FORK
 AC_FUNC_STRTOD
 AC_FUNC_GETLOADAVG
 
-AC_CHECK_FUNCS([execve pipe sigaction dup2 gettimeofday kill strerror],,\
+AC_CHECK_FUNCS([execve pipe sigaction dup2 gettimeofday kill strerror],,
 	[AC_MSG_ERROR([Oh no. Giving up. What crippled architecture are you using?!])])
 
-AC_CHECK_FUNCS([nice setuid setgid setsid chroot],,\
+AC_CHECK_FUNCS([nice setuid setgid setsid chroot],,
 	[AC_MSG_ERROR(Sorry, you lack some useful functions.)])
 
-AC_CHECK_FUNCS([malloc_usable_size],,\
-	[AC_MSG_WARN([Allocation limitation (LMalloc) will not work.])],\
+AC_CHECK_FUNCS([malloc_usable_size],,
+	[AC_MSG_WARN([Allocation limitation (LMalloc) will not work.])],
 	[#include <malloc.h>])
 
-AC_CHECK_FUNCS([poll],,\
+AC_CHECK_FUNCS([poll],,
 	[AC_MSG_WARN([Urgs! Your crippled architecture does not have poll(2). 
 Hlib will use an emulation using select(2). Note that this emulation is 
 slower and cannot provide a poll(2)-replacement. 
 NOTE: Applications may not work as expected. 
-      Complain at your vendor for not implementing poll(2).])],\
+      Complain at your vendor for not implementing poll(2).])],
 	[#include <sys/poll.h>])
 
 # Finnally, check if CLD_EXITED is defined, otherwise all that 
