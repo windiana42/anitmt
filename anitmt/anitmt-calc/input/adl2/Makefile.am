@@ -1,6 +1,7 @@
 # Makefile.am for parser of anitmt adl - animation description language 
 INCLUDES=		-I$(top_srcdir)/lib -I$(top_srcdir)/lib/flex \
-			-I$(srcdir)/../ -I$(srcdir)/../../ -I../../ -I../../functionality/
+			-I$(srcdir)/../ -I$(srcdir)/../../ -I../../ 
+			-I../../functionality/ -I$(srcdir)/../../functionality/
 noinst_LIBRARIES=	libadlparser.a
 check_PROGRAMS=		testadlparser
 CXXFLAGS =		@CXXFLAGS@ -Wno-non-template-friend -DYYDEBUG \
