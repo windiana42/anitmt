@@ -1,6 +1,6 @@
 #include "nodes.hpp"
 void test(){
-  anitmt::make_all_nodes_availible();
+  anitmt::make_all_nodes_available();
 }
 
 #include <iostream>
@@ -91,7 +91,7 @@ int main()
     {
       cout << endl << "Tree Node Test..." << endl;
 
-      anitmt::make_all_nodes_availible();
+      anitmt::make_all_nodes_available();
     
       Animation *ani = new Animation("dummy_name");
     

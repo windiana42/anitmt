@@ -1,4 +1,5 @@
 INCLUDES=-I$(srcdir)/../lib/include/
+SUBDIRS=parser
 bin_PROGRAMS=anitmt-calc
 anitmt_calc_SOURCES = 	error.hpp error.cpp\
 			property.hpp property_templ.cpp property.cpp \

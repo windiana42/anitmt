@@ -1,5 +1,5 @@
 /*****************************************************************************/
-/**   Here are all availible tree nodes listed        			    **/
+/**   Here are all available tree nodes listed        			    **/
 /*****************************************************************************/
 /**									    **/
 /** Author: Martin Trautmann						    **/
@@ -17,8 +17,8 @@
 
 namespace anitmt{
 
-  // makes all nodes availible
-  void make_all_nodes_availible();
+  // makes all nodes available
+  void make_all_nodes_available();
   
 }
 

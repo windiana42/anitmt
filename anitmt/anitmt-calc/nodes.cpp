@@ -24,8 +24,8 @@
 
 namespace anitmt{
 
-  // makes all nodes availible       
-  void make_all_nodes_availible(){
+  // makes all nodes available       
+  void make_all_nodes_available(){
     Prop_Tree_Node::add_child_factory( Ani_Object::get_type_name(), new Node_Factory< Ani_Object > );
     Prop_Tree_Node::add_child_factory( Obj_Move::get_type_name(), new Node_Factory< Obj_Move > );
     Prop_Tree_Node::add_child_factory( Obj_Move_Straight::get_type_name(), new Node_Factory< Obj_Move_Straight > );
