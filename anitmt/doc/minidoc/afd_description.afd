@@ -1,0 +1,211 @@
+/*****************************************************************************/
+/**   Specification of the AFD language                                     **/
+/*****************************************************************************/
+/**									    **/
+/** Author: Martin Trautmann, Manuel Moser				    **/
+/**									    **/
+/** EMail:   martintrautmann@gmx.de					    **/
+/**									    **/
+/** License: GPL - free and without any warranty - read COPYING             **/
+/**									    **/
+/** Package: AniTMT							    **/
+/**									    **/
+/** Date: 20.2.2002							    **/
+/**									    **/
+/*****************************************************************************/
+
+include declaration "<afdfile>";
+include header "<hppfile>";
+
+priority_list {				// declare priority level names
+  highest_priority;
+  lowest_level;
+  push1;
+  push2;
+  default1;
+  default2;
+  lowest_priority;  
+}
+
+base_types {
+  <newtype> = <cpp_identifier>;
+  <newtype> = <oldtype>;
+  <newtype> = { <oldtype> <name>, <oldtype> <name>,... };
+}
+
+
+[serial] type <ProviderType> {
+  provides <ReturnType>(<ParameterType>);
+  provides <ReturnType>(<ParameterType>);
+  ...
+}
+
+// currently a node may be reopened! FIX?
+[abstract] node <TreeNodeName> [extends <TreeNodeName> [, ...]] 
+  [provides <ProviderType> [, ...]] 
+// ignore multiple occurence of the same provided type?
+{
+  properties {
+    // type scalar may be reopened!
+    type scalar {
+      <PropertyName>; 
+      <PropertyName>; 
+      ...
+    }
+    type vector {
+      <PropertyName>;
+      <PropertyName>; 
+      ...
+    }
+    type string {
+      <PropertyName>;
+      <PropertyName>; 
+      ...
+    }
+    scalar <PropertyName>; 
+    string <PropertyName>; 
+    vector <PropertyName>; 
+    ...
+  }
+  aliases {
+    <PropertyAliasName> = <PropertyName>;   // <PropertyAliasName> are only for users !!!
+    ...
+  }
+  operands {
+    type scalar {
+      <OperandName>;  // BlindProperies (Not accessable by user)
+      <OperandName>; 
+      ...
+    }
+    type vector {
+      <OperandName>;
+      <OperandName>; 
+      ...
+    }
+    type string {
+      <OperandName>;
+      <OperandName>; 
+      ...
+    }
+    scalar <OperandName>; 
+    string <OperandName>; 
+    vector <OperandName>; 
+    ...
+  }
+   
+  common {
+    constraints {
+      <operand_boolexpression>;
+      <operand_boolexpression>;
+      ...
+    }
+    solvers {
+      <Solvername> ( <Propertyreference>, <Propertyreference>, ... );
+      <Solvername> ( <Propertyreference>, <Propertyreference>, ... );
+      <PropertyName> = <operand_expression>;
+      <PropertyName> = <operand_expression>;
+      ...
+    } 
+    actions {
+      default( <Prioritylevelname>, <Propertyreference>, <cpp_expression> );
+      ...
+      push( <Prioritylevelname>, <Propertyreference>, <Propertyreference> );
+      ...
+// allow further actions?
+//      <ActionName> ( <Prioritylevel>, <Propertyreference>, <Propertyreference>, ... );
+      ...
+    }
+
+    // Attention:
+    //   currently only "push" and "equal_solver" allow one none local property
+    //   reference
+  }
+  first [<ProviderType>]{
+    constraints { ... }
+    solvers { ... } 
+    actions { ... }
+  }
+  last [<ProviderType>]{
+    constraints { ... }
+    solvers { ... } 
+    actions { ... }
+  }
+  
+  contains {
+    [max1] [min1] <ProviderType>;
+    [max1] [min1] <ProviderType>;
+    ...
+  }
+   
+  provide <ProviderType> {
+    resulting <ReturnType>( <ParameterType> <ParameterName> ) 
+// optional things are currently not implemented!
+      [ requires <Propertyname> | child.<ProviderType>[.<ReturnType>(<ParameterType>)] | this.[<ProviderType>.]<ReturnType>(<ParameterType>) , ... ] 
+    {
+      <Any C++-Code using 
+
+<<<< in doubled square brackets("[[   ]]"):
+       <Propertyname>
+//!!! rethink about all this references...
+// default value and failvar isn't implemented yet
+       child.<ProviderType>.<ReturnType>(<ParameterType> <Parameter>)[,<failboolvar>]
+       [this.][<ProviderType>.]<ReturnType>(<ParameterType> <Parameter>)
+       return_prop <Propertyname>
+       return <cpp_expression>
+       return child.<ProviderType>.<ReturnType>(<ParameterType> <Parameter>) 
+       return this.[<ProviderType>.]<ReturnType>(<ParameterType> <Parameter>)
+       return_fail			// return undefined
+       return_if_fail			// return if one function call failed
+       ...
+<<<< in doubled square brackets("[[   ]]") 
+
+      // availible variables in C++ code:
+       any_result_failed		// true: one previous result function
+					// call failed
+					// set to false to reinitalize
+      >
+    }
+    ...
+  }
+}
+
+/*
+    **examples:**
+      scalar x = [[start_time]] + 3;
+      if( x > 5 )
+        [[return x]];
+      else
+        [[return_prop end_time]];
+*/
+
+/* future example could look like
+bool x_failed;
+x = [[child.scalar_vsa.value(t),x_failed]];
+if( x_failed )
+{
+  [[return_fail]];
+}
+*/
+
+<Propertyreference>:    <PROPERTYNAME>
+                      | <OPERANDNAME>
+                      | <Nodereference>.<PROPERTYNAME>
+                      | <PROVIDERTYPE>.<RETURNTYPE>(<PARAMETERTYPE>).start_param   // range properties for result function
+                      | <PROVIDERTYPE>.<RETURNTYPE>(<PARAMETERTYPE>).end_param                    
+<Nodereference>:        <Localnodeidentifier>
+                      | <Nodeidentifier>
+                      | <Nodereference>.<Nodeidentifier>                           // recursive
+<Localnodeidentifier>:  <PROVIDERTYPE>.prev                           // return type specific sequence
+                      | <PROVIDERTYPE>.next                    
+                      | child.<CHILDPROVIDERTYPE>.first                     
+                      | child.<CHILDPROVIDERTYPE>.last
+                      | child.<CHILDPROVIDERTYPE>[n]
+<Nodeidentifier>:       prev
+                      | next
+                      | parent
+                      | first_child
+                      | last_child
+                      | child[n]
+
+
+<cpp_expression>: operators: +,-,*,/,|,&,^,==,!=,<=,>= //!!! implement more !!!
