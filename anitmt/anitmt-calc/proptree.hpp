@@ -47,6 +47,7 @@ namespace anitmt{
     Prop_Tree_Node *next;	// next node
     Prop_Tree_Node *first_child;// first child node
     Prop_Tree_Node *last_child; // last child node
+    int num_childs;		// number of childs
 
     std::string type;		// type of this node
     std::string name;		// name for reference

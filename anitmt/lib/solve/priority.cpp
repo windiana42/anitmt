@@ -133,54 +133,5 @@ namespace solve
   Action_Caller_Inserter::Action_Caller_Inserter( Priority_Action *action ) 
     : priority_action( action ) {}
 
-  //***************************************************************************
-  // Action System test 
-  //***************************************************************************
-
-  int action_system_test()
-  {
-    int errors = 0;
-
-    std::cout << std::endl;
-    std::cout << "-------------------------------" << std::endl;
-    std::cout << "Priority Action System Test..." << std::endl;
-    std::cout << "-------------------------------" << std::endl;
-
-    Operand<values::Scalar> s0; // start stretch
-    Operand<values::Scalar> se; // end stretch
-    Operand<values::Scalar> s ; // differance stretch
-    Operand<values::Scalar> t ; // duration
-    Operand<values::Scalar> a ; // acceleration
-    Operand<values::Scalar> v0; // startspeed
-    Operand<values::Scalar> ve; // endspeed
-
-    std::cout << " beginning" << std::endl;
-    std::cout << "  s0="<< s0 << " se=" << se << " s=" << s << " t=" <<  t << " a=" << a << " v0=" << v0 << " ve=" << ve << std::endl;
-
-    accel_solver( s, t, a, v0, ve );
-    sum_solver( se, s, s0 );
-
-    Priority_System sys;
-    
-    std::cout << " Actions:" << std::endl;
-    std::cout << "  Level  5:  a= 0.5" << std::endl;
-    std::cout << "  Level  7:  t=  s0" << std::endl;
-    std::cout << "  Level 10: s0=   1" << std::endl;
-    establish_Default_Value( &sys,  5, a, values::Scalar(0.5) );
-    establish_Default_Value( &sys, 10, s0, values::Scalar(1) );
-    establish_Push_Connection( &sys, 7, s0, t ); // push just for fun
-
-    std::cout << " unset status" << std::endl;
-    std::cout << "  s0="<< s0 << " se=" << se << " s=" << s << " t=" <<  t << " a=" << a << " v0=" << v0 << " ve=" << ve << std::endl;
-    v0.set_value( 0 );
-    std::cout << " after v0=0" << std::endl;
-    std::cout << "  s0="<< s0 << " se=" << se << " s=" << s << " t=" <<  t << " a=" << a << " v0=" << v0 << " ve=" << ve << std::endl;
-    sys.invoke_all_Actions();
-    std::cout << " after result of actions" << std::endl;
-    std::cout << "  s0="<< s0 << " se=" << se << " s=" << s << " t=" <<  t << " a=" << a << " v0=" << v0 << " ve=" << ve << std::endl;
-
-    return errors;
-  }
-
 }
 

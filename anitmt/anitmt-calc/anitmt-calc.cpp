@@ -36,6 +36,8 @@
 using namespace anitmt;
 using namespace message;
 
+enum Message_Sources{ ANITMT_Core };
+
 int main(int argc,char **argv,char **envp)
 {
   try
@@ -57,7 +59,7 @@ int main(int argc,char **argv,char **envp)
     // commandline handler of libpar (params.hpp)
     Command_Line cmd(argc,argv,envp);
 
-    Animation ani("noname");
+    Animation ani("noname", &manager );
     if(!ani.param.Parse_Command_Line(&cmd) )
       return -1;
   

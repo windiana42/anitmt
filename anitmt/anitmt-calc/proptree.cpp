@@ -18,6 +18,10 @@
 #include "animation.hpp"
 #include "save_filled.hpp"
 
+#include "message/message.hpp"
+
+#include "utl/stdextend.hpp"
+
 namespace anitmt{
 
   //************************************************************
@@ -84,10 +88,17 @@ namespace anitmt{
     return ret;
   }
 
-  // add child of type with name
+  //! add child of type with name
+  //! if name is an empty string a default name is created
   Prop_Tree_Node *Prop_Tree_Node::add_child( std::string type, 
 					     std::string name ) 
     throw( EX_child_type_unknown, EX_child_type_rejected ) {
+
+    if( name == "" )
+    {
+      // create default name
+      name = type + (ani->unique_name_counter++); 
+    }
 
     child_factory_type::iterator i = child_factory.find( type );
     // if type not found
@@ -294,8 +305,8 @@ namespace anitmt{
   // constructors / destructor
 
   Prop_Tree_Node::Prop_Tree_Node( std::string t, std::string n, Animation *a ) 
-    : parent(0), prev(0), next(0), first_child(0), last_child(0), 
-      type(t), name(n), ani(a) {}
+    : parent(0), prev(0), next(0), first_child(0), last_child(0),
+    type(t), name(n), ani(a) {}
 
   Prop_Tree_Node::~Prop_Tree_Node() {}
 
@@ -307,6 +318,9 @@ namespace anitmt{
   {
     int errors = 0;
 
+    message::Stream_Message_Handler msg_handler(cerr,cout,cout);
+    message::Message_Manager manager(&msg_handler);
+
     cout << endl;
     cout << "-----------------" << endl;
     cout << "Tree Node Test..." << endl;
@@ -317,7 +331,7 @@ namespace anitmt{
     
     cout << " Building data hierarchy..." << endl;
     cout << "  ani dummy_name" << endl;
-    Animation *ani = new Animation("dummy_name");
+    Animation *ani = new Animation("dummy_name", &manager);
     cout << "    scene testscene" << endl;
     Prop_Tree_Node *tscene = ani->add_child( "scene", "testscene" );
     cout << "      scalar testval" << endl;

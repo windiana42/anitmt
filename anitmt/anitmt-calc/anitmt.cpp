@@ -48,7 +48,8 @@ namespace anitmt
 
   AniTMT::AniTMT( param::Parameter_Manager *par, 
 		  message::Message_Handler *msg_handler )
-    : ani("noname"), default_msg_consultant(&msg_manager, MID_AniTMT ),
+    : default_msg_consultant(&msg_manager, MID_AniTMT ),
+      ani("noname", &msg_manager),
       input (par, &default_msg_consultant, &ani), 
       output(par, &default_msg_consultant, &ani),
       msg_manager(msg_handler), 

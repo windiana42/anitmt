@@ -31,8 +31,8 @@ namespace anitmt
 
   class AniTMT 
   {
-    Animation ani;
     message::Message_Consultant default_msg_consultant;
+    Animation ani;
   public:
     //! handles input formats 
     Input_Manager      input;	

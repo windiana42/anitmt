@@ -19,7 +19,8 @@
 #include <map>
 #include <iostream>
 
-namespace utl{
+namespace utl
+{
 
   //*****************************************************************
   // maped_string: may used as string but stores one string only once

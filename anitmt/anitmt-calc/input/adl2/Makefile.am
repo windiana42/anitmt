@@ -6,21 +6,24 @@ check_PROGRAMS=		testadlparser
 CXXFLAGS =		@CXXFLAGS@ -Wno-non-template-friend
 
 libadlparser_a_SOURCES=	scanner.ll parser.yy tokens.h \
+			parser_functions.hpp parser_functions.cpp \
+			parser_functions_inline.cpp \
 			adlparser.hpp adlparser.cpp adlparser_inline.cpp \
 			flexlexer_public.h flexlexer_global.h
 
 testadlparser_SOURCES=	testadlparser.cpp 
 testadlparser_LDADD=	libadlparser.a \
-			../libanitmt.a \
-			../../lib/val/libval.a \
-			../../lib/par/libpar.a \
-			../../lib/solve/libsolve.a \
-			../../lib/message/libmessage.a \
+			../../libanitmt.a \
+			../../../lib/val/libval.a \
+			../../../lib/par/libpar.a \
+			../../../lib/utl/libutl.a \
+			../../../lib/solve/libsolve.a \
+			../../../lib/message/libmessage.a \
 			../adl/libadlparser.a \
 			../libinput.a \
-			../output/lib/liboutput.a \
-			../output/raw/librawout.a \
-			../output/pov/libpovout.a 
+			../../output/lib/liboutput.a \
+			../../output/raw/librawout.a \
+			../../output/pov/libpovout.a 
 #also includes old adl/libadlparser.a for libanitmt
 
 YLWRAP  = 		$(top_srcdir)/ylwrap

@@ -74,7 +74,8 @@ namespace message
   //**************************************************************
   // Message streams
 
-  template<class T> inline Message_Stream& Message_Stream::operator<<(const T &v)
+  template<class T> 
+  inline Message_Stream& Message_Stream::operator<<(const T &v)
   {
     if( enabled ) 
       msg_stream << v; 
@@ -90,9 +91,39 @@ namespace message
 
   inline void Message_Stream::operator<<(_NoEnd)
   {
-     no_end=true;
-     // Destructor will be called and will write the message. 
+    no_end=true;
+    // Destructor will be called and will write the message. 
   }
+
+  // copy operator that disables the source message
+  inline Message_Stream &Message_Stream::operator=( Message_Stream& src ) 
+  {
+    enabled = src.enabled;
+    pos = src.pos;
+    position_detail = src.position_detail;
+    consultant = src.consultant;
+    mtype = src.mtype;
+    strcpy( message, src.message );
+    no_end = src.no_end;
+
+    src.enabled = false;
+    return *this;
+  }
+
+  // copies itself to another Message stream and disables itself
+  inline void Message_Stream::copy_to( Message_Stream& dest ) 
+  {
+    dest.enabled = enabled;
+    dest.pos = pos;
+    dest.position_detail = position_detail;
+    dest.consultant = consultant;
+    dest.mtype = mtype;
+    strcpy( dest.message, message );
+    dest.no_end = no_end;
+
+    enabled = false;
+  }
+
 
   //**************************************************************
   // Message reporting inline code: 
@@ -148,6 +179,48 @@ namespace message
   inline void Message_Reporter::vindent_set(int val)
   {
     consultant->verbose_indent_set(val);
+  }
+
+  //********************
+  // Position classes
+  //********************
+
+  // access/modify functions to the position
+  inline int File_Position::get_line() 
+  {
+    return line;
+  }
+  inline int File_Position::get_column()
+  {
+    return column;
+  }
+  inline void File_Position::set_filename( std::string name )
+  {
+    filename = name;
+    line = 1;
+    column = 1;
+  }
+  inline void File_Position::set_pos( int l, int c )
+  {
+    line = l;
+    column = c;
+  }
+  inline void File_Position::inc_line()
+  {
+    line++;
+    column = 1; 
+  }
+  inline void File_Position::inc_column( int n )
+  {
+    column += n;
+  }
+  inline void File_Position::inc_column()
+  {
+    column++;
+  }
+  inline void File_Position::tab_inc_column()
+  {
+    column = (((column - 1) / tab_len) + 1) * tab_len + 1;
   }
 }
 

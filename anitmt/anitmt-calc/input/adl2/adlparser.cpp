@@ -161,12 +161,42 @@ namespace anitmt
       return tok;
     }
     
-    adlparser_info::adlparser_info( message::Message_Consultant *consultant,
-				    istream &in = cin)
-      : msg(consultant), lexer(new adlparser_FlexLexer(&in)),
-	res_reference( this ), res_property( this )
+    //**********************************************************
+    // adlparser_info: stores information for parser and lexer
+    //**********************************************************
+
+    // open file to be read by the lexer
+    void adlparser_info::open_file( std::string filename )
+    {
+      file_pos.set_filename( filename );
+      in_file.open( filename.c_str() );
+      if( !lexer_uses_file_stream ) 
+      {
+	if( lexer ) delete lexer;
+	lexer = new adlparser_FlexLexer(&in_file);      
+	lexer->info = this;
+      }
+      lexer_uses_file_stream = true;
+    }
+
+    // open file to be read by the lexer
+    void adlparser_info::open_stream( std::string filename, std::istream &in )
+    {
+      file_pos.set_filename( filename );
+      if( lexer ) delete lexer;
+      
+      lexer = new adlparser_FlexLexer(&in);      
+      lexer->info = this;
+      lexer_uses_file_stream = false;
+    }
+
+    adlparser_info::adlparser_info( message::Message_Consultant *consultant )
+      : msg(consultant), lexer(new adlparser_FlexLexer(&cin)),
+	res_reference( this ), res_property( this ),
+	lexer_uses_file_stream( false )
     {
       lexer->info = this;
+      file_pos.set_filename("standard input");
     }
     adlparser_info::~adlparser_info()
     {

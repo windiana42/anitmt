@@ -17,7 +17,7 @@ int main()
   message::Message_Manager manager( &handler );
   message::Message_Consultant main_consultant( &manager, main_msg_id );
 
-  anitmt::Animation ani("test");
+  anitmt::Animation ani("test", &manager);
 
   anitmt::adlparser::adlparser_info info( &main_consultant );
 

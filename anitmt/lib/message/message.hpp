@@ -44,7 +44,7 @@ namespace message
   };
 
   enum Message_Type
-  {  MT_Verbose, MT_Warning, MT_Error, _MT_None  };
+    {  MT_Verbose, MT_Warning, MT_Error, _MT_None  };
 
   //**************************************************************
   // Abstract Interfaces
@@ -55,6 +55,7 @@ namespace message
     virtual void write2stream( std::ostream&, int detail_level ) const = 0;
     virtual ~Abstract_Position() {}
   };
+  std::ostream &operator<<( std::ostream&, const Abstract_Position& );
 
   //! Position used for messages without position
   class Null_Position : public Abstract_Position {
@@ -66,18 +67,33 @@ namespace message
   //! (name, line, column)
   class File_Position : public Abstract_Position {
   public:
-	void write2stream(std::ostream&, int detail_level) const;
-	//! Create a file position
-	/*!\param fn - file name
-	  \param l - line in file (-1 if unused)
-	  \param c - column in file (-1 if not used) */
-	// NOTE: We need -1 as `unused' as column may be 0 (``before first 
-	//       char of line'') (Wolfgang). 
-	File_Position(const std::string fn, const int l=-1, const int c=-1);
+    void write2stream(std::ostream&, int detail_level) const;
+
+    // access/modify functions to the position
+    // !assumption!: first line = 1, first column = 1
+    inline int get_line();
+    inline int get_column();
+    inline void set_filename( std::string name );
+    inline void set_pos( int line, int column );
+    inline void inc_line();
+    inline void inc_column( int n );
+    inline void inc_column();
+    inline void tab_inc_column();
+
+    //! Create a file position
+    /*!\param fn - file name
+      \param l - line in file (-1 if unused)
+      \param c - column in file (-1 if not used) */
+    // NOTE: We need -1 as `unused' as column may be 0 (``before first 
+    //       char of line'') (Wolfgang). 
+    File_Position(const std::string filename="<no file>", 
+		  const int line=-1, const int column=-1,
+		  const int tab_len=8);
   private:
-	  const std::string fn;
-	  const int l, c;
-  };
+    std::string filename;
+    int line, column;
+    int tab_len;
+    };
 
   //! ID type for message source types
   class Message_Source_Identifier {
@@ -89,7 +105,7 @@ namespace message
     //    (could also add pointer to attach higher-level custom objects)
     //! Compare *this to x: 
     bool operator==(const Message_Source_Identifier &x)
-    	{  return(origin_id==x.origin_id && id==x.id);  }
+    {  return(origin_id==x.origin_id && id==x.id);  }
   };
   
   //! Message including text, position,...
@@ -165,7 +181,8 @@ namespace message
 
   //**************************************************************
   // Message streams
-  enum _NoEnd  {  noend  };
+  enum _NoEnd   {  noend  };
+  enum _NoInit  {  noinit  };
   
   class Message_Stream {
   private:
@@ -187,9 +204,6 @@ namespace message
     // If the stream was termianted by noend. 
     bool no_end;
     
-    //! Don't assign message streams; use references or copy 
-    //! constructor (when using operator<<()). 
-    void operator=(const Message_Stream &ms) { }
   public:
     //! Pick up message (two versions: one for const refs; one for 
     //! copied objects)
@@ -201,6 +215,13 @@ namespace message
     
     //! implicite convertion to ostream to allow operator access
     //inline operator std::ostream() { return msg_stream; }
+
+    //! copy operator that disables copy source
+    inline Message_Stream &operator=( Message_Stream &ms );
+    // copies itself to another Message stream and disables itself
+    inline void copy_to( Message_Stream& dest ); 
+    //! uninitialized constuction
+    Message_Stream( _NoInit );
 
     //! construct only with info data
     Message_Stream(Message_Type mtype,
@@ -260,7 +281,7 @@ namespace message
     void write_message(Message &msg,bool append_nl=true);
     std::ostream &get_stream(Message_Type mtype);
   public:
-    void message( Message &msg );  //!overriding a virtual
+    virtual void message( Message &msg );  
 
     Stream_Message_Handler( std::ostream &error_stream,
 			    std::ostream &warning_stream,

@@ -17,6 +17,8 @@
 #include "nodes.hpp"
 #include "save_filled.hpp"
 
+#include "anitmt.hpp"
+
 namespace anitmt{
 
   //********************************
@@ -44,10 +46,14 @@ namespace anitmt{
     save_filled("filled.out", this );
   }
 
-  Animation::Animation( std::string name ) 
-    : Prop_Tree_Node( type_name, name, this /*this is THE animation*/ ),
-      scenes(true,false) {
-  }
+  Animation::Animation( std::string name, message::Message_Manager *manager ) 
+    : Prop_Tree_Node( type_name, name, this ), /*this is THE animation*/
+    scenes(true,false), 
+    // semi global variable initialization
+    msg_consultant( manager, MID_Core ),
+    msg(&msg_consultant), 
+    unique_name_counter(1)
+  { }
 
   bool Animation::try_add_child( Prop_Tree_Node *node ){
     bool res = false;

@@ -6,6 +6,7 @@
 #include <save_filled.hpp>
 
 #include "adlparser.hpp"
+#include <message/message.hpp>
 
 using namespace anitmt;
 using namespace message;
@@ -28,7 +29,10 @@ void ParserTest(Message_Consultant *c) {
 	try {
 		make_all_nodes_available();
 		ADLParser p(string("stdin"), cin, c);
-		Animation *ani=new Animation("dummy_name");
+		
+		Stream_Message_Handler msg_handler(cerr,cout,cout);
+		Message_Manager msg_manager( &msg_handler );
+		Animation *ani=new Animation("dummy_name", &msg_manager);
 		p.ParseTree(ani);
 		ani->pri_sys.invoke_all_Actions();
 		cerr << "Using \"save_filled\" to save values...\n";

@@ -45,16 +45,23 @@ namespace message
     // constructor. Why do things twice?
     std::string i_message;
     if(mtype==MT_Verbose)
-    {
-      for(int i=0; i<vindent; i++)
-      {  i_message+="  ";  }
-    }
+      {
+	for(int i=0; i<vindent; i++)
+	  {  i_message+="  ";  }
+      }
     i_message+=message;
     manager->message( mtype, pos, position_detail, i_message, msg_source, noend );
   }
 
   //**************************************************************
   // Message streams
+
+  Message_Stream::Message_Stream( _NoInit ni ) 
+    : enabled(false),
+      msg_stream(message,_Message_Buf_Size)
+  {
+    assert( ni == noinit );
+  }
 
   // Message_Stream (base class): 
   Message_Stream::Message_Stream( Message_Type message_type,
@@ -98,12 +105,12 @@ namespace message
   std::ostream &Stream_Message_Handler::get_stream(Message_Type mtype)
   {
     switch(mtype)
-    {
+      {
       case MT_Verbose: return(verbose_stream);
       case MT_Warning: return(warning_stream);
       case MT_Error:   return(error_stream);
       case _MT_None:  break;
-    }
+      }
     assert(0);
     return(error_stream);
   }
@@ -112,21 +119,21 @@ namespace message
   {
     std::ostream &stream=get_stream(msg.mtype);
     msg.pos->write2stream(stream,msg.position_detail);
-	 if(msg.mtype==MT_Warning)  stream << "warning: ";
+    if(msg.mtype==MT_Warning)  stream << "warning: ";
     /*else if(msg.mtype==MT_Error)    stream << "error: ";*/
     stream << msg.message;
     if(append_nl)
-    {  stream << std::endl;  }
+      {  stream << std::endl;  }
     else  stream.flush();  // streams get flushed by std::endl. 
   }
 
   void Stream_Message_Handler::message( Message &msg )
   {
     if(noend_pending!=_MT_None && msg.mtype!=noend_pending)
-    {
-      get_stream(noend_pending) << std::endl;
-      noend_pending=_MT_None;
-    }
+      {
+	get_stream(noend_pending) << std::endl;
+	noend_pending=_MT_None;
+      }
     write_message(msg,!msg.no_end);
     noend_pending=(msg.no_end) ? msg.mtype : _MT_None;
   }
@@ -138,17 +145,30 @@ namespace message
       noend_pending(_MT_None)
   {}
 
-  //**************************************************************
+  //********************
   // Position classes
-  void File_Position::write2stream(std::ostream &os,
-			      int detail_level) const {
-	  os << fn << ':';
-	  if (l> 0 && detail_level > 0) os << l << ':';
-	  if (c>=0 && detail_level > 1) os << c << ':';
-	  os << ' ';
+  //********************
+
+  std::ostream &operator<<( std::ostream &os, const Abstract_Position &pos)
+  {
+    pos.write2stream(os,2);
+    return os;
   }
-  File_Position::File_Position(const std::string _fn,
-			       const int _l,
-			       const int _c) :
-	  fn(_fn), l(_l), c(_c) {}
+
+  //****************
+  // File Position
+
+  void File_Position::write2stream(std::ostream &os,
+				   int detail_level) const {
+    os << filename << ':';
+    if (line> 0 && detail_level > 0) os << line << ':';
+    if (column>=0 && detail_level > 1) os << column << ':';
+    os << ' ';
+  }
+
+
+  File_Position::File_Position(const std::string f,
+			       const int l, const int c,
+			       const int tl) :
+    filename(f), line(l), column(c), tab_len(tl) {}
 }

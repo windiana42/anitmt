@@ -47,124 +47,126 @@ namespace anitmt
 
     values::Flag   &Token::flag()
     {
+      if( has_value() && type != TOK_FLAG )
+	consumed();
+
       if( !has_value() )
       {
 	u.flag=new values::Flag; type=TOK_FLAG;
       }
-      else
-	if( type != TOK_FLAG )
-	  consumed();
       return *u.flag;
     }
 
     values::Scalar &Token::scalar()
     {
+      if( has_value() && type != TOK_SCALAR )
+	consumed();
+
       if( !has_value() )
       {
 	u.scalar=new values::Scalar; type=TOK_SCALAR;
       }
-      else
-	if( type != TOK_SCALAR )
-	  consumed();
       return *u.scalar;
     }
 
     values::Vector &Token::vector()
     {
+      if( has_value() && type != TOK_VECTOR )
+	consumed();
+
       if( !has_value() )
       {
 	u.vector=new values::Vector; type=TOK_VECTOR;
       }
-      else
-	if( type != TOK_VECTOR )
-	  consumed();
       return *u.vector;
     }
 
     values::Matrix &Token::matrix()
     {
+      if( has_value() && type != TOK_MATRIX )
+	consumed();
+
       if( !has_value() )
       {
 	u.matrix=new values::Matrix; type=TOK_MATRIX;
       }
-      else
-	if( type != TOK_MATRIX )
-	  consumed();
       return *u.matrix;
     }
 
     values::String &Token::string()
     {
+      if( has_value() && type != TOK_STRING )
+	consumed();
+
       if( !has_value() )
       {
 	u.string=new values::String; type=TOK_STRING;
       }
-      else
-	if( type != TOK_STRING )
-	  consumed();
       return *u.string;
     }
 
     solve::Operand<values::Flag>   &Token::op_flag()
     {
+      if( has_value() && type != TOK_OP_FLAG )
+	consumed();
+
       if( !has_value() )
       {
-	u.op_flag=new solve::Operand<values::Flag>(); type=TOK_OP_FLAG;
+	u.op_flag=new solve::Operand<values::Flag>(); 
+	type=TOK_OP_FLAG;
       }
-      else
-	if( type != TOK_OP_FLAG )
-	  consumed();
       return *u.op_flag;
     }
 
     solve::Operand<values::Scalar> &Token::op_scalar()
     {
+      if( has_value() && type != TOK_OP_SCALAR )
+	consumed();
+
       if( !has_value() )
       {
 	u.op_scalar=new solve::Operand<values::Scalar>();
 	type=TOK_OP_SCALAR;
       }
-      else
-	if( type != TOK_OP_SCALAR )
-	  consumed();
       return *u.op_scalar;
     }
 
     solve::Operand<values::Vector> &Token::op_vector()
     {
+      if( has_value() && type != TOK_OP_VECTOR )
+	consumed();
+
       if( !has_value() )
       {
 	u.op_vector=new solve::Operand<values::Vector>();
 	type=TOK_OP_VECTOR;
       }
-      else
-	if( type != TOK_OP_VECTOR )
-	  consumed();
       return *u.op_vector;
     }
 
     solve::Operand<values::Matrix> &Token::op_matrix()
     {
+      if( has_value() && type != TOK_OP_MATRIX )
+	consumed();
+
       if( !has_value() )
       {
 	u.op_matrix=new solve::Operand<values::Matrix>();
 	type=TOK_OP_MATRIX;
       }
-      else
-	if( type != TOK_OP_MATRIX )
-	  consumed();
       return *u.op_matrix;
     }
 
     solve::Operand<values::String> &Token::op_string()
     {
+      if( has_value() && type != TOK_OP_STRING )
+	consumed();
+
       if( !has_value() )
       {
-	u.op_string=new solve::Operand<values::String>(); type=TOK_OP_STRING;
+	u.op_string=new solve::Operand<values::String>(); 
+	type=TOK_OP_STRING;
       }
-      else
-	if( type != TOK_OP_STRING )
-	  consumed();
       return *u.op_string;
     }
 

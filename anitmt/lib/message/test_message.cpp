@@ -103,13 +103,36 @@ public:
       verbose() << "." << noend;
       if(i==2) error(new File_Position("here")) << "he!!";
     }
-    verbose() << "done";
+    verbose() << "...done";
     #endif
     
     // Check indentions
     verbose() << "Testing Verbose indention:";
     RecursiveIndent(3);
     verbose() << "Done";
+
+    verbose(0) << "----------------------";
+    verbose(0) << "File position test...";
+
+    File_Position file_pos;
+    verbose() << "Uninitialized position:     " << file_pos;
+    file_pos.set_filename("test.file");
+    verbose() << "Initialized position:	      " << file_pos;
+    file_pos.set_pos(130,12);
+    verbose() << "Position(130/12):	      " << file_pos;
+    file_pos.inc_line();
+    verbose() << "Increased line:	      " << file_pos;
+    for( int z=0; z<20; z++ )
+      file_pos.inc_column();
+    verbose() << "20x increased column:	      " << file_pos;
+    file_pos.tab_inc_column();
+    verbose() << "Tab increased column:	      " << file_pos;
+    file_pos.tab_inc_column();
+    verbose() << "Tab increased column:	      " << file_pos;
+    file_pos.tab_inc_column();
+    file_pos.inc_line();
+    verbose() << "Increased line:	      " << file_pos;
+    verbose() << "...done";
   }
   test( Message_Consultant *consultant, int level ) 
     : Message_Reporter( consultant ) 

@@ -26,10 +26,11 @@ namespace anitmt
   //***********
   // modifiers
 
-  void Property::set_name( std::string n ) { name = n; }
-  void Property::set_node( Prop_Tree_Node* n ) { node = n; }	
-  void Property::set_position( message::Abstract_Position* p ) { pos = p; }
-  void Property::set_type( values::Valtype::Types t ) { type = t; }
+  inline void Property::set_name( std::string n ) { name = n; }
+  inline void Property::set_node( Prop_Tree_Node* n ) { node = n; }	
+  inline void Property::set_position( message::Abstract_Position* p ) 
+  { pos = p; }
+  inline void Property::set_type( values::Valtype::Types t ) { type = t; }
 
   //******************
   // access functions

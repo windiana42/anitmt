@@ -56,13 +56,16 @@ namespace anitmt{
     void init();
     void finish_calculations();
 
-    Animation( std::string name );
+    Animation( std::string name, message::Message_Manager *manager );
 
     //*****************************************
     // semi global variables for the animation
 
-    Animation_Parameters param;	// all options
-    solve::Priority_System   pri_sys;	// priority system
+    Animation_Parameters        param;	// all options
+    solve::Priority_System      pri_sys;	// priority system
+    message::Message_Consultant msg_consultant;
+    message::Message_Reporter   msg;
+    long 		        unique_name_counter;
   };
 }
 #endif

@@ -13,10 +13,11 @@
 /*****************************************************************************/
 
 
-#ifndef __adlparser__
-#define __adlparser__
+#ifndef __anitmt_input_adlparser__
+#define __anitmt_input_adlparser__
 
 #include <stack>
+#include <fstream>
 
 #include <val/val.hpp>
 #include <solve/operand.hpp>
@@ -32,6 +33,10 @@ namespace anitmt
   namespace adlparser
   {
 #include "tokens.h" //include token defines TOK_...
+
+    //******************************
+    // Token: Type for lexer tokens
+    //******************************
 
     // YACC/LEX token type
     class Token
@@ -136,6 +141,10 @@ namespace anitmt
       ~Token();
     };
 
+    //**********************************************************
+    // Identifier_Resolver: resolves indentifiers for the lexer
+    //**********************************************************
+
     // virtual class to resolve identifiers in expressions
     class Identifier_Resolver
     {
@@ -162,11 +171,22 @@ namespace anitmt
       Property_Resolver( adlparser_info *i ) : info(i) {}
     };
 
+    //**********************************************************
+    // adlparser_info: stores information for parser and lexer
+    //**********************************************************
+
     // Info opbject that is passed to the parser
     class adlparser_info
     {
-      std::stack<Prop_Tree_Node*> tree_node;  // tree_node in which the parser is
+      std::stack<Prop_Tree_Node*> tree_node;  // tree_node for the parser
+
     public:
+      adlparser_info( message::Message_Consultant *consultant );
+      ~adlparser_info();
+
+      //*************************************************
+      // only for manipulation from yylex() and yyparse()
+
       message::Message_Reporter msg;	// this offers message streams
 
       adlparser_FlexLexer *lexer;	// lexical analyzer / scanner
@@ -175,18 +195,27 @@ namespace anitmt
       Reference_Resolver res_reference;	// resolver for references
       Property_Resolver res_property;	// resolver for property names
 
-      // access functions to tree node (for parser)
+      int tab_len;
+      message::File_Position file_pos;
+      std::ifstream in_file;	// output file stream 
+      bool lexer_uses_file_stream; // whether lexer is created for in_file
+
+      // open file to be read by the lexer
+      void open_file( std::string filename );
+
+      // open file to be read by the lexer
+      void open_stream( std::string filename, std::istream &in );
+
+      // access/modify functions to tree node (for parser)
       inline Prop_Tree_Node *get_current_tree_node();
       inline void set_new_tree_node( Prop_Tree_Node *node );
       inline void tree_node_done();
 
-      adlparser_info( message::Message_Consultant *consultant,
-		      istream &in = cin);
-      ~adlparser_info();
     };
 
     // parse an adl file from instream and
-    int parse_adl( Prop_Tree_Node *node, adlparser_info *info );
+    int parse_adl( Prop_Tree_Node *node, 
+		   adlparser_info *info, std::string filename="" );
   }
 }
 
