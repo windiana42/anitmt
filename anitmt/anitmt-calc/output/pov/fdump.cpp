@@ -228,7 +228,7 @@ char *Frame_Dump::Node::_Dump_Object2Str(char *d,char *dend,Frame_Dump::Context 
 		for(const char *s=_rot_str; *s; s++)
 		{  *(d++)=*s;  }
 		*(d++)='=';
-		d=Vector2Str(d,ret.second.rotate,ctx->ndigits);
+		d=Vector2Str(d,ret.second.rotate*180.0/M_PI,ctx->ndigits);
 		*(d++)=';';  *(d++)='\n';
 	}
 	
