@@ -1,0 +1,135 @@
+// changes: - seriatim moved to provider type
+
+base_types {
+  <newtype> = <oldtype>;
+  <newtype> = { <oldtype> <name>, <oldtype> <name>,... };
+}
+
+
+[serial] type <ProviderType> {
+  provides <ReturnType>(<ParameterType>);
+  provides <ReturnType>(<ParameterType>);
+  ...
+}
+
+
+node <TreeNodeName> [extends <TreeNodeName> [, ...]] 
+                    [provides <ProviderType> [, ...]] {
+  properties {
+    type scalar {
+      <PropertyName>; 
+      <PropertyName>; 
+      ...
+    }
+    type vector {
+      <PropertyName>;
+      <PropertyName>; 
+      ...
+    }
+    type string {
+      <PropertyName>;
+      <PropertyName>; 
+      ...
+    }
+  }
+  aliases {
+    <PropertyAliasName> = <PropertyName>;   // <PropertyAliasName> are only for users !!!
+    ...
+  }
+  operands {
+    type scalar {
+      <OperandName>;  // BlindProperies (Not accessable by user)
+      <OperandName>; 
+      ...
+    }
+    type vector {
+      <OperandName>;
+      <OperandName>; 
+      ...
+    }
+    type string {
+      <OperandName>;
+      <OperandName>; 
+      ...
+    }
+  }
+   
+  common {
+    constraints {
+      <boolexpression>;
+      <boolexpression>;
+      ...
+    }
+    solvers {
+      <Solvername> ( <Propertyreference>, <Propertyreference>, ... );
+      <Solvername> ( <Propertyreference>, <Propertyreference>, ... );
+      <PropertyName> = <expression>;
+      <PropertyName> = <expression>;
+      ...
+    } 
+    actions {
+      <ActionName> ( <Prioritylevel>, <Propertyreference>, <Propertyreference>, ... );
+      <ActionName> ( <Prioritylevel>, <Propertyreference>, <Propertyreference>, ... );
+      ...
+    }
+  }
+  first [<ProviderType>]{
+    constraints { ... }
+    solvers { ... } 
+    actions { ... }
+  }
+  last [<ProviderType>]{
+    constraints { ... }
+    solvers { ... } 
+    actions { ... }
+  }
+  
+  contains {
+    [max1] [min1] <ProviderType>;
+    [max1] [min1] <ProviderType>;
+    ...
+  }
+   
+  provide <ProviderType> {
+    resulting <ReturnType>( <ParameterType> <ParameterName> ) 
+              [ requires <Propertyname> | child.<ProviderType>[.<ReturnType>(<ParameterType>)] | this.[<ProviderType>.]<ReturnType>(<ParameterType>) , ... ] {
+      <Any C++-Code using 
+       <Propertyname>
+       child.<ProviderType>.<ReturnType>(<Parameter>)[,<defaultvalue>[,<failboolvar>]] 
+       this.[<ProviderType>.]<ReturnType>(<Parameter>)
+       ...
+       in SQ_Brackets("[]") >
+    }
+    ...
+  }
+}
+
+/* ex:
+bool x_failed;
+x = [child.scalar_vsa.value(t),0,x_failed];
+if( x_failed )
+{
+  // x is 0!!!
+  return false;
+}
+*/
+
+<Propertyreference>:    PROPERTYNAME
+                      | OPERANDNAME
+                      | <Nodereference>.PROPERTYNAME
+                      | [<ProviderType>.RETURNTYPE(PARAMETERTYPE)].start_param                    // range properties for return type
+                      | [RETURNTYPE(PARAMETERTYPE)].end_param                    
+<Nodereference>:        <Localnodeidentifier>
+                      | <Nodeidentifier>
+                      | <Nodereference>.<Nodeidentifier>                           // recursive
+<Localnodeidentifier>:  [RETURNTYPE(PARAMETERTYPE)].prev                           // return type specific sequence
+                      | [RETURNTYPE(PARAMETERTYPE)].next                    
+                      | [CHILDNAME].first                     
+                      | [CHILDNAME].last
+                      | [CHILDNAME][n]
+<Nodeidentifier>:       prev
+                      | next
+                      | parent
+                      | first_child
+                      | last_child
+                      | child[n]
