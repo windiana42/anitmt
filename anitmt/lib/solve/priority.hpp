@@ -85,6 +85,8 @@ namespace solve{
   class Action_Caller_Inserter : public Solve_Problem_Handler {
     Priority_Action *priority_action;
   public:
+    //! should errors be told to user
+    virtual bool output_error_messages() { return false; }
     // a operand collision occured!
     // ret false: ignore error
     virtual bool operand_collision_occured( std::list< Basic_Operand* > 

@@ -16,12 +16,11 @@
 
 #include <param/param.hpp>
 #include <message/message.hpp>
+#include <proptree/proptree.hpp>
 #include "anitmt.hpp"
 
 /**/
-#include "proptree.hpp"
 #include "animation.hpp"
-#include "nodes.hpp"
 #include "save_filled.hpp"
 #include <input/input.hpp>
 #include <output/output.hpp>
@@ -61,7 +60,7 @@ int main(int argc,char **argv,char **envp)
     Command_Line cmd(argc,argv,envp);
 
     Animation ani("noname", &manager );
-    if(!ani.param.Parse_Command_Line(&cmd) )
+    if(!ani.GLOB.param.Parse_Command_Line(&cmd) )
       return -1;
   
     if(!cmd.Check_Unused() )
@@ -69,14 +68,14 @@ int main(int argc,char **argv,char **envp)
 
     // !!! memory leak and invariable output format !!!
     //Output_Interface *output = new Raw_Output( &ani ); 
-    Output_Interface *output = new Pov_Output( &ani );
+    Output_Interface *output = new Raw_Output( &ani ); // Pov_Output( &ani );
 
     output->init();
 
     // init animation tree
-    make_all_nodes_available();
+    ani.init();
 
-    stringlist adlfiles = ani.param.adl();
+    stringlist adlfiles = ani.GLOB.param.adl();
     if( adlfiles.empty() )
     {
       msg.error() << "no animation descriptions specified";
@@ -88,7 +87,8 @@ int main(int argc,char **argv,char **envp)
 
     for(stringlist::iterator i=adlfiles.begin(); i!=adlfiles.end(); i++)
     {
-      input.push_back( new ADL_Input( *i, &ani, &default_msg_consultant ) );
+      input.push_back( new ADL_Input( *i, &ani,
+				      &default_msg_consultant ) );
     }
 
     msg.verbose() << "read structure...";
@@ -145,9 +145,7 @@ int main(int argc,char **argv,char **envp)
 
     output->check_components(); // needs filename property
 
-    ani.pri_sys.invoke_all_Actions();
-
-    save_filled("filled.out", &ani);
+    ani.finish_calculations();
 
     output->process_results();
 
@@ -162,9 +160,9 @@ int main(int argc,char **argv,char **envp)
 
     /**/    
   }
-  catch( EX e )
+  catch( ... )
   {
-    std::cout << "Error: " << e.get_name() << std::endl;
+    std::cout << "Fatal Error: Exception Caught" << std::endl;
     return -1;
   }
   return 0;

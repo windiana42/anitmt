@@ -21,6 +21,7 @@
 #include <set>
 #include <map>
 #include <list>
+#include <stack>
 
 namespace funcgen
 {
@@ -56,6 +57,7 @@ namespace funcgen
   private:
     element_types_type element_types; // map name->type
   public:
+    bool don_t_create_code;	// ... from this node
     //! add element type to structure
     void add_element( std::string type, std::string name ); 
 
@@ -89,6 +91,7 @@ namespace funcgen
   class Provider_Type
   {
   public:
+    bool don_t_create_code;	// ... from this node
     typedef std::set<Result_Type> result_types_type;
     result_types_type result_types;
     bool serial;
@@ -195,9 +198,11 @@ namespace funcgen
     bool max1;			// container hasn't more than one element
     bool min1;			// container needs at least one element
     std::string provider_type;	// type that all elements have to provide
+    bool serial;
     void print() const;		// print, just for debug purposes
 
-    Child_Container( bool max1, bool min1, std::string provider_type );
+    Child_Container( bool max1, bool min1, std::string provider_type, 
+		     bool serial );
     //! just for set container
     bool operator<( const Child_Container &cc ) const;
   };
@@ -331,6 +336,9 @@ namespace funcgen
     typedef std::map<std::string, Tree_Node_Type> nodes_type;
     nodes_type nodes;
     Tree_Node_Type *current_node;
+
+    std::list<std::string> included_basenames;
+    std::stack<bool> don_t_create_code; // whether source shouldn't be written
 
     AFD_Root( Code_Translator *translator );
     void print() const;		// print, just for debug purposes

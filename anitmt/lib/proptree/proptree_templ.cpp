@@ -12,12 +12,12 @@
 /**									    **/
 /*****************************************************************************/
 
-#ifndef __Functionality_Prop_Tree_Templateimplementaion__
-#define __Functionality_Prop_Tree_Templateimplementaion__
+#ifndef __Proptree_Prop_Tree_Templateimplementaion__
+#define __Proptree_Prop_Tree_Templateimplementaion__
 
 #include "proptree.hpp"
 
-namespace functionality
+namespace proptree
 {
   //************************************************************
   // Prop_Tree_Node: provides tree structure for property groups
@@ -48,19 +48,28 @@ namespace functionality
     return SP_no_err;
   }
 
-  //**************************************************************************
-  // Node_Factory<NT>: provides a factory template for objects that may create 
-  //                   any node objects of type NT
-  //**************************************************************************
+  // **************************************************************************
+  // Node_Factory: provides a factory template for objects that may create 
+  //               any node objects of type NT that provides a special type
+  // **************************************************************************
 
-  //**********
-  // functions
-  /*
-  template< class NT>
-  Prop_Tree_Node *Node_Factory<NT>::create( std::string name, Animation *ani ){
-    return new NT( name, ani );
+  template< class Provider_Type, class NT >
+  Node_Factory<Provider_Type,NT>::node_return_type 
+  Node_Factory<Provider_Type,NT>::
+  create( std::string name, tree_info *info, message::Message_Consultant *msg )
+    const
+  {
+    NT *node = new NT( name, info, msg );
+    return node_return_type(node,node);	// return as different types
   }
-  */
+
+  template< class Provider_Type, class NT >
+  Node_Factory<Provider_Type,NT>::node_return_type 
+  Node_Factory<Provider_Type,NT>::cast( Prop_Tree_Node *prop ) const
+  {
+    return node_return_type(dynamic_cast<Provider_Type*>(prop), prop);
+  }
+
 }
 
 namespace solve
@@ -75,7 +84,7 @@ namespace solve
   bool establish_Push_Connection( Priority_System *sys, 
 				  Priority_System::level_type level,
 				  Operand<T> &src, 
-				  functionality::Prop_Tree_Node *dest_node,
+				  proptree::Prop_Tree_Node *dest_node,
 				  std::string dest_prop ) {
   
     if( !dest_node ) return false;
@@ -104,7 +113,7 @@ namespace solve
   bool establish_Push_Connection( Priority_System *sys, 
 				  Priority_System::level_type level,
 				  Operand<T> &src, 
-				  functionality::Property *dest_prop ) 
+				  proptree::Property *dest_prop ) 
   {
 #ifdef __DEBUG__
     std::cout << "try to establish push" << std::endl;
@@ -128,7 +137,7 @@ namespace solve
   template<class T>
   bool establish_Push_Connection( Priority_System *sys, 
 				  Priority_System::level_type level,
-				  functionality::Property *src_prop, 
+				  proptree::Property *src_prop, 
 				  Operand<T> &dest ) 
   {
 #ifdef __DEBUG__

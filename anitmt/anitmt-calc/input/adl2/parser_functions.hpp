@@ -77,25 +77,31 @@ namespace anitmt
     void change_to_parent( void *vptr_info );
 
     //! property declaration starts
-    inline void prop_declaration_start( Property &prop, void *vptr_info );
+    inline void prop_declaration_start( proptree::Property &prop, 
+					void *vptr_info );
     //! flag property declaration is ready
     inline void flag_prop_declaration_finish
-    ( Type_Property<values::Flag> &prop, Token &tok, void *vptr_info );
+    ( proptree::Type_Property<values::Flag> &prop, Token &tok, 
+      void *vptr_info );
     //! scalar property declaration is ready
     inline void scalar_prop_declaration_finish
-    ( Type_Property<values::Scalar> &prop, Token &tok, void *vptr_info );
+    ( proptree::Type_Property<values::Scalar> &prop, Token &tok, 
+      void *vptr_info );
     //! vector property declaration is ready
     inline void vector_prop_declaration_finish
-    ( Type_Property<values::Vector> &prop, Token &tok, void *vptr_info );
+    ( proptree::Type_Property<values::Vector> &prop, Token &tok, 
+      void *vptr_info );
     //! matrix property declaration is ready
     inline void matrix_prop_declaration_finish
-    ( Type_Property<values::Matrix> &prop, Token &tok, void *vptr_info );
+    ( proptree::Type_Property<values::Matrix> &prop, Token &tok, 
+      void *vptr_info );
     //! string property declaration is ready
     inline void string_prop_declaration_finish
-    ( Type_Property<values::String> &prop, Token &tok, void *vptr_info );
+    ( proptree::Type_Property<values::String> &prop, Token &tok, 
+      void *vptr_info );
 
     //! sets the position of a Property in the adl source
-    inline void set_pos( Property *prop, void *info )
+    inline void set_pos( proptree::Property *prop, void *info )
     {prop->set_position( static_cast<adlparser_info*>(info)->get_old_pos(1) );}
 
     //! sets the position of a Property in the adl source

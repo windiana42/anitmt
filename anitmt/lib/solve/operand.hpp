@@ -38,6 +38,8 @@ namespace solve
   class Solve_Problem_Handler 
   {
   public:
+    //! should errors be told to user
+    virtual bool output_error_messages() = 0;
     // a operand collision occured!
     // ret false: ignore error
     virtual bool operand_collision_occured( std::list< Basic_Operand* > 
@@ -62,6 +64,8 @@ namespace solve
   class User_Problem_Handler : public Solve_Problem_Handler 
   {
   public:
+    //! should errors be told to user
+    virtual bool output_error_messages() { return true; }
     // a operand collision occured!
     // ret false: ignore error
     virtual bool operand_collision_occured( std::list< Basic_Operand* > 
@@ -75,6 +79,7 @@ namespace solve
 					 bad_ops,
 					 Solve_Run_Info *info, 
 					 message::Message_Reporter *msg );
+
   };
 
   //**************************************************************

@@ -16,7 +16,7 @@
 #define __AniTMT_Save_Filled__
 
 #include <string>
-#include "proptree.hpp"
+#include <proptree/proptree.hpp>
 #include "animation.hpp"
 
 namespace anitmt {

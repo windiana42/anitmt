@@ -19,6 +19,16 @@
 
 namespace solve
 {
+  //*******************************************************************
+  // Is_Solved_Operator: operator to test whether an operand is solved
+  //*******************************************************************
+
+  template< class OP >
+  inline Operand<bool> &is_solved( Operand<OP> &op )
+  {
+    if( op.is_solved() ) return const_op( true, op.get_consultant() );
+    return (new Is_Solved_Operator( op, op.get_consultant() ))->get_result();
+  }
 
   //**********************************************
   // Not_Operator: operator for inverting operand

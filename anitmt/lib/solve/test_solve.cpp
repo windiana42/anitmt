@@ -1670,6 +1670,150 @@ namespace solve {
 	}
       }
       //**********************************************************************
+      std::cout << " is_solved Operator..." << std::endl;
+      {
+	Operand<values::Scalar> a(msg);
+	Operand<bool> res(msg);
+	res = is_solved( a );
+	if( res.is_solved() )
+	{
+	  std::cout << "Error: solved without knowing Argument"
+		    << std::endl;
+	}
+	a.set_value(1);
+	if( !res.is_solved() )
+	{
+	  std::cout << "Error: did not work show solved status" << std::endl;
+	}
+	else
+	  std::cout << "  OK" << std::endl;
+      }
+      {
+	Operand<values::Scalar> a(msg);
+	Operand<bool> res(msg);
+	a.set_value(1);
+	res = is_solved( a );
+	if( !res.is_solved() )
+	{
+	  std::cout << "Error: did not work with initially set operand" 
+		    << std::endl;
+	}
+	else
+	  std::cout << "  works with already set operand: OK" << std::endl;
+      }
+      //**********************************************************************
+      std::cout << " Multi AND Operator..." << std::endl;
+      {
+	Multi_And_Operator *and = new Multi_And_Operator(msg);
+	Operand<values::Scalar> a(msg), b(msg), c(msg); 
+	Operand<bool> res(msg);
+	res = and->get_result();
+	and->add_operand( is_solved( a ) );
+	and->add_operand( is_solved( b ) );
+	and->add_operand( is_solved( c ) );
+	and->finish_adding();
+	a.set_value(1);
+	b.set_value(1);
+	if( res.is_solved() )
+	{
+	  std::cout << "Error: solved without knowing 3rd Argument" 
+		    << std::endl;
+	  errors++;
+	}
+	else
+	{
+	  c.set_value(1);
+	  if( !res.is_solved() )
+	  {
+	    std::cout << "Error: did not work with 3 true" << std::endl;
+	    errors++;
+	  }
+	  else
+	  {
+	    if( res.get_value() == false )
+	    {
+	      std::cout << "Error: 3 true and = false" << std::endl;
+	      errors++;
+	    }
+	    else
+	    {
+	      std::cout << "  3 true and = true: OK" << std::endl;
+	    }
+	  }
+	}
+      }
+      {
+	Multi_And_Operator *and = new Multi_And_Operator(msg);
+	Operand<values::Scalar> a(msg), b(msg), c(msg); 
+	Operand<bool> res(msg);
+	res = and->get_result();
+	a.set_value(1);
+	and->add_operand( is_solved( a ) );
+	and->add_operand( const_op(true,msg) );
+	and->add_operand( is_solved( b ) );
+	and->add_operand( is_solved( c ) );
+	and->finish_adding();
+	b.set_value(1);
+	if( res.is_solved() )
+	{
+	  std::cout << "Error: solved without knowing 4th Argument" 
+		    << std::endl;
+	  errors++;
+	}
+	else
+	{
+	  c.set_value(1);
+	  if( !res.is_solved() )
+	  {
+	    std::cout << "Error: did not work with adding solved values" 
+		      << std::endl;
+	    errors++;
+	  }
+	  else
+	  {
+	    if( res.get_value() == false )
+	    {
+	      std::cout << "Error: 4 true and = false" << std::endl;
+	      errors++;
+	    }
+	    else
+	    {
+	      std::cout << "  works with adding solved values: OK" 
+			<< std::endl;
+	    }
+	  }
+	}
+      }
+      {
+	Multi_And_Operator *and = new Multi_And_Operator(msg);
+	Operand<values::Scalar> a(msg); 
+	Operand<bool> res(msg);
+	res = and->get_result();
+	a.set_value(1);
+	and->add_operand( is_solved( a ) );
+	and->add_operand( const_op(true,msg) );
+	and->finish_adding();
+	if( !res.is_solved() )
+	{
+	  std::cout << "Error: didn't solve adding only solved operands" 
+		    << std::endl;
+	  errors++;
+	}
+	else
+	{
+	  if( res.get_value() == false )
+	  {
+	    std::cout << "Error: 2 true and = false" << std::endl;
+	    errors++;
+	  }
+	  else
+	  {
+	    std::cout << "  works with adding only solved values: OK" 
+		      << std::endl;
+	  }
+	}
+      }
+      //**********************************************************************
       std::cout << " Testing combined Solver... (a = (b+c) * d) [77 = (5+6) * 7]" 
 	   << std::endl;
       {

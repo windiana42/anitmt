@@ -12,12 +12,12 @@
 /**									    **/
 /*****************************************************************************/
 
-#ifndef __Functionality_Property_inline_implementation__
-#define __Functionality_Property_inline_implementation__
+#ifndef __Proptree_Property_inline_implementation__
+#define __Proptree_Property_inline_implementation__
 
 #include "property.hpp"
 
-namespace functionality
+namespace proptree
 {
   //****************************************
   // Property: container for property values

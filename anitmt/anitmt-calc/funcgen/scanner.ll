@@ -147,6 +147,7 @@ return		{ tok_pos(); return TAFD_return; }
 <COPY_CODE>[^\n\[}]+"\n" 	{ info->file_pos.inc_line(); 
 				  copy_code_line( info, yytext,yyleng ); }
 
+<<EOF>>		{ finished_file(info); if( info->close_file() ) return 0; }
 
 %%
 

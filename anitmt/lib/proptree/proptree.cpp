@@ -17,7 +17,7 @@
 #include <message/message.hpp>
 #include <utl/stdextend.hpp>
 
-namespace functionality
+namespace proptree
 {
   //************************************************************
   // tree_info: stores information needed by any tree node
@@ -28,8 +28,8 @@ namespace functionality
     return std::to_string(++id_counter);
   }
   
-  tree_info::tree_info( solve::Priority_System *sys ) 
-    : id_counter(0), priority_system(sys) {}
+  tree_info::tree_info( solve::Priority_System *sys, Semi_Global *glob ) 
+    : id_counter(0), priority_system(sys), GLOB(glob) {}
 
   //************************************************************
   // Prop_Tree_Node: provides tree structure for property groups
@@ -37,8 +37,6 @@ namespace functionality
 
   //**********
   // constants
-
-  //Prop_Tree_Node::child_factory_type Prop_Tree_Node::child_factory;
 
   //**********
   // functions
@@ -104,42 +102,33 @@ namespace functionality
     if( name == "" )
     {
       // create default name
-      name = type + info->get_unique_id(); 
+      name = "__" + type + info->get_unique_id(); 
     }
 
-    /*
-    child_factory_type::iterator i = child_factory.find( type );
-    // if type not found
-    if( i == child_factory.end() )
+    Prop_Tree_Node *node = try_add_child( type, name );
+
+    // link node in hierarchy on prop_tree_node level
+    if( node )			
     {
-      //err = AC_child_type_unknown; // return error type
-      return 0;
-    }
-    // create node with factory found
-    Prop_Tree_Node *node = i->second->create( name, ani );
+      node->parent = this;
+      if( first_child == 0 ) 
+      {
+	assert( last_child == 0 );
 
-    if( first_child == 0 ) 
-    {
-      assert( last_child == 0 );
-
-      first_child = node;
-      last_child = node;
-    }
-    else
-    {
-      // connect with last child
-      node->prev = last_child;
-      last_child->next = node;
-      // replace last child
-      last_child = node;
+	first_child = node;
+	last_child = node;
+      }
+      else
+      {
+	// connect with last child
+	node->prev = last_child;
+	last_child->next = node;
+	// replace last child
+	last_child = node;
+      }
     }
 
-    if( !try_add_child( node ) )
-      return 0;
-
-    return node;
-    */
-    return 0;			// just for a while
+    return node;			
   }
 
   // returns next part before a given separator or the end of string
@@ -181,7 +170,6 @@ namespace functionality
     }    
   }
 
-
   // find node according to referencing string
   Prop_Tree_Node *Prop_Tree_Node::get_referenced_node( std::string ref,
 						       char separator='.' )
@@ -189,6 +177,8 @@ namespace functionality
     std::string whole_ref = ref;
     Prop_Tree_Node *cur = this;
     std::string part;
+
+    bool first = true;
     // ref is always reduced by part
     while( (part = get_next_part(ref,separator)) != "" )
     {
@@ -204,6 +194,7 @@ namespace functionality
 		    << std::endl;
 	  return 0;
 	}
+	first = false;
 	continue;
       }
       if( part == "next" )
@@ -215,6 +206,7 @@ namespace functionality
 		    << std::endl;
 	  return 0;
 	}
+	first = false;
 	continue;
       }
       if( part == "prev" )
@@ -226,25 +218,23 @@ namespace functionality
 		    << std::endl;
 	  return 0;
 	}
+	first = false;
 	continue;
       }
       // part is no keyword -> assume it being child name
-      Prop_Tree_Node *test = cur->get_child( part );
-      if( test != 0 )
+      Prop_Tree_Node *test = 0;
+      do{
+	test = cur->get_child( part );
+	if( test != 0 ) break;
+	if( !first )		// allow upwards child search only for first
+	  break;		// part
+	cur = cur->parent;	// search recursively upwards
+      }while( cur != 0 );
+
+      if( test != 0 )		// valid child name found?
       {
-	cur = test;
-	continue;
-      }
-      else			// automatic search
-      {
-	// if no match of part -> try to go on with parent level
-	cur = cur->parent;
-	if( cur == 0 )
-	{
-	  std::cerr << "invalid reference \"" << whole_ref << "\"" 
-		    << std::endl;
-	  return 0;
-	}
+	cur = test;		// child is new current
+	first = false;
 	continue;
       }
 
@@ -254,7 +244,6 @@ namespace functionality
     }
     return cur;
   }
-
 
   // find node according to referencing string
   Property *Prop_Tree_Node::get_referenced_property( std::string ref,
@@ -279,23 +268,6 @@ namespace functionality
 
     return prop;
   }
-
-  /*
-  // adds a factory object for class generation
-  char Prop_Tree_Node::add_child_factory( std::string type_name, 
-					  Child_Factory* fac )
-    throw() 
-  {
-
-    child_factory_type::iterator i = child_factory.find( type_name );
-    // if type not found
-    if( i != child_factory.end() )
-      return -1;
-    
-    child_factory[ type_name ] = fac;
-    return 0;
-  }
-  */
 
   //! function that is called after hierarchy was set up for each node
   void Prop_Tree_Node::hierarchy_final_init()

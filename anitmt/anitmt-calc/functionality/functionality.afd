@@ -1,119 +1,15 @@
-base_types{
-  vector = values::Vector;
-  scalar = values::Scalar;
+include declaration "base_func.afd";
 
-  time = scalar;
-  value = scalar;
-  slope = scalar;
-  acceleration = scalar;
-  stretch = scalar;
-  position = vector;
-  direction = vector;
-  up_vector = vector;
-  
-  orientation = { direction dir, up_vector up };
-}
+// ****************************************************************************
+// ****************************************************************************
+// ** node definitions
+// ****************************************************************************
+// ****************************************************************************
 
-serial type scalar_vsa {
-  provides value (time);
-  provides slope (time);
-  provides acceleration (time);
-}
+// ****************************************************************************
+// ** scalar nodes
+// ****************************************************************************
 
-type track {
-  provides position( stretch );
-}
-
-type space_state {
-  provides position( time );
-  provides position( stretch );
-  provides orientation( time );
-}
-
-// +-------------+
-// | scalar_base |
-// +-------------+
-// Werte
-node scalar_base {
-  properties {
-    type scalar {    
-      start_time;  end_time;  duration;
-      start_value; end_value; difference;
-      start_slope; end_slope; slope_difference;
-    }
-  }  
-  aliases {
-    diff_slope = slope_difference;
-    diff_value = difference;
-  }
-  common {
-    constraints {
-      duration >= 0;
-    }
-    solvers {
-      sum_solver ( start_time, duration, end_time );
-      sum_solver ( start_value, difference, end_value );
-      sum_solver ( start_slope, slope_difference, end_slope );
-    }
-    actions {
-      default( 110, slope_difference, 0 );
-      push( 10, end_time, next.start_time );
-      push( 11, start_time, prev.end_time );
-    }
-  }
-}
-// +--------------------+
-// | scalar_subfunction |
-// +--------------------+
-// Werte
-
-node scalar_subfunction extends scalar_base{
-}
-
-
-
-// +--------+
-// | scalar |
-// +--------+
-// Werte
-                          
-// Gültige Subfunktionen:
-//   change
-
-node scalar extends scalar_base provides scalar_vsa {
-//  ...
-  contains {
-    min1 scalar_vsa;
-  }
-
-  first scalar_vsa {
-    actions {
-      default(100, start_time, 0 );
-    }
-  }
-  // just an example
-  first {
-    actions {
-      default(102, start_value, 0 );
-    }
-  }
-  
-  provide scalar_vsa {
-    resulting value( time t ) 
-      requires child.scalar_vsa.value (time) 
-    { 		 time t2;		   // test
-                 t2 = t;                   // test2
-      [return_res child.scalar_vsa.value (time t2)];
-    } 
-    resulting slope( time t ) requires child.scalar_vsa.slope (time) {
-      [return_res child.scalar_vsa.slope (time t)];
-    }
-    resulting acceleration( time t ) requires child.scalar_vsa.acceleration (time) {
-      [return_res child.scalar_vsa.acceleration (time t)];
-    }
-  }
-}
-  
 // +--------+
 // | change |   ????
 // +--------+
@@ -131,6 +27,7 @@ node change extends scalar_subfunction provides scalar_vsa {
   first scalar_vsa {
     actions {
       default(100, start_time, 0 );
+      default(1000, start_value, 0 );
     }
   }
 
@@ -150,7 +47,7 @@ node change extends scalar_subfunction provides scalar_vsa {
 // +----------+
 // | constant |
 // +----------+
-// beschleunigte Veränderung
+// keine Veränderung
 
 // Gültige Subfunktionen:
 //   keine!
@@ -166,14 +63,28 @@ node constant extends scalar_subfunction provides scalar_vsa {
 
   common {
     solvers {
+      equal_solver( start_time, scalar_vsa.value(time).start_param );
+      equal_solver( end_time, scalar_vsa.value(time).end_param );
+      equal_solver( start_time, scalar_vsa.slope(time).start_param );
+      equal_solver( end_time, scalar_vsa.slope(time).end_param );
+      equal_solver( start_time, scalar_vsa.acceleration(time).start_param );
+      equal_solver( end_time, scalar_vsa.acceleration(time).end_param );
+
+      equal_solver( start_slope, end_slope );
+      equal_solver( start_slope, difference ); // set slopes to zero
       equal_solver( value, start_value );
       equal_solver( value, end_value );
+    }
+    actions {
+      default(2100, duration, 0 );
+      default(2200, start_value, 0 );
     }
   }
 
   first scalar_vsa {
     actions {
       default(100, start_time, 0 );
+      default(1000, start_value, 0 );
     }
   }
   
@@ -189,6 +100,166 @@ node constant extends scalar_subfunction provides scalar_vsa {
     resulting acceleration( time t ) 
     {
       [return 0];
+    }
+  }
+}
+
+// +--------+
+// | linear |
+// +--------+
+// gleichmäßige Veränderung
+
+// Gültige Subfunktionen:
+//   keine!
+
+node linear extends scalar_subfunction provides scalar_vsa {
+//  ...
+
+  properties{
+    scalar slope;		// changing speed of value
+  }
+
+  common {
+    solvers {
+      equal_solver( start_time, scalar_vsa.value(time).start_param );
+      equal_solver( end_time, scalar_vsa.value(time).end_param );
+      equal_solver( start_time, scalar_vsa.slope(time).start_param );
+      equal_solver( end_time, scalar_vsa.slope(time).end_param );
+      equal_solver( start_time, scalar_vsa.acceleration(time).start_param );
+      equal_solver( end_time, scalar_vsa.acceleration(time).end_param );
+
+      product_solver( difference, slope, duration );
+      equal_solver( start_slope, slope );
+      equal_solver( end_slope,   slope );
+    }
+    actions {
+      default(2000, slope, 0 );
+      default(2100, duration, 0 );
+      default(2200, start_value, 0 );
+    }
+  }
+
+  first scalar_vsa {
+    actions {
+      default(100, start_time, 0 );
+      default(1000, start_value, 0 );
+    }
+  }
+  
+  provide scalar_vsa {
+    resulting value( time t ) requires start_value, start_time, slope
+    {
+      scalar res = [start_value] + (t - [start_time]) * [slope];
+      [return res];
+    }
+    resulting slope( time t ) requires slope
+    {
+      [return_prop slope];
+    }
+    resulting acceleration( time t ) 
+    {
+      [return 0];
+    }
+  }
+}
+
+
+// +-------------+
+// | accelerated |
+// +-------------+
+// accelerated value change
+
+// Gültige Subfunktionen:
+//   keine!
+
+node accelerated extends scalar_subfunction provides scalar_vsa {
+//  ...
+
+  properties{
+    scalar acceleration;
+  }
+
+  common {
+    solvers {
+      equal_solver( start_time, scalar_vsa.value(time).start_param );
+      equal_solver( end_time, scalar_vsa.value(time).end_param );
+      equal_solver( start_time, scalar_vsa.slope(time).start_param );
+      equal_solver( end_time, scalar_vsa.slope(time).end_param );
+      equal_solver( start_time, scalar_vsa.acceleration(time).start_param );
+      equal_solver( end_time, scalar_vsa.acceleration(time).end_param );
+
+      accel_solver(difference, duration, acceleration, start_slope, end_slope);
+    }
+    actions {
+      default(200,  acceleration, 0 );
+      default(2000, start_slope, 0 );
+      default(2100, duration, 0 );
+      default(2200, start_value, 0 );
+    }
+  }
+
+  first scalar_vsa {
+    actions {
+      default(100, start_time, 0 );
+      default(1000, start_value, 0 );
+    }
+  }
+  
+  provide scalar_vsa {
+    resulting value(time abs_t) requires start_value, start_time, start_slope,
+					 acceleration
+
+    {
+      scalar t = abs_t - [start_time];
+      scalar res = [start_value] + [start_slope]*t + 0.5*[acceleration]*t*t;
+      [return res];
+    }
+    resulting slope( time abs_t ) requires start_time, start_slope, 
+					   acceleration
+    {
+      scalar t = abs_t - [start_time];
+      scalar res = [start_slope] + [acceleration] * t;
+      [return res];
+    }
+    resulting acceleration( time t ) requires acceleration
+    {
+      [return_prop acceleration];
+    }
+  }
+}
+
+// ******************
+// object anitmtion
+// ******************
+
+// +--------+
+// | object |
+// +--------+
+
+node object provides object_component, space_state {
+  contains {
+    space_state;
+  }
+  provide object_component {
+    resulting position( time t ) requires child.space_state.position(time) {
+      [return_res child.space_state.position( time t )];
+    }
+    resulting orientation( time t ) requires child.space_state.orientation(time) {
+      [return_res child.space_state.orientation( time t )];
+    }
+  }
+  provide space_state {
+    resulting position( time t ) requires child.space_state.position(time) {
+      [return_res child.space_state.position( time t )];
+    }
+    resulting position( stretch s ) requires child.space_state.position(stretch) {
+      [return_res child.space_state.position( stretch s )];
+    }
+    resulting orientation( time t ) requires child.space_state.orientation(time) {
+      [return_res child.space_state.orientation( time t )];
+    }
+    resulting orientation( stretch s ) requires child.space_state.orientation(stretch) {
+      [return_res child.space_state.orientation( stretch s )];
     }
   }
 }

@@ -19,7 +19,7 @@
 #include <solve/operand.hpp>
 #include <message/message.hpp>
 
-#include "property.hpp"
+#include <proptree/property.hpp>
 
 namespace anitmt
 {
@@ -97,11 +97,11 @@ namespace anitmt
 	solve::Operand<values::Vector> *op_vector;
 	solve::Operand<values::Matrix> *op_matrix;
 	solve::Operand<values::String> *op_string;
-	anitmt::Type_Property<values::Flag>   *prop_flag;
-	anitmt::Type_Property<values::Scalar> *prop_scalar;
-	anitmt::Type_Property<values::Vector> *prop_vector;
-	anitmt::Type_Property<values::Matrix> *prop_matrix;
-	anitmt::Type_Property<values::String> *prop_string;
+	proptree::Type_Property<values::Flag>   *prop_flag;
+	proptree::Type_Property<values::Scalar> *prop_scalar;
+	proptree::Type_Property<values::Vector> *prop_vector;
+	proptree::Type_Property<values::Matrix> *prop_matrix;
+	proptree::Type_Property<values::String> *prop_string;
 
 	// these types make problems with the functions below
 	//std::string *std_string; // might be useful for anything
@@ -133,11 +133,11 @@ namespace anitmt
       inline Meta_Operand_Vector meta_op_vector( void* info );
       inline Meta_Operand_Matrix meta_op_matrix( void* info );
       inline Meta_Operand_String meta_op_string( void* info );
-      inline anitmt::Type_Property<values::Flag>   &prop_flag();
-      inline anitmt::Type_Property<values::Scalar> &prop_scalar();
-      inline anitmt::Type_Property<values::Vector> &prop_vector();
-      inline anitmt::Type_Property<values::Matrix> &prop_matrix();
-      inline anitmt::Type_Property<values::String> &prop_string();
+      inline proptree::Type_Property<values::Flag>   &prop_flag();
+      inline proptree::Type_Property<values::Scalar> &prop_scalar();
+      inline proptree::Type_Property<values::Vector> &prop_vector();
+      inline proptree::Type_Property<values::Matrix> &prop_matrix();
+      inline proptree::Type_Property<values::String> &prop_string();
 
       // readonly access functions
       inline std::string get_identifier() const;
@@ -151,22 +151,22 @@ namespace anitmt
       inline solve::Operand<values::Vector> *get_op_vector() const;
       inline solve::Operand<values::Matrix> *get_op_matrix() const;
       inline solve::Operand<values::String> *get_op_string() const;
-      inline anitmt::Type_Property<values::Flag>   *get_prop_flag() const;
-      inline anitmt::Type_Property<values::Scalar> *get_prop_scalar() const;
-      inline anitmt::Type_Property<values::Vector> *get_prop_vector() const;
-      inline anitmt::Type_Property<values::Matrix> *get_prop_matrix() const;
-      inline anitmt::Type_Property<values::String> *get_prop_string() const;
+      inline proptree::Type_Property<values::Flag>   *get_prop_flag() const;
+      inline proptree::Type_Property<values::Scalar> *get_prop_scalar() const;
+      inline proptree::Type_Property<values::Vector> *get_prop_vector() const;
+      inline proptree::Type_Property<values::Matrix> *get_prop_matrix() const;
+      inline proptree::Type_Property<values::String> *get_prop_string() const;
       // set operand without creating a new object
       inline void set_op_flag  ( solve::Operand<values::Flag> &f );
       inline void set_op_scalar( solve::Operand<values::Scalar> &f );
       inline void set_op_vector( solve::Operand<values::Vector> &f );
       inline void set_op_matrix( solve::Operand<values::Matrix> &f );
       inline void set_op_string( solve::Operand<values::String> &f );
-      inline void set_prop_flag  ( anitmt::Type_Property<values::Flag> &f );
-      inline void set_prop_scalar( anitmt::Type_Property<values::Scalar> &f );
-      inline void set_prop_vector( anitmt::Type_Property<values::Vector> &f );
-      inline void set_prop_matrix( anitmt::Type_Property<values::Matrix> &f );
-      inline void set_prop_string( anitmt::Type_Property<values::String> &f );
+      inline void set_prop_flag  ( proptree::Type_Property<values::Flag> &f );
+      inline void set_prop_scalar( proptree::Type_Property<values::Scalar>&f );
+      inline void set_prop_vector( proptree::Type_Property<values::Vector>&f );
+      inline void set_prop_matrix( proptree::Type_Property<values::Matrix>&f );
+      inline void set_prop_string( proptree::Type_Property<values::String>&f );
       // is a value stored in that token?
       inline bool has_value() const;
 

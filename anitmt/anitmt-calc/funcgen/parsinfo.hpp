@@ -38,16 +38,15 @@ namespace funcgen
   private:
     std::deque<message::Abstract_Position*> old_positions;
     unsigned max_old_positions;
+    std::stack<std::ifstream*> in_files;	// output file stream 
+    std::stack<message::File_Position*> positions; // open file positions
   public:
     afd_info( AFD_Root *afd, message::Message_Consultant *consultant );
     ~afd_info();
 
-    // open file to be read by the lexer
+    // open file to be read by the lexer (may be recursively)
     bool open_file( std::string filename ); // false: couldn't open file
-    void close_file();
-
-    // open file to be read by the lexer
-    void open_stream( std::string filename, std::istream &in );
+    bool close_file(); // false: still another file open
 
     //*************************************************
     // only for manipulation from yylex() and yyparse()
@@ -58,7 +57,7 @@ namespace funcgen
 
     int tab_len;
     message::File_Position file_pos;
-    std::ifstream in_file;	// output file stream 
+    std::ifstream &get_in_file();	// output file stream 
     bool lexer_uses_file_stream; // whether lexer is created for in_file
 
     //! store position for later access

@@ -16,6 +16,11 @@
 
 #include <string>
 
+#ifdef WOLFGANG
+// Ugly hack by Wolfgang against unresolved symbol:
+namespace anitmt { namespace adlparser { int yydebug=0; } }
+#endif
+
 namespace anitmt
 {
   //***************************************
@@ -25,7 +30,8 @@ namespace anitmt
   //! create animation tree structure
   void ADL_Input::create_structure()
   {
-    adlparser::parse_adl( ani, consultant, filename, adlparser::pass1 );
+    adlparser::parse_adl( &ani->ani_root, consultant, filename, 
+			  adlparser::pass1 );
   }
   //! create explicite references 
   void ADL_Input::insert_expl_ref()
@@ -35,7 +41,7 @@ namespace anitmt
   //! insert concrete values for properties
   void ADL_Input::insert_values()
   {
-    parse_adl( ani, consultant, filename, adlparser::pass2 );
+    parse_adl( &ani->ani_root, consultant, filename, adlparser::pass2 );
   }
     
   //! Create a new ADL input interface

@@ -34,7 +34,7 @@ namespace anitmt
 {
 
 //! init interface (ex: check if scene file exists)
-void Pov_Output::init() throw( EX )
+void Pov_Output::init() throw()
 {
 	parser=new output_io::POV::File_Parser();
 	
@@ -44,7 +44,7 @@ void Pov_Output::init() throw( EX )
 
 
 //! check the components (verify them and copy files)
-void Pov_Output::check_components() throw( EX )
+void Pov_Output::check_components() throw()
 {
 	assert(parser);
 	
@@ -82,7 +82,7 @@ void Pov_Output::check_components() throw( EX )
 
 
 //! process the resulting animation (ex: integrate it in scene description)
-void Pov_Output::process_results() throw( EX )
+void Pov_Output::process_results() throw()
 {
 	if(verbose())
 	{  vout << "POV output: processing results..." << std::endl;  }

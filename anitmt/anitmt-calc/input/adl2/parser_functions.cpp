@@ -17,7 +17,7 @@
 #include "parser_functions.hpp"
 
 #include <utl/stdextend.hpp>
-#include <proptree.hpp>
+#include <proptree/proptree.hpp>
 
 namespace anitmt
 {
@@ -32,33 +32,33 @@ namespace anitmt
 
     // keeps track of the tree node hierarchy in pass2
     class Child_Manager{
-      std::stack<Prop_Tree_Node*> last_child; 
-      static Prop_Tree_Node *no_child;
+      std::stack<proptree::Prop_Tree_Node*> last_child; 
+      static proptree::Prop_Tree_Node *no_child;
       bool initialized;
     public:
       inline bool is_initialized() { return initialized; }
 
-      void set_root_node( Prop_Tree_Node *node )
+      void set_root_node( proptree::Prop_Tree_Node *node )
       {
 	last_child.push(node);		// node is parent...
 	last_child.push(no_child);	// ... so add a virtual child
 	initialized = true;
       }
 
-      Prop_Tree_Node *get_child()
+      proptree::Prop_Tree_Node *get_child()
       {
 	assert( initialized );	// there must be at least a no_child
 
-	Prop_Tree_Node *last = last_child.top(); // get last child
+	proptree::Prop_Tree_Node *last = last_child.top(); // get last child
 	last_child.pop();		// remove old child
-	Prop_Tree_Node *new_child;
+	proptree::Prop_Tree_Node *new_child;
 	if( last != no_child )
 	{
 	  new_child = last->get_next(); assert( new_child != 0 );
 	}
 	else
 	{
-	  Prop_Tree_Node *parent = last_child.top();
+	  proptree::Prop_Tree_Node *parent = last_child.top();
 	  new_child = parent->get_first_child();
 	}
 	last_child.push(new_child);
@@ -75,7 +75,7 @@ namespace anitmt
       }
       Child_Manager() : initialized(false) {}
     };
-    Prop_Tree_Node *Child_Manager::no_child = 0; // static initialization
+    proptree::Prop_Tree_Node *Child_Manager::no_child = 0; // static initialization
 
     Child_Manager child_manager;
 
@@ -88,7 +88,7 @@ namespace anitmt
     {
       adlparser_info *info = static_cast<adlparser_info*>(vptr_info);
 
-      Prop_Tree_Node *node = 0;
+      proptree::Prop_Tree_Node *node = 0;
       switch( info->pass )
       {
       case pass1:

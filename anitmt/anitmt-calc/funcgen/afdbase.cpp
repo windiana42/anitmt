@@ -151,9 +151,7 @@ namespace funcgen
 
   Constraint_Declaration::Constraint_Declaration( const Expression *exp )
     : essentials( exp->essentials ), constraint_code( exp->expression_code )
-  {
-    constraint_code += ";";	// terminate constraint expression
-  }
+  { }
 
   void Constraint_Code::new_constraint( const Expression *exp )
   {
@@ -338,8 +336,8 @@ namespace funcgen
   }
 
   Child_Container::Child_Container( bool _max1, bool _min1, 
-				    std::string _provider_type )
-    : max1(_max1), min1(_min1), provider_type(_provider_type)
+				    std::string _provider_type, bool _serial )
+    : max1(_max1), min1(_min1), provider_type(_provider_type), serial(_serial)
   {}
 
   //! just for set container
@@ -657,6 +655,8 @@ namespace funcgen
 
   AFD_Root::AFD_Root( Code_Translator *trans )
     : translator(trans)
-  {}
+  {
+    don_t_create_code.push( false );
+  }
 }
 

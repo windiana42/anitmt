@@ -23,49 +23,115 @@
 #include <par/params.hpp>
 
 #include <solve/priority.hpp>
+#include <proptree/property.hpp>
+#include <proptree/proptree.hpp>
 
-#include "tmttype.hpp"
-#include "property.hpp"
-#include "proptree.hpp"
-#include "return.hpp"
-#include "scene.hpp"
+#include <functionality/base_func.hpp>
+
+namespace proptree {
+  // *****************************************
+  // semi global variables for the animation
+  class Semi_Global
+  {
+  public:
+    anitmt::Animation_Parameters param;	// all options
+    message::Message_Reporter msg; // to report messages to the user
+
+    Semi_Global( message::Message_Consultant* );
+  };
+}
 
 namespace anitmt{
 
-  //********************************
+  // ********************************
   // Animation: Animation root node 
-  //********************************
+  // ********************************
 
-  class Animation: public Prop_Tree_Node {
-
-    static const std::string type_name;
-
-    Contain< Ani_Scene > scenes;
-
-    bool try_add_child( Prop_Tree_Node *node );
-
-    //! individual final init after hierarchy is set up (Has to call the 
-    //! function of the return type container
-    virtual void final_init();
+  class Animation {
   public:
-    static std::string get_type_name();
+    proptree::Semi_Global GLOB;
+    proptree::tree_info tree_info;
+    functionality::node_root ani_root;		// root node of animation
 
-    inline const Contain< Ani_Scene >& get_scenes() 
-    { return scenes; }
-    
     void init();
+    void hierarchy_final_init();
     void finish_calculations();
-
     Animation( std::string name, message::Message_Manager *manager );
+  };
 
-    //*****************************************
-    // semi global variables for the animation
+  //***************************************
+  // Interfaces to the animation data tree
+  //***************************************
 
-    Animation_Parameters        param;	// all options
-    solve::Priority_System      pri_sys;	// priority system
-    message::Message_Consultant msg_consultant;
-    message::Message_Reporter   msg;
-    long 		        unique_name_counter;
+  struct Object_State 
+  {
+    values::Matrix matrix;	// transformation matix
+
+    values::Vector translate;
+    values::Vector rotate;
+
+    values::Vector position;
+    values::Vector direction;	
+    values::Vector up_vector;
+  };
+
+  class Scalar_Component_Interface 
+  {
+    functionality::_container_scalar_component::elements_type::iterator 
+    scalar_component;
+  public:
+    Scalar_Component_Interface get_next();
+    std::string get_name();
+    std::pair<bool,values::Scalar> get_value( values::Scalar time );
+
+    inline bool operator==( Scalar_Component_Interface scalar2 ) const
+    { return scalar_component == scalar2.scalar_component; }
+
+    Scalar_Component_Interface
+    ( functionality::_container_scalar_component::elements_type::iterator 
+      scalar );
+  };
+  class Object_Component_Interface 
+  {
+    functionality::_container_object_component::elements_type::iterator  
+    object_component;
+  public:
+    Object_Component_Interface get_next();
+    std::string get_name();
+    std::pair<bool,Object_State> get_state( values::Scalar time );
+
+    inline bool operator==( Object_Component_Interface object2 ) const
+    { return object_component == object2.object_component; }
+
+    Object_Component_Interface
+    ( functionality::_container_object_component::elements_type::iterator 
+      object );
+  };
+  class Scene_Interface 
+  {
+    functionality::_container_scene_type::elements_type::iterator scene;
+  public:
+    Scene_Interface get_next();
+    std::string get_name();
+    Scalar_Component_Interface get_first_scalar();
+    Scalar_Component_Interface get_scalar_end();
+    Object_Component_Interface get_first_object();
+    Object_Component_Interface get_object_end();
+
+    inline bool operator==( Scene_Interface scene2 ) const
+    { return scene == scene2.scene; }
+
+    Scene_Interface
+    ( functionality::_container_scene_type::elements_type::iterator scene );
+  };
+  class Prop_Tree_Interface
+  {
+    functionality::node_root *ani_root;
+  public:
+    Scene_Interface get_first_scene();
+    Scene_Interface get_scene_end();
+    Prop_Tree_Interface( functionality::node_root *ani_root );
+    Prop_Tree_Interface( Animation *ani );
   };
 }
 #endif

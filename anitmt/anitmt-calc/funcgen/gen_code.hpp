@@ -40,9 +40,11 @@ namespace funcgen
   public:
     message::Message_Reporter msg; // for reporting errors
     std::string base_name;	// base filename for the generated file
-    std::string id_name;	// base filename for the generated file
+    std::string id_name;	// identifier for the package
+    std::string namespace_name; // name for the namespace
 
-    code_gen_info( std::string name, message::Message_Consultant *c );
+    code_gen_info( std::string namespace_name, std::string base_name, 
+		   message::Message_Consultant *c );
   };
 
   //! translates code peaces

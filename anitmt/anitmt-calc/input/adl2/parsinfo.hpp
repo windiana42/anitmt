@@ -24,10 +24,10 @@
 #include <fstream>
 
 #include <message/message.hpp>
+#include <proptree/property.hpp>
+#include <proptree/proptree.hpp>
 
 #include "adlparser.hpp"
-#include "property.hpp"
-#include "proptree.hpp"
 
 namespace anitmt
 {
@@ -70,7 +70,7 @@ namespace anitmt
     // Info opbject that is passed to the parser
     class adlparser_info
     {
-      std::stack<Prop_Tree_Node*> tree_node;  // tree_node for the parser
+      std::stack<proptree::Prop_Tree_Node*> tree_node;  // tree_node for the parser
       std::deque<message::Abstract_Position*> old_positions;
       unsigned max_old_positions;
     public:
@@ -105,8 +105,8 @@ namespace anitmt
       bool lexer_uses_file_stream; // whether lexer is created for in_file
 
       // access/modify functions to tree node (for parser)
-      inline Prop_Tree_Node *get_current_tree_node();
-      inline void set_new_tree_node( Prop_Tree_Node *node );
+      inline proptree::Prop_Tree_Node *get_current_tree_node();
+      inline void set_new_tree_node( proptree::Prop_Tree_Node *node );
       inline void tree_node_done();
 
       //! store position for later access

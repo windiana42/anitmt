@@ -62,6 +62,7 @@ namespace funcgen
   // for lexer
   void copy_code_line( afd_info *info, char *line, int len );
   void code_block_escape( afd_info *info );
+  void finished_file( afd_info *info );
 
   //! returns a message object for reporting things to the user
   inline message::Message_Reporter &msg( void *info )
@@ -77,6 +78,7 @@ namespace funcgen
   //******************************************
   // concrete help functions for parser rules
 
+  void include_declaration( void *info, const std::string &file );
   void declare_base_type( void *info, const std::string &name, 
 			  const std::string &type );
   void declare_base_type_structure( void *info, const std::string &name );

@@ -87,18 +87,40 @@ namespace funcgen
     }    
   }
   void code_block_escape( afd_info *info ) {}
+  void finished_file( afd_info *info ) 
+  {
+    info->afd->don_t_create_code.pop(); // reduce stack
+  }
 
   //******************************************
   // concrete help functions for parser rules
+
+  void include_declaration( void *infoptr, const std::string &file )
+  {
+    afd_info *info = static_cast<afd_info*>(infoptr);
+    AFD_Root *afd = info->afd;
+    afd->don_t_create_code.push(true);
+    std::string::size_type p = file.rfind('.');
+    std::string base_name;
+    if( p != std::string::npos )
+      base_name = file.substr(0,p);
+    else
+      base_name = file;
+
+    afd->included_basenames.push_back(base_name);
+    info->open_file(file);
+  }
 
   void declare_base_type( void *info, const std::string &name, 
 			  const std::string &type )
   {
     AFD_Root *afd = static_cast<afd_info*>(info)->afd;
     // add to map and a pointer to sequence list
+    Base_Type *base_type = &(afd->base_types[name] = Base_Type(type));
+    base_type->don_t_create_code = afd->don_t_create_code.top();
     afd->base_types_list.push_back
       (std::pair<std::string,Base_Type*>
-       (name,&(afd->base_types[name] = Base_Type(type))));    
+       (name, base_type));    
   }
 
   void declare_base_type_structure( void *info, const std::string &name )
@@ -109,6 +131,7 @@ namespace funcgen
     // add pointer to sequence list
     afd->base_types_list.push_back
       (std::pair<std::string,Base_Type*>(name,afd->current_base_type));    
+    afd->current_base_type->don_t_create_code = afd->don_t_create_code.top();
   }
   
   void base_type_structure_element( void *info, const std::string &type, 
@@ -127,6 +150,7 @@ namespace funcgen
     afd->current_type = &afd->provider_types[name];
     afd->current_type->serial = serial;
     afd->current_type->pos = info->file_pos.duplicate();
+    afd->current_type->don_t_create_code = afd->don_t_create_code.top();
   }
 
   void add_provided_result_type( void *info, const std::string &ret, 
@@ -155,6 +179,7 @@ namespace funcgen
     AFD_Root *afd = info->afd;
     afd->current_node = &afd->nodes[name]; 
     afd->current_node->pos = info->file_pos.duplicate();
+    afd->current_node->don_t_create_code = afd->don_t_create_code.top();
   }
   void node_extends( void *infoptr, const std::string &node )
   {
@@ -447,10 +472,23 @@ namespace funcgen
   void node_contains( void *info, bool max1, bool min1, 
 		      const std::string &type )
   {
-    Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;
+    message::Message_Reporter &msg = static_cast<afd_info*>(info)->msg;
+    AFD_Root *afd = static_cast<afd_info*>(info)->afd;
+    Tree_Node_Type *node = afd->current_node;
     if( node )
     {
-      node->child_containers.insert( Child_Container( max1,min1,type ) );
+      AFD_Root::provider_types_type::iterator i = 
+	afd->provider_types.find(type);
+      if( i == afd->provider_types.end() )
+      {
+	msg.error() << "provider type " << type << " doesn't exist";
+      }
+      else
+      {
+	Provider_Type &provider_type = i->second;
+	node->child_containers.insert( Child_Container(max1,min1,type,
+						       provider_type.serial) );
+      }
     }
   }
 

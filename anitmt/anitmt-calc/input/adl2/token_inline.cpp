@@ -288,31 +288,31 @@ namespace anitmt
       return Meta_Operand_String( this, info );
     }
     
-    anitmt::Type_Property<values::Flag>   &Token::prop_flag()
+    proptree::Type_Property<values::Flag>   &Token::prop_flag()
     {
       assert(type==TOK_PROP_FLAG  );
       return *u.prop_flag;
     }
 
-    anitmt::Type_Property<values::Scalar> &Token::prop_scalar()
+    proptree::Type_Property<values::Scalar> &Token::prop_scalar()
     {
       assert(type==TOK_PROP_SCALAR  );
       return *u.prop_scalar;
     }
 
-    anitmt::Type_Property<values::Vector> &Token::prop_vector()
+    proptree::Type_Property<values::Vector> &Token::prop_vector()
     {
       assert(type==TOK_PROP_VECTOR  );
       return *u.prop_vector;
     }
 
-    anitmt::Type_Property<values::Matrix> &Token::prop_matrix()
+    proptree::Type_Property<values::Matrix> &Token::prop_matrix()
     {
       assert(type==TOK_PROP_MATRIX  );
       return *u.prop_matrix;
     }
 
-    anitmt::Type_Property<values::String> &Token::prop_string()
+    proptree::Type_Property<values::String> &Token::prop_string()
     {
       assert(type==TOK_PROP_STRING  );
       return *u.prop_string;
@@ -385,31 +385,31 @@ namespace anitmt
       assert(type==TOK_OP_STRING  );
       return u.op_string;
     }
-    anitmt::Type_Property<values::Flag>   *Token::get_prop_flag() const
+    proptree::Type_Property<values::Flag>   *Token::get_prop_flag() const
     {
       assert(type==TOK_PROP_FLAG  );
       return u.prop_flag;
     }
 
-    anitmt::Type_Property<values::Scalar> *Token::get_prop_scalar() const
+    proptree::Type_Property<values::Scalar> *Token::get_prop_scalar() const
     {
       assert(type==TOK_PROP_SCALAR  );
       return u.prop_scalar;
     }
 
-    anitmt::Type_Property<values::Vector> *Token::get_prop_vector() const
+    proptree::Type_Property<values::Vector> *Token::get_prop_vector() const
     {
       assert(type==TOK_PROP_VECTOR  );
       return u.prop_vector;
     }
 
-    anitmt::Type_Property<values::Matrix> *Token::get_prop_matrix() const
+    proptree::Type_Property<values::Matrix> *Token::get_prop_matrix() const
     {
       assert(type==TOK_PROP_MATRIX  );
       return u.prop_matrix;
     }
 
-    anitmt::Type_Property<values::String> *Token::get_prop_string() const
+    proptree::Type_Property<values::String> *Token::get_prop_string() const
     {
       assert(type==TOK_PROP_STRING  );
       return u.prop_string;
@@ -453,35 +453,35 @@ namespace anitmt
       type = TOK_OP_STRING;
     }
 
-    void Token::set_prop_flag( anitmt::Type_Property<values::Flag> &f )
+    void Token::set_prop_flag( proptree::Type_Property<values::Flag> &f )
     {
       if( has_value() ) consumed();
       u.prop_flag = &f;
       type = TOK_PROP_FLAG;
     }
 
-    void Token::set_prop_scalar( anitmt::Type_Property<values::Scalar> &f )
+    void Token::set_prop_scalar( proptree::Type_Property<values::Scalar> &f )
     {
       if( has_value() ) consumed();
       u.prop_scalar = &f;
       type = TOK_PROP_SCALAR;
     }
 
-    void Token::set_prop_vector( anitmt::Type_Property<values::Vector> &f )
+    void Token::set_prop_vector( proptree::Type_Property<values::Vector> &f )
     {
       if( has_value() ) consumed();
       u.prop_vector = &f;
       type = TOK_PROP_VECTOR;
     }
 
-    void Token::set_prop_matrix( anitmt::Type_Property<values::Matrix> &f )
+    void Token::set_prop_matrix( proptree::Type_Property<values::Matrix> &f )
     {
       if( has_value() ) consumed();
       u.prop_matrix = &f;
       type = TOK_PROP_MATRIX;
     }
 
-    void Token::set_prop_string( anitmt::Type_Property<values::String> &f )
+    void Token::set_prop_string( proptree::Type_Property<values::String> &f )
     {
       if( has_value() ) consumed();
       u.prop_string = &f;

@@ -26,6 +26,7 @@ namespace anitmt
 
 #include <param/param.hpp>
 #include <message/message.hpp>
+#include <proptree/proptree.hpp>
 
 #include "animation.hpp"
 
@@ -35,11 +36,11 @@ namespace anitmt
   {
   public:
     //! init interface (ex: check if scene file exists)
-    virtual void init() throw( EX ) = 0;
+    virtual void init() throw() = 0;
     //! check the components (verify them and copy files)
-    virtual void check_components() throw( EX ) = 0;
+    virtual void check_components() throw() = 0;
     //! process the resulting animation (ex: integrate it in scene description)
-    virtual void process_results() throw( EX ) = 0; 
+    virtual void process_results() throw() = 0; 
     
     virtual ~Output_Interface() {}
   };

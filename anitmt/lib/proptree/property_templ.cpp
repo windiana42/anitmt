@@ -17,12 +17,12 @@
 /**           to use the properties                                   	    **/
 /*****************************************************************************/
 
-#ifndef __Functionality_Property_Templateimplementaion__
-#define __Functionality_Property_Templateimplementaion__
+#ifndef __Proptree_Property_Templateimplementaion__
+#define __Proptree_Property_Templateimplementaion__
 
 #include "property.hpp"
 
-namespace functionality
+namespace proptree
 {
   //***************************************************************
   // Type_Property: container for property values of a certain type

@@ -60,11 +60,11 @@ class Pov_Output :
 		std::ostream &vout;  // verbose stream
 	public:
 		//! init interface (ex: check if scene file exists)
-		virtual void init() throw( EX );
+		virtual void init() throw();
 		//! check the components (verify them and copy files)
-		virtual void check_components() throw( EX );
+		virtual void check_components() throw();
 		//! process the resulting animation (ex: integrate it in scene description)
-		virtual void process_results() throw( EX ); 
+		virtual void process_results() throw(); 
 		
 		Pov_Output(Animation *ani);
 		virtual ~Pov_Output();

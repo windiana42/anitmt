@@ -111,7 +111,8 @@ namespace solve
       if( !(*i)->is_result_ok( this, info ) ) 
       {
 	// this operand was involved in this error
-	involved_in_error( get_value(info) ); 
+	if( !info->is_trial_run() )
+	  involved_in_error( get_value(info) ); 
 	return false;
       }
     }

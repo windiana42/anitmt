@@ -38,10 +38,10 @@ namespace solve{
     return false;
   }  
 
-  //**************************************************************
+  // **************************************************************
   // Solve_Run_Info: stores information needed during a solve run
-  //**************************************************************
-
+  // **************************************************************
+  
   Solve_Run_Info::id_type Solve_Run_Info::current_default_test_run_id = 1;
 
   Solve_Run_Info::Solve_Run_Info( Solve_Problem_Handler *handler, 
@@ -52,7 +52,9 @@ namespace solve{
   }
 
   Solve_Run_Info::Solve_Run_Info( Solve_Problem_Handler *handler )
-    : problem_handler( handler ), trial_run( false ), test_run_id( -2 )
+    : problem_handler( handler ), 
+      trial_run( !handler->output_error_messages() ), 
+      test_run_id( -2 )
   {
     new_test_run_id();
   }

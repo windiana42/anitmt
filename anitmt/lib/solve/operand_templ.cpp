@@ -130,7 +130,8 @@ namespace solve
   ( const void *ID, Solve_Run_Info *info ) throw()
   {
     assert( ID == &source );
-    destination.use_test_value( info );
+    if( destination.is_solved_in_try( info ) )
+      destination.use_test_value( info );
   }
 
   template<class T>

@@ -104,7 +104,8 @@ statement:
   | node_declaration
 ;
 include_declaration:
-    TAFD_include TAFD_declaration TAFD_QSTRING ';'
+    TAFD_include TAFD_declaration TAFD_QSTRING ';' 
+					{ include_declaration( info, $3 ); }
 ;
 base_types_declaration: 
     TAFD_base_types '{' base_type_statements '}'
@@ -349,7 +350,7 @@ opt_requires: /*optional*/
 ;
 essentials_list: 
     essential
-  | essentials_list essential
+  | essentials_list ',' essential
 ;
 essential:
     TAFD_IDENTIFIER
@@ -479,7 +480,6 @@ node_identifier:
     if(!info.open_file( filename )) // did an error occur?
       return -1;
     int ret = yyparse( static_cast<void*>(&info) );
-    info.close_file();
       
     return ret;
   }

@@ -97,7 +97,7 @@ namespace message
     std::string filename;
     int line, column;
     int tab_len;
-    };
+  };
 
   //! ID type for message source types
   class Message_Source_Identifier {

@@ -11,18 +11,23 @@
 /** Package: AniTMT							    **/
 /**									    **/
 /*****************************************************************************/
+/** Requires: class proptree::Semi_Global // may store semi global data	    **/
+/*****************************************************************************/
 
-#ifndef __Functionality_Prop_Tree__
-#define __Functionality_Prop_Tree__
+#ifndef __Proptree_Prop_Tree__
+#define __Proptree_Prop_Tree__
 
 #include <list>
 #include <map>
 #include <vector>
 
-namespace functionality
+namespace proptree
 {
+  // required!!!
+  class Semi_Global;		// requires class for semi global variables
+  // provided
   class Prop_Tree_Node;
-  //template< class NT> class Node_Factory;
+  template< class Provider_Type, class NT> class Node_Factory;
 }
 
 #include <val/val.hpp>
@@ -31,7 +36,7 @@ namespace functionality
 
 #include "property.hpp"
 
-namespace functionality
+namespace proptree
 {
   //! stores information needed by any tree node
   class tree_info		
@@ -41,7 +46,9 @@ namespace functionality
     solve::Priority_System *priority_system;
     std::string get_unique_id(); // returns any unique id string
 
-    tree_info(solve::Priority_System *p_sys);
+    Semi_Global *GLOB;		// stores semi global variables
+
+    tree_info(solve::Priority_System *p_sys, Semi_Global *glob);
   };
 
   //************************************************************
@@ -54,14 +61,7 @@ namespace functionality
     // error messages (for future use)
     enum child_err{ AC_no_err=0, AC_unique_child_err,
 		    AC_child_type_rejected };	// for child creation
-    /*
-    // abstract child factory:
-    class Child_Factory
-    {
-    public:
-      virtual Prop_Tree_Node *create( std::string name, Animation* ani ) = 0;
-    };
-    */
+
   private:
 
     // navigation in tree
@@ -82,9 +82,6 @@ namespace functionality
     typedef std::map< std::string, Property* > properties_type;
     properties_type properties;
 
-    // children
-    virtual bool try_add_child( Prop_Tree_Node *node ) = 0;
-				
     // map of child fatories associated to a name as string 
     //typedef std::map< std::string, Child_Factory* > child_factory_type;
     //static child_factory_type child_factory;
@@ -100,6 +97,12 @@ namespace functionality
     // Access functions for hiding data structure
     inline void add_property( std::string name, Property *prop );
 
+    // children
+    virtual Prop_Tree_Node *try_add_child( std::string type, std::string name )
+      throw() = 0;
+
+    //! custom initialization after hierarchy was set up
+    virtual void custom_hierarchy_final_init() = 0;
   public:
     //***********
     // functions
@@ -137,6 +140,7 @@ namespace functionality
 				// return child with name
     std::list<Prop_Tree_Node*> get_all_children();
 				// return all children
+    
     Prop_Tree_Node *add_child( std::string type, std::string name )
       throw();
 				// add child of type with name
@@ -167,17 +171,33 @@ namespace functionality
     void hierarchy_final_init();
 
   };
-  /*
+
   // **************************************************************************
-  // Node_Factory<NT>: provides a factory template for objects that may create 
-  //                   any node objects of type NT
+  // Basic_Node_Factory<NT>: provides a factory interface template for
+  //                         any nodes of a special provider type
   // **************************************************************************
-  template< class NT>
-  class Node_Factory : public Prop_Tree_Node::Child_Factory{
+  template< class Provider_Type >
+  class Basic_Node_Factory {
   public:
-    virtual Prop_Tree_Node *create( std::string name, Animation *ani );
+    typedef std::pair<Provider_Type*,Prop_Tree_Node*> node_return_type;
+    virtual node_return_type create( std::string name, tree_info *info,
+				      message::Message_Consultant *msg ) const
+      = 0;
+    virtual node_return_type cast( Prop_Tree_Node * ) const = 0;
   };
-  */
+
+  // **************************************************************************
+  // Node_Factory: provides a factory template for objects that may create 
+  //               any node objects of type NT that provides a special type
+  // **************************************************************************
+  template< class Provider_Type, class NT >
+  class Node_Factory : public Basic_Node_Factory<Provider_Type> {
+  public:
+    virtual node_return_type create( std::string name, tree_info *info,
+				      message::Message_Consultant *msg ) const;
+    virtual node_return_type cast( Prop_Tree_Node * ) const;
+  };
+
   /*
   // ***************
   // test function
@@ -198,7 +218,7 @@ namespace solve
   bool establish_Push_Connection( Priority_System *sys, 
 				  Priority_System::level_type level,
 				  Operand<T> &src, 
-				  functionality::Prop_Tree_Node   *dest_node,
+				  proptree::Prop_Tree_Node   *dest_node,
 				  std::string dest_prop );
 
 }

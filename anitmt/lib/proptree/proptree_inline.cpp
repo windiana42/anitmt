@@ -12,14 +12,14 @@
 /**									    **/
 /*****************************************************************************/
 
-#ifndef __Functionality_Prop_Tree_inline_implementation__
-#define __Functionality_Prop_Tree_inline_implementation__
+#ifndef __Proptree_Prop_Tree_inline_implementation__
+#define __Proptree_Prop_Tree_inline_implementation__
 
 #include "proptree.hpp"
 
 #include "property.hpp"
 
-namespace functionality{
+namespace proptree{
 
   //************************************************************
   // Prop_Tree_Node: provides tree structure for property groups

@@ -103,7 +103,8 @@ namespace anitmt
     }
 
     // property declaration
-    inline void prop_declaration_start( Property &prop, void *vptr_info )
+    inline void prop_declaration_start( proptree::Property &prop, 
+					void *vptr_info )
     {
       adlparser_info *info = static_cast<adlparser_info*>(vptr_info);
       
@@ -122,7 +123,8 @@ namespace anitmt
       }
     }
     inline void flag_prop_declaration_finish
-    ( Type_Property<values::Flag> &prop, Token &tok, void *vptr_info )
+    ( proptree::Type_Property<values::Flag> &prop, Token &tok, 
+      void *vptr_info )
     {
       adlparser_info *info = static_cast<adlparser_info*>(vptr_info);
       switch( info->pass )
@@ -141,9 +143,14 @@ namespace anitmt
 	}
 	else 
 	{
-	  assert( tok.get_type() == TOK_OP_FLAG );
-	  // establish reference
-	  solve::explicite_reference( prop, tok.op_flag(vptr_info) ); 
+	  if( tok.get_type() == TOK_OP_FLAG )
+	  {
+	    // establish reference
+	    solve::explicite_reference( prop, tok.op_flag(vptr_info) ); 
+	  }
+	  else			// were there an error in the expression
+	    assert( tok.get_type() == TOK_INVALID_ID );
+				// error was already in parser.yy
 	}
 	resolve_properties(info); // resolve properties again
 	break;
@@ -152,7 +159,8 @@ namespace anitmt
       }
     }
     inline void scalar_prop_declaration_finish
-    ( Type_Property<values::Scalar> &prop, Token &tok, void *vptr_info )
+    ( proptree::Type_Property<values::Scalar> &prop, Token &tok, 
+      void *vptr_info )
     {
       adlparser_info *info = static_cast<adlparser_info*>(vptr_info);
       switch( info->pass )
@@ -171,9 +179,14 @@ namespace anitmt
 	}
 	else 
 	{
-	  assert( tok.get_type() == TOK_OP_SCALAR );
-	  // establish reference
-	  solve::explicite_reference( prop, tok.op_scalar(vptr_info) ); 
+	  if( tok.get_type() == TOK_OP_SCALAR )
+	  {
+	    // establish reference
+	    solve::explicite_reference( prop, tok.op_scalar(vptr_info) ); 
+	  }
+	  else			// were there an error in the expression
+	    assert( tok.get_type() == TOK_INVALID_ID );
+				// error was already in parser.yy
 	}
 	resolve_properties(info); // resolve properties again
 	break;
@@ -182,7 +195,8 @@ namespace anitmt
       }
     }
     inline void vector_prop_declaration_finish
-    ( Type_Property<values::Vector> &prop, Token &tok, void *vptr_info )
+    ( proptree::Type_Property<values::Vector> &prop, Token &tok, 
+      void *vptr_info )
     {
       adlparser_info *info = static_cast<adlparser_info*>(vptr_info);
       switch( info->pass )
@@ -201,9 +215,14 @@ namespace anitmt
 	}
 	else 
 	{
-	  assert( tok.get_type() == TOK_OP_VECTOR );
-	  // establish reference
-	  solve::explicite_reference( prop, tok.op_vector(vptr_info) ); 
+	  if( tok.get_type() == TOK_OP_VECTOR )
+	  {
+	    // establish reference
+	    solve::explicite_reference( prop, tok.op_vector(vptr_info) ); 
+	  }
+	  else			// were there an error in the expression
+	    assert( tok.get_type() == TOK_INVALID_ID );
+				// error was already in parser.yy
 	}
 	resolve_properties(info); // resolve properties again
 	break;
@@ -212,7 +231,8 @@ namespace anitmt
       }
     }
     inline void matrix_prop_declaration_finish
-    ( Type_Property<values::Matrix> &prop, Token &tok, void *vptr_info )
+    ( proptree::Type_Property<values::Matrix> &prop, Token &tok, 
+      void *vptr_info )
     {
       adlparser_info *info = static_cast<adlparser_info*>(vptr_info);
       switch( info->pass )
@@ -231,9 +251,14 @@ namespace anitmt
 	}
 	else 
 	{
-	  assert( tok.get_type() == TOK_OP_MATRIX );
-	  // establish reference
-	  solve::explicite_reference( prop, tok.op_matrix(vptr_info) ); 
+	  if( tok.get_type() == TOK_OP_MATRIX )
+	  {
+	    // establish reference
+	    solve::explicite_reference( prop, tok.op_matrix(vptr_info) ); 
+	  }
+	  else			// were there an error in the expression
+	    assert( tok.get_type() == TOK_INVALID_ID );
+				// error was already in parser.yy
 	}
 	resolve_properties(info); // resolve properties again
 	break;
@@ -242,7 +267,8 @@ namespace anitmt
       }
     }
     inline void string_prop_declaration_finish
-    ( Type_Property<values::String> &prop, Token &tok, void *vptr_info )
+    ( proptree::Type_Property<values::String> &prop, Token &tok, 
+      void *vptr_info )
     {
       adlparser_info *info = static_cast<adlparser_info*>(vptr_info);
       switch( info->pass )
@@ -261,9 +287,14 @@ namespace anitmt
 	}
 	else 
 	{
-	  assert( tok.get_type() == TOK_OP_STRING );
-	  // establish reference
-	  solve::explicite_reference( prop, tok.op_string(vptr_info) ); 
+	  if( tok.get_type() == TOK_OP_STRING )
+	  {
+	    // establish reference
+	    solve::explicite_reference( prop, tok.op_string(vptr_info) ); 
+	  }
+	  else			// were there an error in the expression
+	    assert( tok.get_type() == TOK_INVALID_ID );
+				// error was already in parser.yy
 	}
 	resolve_properties(info); // resolve properties again
 	break;

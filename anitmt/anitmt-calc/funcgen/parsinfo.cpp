@@ -23,35 +23,41 @@ namespace funcgen
   // open file to be read by the lexer
   bool afd_info::open_file( std::string filename )
   {
-    file_pos.set_filename( filename );
-    in_file.open( filename.c_str() );
-    if( !in_file )		// couldn't open file?
+    std::ifstream *is = new std::ifstream(filename.c_str());
+    if( !(*is) )		// couldn't open file?
     {
       msg.error(message::GLOB::no_position) 
 	<< "fatal error: couldn't open input file " << filename;
       return false;
     }
-    lexer->set_input_stream( in_file );
+    in_files.push( is );
+    positions.push( file_pos.duplicate() );
+
+    file_pos.set_filename( filename );
+    lexer->set_input_stream( *is );
     lexer_uses_file_stream = true;
     return true;
   }
   
-  void afd_info::close_file()
+  bool afd_info::close_file()
   {
-    lexer_uses_file_stream = false;
-    lexer->set_input_stream( cin );
-    in_file.close();
-  }
-
-  // open file to be read by the lexer
-  void afd_info::open_stream( std::string filename, std::istream &in )
-  {
-    file_pos.set_filename( filename );
-    if( lexer ) delete lexer;
-      
-    lexer = new funcgen_FlexLexer(&in);      
-    lexer->info = this;
-    lexer_uses_file_stream = false;
+    // remove current file from stack
+    delete in_files.top();
+    in_files.pop();
+    delete positions.top();
+    positions.pop();
+    if( in_files.empty() )
+    {
+      lexer_uses_file_stream = false;
+      lexer->set_input_stream( cin );
+      return true;
+    }
+    else
+    {
+      lexer->set_input_stream( *in_files.top() );
+      file_pos = *positions.top();
+      return false;		// still another file open
+    }
   }
 
   afd_info::afd_info( AFD_Root *AFD_Root, 

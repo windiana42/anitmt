@@ -33,12 +33,12 @@ namespace anitmt
     //*********************************************
     // tree node access/modify functions functions
 
-    Prop_Tree_Node *adlparser_info::get_current_tree_node()
+    proptree::Prop_Tree_Node *adlparser_info::get_current_tree_node()
     {
       return tree_node.top();
     }
 
-    void adlparser_info::set_new_tree_node( Prop_Tree_Node *node )
+    void adlparser_info::set_new_tree_node( proptree::Prop_Tree_Node *node )
     {
       tree_node.push( node );
     }

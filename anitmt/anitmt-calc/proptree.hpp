@@ -12,8 +12,9 @@
 /**									    **/
 /*****************************************************************************/
 
-#ifndef __AniTMT_Prop_Tree__
-#define __AniTMT_Prop_Tree__
+#if false
+//#ifndef __AniTMT_Prop_Tree__
+//#define __AniTMT_Prop_Tree__
 
 #include <list>
 #include <map>
@@ -41,7 +42,7 @@ namespace anitmt{
   // Prop_Tree_Node: provides tree structure for property groups
   //************************************************************
 
-  class Prop_Tree_Node : public message::Message_Reporter
+  class __obsolete__Prop_Tree_Node : public message::Message_Reporter
   {
   public:
     // error messages (for future use)
@@ -71,11 +72,11 @@ namespace anitmt{
 				// last position where it is defined (by user)
 
     // properties
-    typedef std::map< std::string, Property* > properties_type;
+    typedef std::map< std::string, proptree::Property* > properties_type;
     properties_type properties;
 
     // children
-    virtual bool try_add_child( Prop_Tree_Node *node ) = 0;
+    virtual bool try_add_child( proptree::Prop_Tree_Node *node ) = 0;
 				
     // map of child fatories associated to a name as string 
     typedef std::map< std::string, Child_Factory* > child_factory_type;

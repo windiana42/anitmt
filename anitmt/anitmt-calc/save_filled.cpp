@@ -17,7 +17,8 @@
 #include <fstream>
 
 namespace anitmt {
-  void write_node( std::ofstream &out, Prop_Tree_Node* node, int indent ){
+  void write_node( std::ofstream &out, proptree::Prop_Tree_Node* node, 
+		   int indent ){
     int i;
     // write type and name
     for( i=0; i<indent; i++ ) out << WN_INDENT_STRING;
@@ -33,8 +34,8 @@ namespace anitmt {
 
 	// Write property value
 	// Special handling of string properties ("" around them)
-	Property *p=node->get_property(*cp);
-	bool str_mode=dynamic_cast<String_Property*>(p);
+	proptree::Property *p=node->get_property(*cp);
+	bool str_mode=dynamic_cast<proptree::String_Property*>(p);
 	if (str_mode) out << '"';
 	out << *p;
 	if (str_mode) out << '"';
@@ -42,12 +43,11 @@ namespace anitmt {
       }
 
     // write children recursive
-    std::list<Prop_Tree_Node*> children = node->get_all_children();
-    std::list<Prop_Tree_Node*>::iterator cc;
-    for( cc = children.begin(); cc != children.end(); cc++ )
+    for( proptree::Prop_Tree_Node* cc = node->get_first_child(); cc != 0; 
+	 cc = cc->get_next() )
       {
 	// recursive call to write child node indented
-	write_node( out, *cc, indent+1);
+	write_node( out, cc, indent+1);
       }
  
     // write end of block
@@ -58,13 +58,12 @@ namespace anitmt {
   void save_filled( std::string filename, Animation *root ){
     std::ofstream out( filename.c_str() );
 
-    // write all scenes
-    std::list<Prop_Tree_Node*> children = root->get_all_children();
-    std::list<Prop_Tree_Node*>::iterator cc;
-    for( cc = children.begin(); cc != children.end(); cc++ )
+    // write children recursive
+    for( proptree::Prop_Tree_Node* cc = root->ani_root.get_first_child(); 
+	 cc != 0; cc = cc->get_next() )
       {
-	// start recursive write 
-	write_node( out, *cc, 0 );
+	// recursive call to write child node indented
+	write_node( out, cc, 0 );
       }
   }
 }

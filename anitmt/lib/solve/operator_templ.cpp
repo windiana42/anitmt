@@ -344,6 +344,203 @@ namespace solve
     // init() cannot be called here as it calls a virtual function
   }
 
+  //***************************************************************************
+  // Basic_Multi_Operand_Solver: base class of solvers with unlimited operands
+  //***************************************************************************
+
+  //! tries to solve result
+  template< class OP, class RES >
+  bool Basic_Multi_Operand_Operator<OP,RES>::try_solve( Solve_Run_Info *info )
+  {
+    if( result.is_solved() ) return true;
+
+    if( info ) // is in solve run ?
+    {
+      if( num_solved_in_try >= num )	// are all operands solved yet?
+      {
+	// solve by running calc for each result
+	RES res = initial_result();
+	operands_type::iterator op;
+	for( op = operands.begin(); op != operands.end(); ++op )
+	{
+	  if( !(*op)->is_solved_in_try(info) ) 
+	  {
+	    return true;	// oparand ok, but still some operands missing
+	  }
+	  res = calc( (*op)->get_value(info), res );
+	}      
+	bool solved = result.test_set_value( res, info );    
+	return solved;
+      }
+    }
+    else
+    {
+      if( num_solved >= num )	// are all operands solved yet?
+      {
+	// solve by running calc for each result
+	RES res = initial_result();
+	operands_type::iterator op;
+	for( op = operands.begin(); op != operands.end(); ++op )
+	{
+	  if( !(*op)->is_solved() ) 
+	  {
+	    return true;	// oparand ok, but still some operands missing
+	  }
+	  res = calc( (*op)->get_value(), res );
+	}      
+	bool solved = result.set_value( res );    
+	return solved;
+      }
+    }
+
+    return true;
+  }
+
+  // has to check the result of the operand with ID as pointer to operand
+  template< class OP, class RES >
+  bool Basic_Multi_Operand_Operator<OP,RES>::
+  is_result_ok( const void *ID, Solve_Run_Info *info ) throw()
+  {
+    if( ID == &result ) return true; // ignore other results
+
+    if( !just_solving )
+    {
+      just_solving = true;
+
+      // find solved operand
+      operands_type::iterator op 
+	= operands.find( static_cast<Operand<OP>*>(ID) );
+      assert( (*op)->is_solved_in_try(info) );
+      OP val = (*op)->get_value( info );
+      if( !is_op_ok(val,result) )
+      {
+	just_solving = false;
+	return false;
+      }
+      if( is_op_sufficient(val) ) // try to calc res with only this operand
+      {
+	just_solving = false;
+	return result.test_set_value( calc(val, initial_result()), info );
+      }
+      ++num_solved_in_try;
+
+      bool res = try_solve(info);
+      just_solving = false;
+      return res;
+    }
+    else
+    {
+      // find solved operand
+      operands_type::iterator op 
+	= operands.find( static_cast<Operand<OP>*>(ID) );
+      assert( (*op)->is_solved_in_try(info) );
+      OP val = (*op)->get_value( info );
+      if( !is_op_ok(val,result) ) return false;
+      ++num_solved_in_try;
+    }
+    return true;
+  }
+
+  // tells to use the result calculated by is_result_ok()
+  template< class OP, class RES >
+  void Basic_Multi_Operand_Operator<OP,RES>::
+  use_result( const void *ID, Solve_Run_Info *info ) throw()
+  {
+    if( !result.is_solved() )
+    {
+      if( ID != &result )
+      {
+	++num_solved;
+	num_solved_in_try = num_solved;
+ 	verbose(4) << "solved " << num_solved << "/" << num;
+	
+	if( result.is_solved_in_try( info ) ) // if result was just solved 
+	  result.use_test_value( info ); // tell result operand to accept value
+      }
+    }
+  }
+
+  // disconnect operand
+  template< class OP, class RES >
+  void Basic_Multi_Operand_Operator<OP,RES>::disconnect( const void *ID )
+  {
+
+    operands_type::iterator op;
+    for( op = operands.begin(); op != operands.end(); ++op )
+      if( (*op) != ID )
+	(*op)->rm_listener(this);
+
+    delete this;
+  }
+  
+  template< class OP, class RES >
+  void Basic_Multi_Operand_Operator<OP,RES>::add_operand( Operand<OP> 
+							  &operand )
+  {
+    bool not_needed = false;
+
+    if( operand.is_solved() )
+    {
+      OP op = operand.get_value();
+      if( is_op_ok( op, result ) )
+      {
+	if( is_op_sufficient( op ) )
+	{
+	  result.set_value( calc( op, initial_result() ) );
+	  not_needed = true;
+	}
+	else
+	{
+	  ++num_solved;
+	  num_solved_in_try = num_solved;
+	}
+      }
+      else
+      {
+	error() << "initial operand for multi and operator is invalid";
+      }
+    }
+
+    if( !not_needed )
+    {
+      operand.add_listener( this );
+      operands.insert( &operand );
+      ++num;
+    }
+  }
+
+  template< class OP, class RES >
+  void Basic_Multi_Operand_Operator<OP,RES>::finish_adding()
+  {
+    try_solve();
+  }
+  
+  //***********************
+  // Constructor/Destructor
+
+  template< class OP, class RES >
+  Basic_Multi_Operand_Operator<OP,RES>::Basic_Multi_Operand_Operator
+  ( message::Message_Consultant *c )
+    : message::Message_Reporter(c), 
+      num(0), num_solved(0), num_solved_in_try(0), result(c),
+      just_solving(false) {}
+
+  template< class OP, class RES >
+  Basic_Multi_Operand_Operator<OP,RES>::~Basic_Multi_Operand_Operator()
+  {}
+
+//**********************************************
+//**********************************************
+//** Special Operators
+//**********************************************
+//**********************************************
+
+//**********************************************
+//**********************************************
+//** Normal Calculation Operators
+//**********************************************
+//**********************************************
+
   //**********************************************
   // Not_Operator: operator for inverting operand
   //**********************************************

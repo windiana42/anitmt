@@ -1,6 +1,18 @@
 some things to do (not complete at all)
 
 Martin:
+** FUNCGEN **
+- parameter for filenames
+** AFD **
+- common C++ source section (only solver access?)
+- bidirectional explicite references 
+- explicite references on default levels
+- specification for expressions and references
+- allow to hide abstract node types 
+- solver generation
+- access to (cmdline) parameters
+
+Martin:
 - Prop_Tree_Node::get_possible_children()
 - optimization of Prop_Tree_Node::get_properties_names()
 - Test functions for anything

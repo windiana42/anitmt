@@ -23,11 +23,11 @@ namespace anitmt
     // adlparser_info: stores information for parser and lexer
     //**********************************************************
 
-    // open file to be read by the lexer
+    // open file to be read by the lexer (may be recursively)
     void adlparser_info::open_file( std::string filename )
     {
-      file_pos.set_filename( filename );
       in_file.open( filename.c_str() );
+      file_pos.set_filename( filename );
       lexer->set_input_stream( in_file );
       lexer_uses_file_stream = true;
     }
@@ -70,7 +70,7 @@ namespace anitmt
 
     Token Reference_Resolver::get_identifier( std::string s )
     {
-      anitmt::Property *prop = info->get_current_tree_node()->
+      proptree::Property *prop = info->get_current_tree_node()->
 	get_referenced_property(s);
       Token tok;
       if( prop != 0 )
@@ -79,24 +79,29 @@ namespace anitmt
 	    {
 	    case values::Valtype::flag:
 	      // type_property is converted to operand as needed by parser!
-	      tok.set_prop_flag  (*dynamic_cast<Type_Property<values::Flag>*>
-				  (prop));
+	      tok.set_prop_flag  
+		(*dynamic_cast<proptree::Type_Property<values::Flag>*>
+		 (prop));
 	      break;
 	    case values::Valtype::scalar:
-	      tok.set_prop_scalar(*dynamic_cast<Type_Property<values::Scalar>*>
-				  (prop));
+	      tok.set_prop_scalar
+		(*dynamic_cast<proptree::Type_Property<values::Scalar>*>
+		 (prop));
 	      break;
 	    case values::Valtype::vector:
-	      tok.set_prop_vector(*dynamic_cast<Type_Property<values::Vector>*>
-				  (prop) );
+	      tok.set_prop_vector
+		(*dynamic_cast<proptree::Type_Property<values::Vector>*>
+		 (prop) );
 	      break;
 	    case values::Valtype::matrix:
-	      tok.set_prop_matrix(*dynamic_cast<Type_Property<values::Matrix>*>
-				  (prop));
+	      tok.set_prop_matrix
+		(*dynamic_cast<proptree::Type_Property<values::Matrix>*>
+		 (prop));
 	      break;
 	    case values::Valtype::string:
-	      tok.set_prop_string(*dynamic_cast<Type_Property<values::String>*>
-				  (prop));
+	      tok.set_prop_string
+		(*dynamic_cast<proptree::Type_Property<values::String>*>
+		 (prop));
 	      break;
 	    }
 	}
@@ -105,7 +110,7 @@ namespace anitmt
 
     Token Property_Resolver::get_identifier( std::string s )
     {
-      anitmt::Property *prop = info->get_current_tree_node()->
+      proptree::Property *prop = info->get_current_tree_node()->
 	get_property(s);
       Token tok;
       if( prop != 0 )
@@ -113,24 +118,29 @@ namespace anitmt
 	  switch( prop->get_type() )
 	    {
 	    case values::Valtype::flag:
-	      tok.set_prop_flag  (*dynamic_cast<Type_Property<values::Flag>*>
-				   (prop) );
+	      tok.set_prop_flag  
+		(*dynamic_cast<proptree::Type_Property<values::Flag>*>
+		 (prop) );
 	      break;
 	    case values::Valtype::scalar:
-	      tok.set_prop_scalar(*dynamic_cast<Type_Property<values::Scalar>*>
-				   (prop) );
+	      tok.set_prop_scalar
+		(*dynamic_cast<proptree::Type_Property<values::Scalar>*>
+		 (prop) );
 	      break;
 	    case values::Valtype::vector:
-	      tok.set_prop_vector(*dynamic_cast<Type_Property<values::Vector>*>
-				   (prop) );
+	      tok.set_prop_vector
+		(*dynamic_cast<proptree::Type_Property<values::Vector>*>
+		 (prop) );
 	      break;
 	    case values::Valtype::matrix:
-	      tok.set_prop_matrix(*dynamic_cast<Type_Property<values::Matrix>*>
-				   (prop) );
+	      tok.set_prop_matrix
+		(*dynamic_cast<proptree::Type_Property<values::Matrix>*>
+		 (prop) );
 	      break;
 	    case values::Valtype::string:
-	      tok.set_prop_string(*dynamic_cast<Type_Property<values::String>*>
-				   (prop) );
+	      tok.set_prop_string
+		(*dynamic_cast<proptree::Type_Property<values::String>*>
+		 (prop) );
 	      break;
 	    }
 	}

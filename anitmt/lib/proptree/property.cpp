@@ -19,7 +19,7 @@
 
 #include "proptree.hpp"
 
-namespace functionality
+namespace proptree
 {
   //****************************************
   // Property: container for property values

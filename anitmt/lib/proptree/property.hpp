@@ -14,10 +14,10 @@
 /**									    **/
 /*****************************************************************************/
 
-#ifndef __Functionality_Property__
-#define __Functionality_Property__
+#ifndef __Proptree_Property__
+#define __Proptree_Property__
 
-namespace functionality
+namespace proptree
 {
   class Property;
   template<class T> class Type_Property;
@@ -35,7 +35,7 @@ namespace functionality
 #include <message/message.hpp>
 #include <solve/operand.hpp>
 
-namespace functionality
+namespace proptree
 {
   // forward declaration for class in "proptree.hpp"
   class Prop_Tree_Node;

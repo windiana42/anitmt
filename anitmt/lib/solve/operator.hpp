@@ -15,6 +15,8 @@
 #ifndef __Solve_Operator__
 #define __Solve_Operator__
 
+#include <set>
+
 #include <val/val.hpp>
 #include <message/message.hpp>
 
@@ -199,11 +201,112 @@ namespace solve
     virtual ~Basic_Operator_for_2_Operands() {}
   };
 
+  //***************************************************************************
+  // Basic_Multi_Operand_Operator: base class of operators with an unlimited 
+  //				   number of operands
+  //***************************************************************************
+
+  //! base class for operators for a sequence of calculations with any number
+  //! of arguments
+  template< class OP, class RES >
+  class Basic_Multi_Operand_Operator 
+    : public Operand_Listener, public message::Message_Reporter
+  {
+    typedef std::set<Operand<OP>*> operands_type;
+    operands_type operands;
+    int num, num_solved, num_solved_in_try;
+    Operand<RES> result;
+
+    bool just_solving;           // is set while testing result of solved value
+
+    bool try_solve( Solve_Run_Info *info = 0 ); // tries to solve result
+
+    //**********************************
+    // Virtual Operand_Listener methods
+
+    // has to check the result of the operand with ID as pointer to operand
+    bool is_result_ok( const void *ID, Solve_Run_Info *info ) throw();
+    // tells to use the result calculated by is_result_ok()
+    void use_result( const void *ID, Solve_Run_Info *info ) throw();
+    // disconnect operand
+    void disconnect( const void *ID );
+
+    //***************************************
+    // Virtual methods for concrete operands
+
+    //! return initial result for calculation sequence
+    virtual RES initial_result() = 0;
+    //! returns new result for one operand and the old result (sequence calc)
+    virtual RES calc( const OP &op, const RES &old_res ) = 0;
+
+    //! is operand valid?
+    virtual bool is_op_ok( const OP &op, Operand<RES> &result ){ return true; }
+    //! is operand sufficient to calc result?
+    virtual bool is_op_sufficient( const OP &op ) { return false; }
+
+  public:
+    void add_operand( Operand<OP> &operand ); 
+    void finish_adding();
+    //! get result when all operands are added
+    inline Operand<RES> &get_result() { return result; }
+
+    Basic_Multi_Operand_Operator( message::Message_Consultant *c );
+    virtual ~Basic_Multi_Operand_Operator();
+  };
+
+
+
 //**********************************************
 //**********************************************
 //** Special Operators
 //**********************************************
 //**********************************************
+
+  //***************************************************************************
+  // Multi_And_Operator: Logical and with any number of operands
+  //***************************************************************************
+
+  //! Logical and with any number of operands
+  class Multi_And_Operator : public Basic_Multi_Operand_Operator<bool,bool>
+  {
+    typedef bool RES;
+    typedef bool OP;
+
+    virtual RES initial_result();	
+    virtual RES calc( const OP &op, const RES &old_res );
+
+    virtual bool is_op_sufficient( const OP &op );
+  public:
+    Multi_And_Operator( message::Message_Consultant *c );
+  };
+
+  //*******************************************************************
+  // Is_Solved_Operator: operator to test whether an operand is solved
+  //*******************************************************************
+
+  //! tests whether operands are solved (but not when this is already the case)
+  class Is_Solved_Operator : public Operand_Listener
+  {
+    Operand<bool> result;
+
+    //**********************************
+    // Virtual Operand_Listener methods
+
+    // has to check the result of the operand with ID as pointer to operand
+    bool is_result_ok( const void *ID, Solve_Run_Info *info ) throw();
+    // tells to use the result calculated by is_result_ok()
+    void use_result( const void *ID, Solve_Run_Info *info ) throw();
+    // disconnect operand
+    void disconnect( const void *ID );
+
+  public:
+    inline Operand<bool> &get_result() { return result; }
+    Is_Solved_Operator( Basic_Operand &op, 
+			message::Message_Consultant *c );
+  };
+
+  template< class OP >
+  inline Operand<bool> &is_solved( Operand<OP> &op );
 
 //**********************************************
 //**********************************************

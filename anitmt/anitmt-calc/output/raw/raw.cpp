@@ -17,65 +17,65 @@
 #include <assert.h>
 #include <fstream>
 #include <val/val.hpp>
-#include "tmttype.hpp"
-#include "scene.hpp"
-#include "proptree.hpp"
+//#include "tmttype.hpp"
+//#include "scene.hpp"
+#include <proptree/proptree.hpp>
 
 namespace anitmt
 {
   //! init interface (ex: check if scene file exists)
-  void Raw_Output::init() throw( EX )
+  void Raw_Output::init() throw()
   {
   }
 
   //! check the components (verify them and copy files)
-  void Raw_Output::check_components() throw( EX )
+  void Raw_Output::check_components() throw()
   {
   }
 
   //! process the resulting animation (ex: integrate it in scene description)
-  void Raw_Output::process_results() throw( EX )
+  void Raw_Output::process_results() throw()
   {
-    const Contain<Ani_Scene>::content_type &scenes 
-      = ani->get_scenes().get_content();
-    Contain<Ani_Scene>::content_type::const_iterator scene;
+    Prop_Tree_Interface prop_tree( &ani->ani_root );
 
-    std::string dir = ani->param.ani_dir();
+    std::string dir = ani->GLOB.param.ani_dir();
     std::string basename = "raw_", extension = ".out";
-    int startf = ani->param.startframe();
-    int endf   = ani->param.endframe();
+    int startf = ani->GLOB.param.startframe();
+    int endf   = ani->GLOB.param.endframe();
 
-    for( int f = startf; f <= endf; f++ /*f += ani->param.jump()*/ )
+    for( int f = startf; f <= endf; f++ /*f += ani->GLOB.param.jump()*/ )
     {
+      verbose(2) << "Writing Frame " << f << "...";
+
       char str_num[20];
       sprintf( str_num, "%04d", f );
-      assert( ani->param.fps() != 0 );
-      values::Scalar t = f / ani->param.fps();
+      assert( ani->GLOB.param.fps() != 0 );
+      values::Scalar t = f / ani->GLOB.param.fps();
       
       std::string filename = dir + basename + str_num + extension;
       std::ofstream out( filename.c_str() );
 
       out << "time " << t << ";" << std::endl;
-      for( scene = scenes.begin(); scene != scenes.end(); ++scene )
+      for( Scene_Interface scene = prop_tree.get_first_scene(); 
+	   scene != prop_tree.get_scene_end(); 
+	   scene = scene.get_next() )
       {
-	out << "scene " << (*scene)->get_name() << std::endl;
+	out << "scene " << scene.get_name() << std::endl;
 	out << "{" << std::endl;
 	
-	//*************************
+	// *************************
 	// output scalar components
 
-	const Contain< Ani_Scalar >::content_type &scalars = 
-	  (*scene)->get_scalars().get_content();
-	Contain< Ani_Scalar >::content_type::const_iterator scalar;
-
-	for( scalar = scalars.begin(); scalar != scalars.end(); ++scalar )
+	for( Scalar_Component_Interface scalar = scene.get_first_scalar();
+	     scalar != scene.get_scalar_end();
+	     scalar = scalar.get_next() )
 	{
-	  out << "  scalar " << (*scalar)->get_name() << std::endl;
+	  out << "  scalar " << scalar.get_name() << std::endl;
 	  out << "  {" << std::endl;
 	  
-	  std::pair<bool,Scalar_State> ret = (*scalar)->get_return_value( t );
+	  std::pair<bool,values::Scalar> ret = scalar.get_value( t );
 	  if( ret.first )
-	    out << "    val " << ret.second.get_value() << ";" << std::endl;
+	    out << "    val " << ret.second << ";" << std::endl;
 	  else
 	    out << "    val <undefined>;" << std::endl;
 	  
@@ -85,25 +85,28 @@ namespace anitmt
 	//*************************
 	// output object components
 
-	const Contain< Ani_Object >::content_type &objects = 
-	  (*scene)->get_objects().get_content();
-	Contain< Ani_Object >::content_type::const_iterator object;
-
-	for( object = objects.begin(); object != objects.end(); ++object )
+	for( Object_Component_Interface object = scene.get_first_object();
+	     object != scene.get_object_end();
+	     object = object.get_next() )
 	{
-	  out << "  object " << (*object)->get_name() << std::endl;
+	  out << "  object " << object.get_name() << std::endl;
 	  out << "  {" << std::endl;
 	  
-	  std::pair<bool,Object_State> ret = (*object)->get_return_value( t );
+	  std::pair<bool,Object_State> ret = object.get_state( t );
 	  if( ret.first )
 	  {
-	    out << "    matrix " << ret.second.get_matrix()<< ";" << std::endl;
+	    out << "    matrix " << ret.second.matrix << ";" << std::endl;
 	    out << "    // equals: " << std::endl;
-	    out << "    scale "     << ret.second.get_scale() 
+	    out << "    translate " << ret.second.translate
 		<< ";" << std::endl;
-	    out << "    translate " << ret.second.get_translate()
+	    out << "    rotate "    << ret.second.rotate
 		<< ";" << std::endl;
-	    out << "    rotate "    << ret.second.get_rotate()
+	    out << "    // equals: " << std::endl;
+	    out << "    position "  << ret.second.position
+		<< ";" << std::endl;
+	    out << "    direction " << ret.second.direction
+		<< ";" << std::endl;
+	    out << "    up-vector " << ret.second.up_vector
 		<< ";" << std::endl;
 	  }
 	  else
@@ -117,6 +120,13 @@ namespace anitmt
       }
     }
   }
+
+  Raw_Output::Raw_Output( Animation *a )
+    : message::Message_Reporter( a->GLOB.msg.get_consultant() ), ani(a)
+  {
+
+  }
+
 }
 
 

@@ -97,7 +97,7 @@ namespace anitmt{
     if( name == "" )
     {
       // create default name
-      name = type + (ani->unique_name_counter++); 
+      name = "__" + type + (ani->unique_name_counter++); 
     }
 
     child_factory_type::iterator i = child_factory.find( type );
@@ -111,6 +111,10 @@ namespace anitmt{
     // create node with factory found
     Prop_Tree_Node *node = i->second->create( name, ani );
 
+    if( !try_add_child( node ) )
+      return 0;
+
+    node->parent = this;
     if( first_child == 0 ) 
     {
       assert( last_child == 0 );
@@ -126,9 +130,6 @@ namespace anitmt{
       // replace last child
       last_child = node;
     }
-
-    if( !try_add_child( node ) )
-      return 0;
 
     return node;
   }
@@ -180,6 +181,8 @@ namespace anitmt{
     std::string whole_ref = ref;
     Prop_Tree_Node *cur = this;
     std::string part;
+
+    bool first = true;
     // ref is always reduced by part
     while( (part = get_next_part(ref,separator)) != "" )
     {
@@ -195,6 +198,7 @@ namespace anitmt{
 		    << std::endl;
 	  return 0;
 	}
+	first = false;
 	continue;
       }
       if( part == "next" )
@@ -206,6 +210,7 @@ namespace anitmt{
 		    << std::endl;
 	  return 0;
 	}
+	first = false;
 	continue;
       }
       if( part == "prev" )
@@ -217,25 +222,23 @@ namespace anitmt{
 		    << std::endl;
 	  return 0;
 	}
+	first = false;
 	continue;
       }
       // part is no keyword -> assume it being child name
-      Prop_Tree_Node *test = cur->get_child( part );
-      if( test != 0 )
+      Prop_Tree_Node *test = 0;
+      do{
+	test = cur->get_child( part );
+	if( test != 0 ) break;
+	if( !first )		// allow upwards child search only for first
+	  break;		// part
+	cur = cur->parent;	// search recursively upwards
+      }while( cur != 0 );
+
+      if( test != 0 )		// valid child name found?
       {
-	cur = test;
-	continue;
-      }
-      else			// automatic search
-      {
-	// if no match of part -> try to go on with parent level
-	cur = cur->parent;
-	if( cur == 0 )
-	{
-	  std::cerr << "invalid reference \"" << whole_ref << "\"" 
-		    << std::endl;
-	  return 0;
-	}
+	cur = test;		// child is new current
+	first = false;
 	continue;
       }
 

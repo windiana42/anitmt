@@ -58,7 +58,6 @@ namespace anitmt
     void add_input_format( Input_Interface *format );
     Input_Manager( param::Parameter_Manager *par, 
 		   message::Message_Consultant *consultant,
-		   //!!! could be realized by a special interface
 		   Animation *ani );
     ~Input_Manager();
   };

@@ -20,9 +20,9 @@ namespace funcgen
   // ****************************************************************
   // code_gen_info:  additional information for the code generation
   
-  code_gen_info::code_gen_info( std::string name, 
+  code_gen_info::code_gen_info( std::string ns, std::string name, 
 				message::Message_Consultant *c ) 
-    : msg(c),base_name(name), id_name(name)
+    : msg(c),base_name(name), id_name(name), namespace_name(ns)
   {}
 
 }

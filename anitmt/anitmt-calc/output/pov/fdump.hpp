@@ -26,8 +26,9 @@
 #include <string>
 
 #include <val/val.hpp>
-#include "proptree.hpp"
-#include "scene.hpp"
+#include "animation.hpp"
+//#include "proptree.hpp"
+//#include "scene.hpp"
 
 
 namespace output_io
@@ -89,14 +90,15 @@ class Frame_Dump
 			~Node();
 			
 			private:
-			char *_Alloc_Scalar_Str(anitmt::Ani_Scalar *ptn);
-			char *_Alloc_Object_Str(anitmt::Ani_Object *ptn,unsigned int id);
+			char *_Alloc_Scalar_Str(anitmt::Scalar_Component_Interface scal);
+			char *_Alloc_Object_Str(anitmt::Object_Component_Interface obj,
+															unsigned int id);
 			char *_Dump_Scalar2Str(char *d,char *dend,Context *ctx);
 			char *_Dump_Object2Str(char *d,char *dend,Context *ctx);
 		};
 	private:
 		anitmt::Animation *ani;
-		anitmt::Ani_Scene *scene;
+		anitmt::Scene_Interface scene;
 		
 		char *buf;      // write buffer
 		char *bufhalf;
@@ -122,7 +124,7 @@ class Frame_Dump
 		std::ostream *_vout;  // verbose stream
 		std::ostream &vout()  {  return(*_vout);  }
 	public:
-		Frame_Dump(anitmt::Animation *ani,anitmt::Ani_Scene *scene);
+		Frame_Dump(anitmt::Animation *ani,anitmt::Scene_Component_Interface scene);
 		~Frame_Dump();
 		
 		// Set verbosity level and verbose stream. 
@@ -139,7 +141,7 @@ class Frame_Dump
 		//     needed for NT_Scalar. 
 		// dump_flags: what shall be dumped (pass 0 for scalars); 
 		//    see enum Dump_Flags above. 
-		void Add_Entry(NType type,anitmt::Prop_Tree_Node *ptn,
+		void Add_Entry(NType type,prop::Prop_Tree_Node *ptn,
 			Dump_Flags dump_flags,unsigned int id=0);
 		
 		// Delete all entries. 

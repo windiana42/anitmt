@@ -1,25 +1,35 @@
 scene testscene {
-	filename "test.pov";
-	scalar testval {
-		linear {}
-		linear testlinear1 {
-			starttime 0;
-			endtime 3;
-			endvalue 2;
-			difference 1;
-		}
-		linear testlinear2 {
-			endtime 10;
-			endvalue 1;
-		}
-		accelerated {
-			startslope 3;
-			endvalue 8;
-			endslope 0;
-		}
-		linear {}
-	}
-
-	scalar testval2 {
-	}
+  filename "test.pov";
+  scalar testval {
+    linear testlinear1 {
+      start_time 0;
+      end_time 3;
+      //duration -1;
+      end_value 2;
+      difference 1;
+    }
+    linear testlinear2 {
+      duration 3;
+    }
+/*
+    linear testlinear {
+      duration 3;
+    }
+*/
+    accelerated {
+      //start_slope prev.slope;
+      end_value testlinear1.end_value * 2.5;
+      end_slope 0;
+    }
+    accelerated {
+      duration 3;
+      end_slope 6;
+    }
+    linear {}
+  }
+  scalar testval2 {
+    linear {
+      end_time 30;
+    }
+  }
 }

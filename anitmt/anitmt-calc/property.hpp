@@ -14,8 +14,9 @@
 /**									    **/
 /*****************************************************************************/
 
-#ifndef __AniTMT_Property__
-#define __AniTMT_Property__
+#if false
+//#ifndef __AniTMT_Property__
+//#define __AniTMT_Property__
 
 namespace anitmt
 {

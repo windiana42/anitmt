@@ -2,8 +2,11 @@
 INCLUDES=		-I$(top_srcdir)/lib 
 
 noinst_LIBRARIES=	libfunctionality.a
-# BUILT_SOURCES=functionality.hpp functionality.cpp 
-libfunctionality_a_SOURCES= functionality.afd \
+BUILT_SOURCES=		base_func.hpp base_func.cpp \
+			functionality.hpp functionality.cpp 
+libfunctionality_a_SOURCES= base_func.afd \
+			base_func.hpp base_func.cpp \
+			functionality.afd \
 			functionality.hpp functionality.cpp 
 
 check_PROGRAMS=		test_functionality
@@ -23,6 +26,11 @@ test_functionality_LDADD= \
 FUNCGEN= ../funcgen/funcgen
 
 # exec funcgen...
+base_func.cpp \
+base_func.hpp: $(srcdir)/base_func.afd $(FUNCGEN)
+	$(FUNCGEN) $(srcdir)/base_func.afd base_func functionality
+
 functionality.cpp \
 functionality.hpp: $(srcdir)/functionality.afd $(FUNCGEN)
-	$(FUNCGEN) $(srcdir)/functionality.afd
+	$(FUNCGEN) $(srcdir)/functionality.afd functionality functionality
+
