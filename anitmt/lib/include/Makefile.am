@@ -1,1 +1,1 @@
-noinst_HEADERS=val.hpp vector.hpp vector3.hh utl.hpp
+noinst_HEADERS=val.hpp vector.hpp matrix.hpp vect.hpp utl.hpp

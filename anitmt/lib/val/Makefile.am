@@ -1,3 +1,3 @@
 INCLUDES=-I$(srcdir)/../include
 noinst_LIBRARIES=libval.a
-libval_a_SOURCES=val.cpp vector.cpp vector3.cpp
+libval_a_SOURCES=val.cpp vect.cpp 
