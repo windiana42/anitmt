@@ -97,7 +97,7 @@ template<int C=4,int R=4>class Matrix
 		
 		// Multiplication/Division of a matrix and/by a scalar: 
 		// (Divides/multiplies every element of the matrix.) 
-		#if !GCC_HACK
+		#ifndef GCC_HACK
 		template<int c,int r>friend Matrix<c,r> operator*(const Matrix<c,r> &a,Scalar b);
 		template<int c,int r>friend Matrix<c,r> operator*(Scalar a,const Matrix<c,r> &b);
 		template<int c,int r>friend Matrix<c,r> operator/(const Matrix<c,r> &a,Scalar b);
@@ -110,7 +110,7 @@ template<int C=4,int R=4>class Matrix
 		
 		// Multiplication of a matrix and a vector: 
 		// (Vector::operator*=(Matrix) is also available.)
-		#if !GCC_HACK
+		#ifndef GCC_HACK
 		template<int c,int r>friend Vector<r> operator*(const Matrix<c,r> &a,const Vector<c> &b);
 		template<int c,int r>friend Vector<r> operator*(const Vector<c> &a,const Matrix<c,r> &b);
 		// Special versions: 
@@ -118,7 +118,7 @@ template<int C=4,int R=4>class Matrix
 		friend Vector<3> operator*(const Vector<3> &a,const Matrix<4,4> &b);
 		#endif
 		
-		#if !GCC_HACK
+		#ifndef GCC_HACK
 		// Multiplication of a matrix and a matrix: 
 		template<int M,int L,int N>friend Matrix<L,M> operator*(
 			const Matrix<N,L> &a,const Matrix<N,M> &b);
@@ -131,12 +131,12 @@ template<int C=4,int R=4>class Matrix
 		// Friend needed for vector * matrix calculation. 
 		// This returns void for speed increase. 
 		template<int N>friend void operator*=(Vector<N> &v,const Matrix<N,N> &m);
-		#if !GCC_HACK
+		#ifndef GCC_HACK
 		// Special version: 
 		friend void operator*=(Vector<3> &v,const Matrix<4,4> &m);
 		#endif
 		
-		#if !GCC_HACK
+		#ifndef GCC_HACK
 		// Addition/Subtraction of two matrices (element-by-elemnt). 
 		template<int c,int r>friend Matrix<c,r> operator+(const Matrix<c,r> &a,const Matrix<c,r> &b);
 		template<int c,int r>friend Matrix<c,r> operator-(const Matrix<c,r> &a,const Matrix<c,r> &b);
@@ -148,7 +148,7 @@ template<int C=4,int R=4>class Matrix
 		Matrix<C,R> operator+() const {  return(*this);  } 
 		Matrix<C,R> operator-() const {  Matrix<C,R> r(noinit);  r.x.neg(x);   return(r);  }
 		
-		#if !GCC_HACK
+		#ifndef GCC_HACK
 		// Operators comparing matrices (are using epsilon): 
 		template<int c,int r>friend bool operator==(const Matrix<c,r> &,const Matrix<c,r> &);
 		template<int c,int r>friend bool operator!=(const Matrix<c,r> &,const Matrix<c,r> &);
@@ -163,11 +163,11 @@ template<int C=4,int R=4>class Matrix
 		
 		// These functions calculate the inverse matrix. 
 		Matrix<C,R> &invert()  {  x.invert();  return(*this);  }
-		#if GCC_HACK
+		#ifndef GCC_HACK
 		template<int c,int r>friend Matrix<c,r> invert(const Matrix<c,r> &m);
 		#endif
 		
-		#if !GCC_HACK
+		#ifndef GCC_HACK
 		// Print matrix to stream: 
 		template<int c,int r>friend ostream& operator<<(ostream& s,const Matrix<c,r> &m);
 		#endif
