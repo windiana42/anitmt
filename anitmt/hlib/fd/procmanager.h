@@ -79,6 +79,12 @@ class ProcessManager :
 		// Limits: 
 		int limitproc;   // -1 -> no limit
 		
+		// When ProcessManager's constructor was called: 
+		HTime starttime;
+		// rusage values at startup: 
+		HTime self_utime0,self_stime0;
+		HTime chld_utime0,chld_stime0;
+		
 		inline void _DeleteNode(Node *n,int may_have_pipefd_set=0);  // dequeue and free
 		Node *_FindNode(pid_t pid);
 		void _Clear();
@@ -147,6 +153,22 @@ class ProcessManager :
 		// Return value: 
 		//   0 -> OK
 		int SpecialRegister(ProcessBase *pb,int special_flags);
+		
+		// This function can be used to query the amount of time 
+		// spent in user mode or system mode and to query process 
+		// uptime. 
+		// Note: The returned values are normalized. ProcessManager 
+		//       subtracts utime and stime queried in the constructor 
+		//       from those values returned by the system so that you 
+		//       can accurately compare them with uptime (measured 
+		//       since ProcessManager exists), 
+		//       Pass normalize=0 if you want data as returned from 
+		//       getrusage(). 
+		// who: 0 -> the process alone
+		//      1 -> all children of the process
+		//     -1 -> only query starttime
+		// Return value: that of getrusage(2). 
+		int GetTimeUsage(int who,ProcTimeUsage *dest,int normalize=1);
 		
 		// Does nothing; just returns specified value: 
 		int noop(int);

@@ -23,6 +23,8 @@
 #include <assert.h>
 
 
+#define UnsetNegMagic  (-29649)
+
 // NOTE: 
 // TaskManager contains a highly non-trivial state machine. 
 // I expect that there are some bugs in it. 
@@ -362,6 +364,17 @@ int TaskManager::tsnotify(TSNotifyInfo *ni)
 			{
 				pending_action=ANone;
 				
+				// Write this frame down in the last frame number history: 
+				if(last_pend_done_frame_no>=0)  // non failed
+				{
+					if(lpf_hist_size>0)
+					{
+						last_proc_frames[lpf_hist_idx]=last_pend_done_frame_no;
+						lpf_hist_idx=(lpf_hist_idx+1)%lpf_hist_size;
+					}
+					last_pend_done_frame_no=-1;
+				}
+				
 				// Okay, go on talking to the task source: 
 				_TS_GetOrDoneTask();
 			}
@@ -482,20 +495,77 @@ int TaskManager::signotify(const SigInfo *si)
 			abort_on_signal=1;
 		}
 	}
+	else if(si->info.si_signo==SIGTSTP || 
+	        si->info.si_signo==SIGCONT )
+	{
+		// Terminal stop and cont. Hmm... check state. 
+		if( ( exec_stopped && si->info.si_signo==SIGCONT) || 
+		    (!exec_stopped && si->info.si_signo==SIGTSTP) )
+		{
+			int signo=exec_stopped ? SIGCONT : SIGSTOP;
+			// send signal to the tasks: 
+			Warning("Sending SIG%s to all jobs... ",
+				signo==SIGCONT ? "CONT" : "STOP");
+			int nkilled=0;
+			int nfailed=0;
+			for(TaskDriver *i=joblist.first(); i; i=joblist.next(i))
+			{
+				if(i->pinfo.pid<0)  continue;
+				if(::kill(i->pinfo.pid,signo))
+				{
+					// We simply ignore these errors because the task may 
+					// have just exited. 
+					if(!nfailed)  Warning("\n");
+					if(i->pinfo.ctsk)
+					{  Warning("Failed for job %s (pid %ld) [frame %d]: "
+						"%s (ignored)\n",i->pinfo.args.first()->str(),
+						long(i->pinfo.pid),i->pinfo.ctsk->frame_no,
+						strerror(errno));  }
+					else
+					{  Warning("Failed for pid %ld: %s (ignored)\n",
+						i->pinfo.pid,strerror(errno));  }
+					++nfailed;
+				}
+				else ++nkilled;
+			}
+			if(nfailed)
+			{  Warning("Sending signals: success: %d jobs; failed: %d jobs\n",
+				nkilled,nfailed);  }
+			else
+			{  Warning("okay, %d jobs%s\n",nkilled,
+				exec_stopped ? "" : " [STOPPING]");  }
+			
+			// Swap state: 
+			exec_stopped=exec_stopped ? 0 : 1;
+			// If we shall be stopped, then we actually stop. Note that this 
+			// means that we also won't disconnect from the task source, 
+			// check timers, etc. 
+			if(exec_stopped)
+			{  raise(SIGSTOP);  }
+		}
+		else
+		{  Warning("Ignoring SIG%s because already %s.\n",
+			si->info.si_signo==SIGCONT ? "CONT" : "TSTP",
+			exec_stopped ? "stopped" : "running");  }
+	}
 	
 	if(do_sched_quit)
 	{
 		// Make sure we quit then...
 		if(!schedule_quit)
 		{  schedule_quit=1;  }  // 1 -> exit(0);
+		
+		if(scheduled_for_start)
+		{
+			// No NEW tasks...
+			if(!_ProcessedTask(scheduled_for_start))
+			{  _KillScheduledForStart();  }
+		}
 	}
 	if(do_kill_tasks)
 	{
 		dont_start_more_tasks=1;
-		if(scheduled_for_start)
-		{  // No, we won't start new processes now. 
-			scheduled_for_start=NULL;
-		}
+		_KillScheduledForStart();   // No, we won't start new processes now. 
 		
 		schedule_quit=2;  // 2 -> exit(1);
 		sched_kill_tasks=1;   // user interrupt
@@ -565,11 +635,11 @@ void TaskManager::_schedule(TimerInfo *ti)
 			}
 			else
 			{  Verbose(" Waiting for jobs to quit.\n");  }
-			scheduled_for_start=NULL;
+			_KillScheduledForStart();
 		}
 	}
 	
-	if(scheduled_for_start)
+	if(scheduled_for_start && load_permits_starting)
 	{
 		// We have to start a job for a task. Okay, let's do it: 
 		TaskDriver *tmp_td=NULL;
@@ -589,7 +659,7 @@ void TaskManager::_schedule(TimerInfo *ti)
 			//  by _LaunchJobForTask(). 
 		}
 		
-		scheduled_for_start=NULL;
+		_KillScheduledForStart();
 		
 		// See if we want to start more task(s): 
 		_CheckStartTasks();
@@ -625,11 +695,40 @@ void TaskManager::_schedule(TimerInfo *ti)
 	}
 }
 
+inline void TaskManager::_KillScheduledForStart()
+{
+	if(scheduled_for_start)
+	{
+		scheduled_for_start=NULL;
+		if(!load_permits_starting)
+		{  UpdateTimer(tid_load_poll,-1,0);  }
+	}
+}
+
 
 int TaskManager::timernotify(TimerInfo *ti)
 {
 	if(ti->tid==tid0)
 	{  _schedule(ti);  }
+	else if(ti->tid==tid_load_poll)
+	{
+		if(!scheduled_for_start)
+		{
+			// Why are we polling the load for no reason? 
+			// (Maybe because scheduled_for_start was cancelled.)
+			UpdateTimer(tid_load_poll,-1,0);
+		}
+		else
+		{
+			assert(!load_permits_starting);
+			_DoCheckLoad();
+			if(load_permits_starting)
+			{
+				UpdateTimer(tid_load_poll,-1,0);
+				ReSched();
+			}
+		}
+	}
 	else if(ti->tid==tid_ts_cwait)
 	{
 		// Seems that we shall re-try to connect. 
@@ -650,16 +749,71 @@ int TaskManager::timernotify(TimerInfo *ti)
 }
 
 
+static int _int_cmp(const void *a,const void *b)
+{
+	return(*(int*)a - *(int*)b);
+}
+
 // Simply call fdmanager()->Quit(status) and write 
 void TaskManager::_DoQuit(int status)
 {
 	VerboseSpecial("Now exiting with status=%s (%d)",
 		status ? "failure" : "success",status);
-	#warning FIXME: more info to come]
-	HTime endtime(HTime::Curr);
+	
+	ProcTimeUsage ptu_self,ptu_chld;
+	ProcessManager::manager->GetTimeUsage(0,&ptu_self);
+	ProcessManager::manager->GetTimeUsage(1,&ptu_chld);
+	
+	HTime elapsed=ptu_self.uptime;
+	HTime endtime=starttime+elapsed;
 	Verbose("  exiting at (local): %s\n",endtime.PrintTime(1,1));
-	HTime elapsed=endtime-starttime;
 	Verbose("  elapsed time: %s\n",elapsed.PrintElapsed());
+	
+	int loadval=_GetLoadValue();
+	Verbose("  load control: ");
+	if(load_low_thresh<=0)
+	{  Verbose(" [disabled]\n");  }
+	else
+	{
+		char max_tmp[32];
+		if(max_load_measured<0)  *max_tmp='\0';
+		else  snprintf(max_tmp,32,"; max: %.2f",double(max_load_measured)/100.0);
+		Verbose("%d times; curr: %.2f%s  (%.2f/%.2f)\n",
+			load_control_stop_counter,double(loadval)/100.0,max_tmp,
+			double(load_low_thresh)/100.0,double(load_high_thresh)/100.0);
+	}
+	
+	if(lpf_hist_size)
+	{
+		Verbose("  last successfully done frames:");
+		qsort(last_proc_frames,lpf_hist_size,sizeof(int),&_int_cmp);
+		int nw=0;
+		for(int i=0; i<lpf_hist_size; i++)
+		{
+			int l=last_proc_frames[i];
+			if(l<0)  continue;
+			Verbose(" %d",l);  ++nw;
+		}
+		Verbose("%s\n",nw ? "" : " [none]");
+	}
+	
+	double rv_cpu=100.0*(ptu_self.stime.GetD(HTime::seconds)+
+		ptu_self.utime.GetD(HTime::seconds)) / elapsed.GetD(HTime::seconds);
+	double ch_cpu=100.0*(ptu_chld.stime.GetD(HTime::seconds)+
+		ptu_chld.utime.GetD(HTime::seconds)) / elapsed.GetD(HTime::seconds);
+	
+	char tmp[48];
+	snprintf(tmp,48,"%s",ptu_self.utime.PrintElapsed());
+	Verbose("  RendView:  %.2f%% CPU  (user: %s; sys: %s)\n",
+		rv_cpu,tmp,ptu_self.stime.PrintElapsed());
+	snprintf(tmp,48,"%s",ptu_chld.utime.PrintElapsed());
+	Verbose("  Jobs:     %.2f%% CPU  (user: %s; sys: %s)\n",
+		ch_cpu,tmp,ptu_chld.stime.PrintElapsed());
+	snprintf(tmp,48,"%s",(ptu_chld.utime+ptu_self.utime).PrintElapsed());
+	Verbose("  Together: %.2f%% CPU  (user: %s; sys: %s)\n",
+		ch_cpu+rv_cpu,tmp,(ptu_chld.stime+ptu_self.stime).PrintElapsed());
+	
+	#warning FIXME: more info to come
 	
 	fdmanager()->Quit(status);
 }
@@ -758,7 +912,27 @@ int TaskManager::_StartProcessing()
 	if(max_failed_in_sequence)  Verbose("%d\n",max_failed_in_sequence);
 	else Verbose("OFF\n");
 	
-	starttime.SetCurr();
+	// Get load val for first time; see if it is >0: 
+	int loadval=_GetLoadValue();
+	
+	Verbose("  load control: ");
+	if(load_low_thresh<=0)
+	{
+		Verbose("[disabled]\n");
+		assert(load_poll_msec<0);
+	}
+	else
+	{
+		Verbose("min: %.2f; max: %.2f; poll: %ld msec; curr: %.2f\n",
+			double(load_low_thresh)/100.0,double(load_high_thresh)/100.0,
+			load_poll_msec,double(loadval)/100.0);
+		assert(load_high_thresh>=load_low_thresh);
+		assert(load_poll_msec>0);  // we want it LARGER THAN 0
+	}
+	
+	ProcTimeUsage ptu;
+	ProcessManager::manager->GetTimeUsage(-1,&ptu);
+	starttime=ptu.starttime;
 	Verbose("  starting at (local): %s\n",starttime.PrintTime(1,1));
 	
 	// Do start things up (yes, REALLY now): 
@@ -809,9 +983,11 @@ int TaskManager::_LaunchJobForTask(CompleteTask *ctsk,TaskDriver **td)
 		return(1);
 	}
 	
+	// Already set ctsk; task driver removes it again if an error occurs: 
+	(*td)->pinfo.ctsk=ctsk;
 	int rv=(*td)->Run(tsb,tp);
 	if(rv)   // Error was already written. 
-	{  return(2);  }
+	{  return(2);  }  // IAmDone() was called...
 	
 	// This is that we know which TaskDriver does which CompleteTask: 
 	// NOTE that this is set AFTER Run() returns success. 
@@ -872,8 +1048,18 @@ void TaskManager::_CheckStartTasks()
 	if(!startme)  return;
 	
 	// Okay, actually schedule task for starting: 
+	_DoScheduleForStart(startme);
+}
+
+inline void TaskManager::_DoScheduleForStart(CompleteTask *startme)
+{
+	assert(!scheduled_for_start);
 	scheduled_for_start=startme;
-	ReSched();  // start schedule timer
+	_DoCheckLoad();
+	if(load_permits_starting)
+	{  ReSched();  }  // start schedule timer
+	else
+	{  _StartLoadPolling();  }
 }
 
 
@@ -1034,12 +1220,19 @@ void TaskManager::_TS_GetOrDoneTask()
 				// We may not dequeue and call TaskDone() if the task 
 				// is currently processed. This should not happen, though. 
 				assert(!ctsk->td);
+				// However, the task could be scheduled for start: 
+				if(scheduled_for_start==ctsk)
+				{  _KillScheduledForStart();  }
 				tasklist_todo.dequeue(ctsk);
 			}
 			assert(ctsk);  // otherwise tsgod_next_action=ADoneTask illegal
 			
 			// Dump all the information to the user: 
 			_PrintDoneInfo(ctsk);
+			
+			// This is needed so that we know the frame number in tsnotify(). 
+			if(ctsk->state==CompleteTask::TaskDone)
+			{  last_pend_done_frame_no=ctsk->frame_no;  }
 			
 			int rv=TSDoneTask(ctsk);
 			assert(rv==0);  // everything else is internal error
@@ -1168,12 +1361,74 @@ int TaskManager::_DealWithNewTask(CompleteTask *ctsk)
 }
 
 
+int TaskManager::_GetLoadValue()
+{
+	int lv=::GetLoadValue();
+	if(lv<0)
+	{  _DisableLoadFeature();  }
+	else if(lv>max_load_measured)
+	{  max_load_measured=lv;  }
+	return(lv);
+}
+
+void TaskManager::_DoCheckLoad()
+{
+	if(load_low_thresh<=0)  return;   // feature disabled
+	
+	int loadval=_GetLoadValue();
+	if(loadval<0)  return;  // feature already disabled by _GetLoadValue()
+	if(load_permits_starting)
+	{
+		if(loadval>=load_high_thresh)
+		{
+			load_permits_starting=false;
+			Warning("Load control: jobs disabled (load: %.2f >=%.2f)\n",
+				double(loadval)/100.0,double(load_high_thresh)/100.0);
+			++load_control_stop_counter;
+		}
+	}
+	else
+	{
+		if(loadval<load_low_thresh)
+		{
+			load_permits_starting=true;
+			Warning("Load control: jobs enabled (load: %.2f <%.2f)\n",
+				double(loadval)/100.0,double(load_low_thresh)/100.0);
+		}
+	}
+}
+
+void TaskManager::_StartLoadPolling()
+{
+	assert(load_poll_msec>0);  // we want it to be >0, NOT >=0. 
+	assert(!load_permits_starting);  // or internal error
+	UpdateTimer(tid_load_poll,load_poll_msec,
+		10 | FDAT_FirstLater | FDAT_FirstEarlier);
+}
+
+void TaskManager::_DisableLoadFeature()
+{
+	// Disable load feature at any time. 
+	
+	if(load_low_thresh<=0)  return;   // already disabled
+	
+	Warning("Disabling load feature.\n");
+	load_low_thresh=0;
+	load_poll_msec=-1;
+	bool ov=load_permits_starting;
+	load_permits_starting=true;
+	KillTimer(tid_load_poll);  tid_load_poll=NULL;
+	if(!ov || scheduled_for_start)
+	{  ReSched();  }
+}
+
+
 void TaskManager::_PrintTaskExecStatus(TaskExecutionStatus *tes)
 {
 	VerboseSpecial("      Status: %s",tes->StatusString());
 	if(tes->status==TTR_Unset)  return;
 	Verbose("      Started: %s\n",tes->starttime.PrintTime(1,1));
-	Verbose("      Done: %s\n",tes->endtime.PrintTime(1,1));
+	Verbose("      Done:    %s\n",tes->endtime.PrintTime(1,1));
 	HTime duration=tes->endtime-tes->starttime;
 	Verbose("      Elapsed: %s  (%.2f%% CPU)\n",
 		duration.PrintElapsed(),
@@ -1218,7 +1473,7 @@ void TaskManager::_PrintDoneInfo(CompleteTask *ctsk)
 	{
 		Verbose("  Render task: %s (%s driver)\n",
 			ctsk->rt->rdesc->name.str(),ctsk->rt->rdesc->dfactory->DriverName());
-		Verbose("    Input file: hd path: %s\n",
+		Verbose("    Input file:  hd path: %s\n",
 			ctsk->rt->infile ? ctsk->rt->infile->HDPath().str() : NULL);
 		Verbose("    Output file: hd path: %s; size %dx%d; format: %s\n",
 			ctsk->rt->outfile ? ctsk->rt->outfile->HDPath().str() : NULL,
@@ -1299,10 +1554,47 @@ void TaskManager::UnregisterTaskDriver(TaskDriver *td)
 
 int TaskManager::CheckParams()
 {
+	int failed=0;
+	
 	if(max_failed_in_sequence<0)
 	{  max_failed_in_sequence=0;  }
 	if(!max_failed_in_sequence)
 	{  Verbose("Note that max-failed-in-seq feature is disabled.\n");  }
+	
+	if(load_low_thresh<=0)
+	{
+		if(load_low_thresh!=UnsetNegMagic)
+		{
+			Error("Illegal load-min value %d.\n",load_low_thresh);
+			++failed;
+		}
+		// Feature switched off by default. 
+		load_low_thresh=0;
+		load_poll_msec=-1;
+		assert(load_permits_starting);
+		// Kill load poll timer; it's not needed. 
+		KillTimer(tid_load_poll);  tid_load_poll=NULL;
+	}
+	else
+	{
+		// Feature turned on. 
+		if(load_high_thresh<load_low_thresh)
+		{
+			int oldval=load_high_thresh;
+			load_high_thresh=load_low_thresh;
+			if(oldval!=UnsetNegMagic)
+			{  Warning("Adjusted load-max to %d (was %d), as load-min is %d.\n",
+				load_high_thresh,oldval,load_low_thresh);  }
+		}
+		if(load_poll_msec<=0)  // YES!
+		{
+			long oldval=load_poll_msec;
+			load_poll_msec=300;
+			if(oldval!=UnsetNegMagic)
+			{  Warning("Adjusted load-poll-msec to %ld (was %ld).\n",
+				load_poll_msec,oldval);  }
+		}
+	}
 	
 	// See if we need /dev/null FD and open it if needed: 
 	if(mute_renderer || quiet_renderer)
@@ -1315,7 +1607,7 @@ int TaskManager::CheckParams()
 			(dev_null_fd<0) ? strerror(errno) : "alloc failure");  }
 	}
 	
-	return(0);
+	return(failed ? 1 : 0);
 }
 
 
@@ -1365,12 +1657,21 @@ int TaskManager::_SetUpParams()
 	AddParam("fdetach-term","terminal control over filter process",
 		&prm[DTFilter].call_setsid);
 	
+	AddParam("load-poll-msec","load value poll delay",&load_poll_msec);
+	AddParam("load-max","do not start jobs if the system load multiplied "
+		"with 100 is >= this value; instead wait unitl it is lower than "
+		"load-min",&load_high_thresh);
+	AddParam("load-min","resume to start jobs if the system load (multiplied "
+		"with 100) is < than this value; 0 turns off load check feature",
+		&load_low_thresh);
+	
 	#warning further params: delay_between_tasks, max_failed_jobs, \
 		dont_fail_on_failed_jobs, launch_if_load_smaller_than, \
 		brutal_on_first_sigint, ignore_sigint, signal_never_abort
 	
 	return(add_failed ? 1 : 0);
 }
+
 
 TaskManager::TaskManager(ComponentDataBase *cdb,int *failflag) :
 	FDBase(failflag),
@@ -1412,6 +1713,7 @@ TaskManager::TaskManager(ComponentDataBase *cdb,int *failflag) :
 	schedule_quit_after=0;
 	sched_kill_tasks=0;
 	kill_tasks_and_quit_now=0;
+	exec_stopped=0;
 	
 	todo_thresh_low=-1;  // initial value
 	todo_thresh_high=-1;
@@ -1423,7 +1725,27 @@ TaskManager::TaskManager(ComponentDataBase *cdb,int *failflag) :
 	ts_done_all_first=0;
 	nth_call_to_get_task=0;
 	
+	load_low_thresh=UnsetNegMagic;
+	load_high_thresh=UnsetNegMagic;
+	load_poll_msec=UnsetNegMagic;
+	load_permits_starting=true;  // important. 
+	load_control_stop_counter=0;
+	max_load_measured=-1;
+	
 	int failed=0;
+	
+	lpf_hist_size=5;
+	lpf_hist_idx=0;
+	last_proc_frames=(int*)LMalloc(lpf_hist_size*sizeof(int));
+	if(!last_proc_frames && lpf_hist_size)
+	{  ++failed;  }
+	else
+	{
+		for(int i=0; i<lpf_hist_size; i++)
+		{  last_proc_frames[i]=-1;  }
+	}
+	last_pend_done_frame_no=0;
+	
 	
 	//if(FDBase::SetManager(1))
 	//{  ++failed;  }
@@ -1432,7 +1754,10 @@ TaskManager::TaskManager(ComponentDataBase *cdb,int *failflag) :
 	tid0=InstallTimer(0,0);
 	// Install disabled timer for connect re-try: 
 	tid_ts_cwait=InstallTimer(-1,0);
-	if(!tid0 || !tid_ts_cwait)
+	// Install disabled timer for load polling; 
+	// IT IS KILLED LATER IF NOT NEEDED. 
+	tid_load_poll=InstallTimer(-1,0);
+	if(!tid0 || !tid_ts_cwait || !tid_load_poll)
 	{  ++failed;  }
 	
 	if(_SetUpParams())
@@ -1467,4 +1792,6 @@ TaskManager::~TaskManager()
 	UseTaskSource(NULL);
 	if(ts)
 	{  delete ts;  }
+	
+	if(last_proc_frames)  last_proc_frames=(int*)LFree(last_proc_frames);
 }

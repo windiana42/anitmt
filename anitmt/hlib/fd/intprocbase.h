@@ -105,6 +105,14 @@ struct InternalProcessBase
 		//    if(uid!=uid_t(-1)) and NOT if(uid<0). 
 	};
 	
+	struct ProcTimeUsage
+	{  _CPP_OPERATORS
+		HTime starttime;  // when started
+		HTime uptime;  // time since startup
+		HTime utime;   // time spent in user mode
+		HTime stime;   // time spend in system mode
+	};
+	
 	// Error return values of StartProcess(): 
 	enum // StartProcessStatus
 	{

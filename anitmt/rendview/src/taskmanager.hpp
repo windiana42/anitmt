@@ -37,7 +37,7 @@ class TaskManager :
 		// Task source connect re-try timer: 
 		TimerID tid_ts_cwait;
 		
-		HTime starttime;
+		HTime starttime;  // same as ProcessManager::starttime. 
 		
 		// Note: all existing TaskDrivers are in this queue: 
 		LinkedList<TaskDriver> joblist;
@@ -104,11 +104,32 @@ class TaskManager :
 		// GetTask() the next time. 
 		int ts_done_all_first : 1;
 		
+		// If this is 0, the load poll timer must be running; always 1 
+		// if the feature is turned off. 
+		int load_permits_starting : 1;
+		
+		// This is set if we receive a SIGTSTP and unset with SIGCONT: 
+		int exec_stopped : 1;
+		
 		// Padding bits: 
-		int _pad : 15;
+		int _pad : 13;
+		
+		long load_poll_msec;   // or -1
+		TimerID tid_load_poll;  // NULL if no load control enabled. 
+		
+		// Load values multiplied with 100; low<=0 -> disable
+		int load_low_thresh,load_high_thresh;
+		int load_control_stop_counter;
+		// Max value measured during runtime: 
+		int max_load_measured;
 		
 		// State flags (B): 
 		TSAction pending_action;
+		int last_pend_done_frame_no;  // frame number if pending_action==ADoneTask. 
+		
+		int lpf_hist_size;
+		int lpf_hist_idx;
+		int *last_proc_frames;
 		
 		// tasklist_todo thresholds: 
 		// If there are less than todo_thresh_low (>=1) tasks in 
@@ -130,7 +151,14 @@ class TaskManager :
 		bool _TS_CanDo_GetTask(bool can_done);
 		
 		void _CheckStartTasks();
+		inline void _DoScheduleForStart(CompleteTask *ctsk);
+		inline void _KillScheduledForStart();
 		int _CheckStartExchange();
+		
+		int _GetLoadValue();
+		void _StartLoadPolling();
+		void _DoCheckLoad();
+		void _DisableLoadFeature();
 		
 		// Do things which are said to be `scheduled'... 
 		// Called by timernotify(): 

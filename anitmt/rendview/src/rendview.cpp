@@ -73,7 +73,9 @@ static int MAIN(int argc,char **argv,char **envp)
 		"start no more processes and wait for all current jobs to "
 		"exit; pressing ^C twice will kill all jobs. In either way "
 		"rendview exits cleanly. Pressing ^C three times makes "
-		"RendView abort. SIGTERM acts like two ^C.");
+		"RendView abort. SIGTERM acts like two ^C. SIGTSTP (^Z) will "
+		"make RendView stop all tasks and then als stop; SIGCONT (fg or "
+		"bg in bash) makes them continue all again.");
 		// ...as well as only rendering changed frames or resuming operation
 		// ...and later create a film of them...
 	

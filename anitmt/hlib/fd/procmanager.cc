@@ -1107,6 +1107,37 @@ void ProcessManager::TermKillDelay(long msec)
 }
 
 
+int ProcessManager::GetTimeUsage(int who,ProcTimeUsage *dest,int normalize=1)
+{
+	if(!dest)  return(0);
+	
+	dest->starttime=starttime;
+	if(who<0)  return(0);
+	
+	struct rusage rus;
+	dest->uptime.SetCurr();
+	int rv=getrusage(who ? RUSAGE_CHILDREN : RUSAGE_SELF,&rus);
+	
+	dest->uptime-=starttime;
+	
+	dest->utime.SetTimeval(&rus.ru_utime);
+	dest->stime.SetTimeval(&rus.ru_stime);
+	if(normalize)
+	{
+		if(who)
+		{
+			dest->utime-=chld_utime0;
+			dest->stime-=chld_stime0;
+		} else {
+			dest->utime-=self_utime0;
+			dest->stime-=self_stime0;
+		}
+	}
+	
+	return(rv);
+}
+
+
 ProcessManager::Node *ProcessManager::_FindNode(pid_t pid)
 {
 	for(Node *i=procs.first(); i; i=i->next)
@@ -1187,9 +1218,12 @@ int ProcessManager::noop(int x)
 
 
 ProcessManager::ProcessManager(char *const _envp[],int *failflag=NULL) : 
-	FDBase(),
-	procs(),
-	specialpb()
+	FDBase(failflag),
+	procs(failflag),
+	specialpb(failflag),
+	starttime(),
+	self_utime0(HTime::Null),self_stime0(HTime::Null),
+	chld_utime0(HTime::Null),chld_stime0(HTime::Null)
 {
 	int failed=0;
 	
@@ -1219,6 +1253,25 @@ ProcessManager::ProcessManager(char *const _envp[],int *failflag=NULL) :
 	{  fprintf(stderr,"%s: more than one ProcessManager.\n",prg_name);  exit(1);  }
 	#endif
 	
+	// Set starttime: 
+	starttime.SetCurr();
+	// rusage values at startup: do it quickly...
+	struct rusage rus_self,rus_chld;
+	int rv_self=getrusage(RUSAGE_SELF,&rus_self);
+	int rv_chld=getrusage(RUSAGE_CHILDREN,&rus_chld);
+	
+	if(!rv_self)
+	{
+		self_utime0.SetTimeval(&rus_self.ru_utime);
+		self_stime0.SetTimeval(&rus_self.ru_stime);
+	}
+	if(!rv_chld)
+	{
+		chld_utime0.SetTimeval(&rus_chld.ru_utime);
+		chld_stime0.SetTimeval(&rus_chld.ru_stime);
+	}
+	
+	// Set global manager: 
 	manager=this;
 }
 

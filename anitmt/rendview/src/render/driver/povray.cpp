@@ -54,7 +54,7 @@ int POVRayDriver::ProcessError(ProcessErrorInfo *pei)
 			break;
 		case PEI_StartSuccess:
 			if(!settings()->verbose)  break;
-			Verbose("POV: Forked to launch POVRay...\n");
+			Verbose("POV: Forked to launch POVRay [frame %s]...\n",_frame_no_str);
 			break;
 		case PEI_ExecSuccess:
 			if(!settings()->verbose)  break;

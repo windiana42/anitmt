@@ -93,7 +93,13 @@ static void _fd_sig_handler(int, siginfo_t *info, void *)
 }
 
 static int _fd_signals[]=
-{  SIGHUP, SIGINT, SIGUSR1, SIGUSR2, SIGPIPE, SIGTERM, SIGCHLD, SIGWINCH, -10000 };
+{
+	SIGHUP, SIGINT, SIGTERM, 
+	SIGUSR1, SIGUSR2, 
+	SIGPIPE, SIGCHLD, 
+	SIGWINCH, 
+	SIGTSTP, SIGCONT, // terminal stop (^Z); cont with SIGCONT
+	-10000 };
 
 // THERE MAY BE ONLY ONE FDManager. 
 

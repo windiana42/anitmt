@@ -71,6 +71,19 @@ static int _CheckIfRedo(RefString *in,RefString *out)
 }
 
 
+static void _DeleteFile(RefString path,int may_not_exist)
+{
+	if(!path.str())  return;
+	if(!unlink(path.str()))
+	{
+		Verbose("Deleted output file of failed task: \"%s\"\n",path.str());
+		return;
+	}
+	if(errno==ENOENT && may_not_exist)  return;
+	Warning("Failed to unlink \"%s\": %s\n",path.str(),strerror(errno));
+}
+
+
 // Return value: 
 //  0 -> okay, render this frame. 
 //  1 -> no more tasks
@@ -196,6 +209,15 @@ void TaskSource_Local::_ProcessDoneTask(TSNotifyInfo *ni)
 {
 	fprintf(stderr,"***DoneTask(%s)***\n",
 		done_task->rt->infile->HDPath().str());
+	
+	// See if successful: 
+	if(done_task->rt && done_task->rtes.status!=TTR_Unset && 
+	   done_task->rtes.status!=TTR_Success )
+	{
+		// Render task was not successful. Delete dest file if there: 
+		if(done_task->rt->outfile)
+		{  _DeleteFile(done_task->rt->outfile->HDPath(),1);  }
+	}
 	
 	// Deleting done_task is okay for DoneTask(). 
 	delete done_task;

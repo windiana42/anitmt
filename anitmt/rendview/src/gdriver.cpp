@@ -215,6 +215,9 @@ int TaskDriver::StartProcess(
 		// Error reported on driver layer (lowest layer): 
 		_SendProcessError(PEI_StartFailed,NULL,save_errno);
 		
+		// This is important for TaskManager::IAmDone: 
+		pinfo.ctsk=NULL;
+		
 		// Tell manager: 
 		_StateChanged();
 		

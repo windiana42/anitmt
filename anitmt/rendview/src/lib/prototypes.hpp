@@ -18,6 +18,8 @@
 #ifndef _RNDV_LIB_PROTOTYPES_HPP_
 #define _RNDV_LIB_PROTOTYPES_HPP_ 1
 
+#include <hlib/prototypes.h>
+
 void Error(const char *fmt,...);
 void Warning(const char *fmt,...);
 void Verbose(const char *fmt,...);
@@ -25,5 +27,9 @@ void VerboseSpecial(const char *fmt,...);
 
 // Returns number of CPUs; assumes one CPU is detection fails. 
 int GetNumberOfCPUs();
+
+// Returns the system load multiplied with 100: 
+// Returns -1 on systems where that is not supported. 
+int GetLoadValue();
 
 #endif  /* _RNDV_LIB_PROTOTYPES_HPP_ */
