@@ -159,5 +159,275 @@ namespace values
   //*******
   // Matrix
   //*******
-  
+	
+	Matrix::Matrix(enum MatRotX,double angle) : 
+		Valtype(Valtype::matrix),x(0)
+	{
+		double sina=sin(angle);
+		double cosa=cos(angle);
+		x(1,1, cosa);  x(2,1,-sina);
+		x(1,2, sina);  x(2,2, cosa);
+	}
+	
+	Matrix::Matrix(enum MatRotY,double angle) : 
+		Valtype(Valtype::matrix),x(0)
+	{
+		double sina=sin(angle);
+		double cosa=cos(angle);
+		x(0,0, cosa);  x(2,0, sina);
+		x(0,2,-sina);  x(2,2, cosa);
+	}
+	
+	Matrix::Matrix(enum MatRotZ,double angle) : 
+		Valtype(Valtype::matrix),x(0)
+	{
+		double sina=sin(angle);
+		double cosa=cos(angle);
+		x(0,0, cosa);  x(1,0,-sina);
+		x(0,1, sina);  x(1,1, cosa);
+	}
+	
+	Matrix::Matrix(enum MatScale,double fact,int idx) : 
+		Valtype(Valtype::matrix),x(0)
+	{
+		x(idx,idx,fact);
+	}
+	
+	Matrix::Matrix(enum MatScale,const Vector &v) : 
+		Valtype(Valtype::matrix),x(0)
+	{
+		x(0,0,v[0]);
+		x(1,1,v[1]);
+		x(2,2,v[2]);
+	}
+	
+	// rotates a specified angle around v 
+	Matrix Mrotate_around(const Vector &v,double angle)
+	{
+		Matrix rv;
+		
+		// rotate v to z
+		rv*=Mrotate_vect_vect(v,Vector(0.0,0.0,1.0));
+		
+		// z-rotation (around v)
+		rv*=MrotateZ(angle);
+		
+		// rotate z back to v
+		rv*=Mrotate_vect_vect(Vector(0.0,0.0,1.0),v);
+		
+		return(rv);
+	}
+	
+	// rotates a vector to another
+	Matrix Mrotate_vect_vect(const Vector &from,const Vector &to)
+	{
+		Matrix rv;
+		
+		Vector vf=from,vt=to;
+		double angle;
+		
+		// ******** rotation from v1 to <1,0,0> (save to matrix)
+		// z-rotation 
+		angle = -atan2(vf[1],vf[0]);
+		vf.rotateZ(angle);
+		rv*=MrotateZ(angle);
+		
+		// y-rotation 
+		angle = atan2(vf[2],vf[0]);
+		//vf.rotateY(angle);
+		rv*=MrotateY(angle);
+		
+		// ******** rotation from v2 to <1,0,0>
+		// z-rotation 
+		double z_angle = -atan2(vt[1],vt[0]);
+		vt.rotateZ(z_angle);
+		
+		// y-rotation 
+		double y_angle = atan2(vt[2],vt[0]);
+		//vt.rotateY(y_angle);
+		
+		// ******** save rotation from <1,0,0> to vt
+		rv*=MrotateY(-y_angle);  // y-rotation
+		rv*=MrotateZ(-z_angle);  // z-rotation 
+		
+		return(rv);
+	}
+	
+	// rotates a vector to another by using a sperical rotation with the
+	// horizontal plane defined by the normal vector "up"
+	Matrix Mrotate_vect_vect_up(const Vector &from,const Vector &to,
+		const Vector &up)
+	{
+		Matrix rv;
+		
+		// ******** rotation of from-vector to <1,0,0> 
+		
+		// rotate up to z and from to the x-z plain
+		Matrix up_from_2_z_x = Mrotate_pair_pair(up,from,
+			Vector(0.0,0.0,1.0),Vector(1.0,0.0,0.0) );
+		
+		// rotate to map the up-rotation to a z-rotation
+		rv*=up_from_2_z_x;
+		
+		Vector v1 = up_from_2_z_x * from;
+		// y-rotation 
+		double angle = atan2(v1[2],v1[0]);
+		// rotation is made by other y-rotation
+		
+		Vector v2 = up_from_2_z_x * to;
+		// ******** rotation from v2 to <1,0,0> by a 
+		//          rotation around z (up) and y 
+		
+		// z-rotation (up is z now)
+		double z_angle = -atan2(v2[1],v2[0]);
+		v2.rotateZ(z_angle);
+		
+		// y-rotation 
+		double y_angle = atan2(v2[2],v2[0]);
+		v2.rotateY(y_angle);
+		
+		// additional rotation around y-axis
+		angle -= y_angle;
+		rv*=MrotateY(angle);
+		
+		// rotate around z-axis
+		angle = -z_angle;
+		rv*=MrotateZ(angle);
+		
+		// rotate back
+		rv*=Mrotate_pair_pair(Vector(0.0,0.0,1.0),Vector(1.0,0.0,0.0),
+			up,from);
+		
+		return(rv);
+	}
+	
+	// rotates a vector pair to another
+	// the first vectors of each pair will mach exactly afterwards but the second
+	// may differ in the angle to the first one. They will be in the same plane
+	// then. 
+	Matrix Mrotate_pair_pair(
+		const Vector &vect1f,const Vector &vect1u,
+		const Vector &vect2f,const Vector &vect2u)
+	{
+		Matrix rv;
+		Vector x(vect1f),y(vect1u);
+		double angle;
+		
+		// ****** get rotation from <1,0,0> and <0,1,0> to vector pair 1
+		
+		// get the vectors
+		//x=vect1f; (done above)
+		//y=vect1u;
+		// rotate x to <1,0,0> and y to <0,1,0> now
+		
+		// get z-rotation
+		double z_angle1 = -atan2(x[1],x[0]);
+		x.rotateZ(z_angle1);
+		y.rotateZ(z_angle1);
+		
+		// get y-rotation
+		double y_angle1 = atan2(x[2],x[0]);
+		//x.rotateY(y_angle1);
+		y.rotateY(y_angle1);
+		
+		// get x-rotation
+		double x_angle1 = -atan2(y[2],y[1]);
+		//x.rotateX(x_angle1);
+		//y.rotateX(x_angle1);
+		
+		//******
+		// get rotation from <1,0,0> and <0,1,0> to vector pair 2
+		
+		// get the vectors
+		x=vect2f; 
+		y=vect2u;
+		// rotate x to <1,0,0> and y to <0,1,0> now
+		
+		// get z-rotation
+		double z_angle2 = -atan2(x[1],x[0]);
+		x.rotateZ(z_angle2);
+		y.rotateZ(z_angle2);
+		
+		// get y-rotation
+		double y_angle2 = atan2(x[2],x[0]);
+		//x.rotateY(y_angle2);
+		y.rotateY(y_angle2);
+		
+		// get x-rotation
+		double x_angle2 = -atan2(y[2],y[1]);
+		//x.rotateX(x_angle2);
+		//y.rotateX(x_angle2);
+		
+		// ****** save the rotation from pair 1 to origin 
+		
+		// rotate around z-axis
+		angle=z_angle1;
+		rv*=MrotateZ(angle);
+		
+		// rotate around y-axis
+		angle=y_angle1;
+		rv*=MrotateY(angle);
+		
+		// rotate around x-axis
+		angle=x_angle1;
+		rv*=MrotateX(angle);
+		
+		// ****** save the rotation from origin to pair2 
+		
+		// rotate around x-axis
+		angle=-x_angle2;
+		rv*=MrotateX(angle);
+		
+		// rotate around y-axis
+		angle=-y_angle2;
+		rv*=MrotateY(angle);
+		
+		// rotate around z-axis
+		angle=-z_angle2;
+		rv*=MrotateZ(angle);
+		
+		return(rv);
+	}
+	
+	// spherical rotation with the horizontal plane defined through
+	// the normal vector up and the front vector 
+	// the x-coordinate of angles is used for the rotation around front
+	// the y-coordinate of angles is used for the rotation around up
+	// and the z-coordiante specifies the angle to go up from the plane
+	Matrix Mrotate_spherical_pair(
+		const Vector &front,const Vector &up,const Vector &angles)
+	{
+		// first rotate around front 
+		Matrix rv(Mrotate_around(front,angles[0]));
+		
+		Vector u(rv*up);       // get the new up vector
+		
+		// then around up
+		Matrix rv2(Mrotate_around(up,angles[1]));
+		rv*=rv2;
+
+		Vector f(rv2*front);   // get the new front vector
+		
+		// and last around u x f
+		rv*=Mrotate_around(f.cross(u),angles[2]);
+		
+		return(rv);
+	}
+	
+	// get the rotation from v1 to v2 around axis 
+	double get_rotation_around(
+		const Vector &v1,const Vector &v2,const Vector &axis)
+	{
+		// rotate both vectors so that axis maches z and v1 is 
+		// in the x-z-plain
+		Matrix rot_easy=Mrotate_pair_pair(axis,v1,
+			Vector(0.0,0.0,1.0),Vector(1.0,0.0,0.0));
+		Vector easy_v2=rot_easy*v2;
+		
+		// get rotation from easy_v2 to x-z-plain around z
+		double z_angle = atan2(easy_v2[1],easy_v2[0]);
+		
+		return(z_angle);
+	}
+	
 }

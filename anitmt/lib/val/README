@@ -280,3 +280,23 @@ Functions:
         identity matrix.)
       * Inversion is done using the Gauss-Jordan algorithm (elegant and 
         exact). 
+  > Matrix Construction: 
+      * You may construct matrices for scaling using MscaleX(), MscaleY(), 
+        MscaleZ(). Each of these functions takes a double argument being 
+        the scale factor. 
+      * You may construct matrices for rotation around an axis using 
+        MrotateX(), MrotateY(), MrotateZ(). The double argument is the 
+        rotation ange (in radians, of course). 
+      * To rotate around the x, the y and the z axis in this order, you 
+        may use Mrotate(Vector v). The elements of the vector specify the 
+        rotation angles. 
+      * Mrotate_around(Vector,angle) constructs a matrix for a rotation 
+        around the specified vector. angle is the rotation angle. 
+      * Mrotate_vect_vect(Vector from,to) rotates the first vector to 
+        the second and returns the rotation matrix which can do that. 
+      * Mrotate_vect_vect_up(Vector from,to,up) rotates the first vector 
+        to the second using a spherical rotation with (along?) the horizontal 
+        plane defined by the normal vector up (third arg). 
+      * Mrotate_pair_pair() ... see val.hpp ... or ask Matrin
+      * Mrotate_spherical_pair() ... see Mrotate_pair_pair() :)
+
