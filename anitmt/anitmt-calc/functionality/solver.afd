@@ -1,0 +1,41 @@
+
+include header "val/val.hpp";
+
+operators
+{
+  one_operand_operator normalize
+  {
+    calc_result( vect ) 
+    {
+      return normalize(vect);
+    }
+    versions
+    {
+      scalar normalize( vector );
+    }
+  }
+  two_operands_operator divide
+  {
+    calc_result( op1, op2 )
+    {
+      return op1 / op2;
+    }
+    is_operand1_enough(op1)
+    {
+      return op1 == 0;
+    }
+    are_operands_ok( op1, op2 )
+    {
+      return (op1 == 0) == (op2 == 0);	// both zero or both not zero
+    }
+    are_operands_enough( op1, op2 )
+    {
+      return op2 != 0;
+    }
+    versions
+    {
+      scalar operator/( scalar, scalar );
+      vector operator/( vector, scalar );
+    }
+  }
+}
