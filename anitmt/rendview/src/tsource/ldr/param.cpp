@@ -238,6 +238,33 @@ int TaskSourceFactory_LDR::CheckParams()
 		}
 	}
 	
+	// NOTE: Additional files which are to be deleted "when frame done" 
+	//       are only deleted if they are no longer used by any task we 
+	//       are doing and are goind to do concerning the current 
+	//       task queue. 
+	//  (More exactly: they are destroyed when the InternalTaskFile record 
+	//   gets destroyed and that is the case when there are no more refs 
+	//   to the file in question.)
+	
+	// Change default: If we do not transfer the file, we do 
+	// not delete it. 
+	if(!transfer.render_src)
+	{  rin_delspec=TaskFile::DontDel;  }
+	if(!transfer.render_dest)
+	{  rout_delspec=TaskFile::DontDel;  fin_delspec=TaskFile::DontDel;  }
+	if(!transfer.filter_dest)
+	{  fout_delspec=TaskFile::DontDel;  }
+	if(!transfer.additional)
+	{  radd_delspec=TaskFile::DontDel;  fadd_delspec=TaskFile::DontDel;  }
+	
+	// Delete specs: MUST BE PARSED AFTER TRANSFER SPEC. 
+	failed+=_ParseDeleteSpec(&rin_delstr,"r-delin",&rin_delspec);
+	failed+=_ParseDeleteSpec(&rout_delstr,"r-delout",&rout_delspec);
+	failed+=_ParseDeleteSpec(&radd_delstr,"r-deladd",&radd_delspec);
+	failed+=_ParseDeleteSpec(&fin_delstr,"f-delin",&fin_delspec);
+	failed+=_ParseDeleteSpec(&fout_delstr,"f-delout",&fout_delspec);
+	failed+=_ParseDeleteSpec(&fadd_delstr,"f-deladd",&fadd_delspec);
+	
 	if(server_net_str.str() && *server_net_str.str())
 	{
 		// Parse in server net spec: 
@@ -344,22 +371,6 @@ int TaskSourceFactory_LDR::CheckParams()
 		}
 	}
 	server_net_str.deref();
-	
-	// Delete specs: 
-	failed+=_ParseDeleteSpec(&rin_delstr,"r-delin",&rin_delspec);
-	failed+=_ParseDeleteSpec(&rout_delstr,"r-delout",&rout_delspec);
-	failed+=_ParseDeleteSpec(&radd_delstr,"r-deladd",&radd_delspec);
-	failed+=_ParseDeleteSpec(&fin_delstr,"f-delin",&fin_delspec);
-	failed+=_ParseDeleteSpec(&fout_delstr,"f-delout",&fout_delspec);
-	failed+=_ParseDeleteSpec(&fadd_delstr,"f-deladd",&fadd_delspec);
-	
-	// NOTE: Additional files which are to be deleted "when frame done" 
-	//       are only deleted if they are no longer used by any task we 
-	//       are doing and are goind to do concerning the current 
-	//       task queue. 
-	//  (More exactly: they are destroyed when the InternalTaskFile record 
-	//   gets destroyed and that is the case when there are no more refs 
-	//   to the file in question.)
 	
 	return(failed ? 1 : 0);
 }
