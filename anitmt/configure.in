@@ -9,18 +9,19 @@ AC_PROG_YACC
 AM_PROG_LEX
 if test "$LEX" != "flex"; then echo "Warning: You need flex for rebuild of .ll-sources!"; fi
 AC_OUTPUT(
-	Makefile \
-	anitmt-calc/Makefile \
-	lib/Makefile \
-	lib/val/Makefile \
-	lib/utl/Makefile \
-	lib/par/Makefile \
-	lib/include/Makefile \
-	output/Makefile 
-	output/raw/Makefile 
-	output/pov/Makefile
-	test/Makefile \
-	anitmt-calc/parser/Makefile
-        anitmt-view/Makefile
-	anitmt-view/parser/Makefile
-	mkavi/Makefile)
+	Makefile 
+	lib/Makefile 
+	lib/val/Makefile 
+	lib/utl/Makefile 
+	lib/par/Makefile 
+	lib/include/Makefile 
+	anitmt-calc/Makefile 
+	anitmt-calc/parser/Makefile 
+	anitmt-calc/output/Makefile 
+	anitmt-calc/output/lib/Makefile 
+	anitmt-calc/output/raw/Makefile 
+	anitmt-calc/output/pov/Makefile 
+	anitmt-view/Makefile 
+	anitmt-view/parser/Makefile 
+	mkavi/Makefile 
+	test/Makefile )
