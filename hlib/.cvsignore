@@ -9,3 +9,5 @@ depcomp
 configure
 aclocal.m4
 hlib-config.h.in
+config.guess
+config.sub

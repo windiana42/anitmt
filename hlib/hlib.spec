@@ -5,20 +5,21 @@ Name: hlib
 Version: 1.0.0
 Release: %rel
 
-Summary: hlib is a general purpose Library of Wolfgang Wieser 
+Summary: HLib is a general purpose library 
 Copyright: GPL
 Group: System/Libraries/
 Vendor: Martin Trautmann <martintrautmann@gmx.de>
 Packager: Martin Trautmann <martintrautmann@gmx.de>
-Url: http://www.cip.physik.uni-muenchen.de/~wwieser/ 
+Author: Wolfgang Wieser <wwieser@gmx.de>
+Url: http://www.cip.physik.uni-muenchen.de/~wwieser/lib/hlib/ 
 
-Source: ftp://download.sourceforge.net/pub/sourceforge/anitmt/%name-%version.tar.gz
+Source: http://www.cip.physik.uni-muenchen.de/~wwieser/lib/hlib/%name-%version.tar.gz
 
 Prefix: %_prefix
 BuildRoot: %_tmppath/%name-%version-root
 
 %description
-HLIB is a general-purpose library for POSIX and POSIX-like operating systems
+HLib is a general-purpose library for POSIX and POSIX-like operating systems
 providing convenient classes which help you to deal in a sophisticated (as
 I hope...) way with following standard issues:
 
@@ -30,13 +31,13 @@ I hope...) way with following standard issues:
   - and staying informed about the launched process (termination and
      termination reason, runtime)
 
-For this purpose, HLIB implements a nice select(2) model (well, actually
-it is using poll(2)). HLIB provides base classes for the mentioned tasks
+For this purpose, HLib implements a nice select(2) model (well, actually
+it is using poll(2)). HLib provides base classes for the mentioned tasks
 and other useful functions (e.g. for making FDs non-blocking) and the
 following addons:
 
   - command line parameter handling
-  - strong cryptography and hashing
+  - strong cryptography and hashing (currently not shipped with this version)
 
 %prep
 %setup -q
