@@ -139,6 +139,25 @@ class ProcessBase :
 		// See ProcessManager for details. 
 		int SpecialRegister(int spec_flags)
 			{  return(procmanager()->SpecialRegister(this,spec_flags));  }
+		
+		// ** These can be used to get string representations of some 
+		// ** of the numeric codes: 
+		// Get an error string (including errno strerror() where apropriate) 
+		// of return code of StartProcess(). The message is formatted into 
+		// buf of size len (and truncated if needed). Writes success message 
+		// and PID if no error occured. 
+		// Return value: 1 -> string was truncated; 0 -> OK
+		int StartProcessErrorString(pid_t retval,char *buf,size_t len);
+		// Get a process status string; can deal with any valid ProcStatus. 
+		// In case ps->action==PSFailed, the formatted string is of the form: 
+		//   "while calling nice: permission denied"
+		// In all other cases, the formatted string is suitable for prefix 
+		//   "Process xyz " or "PID xyz " or "the client "; example: 
+		//   "exited with non-zero code 1" -or- "was killed by signal 9"
+		// Work principle and retval like StartProcessErrorString() above. 
+		int ProcessStatusString(const ProcStatus *ps,char *buf,size_t len);
+		// Get a string representation of PSExecFailed...PSUnknownError: 
+		static const char *PSDetail_SyscallString(PSDetail x);
 };
 
 #endif /* _HLIB_ProcessBase_H_ */

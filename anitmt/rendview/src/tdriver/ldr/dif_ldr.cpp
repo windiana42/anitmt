@@ -129,13 +129,12 @@ void TaskDriverInterface_LDR::ReallyStartProcessing()
 	// when the first client is connected. 
 	
 	// Start connect timer: 
-	#warning allow variable timeout
+	#warning allow variable timeout; hack the timer!!
 	UpdateTimer(tid_connedt_to,10000,0);
 	
 	Verbose("Simultaniously initiating connections to all clients:\n");
 	
 	int n_connecting=0;
-	int n_connected=0;
 	for(TaskDriverInterfaceFactory_LDR::ClientParam *i=p->cparam.first();
 		i; i=i->next)
 	{
@@ -146,6 +145,7 @@ void TaskDriverInterface_LDR::ReallyStartProcessing()
 			{  delete clientlist.popfirst();  }
 			
 			Error("Failed to set up LDR client representation.\n");
+			already_started_processing=1;
 			component_db()->taskmanager()->ReallyStartProcessing(/*error=*/1);
 			return;
 		}
@@ -153,27 +153,68 @@ void TaskDriverInterface_LDR::ReallyStartProcessing()
 		int rv=c->ConnectTo(i);
 		if(rv<0)
 		{  delete c;  c=NULL;  }
-		else if(!rv)
+		else 
 		{  ++n_connecting;  }
-		else if(rv==1)
-		{  ++n_connected;  }
-		#warning MUST CHECK rv=0 / rv=1 !!!!!!!!!!!!!!!!!!!!!!!!!!!
 	}
 	
-	if(!n_connecting && !n_connected)
+	if(!n_connecting)
 	{
 		while(!clientlist.is_empty())
 		{  delete clientlist.popfirst();  }
 		
 		Error("No usable clients left in list. Giving up.\n");
+		already_started_processing=1;
 		component_db()->taskmanager()->ReallyStartProcessing(/*error=*/1);
 		return;
 	}
 	
-	Verbose("Connected to %d clients; waiting for %d LDR conns to establish...\n",
-		n_connected,n_connecting);
+	Verbose("Waiting for %d LDR connections to establish.\n",n_connecting);
 	
-Warning("Please don't wait; this is not yet hacked. Press ^C and ignore the assertion.\n");
+	Error("     hack on...\n");
+}
+
+
+int TaskDriverInterface_LDR::fdnotify(FDInfo *fdi)
+{
+	assert(fdi->dptr);
+	LDRClient *client=(LDRClient*)(fdi->dptr);
+	assert(client->pollid==fdi->pollid);  // otherwise data corrupt
+	
+	client->fdnotify(fdi);
+	
+	return(0);
+}
+
+
+FDBase::PollID TaskDriverInterface_LDR::PollFD_Init(LDRClient *client,int fd)
+{
+	PollID pollid;
+	if(FDBase::PollFD(fd,POLLIN,client,&pollid)<0)
+	{  pollid=NULL;  }
+	return(pollid);
+}
+
+
+void TaskDriverInterface_LDR::FailedToConnect(LDRClient *client)
+{
+	delete client;
+	
+	if(clientlist.is_empty())
+	{
+		Error("No usable clients left in list. Giving up.\n");
+		if(!already_started_processing)
+		{
+			already_started_processing=1;
+			component_db()->taskmanager()->ReallyStartProcessing(/*error=*/1);
+			return;
+		}
+		else
+		{
+			Error("what to do?!");
+			#warning FIXME. 
+			assert(0);
+		}
+	}
 }
 
 
@@ -195,13 +236,19 @@ int TaskDriverInterface_LDR::RegisterLDRClient(LDRClient *client)
 void TaskDriverInterface_LDR::UnregisterLDRClient(LDRClient *client)
 {
 	if(!client)  return;
+	
 	// Check if queued: 
-	if(!clientlist.prev(client) && client!=clientlist.first())  return;
+	if(clientlist.prev(client) || client==clientlist.first())
+	{
+		// Dequeue client: 
+		clientlist.dequeue(client);
+	}
 	
-	// Dequeue client: 
-	clientlist.dequeue(client);
+	// Un-Set client's ClientParam: 
+	client->cp=NULL;
 	
-	component_db()->taskmanager()->CheckStartNewJobs();
+	if(already_started_processing)
+	{  component_db()->taskmanager()->CheckStartNewJobs();  }
 }
 
 
@@ -220,6 +267,8 @@ TaskDriverInterface_LDR::TaskDriverInterface_LDR(
 	
 	todo_thresh_low=p->thresh_param_low;
 	todo_thresh_high=p->thresh_param_high;
+	
+	already_started_processing=0;
 	
 	int failed=0;
 	

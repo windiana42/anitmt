@@ -127,28 +127,37 @@ int TaskDriverInterfaceFactory_LDR::FinalInit()
 	for(ClientParam *cp=cparam.first(); cp; cp=cp->next)
 	{
 		int n_same=0;
-		int n_same_adr=0;
 		for(ClientParam *_i=cp->next; _i; )
 		{
 			ClientParam *i=_i;
 			_i=_i->next;
 			
-			if(!cp->addr.same_address(i->addr))  continue;
-			if(cp->addr.same_port(i->addr))
+			if(cp->addr==i->addr)
 			{
 				++n_same;
 				delete cparam.dequeue(i);
-				continue;
 			}
-			++n_same_adr;
 		}
 		if(n_same)
 		{  Warning("Client %s specified %d times. Using only once.\n",
 			cp->addr.GetAddress().str(),n_same+1);  }
+	}
+	#warning could warn if same ports are used. 
+	/*for(ClientParam *cp=cparam.first(); cp; cp=cp->next)
+	{
+		int n_same_adr=0;
+		for(ClientParam *i=cp->next; i; i=i->next)
+		{
+			if(!cp->addr.same_address(i->addr))  continue;
+			assert(!cp->addr.same_port(i->addr));  // otherwise we should have deleted it some lines above
+			++n_same_adr;
+		}
+		// NOTE!!! That is tricky. FIXME: I report a client 17 times 
+		//         which was spefified 18 times...
 		if(n_same_adr)
 		{  Warning("Client %s specified %d times with different ports.\n",
 			cp->addr.GetAddress(0).str(),n_same_adr+1);  }
-	}
+	}*/
 	
 	if(cparam.is_empty() && !failed)
 	{  Error("No LDR clients specified. (Cannot work.)\n");  ++failed;  }

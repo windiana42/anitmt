@@ -386,6 +386,14 @@ void FDManager::DestructionDone(FDBase *,int nfds,int npollfds)
 		fd_nnodes-=nfds;
 		pollnodes-=npollfds;
 		++fdlist_change_serial;
+		#if TESTING
+		if(pollnodes<0)
+		{  fprintf(stderr,"FD:%d: OOPS: pollnodes=%d<0\n",__LINE__,pollnodes);
+			pollnodes=0;  }
+		if(fd_nnodes<pollnodes)
+		{  fprintf(stderr,"FD:%d: OOPS: fd_nnodes=%d < %d=pollnodes\n",__LINE__,
+			fd_nnodes,pollnodes);  }
+		#endif
 	}
 }
 
@@ -787,7 +795,7 @@ inline void FDManager::_DeliverFDNotify(const HTime *fdtime)
 				// on FDBases which will get deleted. 
 				fdtime_cp=*fdtime;
 				FDInfo fdi;
-				fdi.pollid=(PollID)p;
+				fdi.pollid=(PollID)i;
 				fdi.fd=p->fd;
 				fdi.events=p->events;
 				fdi.revents=p->revents;
@@ -1758,6 +1766,11 @@ int FDManager::_PollFD(FDBase * /*fdb*/,FDManager::FDNode *j,
 	if(j->events)  {  --pollnodes;  }
 	j->events=events;
 	if(j->events)  {  ++pollnodes;  }
+	#if TESTING
+	if(pollnodes<0)
+	{  fprintf(stderr,"FD:%d: OOPS: pollnodes=%d<0\n",__LINE__,pollnodes);
+		pollnodes=0;  }
+	#endif
 	// If fdlist_change_serial>0, then the fd array has to be 
 	// updated aynway, so we just quit here and do the rest 
 	// later. 
@@ -1855,6 +1868,16 @@ inline int FDManager::_UnpollFD(FDBase *fdb,FDManager::FDNode *fdn)
 {
 	if(fdn->events)
 	{  --pollnodes;  }
+	#if TESTING
+	// NOTE: if you get that, I bet it's because UnpollFD() was called more 
+	// than once with the same pollid. You can detect if that is the case 
+	// be uncommenting the following line. If the oops disappears, look 
+	// for the illegal calls to UnpollFD. 
+	/*fdn->events=0;*/  // can be enabled for bug hunting...
+	if(pollnodes<0)
+	{  fprintf(stderr,"FD:%d: OOPS: pollnodes=%d<0\n",__LINE__,pollnodes);
+		pollnodes=0;  }
+	#endif
 	// In case there is no array elem associated with that fd 
 	// node, the array keeps in sync. 
 	// Hmmm... no because that gives trouble if PollFD() gets 

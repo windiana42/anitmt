@@ -307,25 +307,6 @@ void TaskDriver::_FillInStatistics(const ProcStatus *ps)
 }
 
 
-// Used by PSFailedErrorString(): 
-const char *TaskDriver::_ExecFailedError_SyscallName(PSDetail x)
-{
-	switch(x)
-	{
-		case PSExecFailed:  return("execve");
-		case PSDupFailed:  return("dup2");
-		case PSChrootFailed:  return("chroot");
-		case PSChdirFailed:  return("chdir");
-		case PSNiceFailed:  return("nice");
-		case PSSetSidFailed:  return("setsid");
-		case PSSetGidFailed:  return("setgid");
-		case PSSetUidFailed:  return("setuid");
-		case PSFunctionFailed:  assert(0);  break;
-		case PSUnknownError:  return("[unknown]");
-	}
-	return("???");
-}
-
 // Print error when ProcessBase::PSFailed occurs. 
 const char *TaskDriver::PSFailedErrorString(ProcessErrorInfo *pei)
 {
@@ -334,51 +315,19 @@ const char *TaskDriver::PSFailedErrorString(ProcessErrorInfo *pei)
 	
 	static char tmp[128];
 	snprintf(tmp,128,"while calling %s: %s (code %d)\n",
-		_ExecFailedError_SyscallName(ps->detail),
+		ProcessBase::PSDetail_SyscallString(ps->detail),
 		strerror(ps->estatus),ps->estatus);
 	return(tmp);
 }
 
 
 // Can be used to get error code string returned by StartProcess. 
-// Returns error string (static data); if errno-string (or special 
-// code string) should also be written, the corresponding strerror() 
-// value is in error_str (otherwise NULL). 
-const char *TaskDriver::StartProcessErrorString(
-	ProcessErrorInfo *pei,const char **error_str)
+// Returns error string (static data). 
+const char *TaskDriver::StartProcessErrorString(ProcessErrorInfo *pei)
 {
-	static char numtmp[24];
-	switch(pei->pinfo->pid)
-	{
-		case SPS_LMallocFailed:
-		case SPS_PathAllocFailed:
-		case SPS_ArgAllocFailed:
-		case SPS_EvnAllocFailed:
-			snprintf(numtmp,24,"(code %d)",pei->pinfo->pid);
-			if(error_str) *error_str=numtmp;
-			return("allocation failure");
-		case SPS_AccessFailed:
-			return("binary to execute not found");
-		case SPS_ForkFailed:
-			if(error_str) *error_str=strerror(pei->errno_val);
-			return("while calling fork: ");
-		case SPS_PipeFailed:
-		case SPS_FcntlPipeFailed:
-			if(error_str) *error_str=strerror(pei->errno_val);
-			return("syscall (pipe/fcnt) failed: ");
-		case SPS_IllegalFlags:
-		case SPS_ProcessLimitExceeded:
-		case SPS_SearchPathError:
-		case SPS_ArgListError:
-			snprintf(numtmp,24,"(code %d)",pei->pinfo->pid);
-			if(error_str) *error_str=numtmp;
-			return("internal error ");
-		default:  break;  // see below. 
-	}
-	
-	snprintf(numtmp,24,"(code %d)",pei->pinfo->pid);
-	if(error_str) *error_str=numtmp;
-	return("unknown internal error ");
+	static char tmp[80];
+	ProcessBase::StartProcessErrorString(pei->pinfo->pid,tmp,80);
+	return(tmp);
 }
 
 

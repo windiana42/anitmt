@@ -42,8 +42,6 @@ int POVRayDriver::ProcessError(ProcessErrorInfo *pei)
 	//const RenderTaskParams *rtp=(const RenderTaskParams*)pei->pinfo->tp;
 	const RenderTask *rt=(const RenderTask *)pei->pinfo->tsb;
 	
-	const char *tmp=NULL;
-	const char *errno_str=NULL;
 	switch(pei->reason)
 	{
 		// *** verbose messages: ***
@@ -77,8 +75,7 @@ int POVRayDriver::ProcessError(ProcessErrorInfo *pei)
 		// *** error messages: ***
 		case PEI_StartFailed:
 			Error("POV: Failed to start POVRay [frame %s].\n",_frame_no_str);
-			tmp=StartProcessErrorString(pei,&errno_str);
-			Error("POV:   Error: %s%s\n",tmp,errno_str ? errno_str : "");
+			Error("POV:   Error: %s\n",StartProcessErrorString(pei));
 			Error("POV:   Binary: %s\n",rt->rdesc->binpath.str());
 			Error("POV:   Working dir: %s\n",
 				pei->pinfo->tsb->wdir.str() ? pei->pinfo->tsb->wdir.str() : "[cwd]");

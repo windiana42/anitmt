@@ -347,8 +347,8 @@ class FDBase
 		//    1 -> nothing to un-poll: no such fd for *this. 
 		int UnpollFD(int fd)
 			{  return(fdmanager()->UnpollFD(this,fd));  }
-		int UnpollFD(PollID pollid)
-			{  return(fdmanager()->UnpollFD(this,pollid));  }
+		int UnpollFD(PollID &pollid)
+			{  int rv=fdmanager()->UnpollFD(this,pollid);  pollid=NULL;  return(rv);  }
 		// Return value: that of close(fd). 
 		int CloseFD(int fd)
 			{  return(fd<0 ? 0 : _CloseFD(fd));  }

@@ -23,8 +23,7 @@
 // (which is the right hand of TaskManager).  
 // (NOT BY ComponentDataBase). 
 class LDRClient : 
-	public LinkedListBase<LDRClient>,
-	public FDBase
+	public LinkedListBase<LDRClient>
 {
 	friend class TaskDriverInterface_LDR;
 	private:
@@ -33,8 +32,33 @@ class LDRClient :
 		// We never talk to TaskManager directly but via TaskDriverInterface_LDR. 
 		TaskDriverInterface_LDR *tdif;
 		
-		// Overriding virtuals: 
-		int timernotify(TimerInfo *ti);
+		// Allocated by TaskDriverInterface; it is responsible for it. 
+		ClientParam *cp;
+		
+		// Socket for client connection: 
+		int sock_fd;
+		FDBase::PollID pollid;
+		
+		// connected_state: 2 -> connected; 1 -> waiting for conn; 0 -> not conn.
+		int connected_state : 3;  // 0,1,2
+		
+		int : 29;  // padding
+		
+		inline void PollFD(short events)
+			{  tdif->PollFD(pollid,events);  }
+		inline void ShutdownFD()
+			{  tdif->ShutdownFD(pollid);  }
+		inline void UnpollFD()
+			{  tdif->UnpollFD(pollid);  sock_fd=-1;  }
+		
+		// Returns nice client name: 
+		RefString _ClientName();
+		
+		// Helpers of fdnotify(): 
+		int _DoFinishConnect(FDBase::FDInfo *fdi);
+		
+		// Called via TaskDriverInterface_LDR: 
+		void fdnotify(FDBase::FDInfo *fdi);
 		
 	public:  _CPP_OPERATORS_FF
 		// Driver name copied into RefString. 

@@ -439,18 +439,10 @@ const char *ProcTester::acion_str(PSAction a)
 
 const char *ProcTester::detail_str(PSDetail d)
 {
+	if(d>=PSExecFailed && d<_PSLASTFailed)
+	{  return(ProcessBase::PSDetail_SyscallString(d));  }
 	switch(d)
 	{
-		case PSExecFailed:  return("execve failed");
-		case PSDupFailed:  return("dup failed");
-		case PSChrootFailed:  return("chroot failed");
-		case PSChdirFailed:  return("chdir failed");
-		case PSNiceFailed:  return("nice failed");
-		case PSSetSidFailed:  return("setsid failed");
-		case PSSetGidFailed:  return("setgid failed");
-		case PSSetUidFailed:  return("setuid failed");
-		case PSFunctionFailed:  return("function failed");
-		case PSUnknownError:  return("unknown error");
 		case PSExited:  return("exited");
 		case PSKilled:  return("killed");
 		case PSDumped:  return("dumped");

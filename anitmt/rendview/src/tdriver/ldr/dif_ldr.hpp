@@ -47,8 +47,13 @@ class TaskDriverInterface_LDR :
 		// client connect timeout timer: 
 		TimerID tid_connedt_to;
 		
+		int already_started_processing;  // ReallyStartProcessing() called?
+		
 		void _WriteStartProcInfo(const char *msg);
 		void _WriteEndProcInfo();
+		
+		// FDBase virtuals: 
+		int fdnotify(FDInfo *fdi);
 	public:  _CPP_OPERATORS_FF
 		TaskDriverInterface_LDR(TaskDriverInterfaceFactory_LDR *f,int *failflag=NULL);
 		~TaskDriverInterface_LDR();
@@ -95,6 +100,18 @@ class TaskDriverInterface_LDR :
 		// Return value: 0 -> OK; !=0 -> failed
 		int RegisterLDRClient(LDRClient *client);
 		void UnregisterLDRClient(LDRClient *client);
+		
+		PollID PollFD_Init(LDRClient *client,int fd);
+		void PollFD(PollID pollid,short events)
+			{  FDBase::PollFD(pollid,events);  }
+		int ShutdownFD(PollID pollid)
+			{  return(FDBase::ShutdownFD(pollid));  }
+		void UnpollFD(PollID &pollid)
+			{  FDBase::UnpollFD(pollid);  }
+		
+		// Called if connect(2) or authentification failed. 
+		// The client gets removed now. 
+		void FailedToConnect(LDRClient *client);
 		
 		// Called by LDRClient when he is done and wants to get deleted: 
 		void IAmDone(LDRClient *client);

@@ -63,7 +63,7 @@ struct InternalProcessBase
 		PSExecFailed=101,  // execve() failed
 		PSDupFailed,       // dup2() failed
 		PSChrootFailed,    // chdir(); chroot(".") failed [chroot dir]
-		PSChdirFailed,     // chdor() failed [working dir]
+		PSChdirFailed,     // chdir() failed [working dir]
 		PSNiceFailed,      // nice() failed
 		PSSetSidFailed,    // setsid() failed (and failure not ignored)
 		PSSetGidFailed,    // setgid() failed
@@ -81,6 +81,11 @@ struct InternalProcessBase
 		// *** detail for PSExecuted: ***
 		PSSuccess  // success
 	};
+	
+	// NOTE: 
+	// To get a string representation of PSExecFailed...PSUnknownError, 
+	// use: ProcessBase::PSDetail_SyscallString(PSDetail x). 
+	
 	struct ProcStatus
 	{  _CPP_OPERATORS
 		PSAction action;  // see above
@@ -116,6 +121,7 @@ struct InternalProcessBase
 	};
 	
 	// Error return values of StartProcess(): 
+	// (See also ProcessBase::StartProcessErrorString().)
 	enum // StartProcessStatus
 	{
 		// VALUES MUST ALL BE NEGATIVE!

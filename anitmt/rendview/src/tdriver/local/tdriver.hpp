@@ -262,9 +262,6 @@ class TaskDriver :
 		// reason_detail: one of the JK_* - values
 		int KillProcess(int reason_detail);
 		
-		// Used by PSFailedErrorString(): 
-		const char *_ExecFailedError_SyscallName(PSDetail x);
-		
 		// Notify driver level using virtual ProcessError(): 
 		int _SendProcessError(ProcessErrorType pet,
 			const ProcStatus *ps=NULL,int errno_val=0);
@@ -304,11 +301,8 @@ class TaskDriver :
 		void procnotify(const ProcStatus *ps);
 		
 		// Can be used to get error code string returned by StartProcess. 
-		// Returns error string (static data); if errno-string (or special 
-		// code string) should also be written, the corresponding strerror() 
-		// value is in error_str (otherwise NULL). 
-		const char *StartProcessErrorString(ProcessErrorInfo *pei,
-			const char **error_str);
+		// Returns error string (static data). 
+		const char *StartProcessErrorString(ProcessErrorInfo *pei);
 		// Print error when ProcessBase::PSFailed occurs. 
 		const char *PSFailedErrorString(ProcessErrorInfo *pei);
 		
