@@ -14,7 +14,7 @@ funcgen_SOURCES=	gen_code.hpp gen_code.cpp gen_cpp.cpp gen_cpp.hpp \
 			parsinfo.hpp parsinfo.cpp parsinfo_inline.cpp \
 			funcgen.cpp stdextend.hpp stdextend.cpp 
 
-funcgen_LDADD=		../../lib/message/libmessage.a -lefence
+funcgen_LDADD=		../../lib/message/libmessage.a 
 
 #also includes old adl/libadlparser.a for libanitmt
 
