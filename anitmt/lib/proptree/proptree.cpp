@@ -25,7 +25,7 @@ namespace functionality
 
   std::string tree_info::get_unique_id()
   {
-    return to_string(++id_counter);
+    return std::to_string(++id_counter);
   }
   
   tree_info::tree_info( solve::Priority_System *sys ) 
