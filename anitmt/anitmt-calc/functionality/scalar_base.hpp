@@ -202,7 +202,6 @@ namespace functionality
     // ** constraint, solver and action establishing functions **
     //! establish general dependencies (common) for each node
     virtual void common_init();
-    virtual void _rf_scalar_vsa_first_init();
 
     // ** result functions **
     virtual std::pair<bool,value> _rf_scalar_component_value_time( time );

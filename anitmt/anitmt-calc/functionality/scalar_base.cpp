@@ -342,6 +342,8 @@ namespace functionality
     {
       equal_solver(_op_end_slope,get_last_child()->get_property( "end_slope" ));
     }
+    solve::establish_Default_Value( info->priority_system,_pl_default_first_time, _op_start_time, 0);
+    solve::establish_Default_Value( info->priority_system,_pl_default_first_state, _op_start_value, 0);
     // ** invoke first_/last_init() for each child container **
     if( !_cn_scalar_vsa.elements_empty() )
     {
@@ -372,12 +374,6 @@ namespace functionality
     m_and->finish_adding();
   }
 
-  void node_scalar::_rf_scalar_vsa_first_init()
-  {
-    solve::establish_Default_Value( info->priority_system,_pl_default_first_time, _op_start_time, 0);
-    solve::establish_Default_Value( info->priority_system,_pl_default_first_state, _op_start_value, 0);
-  }
-
   // ** result functions **
   std::pair<bool,value> node_scalar::_rf_scalar_component_value_time( time t )
   {
@@ -393,7 +389,7 @@ namespace functionality
       error() << "required child container wasn't solved";
       return no_res;
     }
-    // *** user code following... line:129 ***
+    // *** user code following... line:126 ***
                                                                          
       return(_cn_scalar_vsa._rf_scalar_vsa_value_time( t ));
     
@@ -413,7 +409,7 @@ namespace functionality
       error() << "required child container wasn't solved";
       return no_res;
     }
-    // *** user code following... line:122 ***
+    // *** user code following... line:119 ***
                                                                                         
       return(_cn_scalar_vsa._rf_scalar_vsa_acceleration_time( t ));
     
@@ -433,7 +429,7 @@ namespace functionality
       error() << "required child container wasn't solved";
       return no_res;
     }
-    // *** user code following... line:119 ***
+    // *** user code following... line:116 ***
                                                                           
       return(_cn_scalar_vsa._rf_scalar_vsa_slope_time( t ));
     
@@ -453,7 +449,7 @@ namespace functionality
       error() << "required child container wasn't solved";
       return no_res;
     }
-    // *** user code following... line:116 ***
+    // *** user code following... line:113 ***
                                                                            
       return(_cn_scalar_vsa._rf_scalar_vsa_value_time( t ));
     

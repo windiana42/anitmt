@@ -29,11 +29,13 @@ namespace solve
   //***************************************************************
 
   /*! Base class for expression tree operators, that calculate the results
-    from one operand*/
+    from one operand
+    name in afd: one_operand_operator */
   template<class T_Result, class T_Operand>
   class Basic_Operator_for_1_Operand 
     : public Operand_Listener, public message::Message_Reporter
   {
+  private:
     //*** Operand_Listener methods ***
 
     //! has to check the result of the operand with ID as pointer to operand
@@ -82,6 +84,7 @@ namespace solve
   class Basic_Dual_Solution_Operator_for_1_Operand 
     : public Operand_Listener, public message::Message_Reporter
   {
+  private:
     //*** Operand_Listener methods ***
 
     //! has to check the result of the operand with ID as pointer to operand
@@ -132,11 +135,13 @@ namespace solve
   //***************************************************************
 
   /*! Base class for expression tree operators, that calculate the result
-    from two operands*/
+    from two operands
+    name in afd: two_operand_operator */
   template<class T_Result, class T_Op1, class T_Op2>
   class Basic_Operator_for_2_Operands
     : public Operand_Listener, public message::Message_Reporter
   {
+  private:
     //*** Operand_Listener methods ***
 
     //! has to check the result of the operand with ID as pointer to operand
@@ -212,6 +217,7 @@ namespace solve
   class Basic_Multi_Operand_Operator 
     : public Operand_Listener, public message::Message_Reporter
   {
+  private:
     typedef std::set<Operand<OP>*> operands_type;
     operands_type operands;
     int num, num_solved, num_solved_in_try;
@@ -269,6 +275,7 @@ namespace solve
   //! Logical and with any number of operands
   class Multi_And_Operator : public Basic_Multi_Operand_Operator<bool,bool>
   {
+  private:
     typedef bool RES;
     typedef bool OP;
 
@@ -322,6 +329,7 @@ namespace solve
   class Not_Operator
     : public Basic_Operator_for_1_Operand<T_Result, T_Operand> 
   {
+  private:
     /*! has to calculate the result when both is_operand_ok and 
       is_operand_enough  return true */
     virtual T_Result calc_result( const T_Operand &value ); 
@@ -345,6 +353,7 @@ namespace solve
   class Negative_Operator
     : public Basic_Operator_for_1_Operand<T_Result, T_Operand> 
   {
+  private:
     /*! has to calculate the result when both is_operand_ok and 
       is_operand_enough  return true */
     virtual T_Result calc_result( const T_Operand &value ); 
@@ -365,6 +374,7 @@ namespace solve
   class Abs_Operator
     : public Basic_Operator_for_1_Operand<T_Result, T_Operand> 
   {
+  private:
     /*! has to calculate the result when both is_operand_ok and 
       is_operand_enough  return true */
     virtual T_Result calc_result( const T_Operand &value ); 
@@ -385,6 +395,7 @@ namespace solve
   class Sqrt_Operator
     : public Basic_Operator_for_1_Operand<T_Result, T_Operand> 
   {
+  private:
     /*! has to calculate the result when both is_operand_ok and 
       is_operand_enough  return true */
     virtual T_Result calc_result( const T_Operand &value ); 
@@ -407,6 +418,7 @@ namespace solve
   class Plus_Minus_Operator
     : public Basic_Dual_Solution_Operator_for_1_Operand<T_Result, T_Operand> 
   {
+  private:
     /*! has to calculate the result when both is_operand_ok and 
       is_operand_enough1 return true */
     virtual T_Result calc_result1( const T_Operand &value ); 
@@ -432,6 +444,7 @@ namespace solve
   class Add_Operator
     : public Basic_Operator_for_2_Operands<T_Result, T_Op1, T_Op2> 
   {
+  private:
     /*! has to calculate the result when both is_operand_ok and 
       is_operand_enough  return true */
     virtual T_Result calc_result( const T_Op1 &value1, const T_Op2 &value2 ); 
@@ -475,6 +488,7 @@ namespace solve
   class Sub_Operator
     : public Basic_Operator_for_2_Operands<T_Result, T_Op1, T_Op2> 
   {
+  private:
     /*! has to calculate the result when both is_operand_ok and 
       is_operand_enough  return true */
     virtual T_Result calc_result( const T_Op1 &value1, const T_Op2 &value2 ); 
@@ -512,6 +526,7 @@ namespace solve
   class Mul_Operator
     : public Basic_Operator_for_2_Operands<T_Result, T_Op1, T_Op2> 
   {
+  private:
     /*! has to calculate the result when both is_operand_ok and 
       is_operand_enough  return true */
     virtual T_Result calc_result( const T_Op1 &value1, const T_Op2 &value2 ); 
@@ -581,6 +596,7 @@ namespace solve
   class Div_Operator
     : public Basic_Operator_for_2_Operands<T_Result, T_Op1, T_Op2> 
   {
+  private:
     /*! has to calculate the result when both is_operand_ok and 
       is_operand_enough  return true */
     virtual T_Result calc_result( const T_Op1 &value1, const T_Op2 &value2 ); 
@@ -628,6 +644,7 @@ namespace solve
   class Equal_Operator
     : public Basic_Operator_for_2_Operands<T_Result, T_Op1, T_Op2> 
   {
+  private:
     /*! has to calculate the result when both is_operand_ok and 
       is_operand_enough  return true */
     virtual T_Result calc_result( const T_Op1 &value1, const T_Op2 &value2 ); 
@@ -687,6 +704,7 @@ namespace solve
   class Unequal_Operator
     : public Basic_Operator_for_2_Operands<T_Result, T_Op1, T_Op2> 
   {
+  private:
     /*! has to calculate the result when both is_operand_ok and 
       is_operand_enough  return true */
     virtual T_Result calc_result( const T_Op1 &value1, const T_Op2 &value2 ); 
@@ -746,6 +764,7 @@ namespace solve
   class Less_Operator
     : public Basic_Operator_for_2_Operands<T_Result, T_Op1, T_Op2> 
   {
+  private:
     /*! has to calculate the result when both is_operand_ok and 
       is_operand_enough  return true */
     virtual T_Result calc_result( const T_Op1 &value1, const T_Op2 &value2 ); 
@@ -789,6 +808,7 @@ namespace solve
   class Greater_Operator
     : public Basic_Operator_for_2_Operands<T_Result, T_Op1, T_Op2> 
   {
+  private:
     /*! has to calculate the result when both is_operand_ok and 
       is_operand_enough  return true */
     virtual T_Result calc_result( const T_Op1 &value1, const T_Op2 &value2 ); 
@@ -832,6 +852,7 @@ namespace solve
   class Not_Greater_Operator
     : public Basic_Operator_for_2_Operands<T_Result, T_Op1, T_Op2> 
   {
+  private:
     /*! has to calculate the result when both is_operand_ok and 
       is_operand_enough  return true */
     virtual T_Result calc_result( const T_Op1 &value1, const T_Op2 &value2 ); 
@@ -875,6 +896,7 @@ namespace solve
   class Not_Less_Operator
     : public Basic_Operator_for_2_Operands<T_Result, T_Op1, T_Op2> 
   {
+  private:
     /*! has to calculate the result when both is_operand_ok and 
       is_operand_enough  return true */
     virtual T_Result calc_result( const T_Op1 &value1, const T_Op2 &value2 ); 
