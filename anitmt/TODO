@@ -26,7 +26,6 @@ Wolfgang:
 - fixme in fdump.cpp
 - Parameter subsystem [...]
 - Message handler: automatic newline, etc.
-- funcgen parameter stuff
 - message system support for all my parts
 - message system & position objects ( & formatting / line break)
   (-fmessage-length...)
