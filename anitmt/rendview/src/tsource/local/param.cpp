@@ -604,11 +604,11 @@ int TaskSourceFactory_Local::_MergePerFrameBlock(PerFrameTaskInfo *dest,
 		sa->width,sa->height,sa->set_flags & SF_size,
 		sb->width,sb->height,sb->set_flags & SF_size),
 		SF_size,&failed,&dest->set_flags);
-	_PFBMergeHelper(_PFBMergePtr(&(const void*)dest->oformat,
+	_PFBMergeHelper(_PFBMergePtr((const void**)&dest->oformat,
 		sa->oformat,sa->set_flags & SF_oformat,
 		sb->oformat,sb->set_flags & SF_oformat),
 		SF_oformat,&failed,&dest->set_flags);
-	_PFBMergeHelper(_PFBMergePtr(&(const void*)dest->rdesc,
+	_PFBMergeHelper(_PFBMergePtr((const void**)&dest->rdesc,
 		sa->rdesc,sa->set_flags & SF_rdesc,
 		sb->rdesc,sb->set_flags & SF_rdesc),
 		SF_rdesc,&failed,&dest->set_flags);
@@ -641,7 +641,7 @@ int TaskSourceFactory_Local::_MergePerFrameBlock(PerFrameTaskInfo *dest,
 		&sb->radd_files,sb->set_flags & SF_radd_files),
 		SF_radd_files,&failed,&dest->set_flags);
 	
-	_PFBMergeHelper(_PFBMergePtr(&(const void*)dest->fdesc,
+	_PFBMergeHelper(_PFBMergePtr((const void**)&dest->fdesc,
 		sa->fdesc,sa->set_flags & SF_fdesc,
 		sb->fdesc,sb->set_flags & SF_fdesc),
 		SF_fdesc,&failed,&dest->set_flags);
@@ -867,7 +867,6 @@ int TaskSourceFactory_Local::FinalInit()
 	{
 		// First, eliminite all list elements with illegal range entries 
 		// (and those which will never be used): 
-		int never_used=0;
 		for(PerFrameTaskInfo *_fi=fi_list.first(); _fi; )
 		{
 			PerFrameTaskInfo *fi=_fi;
