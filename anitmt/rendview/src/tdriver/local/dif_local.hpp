@@ -82,7 +82,7 @@ class TaskDriverInterface_Local :
 		// Decide on task to start and return it. 
 		// Return NULL if there is no task to start. 
 		CompleteTask *GetTaskToStart(
-			LinkedList<CompleteTask> *tasklist_todo,int schedule_quit);
+			TaskManager_TaskList *tasklist,int schedule_quit);
 		
 		// Actually launch a job for a task. No check if we may do that. 
 		// Return value: 0 -> OK; -1,-2 -> failed

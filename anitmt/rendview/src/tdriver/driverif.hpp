@@ -20,6 +20,7 @@
 
 class ComponentDataBase;
 class TaskDriver;
+struct TaskManager_TaskList;
 
 
 class TaskDriverInterface
@@ -33,6 +34,7 @@ class TaskDriverInterface
 		// the todo queue, the exchange with the task queue is 
 		// started. No more than todo_thresh_high tasks will ever 
 		// be in the task queue. 
+		// NOTE: We're talking about todo queue, NOT proc queue. 
 		int todo_thresh_low;
 		int todo_thresh_high;
 		
@@ -40,8 +42,7 @@ class TaskDriverInterface
 		
 		// Get the tasklist_todo from the TaskManager. Useful if the 
 		// task driver interface has to search in it if a client dies. 
-		inline const LinkedList<CompleteTask> *GetTaskListTodo();
-		inline int GetTaskListTodo_Nelem();
+		inline const TaskManager_TaskList *GetTaskList();
 		
 		// See taskmanager.hpp / PutBackTask(). 
 		void PutBackTask(CompleteTask *ctsk);
@@ -89,10 +90,13 @@ class TaskDriverInterface
 		// Decide on task to start and return it. 
 		// Return NULL if there is no task to start. 
 		virtual CompleteTask *GetTaskToStart(
-			LinkedList<CompleteTask> * /*tasklist_todo*/,int /*schedule_quit*/) HL_PureVirt(NULL)
+			TaskManager_TaskList * /*tasklist*/,int /*schedule_quit*/) HL_PureVirt(NULL)
 		
 		// Actually launch a job for a task. No check if we may do that. 
 		// Return value: 0 -> OK; -1,-2 -> failed
+		// +1 -> FAILED to start launch but NO HandleFailedJob() called; 
+		//       MUST BE HANDELED & try again. 
+		// ctsk->d.any() MUST BE 0 unless retval is 0. 
 		virtual int LaunchTask(CompleteTask *) HL_PureVirt(1)
 		
 		// signo=STGTSTP/SIGCONT: stop/cont all jobs. 

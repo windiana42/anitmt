@@ -73,14 +73,9 @@ int TaskDriverInterfaceFactory_Local::FinalInit()
 	
 	// Task queue thresh values: 
 	if(thresh_param_low<1)  // YES: <1, NOT <0
-	{  thresh_param_low=njobs+1;  }
+	{  thresh_param_low=1;  }
 	
-	#warning thresh values need optimization. 
-	// Adjust task queue thresholds: 
-	if(thresh_param_low<njobs+1)
-	{  Warning("It is very unwise to set low task queue threshold (%d) "
-		"smaller than njobs+1 (%d)\n",thresh_param_low,njobs+1);  }
-	if(thresh_param_high+1<thresh_param_low)
+	if(thresh_param_high<=thresh_param_low)
 	{
 		int oldval=thresh_param_high;
 		thresh_param_high=thresh_param_low+5;
@@ -179,12 +174,12 @@ int TaskDriverInterfaceFactory_Local::_RegisterParams()
 	add_failed=0;
 	AddParam("njobs","number of simultanious jobs",&njobs);
 	
-	AddParam("task-thresh-low",
+	AddParam("todo-thresh-low",
 		"start getting new tasks from the task source if there are less "
-		"than this number of non-completely processed tasks in the task "
+		"than this number of non-completely processed tasks in the todo "
 		"queue",&thresh_param_low);
-	AddParam("task-thresh-high",
-		"never store more than this number of tasks in the local task queue",
+	AddParam("todo-thresh-high",
+		"never store more than this number of tasks in the local todo queue",
 		&thresh_param_high);
 	
 	if(add_failed)

@@ -23,6 +23,34 @@
 #include "tdriver/driverif.hpp"
 
 
+
+struct TaskManager_TaskList
+{
+	// This is the list of tasks (NOT jobs, do not mix up). 
+	// tasklist.todo holds tasks in state ToBe*. 
+	//     The ones which are currently processed have 
+	//     TaskDriver pointer (td) !=NULL and are in 
+	//     tasklist.proc. 
+	// tasklist.done holds tasks in in state TaskDone. 
+	// Note that tasks have state TaskDone when retrieved 
+	// by GetTask(). 
+	// NOTE: Order is important. 
+	// FIRST task is processed first; new task are added at 
+	// the end (appended). 
+	LinkedList<CompleteTask> todo;
+	LinkedList<CompleteTask> proc;
+	LinkedList<CompleteTask> done;
+	// These contain the number of elements in the lists: 
+	int todo_nelem;
+	int proc_nelem;
+	int done_nelem;
+
+	_CPP_OPERATORS_FF
+	TaskManager_TaskList(int *failflag=NULL);
+	~TaskManager_TaskList();
+};
+
+
 class TaskManager : 
 	public FDBase, 
 	public TimeoutBase,
@@ -50,21 +78,8 @@ class TaskManager :
 		ProcessManager::ProcTimeUsage ptu_self_start_work,ptu_chld_start_work;
 		int work_cycle_count;   // only active task source
 		
-		// This is the list of tasks (NOT jobs, do not mix up). 
-		// tasklist_todo holds tasks in state ToBe*. 
-		//     The ones which are currently processed have 
-		//     TaskDriver pointer (td) !=NULL. 
-		// tasklist_done holds tasks in in state TaskDone. 
-		// Note that tasks have state TaskDone when retrieved 
-		// by GetTask(). 
-		// NOTE: Order is important. 
-		// LAST task is processed first; new task are added at 
-		// the front (inserted). 
-		LinkedList<CompleteTask> tasklist_todo;
-		LinkedList<CompleteTask> tasklist_done;
-		// These contain the number of elements in the lists: 
-		int tasklist_todo_nelem;
-		int tasklist_done_nelem;
+		// For more info, see above. 
+		TaskManager_TaskList tasklist;
 		
 		CompleteTask *scheduled_for_start;
 		
@@ -129,7 +144,7 @@ class TaskManager :
 		int lpf_hist_idx;
 		int *last_proc_frames;
 		
-		// tasklist_todo thresholds: Now hidden in interface. 
+		// tasklist.todo/proc/done thresholds: Now hidden in interface. 
 		
 		TSAction tsgod_next_action;  // used by _TS_GetOrDoneTask()
 		int nth_call_to_get_task;  // increased for each call to TSGetTask. 
@@ -149,7 +164,7 @@ class TaskManager :
 		
 		void _CheckStartTasks();
 		inline void _DoScheduleForStart(CompleteTask *ctsk);
-		inline void _KillScheduledForStart();
+		inline void _KillScheduledForStart(int was_launched=0);
 		int _CheckStartExchange();
 		
 		int _GetLoadValue();
@@ -246,6 +261,8 @@ class TaskManager :
 		// njobs_changed: 0,1 and special value -1
 		void CheckStartNewJobs(int njobs_changed);
 		
+		// These only accept tasks in proc queue; ctsk->d ptr must 
+		// already be NULL. (ctsk->d.any()=0) 
 		void HandleSuccessfulJob(CompleteTask *ctsk);
 		void HandleFailedTask(CompleteTask *ctsk,int running_jobs);
 		
@@ -255,15 +272,17 @@ class TaskManager :
 		void LaunchingTaskDone(CompleteTask *ctsk);
 		
 		// Tell TaskManager that the passed CompleteTask (which must 
-		// currently be queued in tasklist_todo (not _done, of course) 
+		// currently be queued in tasklist.proc (not .done, of course) 
 		// has to be done again. TaskManager may wish to put the task 
-		// into the done queue [failed] if that happens too often. 
+		// into the done queue [failed] if that happens too often or 
+		// normally back into todo list. ctsk->d.any() must be NULL. 
 		void PutBackTask(CompleteTask *ctsk);
 		
 		// Find task by TaskID. 
 		// Returns NULL in case the task is unknown. 
 		// Should check if the returned task is actually assigned to the 
-		// right client / task driver. ONLY todo LIST IS SEARCHED. 
+		// right client / task driver. 
+		// ONLY todo & proc LISTS ARE SEARCHED. 
 		CompleteTask *FindTaskByTaskID(u_int32_t task_id);
 		
 		// Get /dev/null fd. 
@@ -271,16 +290,12 @@ class TaskManager :
 			{  return(dev_null_fd);  }
 		
 		// For TaskDriverInterface only. Be careful with it. 
-		const LinkedList<CompleteTask> *GetTaskListTodo()
-			{  return(&tasklist_todo);  }
-		int GetTaskListTodo_Nelem()
-			{  return(tasklist_todo_nelem);  }
+		const TaskManager_TaskList *GetTaskList()
+			{  return(&tasklist);  }
 };
 
-inline const LinkedList<CompleteTask> *TaskDriverInterface::GetTaskListTodo()
-	{  return(component_db()->taskmanager()->GetTaskListTodo());  }
-inline int TaskDriverInterface::GetTaskListTodo_Nelem()
-	{  return(component_db()->taskmanager()->GetTaskListTodo_Nelem());  }
+inline const TaskManager_TaskList *TaskDriverInterface::GetTaskList()
+	{  return(component_db()->taskmanager()->GetTaskList());  }
 
 inline void TaskDriverInterface::PutBackTask(CompleteTask *ctsk)
 	{  component_db()->taskmanager()->PutBackTask(ctsk);  }

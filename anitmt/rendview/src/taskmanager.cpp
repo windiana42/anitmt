@@ -21,8 +21,8 @@
 #include <fcntl.h>
 #include <assert.h>
 
-/* This is for testing: before dequeuing a task from the todo list, check if 
- * is actually on that list: */
+/* This is for testing: before dequeuing a task from the todo/proc list, 
+ * check if is actually on that list: */
 #define TEST_TASK_LIST_MEMBERSHIP   1
 
 #define UnsetNegMagic  (-29649)
@@ -48,6 +48,14 @@
 //     not set any of the quit flags but is similar to them in many ways. 
 //     Recovery is done when we re-start because the active task source 
 //     got disconnected. 
+/******************************************************************************/
+// Task lists: 
+//  - todo list: All task to be done. Also, scheduled_for_start is in 
+//               todo list. ctsk->d.any() may NEVER be set. 
+//  - proc list: All tasks currently being processed. 
+//               ctsk->d.any() must be set. 
+//  - done list: All tasks to be reported to the task source as done 
+//               (with or without error). 
 /******************************************************************************/
 
 
@@ -123,26 +131,27 @@ void TaskManager::DontStartMoreTasks()
 {
 	// Note: We may enter this function also in case 
 	//       dont_start_more_tasks is already set. In this case 
-	//       we MUST NOT return immediately but go through tasklist_todo 
+	//       we MUST NOT return immediately but go through tasklist.todo 
 	//       again and re-queue tasks from todo to done queue if needed. 
 	
 	dont_start_more_tasks=1;
 	
 	_KillScheduledForStart();    // ALWAYS!
 	
-	for(CompleteTask *_i=tasklist_todo.first(); _i; )
+	for(CompleteTask *_i=tasklist.todo.first(); _i; )
 	{
 		CompleteTask *i=_i;  _i=_i->next;
 		
-		if(!_ProcessedTask(i) || i->d.any())  continue;
+		assert(!i->d.any());   // Otherwise: belongs into proc list. 
+		if(!_ProcessedTask(i))  continue;
 		// Here: *i was processed and is currently not processed but 
 		// still in the todo list (i.e. *i rendered but not yet 
 		// filtered). 
 		assert(i->state==CompleteTask::ToBeFiltered);
 		
 		// In this case: Move task to done queue. 
-		tasklist_todo.dequeue(i);  --tasklist_todo_nelem;
-		tasklist_done.append(i);   ++tasklist_done_nelem;
+		tasklist.todo.dequeue(i);  --tasklist.todo_nelem;
+		tasklist.done.append(i);   ++tasklist.done_nelem;
 	}
 }
 
@@ -157,18 +166,19 @@ void TaskManager::HandleSuccessfulJob(CompleteTask *ctsk)
 	// Reset this counter: 
 	jobs_failed_in_sequence=0;
 	
+	#if TEST_TASK_LIST_MEMBERSHIP
+	// Test: see if task is actually in tasklist.proc: 
+	assert(tasklist.proc.find(ctsk));
+	#endif
+	assert(!ctsk->d.any());  // Must already be NULL. 
+	
 	switch(ctsk->state)
 	{
 		case CompleteTask::TaskDone:
 			// Good, task is done completely. 
 			
-			#if TEST_TASK_LIST_MEMBERSHIP
-			// Test: see if task is actually in tasklist_todo: 
-			assert(tasklist_todo.find(ctsk));
-			#endif
-			
-			tasklist_todo.dequeue(ctsk);  --tasklist_todo_nelem;
-			tasklist_done.append(ctsk);   ++tasklist_done_nelem;
+			tasklist.proc.dequeue(ctsk);  --tasklist.proc_nelem;
+			tasklist.done.append(ctsk);   ++tasklist.done_nelem;
 			
 			// This is definitely needed: 
 			_CheckStartTasks();
@@ -181,11 +191,15 @@ void TaskManager::HandleSuccessfulJob(CompleteTask *ctsk)
 		case CompleteTask::ToBeFiltered:
 			// Okay, task was rendered and has to be filtered now. 
 			
+			// Re-queue into todo queue (at the BEGINNING): 
+			tasklist.proc.dequeue(ctsk);  --tasklist.proc_nelem;
+			tasklist.todo.insert(ctsk);   ++tasklist.todo_nelem;
+			
 			// In case dont_start_more_tasks is set we must make sure that we 
 			// do not bring the state machine into a state where that was 
 			// required: If we do not start more tasks, then a successful 
 			// task which is now to be filtered cannot be filtered any more 
-			// and so has to be put into the lasklist_done queue which is 
+			// and so has to be put into the lasklist.done queue which is 
 			// exactly what DontStartMoreTasks() does. That is why we only 
 			// call DontStartMoreTasks() in case dont_start_more_tasks is set. 
 			if(dont_start_more_tasks)  // CORRECT!!
@@ -210,13 +224,30 @@ void TaskManager::HandleFailedTask(CompleteTask *ctsk,int running_jobs)
 	
 	// Error info already stored. 
 	
-	#if TEST_TASK_LIST_MEMBERSHIP
-	// Test: see if task is actually in tasklist_todo: 
-	assert(tasklist_todo.find(ctsk));
-	#endif
+	if(ctsk==scheduled_for_start)
+	{
+		// Called on the stack of schedule() -> LaunchTask(). 
+		// In this case, ctsk is still in tasklist.todo. 
+		#if TEST_TASK_LIST_MEMBERSHIP
+		// Test: see if task is actually in tasklist.proc: 
+		assert(tasklist.proc.find(ctsk));
+		#endif
+		
+		// Also, we must kill scheduled for start: 
+		_KillScheduledForStart(/*was_launched=*/0);  // Yes, (0). 
+	}
+	else
+	{
+		#if TEST_TASK_LIST_MEMBERSHIP
+		// Test: see if task is actually in tasklist.proc: 
+		assert(tasklist.proc.find(ctsk));
+		#endif
+		
+		tasklist.proc.dequeue(ctsk);  --tasklist.proc_nelem;
+		tasklist.done.append(ctsk);   ++tasklist.done_nelem;
+	}
 	
-	tasklist_todo.dequeue(ctsk);  --tasklist_todo_nelem;
-	tasklist_done.append(ctsk);   ++tasklist_done_nelem;
+	assert(!ctsk->d.any());   // Must already be NULL. 
 	
 	if(kill_tasks_and_quit_now)
 	{
@@ -268,8 +299,17 @@ void TaskManager::LaunchingTaskDone(CompleteTask *ctsk)
 {
 	// Currently, this is only called on success. 
 	
+	assert(ctsk->d.any());
+	#if TEST_TASK_LIST_MEMBERSHIP
+	// Test: see if task is actually in tasklist.proc: 
+	assert(tasklist.proc.find(ctsk));
+	#endif
+	
 	// See if we can start more tasks. (NEEDED.)
 	_CheckStartTasks();
+
+	// This is not needed; we check that often enough. 
+	//_CheckStartExchange();
 }
 
 
@@ -279,12 +319,8 @@ void TaskManager::_TakeFreshTask(CompleteTask *ctsk,int /*from_take_task*/)
 {
 	assert(ctsk);   // otherwise internal error
 	
-	// This is now done by the task source: 
-	//if(from_take_task && tasklist_todo.is_empty())
-	//{  _PrintWorkCycleStart();  }
-	
 	// Put task into queue (at the END of the queue): 
-	tasklist_todo.append(ctsk);  ++tasklist_todo_nelem;
+	tasklist.todo.append(ctsk);  ++tasklist.todo_nelem;
 	
 	// NOTE: ni->ctsk->state = TaskDone here. Must set up 
 	//       proper value now and set up TaskParams: 
@@ -299,7 +335,12 @@ void TaskManager::_TakeFreshTask(CompleteTask *ctsk,int /*from_take_task*/)
 void TaskManager::PutBackTask(CompleteTask *ctsk)
 {
 	assert(ctsk);   // otherwise internal error
-	// NOTE: ctsk is queued in tasklist_todo (YES!). 
+	
+	// NOTE: ctsk is queued in tasklist.proc (YES!)
+	//       although ctsk->d.any() is already 0. 
+	#if TEST_TASK_LIST_MEMBERSHIP
+	assert(tasklist.proc.find(ctsk));
+	#endif
 	
 	// If someone puts back a task, then it may not have a 
 	// task driver or LDR client attached. 
@@ -307,18 +348,26 @@ void TaskManager::PutBackTask(CompleteTask *ctsk)
 	
 	// NOTE: We MAY dequeue or re-queue the passed ctsk here 
 	//       (the caller knows that and has removal-safe loop). 
-
-static int warned=0;
-if(!warned)	
-{ fprintf(stderr,"TaskManager::PutBackTask(): "
-	"ANYTHING TO DO HERE?\n"); ++warned; }
+	
+	// We put task into todo queue. 
+	// ###FIXME###
+	// We should put it into done queue with error if that happens too often?
+	
+	// Re-queue at BEGINNING of todo list. 
+	tasklist.proc.dequeue(ctsk);  --tasklist.proc_nelem;
+	tasklist.todo.insert(ctsk);   ++tasklist.todo_nelem;
 }
 
 
 CompleteTask *TaskManager::FindTaskByTaskID(u_int32_t task_id)
 {
 	#warning could speed up this loopup in some way?
-	for(CompleteTask *ctsk=tasklist_todo.first(); ctsk; ctsk=ctsk->next)
+	for(CompleteTask *ctsk=tasklist.proc.first(); ctsk; ctsk=ctsk->next)
+	{
+		if(ctsk->task_id==task_id)
+		{  return(ctsk);  }
+	}
+	for(CompleteTask *ctsk=tasklist.todo.first(); ctsk; ctsk=ctsk->next)
 	{
 		if(ctsk->task_id==task_id)
 		{  return(ctsk);  }
@@ -437,13 +486,13 @@ int TaskManager::tsnotify(TSNotifyInfo *ni)
 				
 				// So the task source thinks we have enough tasks. 
 				// Let's see: 
-				if(!tasklist_done.is_empty())
+				if(!tasklist.done.is_empty())
 				{
 					// Okay, first we report `done´ for all done tasks. 
 					ts_done_all_first=1;
 					_TS_GetOrDoneTask();
 				}
-				else if(tasklist_todo.is_empty())
+				else if(tasklist.todo.is_empty() && tasklist.proc.is_empty())
 				{
 					// No, the task source is wrong. 
 					Error("Task source thinks we have enough tasks but that's "
@@ -518,14 +567,6 @@ int TaskManager::tsnotify(TSNotifyInfo *ni)
 				// FIXME: currently, no error can happen. 
 				Error("Please implement me. ABORTING.\n");
 				assert(0);
-				
-				#if 0  // DO THIS BEFORE CALLING GetTask(): 
-				// When recovery is reported to be done, then there may not be any 
-				// tasks left. In case this fails, there is a bug in TaskManager's 
-				// state machinery. 
-				assert(p->component_db()->taskmanager()->GetTaskListTodo()->is_empty());
-				assert(number_of_running_tasks==0);
-				#endif
 			}
 		}  break;
 		case ADisconnect:
@@ -586,14 +627,16 @@ int TaskManager::tsnotify(TSNotifyInfo *ni)
 				// active task sources]. 
 				// Okay, then let's recover: 
 				
-				int ntodo=tasklist_todo_nelem;
-				int ndone=tasklist_done_nelem;
+				int ntodo=tasklist.todo_nelem;
+				int nproc=tasklist.proc_nelem;
+				int ndone=tasklist.done_nelem;
 				int nrun=interface->Get_nrunning();
 				VerboseSpecial("Beginning recovery. "
-					"Tasks: todo=%d; done=%d; running=%d %s",
-					ntodo,ndone,nrun,
-					(ndone || nrun) ? "(bad)" : 
-					(!ntodo && !ndone && !nrun) ? "(good)" : "(hrm...)");
+					"Tasks: todo=%d; proc=%d (%d); done=%d %s",
+					ntodo,nproc,nrun,ndone,
+					(ndone || nproc) ? "(bad)" : 
+					(!ntodo && !ndone && !nproc) ? "(good)" : "(hrm...)");
+				assert(nrun==nproc);
 				
 				DontStartMoreTasks();
 				recovering=1;
@@ -804,9 +847,21 @@ void TaskManager::_schedule(TimerInfo *ti)
 	if(scheduled_for_start && load_permits_starting)
 	{
 		// We have to start a job for a task. Okay, let's do it: 
-		interface->LaunchTask(scheduled_for_start);
+		int rv=interface->LaunchTask(scheduled_for_start);
+		// rv=-1/-2 issued by local driver which also calls 
+		//    HandleFailedTask() so this is dealt with. 
+		// rv=+1 issued by LDR driver in case there is no free 
+		//    client (e.g. the free one unregistered between 
+		//    GetTaskToStart() and here) or local if alloc failed. 
+		//    Try again. 
 		
-		_KillScheduledForStart();
+		if(rv)
+		{  assert(!scheduled_for_start->d.any());  }
+		else
+		{  assert(scheduled_for_start->d.any());  }
+		
+		int was_launched=((rv==1) ? 0 : 1);
+		_KillScheduledForStart(was_launched);
 		
 		// See if we want to start more task(s): 
 		_CheckStartTasks();
@@ -820,7 +875,7 @@ void TaskManager::_schedule(TimerInfo *ti)
 		// The interface (in case of an LDR server) must disconnect 
 		// from the clients if there are no more jobs to do. 
 		// Let him do that. 
-		if(tasklist_todo.is_empty() && 
+		if(tasklist.todo.is_empty() && tasklist.proc.is_empty() && 
 		   !told_interface_to_quit )
 		{
 			interface->PleaseQuit();
@@ -829,8 +884,9 @@ void TaskManager::_schedule(TimerInfo *ti)
 		}
 		
 		if(!interface->AreThereJobsRunning() && 
-		   tasklist_todo.is_empty() && 
-		   tasklist_done.is_empty() && 
+		   tasklist.todo.is_empty() && 
+		   tasklist.proc.is_empty() && 
+		   tasklist.done.is_empty() && 
 		   !connected_to_tsource && 
 		   pending_action==ANone )
 		{
@@ -853,14 +909,33 @@ void TaskManager::_schedule(TimerInfo *ti)
 	}
 }
 
-inline void TaskManager::_KillScheduledForStart()
+inline void TaskManager::_KillScheduledForStart(int was_launched)
 {
-	if(scheduled_for_start)
+	if(!scheduled_for_start)  return;
+	
+	#if TEST_TASK_LIST_MEMBERSHIP
+	// Test: see if task is actually in tasklist.todo: 
+	assert(tasklist.todo.find(scheduled_for_start));
+	#endif
+	
+	if(was_launched)
 	{
-		scheduled_for_start=NULL;
-		if(!load_permits_starting)
-		{  UpdateTimer(tid_load_poll,-1,0);  }
+		// Must put task into proc queue: 
+		tasklist.todo.dequeue(scheduled_for_start);  --tasklist.todo_nelem;
+		tasklist.proc.append(scheduled_for_start);   ++tasklist.proc_nelem;
+		
+		// This is only the case when the task was actually just launched 
+		// in schedule(). 
+		assert(scheduled_for_start->d.any());
 	}
+	else
+	{
+		assert(!scheduled_for_start->d.any());
+	}
+	
+	scheduled_for_start=NULL;
+	if(!load_permits_starting)
+	{  UpdateTimer(tid_load_poll,-1,0);  }
 }
 
 
@@ -948,15 +1023,15 @@ void TaskManager::_EmitCPUStats(const char *title,
 	
 	char tmp[48];
 	snprintf(tmp,48,"%s",ptu_self->utime.PrintElapsed());
-	Verbose(TDI,"    RendView: %2d.%02d%% CPU  (user: %s; sys: %s)\n",
+	Verbose(TDI,"    RendView: %4d.%02d%% CPU  (user: %s; sys: %s)\n",
 		int(rv_cpu),int(100.0*rv_cpu+0.5)%100,
 		tmp,ptu_self->stime.PrintElapsed());
 	snprintf(tmp,48,"%s",ptu_chld->utime.PrintElapsed());
-	Verbose(TDI,"    Jobs:     %2d.%02d%% CPU  (user: %s; sys: %s)\n",
+	Verbose(TDI,"    Jobs:     %4d.%02d%% CPU  (user: %s; sys: %s)\n",
 		int(ch_cpu),int(100.0*ch_cpu+0.5)%100,
 		tmp,ptu_chld->stime.PrintElapsed());
 	snprintf(tmp,48,"%s",(ptu_chld->utime+ptu_self->utime).PrintElapsed());
-	Verbose(TDI,"    Together: %2d.%02d%% CPU  (user: %s; sys: %s)\n",
+	Verbose(TDI,"    Together: %4d.%02d%% CPU  (user: %s; sys: %s)\n",
 		int(ch_cpu+rv_cpu),int(100.0*(ch_cpu+rv_cpu)+0.5)%100,
 		tmp,(ptu_chld->stime+ptu_self->stime).PrintElapsed());
 }
@@ -1070,8 +1145,12 @@ void TaskManager::_DoQuit(int status)
 		int fail=1;
 		do {
 			if(scheduled_for_start)  break;
-			if(!tasklist_todo.is_empty() || !tasklist_todo.is_empty())  break;
-			if(tasklist_todo_nelem || tasklist_done_nelem)  break;
+			if(!tasklist.todo.is_empty() || 
+			   !tasklist.proc.is_empty() || 
+			   !tasklist.done.is_empty())  break;
+			if(tasklist.todo_nelem || 
+			   tasklist.done_nelem || 
+			   tasklist.done_nelem )  break;
 			if(!recovering)  break;
 			if(!dont_start_more_tasks)  break;  // Must be set by recovering. 
 			if(schedule_quit || schedule_quit_after)  break;  // We may not be here. 
@@ -1128,7 +1207,7 @@ void TaskManager::_DoQuit(int status)
 		abort_on_signal=0;
 		caught_sigint=0;
 		
-fprintf(stderr,"task-thresh: low=%d, high=%d [debug]\n",
+fprintf(stderr,"todo-thresh: low=%d, high=%d [debug]\n",
 	interface->Get_todo_thresh_low(),
 	interface->Get_todo_thresh_high());
 		
@@ -1346,7 +1425,7 @@ void TaskManager::ReallyStartProcessing(int error_occured)
 void TaskManager::PrintWorkCycleStart()
 {
 	assert(!recovering);
-	assert(tasklist_todo_nelem==0);  // bug trap...
+	assert(tasklist.todo_nelem==0 && tasklist.proc_nelem==0);  // bug trap...
 	
 	// Save some info from work start: 
 	ProcessManager::manager->GetTimeUsage(0,&ptu_self_start_work);
@@ -1376,7 +1455,7 @@ void TaskManager::CheckStartNewJobs(int njobs_changed)
 		// Special case. Called by LDR interface when all clients were 
 		// disconnected. 
 		assert((schedule_quit || schedule_quit_after || recovering) && 
-			   tasklist_todo.is_empty());
+			   tasklist.todo.is_empty() && tasklist.proc.is_empty());
 		
 		ReSched();
 		return;
@@ -1406,7 +1485,8 @@ connections.
 			// This will put back all tasks to the source and quit then. 
 			// This is an error unless there is nothing to do and we're 
 			// quitting. 
-			bool just_quitting = tasklist_todo.is_empty() && 
+			bool just_quitting = 
+				tasklist.todo.is_empty() && tasklist.proc.is_empty() && 
 				(schedule_quit || schedule_quit_after || recovering);
 			if(!just_quitting)
 			{  schedule_quit=2;  }
@@ -1421,7 +1501,8 @@ connections.
 	if(!scheduled_for_start)  // _CheckStartTasks() did not schedule a start 
 	{
 		// Okay, quit handling: 
-		if(schedule_quit_after && tasklist_todo.is_empty())
+		if(schedule_quit_after && 
+		   tasklist.todo.is_empty() && tasklist.done.is_empty())
 		{
 			if(schedule_quit<schedule_quit_after)
 			{  schedule_quit=schedule_quit_after;  }
@@ -1448,9 +1529,12 @@ void TaskManager::_CheckStartTasks()
 	// See if there's already a task scheduled for start: 
 	if(scheduled_for_start)  return;
 	
-	CompleteTask *startme=interface->GetTaskToStart(&tasklist_todo,schedule_quit);
+	CompleteTask *startme=interface->GetTaskToStart(&tasklist,schedule_quit);
 	
 	if(!startme)  return;
+	
+	// NOTE: d.any() may NOT yet be set. It must be set when launching the task. 
+	assert(!startme->d.any());
 	
 	// Okay, actually schedule task for starting: 
 	_DoScheduleForStart(startme);
@@ -1501,20 +1585,16 @@ int TaskManager::_CheckStartExchange()
 	}
 	if(must_connect<0 && !schedule_quit_after)
 	{
-		int n_todo=0;
-		for(CompleteTask *i=tasklist_todo.first(); i; i=i->next)
-		{
-			assert(i->state!=CompleteTask::TaskDone);
-			++n_todo;
-			// currently getting processed if(i->d.any())
-		}
-		if(n_todo<interface->Get_todo_thresh_low())  // NOT <= 
+		if(tasklist.todo_nelem<interface->Get_todo_thresh_low())  // NOT <= 
 		{  must_connect=1;  }
 	}
 	if(must_connect<0)
 	{  must_connect=0;  }
 	
-	if(!must_connect && tasklist_todo.is_empty() && !tasklist_done.is_empty())
+	if(!must_connect && 
+	   tasklist.todo.is_empty() && 
+	   tasklist.proc.is_empty() && 
+	   !tasklist.done.is_empty() )
 	{
 		if(schedule_quit_after)
 		{  must_connect=1;  }
@@ -1551,13 +1631,16 @@ bool TaskManager::_TS_CanDo_DoneTask(CompleteTask **special_done)
 	//       done; recovering sets dont_start_more_tasks, so no extra 
 	//       condition is needed. 
 	assert(!recovering || dont_start_more_tasks);
-	     if(!tasklist_done.is_empty())  can_done=true;
+	     if(!tasklist.done.is_empty())  can_done=true;
 	else if(dont_start_more_tasks || schedule_quit)
 	{
-		for(CompleteTask *i=tasklist_todo.first(); i; i=i->next)
+		// This checks if we want to give back tasks from todo list which 
+		// were not yet processed. Hence, no need to check proc list. 
+		for(CompleteTask *i=tasklist.todo.first(); i; i=i->next)
 		{
 			assert(i->state!=CompleteTask::TaskDone);
-			if( (dont_start_more_tasks && !i->d.any()) || 
+			assert(!i->d.any());   // Otherwise: proc list. 
+			if( (dont_start_more_tasks /*&& !i->d.any()*/) || 
 			    (schedule_quit && !_ProcessedTask(i) ) )
 			{
 				if(special_done)  *special_done=i;
@@ -1577,7 +1660,7 @@ bool TaskManager::_TS_CanDo_GetTask(bool can_done)
 	     if(dont_start_more_tasks)  can_get=false;
 	else if(schedule_quit || schedule_quit_after)  can_get=false;
 	else if(ts_done_all_first && can_done)  can_get=false;
-	else if(tasklist_todo_nelem>=interface->Get_todo_thresh_high())
+	else if(tasklist.todo_nelem>=interface->Get_todo_thresh_high())
 		can_get=false;
 	return(can_get);
 }
@@ -1639,9 +1722,9 @@ void TaskManager::_TS_GetOrDoneTask()
 		}
 		case ADoneTask:
 		{
-			CompleteTask *ctsk=tasklist_done.popfirst();
+			CompleteTask *ctsk=tasklist.done.popfirst();
 			if(ctsk)
-			{  --tasklist_done_nelem;  }
+			{  --tasklist.done_nelem;  }
 			else
 			{
 				ctsk=special_done;
@@ -1653,10 +1736,10 @@ void TaskManager::_TS_GetOrDoneTask()
 				{  _KillScheduledForStart();  }
 				
 				#if TEST_TASK_LIST_MEMBERSHIP
-				assert(tasklist_todo.find(ctsk));
+				assert(tasklist.todo.find(ctsk));  // NOT tasklist.proc
 				#endif
 				
-				tasklist_todo.dequeue(ctsk);  --tasklist_todo_nelem;
+				tasklist.todo.dequeue(ctsk);  --tasklist.todo_nelem;
 			}
 			assert(ctsk);  // otherwise tsgod_next_action=ADoneTask illegal
 			
@@ -2034,8 +2117,8 @@ void TaskManager::_DumpInternalState()
 		TimerInterval(tid_load_poll));
 		
 	
-	fprintf(stderr,"  Tasks todo (%d):",tasklist_todo_nelem);
-	for(CompleteTask *i=tasklist_todo.first(); i; i=i->next)
+	fprintf(stderr,"  Tasks todo (%d):",tasklist.todo_nelem);
+	for(CompleteTask *i=tasklist.todo.first(); i; i=i->next)
 	{
 		char st[3]={'-','-','\0'};
 		if(i->rt)
@@ -2043,17 +2126,29 @@ void TaskManager::_DumpInternalState()
 		if(i->ft)
 		{  st[1] = (i->state==CompleteTask::ToBeFiltered ? 'f' : 'F');  }
 		fprintf(stderr," [%d:%s]",i->frame_no,st);
+		assert(!i->d.any());
 	}
 	fprintf(stderr,"\n");
 	
-	fprintf(stderr,"  Tasks done (%d):",tasklist_done_nelem);
-	for(CompleteTask *i=tasklist_done.first(); i; i=i->next)
+	fprintf(stderr,"  Tasks proc (%d):",tasklist.proc_nelem);
+	for(CompleteTask *i=tasklist.proc.first(); i; i=i->next)
+	{
+		char st[3]={'R','F','D'};
+		assert(i->state>=0 && i->state<3);
+		fprintf(stderr," [%d:%c]",i->frame_no,st[i->state]);
+		assert(i->d.any());
+	}
+	fprintf(stderr,"\n");
+	
+	fprintf(stderr,"  Tasks done (%d):",tasklist.done_nelem);
+	for(CompleteTask *i=tasklist.done.first(); i; i=i->next)
 	{
 		fprintf(stderr," [%d:%c%c]",i->frame_no,
 			_ProcessedTask(i) ? 'p' : '-',
 			(i->state==CompleteTask::ToBeRendered ? 'r' : 
 			  i->state==CompleteTask::ToBeFiltered ? 'f' : 
 			   i->state==CompleteTask::TaskDone ? 'd' : '?'));
+		assert(!i->d.any());
 	}
 	fprintf(stderr,"\n");
 }
@@ -2063,11 +2158,13 @@ void TaskManager::_DumpInternalState()
 // (Used by task source for verbose messages.) 
 int TaskManager::tsGetDebugInfo(TSDebugInfo *dest)
 {
-	dest->todo_queue=tasklist_todo_nelem;
-	dest->done_queue=tasklist_done_nelem;
+	dest->todo_queue=tasklist.todo_nelem;
+	dest->proc_queue=tasklist.proc_nelem;
+	dest->done_queue=tasklist.done_nelem;
 	#if TESTING
-	assert(tasklist_todo_nelem==tasklist_todo.count());
-	assert(tasklist_done_nelem==tasklist_done.count());
+	assert(tasklist.todo_nelem==tasklist.todo.count());
+	assert(tasklist.proc_nelem==tasklist.proc.count());
+	assert(tasklist.done_nelem==tasklist.done.count());
 	#endif
 	return(0);
 }
@@ -2080,16 +2177,13 @@ TaskManager::TaskManager(ComponentDataBase *cdb,int *failflag) :
 	par::ParameterConsumer_Overloaded(cdb->parmanager(),failflag),
 	exec_timeout_spec(failflag),
 	starttime(),
-	tasklist_todo(failflag),tasklist_done(failflag),
+	tasklist(failflag),
 	tsource_name(failflag),tdinterface_name(failflag),opmode_name(failflag)
 {
 	component_db=cdb;
 	component_db->_SetTaskManager(this);
 	
 	interface=NULL;
-	
-	tasklist_todo_nelem=0;
-	tasklist_done_nelem=0;
 	
 	// Initial values: 
 	jobs_failed_in_sequence=0;
@@ -2177,16 +2271,21 @@ void TaskManager::_DestructCleanup(int real_destructor)
 	
 	//if(!kill_tasks_and_quit_now)
 	{
-		if(!tasklist_todo.is_empty())
+		if(!tasklist.todo.is_empty())
 		{  Warning("OOPS: Tasks left in todo queue.\n");  }
-		while(!tasklist_todo.is_empty())
-		{  delete tasklist_todo.popfirst();  --tasklist_todo_nelem;  }
-		if(!tasklist_done.is_empty())
+		while(!tasklist.todo.is_empty())
+		{  delete tasklist.todo.popfirst();  --tasklist.todo_nelem;  }
+		if(!tasklist.proc.is_empty())
+		{  Warning("OOPS: Tasks left in proc queue.\n");  }
+		while(!tasklist.proc.is_empty())
+		{  delete tasklist.proc.popfirst();  --tasklist.proc_nelem;  }
+		if(!tasklist.done.is_empty())
 		{  Warning("OOPS: Tasks left in done queue.\n");  }
-		while(!tasklist_done.is_empty())
-		{  delete tasklist_done.popfirst();  --tasklist_done_nelem;  }
-		assert(!tasklist_todo_nelem);
-		assert(!tasklist_done_nelem);
+		while(!tasklist.done.is_empty())
+		{  delete tasklist.done.popfirst();  --tasklist.done_nelem;  }
+		assert(!tasklist.todo_nelem);
+		assert(!tasklist.proc_nelem);
+		assert(!tasklist.done_nelem);
 	}
 	
 	TaskSource *ts=tasksource();
@@ -2205,9 +2304,6 @@ TaskManager::~TaskManager()
 	// Make sure there are no jobs and no tasks left: 
 	assert(!scheduled_for_start);
 	
-	assert(tasklist_todo.is_empty());  assert(!tasklist_todo_nelem);
-	assert(tasklist_done.is_empty());  assert(!tasklist_done_nelem);
-	
 	assert(!connected_to_tsource);
 	assert(pending_action==ANone);
 	
@@ -2215,4 +2311,22 @@ TaskManager::~TaskManager()
 	assert(!interface);
 	
 	if(last_proc_frames)  last_proc_frames=(int*)LFree(last_proc_frames);
+}
+
+
+TaskManager_TaskList::TaskManager_TaskList(int *failflag) : 
+	todo(failflag),
+	proc(failflag),
+	done(failflag)
+{
+	todo_nelem=0;
+	proc_nelem=0;
+	done_nelem=0;
+}
+
+TaskManager_TaskList::~TaskManager_TaskList()
+{
+	assert(todo.is_empty());  assert(!todo_nelem);
+	assert(proc.is_empty());  assert(!proc_nelem);
+	assert(done.is_empty());  assert(!done_nelem);
 }

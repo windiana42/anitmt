@@ -272,7 +272,8 @@ int TaskSource_LDR_ServerConn::_SendNowConnected()
 	{
 		TaskManager *taskman=component_db()->taskmanager();
 		d->njobs=htons(taskman->Get_njobs());
-		d->task_thresh_high=htons(taskman->Get_todo_thresh_high());
+		d->task_thresh_high=
+			htons(taskman->Get_todo_thresh_high()+taskman->Get_njobs());
 		HTime2LDRTime(taskman->Get_starttime(),&d->starttime);
 		int lv=::GetLoadValue();
 		d->loadval = (lv>=0 && lv<0xffff) ? htons(lv) : 0xffffU;

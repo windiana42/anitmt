@@ -166,7 +166,7 @@ class LDRClient :
 		int ConnectTo(ClientParam *);
 		
 		// Check if the client can do a task (i.e. connected and it has 
-		// less than c_jobs tasks assigned.). 
+		// less than c_task_thresh_high tasks assigned.). 
 		// That is, SendTaskToClient() can be called. 
 		int CanDoTask()
 		{  return(auth_passed && assigned_jobs<c_task_thresh_high && 

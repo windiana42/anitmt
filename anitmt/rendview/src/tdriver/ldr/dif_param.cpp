@@ -294,13 +294,13 @@ int TaskDriverInterfaceFactory_LDR::_RegisterParams()
 		"until two times that interval; -1 to disable)",
 		&reconnect_interval);
 	
-	AddParam("task-res-min",
-		"try to always have that many tasks MORE than currently running",
-		&todo_thresh_reserved_min);
-	AddParam("task-res-max",
-		"stop getting tasks when having that many tasks MORE than currenty "
-		"running",
-		&todo_thresh_reserved_max);
+	AddParam("todo-thresh-low",
+		"start getting new tasks from the task source if there are less "
+		"than this number of tasks in the todo queue",
+		&todo_thresh_low);
+	AddParam("todo-thresh-high",
+		"never store more than this number of tasks in the local todo queue",
+		&todo_thresh_high);
 	
 	if(add_failed)
 	{  return(1);  }
@@ -340,8 +340,8 @@ TaskDriverInterfaceFactory_LDR::TaskDriverInterfaceFactory_LDR(
 	int failed=0;
 	
 	// Set up defaults/initial values: 
-	todo_thresh_reserved_min=2;
-	todo_thresh_reserved_max=3;
+	todo_thresh_low=2;
+	todo_thresh_high=5;
 	
 	default_port=DefaultLDRPort;
 	

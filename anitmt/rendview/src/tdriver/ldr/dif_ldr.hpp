@@ -37,6 +37,9 @@ class TaskDriverInterface_LDR :
 		
 		// Note: All existing LDRClient classes are in this queue: 
 		LinkedList<LDRClient> clientlist;
+		// Client which will get task reported by GetTaskToStart() 
+		// when launching task. 
+		LDRClient *free_client;
 		
 		// Current (max) number of jobs: 
 		int njobs;
@@ -68,6 +71,8 @@ class TaskDriverInterface_LDR :
 		
 		// ARGUMENT MUST BE OF TYPE TaskDriverInterfaceFactory_LDR::ClientParam *
 		LDRClient *NEW_LDRClient(void *p);
+		
+		LDRClient *_FindFreeClient();
 		
 		void _WriteStartProcInfo(const char *msg);
 		void _WriteProcInfoUpdate();
@@ -113,7 +118,7 @@ class TaskDriverInterface_LDR :
 		// Decide on task to start and return it. 
 		// Return NULL if there is no task to start. 
 		CompleteTask *GetTaskToStart(
-			LinkedList<CompleteTask> *tasklist_todo,int schedule_quit);
+			TaskManager_TaskList *tasklist_todo,int schedule_quit);
 		
 		// Actually launch a job for a task. No check if we may do that. 
 		// Return value: 0 -> OK; -1 [-2] -> failed

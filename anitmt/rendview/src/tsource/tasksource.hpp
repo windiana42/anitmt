@@ -249,6 +249,7 @@ class TaskSourceConsumer : public TaskSource_NAMESPACE
 		{
 			// Number of tasks in todo and done queue: 
 			int todo_queue;
+			int proc_queue;
 			int done_queue;
 		};
 	private:

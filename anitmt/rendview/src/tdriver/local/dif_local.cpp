@@ -110,7 +110,7 @@ int TaskDriverInterface_Local::LaunchTask(CompleteTask *ctsk)
 	TaskDriver *tmp_td=NULL;
 	
 	int rv=_DoLaunchTask(ctsk,&tmp_td);
-	if(rv)
+	if(rv<0)  // NOT rv=+1
 	{
 		// Launching the task failed. 
 		
@@ -118,7 +118,7 @@ int TaskDriverInterface_Local::LaunchTask(CompleteTask *ctsk)
 		// error info set: 
 		_HandleFailedJob(ctsk,tmp_td);
 	}
-	else
+	else if(!rv)  // NOT rv=+1
 	{
 		// Successful start. 
 		TaskDriverType dtype=tmp_td->GetFactory()->DType();
@@ -163,7 +163,7 @@ int TaskDriverInterface_Local::_DoLaunchTask(CompleteTask *ctsk,TaskDriver **td)
 	{
 		Error("Failed to set up (%s) task driver %s for %s\n",
 			DTypeString(dtype),(*td)->f->DriverName(),d->name.str());
-		return(-1);
+		return(+1);  // try again
 	}
 	
 	// We "copy" this info as it is needed for error reporting, too. 
@@ -400,7 +400,7 @@ void TaskDriverInterface_Local::_HandleFailedJob(CompleteTask *ctsk,TaskDriver *
 // Decide on task to start and return it. 
 // Return NULL if there is no task to start. 
 CompleteTask *TaskDriverInterface_Local::GetTaskToStart(
-	LinkedList<CompleteTask> *tasklist_todo,int schedule_quit)
+	TaskManager_TaskList *tasklist,int schedule_quit)
 {
 	if(RunningJobs()>=p->njobs)  return(NULL);
 	
@@ -419,10 +419,11 @@ CompleteTask *TaskDriverInterface_Local::GetTaskToStart(
 	// Okay, less jobs are running than possible. 
 	// We should start one if there is one. 
 	CompleteTask *startme=NULL;
-	for(CompleteTask *i=tasklist_todo->first(); i; i=i->next)
+	for(CompleteTask *i=tasklist->todo.first(); i; i=i->next)
 	{
 		assert(i->state!=CompleteTask::TaskDone);
-		if(i->d.td)  continue;  // task is currently processed 
+		assert(!i->d.any());   // We're in todo list, not proc list...
+		
 		// See if we can start a job for task *i: 
 		if( (i->state==CompleteTask::ToBeRendered && may_start[DTRender]) ||
 			(i->state==CompleteTask::ToBeFiltered && may_start[DTFilter]) )
@@ -468,7 +469,7 @@ void TaskDriverInterface_Local::_WriteStartProcInfo(const char *msg)
 		Verbose(TDI,"\n");
 	}
 	
-	Verbose(TDI,"  task-thresh: low=%d, high=%d\n",
+	Verbose(TDI,"  todo-thresh: low=%d, high=%d\n",
 		todo_thresh_low,todo_thresh_high);
 	
 }

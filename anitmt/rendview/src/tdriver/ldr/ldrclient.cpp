@@ -421,10 +421,13 @@ int LDRClient::_DoAuthHandshake(FDBase::FDInfo *fdi)
 			LDRTime2HTime(&d.starttime,&up_since);
 			
 			if(c_jobs>max_jobs_per_client || 
-			   c_task_thresh_high>max_high_thresh_of_client)
+			   c_task_thresh_high>max_high_thresh_of_client || 
+			   c_task_thresh_high<c_jobs )
 			{
 				int old_j=c_jobs,old_t=c_task_thresh_high;
 				
+				if(c_task_thresh_high<c_jobs)
+				{  c_task_thresh_high=c_jobs;  }
 				if(c_jobs>max_jobs_per_client)
 				{  c_jobs=max_jobs_per_client;  }
 				if(c_task_thresh_high>max_high_thresh_of_client)

@@ -47,8 +47,8 @@ class TaskDriverInterfaceFactory_LDR :
 		// We may access component_db(). 
 		
 		// User-tunable param: 
-		int todo_thresh_reserved_min;  // always have this many more tasks than clients
-		int todo_thresh_reserved_max;
+		int todo_thresh_low;  // Always have this many tasks in todo (NOT proc) queue. 
+		int todo_thresh_high;
 		
 		// Default LDR port and password (if not specified after client): 
 		int default_port;

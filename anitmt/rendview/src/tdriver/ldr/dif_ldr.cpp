@@ -159,15 +159,32 @@ int TaskDriverInterface_LDR::TermAllJobs(int reason)
 // Actually launch a job for a task. No check if we may do that. 
 int TaskDriverInterface_LDR::LaunchTask(CompleteTask *ctsk)
 {
-	// Otherwise GetTaskToStart() has a bug: 
+	// Otherwise LaunchTask() has a bug: 
 	assert(ctsk && (ctsk->rt || ctsk->ft));   
-	
-	LDRClient *c=ctsk->d.ldrc;
-	assert(c);  // Otherwise bug near/in GetTaskToStart(). 
+	assert(!ctsk->d.any());   // May NOT YET be set (is set below). 
 	
 	// Return value: 
+	//  1 -> could not launch (no free client)
 	//  0 -> OK
 	// -1,-2 -> did not start task [will not happen currently]
+	
+	if(!free_client)
+	{
+		// free_client is set in GetTaskToStart(). 
+		// It can be NULL here if the client unregistered between 
+		// GetTaskToStart() and actual launch. In this case, see 
+		// if we can get a different one or report failure: 
+		free_client=_FindFreeClient();
+		if(!free_client)
+		{  return(+1);  }
+	}
+	
+	// First, make sure we cancel free_client: 
+	LDRClient *c=free_client;
+	free_client=NULL;
+	
+	// Assign client to task (must be done here): 
+	ctsk->d.ldrc=c;
 	
 	int rv=c->SendTaskToClient(ctsk);
 	// NOTE: In case there is an error which MAY & DOES happen, then 
@@ -218,10 +235,10 @@ njobs,c->assigned_jobs,nclients);
 void TaskDriverInterface_LDR::TaskLaunchResult(CompleteTask *ctsk,
 	int resp_code)
 {
-	assert(ctsk && ctsk->d.any());
+	assert(ctsk);
 	
 	LDRClient *c=ctsk->d.ldrc;
-	assert(c);  // Otherwise bug near/in GetTaskToStart(). 
+	assert(c);  // Otherwise bug near/in LaunchTask(). 
 	
 	if(resp_code)
 	{
@@ -235,6 +252,7 @@ void TaskDriverInterface_LDR::TaskLaunchResult(CompleteTask *ctsk,
 		//#warning check that... ######
 		
 		// Do not forget to remove client: 
+		// AND WHEN DOING THAT PUTTING TASK FROM proc QUEUE TO todo OR done QUEUE. 
 		ctsk->d.ldrc=NULL;
 		
 		fprintf(stderr,"implement me (resp_code=%d)!\n",resp_code);
@@ -354,9 +372,9 @@ int TaskDriverInterface_LDR::DealWithNewTask(CompleteTask *ctsk)
 // Decide on task to start and return it. 
 // Return NULL if there is no task to start. 
 CompleteTask *TaskDriverInterface_LDR::GetTaskToStart(
-	LinkedList<CompleteTask> *tasklist_todo,int schedule_quit)
+	TaskManager_TaskList *tasklist,int schedule_quit)
 {
-	if(tasklist_todo->is_empty())
+	if(tasklist->todo.is_empty())
 	{  return(NULL);  }
 	
 	// Well, that's simple for the LDR task driver: 
@@ -365,32 +383,49 @@ CompleteTask *TaskDriverInterface_LDR::GetTaskToStart(
 	if(schedule_quit)
 	{  return(NULL);  }
 	
-	// Find free client: 
-	// NOTE: We use an LRU-like method here: We always check the client 
-	//       list first-to-last if a client can do a task. If this client 
-	//       got its task, then this client is re-queued at the end. 
-	LDRClient *free_client=NULL;
-	for(LDRClient *i=clientlist.first(); i; i=i->next)
+	if(free_client)
 	{
-		if(i->CanDoTask())
-		{  free_client=i;  break;  }
+		// This can have different reasons:
+		// TaskManager calls GetTaskToStart() twice without actually 
+		// launching the task in between. Maybe, the started task 
+		// was just cancelled for what reason ever. 
+		if(!free_client->CanDoTask())
+		{  free_client=NULL;  }
 	}
 	
 	if(!free_client)
+	{  free_client=_FindFreeClient();  }
+	
+	if(!free_client)
 	{
-fprintf(stderr,"TaskDriverInterface_LDR: ??? No free client!!!\n");
+		fprintf(stderr,"TaskDriverInterface_LDR: ??? No free client!!!\n");
+		fprintf(stderr,"  todo=%d, proc=%d\n",
+			tasklist->todo_nelem,tasklist->proc_nelem);
+		for(LDRClient *i=clientlist.first(); i; i=i->next)
+		{
+			fprintf(stderr,"  Client %s: assigned=%d, njobs=%d, max=%d, %s, %d-%d\n",
+				i->_ClientName().str(),
+				i->assigned_jobs,i->c_jobs,i->c_task_thresh_high,
+				i->CanDoTask() ? "YES" : "NO",
+				i->auth_passed ? 1 : 0,i->tri.scheduled_to_send ? 1 : 0);
+			fprintf(stderr,"    ioplock=%d, sched=%p, trs=%d, req=%d,%d\n",
+				i->outpump_lock,i->tri.scheduled_to_send,i->tri.task_request_state,
+				i->tri.req_file_type,i->tri.req_file_idx);
+		}
 		return(NULL);
 	}
 	
 	// Find task to be done: 
 	CompleteTask *startme=NULL;
-	for(CompleteTask *i=tasklist_todo->first(); i; i=i->next)
+	for(CompleteTask *i=tasklist->todo.first(); i; i=i->next)
 	{
 		assert(i->state!=CompleteTask::TaskDone);
-		if(i->d.any())  continue;  // task is currently processed 
+		assert(!i->d.any());   // We're in todo list, not proc list...
 		
 		startme=i;
-		startme->d.ldrc=free_client;   // for LaunchTask() etc. 
+		// We may not set startme->d.ldrc=free_client here because 
+		// this is not allowed before actually launching. 
+		// Instead, we save free_client. 
 		break;
 	}
 	
@@ -398,6 +433,22 @@ if(!startme)
 {  fprintf(stderr,"TaskDriverInterface_LDR: ??? No task todo!!!\n");  }
 	
 	return(startme);
+}
+
+
+LDRClient *TaskDriverInterface_LDR::_FindFreeClient()
+{
+	// Find free client: 
+	// NOTE: We use an LRU-like method here: We always check the client 
+	//       list first-to-last if a client can do a task. If this client 
+	//       got its task, then this client is re-queued at the end. 
+	for(LDRClient *i=clientlist.first(); i; i=i->next)
+	{
+		if(i->CanDoTask())
+		{  return(i);  }
+	}
+	
+	return(NULL);
 }
 
 
@@ -418,9 +469,9 @@ void TaskDriverInterface_LDR::_WriteStartProcInfo(const char *msg)
 	VerboseSpecial("Okay, %s work: max %d parallel tasks on %d client%s.",
 		msg,njobs,nclients,nclients==1 ? "" : "s");
 	
-	Verbose(TDI,"  task-thresh: low=%d, high=%d  (current: %d)\n",
+	Verbose(TDI,"  todo-thresh: low=%d, high=%d  (current: todo=%d, proc=%d)\n",
 		todo_thresh_low,todo_thresh_high,
-		GetTaskListTodo_Nelem());
+		GetTaskList()->todo_nelem,GetTaskList()->proc_nelem);
 	
 }
 
@@ -430,9 +481,9 @@ void TaskDriverInterface_LDR::_WriteProcInfoUpdate()
 	{
 		VerboseSpecial("Update: max %d parallel tasks (currently %d) on %d client%s",
 			njobs,RunningJobs(),nclients,nclients==1 ? "" : "s");
-		Verbose(TDI,"  task-thresh: low=%d, high=%d (current=%d)\n",
+		Verbose(TDI,"  todo-thresh: low=%d, high=%d (current: todo=%d, proc=%d)\n",
 			todo_thresh_low,todo_thresh_high,
-			GetTaskListTodo_Nelem());
+			GetTaskList()->todo_nelem,GetTaskList()->proc_nelem);
 	}
 	if(shall_quit && clientlist.is_empty())
 	{
@@ -519,6 +570,7 @@ void TaskDriverInterface_LDR::ReallyStartProcessing()
 		LDRClient *c=NEW_LDRClient(i);
 		if(!c)
 		{
+			assert(!free_client);
 			while(!clientlist.is_empty())
 			{  clientlist.popfirst()->DeleteMe();  }
 			
@@ -537,6 +589,7 @@ void TaskDriverInterface_LDR::ReallyStartProcessing()
 	
 	if(!n_connecting)
 	{
+		assert(!free_client);
 		while(!clientlist.is_empty())
 		{  clientlist.popfirst()->DeleteMe();  }
 		
@@ -552,6 +605,9 @@ void TaskDriverInterface_LDR::ReallyStartProcessing()
 
 int TaskDriverInterface_LDR::fdnotify(FDInfo *fdi)
 {
+	Error("This is needed?!\n");
+	assert(0);
+	
 	assert(fdi->dptr);
 	LDRClient *client=(LDRClient*)(fdi->dptr);
 	assert(client->pollid==fdi->pollid);  // otherwise data corrupt
@@ -706,8 +762,13 @@ void TaskDriverInterface_LDR::_JobsAddClient(LDRClient *client,int mode)
 		njobs+=client->c_jobs;
 	}
 	
-	todo_thresh_low= njobs+p->todo_thresh_reserved_min;
-	todo_thresh_high=njobs+p->todo_thresh_reserved_max;
+	#warning could adjust todo_thresh_low/high if we get more clients. 
+	// todo_thresh_low/high is the number of tasks in todo queue (NOT in proc 
+	// queue). So, we normally need not change it. BUT for 100 clients, we 
+	// should probably have more than the default 2..5 tasks in todo to be 
+	// able to serve task at any time. 
+	//todo_thresh_low=...
+	//todo_thresh_high=...
 	
 	#if TESTING
 	int cnt=0;
@@ -762,7 +823,7 @@ void TaskDriverInterface_LDR::ClientDisconnected(LDRClient *client)
 		// Note: The one task which might be on the fly (not completely 
 		//       transferred already has d.ldrc set properly and also 
 		//       counts for assigned_jobs. So we do not leave it out here. 
-		for(const CompleteTask *_i=GetTaskListTodo()->first(); _i; )
+		for(const CompleteTask *_i=GetTaskList()->proc.first(); _i; )
 		{
 			// This is needed because PutBackTask() may want to re-order or 
 			// dequeue the task. 
@@ -776,7 +837,7 @@ void TaskDriverInterface_LDR::ClientDisconnected(LDRClient *client)
 			
 			// Tell the TaskManager. 
 			ctsk->d.ldrc=NULL;
-			PutBackTask(ctsk);
+			PutBackTask(ctsk);  // Will re-queue into todo or done list. 
 			
 			if((--client->assigned_jobs)<=0)  break;
 		}
@@ -788,7 +849,7 @@ void TaskDriverInterface_LDR::ClientDisconnected(LDRClient *client)
 	// There may not be any CompleteTasks which still reference 
 	// the client. Note that when triggering this bug trap, the reason 
 	// can also be incorrect client->assigned_jobs counting. 
-	for(const CompleteTask *i=GetTaskListTodo()->first(); i; i=i->next)
+	for(const CompleteTask *i=GetTaskList()->proc.first(); i; i=i->next)
 	{  assert(i->d.ldrc!=client);  }
 	#endif
 	
@@ -822,6 +883,9 @@ void TaskDriverInterface_LDR::UnregisterLDRClient(LDRClient *client)
 		// MUST BE DONE before _JobsAddClient(). 
 		clientlist.dequeue(client);
 	}
+	
+	if(client==free_client);
+	{  free_client=NULL;  }
 	
 	_JobsAddClient(client,-1);
 	
@@ -864,12 +928,16 @@ TaskDriverInterface_LDR::TaskDriverInterface_LDR(
 {
 	p=f;
 	
+	free_client=NULL;
+	
 	// Initial vals: 
 	nclients=0;
 	njobs=0;  // NOT -1
 	
-	todo_thresh_low=p->todo_thresh_reserved_min;
-	todo_thresh_high=p->todo_thresh_reserved_max;
+Error("dif_ldr.cpp: Get rid of fdnotify()!!!!!\n");
+	
+	todo_thresh_low=p->todo_thresh_low;
+	todo_thresh_high=p->todo_thresh_high;
 	
 	already_started_processing=0;
 	shall_quit=0;
@@ -893,4 +961,5 @@ TaskDriverInterface_LDR::~TaskDriverInterface_LDR()
 	// Note: clients have to be deleted via DeleteMe(). 
 	// It's too late here for that. 
 	assert(clientlist.is_empty());
+	assert(!free_client);
 }
