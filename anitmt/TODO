@@ -24,4 +24,9 @@ Wolfgang:
 - Clean up frame output code (better done when we implement the 
   new output concept). 
 - Parameter subsystem [...]
+- Message handler: automatic newline, etc.
+- funcgen parameter stuff
+- message system support for all my parts
+- message system & position objects ( & formatting / line break)
+  (-fmessage-length...)
 - More to come...

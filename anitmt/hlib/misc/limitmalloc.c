@@ -22,7 +22,7 @@
  * of pointers is held. For simplicity, this array is of fixed size 
  * and has as many elements as you specify here. 
  */
-#define AllocDebugging 16384
+#define AllocDebugging 0 /*16384*/
 
 static size_t malloc_limit=0;   /* 0 -> unlimited */
 static size_t curr_size=0;   /* current amount of malloc()ed memory */
