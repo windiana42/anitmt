@@ -98,8 +98,11 @@ class ParameterConsumer :
 		//      beginning of the message is assumed. If this char is a 
 		//      colon, it is also skipped. (Useful e.g. if your message 
 		//      begins with a digit or a `+´.)
-		// NOTE: You may need #include <hlib/refstrlist.h>. 
-		// Return value: currently unused; use 0. 
+		// Note: You may need #include <hlib/refstrlist.h>. 
+		// Return value: 
+		//    0 -> normal operation; print help text
+		//    1 -> do not count the option as help option (go on processing 
+		//         as if it was not there; just print passed text). 
 		virtual int PrintSpecialHelp(RefStrList *,const SpecialHelpItem *)
 			{  return(0);  }
 	public:  _CPP_OPERATORS_FF
@@ -274,6 +277,10 @@ class ParameterConsumer :
 		// -1 -> allocation failure
 		// -2 -> descr or optname NULL 
 		int AddSpecialHelp(SpecialHelpItem *shi);
+		
+		// Explicity print special help item. The item is identified 
+		// by the item_id. Returns number of items written. 
+		int ExplicitPrintSpecialHelp(int item_id);
 };
 
 }  // namespace end 

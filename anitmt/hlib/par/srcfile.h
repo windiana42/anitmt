@@ -31,13 +31,14 @@ class ParameterSource_File : public ParameterSource
 		{
 			// warnings (<0)
 			PPWarningIgnoringInclude=-100,  // allow_recursion=-1 and #include found
-			PPWarningIgnoringGarbageAtEol,  // e.g. `#end blah'
+			PPWarningIgnoringGarbageAtEol,  // e.g. `*end blah'
 			// errors (>0)
-			PPArgOmitted=1,          // #section, #include without arg
+			PPArgOmitted=1,          // *section, *include without arg
 			PPIncludeNestedTooOften, // allow_recursion exceeded
-			PPUnknownSection,        // #section blah -> `blah' unknown
-			PPTooManyEndStatements,  // #end occured too often
-			PPUnterminatedString     // <- after #section, #include...
+			PPUnknownSection,        // *section blah -> `blah' unknown
+			PPTooManyEndStatements,  // *end occured too often
+			PPUnterminatedString,    // <- after *section, *include...
+			PPIllegalPPCommand       // e.g. *sgrfzz
 		};
 	private:
 		Section *file_top_sect;

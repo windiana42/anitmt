@@ -259,9 +259,10 @@ int ParameterManager::CheckHandleHelpOpts(ParamArg *pa,Section *top_sect)
 				if(optlen!=pa->namelen)  continue;
 				if(strncmp(shi->optname,pa->name,pa->namelen))  continue;
 				// Okay, found it. 
-				PrintSpecialHelp(pc,shi);
+				int rv=PrintSpecialHelp(pc,shi);
 				pa->pdone=1;
-				++special;
+				if(rv!=1)
+				{  ++special;  }
 			}
 		}
 	}

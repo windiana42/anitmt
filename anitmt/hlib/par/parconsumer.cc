@@ -127,6 +127,18 @@ int ParameterConsumer::AddSpecialHelp(SpecialHelpItem *shi)
 }
 
 
+int ParameterConsumer::ExplicitPrintSpecialHelp(int item_id)
+{
+	int cnt=0;
+	for(const SpecialHelpItem *i=shelp.first(); i; i=i->next)
+	{
+		if(i->item_id!=item_id)  continue;
+		parmanager()->PrintSpecialHelp(this,i);
+	}
+	return(cnt);
+}
+
+
 ParameterConsumer::ParameterConsumer(ParameterManager *_manager,
 	int *failflag) : 
 	shelp(failflag)

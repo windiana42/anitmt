@@ -77,7 +77,7 @@ class SectionParameterHandler : public PAR
 		//        (use this if the parameter was added to the system by 
 		//        the parse() routine and it has to be parsed normally)
 		//        You may safely use that if there was no param 
-		//        (e.g. for "#section xyz" in contrast to "-xyz-param")
+		//        (e.g. for "*section xyz" in contrast to "-xyz-param")
 		//   2 -> parameter was not accepted, go one level up. 
 		//  -1 -> some sort of error; stop here and do not go one level up
 		virtual int parse(const Section *,SPHInfo *)

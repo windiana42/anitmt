@@ -271,7 +271,7 @@ void ParameterManager::_PrintFormatStrListHelp(RefStrList *txtlst,
 
 
 int ParameterManager::PrintSpecialHelp(ParameterConsumer *pc,
-	SpecialHelpItem *shi,FILE *out)
+	const SpecialHelpItem *shi,FILE *out)
 {
 	SimpleIndentConsoleOutput sico;
 	sico.SetFile(out);

@@ -50,10 +50,11 @@ static const struct pp_info
 	{ ParameterSource_File::PPArgOmitted,                  "required argument omitted" },
 	{ ParameterSource_File::PPIncludeNestedTooOften,       "include nested too deeply" },
 	{ ParameterSource_File::PPUnknownSection,              "unknown section" },
-	{ ParameterSource_File::PPTooManyEndStatements,        "too many #end statements" },
+	{ ParameterSource_File::PPTooManyEndStatements,        "too many *end statements" },
 	{ ParameterSource_File::PPUnterminatedString,          "unterminated string" },
+	{ ParameterSource_File::PPIllegalPPCommand,            "illegal preprocessor command" },
 	// warnings: 
-	{ ParameterSource_File::PPWarningIgnoringInclude,      "ignoring #incluse directive" },
+	{ ParameterSource_File::PPWarningIgnoringInclude,      "ignoring *incluse directive" },
 	{ ParameterSource_File::PPWarningIgnoringGarbageAtEol, "ignoring garbage at end of line" }
 };
 

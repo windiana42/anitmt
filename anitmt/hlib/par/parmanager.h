@@ -224,7 +224,7 @@ class ParameterManager : public PAR
 		virtual int PrintLicense(int what,FILE *out=stderr);
 		// Used when a special help option is encountered. 
 		virtual int PrintSpecialHelp(ParameterConsumer *pc,
-			SpecialHelpItem *shi,FILE *out=stdout);
+			const SpecialHelpItem *shi,FILE *out=stdout);
 		
 		// You should set the program name, package name and version info 
 		// Using this function: 

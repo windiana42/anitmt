@@ -94,7 +94,7 @@ int ParameterSource_File::_ReadLine(FILE *fp,int *linecnt)
 }
 
 
-// If allow_recursion=-1, #include will be ignored. 
+// If allow_recursion=-1, *include will be ignored. 
 // Returns no of errors or -1 -> malloc failed. 
 int ParameterSource_File::_ReadFile(const char *_file,int allow_recursion)
 {
@@ -147,28 +147,38 @@ int ParameterSource_File::_ReadFile(const char *_file,int allow_recursion)
 		
 		// Check for include statement and 
 		// check if this is a section beginning/end: 
+		char *lcmd=line;
 		int special=0;
 		int stype=0;
-		if(!strncmp(line,"#include",8))
+		if(*lcmd!='*')  goto spdone;  // *section, *end, ...
+		// Find command in line: 
+		++lcmd;
+		while(*lcmd && isspace(*lcmd))  ++lcmd;
+		if(!(*lcmd) || *lcmd=='#')  // empty or comment
+		{  goto spdone;  }  // no special line
+		
+		// We are only here if the line begins with preprocessor prefix. 
+		stype=-1;
+		if(!strncmp(lcmd,"include",7))
 		{
 			if(allow_recursion<0)
 			{  PreprocessorError(PPWarningIgnoringInclude,&origin,
 				curr_sect,NULL);  }
 			else
-			{  special=8;  stype=1;  }
+			{  special=7;  stype=1;  }
 		}
-		if(!strncmp(line,"#section",8))
-		{  special=8;  stype=2;  }
-		if(!strncmp(line,"#end",4))
-		{  special=4;  stype=3;  }
-		if(stype)
+		else if(!strncmp(lcmd,"section",7))
+		{  special=7;  stype=2;  }
+		else if(!strncmp(lcmd,"end",3))
+		{  special=3;  stype=3;  }
+		if(stype>=0)
 		{
-			if(line[special] && !isspace(line[special]))
-			{  stype=0;  }
+			if(lcmd[special] && !isspace(lcmd[special]))
+			{  stype=-1;  }  // error
 		}
 		if(stype==1 || stype==2)
 		{
-			char *sname=&line[special];
+			char *sname=&lcmd[special];
 			while(isspace(*sname))  ++sname;
 			if(*sname=='#' || !(*sname))
 			{  PreprocessorError(PPArgOmitted,&origin,curr_sect,NULL);
@@ -215,9 +225,9 @@ int ParameterSource_File::_ReadFile(const char *_file,int allow_recursion)
 				}
 			}
 		}
-		else if(stype==3)  // #end
+		else if(stype==3)  // end
 		{
-			char *sname=&line[special];
+			char *sname=&lcmd[special];
 			while(isspace(*sname))  ++sname;
 			if(*sname!='#' && (*sname))
 			{  PreprocessorError(PPWarningIgnoringGarbageAtEol,&origin,
@@ -235,7 +245,17 @@ int ParameterSource_File::_ReadFile(const char *_file,int allow_recursion)
 				assert(curr_sect);
 			}
 		}
+		else  // stype==-1
+		{
+			lcmd[-1]='*';
+			PreprocessorError(PPIllegalPPCommand,&origin,
+				curr_sect,lcmd-1);
+			++errors;
+		}
 		spdone:;
+		
+		// Nothing more to do if that was a pp command: 
+		if(stype)  continue;
 		
 		// Check for comments: 
 		if(*line=='#')  continue;
@@ -260,7 +280,7 @@ int ParameterSource_File::_ReadFile(const char *_file,int allow_recursion)
 
 // *str=beginning of string
 // Return value: 0 -> OK; >0 -> error
-// NOT used for parameters, only used for #section, #include. 
+// NOT used for parameters, only used for *section, *include. 
 int ParameterSource_File::_ParseString(char **str,size_t *retlen,char **end,
 	const ParamArg::Origin *origin)
 {
