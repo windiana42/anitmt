@@ -322,7 +322,12 @@ dummy_exp:
   | '(' dummy_exp ')'
   | '-' TOK_DUMMY_OPERAND %prec highest_precedence
   | '+' TOK_DUMMY_OPERAND %prec highest_precedence
+  | '<' dummy_exp_comma_list '>'
   | TOK_DUMMY_OPERAND
+;
+dummy_exp_comma_list:
+    dummy_exp
+  | dummy_exp_comma_list ',' dummy_exp
 ;
 dummy_operator:
     TOK_DUMMY_OPERATOR
