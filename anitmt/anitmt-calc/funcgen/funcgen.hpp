@@ -17,6 +17,8 @@
 
 // Parameter system: 
 #include <hlib/parbase.h>
+// Our config. Must be included after hlib/parbase.h. 
+#include <config.h>
 
 class FuncgenParameters : par::ParameterConsumer_Overloaded
 {
@@ -27,7 +29,9 @@ class FuncgenParameters : par::ParameterConsumer_Overloaded
     // Overriding virtual: 
     int CheckParams();
     
+#if YYDEBUG
     int yydebug;   // parser debugging info
+#endif
     int stdebug;   // structure debugging info
     RefString in_file;
     RefString out_basename;

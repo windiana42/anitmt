@@ -12,8 +12,6 @@
 /**									    **/
 /*****************************************************************************/
 
-#include <config.h>
-
 #include <iostream>
 #include <message/message.hpp>
 
