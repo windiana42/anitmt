@@ -152,23 +152,24 @@ int main()
 		va.scale(-0.5,1).scale(-2,2) << "\n";
 	
 	cerr << "Testing multiplication...";
+	int nfailed=0;
 	for(int i=0; i<100; i++)
 	{
-		va=Vector(rand()/1000,rand()/1000,rand()/1000);
-		vb=Vector(rand()/1000,rand()/1000,rand()/1000);
+		va=Vector(rand()/10000,rand()/10000,rand()/10000);
+		vb=Vector(rand()/10000,rand()/10000,rand()/10000);
 		vc=cross(va,vb);
 		sa=va*vc;
 		sb=dot(vb,vc);
 		sc=abs(va)*abs(vb)*(sin(angle(va,vb)));
 		if(sa!=0.0 || sb!=0.0)
 		{  cerr << "*** ERROR (scalar/vector mul) (" << 
-			sa << ", " << sb << ")\n";  }
+			sa << ", " << sb << ")\n";  ++nfailed;  }
 		else if(abs(vc)-sc > 0.01)
 		{  cerr << "*** ERROR (scalar/vector mul) " << 
 			abs(vc) << " != " << sc << "; delta=" << 
-			abs(vc)-sc << "\n";  }
+			abs(vc)-sc << "\n";  ++nfailed;  }
 	}
-	cerr << "done\n";
+	cerr << "done (" << nfailed << "/100)\n";
 	
 	Matrix ma,mb(Matrix::ident),mc(Matrix::null),md;
 	
