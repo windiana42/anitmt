@@ -1,5 +1,5 @@
 # Makefile.am for parser of anitmt adl - animation description language 
-INCLUDES=		-I$(top_srcdir)/lib -I$(top_srcdir)/lib/flex 
+INCLUDES=		-I$(top_srcdir)/lib -I$(top_srcdir)/lib/flex -I$(top_builddir)/hlib/include 
 
 bin_PROGRAMS=		funcgen
 CXXFLAGS =		@CXXFLAGS@ -Wno-non-template-friend -DYYDEBUG \
@@ -14,7 +14,7 @@ funcgen_SOURCES=	gen_code.hpp gen_code.cpp gen_cpp.cpp gen_cpp.hpp \
 			parsinfo.hpp parsinfo.cpp parsinfo_inline.cpp \
 			funcgen.cpp stdextend.hpp stdextend.cpp 
 
-funcgen_LDADD=		../../lib/message/libmessage.a 
+funcgen_LDADD=		../../lib/message/libmessage.a ../../hlib/libhlib.a 
 
 #also includes old adl/libadlparser.a for libanitmt
 

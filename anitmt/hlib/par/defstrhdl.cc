@@ -76,7 +76,8 @@ PAR::ParParseState StringValueHandler::parse(ParamInfo *,void *valptr,
 	if(internal::ValueInNextArg(arg))
 	{
 		ParamArg *nx=arg->next;  // not NULL here 
-		if(nx->atype==ParamArg::Unknown)
+		if(nx->atype==ParamArg::Unknown || 
+		   nx->atype==ParamArg::Filename )
 		{
 			value=arg->next->arg;
 			arg->next->pdone=1;   // Parser will set that to -1 on error. 

@@ -34,34 +34,34 @@ FUNCGEN_CODE=$(srcdir)/../funcgen/gen_cpp.cpp
 base_func.cpp \
 base_func.hpp: $(srcdir)/base_func.afd 
 	if test -e $(FUNCGEN); then					\
-	  $(FUNCGEN) $(srcdir)/base_func.afd base_func functionality	\
-	    $(srcdir)/ ;						\
+	  $(FUNCGEN) -i $(srcdir)/base_func.afd -o base_func -n functionality	\
+	    -I+=$(srcdir)/ ;						\
 	else								\
-	  echo "no funcgen availible, don't create code";		\
+	  echo "No funcgen availible, cannot create code.";		\
 	fi
 
 scalar.cpp \
 scalar.hpp: $(srcdir)/scalar.afd $(FUNCGEN_CODE)
 	if test -e $(FUNCGEN); then					    \
-	  $(FUNCGEN) $(srcdir)/scalar.afd scalar functionality $(srcdir)/ ; \
+	  $(FUNCGEN) -i $(srcdir)/scalar.afd -o scalar -n functionality -I+=$(srcdir)/ ; \
 	else								    \
-	  echo "no funcgen availible, don't create code";		    \
+	  echo "No funcgen availible, cannot create code.";		    \
 	fi
 
 object.cpp \
 object.hpp: $(srcdir)/object.afd $(FUNCGEN_CODE)
 	if test -e $(FUNCGEN); then					    \
-	  $(FUNCGEN) $(srcdir)/object.afd object functionality $(srcdir)/ ; \
+	  $(FUNCGEN) -i $(srcdir)/object.afd -o object -n functionality -I+=$(srcdir)/ ; \
 	else								    \
-	  echo "no funcgen availible, don't create code";		    \
+	  echo "No funcgen availible, cannot create code.";		    \
 	fi
 
 functionality.cpp \
 functionality.hpp: $(srcdir)/functionality.afd $(FUNCGEN_CODE)
 	if test -e $(FUNCGEN); then					     \
-	  $(FUNCGEN) $(srcdir)/functionality.afd functionality functionality \
-	    $(srcdir)/ ;						     \
+	  $(FUNCGEN) -i $(srcdir)/functionality.afd -o functionality -n functionality \
+	    -I+=$(srcdir)/ ;						     \
 	else								     \
-	  echo "no funcgen availible, don't create code";		     \
+	  echo "No funcgen availible, cannot create code.";		     \
 	fi
 

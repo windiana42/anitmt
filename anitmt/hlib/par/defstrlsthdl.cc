@@ -73,7 +73,8 @@ PAR::ParParseState StringListValueHandler::parse(ParamInfo *,void *valptr,
 	if(internal::ValueInNextArg(arg))
 	{
 		ParamArg *nx=arg->next;  // not NULL here 
-		if(nx->atype==ParamArg::Unknown)
+		if(nx->atype==ParamArg::Unknown || 
+		   nx->atype==ParamArg::Filename )
 		{
 			value=arg->next->arg;
 			arg->next->pdone=1;   // Parser will set that to -1 on error. 
@@ -102,7 +103,7 @@ PAR::ParParseState StringListValueHandler::parse(ParamInfo *,void *valptr,
 			size_t str_len=pend-p;
 			
 			// We need a temporary copy: 
-			char *tmp=(char*)LMalloc(str_len+1);
+			tmp=(char*)LMalloc(str_len+1);
 			if(!tmp)
 			{  return(PAR::PPSAssFailed);  }
 			
@@ -184,6 +185,12 @@ PAR::ParParseState StringListValueHandler::parse(ParamInfo *,void *valptr,
 		breakout:;
 	}
 	
+	#if 0
+	char *_str=print(NULL,&list,NULL,0);
+	fprintf(stderr,"READ IN STRLIST[%s]",_str);
+	LFree(_str);
+	#endif
+	
 	// Assign value: 
 	RefStrList *sl=(RefStrList*)valptr;
 	int arv=0;
@@ -219,13 +226,15 @@ char *StringListValueHandler::print(ParamInfo *,void *valptr,
 	{
 		need_len+=i->len()+3;  // +2 for `"' +1 for ' '
 		if(!i->str())  continue;
-		assert(i->stype()==1);  // must be a '\0'-terminated string
+		assert(i->stype()!=1);  // must be a '\0'-terminated string
 		for(const char *c=i->str(); *c; c++)
 		{
 			if(*c=='\\' || *c=='\"')
 			{  ++need_len;  }
 		}
 	}
+	if(!sl->first())
+	{  ++need_len;  }
 	
 	// Allocate memory if not enough mem was supplied: 
 	if(len<need_len)
@@ -249,8 +258,10 @@ char *StringListValueHandler::print(ParamInfo *,void *valptr,
 			}
 		}
 		*(d++)='\"';
-		*(d++) = i->next ? ' ' : '\0';
+		if(i->next)
+		{  *(d++)=' ';  }
 	}
+	*d='\0';
 	
 	return(dest);
 }
