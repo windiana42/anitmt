@@ -128,10 +128,13 @@ if test "x$opt_anitmt_build_dir" != "x" ; then
 	checkdirs="$opt_anitmt_build_dir $opt_anitmt_build_dir/anitmt $opt_anitmt_build_dir/.."
 fi
 for i in $checkdirs ; do
-  test -e "$i/anitmt-calc/functionality/libfunctionality.a" || continue
+  test -e "$i/anitmt-calc/libanitmt-static.a" || continue
   anitmt_build_dir="$i" ; break
 done
 if test "x$anitmt_build_dir" = "x" ; then
+	echo $anitmt_build_dir
+	echo $opt_anitmt_build_dir
+	ls $opt_anitmt_build_dir
 	AC_MSG_RESULT([failed])
 	AC_MSG_ERROR([Unable to find aniTMT build dir. Giving up.])
 fi

@@ -1,7 +1,7 @@
 SUBDIRS = valtype sourcepos numerics objdesc pov-scan ani-parser \
 	pov-core depgraph calccore core
 INCLUDES = -I$(top_srcdir)/src/ -I$(top_builddir)/hlib/include
-	
+
 bin_PROGRAMS = anivision
 LIBS = -lm
 
@@ -29,14 +29,6 @@ anivision_LDADD = \
 	numerics/libnumerics.a \
 	$(top_builddir)/hlib/libhlib.a \
 	\
-	$(top_builddir)/anitmt-build/anitmt-calc/libanitmt.a \
-	$(top_builddir)/anitmt-build/anitmt-calc/functionality/libfunctionality.a \
-	$(top_builddir)/anitmt-build/lib/message/libmessage.a \
-	$(top_builddir)/anitmt-build/lib/param/libparam.a \
-	$(top_builddir)/anitmt-build/lib/par/libpar.a \
-	$(top_builddir)/anitmt-build/lib/val/libval.a \
-	$(top_builddir)/anitmt-build/lib/solve/libsolve.a \
-	$(top_builddir)/anitmt-build/lib/proptree/libproptree.a \
-	$(top_builddir)/anitmt-build/lib/utl/libutl.a \
+	$(top_builddir)/anitmt-build/anitmt-calc/libanitmt-static.a \
 	\
 	-lstdc++ 
