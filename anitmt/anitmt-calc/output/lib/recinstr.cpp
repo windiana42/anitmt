@@ -314,7 +314,7 @@ int Recursive_Input_Stream::_Recursive_Read(InFile_Segment *ifs)
 		{
 			if(ifs->depth>=Max_Include_Depth)
 			{
-				error() << "Error: Max include depth (" << Max_Include_Depth <<
+				error() << "Max include depth (" << Max_Include_Depth <<
 					") exceeded; skipping " << include.is->Path();
 				if(include.is)  delete include.is;
 				include.is=NULL;
@@ -423,7 +423,7 @@ int Recursive_Input_Stream::Include_File(
 		}
 		
 		if(warn_multiple_include)
-		{  Error_Header(error(),lineno) << "warning: " << (lis->Path()) << 
+		{  Error_Header(warning(),lineno) << "warning: " << (lis->Path()) << 
 			" included for the " << (lis->use_cnt) << 
 			Num_Postfix(lis->use_cnt) << 
 			" time. Expect trouble.";  }
