@@ -166,7 +166,8 @@ AC_CONFIG_FILES([ Makefile
 	lib/solve/Makefile
 	lib/utl/Makefile
 	lib/val/Makefile
-	mkavi/Makefile 
+	utils/Makefile 
+	utils/mkavi/Makefile 
 	example/Makefile
 	example/test/Makefile
 	example/test/test_ani/Makefile

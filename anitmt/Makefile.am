@@ -1,4 +1,4 @@
-SUBDIRS = lib hlib anitmt-calc anitmt-view mkavi rendview example
+SUBDIRS = utils lib hlib anitmt-calc rendview example
 EXTRA_DIST = BUILD FAQ autogen.sh
 
 # Make rules currently used by me (Wolfgang): 
