@@ -52,6 +52,17 @@ struct TaskSource_LDR_ServerConn :
 	LDR::LDRCommand next_send_cmd;
 	LDR::LDRCommand expect_cmd;
 	
+	// This is filled in when we get a task until all 
+	// the file downloading, etc. is done, the task is 
+	// passed to the TaskManager and/or LDRTaskResponse 
+	// is sent to the server. 
+	struct TaskRequestInfo
+	{
+		CompleteTask *ctsk;  // May be NULL if we refuse task. 
+		u_int32_t task_id;
+		int resp_code;   // TaskResponseCode: TRC_* or -1 for "unset"
+	} tri;
+	
 	_CPP_OPERATORS_FF
 	TaskSource_LDR_ServerConn(TaskSource_LDR *back,int *failflag=NULL);
 	~TaskSource_LDR_ServerConn();
@@ -79,8 +90,13 @@ struct TaskSource_LDR_ServerConn :
 	int _HandleReceivedHeader(LDR::LDRHeader *hdr);
 	
 	int _ParseTaskRequest(RespBuf *buf);
+	int _ParseTaskRequest_Intrnl(RespBuf *buf,TaskRequestInfo *tri);
 	
 	int _AuthSConnFDNotify(FDInfo *fdi);
+	
+	int cpnotify_outpump_done(FDCopyBase::CopyInfo *cpi);
+	int cpnotify_outpump_start();
+	int cpnotify_inpump(FDCopyBase::CopyInfo *cpi);
 	
 	// Overriding virtual from FDCopyBase: 
 	int fdnotify2(FDBase::FDInfo *fdi);

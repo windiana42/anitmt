@@ -372,6 +372,8 @@ void TaskSource_Local::_ProcessGetTask(TSNotifyInfo *ni)
 		if(!ctsk)  break;
 		
 		ctsk->frame_no=ftpi.frame_no;
+		#warning SUPPLY proper task_id!
+		ctsk->task_id=ftpi.frame_no;
 		
 		if(ftpi.tobe_rendered)
 		{

@@ -552,16 +552,56 @@ int TaskSource_LDR_ServerConn::_HandleReceivedHeader(LDRHeader *hdr)
 }
 
 
+// Return value: (all errors reported to user)
+//   0 -> OK
+//   1 -> error; disconnect
+//   2 -> error; send LDRTaskResponse and refuse task
+int TaskSource_LDR_ServerConn::_ParseTaskRequest(RespBuf *buf)
+{
+	if(tri.resp_code!=-1 || tri.ctsk!=NULL)
+	{
+		// OOPS: Another task is pending here and we're getting info 
+		// for the next one. Server error. Quit now. 
+		Error("LDR: Server sends task request while previous request "
+			"is still incomplete.\n");
+		return(1);
+	}
+	
+	int rv=_ParseTaskRequest_Intrnl(buf,&tri);
+	switch(rv)
+	{
+		case -2:  return(1);
+		case -1:  _AllocFailure();  return(1);
+		case  0:  break;
+		case  1:  return(1);
+		case  2:  assert(tri.resp_code>0);  return(2);
+		default:  assert(0);  break;
+	}
+	
+	#warning hack this check (too many tasks)
+	if(0  /*we_have_enough_tasks_already() FIXME ##*/)
+	{
+		DELETE(tri.ctsk);
+		tri.resp_code=TRC_TooManyTasks;
+		return(2);
+	}
+	
+	assert(tri.resp_code==TRC_Accepted);
+	return(0);
+}
+
+// Internally used by _ParseTaskRequest(). 
 // Return value: 
 //   0 -> OK
 //   1 -> error; disconnect  (message already reported to user)
 //   2 -> error; refuse task (message already reported to user)
 //  -1 -> alloc failure  (!NOT REPORTED!)
 //  -2 -> illegal size entries in header  (message written)
-int TaskSource_LDR_ServerConn::_ParseTaskRequest(RespBuf *buf)
+int TaskSource_LDR_ServerConn::_ParseTaskRequest_Intrnl(
+	RespBuf *buf,TaskRequestInfo *tri)
 {
 	assert(buf->content==Cmd_TaskRequest);  // otherwise strange internal error
-	LDRDoTask *pack=(LDRDoTask*)(buf->data);
+	LDRTaskRequest *pack=(LDRTaskRequest*)(buf->data);
 	assert(pack->command==Cmd_TaskRequest);  // can be left away
 	
 	size_t len=pack->length;
@@ -590,10 +630,10 @@ int TaskSource_LDR_ServerConn::_ParseTaskRequest(RespBuf *buf)
 	char *r_add_args=ptr;     ptr+=r_add_args_size;  lenaccu+=r_add_args_size;
 	char *f_add_args=ptr;     ptr+=f_add_args_size;  lenaccu+=f_add_args_size;
 	
-	if( int64_t(len) != lenaccu+int64_t(sizeof(LDRDoTask)) )
+	if( int64_t(len) != lenaccu+int64_t(sizeof(LDRTaskRequest)) )
 	{
 		fprintf(stderr,"LDR: Illegal size entries in received task request "
-			"(header: %u; data: %u)\n",len,size_t(lenaccu)+sizeof(LDRDoTask));
+			"(header: %u; data: %u)\n",len,size_t(lenaccu)+sizeof(LDRTaskRequest));
 		return(-2);
 	}
 	assert(int64_t(ptr-(char*)pack->data)==lenaccu);   // "must" be the case (see test above).
@@ -606,6 +646,9 @@ int TaskSource_LDR_ServerConn::_ParseTaskRequest(RespBuf *buf)
 		Error("%s%d] with illegal frame number.\n",_rtr,frame_no);
 		return(1);
 	}
+	
+	tri->task_id=ntohl(pack->task_id);
+	#warning check task ID
 	
 	// First, extract render desc, filter desc strings: 
 	RefString rdesc_name,fdesc_name;
@@ -643,7 +686,7 @@ int TaskSource_LDR_ServerConn::_ParseTaskRequest(RespBuf *buf)
 		{
 			Error("%s%d] for unknown render desc \"%s\".\n",
 				_rtr,frame_no,rdesc_name.str());
-			// FIXME: Must store apropriate refusal code.  
+			tri->resp_code=TRC_UnknownRender;
 			return(2);
 		}
 	}
@@ -656,7 +699,7 @@ int TaskSource_LDR_ServerConn::_ParseTaskRequest(RespBuf *buf)
 		{
 			Error("%s%d] for unknown filter desc \"%s\".\n",
 				_rtr,frame_no,fdesc_name.str());
-			// FIXME: Must store apropriate refusal code.  
+			tri->resp_code=TRC_UnknownFilter;
 			return(2);
 		}
 	}
@@ -677,7 +720,7 @@ int TaskSource_LDR_ServerConn::_ParseTaskRequest(RespBuf *buf)
 		{
 			Error("%s%d] containing unknown image format \"%s\".\n",
 				_rtr,frame_no,oformat_name.str());
-			// FIXME: Must store apropriate refusal code.  
+			tri->resp_code=TRC_UnknownROFormat;
 			return(2);
 		}
 	}
@@ -688,7 +731,7 @@ int TaskSource_LDR_ServerConn::_ParseTaskRequest(RespBuf *buf)
 	{  return(-1);  }
 	
 	ctsk->frame_no=frame_no;
-	#warning task id...
+	ctsk->task_id=tri->task_id;
 	if(rdesc)
 	{
 		RenderTask *rt=NEW<RenderTask>();
@@ -751,7 +794,7 @@ int TaskSource_LDR_ServerConn::_ParseTaskRequest(RespBuf *buf)
 	// Okay, dump to the user: 
 	fprintf(stderr,"Received task request:\n");
 	fprintf(stderr,"  frame_no=%u; id=%u\n",
-		ctsk->frame_no,ntohl(pack->task_id));
+		ctsk->frame_no,ctsk->task_id);
 	if(ctsk->rt)
 	{
 		fprintf(stderr,"  Render: %s (%ux%u; timeout=%d; oformat=%s)\n",
@@ -792,9 +835,9 @@ int TaskSource_LDR_ServerConn::_ParseTaskRequest(RespBuf *buf)
 	fprintf(stderr,"<<\n");
 	#endif
 	
-	// AND DO THE RANGE CHECK ABOVE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	Error("Hack on...\n");
-	assert(0);
+	// Okay, so let's fill in the success code and go on. 
+	tri->resp_code=TRC_Accepted;
+	tri->ctsk=ctsk;
 	
 	return(0);
 }
@@ -862,6 +905,12 @@ int TaskSource_LDR_ServerConn::fdnotify2(FDInfo *fdi)
 			if(_SendNowConnected())  return(0);
 			handeled=1;
 		}
+		/*else if(authenticated)
+		{
+			handeled=_AuthSConnFDNotify(fdi);
+			if(handeled<0)  return(0);
+		}*/
+		//else -> !handeled below
 	}
 	
 	if(!handeled || (fdi->revents & (POLLPRI | POLLERR | POLLNVAL)) )
@@ -891,20 +940,48 @@ int TaskSource_LDR_ServerConn::fdnotify2(FDInfo *fdi)
 }
 
 
-int TaskSource_LDR_ServerConn::cpnotify(FDCopyBase::CopyInfo *cpi)
+// Return value: 1 -> called CloseConn(); 0 -> normal
+int TaskSource_LDR_ServerConn::cpnotify_outpump_done(FDCopyBase::CopyInfo *cpi)
 {
-	fprintf(stderr,"cpnotify(scode=0x%x (final=%s; limit=%s), err_no=%d (%s))\n",
-		cpi->scode,
-		(cpi->scode & FDCopyPump::SCFinal) ? "yes" : "no",
-		(cpi->scode & FDCopyPump::SCLimit) ? "yes" : "no",
-		cpi->err_no,strerror(cpi->err_no));
+	// ---------<FIRST PART: HANDLE TERMINATION OF CURRENT REQUEST>---------
+	Error("cpnotify_outpump_done: hack on...\n");
+	assert(0);
 	
-	// We are only interested in FINAL codes. 
-	if(!(cpi->scode & FDCopyPump::SCFinal))
-	{  return(0);  }
-	
-	if(cpi->pump==in.pump_s && in_active_cmd==Cmd_TaskRequest)
+	return(0);
+}
+
+// Return value: 1 -> called CloseConn(); 0 -> normal
+int TaskSource_LDR_ServerConn::cpnotify_outpump_start()
+{
+	if(out.ioaction!=IOA_None)
 	{
+		// This only happens if we're not called from cpnotify() but 
+		// from somewhere else. (Protected by assert() in cpnotify().) 
+		// It means that another copy notify is running and this 
+		// function will be called again when it is over. 
+		return(0);
+	}
+	
+	// ---------<SECOND PART: LAUNCH NEW REQUEST IF NEEDED>---------
+		
+	// See what we can send...
+	if(tri.resp_code>0)  // Not -1 "unset" and not TRC_Accepted. 
+	{
+		// Okay, we have to refuse the packet. 
+		Error("hack me...NOW!");
+		assert(0);
+	}
+	
+	return(0);
+}
+
+// Return value: 1 -> called CloseConn(); 0 -> normal
+int TaskSource_LDR_ServerConn::cpnotify_inpump(FDCopyBase::CopyInfo *cpi)
+{
+	if(in_active_cmd==Cmd_TaskRequest)
+	{
+		assert(cpi->pump==in.pump_s);  // can be left away
+		
 		in_active_cmd==Cmd_NoCommand;
 		in.ioaction=IOA_None;
 		
@@ -922,14 +999,20 @@ int TaskSource_LDR_ServerConn::cpnotify(FDCopyBase::CopyInfo *cpi)
 			#endif
 			
 			int rv=_ParseTaskRequest(&recv_buf);
-			if(rv)
+			if(rv==0)
 			{
-				if(rv==-1)  _AllocFailure();
-				else assert(rv>0 || rv==-2);  // For those <0, WE MUST WRITE ERROR HERE. 
-				
-				_ConnClose(0);
-				return(0);
+				//GoOnAcceptTask();
+				Error("Hack on...\n");
+				assert(0);
 			}
+			else if(rv==1)
+			{  _ConnClose(0);  return(1);  }
+			else if(rv==2)
+			{
+				assert(tri.resp_code>0);
+				cpnotify_outpump_start();
+			}
+			else assert(0);
 		}
 		else
 		{
@@ -941,11 +1024,44 @@ int TaskSource_LDR_ServerConn::cpnotify(FDCopyBase::CopyInfo *cpi)
 			// Act correctly (disconnect). 
 			assert(0);
 		}
-		return(0);
+	}
+	else
+	{
+		Error("DONE -> hack on\n");
+		assert(0);
 	}
 	
-	Error("DONE -> hack on\n");
-	assert(0);
+	return(0);
+}
+
+
+int TaskSource_LDR_ServerConn::cpnotify(FDCopyBase::CopyInfo *cpi)
+{
+	fprintf(stderr,"cpnotify(scode=0x%x (final=%s; limit=%s), err_no=%d (%s))\n",
+		cpi->scode,
+		(cpi->scode & FDCopyPump::SCFinal) ? "yes" : "no",
+		(cpi->scode & FDCopyPump::SCLimit) ? "yes" : "no",
+		cpi->err_no,strerror(cpi->err_no));
+	
+	// We are only interested in FINAL codes. 
+	if(!(cpi->scode & FDCopyPump::SCFinal))
+	{  return(0);  }
+	
+	// This is only used for auth: 
+	assert(next_send_cmd==Cmd_NoCommand);
+	
+	if(cpi->pump==in.pump_s || cpi->pump==in.pump_fd)
+	{
+		cpnotify_inpump(cpi);
+	}
+	else if(cpi->pump==out.pump_s || cpi->pump==out.pump_fd)
+	{
+		if(!cpnotify_outpump_done(cpi))
+		{
+			assert(out.ioaction!=IOA_None);  // If FDCopyPump is running, we may not be here. 
+			cpnotify_outpump_start();
+		}
+	}
 	
 	return(0);
 }
@@ -1002,11 +1118,17 @@ TaskSource_LDR_ServerConn::TaskSource_LDR_ServerConn(TaskSource_LDR *_back,
 	next_send_cmd=Cmd_NoCommand;
 	expect_cmd=Cmd_NoCommand;
 	
+	tri.ctsk=NULL;
+	tri.task_id=0;
+	tri.resp_code=-1;
+	
 	memset(expect_chresp,0,LDRChallengeLength);
 }
 
 TaskSource_LDR_ServerConn::~TaskSource_LDR_ServerConn()
 {
+	memset(expect_chresp,0,LDRChallengeLength);
+	
 	if(sock_fd>=0)
 	{
 		fprintf(stderr,"OOPS: still connected to %s\n",
@@ -1014,6 +1136,12 @@ TaskSource_LDR_ServerConn::~TaskSource_LDR_ServerConn()
 		ShutdownFD(sock_fd);  pollid=NULL;
 	}
 	
-	memset(expect_chresp,0,LDRChallengeLength);
+	if(tri.ctsk)
+	{
+		fprintf(stderr,"OOPS: dangling task [frame %d] left (TaskSource_LDR)\n",
+			tri.ctsk->frame_no);
+		DELETE(tri.ctsk);
+	}
+	
 	back=NULL;
 }

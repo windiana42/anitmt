@@ -65,7 +65,7 @@ class LDRClient :
 		
 		// These store packets in RespBuf *dest: 
 		int _StoreChallengeResponse(LDR::LDRChallengeRequest *d,RespBuf *dest);
-		int _Create_DoTask_Packet(CompleteTask *ctsk,RespBuf *dest);
+		int _Create_TaskRequest_Packet(CompleteTask *ctsk,RespBuf *dest);
 		
 		// Accept and return LDRHeader in HOST order. 
 		int     _AtomicSendData(LDR::LDRHeader *d);

@@ -42,25 +42,33 @@ typedef unsigned char uchar;
 //    ----[LDRChallengeResponse]---->
 //   <------[LDRNowConnected]-------
 
+//    -------[LDRTaskRequest]------->
+//   <-------[LDRFileRequest]-------
+//    ----[LDRFileTransmission]----->
+//   <------[LDRTaskResponse]-------
 
 enum LDRCommand
 {
 	// MAKE SURE THAT THE COMMAND NUMBERS ARE 0..._Cmd_LAST. 
 	Cmd_NoCommand=0x0000,
 	Cmd_QuitNow,          // ONLY server -> client
+	
 	Cmd_ChallengeRequest,
 	Cmd_ChallengeResponse,
 	Cmd_NowConnected,     // challenge resp okay, now server -OR-
 	                      // illegal challenge resp or already connected
 	Cmd_TaskRequest,      // please do that task: blahblah...
-	Cmd_TaskRefused,      // e.g. unknown renderer
+	Cmd_TaskRsponse,      // task accepted or refused (e.g. unknown 
+	                      // renderer, filter, image format...)
+	
 	Cmd_FileRequest,      // need files x,y,z
+	
 	Cmd_TaskState,        // working, killed (?)
 	Cmd_TaskDone,         // task done
 	Cmd_FileTransmission, // here is file x...
 	Cmd_SpecialTaskRequest,  // e.g. interrupt, stop, cont
 	
-	_Cmd_LAST,   // MUST BE LAST
+	_Cmd_LAST   // MUST BE LAST
 };
 
 const char *LDRCommandString(LDRCommand c);
@@ -144,7 +152,7 @@ struct LDRFileInfoEntry
 
 // ALL PASSED STRINGS ARE NOT '\0' - TERMINATED. 
 
-struct LDRDoTask : LDRHeader
+struct LDRTaskRequest : LDRHeader
 {
 	u_int32_t frame_no;
 	u_int32_t task_id;   // unique task ID
@@ -177,6 +185,24 @@ struct LDRDoTask : LDRHeader
 	// LDRFileInfoEntry[1]
 	//    ...
 	// LDRFileInfoEntry[r_n_files+f_n_files-1]
+};
+
+
+enum // TaskResponseCode
+{
+	TRC_Accepted=0,       // task accepted; will be processed later; 
+	                      // (can download next task)
+	TRC_UnknownRender,    // render desc unknown
+	TRC_UnknownFilter,    // filter desc unknown
+	TRC_UnknownROFormat,  // unknown render output image format
+	TRC_TooManyTasks      // client thinks he already has enough tasks 
+	                      // (should never happen)
+};
+
+struct LDRTaskResponse : LDRHeader
+{
+	u_int32_t task_id;   // unique task ID
+	u_int16_t resp_code;  // one of the TRC_* above
 };
 
 // If passwd.str() is NULL or has zero length, default password if 

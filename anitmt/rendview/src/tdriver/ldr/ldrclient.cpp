@@ -556,12 +556,12 @@ void LDRClient::_DoSendQuit(FDBase::FDInfo *fdi)
 }
 
 
-// This formats the whole LDRDoTask data into the RespBuf *dest. 
+// This formats the whole LDRTaskRequest data into the RespBuf *dest. 
 // (Note: Header in HOST oder)
 // Return value: 
 //   0 -> OK complete packet in resp_buf; ready to send it 
 //  -1 -> alloc failure
-int LDRClient::_Create_DoTask_Packet(CompleteTask *ctsk,RespBuf *dest)
+int LDRClient::_Create_TaskRequest_Packet(CompleteTask *ctsk,RespBuf *dest)
 {
 	assert(dest->content==Cmd_NoCommand);
 	
@@ -569,7 +569,7 @@ int LDRClient::_Create_DoTask_Packet(CompleteTask *ctsk,RespBuf *dest)
 	FilterTask *ft=ctsk->ft;
 	
 	// First, compute the size of the "packet": 
-	size_t totsize=sizeof(LDRDoTask);
+	size_t totsize=sizeof(LDRTaskRequest);
 	
 	// All the additional args have to be passed: 
 	size_t r_add_args_size;
@@ -620,7 +620,7 @@ int LDRClient::_Create_DoTask_Packet(CompleteTask *ctsk,RespBuf *dest)
 	
 	// Actually format the packet: 
 	// (Header still in HOST oder)
-	LDRDoTask *pack=(LDRDoTask *)(dest->data);
+	LDRTaskRequest *pack=(LDRTaskRequest *)(dest->data);
 	pack->length=totsize;
 	pack->command=Cmd_TaskRequest;
 	
@@ -715,7 +715,6 @@ int LDRClient::SendTaskToClient(CompleteTask *ctsk)
 	}
 	
 	#warning ! must make sure that we put back those tasks assigned to a client when it disconnects unexpectedly. 
-	#warning check CanDoTask (&& MISSING -> when we are currently busy sending a task)
 	
 	return(0);
 }
@@ -775,7 +774,7 @@ int LDRClient::fdnotify2(FDBase::FDInfo *fdi)
 			// Okay, we have to send the main task data. 
 			int fail=1;
 			do {
-				if(_Create_DoTask_Packet(scheduled_to_send,&send_buf))  break;
+				if(_Create_TaskRequest_Packet(scheduled_to_send,&send_buf))  break;
 				// Okay, make ready to send it: 
 				if(_FDCopyStartSendBuf((LDRHeader*)(send_buf.data)))  break;
 				fail=0;

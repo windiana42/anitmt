@@ -96,6 +96,7 @@ CompleteTask::CompleteTask(int * failflag) :
 {
 	state=TaskDone;  // okay. 
 	frame_no=-1;
+	task_id=0;
 	d.td=NULL;
 	d.ldrc=NULL;
 	assert(!d.any());

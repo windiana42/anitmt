@@ -60,6 +60,9 @@ struct CompleteTask : LinkedListBase<CompleteTask>
 	// Frame number (only used for user output). 
 	int frame_no;
 	
+	// Unique task ID given to the task by the (local) task source. 
+	u_int32_t task_id;  // initially 0 
+	
 	// Allocated for CompleteTask and freed by destructor ~CompleteTask(). 
 	RenderTask *rt;   // or NULL 
 	FilterTask *ft;   // or NULL
