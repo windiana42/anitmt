@@ -1,0 +1,26 @@
+This is the license for the software package 'AniTMT' which is
+  Copyright (c) 2000 by Jan Theofel, Martin Trautmann and Manuel Moser
+
+Please read it carefully!
+
+§1: You may use this software for any usage, commercial or noncommercial one,
+    which you can find for it.
+
+§2: Everyone is allowed to distribute unmodified versions of it, as long as
+    the software is not changed and especially this license information is
+    untouched!
+
+§3: As this program is submitted to a competition, you are not allowed to make
+    any changes to the source yet. Anyway we want to encourage you to send us
+    bug reports, features  which should be added, comments and things like that.
+
+§4: As soon as the competition is over, this license will changed into the GNU
+    GPL. (The latest point of time will be arround summer 2000, if we get so far
+    in the competition.)
+
+§5: The distributed source may be used for educational reasons or to improve
+    your own programs, as long as they are published under the GNU GPL. Plaese
+    contact us, if you want to do this, before the competition is finished!
+
+§6: This software is published as it is. It comes with absolutly NO WARRENTY.
+    Use it at YOUR OWN RISK!

@@ -1,0 +1,686 @@
+2000-01-09 - The command line options are parsed...
+2000-01-09 - Starting without a project. Waiting for incoming projects...
+2000-01-09 - anitmt server started, using port 4004
+2000-01-09 - started child with pid 2515
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2515
+2000-01-09 - Quitting parent process with pid 2503 on signal INT
+2000-01-09 - The command line options are parsed...
+2000-01-09 - Starting without a project. Waiting for incoming projects...
+2000-01-09 - anitmt server started, using port 4004
+2000-01-09 - started child with pid 2532
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2532
+2000-01-09 - started child with pid 2548
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2548
+2000-01-09 - started child with pid 2554
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2554
+2000-01-09 - Quitting parent process with pid 2525 on signal INT
+2000-01-09 - The command line options are parsed...
+2000-01-09 - Starting without a project. Waiting for incoming projects...
+2000-01-09 - anitmt server started, using port 4004
+2000-01-09 - started child with pid 2597
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2597
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2598
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2598
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2600
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2600
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2602
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2602
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2604
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2604
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2606
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2606
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2608
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2608
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2610
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2610
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2612
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2612
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2614
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2614
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2616
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2616
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2618
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2618
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2620
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2620
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2622
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2622
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2624
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2624
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2626
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2626
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2628
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2628
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2630
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2630
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2632
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2632
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2634
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2634
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2636
+2000-01-09 - started child with pid 2636
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2638
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2638
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2640
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2640
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2642
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2642
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2644
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2644
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2646
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2646
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2648
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2648
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2650
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2650
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2652
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2652
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2654
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2654
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2656
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2656
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2658
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2658
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2660
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2660
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2662
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2662
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2664
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2664
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2666
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2666
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2668
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2668
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2670
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2670
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2672
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2672
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2674
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2674
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2676
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2676
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2678
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2678
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2680
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2680
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2682
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2682
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2686
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2686
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2688
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2688
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2690
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2690
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2696
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2696
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2702
+2000-01-09 - started child with pid 2702
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 1, from: 127.0.0.1
+2000-01-09 - started child with pid 2706
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2706
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2708
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2708
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2710
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2710
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2722
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2722
+2000-01-09 - started child with pid 2747
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2747
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2749
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2749
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2751
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2751
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2753
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2753
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2755
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2755
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2757
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2757
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2759
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2759
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2761
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2761
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2766
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2766
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2768
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2768
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2770
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2770
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2772
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2772
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2777
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2777
+2000-01-09 - started child with pid 2783
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2783
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2785
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2785
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2787
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2787
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2789
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2789
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2791
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2791
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2793
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2793
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2795
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2795
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2797
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2797
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2799
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2799
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2801
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2801
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2803
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2803
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2805
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2805
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2807
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2807
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2809
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2809
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2811
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2811
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2813
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2813
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2815
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2815
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2817
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2817
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2819
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2819
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2821
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2821
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2823
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2823
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2825
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2825
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2827
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2827
+2000-01-09 - SEHE DEBUG INFO: found: 2, connected: 0, from: 127.0.0.1
+2000-01-09 - started child with pid 2832
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2832
+2000-01-09 - started child with pid 2854
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2854
+2000-01-09 - Adding project from file /home/jan/anitmt/test-prj/ani.rif
+2000-01-09 - Adding project from file /home/jan/anitmt/test-prj/ani.rif
+2000-01-09 - Quitting child process with pid 2854 on signal INT
+2000-01-09 - Quitting parent process with pid 2591 on signal INT
+2000-01-09 - The command line options are parsed...
+2000-01-09 - Starting without a project. Waiting for incoming projects...
+2000-01-09 - anitmt server started, using port 4004
+2000-01-09 - started child with pid 2887
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2887
+2000-01-09 - Adding project from file /home/jan/anitmt/test-prj/ani.rif
+2000-01-09 - Quitting parent process with pid 2883 on signal INT
+2000-01-09 - The command line options are parsed...
+2000-01-09 - Starting without a project. Waiting for incoming projects...
+2000-01-09 - anitmt server started, using port 4004
+2000-01-09 - started child with pid 2910
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2910
+2000-01-09 - Adding project from file /home/jan/anitmt/test-prj/ani.rif
+2000-01-09 - WARNING: Number of files not equal with given frame number (project test.01)
+2000-01-09 - Quitting child process with pid 2910 on signal INT
+2000-01-09 - Quitting parent process with pid 2898 on signal INT
+2000-01-09 - The command line options are parsed...
+2000-01-09 - Starting without a project. Waiting for incoming projects...
+2000-01-09 - anitmt server started, using port 4004
+2000-01-09 - started child with pid 2951
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2951
+2000-01-09 - Adding project from file /home/jan/anitmt/test-pfj/ani.rif
+2000-01-09 - Adding project from file /home/jan/anitmt/test-prj/ani.rif
+2000-01-09 - WARNING: Number of files not equal with given frame number (project test.02)
+2000-01-09 - Quitting child process with pid 2951 on signal INT
+2000-01-09 - Quitting parent process with pid 2944 on signal INT
+2000-01-09 - The command line options are parsed...
+2000-01-09 - Starting without a project. Waiting for incoming projects...
+2000-01-09 - anitmt server started, using port 4004
+2000-01-09 - started child with pid 2993
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 2993
+2000-01-09 - Adding project from file /home/jan/anitmt/test-prj/ani.rif
+2000-01-09 - Adding project from file /home/jan/anitmt/test-prj/ani.rif
+2000-01-09 - WARNING: Number of files not equal with given frame number (project test.03)
+2000-01-09 - Quitting child process with pid 2993 on signal INT
+2000-01-09 - Quitting parent process with pid 2989 on signal INT
+2000-01-09 - The command line options are parsed...
+2000-01-09 - Starting without a project. Waiting for incoming projects...
+2000-01-09 - anitmt server started, using port 4004
+2000-01-09 - started child with pid 0
+2000-01-09 - Connection accepted from 127.0.0.1 by child 3520
+2000-01-09 - started child with pid 3520
+2000-01-09 - Adding project from file /home/jan/anitmt/test-prj/ani.rif
+2000-01-09 - DEBUG: SQL command for adding the project is:
+  INSERT INTO projects VALUES (NULL, "test.04", "author unknown", "no comment given", "/home/jan/anitmt/test-prj/ani/", "/tmp/anitmt/server-output/test.04/", 400, 300, "povray31.pov", "f%04d.inc", "frame.inc", 24, 120, 0)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0000.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0001.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0002.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0003.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0004.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0005.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0006.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0007.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0008.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0009.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0010.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0011.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0012.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0013.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0014.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0015.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0016.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0017.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0018.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0019.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0020.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0021.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0022.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0023.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0024.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0025.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0026.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0027.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0028.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0029.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0030.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0031.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0032.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0033.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0034.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0035.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0036.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0037.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0038.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0039.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0040.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0041.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0042.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0043.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0044.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0045.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0046.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0047.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0048.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0049.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0050.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0051.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0052.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0053.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0054.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0055.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0056.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0057.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0058.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0059.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0060.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0061.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0062.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0063.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0064.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0065.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0066.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0067.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0068.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0069.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0070.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0071.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0072.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0073.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0074.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0075.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0076.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0077.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0078.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0079.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0080.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0081.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0082.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0083.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0084.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0085.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0086.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0087.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0088.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0089.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0090.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0091.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0092.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0093.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0094.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0095.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0096.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0097.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0098.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0099.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0100.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0101.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0102.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0103.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0104.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0105.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0106.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0107.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0108.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0109.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0110.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0111.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0112.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0113.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0114.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0115.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0116.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0117.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0118.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the frame is:
+  INSERT INTO frames VALUES (NULL, 2, "povray3.1", "", 0, "f0119.inc", "not rendered", 1)
+2000-01-09 - DEBUG: SQL command for adding the copy file is:
+  INSERT INTO copy_files VALUES (NULL, 2, "colors.inc")
+2000-01-09 - DEBUG: SQL command for adding the copy file is:
+  INSERT INTO copy_files VALUES (NULL, 2, "film.avi")
+2000-01-09 - DEBUG: SQL command for adding the copy file is:
+  INSERT INTO copy_files VALUES (NULL, 2, "frame.inc")
+2000-01-09 - DEBUG: SQL command for adding the copy file is:
+  INSERT INTO copy_files VALUES (NULL, 2, "kugel.pov")
+2000-01-09 - DEBUG: SQL command for adding the copy file is:
+  INSERT INTO copy_files VALUES (NULL, 2, "povray31.pov")
+2000-01-09 - WARNING: Number of files not equal with given frame number (project test.04)

@@ -1,0 +1,15 @@
+
+This is the server program for the AniTMT animation system.
+
+To install:
+1. Unpack this package.
+2. If needed, install Perl 5.003 or later
+2. If needed, install the following (CPAN) modules:
+   - IPC::Shareable (needs Tie::Storeable)  [ both CPAN ]
+   - GetOpt::Long                           [ standard ]
+   - Time::localtime                        [ standard ]
+ 
+The license can be found in license.eng.txt.
+
+New versions:
+  http://www.theofel.de/anitmt/
