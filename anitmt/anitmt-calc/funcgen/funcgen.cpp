@@ -22,11 +22,6 @@ namespace funcgen
   int parse_afd( AFD_Root *afd, message::Message_Consultant *c, 
 		 std::string filename );
   extern int yydebug;
-
-#ifdef WOLFGANG
-  // UGLY HACK BY Wolfgang: Need that against unresolved symbol yydebug:
-  int yydebug=0;
-#endif
 }
 
 

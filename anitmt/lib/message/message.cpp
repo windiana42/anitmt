@@ -114,7 +114,7 @@ namespace message
     // This is likely to do the opposite of what we want: 
     strcpy( message, src.message );
     #ifdef WOLFGANG
-    cerr << "message.cpp:" << __LINE__ << " Please report me as bug." << std::endl;
+    fprintf(stderr,"message.cpp:%d: Please report me as bug.\n",__LINE__);
     assert(0);
     // Should be something like that:
     //msg_stream=std::strstream(
@@ -138,7 +138,7 @@ namespace message
     // This is likely to do the opposite of what we want: 
     strcpy( dest.message, message );
     #ifdef WOLFGANG
-    cerr << "message.cpp:" << __LINE__ << " Please report me as bug." << std::endl;
+    fprintf(stderr,"message.cpp:%d: Please report me as bug.\n",__LINE__);
     assert(0);
     // Should be something like that:
     //dest.msg_stream=std::strstream(

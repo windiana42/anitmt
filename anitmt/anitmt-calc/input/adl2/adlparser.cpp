@@ -16,10 +16,6 @@
 
 #include <string>
 
-#ifdef WOLFGANG
-// Ugly hack by Wolfgang against unresolved symbol:
-namespace anitmt { namespace adlparser { int yydebug=0; } }
-#endif
 
 namespace anitmt
 {
