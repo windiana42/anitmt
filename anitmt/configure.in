@@ -72,58 +72,33 @@ AC_CHECK_FUNCS([dup2 gettimeofday stat memmove memset pow setenv sqrt strcasecmp
 
 AC_CONFIG_SUBDIRS(hlib rendview)
 
-AC_OUTPUT( Makefile
-           anitmt-calc/Makefile
-           anitmt-calc/funcgen/Makefile
-           anitmt-calc/functionality/Makefile
-           anitmt-calc/input/Makefile
-           anitmt-calc/input/adl2/Makefile
-           anitmt-calc/output/Makefile
-           anitmt-calc/output/lib/Makefile
-           anitmt-calc/output/pov/Makefile
-           anitmt-calc/output/raw/Makefile
-           anitmt-view/Makefile
-           anitmt-view/parser/Makefile
-           lib/Makefile
-           lib/flex/Makefile
-           lib/message/Makefile
-           lib/par/Makefile
-           lib/param/Makefile
-           lib/proptree/Makefile
-           lib/solve/Makefile
-           lib/utl/Makefile
-           lib/val/Makefile
-           mkavi/Makefile 
-           example/Makefile
-           example/test/Makefile
-           example/test/test_ani/Makefile
-           example/myrobot/Makefile
-           example/myrobot/ani/Makefile
-           example/circles/Makefile 
-           example/circles/ani/Makefile )
-#** created by too new autoscan
-#AC_CONFIG_FILES([Makefile
-#                 anitmt-calc/Makefile
-#                 anitmt-calc/funcgen/Makefile
-#                 anitmt-calc/funcgen/test/Makefile
-#                 anitmt-calc/functionality/Makefile
-#                 anitmt-calc/input/Makefile
-#                 anitmt-calc/input/adl2/Makefile
-#                 anitmt-calc/output/Makefile
-#                 anitmt-calc/output/lib/Makefile
-#                 anitmt-calc/output/pov/Makefile
-#                 anitmt-calc/output/raw/Makefile
-#                 anitmt-view/Makefile
-#                 anitmt-view/parser/Makefile
-#                 lib/Makefile
-#                 lib/flex/Makefile
-#                 lib/message/Makefile
-#                 lib/par/Makefile
-#                 lib/param/Makefile
-#                 lib/proptree/Makefile
-#                 lib/solve/Makefile
-#                 lib/utl/Makefile
-#                 lib/val/Makefile
-#                 lib/val2/Makefile
-#                 mkavi/Makefile])
-#AC_OUTPUT
+AC_CONFIG_FILES([ Makefile
+	anitmt-calc/Makefile
+	anitmt-calc/funcgen/Makefile
+	anitmt-calc/functionality/Makefile
+	anitmt-calc/input/Makefile
+	anitmt-calc/input/adl2/Makefile
+	anitmt-calc/output/Makefile
+	anitmt-calc/output/lib/Makefile
+	anitmt-calc/output/pov/Makefile
+	anitmt-calc/output/raw/Makefile
+	anitmt-view/Makefile
+	anitmt-view/parser/Makefile
+	lib/Makefile
+	lib/flex/Makefile
+	lib/message/Makefile
+	lib/par/Makefile
+	lib/param/Makefile
+	lib/proptree/Makefile
+	lib/solve/Makefile
+	lib/utl/Makefile
+	lib/val/Makefile
+	mkavi/Makefile 
+	example/Makefile
+	example/test/Makefile
+	example/test/test_ani/Makefile
+	example/myrobot/Makefile
+	example/myrobot/ani/Makefile
+	example/circles/Makefile 
+	example/circles/ani/Makefile ])
+AC_OUTPUT
