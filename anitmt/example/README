@@ -1,1 +1,5 @@
-no propper example yet!!!
++ test:    stupid test example
++ myrobot: moving robots (scalar animation)
++ circles: rotating circles with anitmt in the middle
+
+mpeg.par:  example parameter file for mpeg2encode

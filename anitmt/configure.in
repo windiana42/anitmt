@@ -96,7 +96,14 @@ AC_OUTPUT( Makefile
            lib/solve/Makefile
            lib/utl/Makefile
            lib/val/Makefile
-           mkavi/Makefile )
+           mkavi/Makefile 
+           example/Makefile
+           example/test/Makefile
+           example/test/test_ani/Makefile
+           example/myrobot/Makefile
+           example/myrobot/ani/Makefile
+           example/circles/Makefile 
+           example/circles/ani/Makefile )
 #** created by too new autoscan
 #AC_CONFIG_FILES([Makefile
 #                 anitmt-calc/Makefile

@@ -1,0 +1,87 @@
+scene CircleScene { 
+  filename "circles.pov";
+  scene_type "pov";
+  scalar Rotation {
+      linear {
+        difference   0;
+      }
+      accelerated a1 {
+        start_value   0;
+        start_time    0;
+        start_slope   0;
+        end_value     (start_value + next.end_value) / 2;
+        duration     0.75;
+      }
+      accelerated {
+        duration     CircleScene.Rotation.a1.duration;
+        end_value     5;
+        end_slope     0;     
+      }
+      accelerated {
+        start_slope   0;
+        end_value     (start_value + next.end_value) / 2;
+        duration     CircleScene.Rotation.a1.duration;
+      }
+      accelerated {
+        duration     CircleScene.Rotation.a1.duration;
+        end_value   -10;
+      }
+      accelerated a5 {
+        start_slope   0;
+        duration     CircleScene.Rotation.a1.duration;
+        end_slope    45;        
+      }
+      linear l2 {
+        //start_time 3.75;//5 * CircleScene.Rotation.a1.duration;
+        //start_value 6.8;//prev.end_value;
+        slope 45; // prev.end_slope;
+        //end_value   360 - 16.8;
+        //frames 100;
+        //end_time 3.75+8;
+      }
+      accelerated a6 {
+        //start_time 5 * CircleScene.Rotation.a1.duration + (start_value - CircleScene.Rotation.a5.end_value) * CircleScene.Rotation.a5.end_slope;
+        //start_value end_value - difference;
+        start_slope   45; // prev.slope;
+        duration     CircleScene.Rotation.a1.duration;
+        //difference duration * (start_slope + end_slope) * 0.5;
+        end_slope     0;        
+        end_value   360;
+        //end_time     11;
+      }
+      linear {
+        difference 0;
+      }
+      linear { // /* to fix endtime default */
+	start_time 14;
+      }
+  }
+  
+  scalar PlasmaOffset {
+      linear {
+        start_value  0;
+        slope     100; 
+      }
+      linear { // /* to fix endtime default */
+	start_time 14;
+      }
+  }
+
+  scalar TimeVar {
+      linear {
+        slope      1;
+        end_value   0;
+        end_time    0;
+      }
+      linear {
+        start_time  0;
+        start_value 0;
+        slope      1;
+      }
+      linear { // /* workaround for endtime default */
+	start_time 14;
+      }
+  }
+}
+
+

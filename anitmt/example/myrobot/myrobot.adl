@@ -1,0 +1,991 @@
+scene MyRoboterSzene {
+  filename "myrobot.pov";
+  scene_type "pov";
+
+  scalar Kameradreh2 {
+    change c {
+/*
+      accelerated a1{
+	start_time 0;
+	start_value  0;
+	start_slope  0;
+	end_value    (MyRoboterSzene.Kameradreh2.c.a2.end_value + start_value) / 2;
+	duration    3;
+      }
+      accelerated a2{
+	end_slope    0;
+	end_value    -360 + 120;
+	duration    3;
+      }
+*/
+      linear{
+	start_time 0;
+        end_time 14;
+      }
+    }
+  }
+
+//  Rob_Drehgelenk_W       =    0
+//  Rob_Armteil1_W         =   45
+//  Rob_Armteil2_W         =  -90
+//  Rob_Tele_L             =    7.25
+//  // Hier : min 7.25      max 19.25
+//  Rob_Armteil3_W         =  -45
+//  Finger1_Winkel         =   45 
+//  Finger2_Winkel         =   45 
+
+/*
+// *****************************************************************************
+// Robot XXX  
+// *****************************************************************************
+  scalar Rob_Armteil1_WXXX {
+    change c {
+      linear {
+	start_time 0;
+	difference 0;
+	end_time Rob_Armteil1_WXXX.c.oben.end_time;;
+      }
+      accelerated start{
+        start_value     45;
+        start_slope      0;
+        duration         1; 
+        end_value     52.5;
+      }
+      accelerated oben{
+        duration        1; 
+        end_value       60;
+        end_slope        0;
+      }
+      linear {
+	end_time 14;
+      }
+    }
+  }
+  
+  scalar Rob_Drehgelenk_WXXX {
+    change c {
+      linear {
+	start_time 0;
+        //duration        2;
+	end_time   Rob_Armteil1_WXXX.c.oben.end_time;
+      }
+      accelerated {
+        start_value    -60;
+        start_slope      0;
+        duration         1;
+        end_value      -15;
+      }
+      accelerated gedreht {
+        duration         1;
+        end_value       30;
+        end_slope        0;
+      }
+      linear {
+	end_time 14;
+      }
+    }
+  }
+  
+  scalar Rob_Armteil2_WXXX {
+    change c {
+      linear {
+	start_time 0;
+	difference 0;
+	end_time Rob_Armteil1_WXXX.c.start.start_time;
+      }
+      accelerated {
+        start_value   -90;
+        start_slope     0;
+        duration        1;
+        end_value     -80;
+      }
+      accelerated {
+        duration        1;
+        end_value     -70;
+        end_slope       0;
+      }
+      linear {
+	end_time 14;
+      }
+    }
+  }
+  
+  scalar Rob_Tele_LXXX {
+    change c {
+      linear {
+	start_time 0;
+        start_value    7.25;
+        difference     0;
+        //duration       2;
+	end_time       Rob_Armteil1_WXXX.c.oben.end_time;
+      }
+      linear {
+        end_value      17.25;
+        duration       3;
+      }
+      linear {
+        end_value      19.25;
+        duration       0.5;
+      }
+      constant {
+	end_time 14;
+      }
+    }
+  }
+  
+  scalar Rob_Armteil3_WXXX {
+    change c {
+      linear {
+	start_time 0;
+        difference 0;
+	end_time Rob_Armteil1_WXXX.c.start.start_time;
+      }
+      accelerated {
+        start_value  -45;
+        start_slope    0;
+        duration      1;
+        end_value    -62.5;
+      }
+      accelerated {
+        duration      1;
+        end_value    -80;
+        end_slope      0;
+      }
+      linear {
+        duration      2; 
+      }
+      accelerated {
+        start_slope    0;
+        duration      1;
+        end_value    -35;
+      }
+      accelerated {
+        duration      1;
+        end_value     10;
+        end_slope      0;
+      }
+      linear {
+	end_time 14;
+      }
+    }
+  }
+  
+  scalar Finger1_WinkelXXX {
+    change c {
+      linear {
+	start_time 0;
+        start_value   45;
+        //duration      4;
+	end_time   Rob_Drehgelenk_WXXX.c.gedreht.end_time;
+        difference     0;
+      }
+      linear {
+        duration      0.5;
+        end_value      0;
+      }
+      linear {
+        duration     1;
+        difference     0;
+      }
+      accelerated {
+        duration     2;
+        end_value    45;
+        end_slope     0;
+      }
+      linear {
+	end_time 14;
+      }
+    }
+  }
+  
+  scalar Finger2_WinkelXXX {
+    change c {
+      linear {
+	start_time 0;
+        start_value  45;
+        //duration     4;
+	end_time   Rob_Drehgelenk_WXXX.c.gedreht.end_time;
+        difference     0;
+      }
+      linear {
+        end_value    60;
+        duration     0.5;
+      }
+      linear {
+        duration     1;
+        difference     0;
+      }
+      accelerated {
+        duration     2;
+        end_value    90;
+        end_slope     0;
+      }
+      linear {
+	end_time 14;
+      }
+    }
+  }
+*/
+
+// *****************************************************************************
+// Robot 1  
+// *****************************************************************************
+  scalar Rob_Armteil1_W1 {
+    change c {
+      linear {
+	start_time 0;
+	difference 0;
+	end_time 0;
+      }
+      accelerated start{
+        start_value     45;
+        start_slope      0;
+        duration         1; 
+        end_value     52.5;
+      }
+      accelerated oben{
+        duration        1; 
+        end_value       60;
+        end_slope        0;
+      }
+      linear {
+	end_time 14;
+      }
+    }
+  }
+  
+  scalar Rob_Drehgelenk_W1 {
+    change c {
+      linear {
+	start_time 0;
+        //duration        2;
+	end_time   Rob_Armteil1_W1.c.oben.end_time;
+      }
+      accelerated {
+        start_value    -60;
+        start_slope      0;
+        duration         1;
+        end_value      -15;
+      }
+      accelerated gedreht {
+        duration         1;
+        end_value       30;
+        end_slope        0;
+      }
+      linear {
+	end_time 14;
+      }
+    }
+  }
+  
+  scalar Rob_Armteil2_W1 {
+    change c {
+      linear {
+	start_time 0;
+	difference 0;
+	end_time Rob_Armteil1_W1.c.start.start_time;
+      }
+      accelerated {
+        start_value   -90;
+        start_slope     0;
+        duration        1;
+        end_value     -80;
+      }
+      accelerated {
+        duration        1;
+        end_value     -70;
+        end_slope       0;
+      }
+      linear {
+	end_time 14;
+      }
+    }
+  }
+  
+  scalar Rob_Tele_L1 {
+    change c {
+      linear {
+	start_time 0;
+        start_value    7.25;
+        difference     0;
+        //duration       2;
+	end_time       Rob_Armteil1_W1.c.oben.end_time;
+      }
+      linear {
+        end_value      17.25;
+        duration       3;
+      }
+      linear {
+        end_value      19.25;
+        duration       0.5;
+      }
+      constant {
+	end_time 14;
+      }
+    }
+  }
+  
+  scalar Rob_Armteil3_W1 {
+    change c {
+      linear {
+	start_time 0;
+        difference 0;
+	end_time Rob_Armteil1_W1.c.start.start_time;
+      }
+      accelerated {
+        start_value  -45;
+        start_slope    0;
+        duration      1;
+        end_value    -62.5;
+      }
+      accelerated {
+        duration      1;
+        end_value    -80;
+        end_slope      0;
+      }
+      linear {
+        duration      2; 
+      }
+      accelerated {
+        start_slope    0;
+        duration      1;
+        end_value    -35;
+      }
+      accelerated {
+        duration      1;
+        end_value     10;
+        end_slope      0;
+      }
+      linear {
+	end_time 14;
+      }
+    }
+  }
+  
+  scalar Finger1_Winkel1 {
+    change c {
+      linear {
+	start_time 0;
+        start_value   45;
+        //duration      4;
+	end_time   Rob_Drehgelenk_W1.c.gedreht.end_time;
+        difference     0;
+      }
+      linear {
+        duration      0.5;
+        end_value      0;
+      }
+      linear {
+        duration     1;
+        difference     0;
+      }
+      accelerated {
+        duration     2;
+        end_value    45;
+        end_slope     0;
+      }
+      linear {
+	end_time 14;
+      }
+    }
+  }
+  
+  scalar Finger2_Winkel1 {
+    change c {
+      linear {
+	start_time 0;
+        start_value  45;
+        //duration     4;
+	end_time   Rob_Drehgelenk_W1.c.gedreht.end_time;
+        difference     0;
+      }
+      linear {
+        end_value    60;
+        duration     0.5;
+      }
+      linear {
+        duration     1;
+        difference     0;
+      }
+      accelerated {
+        duration     2;
+        end_value    90;
+        end_slope     0;
+      }
+      linear {
+	end_time 14;
+      }
+    }
+  }
+// *****************************************************************************
+// Robot 2  
+// *****************************************************************************
+  scalar Rob_Armteil1_W2 {
+    change c {
+      linear {
+	start_time 0;
+	difference 0;
+	end_time Rob_Armteil1_W1.c.oben.end_time;
+      }
+      accelerated start{
+        start_value     45;
+        start_slope      0;
+        duration         1; 
+        end_value     52.5;
+      }
+      accelerated oben{
+        duration        1; 
+        end_value       60;
+        end_slope        0;
+      }
+      linear {
+	end_time 14;
+      }
+    }
+  }
+  
+  scalar Rob_Drehgelenk_W2 {
+    change c {
+      linear {
+	start_time 0;
+        //duration        2;
+	end_time   Rob_Armteil1_W2.c.oben.end_time;
+      }
+      accelerated {
+        start_value    -60;
+        start_slope      0;
+        duration         1;
+        end_value      -15;
+      }
+      accelerated gedreht {
+        duration         1;
+        end_value       30;
+        end_slope        0;
+      }
+      linear {
+	end_time 14;
+      }
+    }
+  }
+  
+  scalar Rob_Armteil2_W2 {
+    change c {
+      linear {
+	start_time 0;
+	difference 0;
+	end_time Rob_Armteil1_W2.c.start.start_time;
+      }
+      accelerated {
+        start_value   -90;
+        start_slope     0;
+        duration        1;
+        end_value     -80;
+      }
+      accelerated {
+        duration        1;
+        end_value     -70;
+        end_slope       0;
+      }
+      linear {
+	end_time 14;
+      }
+    }
+  }
+  
+  scalar Rob_Tele_L2 {
+    change c {
+      linear {
+	start_time 0;
+        start_value    7.25;
+        difference     0;
+        //duration       2;
+	end_time       Rob_Armteil1_W2.c.oben.end_time;
+      }
+      linear {
+        end_value      17.25;
+        duration       3;
+      }
+      linear {
+        end_value      19.25;
+        duration       0.5;
+      }
+      constant {
+	end_time 14;
+      }
+    }
+  }
+  
+  scalar Rob_Armteil3_W2 {
+    change c {
+      linear {
+	start_time 0;
+        difference 0;
+	end_time Rob_Armteil1_W2.c.start.start_time;
+      }
+      accelerated {
+        start_value  -45;
+        start_slope    0;
+        duration      1;
+        end_value    -62.5;
+      }
+      accelerated {
+        duration      1;
+        end_value    -80;
+        end_slope      0;
+      }
+      linear {
+        duration      2; 
+      }
+      accelerated {
+        start_slope    0;
+        duration      1;
+        end_value    -35;
+      }
+      accelerated {
+        duration      1;
+        end_value     10;
+        end_slope      0;
+      }
+      linear {
+	end_time 14;
+      }
+    }
+  }
+  
+  scalar Finger1_Winkel2 {
+    change c {
+      linear {
+	start_time 0;
+        start_value   45;
+        //duration      4;
+	end_time   Rob_Drehgelenk_W2.c.gedreht.end_time;
+        difference     0;
+      }
+      linear {
+        duration      0.5;
+        end_value      0;
+      }
+      linear {
+        duration     1;
+        difference     0;
+      }
+      accelerated {
+        duration     2;
+        end_value    45;
+        end_slope     0;
+      }
+      linear {
+	end_time 14;
+      }
+    }
+  }
+  
+  scalar Finger2_Winkel2 {
+    change c {
+      linear {
+	start_time 0;
+        start_value  45;
+        //duration     4;
+	end_time   Rob_Drehgelenk_W2.c.gedreht.end_time;
+        difference     0;
+      }
+      linear {
+        end_value    60;
+        duration     0.5;
+      }
+      linear {
+        duration     1;
+        difference     0;
+      }
+      accelerated {
+        duration     2;
+        end_value    90;
+        end_slope     0;
+      }
+      linear {
+	end_time 14;
+      }
+    }
+  }
+// *****************************************************************************
+// Robot 3  
+// *****************************************************************************
+  scalar Rob_Armteil1_W3 {
+    change c {
+      linear {
+	start_time 0;
+	difference 0;
+	end_time Rob_Armteil1_W2.c.oben.end_time;
+      }
+      accelerated start{
+        start_value     45;
+        start_slope      0;
+        duration         1; 
+        end_value     52.5;
+      }
+      accelerated oben{
+        duration        1; 
+        end_value       60;
+        end_slope        0;
+      }
+      linear {
+	end_time 14;
+      }
+    }
+  }
+  
+  scalar Rob_Drehgelenk_W3 {
+    change c {
+      linear {
+	start_time 0;
+        //duration        2;
+	end_time   Rob_Armteil1_W3.c.oben.end_time;
+      }
+      accelerated {
+        start_value    -60;
+        start_slope      0;
+        duration         1;
+        end_value      -15;
+      }
+      accelerated gedreht {
+        duration         1;
+        end_value       30;
+        end_slope        0;
+      }
+      linear {
+	end_time 14;
+      }
+    }
+  }
+  
+  scalar Rob_Armteil2_W3 {
+    change c {
+      linear {
+	start_time 0;
+	difference 0;
+	end_time Rob_Armteil1_W3.c.start.start_time;
+      }
+      accelerated {
+        start_value   -90;
+        start_slope     0;
+        duration        1;
+        end_value     -80;
+      }
+      accelerated {
+        duration        1;
+        end_value     -70;
+        end_slope       0;
+      }
+      linear {
+	end_time 14;
+      }
+    }
+  }
+  
+  scalar Rob_Tele_L3 {
+    change c {
+      linear {
+	start_time 0;
+        start_value    7.25;
+        difference     0;
+        //duration       2;
+	end_time       Rob_Armteil1_W3.c.oben.end_time;
+      }
+      linear {
+        end_value      17.25;
+        duration       3;
+      }
+      linear {
+        end_value      19.25;
+        duration       0.5;
+      }
+      constant {
+	end_time 14;
+      }
+    }
+  }
+  
+  scalar Rob_Armteil3_W3 {
+    change c {
+      linear {
+	start_time 0;
+        difference 0;
+	end_time Rob_Armteil1_W3.c.start.start_time;
+      }
+      accelerated {
+        start_value  -45;
+        start_slope    0;
+        duration      1;
+        end_value    -62.5;
+      }
+      accelerated {
+        duration      1;
+        end_value    -80;
+        end_slope      0;
+      }
+      linear {
+        duration      2; 
+      }
+      accelerated {
+        start_slope    0;
+        duration      1;
+        end_value    -35;
+      }
+      accelerated {
+        duration      1;
+        end_value     10;
+        end_slope      0;
+      }
+      linear {
+	end_time 14;
+      }
+    }
+  }
+  
+  scalar Finger1_Winkel3 {
+    change c {
+      linear {
+	start_time 0;
+        start_value   45;
+        //duration      4;
+	end_time   Rob_Drehgelenk_W3.c.gedreht.end_time;
+        difference     0;
+      }
+      linear {
+        duration      0.5;
+        end_value      0;
+      }
+      linear {
+        duration     1;
+        difference     0;
+      }
+      accelerated {
+        duration     2;
+        end_value    45;
+        end_slope     0;
+      }
+      linear {
+	end_time 14;
+      }
+    }
+  }
+  
+  scalar Finger2_Winkel3 {
+    change c {
+      linear {
+	start_time 0;
+        start_value  45;
+        //duration     4;
+	end_time   Rob_Drehgelenk_W3.c.gedreht.end_time;
+        difference     0;
+      }
+      linear {
+        end_value    60;
+        duration     0.5;
+      }
+      linear {
+        duration     1;
+        difference     0;
+      }
+      accelerated {
+        duration     2;
+        end_value    90;
+        end_slope     0;
+      }
+      linear {
+	end_time 14;
+      }
+    }
+  }
+// *****************************************************************************
+// Robot 4  
+// *****************************************************************************
+  scalar Rob_Armteil1_W4 {
+    change c {
+      linear {
+	start_time 0;
+	difference 0;
+	end_time Rob_Armteil1_W3.c.oben.end_time;
+      }
+      accelerated start{
+        start_value     45;
+        start_slope      0;
+        duration         1; 
+        end_value     52.5;
+      }
+      accelerated oben{
+        duration        1; 
+        end_value       60;
+        end_slope        0;
+      }
+      linear {
+	end_time 14;
+      }
+    }
+  }
+  
+  scalar Rob_Drehgelenk_W4 {
+    change c {
+      linear {
+	start_time 0;
+        //duration        2;
+	end_time   Rob_Armteil1_W4.c.oben.end_time;
+      }
+      accelerated {
+        start_value    -60;
+        start_slope      0;
+        duration         1;
+        end_value      -15;
+      }
+      accelerated gedreht {
+        duration         1;
+        end_value       30;
+        end_slope        0;
+      }
+      linear {
+	end_time 14;
+      }
+    }
+  }
+  
+  scalar Rob_Armteil2_W4 {
+    change c {
+      linear {
+	start_time 0;
+	difference 0;
+	end_time Rob_Armteil1_W4.c.start.start_time;
+      }
+      accelerated {
+        start_value   -90;
+        start_slope     0;
+        duration        1;
+        end_value     -80;
+      }
+      accelerated {
+        duration        1;
+        end_value     -70;
+        end_slope       0;
+      }
+      linear {
+	end_time 14;
+      }
+    }
+  }
+  
+  scalar Rob_Tele_L4 {
+    change c {
+      linear {
+	start_time 0;
+        start_value    7.25;
+        difference     0;
+        //duration       2;
+	end_time       Rob_Armteil1_W4.c.oben.end_time;
+      }
+      linear {
+        end_value      17.25;
+        duration       3;
+      }
+      linear {
+        end_value      19.25;
+        duration       0.5;
+      }
+      constant {
+	end_time 14;
+      }
+    }
+  }
+  
+  scalar Rob_Armteil3_W4 {
+    change c {
+      linear {
+	start_time 0;
+        difference 0;
+	end_time Rob_Armteil1_W4.c.start.start_time;
+      }
+      accelerated {
+        start_value  -45;
+        start_slope    0;
+        duration      1;
+        end_value    -62.5;
+      }
+      accelerated {
+        duration      1;
+        end_value    -80;
+        end_slope      0;
+      }
+      linear {
+        duration      2; 
+      }
+      accelerated {
+        start_slope    0;
+        duration      1;
+        end_value    -35;
+      }
+      accelerated {
+        duration      1;
+        end_value     10;
+        end_slope      0;
+      }
+      linear {
+	end_time 14;
+      }
+    }
+  }
+  
+  scalar Finger1_Winkel4 {
+    change c {
+      linear {
+	start_time 0;
+        start_value   45;
+        //duration      4;
+	end_time   Rob_Drehgelenk_W4.c.gedreht.end_time;
+        difference     0;
+      }
+      linear {
+        duration      0.5;
+        end_value      0;
+      }
+      linear {
+        duration     1;
+        difference     0;
+      }
+      accelerated {
+        duration     2;
+        end_value    45;
+        end_slope     0;
+      }
+      linear {
+	end_time 14;
+      }
+    }
+  }
+  
+  scalar Finger2_Winkel4 {
+    change c {
+      linear {
+	start_time 0;
+        start_value  45;
+        //duration     4;
+	end_time   Rob_Drehgelenk_W4.c.gedreht.end_time;
+        difference     0;
+      }
+      linear {
+        end_value    60;
+        duration     0.5;
+      }
+      linear {
+        duration     1;
+        difference     0;
+      }
+      accelerated {
+        duration     2;
+        end_value    90;
+        end_slope     0;
+      }
+      linear {
+	end_time 14;
+      }
+    }
+  }
+
+}
