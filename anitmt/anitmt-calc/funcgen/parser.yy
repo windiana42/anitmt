@@ -1,5 +1,5 @@
 /*****************************************************************************/
-/**   This file defines a parser/compiler for the ADL language              **/
+/**   This file defines a parser/compiler for the AFD language              **/
 /*****************************************************************************/
 /**									    **/
 /** Author: Martin Trautmann						    **/
@@ -12,9 +12,9 @@
 /**									    **/
 /*****************************************************************************/
 
-//***********
+// ***********
 // Codeblock
-//***********
+// ***********
 
 %{
 #include <iostream>
@@ -41,15 +41,15 @@ namespace funcgen
 
 %}
 
-//*********
+// *********
 // Options
-//*********
+// *********
    
 %pure_parser			// parser may be called recursive
 
-//********
+// ********
 // Tokens
-//********
+// ********
 
 // keywords
 %token TAFD_include TAFD_declaration TAFD_header TAFD_avoid_recursion 
@@ -62,8 +62,10 @@ namespace funcgen
 %token TAFD_last_child TAFD_start_param TAFD_end_param TAFD_true TAFD_false
 %token TAFD_return TAFD_return_prop TAFD_return_fail TAFD_return_if_fail 
 %token TAFD_operators TAFD_versions TAFD_BB_left TAFD_PT_CONCAT
-%token TAFD_declarations TAFD_init TAFD_events TAFD_group TAFD_condition 
-%token TAFD_test_run TAFD_final TAFD_reset
+%token TAFD_declarations TAFD_init_operands TAFD_init_code TAFD_events 
+%token TAFD_container TAFD_serial_container TAFD_group TAFD_event TAFD_test_run
+%token TAFD_final TAFD_reset TAFD_set TAFD_try TAFD_try_reject
+%token TAFD_trial_failed TAFD_is_solved_in_try TAFD_is_just_solved TAFD_solver
 
 // lexer error
 %token TAFD_ERROR 
@@ -86,6 +88,7 @@ namespace funcgen
 %type <u.boolean> opt_serial
 %type <string> opt_second_identifier
 %type <string> opt_fail_bool_var
+%type <string> opt_identifier
 %type <u.exp> op_expression
 %type <u.exp> op_expression_list
 %type <string> Cxx_type_identifier
@@ -95,12 +98,13 @@ namespace funcgen
 %type <string> Cxx_identifier
 %type <string> Cxx_complex_identifier
 %type <string> Cxx_expression
+%type <string> opt_Cxx_expression_list
 %type <string> Cxx_expression_list
-//****************
+// ****************
 // precicion table
-//****************
+// ****************
 
-//********************
+// ********************
 // normal precedences
 %left '?' ':'
 %left TAFD_AND TAFD_OR
@@ -112,9 +116,9 @@ namespace funcgen
 %left '.' ID_CONCAT
 %left NS_CONCAT
 
-//****************
+// ****************
 // Parser Rules
-//****************
+// ****************
 %%
 
 // ***********************************************************
@@ -134,7 +138,7 @@ statement:
   | type_declaration
   | node_declaration
   | operators_declaration
-  | complex_solvers_declaration
+  | event_solvers_declaration
 ;
 
 // ***********************************************************
@@ -470,49 +474,49 @@ essential:
       { node_result_essential_result( info, "", $3, $5 ); }
   | TAFD_this '.' TAFD_IDENTIFIER '.' TAFD_IDENTIFIER '(' TAFD_IDENTIFIER ')'
       { node_result_essential_result( info, $3, $5, $7 ); }
+  | TAFD_IDENTIFIER '.' TAFD_IDENTIFIER 
+      { node_result_essential_solver_function( info, $1, $3 ); }
 ;
 result_code_block:
-    { start_code_block(info); } code_statements { finish_code_block(info); }
+    { start_code_block(info); } 
+  result_code_statements 
+    { finish_code_block(info); }
 ;
-code_statements: /*optional*/
-  | code_statements code_statement
+result_code_statements: /*optional*/
+  | result_code_statements result_code_statement
 ;
-code_statement:
+result_code_statement:
     TAFD_CODE	
 // closing brackets may be single to avoid C++ code conflicts with tokens
-  | TAFD_BB_left result_reference ']' ']' { continue_code_mode(info); }
-  | TAFD_BB_left TAFD_return_prop	  { res_ref_start_return_prop(info); }
-      result_property_reference ']' ']'   { res_ref_finish_return_prop(info);
-					    continue_code_mode(info); }
-  | TAFD_BB_left TAFD_return		  { res_ref_start_return(info); }
-      Cxx_expression ']' ']'		  { write_code(info,$4);
-					    res_ref_finish_return(info);
-					    continue_code_mode(info); }
-  | TAFD_BB_left TAFD_return		  { res_ref_start_return_res(info); }
-      strict_result_function_reference ']' ']'   
-					  { res_ref_finish_return_res(info);
-					    continue_code_mode(info); }
-  | TAFD_BB_left TAFD_return_fail ']' ']' { res_ref_return_fail(info);
-					    continue_code_mode(info); }
-  | TAFD_BB_left TAFD_return_if_fail ']' ']' 
-					  { res_ref_return_if_fail(info);
-					    continue_code_mode(info); }
+  | TAFD_BB_left result_code_special_command ']' ']' 
+      { continue_code_mode(info); }
   | TAFD_BB_left error ']' ']'		  { continue_code_mode(info); }
 ;
-result_reference:
-    result_property_reference
-  | result_function_reference
-;
-result_property_reference:
-    TAFD_IDENTIFIER		{ res_ref_property(info,$1); }
-;
-result_function_reference:
-    TAFD_child '.' TAFD_IDENTIFIER '.' TAFD_IDENTIFIER '('
+result_code_special_command:
+  | TAFD_IDENTIFIER
+        { user_code_prop_op(info,$1); }
+  | TAFD_child '.' TAFD_IDENTIFIER '.' TAFD_IDENTIFIER '('
     TAFD_IDENTIFIER TAFD_IDENTIFIER ')' opt_fail_bool_var
-				{ res_ref_child(info,$3,$5,$7,$8,$10); }
+	{ res_ref_child(info,$3,$5,$7,$8,$10); }
   | opt_this TAFD_IDENTIFIER opt_second_identifier '(' 
     TAFD_IDENTIFIER TAFD_IDENTIFIER ')' opt_fail_bool_var
-				{ res_ref_this(info,$2,$3,$5,$6,$8); }
+	{ res_ref_this(info,$2,$3,$5,$6,$8); }
+  | TAFD_solver '.' TAFD_IDENTIFIER '.' TAFD_IDENTIFIER 
+      '(' opt_Cxx_expression_list ')' opt_fail_bool_var
+	{ user_code_solver_function(info,$3,$5,$7,$9); }
+
+  | TAFD_return_prop TAFD_IDENTIFIER ';'
+        { user_code_return_prop(info,$2); }
+  | TAFD_return Cxx_expression ';'
+        { user_code_return(info,$2); }
+  | TAFD_return TAFD_solver '.' TAFD_IDENTIFIER '.' TAFD_IDENTIFIER
+      '(' opt_Cxx_expression_list ')' ';'
+	{ user_code_return_solver_function(info,$4,$6,$8); }
+  | TAFD_return strict_result_function_reference ';'
+  | TAFD_return_fail ';'
+        { user_code_return_fail(info); }
+  | TAFD_return_if_fail ';'
+        { user_code_return_if_fail(info); }
 ;
 strict_result_function_reference: // for return statements
     TAFD_child '.' TAFD_IDENTIFIER '.' TAFD_IDENTIFIER '('
@@ -618,37 +622,42 @@ operator_version_type_list: /*optional*/
 // solver declaration rules
 // ***********************************************************
 
-complex_solvers_declaration:
-    TAFD_solvers '{' complex_solvers_statements '}'
+event_solvers_declaration:
+    TAFD_solvers '{' event_solvers_statements '}'
 ;
-complex_solvers_statements: /*optional*/
-  | complex_solvers_statements complex_solver_declaration    
+event_solvers_statements: /*optional*/
+  | event_solvers_statements event_solver_declaration    
 ;
-complex_solver_declaration:
+event_solver_declaration:
     TAFD_IDENTIFIER '(' 
-        { start_complex_solver_parameters( info, $1 ); }
-      operand_parameter_list ')' 
-        { start_complex_solver_declaration( info ); }
-      '{' complex_solver_statements '}' { }
-        { finish_complex_solver_declaration( info ); }
+        { start_event_solver_parameters( info, $1 ); }
+      event_solver_parameter_list ')' 
+        { start_event_solver_declaration( info ); }
+      '{' event_solver_statements '}' 
+        { finish_event_solver_declaration( info ); }
 ;
-operand_parameter_list: /*optional*/
-  | operand_parameter					
-  | operand_parameter_list ',' operand_parameter  
+event_solver_parameter_list: /*optional*/
+  | event_solver_parameter					
+  | event_solver_parameter_list ',' event_solver_parameter  
 ;
-operand_parameter:
-    TAFD_IDENTIFIER TAFD_IDENTIFIER { declare_operand( info, $1, $2 ); }
+event_solver_parameter:
+    TAFD_IDENTIFIER TAFD_IDENTIFIER
+        { event_solver_parameter_operand( info, $1, $2 ); }
+  | TAFD_container '.' TAFD_IDENTIFIER TAFD_IDENTIFIER
+        { event_solver_parameter_container( info, false, $3, $4 ); }
+  | TAFD_serial_container '.' TAFD_IDENTIFIER TAFD_IDENTIFIER
+        { event_solver_parameter_container( info, true, $3, $4 ); }
 ;
-complex_solver_statements: /*optional*/
-  | complex_solver_statements complex_solver_statement
+event_solver_statements: /*optional*/
+  | event_solver_statements event_solver_statement
 ;
-complex_solver_statement:
+event_solver_statement:
     operands_declaration
-  | complex_solver_member_declaration
-  | complex_solver_init_declaration
-  | complex_solver_init_constraints_declaration
-  | complex_solver_events_declaration
-  | complex_solver_provide_declaration
+  | event_solver_member_declaration
+  | event_solver_init_operands_declaration
+  | event_solver_init_code_declaration
+  | event_solver_events_declaration
+  | event_solver_provide_declaration
 ;
 
 // ********
@@ -659,7 +668,7 @@ complex_solver_statement:
 // *************
 // declarations
 
-complex_solver_member_declaration:
+event_solver_member_declaration:
     TAFD_declarations '{' variable_declarations '}'
 ;
 variable_declarations: /*optional*/
@@ -677,86 +686,153 @@ variable_name_identifier:
     TAFD_IDENTIFIER		{ variable_declaration_name( info, $1 ); }
 ;
 
-// ********
-// init
+// **************
+// init operands
 
-complex_solver_init_declaration:
-    TAFD_init '{' 
-        { start_complex_solver_init_block(info); } 
+event_solver_init_operands_declaration:
+    TAFD_init_operands '{' event_solver_init_operand_statements '}'
+;
+event_solver_init_operand_statements: /*optional*/
+  | event_solver_init_operand_statements 
+      event_solver_init_operand_statement
+;
+event_solver_init_operand_statement:
+    TAFD_solvers '{' 
+        { start_event_solver_init_solvers_block(info); } 
       solver_statements 
-        { finish_complex_solver_init_block(info); } 
+        { finish_event_solver_init_solvers_block(info); } 
+      '}'
+  | TAFD_constraints '{' 
+        { start_event_solver_init_constraints_block(info); } 
+      constraint_statements 
+        { finish_event_solver_init_constraints_block(info); } 
       '}'
 ;
+  
 
-// *****************
-// init_constraints
+// **********
+// init code
 
-complex_solver_init_constraints_declaration:
-    TAFD_init TAFD_constraints'{' 
-        { start_complex_solver_init_constraints_block(info); } 
-      constraint_statements 
-        { finish_complex_solver_init_constraints_block(info); } 
-      '}'
+event_solver_init_code_declaration:
+    TAFD_init_code			{ start_event_solver_init_code(info); }
+      '{' Cxx_code '}'			{ finish_event_solver_init_code(info);}
 ;
 
 // ********
 // events
 
-complex_solver_events_declaration:
-    TAFD_events '{' complex_solver_events_statements '}'
+event_solver_events_declaration:
+    TAFD_events '{' event_solver_events_statements '}'
 ;
-complex_solver_events_statements: /*optional*/
-  | complex_solver_events_statements complex_solver_events_statement
+event_solver_events_statements: /*optional*/
+  | event_solver_events_statements event_solver_events_statement
 ;
-complex_solver_events_statement:
-    complex_solver_event_condition_block
-  | TAFD_group '{' complex_solver_event_group_statements '}'
+event_solver_events_statement:
+    event_solver_event_block
+      { finish_event_solver_event_group(info); /* close single event group */ }
+  | TAFD_group opt_identifier '{'
+      { start_event_solver_event_group(info,$2); }
+    event_solver_event_group_statements '}'
+      { finish_event_solver_event_group(info); }
 ;
-complex_solver_event_group_statements: /*optional*/
-  | complex_solver_event_group_statements complex_solver_event_group_statement
+event_solver_event_group_statements: /*optional*/
+  | event_solver_event_group_statements event_solver_event_group_statement
 ;
-complex_solver_event_group_statement:
-    complex_solver_event_condition_block
-  | opt_complex_solver_event_reset_block
+event_solver_event_group_statement:
+    event_solver_event_block
+  | opt_event_solver_event_group_reset_block
 ;
-complex_solver_event_condition_block:
-    TAFD_condition complex_solver_event_condition 
-      '{' complex_solver_event_condition_statement '}'
+opt_event_solver_event_group_reset_block: /*optional*/
+  | TAFD_reset				{ start_event_group_reset_code(info); }
+      '{' Cxx_code '}'			{ finish_event_group_reset_code(info);}
 ;
-complex_solver_event_condition:
-    TAFD_IDENTIFIER					{ }
-  | complex_solver_event_condition '&' TAFD_IDENTIFIER	{ }
+event_solver_event_block:
+    TAFD_event opt_identifier TAFD_requires 
+        { start_event_solver_event(info, $2); }
+    event_solver_event_condition 
+    '{' event_solver_event_statement '}'
 ;
-complex_solver_event_condition_statement:
-    complex_solver_event_test_run_block
-    opt_complex_solver_event_final_block
-    opt_complex_solver_event_reset_block
+event_solver_event_condition:
+    event_solver_event_condition_element
+  | event_solver_event_condition ',' 
+      event_solver_event_condition_element
 ;
-complex_solver_event_test_run_block:
-    TAFD_test_run '{' Cxx_code '}'
+event_solver_event_condition_element:
+    TAFD_IDENTIFIER			   
+        { event_condition(info, $1); }
+  | TAFD_container '.' event_solver_event_container_condition
 ;
-opt_complex_solver_event_final_block: /*optional*/
-  | TAFD_final '{' Cxx_code '}'
+event_solver_event_container_condition:
+    TAFD_IDENTIFIER
+        { event_condition_container(info, $1); }
+  | TAFD_IDENTIFIER '.' TAFD_IDENTIFIER '(' TAFD_IDENTIFIER ')'
+        { event_condition_container_function(info, $1, $3, $5); }
 ;
-opt_complex_solver_event_reset_block: /*optional*/
-  | TAFD_reset '{' Cxx_code '}'
+event_solver_event_statement:
+    event_solver_event_test_run_block
+    opt_event_solver_event_final_block
+    opt_event_solver_event_reset_block
+;
+opt_event_solver_event_final_block: /*optional*/
+  | TAFD_final				{ start_event_final_code(info); }
+      '{' Cxx_code '}'			{ finish_event_final_code(info); }
+;
+opt_event_solver_event_reset_block: /*optional*/
+  | TAFD_reset				{ start_event_reset_code(info); }
+      '{' Cxx_code '}'			{ finish_event_reset_code(info); }
+;
+event_solver_event_test_run_block:
+    TAFD_test_run			{ start_event_test_run_code(info); }
+      '{' test_run_code_block '}'	{ finish_event_test_run_code(info); }
+;
+test_run_code_block:
+    { start_code_block(info); } 
+  test_run_code_statements 
+    { finish_code_block(info); }
+;
+test_run_code_statements: /*optional*/
+  | test_run_code_statements test_run_code_statement
+;
+test_run_code_statement:
+    TAFD_CODE	
+// closing brackets may be single to avoid C++ code conflicts with tokens
+  | TAFD_BB_left test_run_special_command ']' ']' { continue_code_mode(info); }
+;
+test_run_special_command:
+    TAFD_set TAFD_IDENTIFIER '=' Cxx_expression ';'	
+        { event_solver_code_set(info,$2,$4); }
+  | TAFD_try TAFD_IDENTIFIER '=' Cxx_expression ';'
+        { event_solver_code_try(info,$2,$4); }
+  | TAFD_try_reject identifier_comma_list ';'
+        { event_solver_code_try_reject(info); }
+  | TAFD_is_solved_in_try '(' TAFD_IDENTIFIER ')'	
+        { event_solver_code_is_solved_in_try(info,$3); }
+  | TAFD_is_just_solved   '(' TAFD_IDENTIFIER ')'	
+        { event_solver_code_is_just_solved(info,$3); }
+
+  | TAFD_IDENTIFIER
+        { user_code_prop_op_try(info,$1); }
+  | TAFD_solver '.' TAFD_IDENTIFIER '.' TAFD_IDENTIFIER 
+      '(' opt_Cxx_expression_list ')' opt_fail_bool_var
+	{ user_code_solver_function(info,$3,$5,$7,$9); }
 ;
 
 // ********
 // provides
 
-complex_solver_provide_declaration:
-    TAFD_provide '{' complex_solver_provide_statements '}'
+event_solver_provide_declaration:
+    TAFD_provide '{' event_solver_provide_statements '}'
 ;
-complex_solver_provide_statements: /*optional*/
-  | complex_solver_provide_statements complex_solver_function_declaration
+event_solver_provide_statements: /*optional*/
+  | event_solver_provide_statements event_solver_function_declaration
 ;
-complex_solver_function_declaration:
+event_solver_function_declaration:
     Cxx_type_identifier TAFD_IDENTIFIER
-				{ start_complex_solver_function(info,$1,$2); }
+				{ start_event_solver_function(info,$1,$2); }
       '(' Cxx_function_parameters ')' 
-      opt_complex_solver_function_requirements
-      '{' Cxx_code '}'		{ finish_complex_solver_function(info); }
+      opt_event_solver_function_requirements
+      '{' event_solver_function_code_block '}' 
+				{ finish_event_solver_function(info);}
 ;
 Cxx_function_parameters: /*optional*/
   | Cxx_function_parameter
@@ -765,22 +841,94 @@ Cxx_function_parameters: /*optional*/
 Cxx_function_parameter:
     Cxx_type_identifier TAFD_IDENTIFIER	{ function_parameter(info,$1,$2); }
 ;
-opt_complex_solver_function_requirements: /*optional*/
-  | TAFD_requires complex_solver_function_require_statements
+opt_event_solver_function_requirements: /*optional*/
+  | TAFD_requires event_solver_function_require_statements
 ;
-complex_solver_function_require_statements:
-    complex_solver_function_require_statement
-  | complex_solver_function_require_statements ',' 
-      complex_solver_function_require_statement
+event_solver_function_require_statements:
+    event_solver_function_require_statement
+  | event_solver_function_require_statements ',' 
+      event_solver_function_require_statement
 ;
-complex_solver_function_require_statement:
-    TAFD_IDENTIFIER			{ complex_solver_require_operand
+event_solver_function_require_statement:
+    TAFD_IDENTIFIER			{ event_solver_require_operand
 					    (info,$1); }
-  | TAFD_this '.' TAFD_IDENTIFIER	{ complex_solver_require_function
+  | TAFD_this '.' TAFD_IDENTIFIER	{ event_solver_require_function
 					    (info,$3); }
-  | TAFD_IDENTIFIER '.' TAFD_IDENTIFIER	{ complex_solver_require_solver_func
+  | TAFD_IDENTIFIER '.' TAFD_IDENTIFIER	{ event_solver_require_solver_func
 					    (info,$1,$3); }
+  | TAFD_event '.' TAFD_IDENTIFIER	{ event_solver_require_event
+					    (info,$3); }
+  | TAFD_group '.' TAFD_IDENTIFIER	{ event_solver_require_event_group
+					    (info,$3); }
+  | TAFD_container '.' event_solver_function_require_container
 ;
+event_solver_function_require_container:
+    TAFD_IDENTIFIER
+        { event_solver_require_container(info, $1); }
+  | TAFD_IDENTIFIER '.' TAFD_IDENTIFIER '(' TAFD_IDENTIFIER ')'
+        { event_solver_require_container_function(info, $1, $3, $5); }
+;
+event_solver_function_code_block:
+    { start_code_block(info); } 
+  event_solver_function_code_statements 
+    { finish_code_block(info); }
+;
+event_solver_function_code_statements: /*optional*/
+  | event_solver_function_code_statements event_solver_function_code_statement
+;
+event_solver_function_code_statement:
+    TAFD_CODE	
+// closing brackets may be single to avoid C++ code conflicts with tokens
+  | TAFD_BB_left event_solver_function_special_command ']' ']' 
+    { continue_code_mode(info); }
+;
+event_solver_function_special_command:
+  | TAFD_IDENTIFIER
+        { user_code_prop_op(info,$1); }
+  | TAFD_solver '.' TAFD_IDENTIFIER '.' TAFD_IDENTIFIER 
+      '(' opt_Cxx_expression_list ')' opt_fail_bool_var
+	{ user_code_solver_function(info,$3,$5,$7,$9); }
+
+  | TAFD_return_prop TAFD_IDENTIFIER ';'
+        { user_code_return_prop(info,$2); }
+  | TAFD_return Cxx_expression ';'
+        { user_code_return(info,$2); }
+  | TAFD_return TAFD_solver '.' TAFD_IDENTIFIER '.' TAFD_IDENTIFIER
+      '(' opt_Cxx_expression_list ')' ';'
+	{ user_code_return_solver_function(info,$4,$6,$8); }
+  | TAFD_return_fail ';'
+        { user_code_return_fail(info); }
+  | TAFD_return_if_fail ';'
+        { user_code_return_if_fail(info); }
+;
+
+// ***********************************************************
+// common rules
+// ***********************************************************
+
+opt_identifier: /*optional*/		{$$="";}
+  | TAFD_IDENTIFIER		
+;
+
+/*
+opt_identifier_comma_list: /*optional* /
+  | identifier_comma_list
+;
+
+operand_parameter_list: /*optional* /
+  | operand_parameter					
+  | operand_parameter_list ',' operand_parameter  
+;
+operand_parameter:
+    TAFD_IDENTIFIER TAFD_IDENTIFIER { declare_operand( info, $1, $2 ); }
+;
+*/
+
+identifier_comma_list:
+  | TAFD_IDENTIFIER			      {common_add_identifier(info,$1);}
+  | identifier_comma_list ',' TAFD_IDENTIFIER {common_add_identifier(info,$3);}
+;
+
 // ***********************************************************
 // expression rules
 // ***********************************************************
@@ -847,6 +995,8 @@ Cxx_complex_identifier: /* C++ Identifier like values::value.x->y.z */
 Cxx_expression:
     Cxx_complex_identifier		  {$$ = $1;}
   | TAFD_SCALAR				  {$$ = to_string($1);}
+  | TAFD_true				  {$$ = "true";}
+  | TAFD_false				  {$$ = "false";}
   | '(' Cxx_expression ')'		  {$$ = '(' + $2 + ')';}
   | Cxx_complex_identifier '(' ')'	  {$$ = $1 + '(' + ')';}
   | Cxx_complex_identifier '(' Cxx_expression_list ')'
@@ -866,8 +1016,13 @@ Cxx_expression:
   | Cxx_expression TAFD_MORE_EQUAL Cxx_expression {$$ = $1 + ">=" + $3;}
   | Cxx_expression TAFD_LESS_EQUAL Cxx_expression {$$ = $1 + "<=" + $3;}
   | Cxx_expression '?' Cxx_expression ':' Cxx_expression
-					  {$$ = $1 + "?" + $3 + ":" + $5;}
+					  {$$ = "choose(" + $1 + "," + $3 
+					     + ","+$5+")";}
 ;
+opt_Cxx_expression_list: /*optional*/		  {$$ = ""; }
+  | Cxx_expression_list				  {$$ = $1; }
+;
+
 Cxx_expression_list: 
     Cxx_expression				  {$$ = $1;}
   | Cxx_expression_list ',' Cxx_expression	  {$$ = $1 + "," + $3;}

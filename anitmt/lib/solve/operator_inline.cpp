@@ -24,9 +24,10 @@ namespace solve
   //*******************************************************************
 
   template< class OP >
-  inline Operand<bool> &is_solved( Operand<OP> &op )
+  inline Operand<values::Flag> &is_solved( Operand<OP> &op )
   {
-    if( op.is_solved() ) return const_op( true, op.get_consultant() );
+    if( op.is_solved() ) 
+      return const_op( values::Flag(true), op.get_consultant() );
     return (new Is_Solved_Operator( op, op.get_consultant() ))->get_result();
   }
   /* see solver.afd

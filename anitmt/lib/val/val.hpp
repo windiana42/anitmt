@@ -32,6 +32,8 @@
 namespace values
 {
 
+const double PI = 3.14159265358979323846;
+
 typedef vect::Neutral0 Neutral0;
 typedef vect::Neutral1 Neutral1;
 typedef vect::Flag Flag;

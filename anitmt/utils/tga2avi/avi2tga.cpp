@@ -75,14 +75,14 @@ int main(int argn,char **argv)
       printf(" Syntax:\n");
       printf("   avi2tga options \n\n");
       printf("   [-o tganames ]  name of the TGA-files that includes number of digits:\n");
-      printf("                   %c0nd (f%c04d.tga for f0000.tga,...)\n\n",'%','%');
+      printf("                   `%c0nd' (f%c04d.tga for f0000.tga,...)\n\n",'%','%');
       printf("   [-i inputname]  filename of the AVI-file (film.avi)\n");
       printf("   [-s startframe] first frame number of the TGA set to use (0)\n");
       printf("   [-e endframe]   last  frame number of the TGA set to use\n");
       printf("   [-j step]       use every step frames (1)\n");
       printf("\n");
       printf(" example:\n");
-      printf("   avi2tga -o %c04d.tga -i src.avi -e29\n",'%');
+      printf("   avi2tga -o f%c04d.tga -i src.avi -e29\n",'%');
 
       return 0;
     }
@@ -93,7 +93,7 @@ int main(int argn,char **argv)
   char *maxtext = (char *) malloc( 100 );
   char *steptext = (char *) malloc( 100 );
 
-  std::string tga_names = "f%04d.tga";
+  std::string tga_names = "f%07d.tga";
   strcpy(inputname, "film.avi");
   strcpy(fpstext, "24");
   strcpy(mintext, "0");

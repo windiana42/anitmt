@@ -1,87 +1,60 @@
 autoscan: warning: missing AC_CHECK_FUNCS([gethostbyname]) wanted by: 
 	rendview/src/lib/myaddrinfo.cpp:43
 	rendview/src/lib/myaddrinfo.hpp:72
+autoscan: warning: missing AC_CHECK_FUNCS([getpass]) wanted by: 
+	rendview/src/lib/ldrproto.cpp:130
+	rendview/src/lib/ldrproto.cpp:145
+	rendview/src/lib/ldrproto.hpp:244
 autoscan: warning: missing AC_CHECK_FUNCS([inet_ntoa]) wanted by: 
 	rendview/src/lib/myaddrinfo.cpp:62
 	rendview/src/lib/myaddrinfo.cpp:64
 autoscan: warning: missing AC_CHECK_FUNCS([pow]) wanted by: 
-	anitmt-view/parser/vals.cpp:344
-	anitmt-view/parser/vals.cpp:352
-	anitmt-view/parser/vals.cpp:546
-	anitmt-view/parser/vals.cpp:548
-	anitmt-view/parser/vals.cpp:549
-	anitmt-view/parser/vals.hpp:83
-	anitmt-view/parser/vals.hpp:212
 	anitmt-calc/output/lib/convtoa.cpp:53
 	anitmt-calc/output/lib/convtoa.cpp:83
 	anitmt-calc/output/lib/convtoa.cpp:140
 	anitmt-calc/output/lib/convtoa.cpp:142
 	utils/genpoly.cpp:132
 autoscan: warning: missing AC_CHECK_FUNCS([select]) wanted by: 
-	hlib/fd/fdmanager.cc:1931
-	hlib/fd/fdmanager.cc:1967
-	hlib/fd/cpmanager.cc:544
+	hlib/fd/fdmanager.cc:1964
+	hlib/fd/fdmanager.cc:2000
 autoscan: warning: missing AC_CHECK_FUNCS([socket]) wanted by: 
-	rendview/src/tsource/ldr/param.cpp:61
-	rendview/src/tsource/ldr/param.hpp:39
-	rendview/src/tdriver/ldr/ldrclient.cpp:54
+	rendview/src/tsource/ldr/param.cpp:73
+	rendview/src/tsource/ldr/param.hpp:50
+	rendview/src/tdriver/ldr/ldrclient.cpp:62
 	rendview/src/lib/myaddrinfo.cpp:69
 	rendview/src/lib/myaddrinfo.cpp:71
 	rendview/src/lib/myaddrinfo.hpp:85
 	rendview/src/lib/myaddrinfo.hpp:85
 	rendview/src/lib/myaddrinfo.hpp:87
-	hlib/misc/check_misc.cc:324
+	hlib/misc/check_misc.cc:345
 autoscan: warning: missing AC_CHECK_FUNCS([sqrt]) wanted by: 
 	anitmt-view/myvektor.h:80
-	anitmt-view/parser/vector3.cpp:258
-	anitmt-view/parser/vector3.cpp:282
-	anitmt-view/parser/vector3.cpp:442
-	anitmt-view/parser/vector3.cpp:462
-	anitmt-view/parser/vector3.cpp:798
-	anitmt-view/parser/vector3.cpp:876
-	anitmt-view/parser/vector3.cpp:890
-	anitmt-view/parser/vector3.cpp:892
-	anitmt-view/parser/vector3.cpp:897
-	anitmt-view/parser/vector3.cpp:959
-	anitmt-view/parser/vals.cpp:368
-	anitmt-view/parser/vals.cpp:370
-	anitmt-view/parser/vals.cpp:551
-	anitmt-view/parser/vals.cpp:552
-	anitmt-view/parser/vals.hpp:85
-	anitmt-view/parser/vals.hpp:213
-	anitmt-calc/functionality/object.cpp:448
-	anitmt-calc/functionality/object.cpp:449
-	anitmt-calc/functionality/object.cpp:561
-	anitmt-calc/functionality/object.cpp:639
-	anitmt-calc/functionality/object.cpp:640
-	anitmt-calc/functionality/solver.hpp:2772
-	anitmt-calc/functionality/solver.hpp:2791
-	anitmt-calc/functionality/alt/object.cpp:415
-	anitmt-calc/functionality/alt/object.cpp:416
-	anitmt-calc/functionality/alt/object.cpp:512
-	anitmt-calc/functionality/alt/object.cpp:578
-	anitmt-calc/functionality/alt/object.cpp:579
-	anitmt-calc/input/adl2/parser.cc:1257
-	anitmt-calc/input/adl2/parser.cc:1361
-	anitmt-calc/input/adl2/parser.yy:241
-	anitmt-calc/input/adl2/parser.yy:284
-	anitmt-calc/input/adl2/parser.yy.tab.c:1257
-	anitmt-calc/input/adl2/parser.yy.tab.c:1361
+	anitmt-calc/functionality/object.cpp:441
+	anitmt-calc/functionality/object.cpp:442
+	anitmt-calc/functionality/object.cpp:554
+	anitmt-calc/functionality/object.cpp:632
+	anitmt-calc/functionality/object.cpp:633
+	anitmt-calc/functionality/solver.hpp:2713
+	anitmt-calc/functionality/solver.hpp:2732
+	anitmt-calc/input/adl2/parser.cc:1439
+	anitmt-calc/input/adl2/parser.cc:1543
+	anitmt-calc/input/adl2/parser.yy:244
+	anitmt-calc/input/adl2/parser.yy:287
 	lib/val/scalar.hpp:125
 	lib/val/scalar.hpp:126
 	lib/val/ivector.hpp:70
 	lib/val/ivector.hpp:72
-	lib/val/ivector.hpp:169
+	lib/val/ivector.hpp:174
 autoscan: warning: missing AC_CHECK_FUNCS([stime]) wanted by: 
-	rendview/src/tdriver/local/tdriverfact.cpp:192
+	rendview/src/tdriver/local/tdriverfact.cpp:211
 	hlib/include/hlib/intprocbase.h:115
 	hlib/include/hlib/intprocbase.h:127
 	hlib/fd/intprocbase.h:115
 	hlib/fd/intprocbase.h:127
 autoscan: warning: missing AC_CHECK_FUNCS([strstr]) wanted by: 
-	hlib/misc/hlib_id1.c:108
+	hlib/misc/hlib_id1.c:118
 autoscan: warning: missing AC_CHECK_FUNCS([utime]) wanted by: 
-	rendview/src/tdriver/local/tdriverfact.cpp:191
+	rendview/src/tdriver/local/tdriverfact.cpp:210
 	hlib/include/hlib/intprocbase.h:115
 	hlib/include/hlib/intprocbase.h:127
 	hlib/fd/intprocbase.h:115
@@ -91,41 +64,38 @@ autoscan: warning: missing AC_CHECK_HEADERS([arpa/inet.h]) wanted by:
 autoscan: warning: missing AC_CHECK_HEADERS([fcntl.h]) wanted by: 
 	anitmt-calc/output/lib/outstr.cpp:25
 	anitmt-calc/output/lib/instr.cpp:23
-	mkavi/mkavi.cc:29
+	utils/mkavi/mkavi.cc:29
 	rendview/src/taskmanager.cpp:21
+	rendview/src/lib/file.cpp:27
 	rendview/src/lib/get_load.cpp:17
-	hlib/misc/check_misc.cc:21
-	hlib/misc/nonblock.c:17
-	hlib/misc/getloadavg.c:18
-	hlib/fd/check_fd.cc:35
-	hlib/fd/procmanager.cc:22
+	rendview/src/lib/netiobase.cpp:24
+	hlib/misc/check_misc.cc:27
+	hlib/misc/nonblock.c:18
+	hlib/misc/getloadavg.c:19
+	hlib/fd/check_fd.cc:36
+	hlib/fd/procmanager.cc:23
 autoscan: warning: missing AC_CHECK_HEADERS([netdb.h]) wanted by: 
 	rendview/src/tdriver/ldr/dif_param.cpp:29
 	rendview/src/lib/myaddrinfo.cpp:18
 autoscan: warning: missing AC_CHECK_HEADERS([netinet/in.h]) wanted by: 
 	rendview/src/lib/myaddrinfo.hpp:27
-	rendview/src/lib/ldrproto.cpp:21
-	hlib/misc/check_misc.cc:31
+	rendview/src/lib/ldrproto.cpp:23
+	hlib/misc/check_misc.cc:37
 autoscan: warning: missing AC_CHECK_HEADERS([sys/ioctl.h]) wanted by: 
 	hlib/misc/gettermsize.c:23
 autoscan: warning: missing AC_CHECK_HEADERS([sys/socket.h]) wanted by: 
 	rendview/src/lib/myaddrinfo.hpp:24
 	hlib/include/hlib/fdbase.h:28
 	hlib/include/hlib/hlib.h:27
-	hlib/misc/check_misc.cc:28
+	hlib/misc/check_misc.cc:34
 	hlib/misc/hlib.h:27
-	hlib/misc/sockerror.c:18
-	hlib/misc/tcpnodelay.c:18
+	hlib/misc/sockerror.c:19
+	hlib/misc/tcpnodelay.c:19
 	hlib/fd/fdbase.h:28
 autoscan: warning: missing AC_CHECK_HEADERS([termios.h]) wanted by: 
 	hlib/misc/gettermsize.c:19
-autoscan: warning: missing AC_FUNC_ALLOCA wanted by: 
-	anitmt-calc/funcgen/parser.cc:752
-	anitmt-calc/funcgen/parser.yy.tab.c:606
-	anitmt-calc/input/adl2/parser.cc:527
-	anitmt-calc/input/adl2/parser.yy.tab.c:527
 autoscan: warning: missing AC_FUNC_FORK wanted by: 
-	rendview/src/tdriver/local/dif_local.cpp:168
+	rendview/src/tdriver/local/dif_local.cpp:191
 	hlib/include/hlib/procbase.h:64
 	hlib/include/hlib/procbase.h:102
 	hlib/include/hlib/procmanager.h:52
@@ -134,10 +104,10 @@ autoscan: warning: missing AC_FUNC_FORK wanted by:
 	hlib/fd/procbase.h:102
 	hlib/fd/procmanager.h:52
 	hlib/fd/intprocbase.h:264
-	hlib/fd/procmanager.cc:266
-	hlib/fd/procmanager.cc:818
+	hlib/fd/procmanager.cc:267
+	hlib/fd/procmanager.cc:819
 autoscan: warning: missing AC_FUNC_GETLOADAVG wanted by: 
-	hlib/misc/getloadavg.c:34
+	hlib/misc/getloadavg.c:35
 autoscan: warning: missing AC_FUNC_MALLOC wanted by: 
 	anitmt-view/tga2avi.cpp:125
 	anitmt-view/tga2avi.cpp:126
@@ -164,66 +134,58 @@ autoscan: warning: missing AC_FUNC_MALLOC wanted by:
 	anitmt-view/myfile.h:189
 	anitmt-view/myfile.h:242
 	anitmt-view/myfile.h:474
-	anitmt-view/anitmt-view.cpp:56
-	anitmt-view/anitmt-view.cpp:69
-	anitmt-view/anitmt-view.cpp:258
-	anitmt-view/anitmt-view.cpp:282
-	anitmt-view/anitmt-view.cpp:333
-	anitmt-view/anitmt-view.cpp:386
-	anitmt-view/anitmt-view.cpp:389
-	anitmt-view/anitmt-view.cpp:392
-	anitmt-calc/funcgen/parser.cc:2061
-	anitmt-calc/funcgen/scanner.cc:2003
-	anitmt-calc/funcgen/parser.yy.tab.c:1653
-	anitmt-calc/input/adl2/parser.cc:1508
-	anitmt-calc/input/adl2/scanner.cc:1688
-	anitmt-calc/input/adl2/parser.yy.tab.c:1508
+	anitmt-calc/funcgen/scanner.cc:2665
+	anitmt-calc/input/adl2/scanner.cc:2220
 	utils/genpoly.cpp:115
-	mkavi/mkavi.cc:106
-	mkavi/mkavi.cc:107
-	mkavi/mkavi.cc:108
-	mkavi/mkavi.cc:109
-	mkavi/mkavi.cc:110
-	mkavi/mkavi.cc:112
-	mkavi/mkavi.cc:113
-	hlib/include/hlib/parconsumer.h:148
-	hlib/include/hlib/parconsumer.h:214
+	utils/mkavi/mkavi.cc:106
+	utils/mkavi/mkavi.cc:107
+	utils/mkavi/mkavi.cc:108
+	utils/mkavi/mkavi.cc:109
+	utils/mkavi/mkavi.cc:110
+	utils/mkavi/mkavi.cc:112
+	utils/mkavi/mkavi.cc:113
+	hlib/include/hlib/parconsumer.h:151
+	hlib/include/hlib/parconsumer.h:217
 	hlib/include/hlib/cplusplus.h:39
 	hlib/include/hlib/cplusplus.h:47
 	hlib/include/hlib/cplusplus.h:53
-	hlib/include/hlib/cplusplus.h:398
-	hlib/include/hlib/fdbase.h:234
-	hlib/include/hlib/fdbase.h:307
-	hlib/include/hlib/fdbase.h:326
+	hlib/include/hlib/cplusplus.h:402
+	hlib/include/hlib/fdbase.h:250
+	hlib/include/hlib/fdbase.h:323
+	hlib/include/hlib/fdbase.h:342
 	hlib/include/hlib/parmanager.h:75
+	hlib/crypto/check_crypto.cc:691
 	hlib/misc/limitmalloc.c:117
-	hlib/par/parconsumer.h:148
-	hlib/par/parconsumer.h:214
-	hlib/par/cmanhdl.cc:307
-	hlib/par/cmanhdl.cc:315
+	hlib/par/parconsumer.h:151
+	hlib/par/parconsumer.h:217
+	hlib/par/cmanhdl.cc:308
+	hlib/par/cmanhdl.cc:316
 	hlib/par/parmanager.h:75
 	hlib/cpp/cplusplus.h:39
 	hlib/cpp/cplusplus.h:47
 	hlib/cpp/cplusplus.h:53
-	hlib/cpp/cplusplus.h:398
+	hlib/cpp/cplusplus.h:402
 	hlib/cpp/cplusplusff.cc:33
-	hlib/fd/fdmanager.cc:25
-	hlib/fd/fdmanager.cc:215
-	hlib/fd/fdbase.h:234
-	hlib/fd/fdbase.h:307
-	hlib/fd/fdbase.h:326
+	hlib/fd/fdmanager.cc:28
+	hlib/fd/fdmanager.cc:217
+	hlib/fd/fdbase.h:250
+	hlib/fd/fdbase.h:323
+	hlib/fd/fdbase.h:342
+autoscan: warning: missing AC_FUNC_MKTIME wanted by: 
+	hlib/fd/htimeread.cc:200
 autoscan: warning: missing AC_FUNC_STRFTIME wanted by: 
-	hlib/fd/htimeprint.cc:43
-	hlib/fd/htimeprint.cc:47
+	hlib/include/hlib/htime.h:180
+	hlib/fd/htimeprint.cc:44
+	hlib/fd/htimeprint.cc:48
+	hlib/fd/htime.h:180
 autoscan: warning: missing AC_FUNC_STRTOD wanted by: 
-	anitmt-view/parser/parser.cpp:180
 	utils/genpoly.cpp:232
 	rendview/src/lib/get_ncpus.cpp:133
-	hlib/misc/getloadavg.c:58
-	hlib/par/defhdl.cc:140
+	hlib/misc/getloadavg.c:59
+	hlib/par/defhdl.cc:141
 	lib/par/conv.cpp:224
 autoscan: warning: missing AC_FUNC_UTIME_NULL wanted by: 
-	rendview/src/tdriver/local/tdriverfact.cpp:191
+	rendview/src/tdriver/local/tdriverfact.cpp:210
 	hlib/include/hlib/intprocbase.h:115
 	hlib/include/hlib/intprocbase.h:127
 	hlib/fd/intprocbase.h:115
@@ -238,19 +200,14 @@ autoscan: warning: missing AC_FUNC_WAIT3 wanted by:
 	hlib/include/hlib/intprocbase.h:104
 	hlib/fd/procmanager.h:32
 	hlib/fd/intprocbase.h:104
-	hlib/fd/procmanager.cc:603
-	hlib/fd/procmanager.cc:767
+	hlib/fd/procmanager.cc:604
+	hlib/fd/procmanager.cc:768
 autoscan: warning: missing AC_HEADER_SYS_WAIT wanted by: 
-	hlib/fd/procmanager.cc:25
-autoscan: warning: missing AC_PROG_LN_S wanted by: 
-	anitmt-calc/functionality/alt/Makefile.in:232
-	rendview/src/render/Makefile.in:252
-	rendview/src/render/driver/Makefile.in:191
-	rendview/src/filter/Makefile.in:252
-	rendview/src/filter/driver/Makefile.in:191
-	lib/val2/Makefile.in:217
+	hlib/fd/procmanager.cc:26
 autoscan: warning: missing AC_STRUCT_TM wanted by: 
-	rendview/src/database.cpp:776
-	rendview/src/database.cpp:779
-	rendview/src/database.hpp:123
-	hlib/fd/htimeprint.cc:36
+	rendview/src/database.cpp:934
+	rendview/src/database.cpp:937
+	rendview/src/database.hpp:128
+	hlib/fd/htimeread.cc:29
+	hlib/fd/htimeread.cc:30
+	hlib/fd/htimeprint.cc:37

@@ -353,7 +353,6 @@ namespace funcgen
     Context *context = static_cast<afd_info*>(info)->afd->get_context();
     if( context )
     {
-      //   +---- `!' added by senior bug tracking officer Wolfgang :)
       if( !context->is_property(name) )
       {
 	context->property_list.push_back( Property(name,type) );
@@ -413,6 +412,42 @@ namespace funcgen
       else
       {
 	msg.error() << "operand \"" << name << "\" already defined";
+      }
+    }
+  } 
+  void declare_container( void *info, const std::string &type, 
+			  const std::string &name )
+  {
+    message::Message_Reporter &msg = static_cast<afd_info*>(info)->msg;
+    Context *context = static_cast<afd_info*>(info)->afd->get_context();
+    if( context )
+    {
+      if( context->is_provider_type(type) )
+      {
+	declare_container( info, context->provider_types[type].serial,
+			   type, name );
+      }
+      else
+      {
+	msg.error() << type << " is no provider type";
+      }
+    }    
+  }
+  void declare_container( void *info, bool serial, const std::string &type, 
+			  const std::string &name )
+  {
+    message::Message_Reporter &msg = static_cast<afd_info*>(info)->msg;
+    Context *context = static_cast<afd_info*>(info)->afd->get_context();
+    if( context )
+    {
+      if( !context->is_container(name) )
+      {
+	context->container_list.push_back( Container(serial,type,name) );
+	context->containers[name] = &context->container_list.back();
+      }
+      else
+      {
+	msg.error() << "container \"" << name << "\" already defined";
       }
     }
   } 
@@ -734,6 +769,7 @@ namespace funcgen
 
 	// for code mode of lexer
 	afd->current_code = provided->current_result_code; 
+	afd->return_type = ret_type;
       }
       else
       {				
@@ -806,6 +842,28 @@ namespace funcgen
 	// insert required child result function
 	res_code->required_results.push_back
 	  (std::pair<std::string,Result_Type>(provider,Result_Type(ret,par)));
+      }
+    }
+  }
+  void node_result_essential_solver_function( void *info, 
+					      const std::string &solver,
+					      const std::string &function )
+  {
+    //message::Message_Reporter &msg = static_cast<afd_info*>(info)->msg;
+    Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;
+    assert(node != 0);
+    Provided_Results *provided = node->current_provided_results;
+    if( provided )
+    {
+      Result_Code *res_code = provided->current_result_code;
+
+      if( res_code )		// in valid result code?
+      {
+	//!!! check whether solver function exists exists !!!
+
+	// insert required child result function
+	res_code->required_solver_functions.push_back
+	  (std::pair<std::string,std::string>(solver,function));
       }
     }
   }
@@ -969,7 +1027,7 @@ namespace funcgen
     }
   }
 
-  void start_complex_solver_parameters( void *info, const std::string &name )
+  void start_event_solver_parameters( void *info, const std::string &name )
   {
     afd_info *I=static_cast<afd_info*>(info);
     message::Message_Reporter &msg = I->msg;
@@ -978,64 +1036,95 @@ namespace funcgen
     if( !afd->get_context()->is_solver(name) )
     {
       // create new solver
-      afd->current_complex_solver = &afd->solvers[name];
-      afd->current_complex_solver->don_t_create_code 
+      afd->current_event_solver = &afd->solvers[name];
+      afd->current_event_solver->don_t_create_code 
 	= afd->don_t_create_code.top();
       // relink kontext of parameter operands to afd root
-      afd->current_complex_solver->parameter.set_parent_context(afd);
+      afd->current_event_solver->parameters.set_parent_context(afd);
       // choose parameter operands as current context
-      afd->push_context( &afd->current_complex_solver->parameter );
+      afd->push_context( &afd->current_event_solver->parameters );
     }
     else
     {
       msg.error() << "solver \"" << name << "\" already defined";
-      afd->current_complex_solver = 0;
+      afd->current_event_solver = 0;
       afd->push_context( 0 );
     }
   }
-  void start_complex_solver_declaration( void *info )
+  void event_solver_parameter_operand( void *info, const std::string &type, 
+				       const std::string &name )
+  {
+    declare_operand( info, type, name ); // declare operand in context
+
+    afd_info *I=static_cast<afd_info*>(info);
+    //message::Message_Reporter &msg = I->msg;
+    Event_Solver *solver= I->afd->current_event_solver;
+    
+    if( solver )
+    {
+      solver->parameters.parameters.push_back( Operand( name, type ) );
+    }
+  }
+  void event_solver_parameter_container( void *info, bool serial, 
+					 const std::string &type, 
+					 const std::string &name )
+  {
+    // declare container in context
+    declare_container( info, serial, type, name ); 
+
+    afd_info *I=static_cast<afd_info*>(info);
+    //message::Message_Reporter &msg = I->msg;
+    Event_Solver *solver= I->afd->current_event_solver;
+    
+    if( solver )
+    {
+      solver->
+	parameters.parameters.push_back( Container( serial, type, name ) );
+    }
+  }
+  void start_event_solver_declaration( void *info )
   {
     afd_info *I=static_cast<afd_info*>(info);
     //message::Message_Reporter &msg = I->msg;
     AFD_Root *afd = I->afd;
 
-    if( afd->current_complex_solver )
+    if( afd->current_event_solver )
     {
       afd->pop_context();
       // relink kontext of solver with it's parameter operands
-      afd->current_complex_solver->set_parent_context
-	( &afd->current_complex_solver->parameter );
+      afd->current_event_solver->set_parent_context
+	( &afd->current_event_solver->parameters );
       // choose solver as current context
-      afd->push_context( afd->current_complex_solver );
+      afd->push_context( afd->current_event_solver );
     }
   }
-  void finish_complex_solver_declaration( void *info )
+  void finish_event_solver_declaration( void *info )
   {
     afd_info *I=static_cast<afd_info*>(info);
     AFD_Root *afd = I->afd;
-    if( afd->current_complex_solver )
+    if( afd->current_event_solver )
     {
-      afd->current_complex_solver = 0;
+      afd->current_event_solver = 0;
     }
     afd->pop_context();		// context was changed in any case
   }
 
   //...
-  void start_complex_solver_init_block( void *info )
+  void start_event_solver_init_solvers_block( void *info )
   {
     AFD_Root *afd = static_cast<afd_info*>(info)->afd;
-    if( afd->current_complex_solver )
+    if( afd->current_event_solver )
       afd->current_solve_code = new Solve_System_Code;
     else
       afd->current_solve_code = 0;
   }
-  void finish_complex_solver_init_block( void *info )
+  void finish_event_solver_init_solvers_block( void *info )
   {
     AFD_Root *afd = static_cast<afd_info*>(info)->afd;
-    if( afd->current_solve_code && afd->current_complex_solver )
+    if( afd->current_solve_code && afd->current_event_solver )
     {
       // copy solver code
-      afd->current_complex_solver->init_code.merge
+      afd->current_event_solver->init_solver_code.merge
 	( afd->current_solve_code->solvers );
     }
     if( afd->current_solve_code )
@@ -1044,21 +1133,21 @@ namespace funcgen
       afd->current_solve_code = 0;
     }
   }
-  void start_complex_solver_init_constraints_block( void *info )
+  void start_event_solver_init_constraints_block( void *info )
   {
     AFD_Root *afd = static_cast<afd_info*>(info)->afd;
-    if( afd->current_complex_solver )
+    if( afd->current_event_solver )
       afd->current_solve_code = new Solve_System_Code;
     else
       afd->current_solve_code = 0;
   }
-  void finish_complex_solver_init_constraints_block( void *info )
+  void finish_event_solver_init_constraints_block( void *info )
   {
     AFD_Root *afd = static_cast<afd_info*>(info)->afd;
-    if( afd->current_solve_code && afd->current_complex_solver )
+    if( afd->current_solve_code && afd->current_event_solver )
     {
       // copy solver code
-      afd->current_complex_solver->init_constraint_code.merge
+      afd->current_event_solver->init_constraint_code.merge
 	( afd->current_solve_code->constraints );
     }
     if( afd->current_solve_code )
@@ -1067,13 +1156,13 @@ namespace funcgen
       afd->current_solve_code = 0;
     }
   }
-  void start_complex_solver_function( void *info, const std::string &ret_type,
+  void start_event_solver_function( void *info, const std::string &ret_type,
 				      const std::string &name )
   {
     afd_info *I=static_cast<afd_info*>(info);
     //message::Message_Reporter &msg = I->msg;
     AFD_Root *afd = I->afd;
-    Complex_Solver *solver = afd->current_complex_solver;
+    Event_Solver *solver = afd->current_event_solver;
 
     if( solver )
     {
@@ -1083,14 +1172,15 @@ namespace funcgen
       solver->current_function_code->set_parent_context( solver );
       afd->push_context( solver->current_function_code );
       afd->current_code = solver->current_function_code;
+      afd->return_type = ret_type;
     }
   }
-  void finish_complex_solver_function( void *info )
+  void finish_event_solver_function( void *info )
   {
     afd_info *I=static_cast<afd_info*>(info);
     //message::Message_Reporter &msg = I->msg;
     AFD_Root *afd = I->afd;
-    Complex_Solver *solver = afd->current_complex_solver;
+    Event_Solver *solver = afd->current_event_solver;
 
     if( solver )
     {
@@ -1098,44 +1188,555 @@ namespace funcgen
     }
     afd->current_code = 0;
   }
-  void complex_solver_require_operand( void *info, const std::string &op )
+  void start_event_solver_event_group( void *info, const std::string &name )
   {
     afd_info *I=static_cast<afd_info*>(info);
     //message::Message_Reporter &msg = I->msg;
     AFD_Root *afd = I->afd;
-    Complex_Solver *solver = afd->current_complex_solver;
-
+    Event_Solver *solver = afd->current_event_solver;
+    
     if( solver )
     {
-      solver->current_function_code->required_operands.push_back(op);
+      solver->event_groups.push_back( Event_Group(name) );
+      solver->current_event_group = &solver->event_groups.back();
     }
   }
-  void complex_solver_require_function( void *info, const std::string &func )
+  void finish_event_solver_event_group(void *info)
   {
     afd_info *I=static_cast<afd_info*>(info);
     //message::Message_Reporter &msg = I->msg;
     AFD_Root *afd = I->afd;
-    Complex_Solver *solver = afd->current_complex_solver;
+    Event_Solver *solver = afd->current_event_solver;
+    
+    if( solver )
+    {
+      solver->current_event_group = 0;
+    }
+  }
+  void start_event_solver_event(void *info, const std::string &name)
+  {  
+    afd_info *I=static_cast<afd_info*>(info);
+    //message::Message_Reporter &msg = I->msg;
+    AFD_Root *afd = I->afd;
+    Event_Solver *solver = afd->current_event_solver;
+    
+    if( solver )
+    {
+      Event_Group *group = solver->current_event_group;
+      if( !group )		// if there is no group
+      {
+	// create a group
+	solver->event_groups.push_back( Event_Group("") );
+	group = &solver->event_groups.back();
+	solver->current_event_group = group;
+      }
+
+      group->events.push_back( Event(name) );
+      group->current_event = &group->events.back();
+    }
+  }
+  void event_condition( void *info, const std::string &operand )
+  {
+    afd_info *I=static_cast<afd_info*>(info);
+    //message::Message_Reporter &msg = I->msg;
+    AFD_Root *afd = I->afd;
+    Event_Solver *solver = afd->current_event_solver;
+    
+    if( solver )
+    {
+      Event_Group *group = solver->current_event_group;
+      if( group )		// if there is no group
+      {
+	Event *event = group->current_event;
+	if( event )
+	{
+	  event->required_operands.push_back( operand );
+	}
+      }
+    }
+  }
+  void event_condition_container( void *info, 
+				  const std::string &name )
+  {
+    afd_info *I=static_cast<afd_info*>(info);
+    //message::Message_Reporter &msg = I->msg;
+    AFD_Root *afd = I->afd;
+    Event_Solver *solver = afd->current_event_solver;
+    
+    if( solver )
+    {
+      Event_Group *group = solver->current_event_group;
+      if( group )		// if there is no group
+      {
+	Event *event = group->current_event;
+	if( event )
+	{
+	  event->required_containers.push_back( name );
+	}
+      }
+    }
+  }
+  void event_condition_container_function( void *info, 
+					   const std::string &name,
+					   const std::string &return_type,
+					   const std::string &parameter_type )
+  {
+    afd_info *I=static_cast<afd_info*>(info);
+    //message::Message_Reporter &msg = I->msg;
+    AFD_Root *afd = I->afd;
+    Event_Solver *solver = afd->current_event_solver;
+    
+    if( solver )
+    {
+      Event_Group *group = solver->current_event_group;
+      if( group )		// if there is no group
+      {
+	Event *event = group->current_event;
+	if( event )
+	{
+	  event->required_container_functions.push_back
+	    ( Container_Function( name, return_type, parameter_type ) );
+	}
+      }
+    }
+  }
+
+
+  void start_event_solver_init_code( void *info )
+  {
+    afd_info *I=static_cast<afd_info*>(info);
+    //message::Message_Reporter &msg = I->msg;
+    AFD_Root *afd = I->afd;
+    Event_Solver *solver = afd->current_event_solver;
+    
+    if( solver )
+    {
+      afd->current_code = &solver->init_code;
+    }
+  }
+  void finish_event_solver_init_code( void *info )
+  {
+    afd_info *I=static_cast<afd_info*>(info);
+    //message::Message_Reporter &msg = I->msg;
+    AFD_Root *afd = I->afd;
+    
+    afd->current_code = 0;
+  }
+  void start_event_group_reset_code( void *info )
+  {
+    afd_info *I=static_cast<afd_info*>(info);
+    //message::Message_Reporter &msg = I->msg;
+    AFD_Root *afd = I->afd;
+    Event_Solver *solver = afd->current_event_solver;
+    
+    if( solver )
+    {
+      Event_Group *group = solver->current_event_group;
+      if( group )		// if there is no group
+      {
+	afd->current_code = &group->reset_code;
+      }
+    }
+  }
+  void finish_event_group_reset_code( void *info )
+  {
+    afd_info *I=static_cast<afd_info*>(info);
+    //message::Message_Reporter &msg = I->msg;
+    AFD_Root *afd = I->afd;
+    
+    afd->current_code = 0;
+  }
+  void start_event_final_code( void *info )
+  {
+    afd_info *I=static_cast<afd_info*>(info);
+    //message::Message_Reporter &msg = I->msg;
+    AFD_Root *afd = I->afd;
+    Event_Solver *solver = afd->current_event_solver;
+    
+    if( solver )
+    {
+      Event_Group *group = solver->current_event_group;
+      if( group )		// if there is no group
+      {
+	Event *event = group->current_event;
+	if( event )
+	{
+	  afd->current_code = &event->final_code;
+	}
+      }
+    }
+  }
+  void finish_event_final_code( void *info )
+  {
+    afd_info *I=static_cast<afd_info*>(info);
+    //message::Message_Reporter &msg = I->msg;
+    AFD_Root *afd = I->afd;
+    
+    afd->current_code = 0;
+  }
+  void start_event_reset_code( void *info )
+  {
+    afd_info *I=static_cast<afd_info*>(info);
+    //message::Message_Reporter &msg = I->msg;
+    AFD_Root *afd = I->afd;
+    Event_Solver *solver = afd->current_event_solver;
+    
+    if( solver )
+    {
+      Event_Group *group = solver->current_event_group;
+      if( group )		// if there is no group
+      {
+	Event *event = group->current_event;
+	if( event )
+	{
+	  afd->current_code = &event->reset_code;
+	}
+      }
+    }
+  }
+  void finish_event_reset_code( void *info )
+  {
+    afd_info *I=static_cast<afd_info*>(info);
+    //message::Message_Reporter &msg = I->msg;
+    AFD_Root *afd = I->afd;
+    
+    afd->current_code = 0;
+  }
+  void start_event_test_run_code( void *info )
+  {
+    afd_info *I=static_cast<afd_info*>(info);
+    //message::Message_Reporter &msg = I->msg;
+    AFD_Root *afd = I->afd;
+    Event_Solver *solver = afd->current_event_solver;
+    
+    if( solver )
+    {
+      Event_Group *group = solver->current_event_group;
+      if( group )		// if there is no group
+      {
+	Event *event = group->current_event;
+	if( event )
+	{
+	  afd->current_code = &event->test_run_code;
+	}
+      }
+    }
+  }
+  void finish_event_test_run_code( void *info )
+  {
+    afd_info *I=static_cast<afd_info*>(info);
+    //message::Message_Reporter &msg = I->msg;
+    AFD_Root *afd = I->afd;
+    
+    afd->current_code = 0;
+  }
+
+  void event_solver_require_operand( void *info, const std::string &op )
+  {
+    afd_info *I=static_cast<afd_info*>(info);
+    //message::Message_Reporter &msg = I->msg;
+    AFD_Root *afd = I->afd;
+    Event_Solver *solver = afd->current_event_solver;
 
     if( solver )
     {
-      solver->current_function_code->required_functions.push_back(func);
+      if( solver->current_function_code )
+      {
+        solver->current_function_code->required_operands.push_back(op);
+      }
     }
   }
-  void complex_solver_require_solver_func( void *info, 
+  void event_solver_require_function( void *info, const std::string &func )
+  {
+    afd_info *I=static_cast<afd_info*>(info);
+    //message::Message_Reporter &msg = I->msg;
+    AFD_Root *afd = I->afd;
+    Event_Solver *solver = afd->current_event_solver;
+
+    if( solver )
+    {
+      if( solver->current_function_code )
+      {
+        solver->current_function_code->required_functions.push_back(func);
+      }
+    }
+  }
+  void event_solver_require_solver_func( void *info, 
 					   const std::string &solver_id,
 					   const std::string &function )
   {
     afd_info *I=static_cast<afd_info*>(info);
     //message::Message_Reporter &msg = I->msg;
     AFD_Root *afd = I->afd;
-    Complex_Solver *solver = afd->current_complex_solver;
+    Event_Solver *solver = afd->current_event_solver;
 
     if( solver )
     {
       solver->current_function_code->
 	required_solver_functions.push_back
 	( Solver_Function(solver_id,function) );
+    }
+  }
+  void event_solver_require_event( void *info, const std::string &event )
+  {
+    afd_info *I=static_cast<afd_info*>(info);
+    //message::Message_Reporter &msg = I->msg;
+    AFD_Root *afd = I->afd;
+    Event_Solver *solver = afd->current_event_solver;
+
+    if( solver )
+    {
+      if( solver->current_function_code )
+      {
+	solver->current_function_code->
+	  required_events.push_back( event );
+      }
+    }
+  }
+  void event_solver_require_event_group( void *info, const std::string &group )
+  {
+    afd_info *I=static_cast<afd_info*>(info);
+    //message::Message_Reporter &msg = I->msg;
+    AFD_Root *afd = I->afd;
+    Event_Solver *solver = afd->current_event_solver;
+
+    if( solver )
+    {
+      if( solver->current_function_code )
+      {
+        solver->current_function_code->
+	  required_event_groups.push_back( group );
+      }
+    }
+  }    
+  void event_solver_require_container( void *info, const std::string &name )
+  {
+    afd_info *I=static_cast<afd_info*>(info);
+    //message::Message_Reporter &msg = I->msg;
+    AFD_Root *afd = I->afd;
+    Event_Solver *solver = afd->current_event_solver;
+
+    if( solver )
+    {
+      if( solver->current_function_code )
+      {
+        solver->current_function_code->
+	  required_containers.push_back( name );
+      }
+    }
+  }
+  void event_solver_require_container_function( void *info, 
+						const std::string &name, 
+						const std::string &return_type,
+						const std::string 
+						&parameter_type )
+  {
+    afd_info *I=static_cast<afd_info*>(info);
+    //message::Message_Reporter &msg = I->msg;
+    AFD_Root *afd = I->afd;
+    Event_Solver *solver = afd->current_event_solver;
+
+    if( solver )
+    {
+      if( solver->current_function_code )
+      {
+	Context *context = afd->get_context();
+	assert( context );
+	if( context->is_container( name ) )
+	{
+	  solver->current_function_code->
+	    required_container_functions.push_back
+	    ( Container_Function( name,
+				  context->containers[name]->provider_type,
+				  return_type, parameter_type ) );
+	}
+      }
+    }
+  }
+
+  void event_solver_code_set( void *info, std::string operand, 
+			      std::string expression)
+  {
+    afd_info *I=static_cast<afd_info*>(info);
+    //message::Message_Reporter &msg = I->msg;
+    Code_Translator *translator = I->afd->translator;
+    AFD_Root *afd = I->afd;
+    Code *code = afd->current_code;
+
+    if( code )
+    {
+      code->code += translator->event_code_set( operand, expression );
+    }
+  }
+  void event_solver_code_try( void *info, std::string operand, 
+			      std::string expression)
+  {
+    afd_info *I=static_cast<afd_info*>(info);
+    //message::Message_Reporter &msg = I->msg;
+    Code_Translator *translator = I->afd->translator;
+    AFD_Root *afd = I->afd;
+    Code *code = afd->current_code;
+
+    if( code )
+    {
+      code->code += translator->event_code_try( operand, expression );
+    }
+  }
+  void event_solver_code_try_reject( void *info )
+  {
+    afd_info *I=static_cast<afd_info*>(info);
+    //message::Message_Reporter &msg = I->msg;
+    Code_Translator *translator = I->afd->translator;
+    AFD_Root *afd = I->afd;
+    Code *code = afd->current_code;
+
+    if( code )
+    {
+      code->code += translator->event_code_try_reject( afd->string_list );
+    }
+  }
+  void event_solver_code_is_solved_in_try( void *info, std::string operand )
+  {
+    afd_info *I=static_cast<afd_info*>(info);
+    //message::Message_Reporter &msg = I->msg;
+    Code_Translator *translator = I->afd->translator;
+    AFD_Root *afd = I->afd;
+    Code *code = afd->current_code;
+
+    if( code )
+    {
+      code->code += translator->event_code_is_solved_in_try( operand );
+    }
+  }
+  void event_solver_code_is_just_solved( void *info, std::string operand )
+  {
+    afd_info *I=static_cast<afd_info*>(info);
+    //message::Message_Reporter &msg = I->msg;
+    Code_Translator *translator = I->afd->translator;
+    AFD_Root *afd = I->afd;
+    Code *code = afd->current_code;
+
+    if( code )
+    {
+      code->code += translator->event_code_is_just_solved( operand );
+    }
+  }
+  void user_code_prop_op( void *info, std::string operand )
+  {
+    afd_info *I=static_cast<afd_info*>(info);
+    //message::Message_Reporter &msg = I->msg;
+    Code_Translator *translator = I->afd->translator;
+    AFD_Root *afd = I->afd;
+    Code *code = afd->current_code;
+
+    if( code )
+    {
+      code->code += translator->prop_op_value( operand );
+    }
+  }
+  void user_code_prop_op_try( void *info, std::string operand )
+  {
+    afd_info *I=static_cast<afd_info*>(info);
+    //message::Message_Reporter &msg = I->msg;
+    Code_Translator *translator = I->afd->translator;
+    AFD_Root *afd = I->afd;
+    Code *code = afd->current_code;
+
+    if( code )
+    {
+      code->code += translator->prop_op_value_try( operand );
+    }
+  }
+  void user_code_solver_function( void *info, std::string solver, 
+				  std::string function, 
+				  std::string parameter, 
+				  std::string opt_fail_bool_var )
+  {
+    afd_info *I=static_cast<afd_info*>(info);
+    //message::Message_Reporter &msg = I->msg;
+    Code_Translator *translator = I->afd->translator;
+    AFD_Root *afd = I->afd;
+    Code *code = afd->current_code;
+
+    if( code )
+    {
+      code->code += translator->solver_function_value
+	( solver, function, parameter, opt_fail_bool_var);
+    }
+  }
+  void user_code_return_prop( void *info, std::string operand )
+  {
+    afd_info *I=static_cast<afd_info*>(info);
+    //message::Message_Reporter &msg = I->msg;
+    Code_Translator *translator = I->afd->translator;
+    AFD_Root *afd = I->afd;
+    Code *code = afd->current_code;
+
+    if( code )
+    {
+      code->code += translator->start_return_value( afd->return_type );
+      code->code += translator->prop_op_value( operand );
+      code->code += translator->finish_return_value( afd->return_type );
+    }
+  }
+  void user_code_return( void *info, std::string expression )
+  {
+    afd_info *I=static_cast<afd_info*>(info);
+    //message::Message_Reporter &msg = I->msg;
+    Code_Translator *translator = I->afd->translator;
+    AFD_Root *afd = I->afd;
+    Code *code = afd->current_code;
+
+    if( code )
+    {
+      code->code += translator->start_return_value( afd->return_type );
+      code->code += expression;
+      code->code += translator->finish_return_value( afd->return_type );
+    }
+  }
+  void user_code_return_solver_function( void *info, 
+						 std::string solver, 
+						 std::string function, 
+						 std::string parameter )
+  {
+    afd_info *I=static_cast<afd_info*>(info);
+    //message::Message_Reporter &msg = I->msg;
+    Code_Translator *translator = I->afd->translator;
+    AFD_Root *afd = I->afd;
+    Code *code = afd->current_code;
+
+    if( code )
+    {
+      code->code += translator->start_return_result( afd->return_type );
+      code->code += translator->solver_function_result( solver, function, 
+							parameter );
+      code->code += translator->finish_return_result( afd->return_type );
+    }
+  }
+  void user_code_return_fail( void *info )
+  {
+    afd_info *I=static_cast<afd_info*>(info);
+    //message::Message_Reporter &msg = I->msg;
+    Code_Translator *translator = I->afd->translator;
+    AFD_Root *afd = I->afd;
+    Code *code = afd->current_code;
+
+    if( code )
+    {
+      code->code += translator->return_fail();
+    }
+  }
+  void user_code_return_if_fail( void *info )
+  {
+    afd_info *I=static_cast<afd_info*>(info);
+    //message::Message_Reporter &msg = I->msg;
+    Code_Translator *translator = I->afd->translator;
+    AFD_Root *afd = I->afd;
+    Code *code = afd->current_code;
+
+    if( code )
+    {
+      code->code += translator->return_if_fail();
     }
   }
 
@@ -1322,9 +1923,11 @@ namespace funcgen
       {
 	//!!! check whether result function of child exists !!!
 
+	res_code->code += translator->start_return_result( result_type );
 	res_code->code += 
 	  translator->child_result( provider, result_type, 
 				    parameter_type, parameter );
+	res_code->code += translator->finish_return_result( result_type );
       }
     }    
   }
@@ -1354,9 +1957,11 @@ namespace funcgen
       {
 	//!!! check whether result function of child exists exists !!!
 
+	res_code->code += translator->start_return_result( result_type );
 	res_code->code += 
 	  translator->provided_result( provider, result_type, 
 				       parameter_type, parameter );
+	res_code->code += translator->finish_return_result( result_type );
       }
     }    
   }
@@ -1375,7 +1980,7 @@ namespace funcgen
 
       if( res_code )		// in valid result code?
       {
-	res_code->code += translator->start_return_res
+	res_code->code += translator->start_return_result
 	  (res_code->return_type);
       }
     }
@@ -1394,7 +1999,7 @@ namespace funcgen
 
       if( res_code )		// in valid result code?
       {
-	res_code->code += translator->finish_return_res
+	res_code->code += translator->finish_return_result
 	  (res_code->return_type);
       }
     }
@@ -1413,7 +2018,7 @@ namespace funcgen
 
       if( res_code )		// in valid result code?
       {
-	res_code->code += translator->start_return_prop
+	res_code->code += translator->start_return_value
 	  (res_code->return_type);
       }
     }
@@ -1432,7 +2037,7 @@ namespace funcgen
 
       if( res_code )		// in valid result code?
       {
-	res_code->code += translator->finish_return_prop
+	res_code->code += translator->finish_return_value
 	  (res_code->return_type);
       }
     }
@@ -1451,7 +2056,8 @@ namespace funcgen
 
       if( res_code )		// in valid result code?
       {
-	res_code->code += translator->start_return(res_code->return_type);
+	res_code->code 
+	  += translator->start_return_value(res_code->return_type);
       }
     }
   }
@@ -1469,7 +2075,8 @@ namespace funcgen
 
       if( res_code )		// in valid result code?
       {
-	res_code->code += translator->finish_return(res_code->return_type);
+	res_code->code 
+	  += translator->finish_return_value(res_code->return_type);
       }
     }
   }
@@ -1505,7 +2112,7 @@ namespace funcgen
 
       if( res_code )		// in valid result code?
       {
-	res_code->code += translator->return_fail();
+	res_code->code += translator->return_if_fail();
       }
     }
   }
@@ -1784,5 +2391,9 @@ namespace funcgen
     I->afd->current_reference.add( translator->get_child(int(n)),
 				 translator->reference_concat_string() );
   }
-
+  void common_add_identifier( void *info, std::string id )
+  {
+    AFD_Root *afd = static_cast<afd_info*>(info)->afd;
+    afd->string_list.push_back( id );
+  }
 }

@@ -92,13 +92,13 @@ node change extends scalar_subfunction {
   // result functions using the scalar subfunctions
   provide scalar_vsa {
     resulting value( time t ) requires child.scalar_vsa.value ( time ) { 
-      [[ return child.scalar_vsa.value ( time t ) ]];
+      [[ return child.scalar_vsa.value ( time t ); ]]
     } 
     resulting slope( time t ) requires child.scalar_vsa.slope ( time ) {
-      [[ return child.scalar_vsa.slope ( time t ) ]];
+      [[ return child.scalar_vsa.slope ( time t ); ]]
     }
     resulting acceleration( time t ) requires child.scalar_vsa.acceleration ( time ) {
-      [[ return child.scalar_vsa.acceleration ( time t ) ]];
+      [[ return child.scalar_vsa.acceleration ( time t ); ]]
     }
   }
 }
@@ -147,15 +147,15 @@ node constant extends scalar_subfunction {
   provide scalar_vsa {
     resulting value( time t ) requires value
     {
-      [[ return_prop value ]];
+      [[ return_prop value; ]]
     }
     resulting slope( time t ) 
     {
-      [[ return 0 ]];
+      [[ return 0; ]]
     }
     resulting acceleration( time t ) 
     {
-      [[ return 0 ]];
+      [[ return 0; ]]
     }
   }
 }
@@ -204,15 +204,15 @@ node linear extends scalar_subfunction provides scalar_vsa {
     resulting value( time t ) requires start_value, start_time, slope
     {
       scalar res = [[ start_value ]] + (t - [[ start_time ]]) * [[ slope ]];
-      [[ return res ]];
+      [[ return res; ]]
     }
     resulting slope( time t ) requires slope
     {
-      [[ return_prop slope ]];
+      [[ return_prop slope; ]]
     }
     resulting acceleration( time t ) 
     {
-      [[ return 0 ]];
+      [[ return 0; ]]
     }
   }
 }
@@ -226,8 +226,10 @@ node linear extends scalar_subfunction provides scalar_vsa {
 node accelerated extends scalar_subfunction provides scalar_vsa {
 
   // special properties for accelerated
-  properties{
-    scalar acceleration;
+  properties {
+    type scalar {
+      acceleration;
+    }
   }
 
   common {
@@ -264,19 +266,19 @@ node accelerated extends scalar_subfunction provides scalar_vsa {
     {
       scalar t = abs_t - [[ start_time ]];
       scalar res = [[ start_value ]] + [[ start_slope ]]*t + 0.5*[[ acceleration ]]*t*t;
-      [[ return res ]];
+      [[ return res; ]]
     }
     resulting slope( time abs_t ) 
     requires start_time, start_slope, acceleration
     {
       scalar t = abs_t - [[ start_time ]];
       scalar res = [[ start_slope ]] + [[ acceleration ]] * t;
-      [[ return res ]];
+      [[ return res; ]]
     }
     resulting acceleration( time t ) 
     requires acceleration
     {
-      [[ return_prop acceleration ]];
+      [[ return_prop acceleration; ]]
     }
   }
 }
@@ -360,17 +362,17 @@ node if extends scalar_subfunction provides scalar_vsa {
     resulting value ( time t ) 
     requires child.scalar_then_vsa.value ( time ), child.scalar_else_vsa.value ( time ) { 
       scalar res = [[if_condition]] ? [[ child.scalar_then_vsa.value ( time t ) ]] : [[ child.scalar_else_vsa.value ( time t ) ]];
-      [[ return res]];
+      [[ return res; ]]
     } 
     resulting slope ( time t ) 
     requires child.scalar_then_vsa.slope ( time ), child.scalar_else_vsa.slope ( time ) { 
       scalar res = [[ if_condition ]] ? [[child.scalar_then_vsa.slope ( time t ) ]] : [[child.scalar_else_vsa.slope ( time t ) ]];
-      [[ return res]];
+      [[ return res; ]]
     } 
     resulting acceleration ( time t ) 
     requires child.scalar_then_vsa.acceleration ( time ), child.scalar_else_vsa.acceleration ( time ) { 
       scalar res = [[ if_condition ]] ? [[child.scalar_then_vsa.acceleration ( time t ) ]] : [[child.scalar_else_vsa.acceleration ( time t ) ]];
-      [[ return res]];
+      [[ return res; ]]
     } 
   }
 }
@@ -410,13 +412,13 @@ node then extends scalar_base provides scalar_then_vsa {
   // result functions using the scalar subfunctions
   provide scalar_then_vsa {
     resulting value ( time t ) requires child.scalar_vsa.value ( time ) { 
-      [[ return child.scalar_vsa.value ( time t )]];
+      [[ return child.scalar_vsa.value ( time t ); ]]
     } 
     resulting slope ( time t ) requires child.scalar_vsa.slope ( time ) { 
-      [[ return child.scalar_vsa.slope ( time t )]];
+      [[ return child.scalar_vsa.slope ( time t ); ]]
     } 
     resulting acceleration ( time t ) requires child.scalar_vsa.acceleration ( time ) { 
-      [[ return child.scalar_vsa.acceleration ( time t )]];
+      [[ return child.scalar_vsa.acceleration ( time t ); ]]
     } 
   }
 }
@@ -456,13 +458,13 @@ node else extends scalar_base provides scalar_else_vsa{
   // result functions using the scalar subfunctions
   provide scalar_else_vsa {
     resulting value ( time t ) requires child.scalar_vsa.value ( time ) { 
-      [[ return child.scalar_vsa.value ( time t )]];
+      [[ return child.scalar_vsa.value ( time t ); ]]
     } 
     resulting slope ( time t ) requires child.scalar_vsa.slope ( time ) { 
-      [[ return child.scalar_vsa.slope ( time t )]];
+      [[ return child.scalar_vsa.slope ( time t ); ]]
     } 
     resulting acceleration ( time t ) requires child.scalar_vsa.acceleration ( time ) { 
-      [[ return child.scalar_vsa.acceleration ( time t )]];
+      [[ return child.scalar_vsa.acceleration ( time t ); ]]
     } 
   }
 }
@@ -556,13 +558,13 @@ node test extends scalar_subfunction provides scalar_vsa {
   // MM: Using the boolean type, may not work in the moment
   provide scalar_vsa {
     resulting value ( time t ) requires ret_value { 
-      [[ return_prop ret_value]];
+      [[ return_prop ret_value; ]]
     } 
     resulting slope ( time t ) requires ret_slope { 
-      [[ return_prop ret_slope]];
+      [[ return_prop ret_slope; ]]
     } 
     resulting acceleration ( time t ) requires ret_acceleration { 
-      [[ return_prop ret_acceleration]];
+      [[ return_prop ret_acceleration; ]]
     } 
   }
 }

@@ -31,6 +31,10 @@ namespace proptree{
       delete pos;
     pos = p; 
   }
+  inline const message::Abstract_Position* Prop_Tree_Node::get_position()
+  {
+    return pos;
+  }
 
   inline void Prop_Tree_Node::add_property( std::string name, Property *prop )
   {

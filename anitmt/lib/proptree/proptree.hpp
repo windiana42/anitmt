@@ -112,6 +112,7 @@ namespace proptree
 
     //! sets position where this tree node is defined by user
     inline void set_position( message::Abstract_Position* );
+    inline const message::Abstract_Position* get_position();
 
     //* property access
     Property *get_property( std::string name );	

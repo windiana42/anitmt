@@ -48,6 +48,13 @@ namespace solve
     return test_run_id;
   }
    
+  // sets current run ID, which has to be valid
+  void Solve_Run_Info::set_test_run_id( id_type id ) 
+  {
+    assert( is_id_valid( id ) );
+    test_run_id = id;
+  }
+
   // adds a test run ID
   void Solve_Run_Info::add_test_run_id( id_type id )
   {
@@ -55,7 +62,7 @@ namespace solve
     valid_test_run_ids.push_front( test_run_id );
   }
 
-  // removes a test run ID
+  // removes all test run IDs that are newer than id
   void Solve_Run_Info::remove_test_run_id( id_type id )
   {
     // remove all ids added after this one
@@ -124,18 +131,6 @@ namespace solve
     return true;
   }
   
-  template<class T>
-  bool Operand<T>::is_solved_in_try( const Solve_Run_Info *info ) const
-  { 
-    return solved || info->is_id_valid( last_test_run_id ); 
-  }
-
-  template<class T>
-  bool Operand<T>::is_solved() const 
-  { 
-    return solved; 
-  }
-
   template<class T>
   const T& Operand<T>::get_value() const 
   { 

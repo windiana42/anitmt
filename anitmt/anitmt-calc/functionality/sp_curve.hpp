@@ -95,7 +95,8 @@ namespace functionality
   public:
     bezier_curve( values::Vector point0, values::Vector point1, 
 		  values::Vector point2, values::Vector point3,
-		  double max_a, double max_l, double min_l, int anz )
+		  double max_a = 1./180 *values::PI, double max_l = 1, 
+		  double min_l = .01, int anz = 10 )
       : space_curve( max_a, max_l, min_l, anz ),
 	p0(point0), p1(point1), p2(point2), p3(point3)	
     {

@@ -304,7 +304,13 @@ namespace proptree
       parent(0), prev(0), next(0), first_child(0), last_child(0),
       type_name(t), name(n), pos(message::GLOB::no_position), info(i) {}
 
-  Prop_Tree_Node::~Prop_Tree_Node() {}
+  Prop_Tree_Node::~Prop_Tree_Node() 
+  {
+    delete pos;
+    // bidirectional delete of delete hierarchy
+    if( first_child ) delete first_child;
+    if( next ) delete next;
+  }
 
   //***************************************************************************
   // tree create test

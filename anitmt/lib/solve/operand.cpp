@@ -59,6 +59,12 @@ namespace solve{
     new_test_run_id();
   }
 
+  // **************************************************************
+  // Basic_Operand: base class for operand values of any type
+  // **************************************************************
+
+  Basic_Operand::~Basic_Operand() {}
+
 }
 
 

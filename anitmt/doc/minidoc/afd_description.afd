@@ -95,6 +95,12 @@ base_types {
     ...
   }
    
+  contains {
+    [max1] [min1] <ProviderType>;
+    [max1] [min1] <ProviderType>;
+    ...
+  }
+   
   common {
     constraints {
       <operand_boolexpression>;
@@ -102,7 +108,7 @@ base_types {
       ...
     }
     solvers {
-      <Solvername> [ <SolverInstanceName> /*todo*/ ] ( <Propertyreference> | <constant> | <function_call>, ... );
+      <Solvername> [ <SolverInstanceName> ] ( <Propertyreference> | <constant> | <function_call> | container.<ProviderType>, ... );
       <PropertyName> = <operand_expression>;
       ...
     } 
@@ -131,16 +137,10 @@ base_types {
     actions { ... }
   }
   
-  contains {
-    [max1] [min1] <ProviderType>;
-    [max1] [min1] <ProviderType>;
-    ...
-  }
-   
   provide <ProviderType> {
     resulting <ReturnType>( <ParameterType> <ParameterName> ) 
 // optional things are currently not implemented!
-      [ requires <Propertyname> | child.<ProviderType>[.<ReturnType>(<ParameterType>)] | this.[<ProviderType>.]<ReturnType>(<ParameterType>) | <SolverInstanceName>.<FunctionName>/*todo*/, ... ] 
+      [ requires <Propertyname> | child.<ProviderType>[.<ReturnType>(<ParameterType>)] | this.[<ProviderType>.]<ReturnType>(<ParameterType>) | <SolverInstanceName>.<FunctionName>, ... ] 
     {
       <Any C++-Code using 
 
@@ -148,20 +148,27 @@ base_types {
 // accepts [[ ... ] ] as well, as "]]" might occur in C-Code and shouldn't be
 // a token
 
-       <Propertyname>
+      [[ <PropertyName> ]]
+      [[ <OperandName> ]]
 //!!! rethink about all this references...
 // default value and failvar isn't implemented yet
-       child.<ProviderType>.<ReturnType>(<ParameterType> <Parameter>)[,<failboolvar>]
-       [this./*todo*/][<ProviderType>./*todo*/]<ReturnType>(<ParameterType> <Parameter>)
-       <SolverInstanceName>.<FunctionName>(<ParameterType> <Parameter>,...) /*todo*/
-       return_prop <Propertyname>
-       return <cpp_expression>
-       return child.<ProviderType>.<ReturnType>(<ParameterType> <Parameter>) 
-       return this.[<ProviderType>.]<ReturnType>(<ParameterType> <Parameter>)
-       return_fail                      // return undefined
-       return_if_fail                   // return if one function call failed
+      [[ child.<ProviderType>.<ReturnType>(<ParameterType> <Parameter>)
+	 [,<failboolvar>] ]]
+      [[ [this./*todo*/][<ProviderType>./*todo*/]
+	 <ReturnType>(<ParameterType> <Parameter>) ]]
+      [[ solver.<SolverInstanceName>.<FunctionName>(<Parameter>,...)
+	 [,<failboolvar>] ]] /*todo*/
+      [[ return_prop <Propertyname>; ]]
+      [[ return <cpp_expression>; ]]
+      [[ return child.<ProviderType>.<ReturnType>(<ParameterType> <Parameter>);
+         ]]
+      [[ return this.[<ProviderType>.]
+	 <ReturnType>(<ParameterType> <Parameter>); ]]
+      [[ return solver.<SolverInstanceName>.<FunctionName>(<Parameter>,...)
+	 [,<failboolvar>] ]] /*todo*/
+      [[ return_fail; ]]		// return undefined
+      [[ return_if_fail; ]]		// return if one function call failed
        ...
-<<<< in doubled square brackets("[[   ]]") 
 
       // availible variables in C++ code:
        did_any_result_fail              // true: one previous result function
@@ -252,7 +259,9 @@ operators
 
 solvers /*todo*/
 {
-  <SolverName> ( <Type> <OperandName>, ... )
+  <SolverName> ( <Type> <OperandName>, 
+                 container.<ProviderType> <ContainerName>,
+		 serial_container.<ProviderType> <ContainerName>, ...  )
   {
     operands                            // local operands
     {
@@ -289,36 +298,62 @@ solvers /*todo*/
     }
     events
     {
-      condition <OperandName> & <OperandName> & ... 
+      event [<Identifier>] 
+        requires <OperandName> | container.<ProviderName>
+      | container.<ContainerName>.<ReturnType>(<ParameterType>) , ...
       {
         test_run 
         { 
-          <C++ code> including... 
-          return <true/false>; or 
-          [[ test <OperandName> = <cpp_expression>; ]]
-          [[ try_reject <OperandName>, ...; ]]  
-          if( [[ is_operand_solved_by_this_solver ]] ) ...;
-          if( [[ is_solved_in_try(<OperandName>) ]] ) ...;
-          if( [[ is_just_solved(<OperandName>) ]] ) ...;
+          <C++ code> including ... <see below> ...
         }
         [ final { <C++ code> } ] // useful?
         [ reset { <C++ code> } ]
       }
       ...
-      group
+      group [<GroupName>]
       {
-        condition <OperandName> & <OperandName> & ... 
+	event [<EventName>] 
+	  requires <OperandName> | container.<ProviderName> 
+	| container.<ProviderName>.<ReturnType>(<ParameterType>) , ...
         {
           test_run 
           { 
             <C++ code> including... 
             return <true/false>; or  
-            [[ test <OperandName> = <cpp_expression>; ]]
+            [[ set <OperandName> = <cpp_expression>; ]]
+            [[ try <OperandName> = <cpp_expression>; ]]
             [[ try_reject <OperandName>, ...; ]]  
             if( [[ is_operand_solved_by_this_solver ]] ) ...;
             if( [[ is_solved_in_try(<OperandName>) ]] ) ...;
             if( [[ is_just_solved(<OperandName>) ]] ) ...;
-          }
+
+	    [[ <Propertyname> ]]
+	    [[ <Operandname> ]]
+	    [[ solver.<SolverInstanceName>.<FunctionName>(<Parameter>,...)
+	      [,<failboolvar>] ]]
+	    // for serial containers:
+	    [[ <ContainerName>.<ReturnType>
+	      (<ParameterType> <Parameter>)[,<failboolvar>] ]]
+	    // for parallel containers:
+	    for( int <Index> = [[ <ContainerName>.first_index ]]; 
+	      <Index> <= [[ <ContainerName>.last_index ]]; ++<Index> )
+	    {
+	      x = [[ <ContainerName>[<Index>].<ReturnType>
+		(<ParameterType> <Parameter>)[,<failboolvar>] ]];
+	    }
+	    [[ for_each <Element> in <ContainerName> ]]
+	    {
+	      x = [[ element(<Element>).<ReturnType>
+		(<ParameterType> <Parameter>)[,<failboolvar>] ]];
+	    }
+	    ...
+	    
+	    // availible variables in C++ code:
+	    did_any_result_fail		// true: one previous result function
+					// call failed
+					// set to false to reinitalize
+	    did_result_fail			// default fail_bool_var
+	  }
           [ final { <C++ code> } ] // useful?
           [ reset { <C++ code> } ]
         }
@@ -341,9 +376,46 @@ solvers /*todo*/
     {
       <ReturnType> <FunctionName> ( <Type> <Variable>,... ) 
         [ requires <OperandName> | this.<FunctionName> 
-          | <SolverInstanceName>.<FunctionName> , ... ]
+          | <SolverInstanceName>.<FunctionName> | event.<EventName> 
+	  | group.<EventGroupName> | container.<ContainerName> /*complete*/
+	  | container.<ContainerName>.<ReturnType>(<ParameterType>) 
+	  , ... ]
       {
         <C++ code returning value, using <Variable>s and <ObjectName>s>
+	
+	[[ <Propertyname> ]]
+	[[ <Operandname> ]]
+	[[ solver.<SolverInstanceName>.<FunctionName>(<Parameter>,...)
+	   [,<failboolvar>] ]]
+	// for serial containers:
+	[[ <ContainerName>.<ReturnType>
+	   (<ParameterType> <Parameter>)[,<failboolvar>] ]]
+	// for parallel containers:
+	for( int <Index> = [[ <ContainerName>.first_index ]]; 
+	     <Index> <= [[ <ContainerName>.last_index ]]; ++<Index> )
+	{
+	  x = [[ <ContainerName>[<Index>].<ReturnType>
+	          (<ParameterType> <Parameter>)[,<failboolvar>] ]];
+	}
+        [[ for_each <Element> in <ContainerName> ]]
+        {
+          x = [[ element(<Element>).<ReturnType>
+                (<ParameterType> <Parameter>)[,<failboolvar>] ]];
+	}
+
+	[[ return_prop <Propertyname>; ]]
+	[[ return <cpp_expression>; ]]
+	[[ return solver.<SolverInstanceName>.<FunctionName>(<Parameter>,...);
+	]]
+	[[ return_fail; ]]		// return undefined
+	[[ return_if_fail; ]]		// return if one function call failed
+	...
+
+	// availible variables in C++ code:
+	did_any_result_fail		// true: one previous result function
+					// call failed
+					// set to false to reinitalize
+	did_result_fail			// default fail_bool_var
       }
       ...
     }

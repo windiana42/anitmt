@@ -171,7 +171,7 @@ namespace funcgen
     if( properties.find(name) != properties.end() )
       return true;
     if( parent ) return parent->is_property(name);
-    return(false);
+    return false;
   }
   Property *Context::get_property( std::string name )
   {
@@ -188,7 +188,7 @@ namespace funcgen
     if( operands.find(name) != operands.end() )
       return true;
     if( parent ) return parent->is_operand(name);
-    return(false);
+    return false;
   }
   Operand *Context::get_operand( std::string name )
   {
@@ -197,6 +197,23 @@ namespace funcgen
       return i->second;
 
     if( parent ) return parent->get_operand(name);
+    return 0;
+  }
+  
+  bool Context::is_container( std::string name )
+  {
+    if( containers.find(name) != containers.end() )
+      return true;
+    if( parent ) return parent->is_container(name);
+    return false;
+  }
+  Container *Context::get_container( std::string name )
+  {
+    std::map<std::string,Container*>::iterator i = containers.find(name);
+    if( i != containers.end() )
+      return i->second;
+
+    if( parent ) return parent->get_container(name);
     return 0;
   }
 
@@ -268,20 +285,6 @@ namespace funcgen
     if( parent ) return parent->get_operator(name);
     return 0;
   }
-
-  Parameter::Parameter( std::string n, std::string t ) : name(n), type(t)
-  {
-  }
-  Solver_Function::Solver_Function( std::string s, std::string f ) 
-    : solver(s), function(f)
-  {
-  }
-  Solver_Function_Code::Solver_Function_Code( std::string n, 
-					      std::string ret ) 
-    : return_type(ret), name(n)
-  {
-  }
-
   bool Context::is_solver( std::string name )
   {
     if( solvers.find(name) != solvers.end() )
@@ -289,9 +292,142 @@ namespace funcgen
     if( parent ) return parent->is_solver(name);
     return false;
   }
-  Complex_Solver *Context::get_solver( std::string name )
+
+  Code::Code() : start_src_line(0), start_src_column(0), code("") {}
+
+  Solver_Function::Solver_Function( std::string s, std::string f ) 
+    : solver(s), function(f) {}
+
+  Solver_Function_Code::Solver_Function_Code( std::string n, 
+					      std::string ret ) 
+    : return_type(ret), name(n) {}
+
+  Container::Container( bool serial, std::string provider_type, 
+			std::string name )
+    : serial(serial), provider_type(provider_type), name(name) {}
+
+  Container_Function::Container_Function( std::string name, 
+					  std::string provider_type, 
+					  std::string return_type, 
+					  std::string parameter_type )
+    : name(name), provider_type(provider_type), return_type(return_type), 
+      parameter_type(parameter_type) {}
+
+  Solver_Parameter::Solver_Parameter( const Operand&   operand   )
+    : parameter_type(t_operand), operand( new Operand(operand) ) {}
+    
+  Solver_Parameter::Solver_Parameter( const Container& container )
+    : parameter_type(t_container), container( new Container(container) ) {}
+
+  Solver_Parameter::Solver_Parameter( Solver_Parameter &src )
+    : parameter_type(src.parameter_type), operand(src.operand),
+      container(src.container) 
   {
-    std::map<std::string,Complex_Solver>::iterator i = solvers.find(name);
+    src.parameter_type = t_none; // move data
+  }
+
+  Solver_Parameter::Solver_Parameter( const Solver_Parameter &src )
+    : parameter_type(src.parameter_type)
+  {
+    switch( parameter_type )
+    {
+    case t_operand:
+      operand = new Operand( *src.operand );
+      break;
+    case t_container:
+      container = new Container( *src.container );
+      break;
+    case t_none:
+      break;
+    }
+  }
+
+  Solver_Parameter::Solver_Parameter()
+    : parameter_type(t_none) {}
+
+  Solver_Parameter &Solver_Parameter::operator=( const Operand&   op )
+  {
+    delete_data();
+    operand = new Operand(op);
+    parameter_type = t_operand;
+    return *this;
+  }
+  Solver_Parameter &Solver_Parameter::operator=( const Container& c )
+  {
+    delete_data();
+    container = new Container(c);
+    parameter_type = t_container;
+    return *this;
+  }
+  //! moves content
+  Solver_Parameter &Solver_Parameter::operator=( Solver_Parameter& src )
+  {
+    delete_data();
+    parameter_type = src.parameter_type;
+    operand        = src.operand;
+    container      = src.container;
+
+    src.parameter_type = t_none;		// removes data in source
+    return *this;
+  }
+
+  Solver_Parameter &Solver_Parameter::operator=( const Solver_Parameter& src )
+  {
+    delete_data();
+
+    parameter_type = src.parameter_type;
+    switch( parameter_type )
+    {
+    case t_operand:
+      operand = new Operand( *src.operand );
+      break;
+    case t_container:
+      container = new Container( *src.container );
+      break;
+    case t_none:
+      break;
+    }
+
+    return *this;
+  }
+
+  Operand   &Solver_Parameter::get_operand() const
+  {
+    assert( parameter_type == t_operand );
+    return *operand;
+  }
+  Container &Solver_Parameter::get_container() const
+  {
+    assert( parameter_type == t_container );
+    return *container;
+  }
+
+  Solver_Parameter::~Solver_Parameter()
+  {
+    delete_data();
+  }
+
+  void Solver_Parameter::delete_data()
+  {
+    switch( parameter_type )
+    {
+    case t_operand:   delete operand; break;
+    case t_container: delete container; break;
+    case t_none: break;
+    }
+  }
+
+  Parameter::Parameter( std::string n, std::string t ) : name(n), type(t) {}
+
+  Event::Event( std::string name ) : name(name) {}
+
+  Event_Group::Event_Group( std::string name ) : name(name) {}
+
+  Event_Solver::Event_Solver() : current_event_group(0) {}
+
+  Event_Solver *Context::get_solver( std::string name )
+  {
+    std::map<std::string,Event_Solver>::iterator i = solvers.find(name);
     if( i != solvers.end() )
       return &(i->second);
 
@@ -867,8 +1003,9 @@ namespace funcgen
   }
 
   AFD_Root::AFD_Root( Code_Translator *trans )
-    : translator(trans), current_code(0), priority_list_defined(false), 
-      write_priority_list(false), current_node(0), include_depth(0)
+    : translator(trans), priority_list_defined(false), 
+      write_priority_list(false), 
+      current_node(0), include_depth(0), current_code(0)
   {
     don_t_create_code.push( false );
     push_context( this );

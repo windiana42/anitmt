@@ -48,9 +48,10 @@ namespace funcgen
   class Expression;
   class Tree_Node_Type;
   class Operator_Declaration;
-  class Parameter_Operands;
-  class Complex_Solver;
+  class Solver_Parameter;
+  class Event_Solver;
   class AFD_Root;
+  /* !!! incomplete !!! */
 }
 
 #include "gen_code.hpp"
@@ -153,6 +154,17 @@ namespace funcgen
     std::string type;
   };
 
+  class Container
+  {
+  public:
+    bool serial;
+    std::string provider_type;
+    std::string name;
+    
+    Container( bool serial=true, std::string provider_type="", 
+	       std::string name="" );
+  };
+
   class Variable
   {
   public:
@@ -185,6 +197,14 @@ namespace funcgen
     bool is_operand( std::string name );
     Operand *get_operand( std::string name );
 
+    //************
+    // containers
+    std::map<std::string,Container*> containers;// for search
+    std::list<Container> container_list;	// for sequence
+    std::string current_container_type;
+    bool is_container( std::string name );
+    Container *get_container( std::string name );
+
     //***********
     // variables
     std::map<std::string,Variable*> variables;	// for search
@@ -213,9 +233,9 @@ namespace funcgen
 
     //*******
     // solver
-    std::map<std::string,Complex_Solver> solvers;
+    std::map<std::string,Event_Solver> solvers;
     bool is_solver( std::string name );
-    Complex_Solver *get_solver( std::string name );
+    Event_Solver *get_solver( std::string name );
   private:
     Context *parent;
   };
@@ -223,6 +243,8 @@ namespace funcgen
   class Code
   {
   public:
+    Code();
+
     int start_src_line;		// source line where this code starts
     int start_src_column;	// source column where this code starts
     std::string code;		// source code
@@ -356,8 +378,9 @@ namespace funcgen
     std::string parameter_type;	// parameter_type type of this code
     std::string parameter;	// parameter name
     std::list<std::string> required_properties; 
-    std::list< std::pair<std::string,Result_Type> > required_children; 
+    std::list< std::pair<std::string,Result_Type> > required_children;
     std::list< std::pair<std::string,Result_Type> > required_results; 
+    std::list< std::pair<std::string,std::string> > required_solver_functions; 
 
     void print( const Result_Type &type ) const; 
 				// print, just for debug purposes
@@ -417,7 +440,7 @@ namespace funcgen
 
     //***********
     // properties
-    //Context: std::map<std::string,Property> properties;
+    //Context: std::map<std::string,Property*> properties;
     //Context: std::string current_property_type;
 
     //***********
@@ -426,7 +449,7 @@ namespace funcgen
     
     //***********
     // operands
-    //Context: std::map<std::string,Operand> operands; 
+    //Context: std::map<std::string,Operand*> operands; 
     //Context: std::string current_operand_type;
 
     //*****************
@@ -468,13 +491,66 @@ namespace funcgen
     std::list<std::string> *current_version;
   };
 
-  class Parameter_Operands : public Context
+  class Container_Function
+  {
+  public:
+    std::string name;
+    std::string provider_type;
+    std::string return_type;
+    std::string parameter_type;
+
+    Container_Function( std::string name="", std::string provider_type="",
+			std::string return_type="", 
+			std::string parameter_type="" );
+  };
+
+  class Solver_Parameter
+  {
+  public:
+    enum type { t_operand, t_container, t_none };
+
+    Solver_Parameter( const Operand&   operand   );
+    Solver_Parameter( const Container& container );
+    Solver_Parameter( Solver_Parameter& );
+    Solver_Parameter( const Solver_Parameter& );
+    Solver_Parameter();
+
+    Solver_Parameter &operator=( const Operand&   operand   );
+    Solver_Parameter &operator=( const Container& container );
+    //! moves content
+    Solver_Parameter &operator=( Solver_Parameter& );
+    Solver_Parameter &operator=( const Solver_Parameter& );
+
+    inline type get_type() const	{ return parameter_type; }
+    Operand   &get_operand() const;
+    Container &get_container() const;
+
+    ~Solver_Parameter();
+  private:
+    type parameter_type;
+
+    Operand   *operand;
+    Container *container;
+
+    void delete_data();
+  };
+
+  class Solver_Parameters : public Context
   {
   public:
     //***********
     // operands
-    //Context: std::map<std::string,Operand> operands; 
+    //Context: std::map<std::string,Operand*> operands; 
+    //Context: std::list<Operand> operand_list;
     //Context: std::string current_operand_type;
+
+    //************
+    // containers
+    //Context: std::map<std::string,Container*> containers;
+    //Context: std::list<Container> container_list;	
+    //Context: std::string current_container_type;
+
+    std::list<Solver_Parameter> parameters; // operands and containers
   };
 
   class Parameter
@@ -484,6 +560,32 @@ namespace funcgen
 
     std::string name;
     std::string type;
+  };
+
+  class Event
+  {
+  public:
+    Event( std::string name="" );
+
+    std::string name;
+    std::list<std::string> required_operands;
+    std::list<std::string> required_containers;
+    std::list<Container_Function> required_container_functions;
+    Code test_run_code;
+    Code reset_code;
+    Code final_code;
+  };
+  class Event_Group
+  {
+  public:
+    Event_Group( std::string name="" );
+
+    std::string name;
+    Code reset_code;
+
+    // events:
+    std::list<Event> events;
+    Event *current_event;
   };
 
   class Solver_Function
@@ -505,20 +607,26 @@ namespace funcgen
     std::list<std::string> required_operands; 
     std::list<std::string> required_functions; 
     std::list<Solver_Function> required_solver_functions; 
+    std::list<std::string> required_events;
+    std::list<std::string> required_event_groups;
+    std::list<std::string> required_containers;
+    std::list<Container_Function> required_container_functions;
 
     Solver_Function_Code( std::string name="", std::string return_type="" );
   };
 
-  class Complex_Solver : public Context
+  class Event_Solver : public Context
   {
   public:
+    Event_Solver();
+
     bool don_t_create_code;	// ... from this solve definition
 
-    Parameter_Operands parameter;
+    Solver_Parameters parameters;
 
     //***********
     // operands
-    //Context: std::map<std::string,Operand> operands; 
+    //Context: std::map<std::string,Operand*> operands; 
     //Context: std::string current_operand_type;
 
     //*************
@@ -529,7 +637,13 @@ namespace funcgen
     //*************
     // init code
     Constraint_Code     init_constraint_code;
-    Solver_Code		init_code;
+    Solver_Code		init_solver_code;
+    Code		init_code;
+
+    //*************
+    // events
+    std::list<Event_Group> event_groups;
+    Event_Group *current_event_group;
     
     //*************
     // provides
@@ -549,13 +663,11 @@ namespace funcgen
     std::list<std::string> included_basenames;
     Header_Files header_files;
 
-    Code *current_code;		// any type of plain code
-
     Priority_List priority_list;
     bool priority_list_defined;
     bool write_priority_list;
     
-    //Context: std::map<std::string, Base_Type> base_types;
+    //Context: std::map<std::string, Base_Type*> base_types;
     Base_Type      *current_base_type;
     typedef 
     std::list< std::pair<std::string, Base_Type*> > base_types_list_type; 
@@ -575,9 +687,9 @@ namespace funcgen
     //Context: operators_type operators;
     Operator_Declaration *current_operator_declaration;
 
-    typedef std::map<std::string, Complex_Solver> complex_solver_type;
-    //Context: complex_solver_type solvers;
-    Complex_Solver *current_complex_solver;
+    typedef std::map<std::string, Event_Solver> event_solver_type;
+    //Context: event_solver_type solvers;
+    Event_Solver *current_event_solver;
 
     int include_depth;
     std::set<std::string> avoid_recursion_of;
@@ -590,8 +702,11 @@ namespace funcgen
 
     //**********************
     // general help objects
+    Code *current_code;		// any type of plain code
+    std::string return_type;	// main return type of current code
     Property_Reference current_reference;
     Solve_System_Code *current_solve_code;
+    std::list<std::string> string_list;
   private:
     std::stack<Context*> contexts;
   };

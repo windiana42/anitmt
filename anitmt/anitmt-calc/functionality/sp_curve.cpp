@@ -261,7 +261,7 @@ namespace functionality{
     double        s0 = it->stretch;
     values::Vector f0 = it->front;
 
-    // get koefficient for interpolation
+    // get coefficient for interpolation
     double q = ( s - s0 ) / (s1 - s0);
 
     // return direction

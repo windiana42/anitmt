@@ -118,6 +118,12 @@ namespace funcgen
   void declare_operand( void *info, const std::string &name ); 
   void declare_operand( void *info, const std::string &type,
 			const std::string &name );
+  void declare_container( void *info, bool serial,
+			  const std::string &type,
+			  const std::string &name );
+  void declare_container( void *info, 
+			  const std::string &type,
+			  const std::string &name );
 
   void node_start_common_declaration( void *info );
   void node_start_first_declaration( void *info, const std::string &type="" ); 
@@ -168,6 +174,9 @@ namespace funcgen
   void node_result_essential_result( void *info, const std::string &provider, 
 				     const std::string &ret="", 
 				     const std::string &par="" );
+  void node_result_essential_solver_function( void *info, 
+					      const std::string &solver,
+					      const std::string &function );
 
   void start_operator_declaration( void *info, const std::string &type,
 				   const std::string &name );
@@ -181,22 +190,78 @@ namespace funcgen
   void add_operator_version_parameter( void *info, const std::string &name );
   void finish_operator_version( void *infoptr );
 
-  void start_complex_solver_parameters( void *info, const std::string &name );
-  void start_complex_solver_declaration( void *info );
-  void finish_complex_solver_declaration( void *info );
-  //...
-  void start_complex_solver_init_block( void *info );
-  void finish_complex_solver_init_block( void *info );
-  void start_complex_solver_init_constraints_block( void *info );
-  void finish_complex_solver_init_constraints_block( void *info );
-  void start_complex_solver_function( void *info, const std::string &ret_type,
+  void start_event_solver_parameters( void *info, const std::string &name );
+  void event_solver_parameter_operand( void *info, const std::string &type, 
+				       const std::string &name );
+  void event_solver_parameter_container( void *info, bool serial,
+					 const std::string &type, 
+					 const std::string &name );
+  void start_event_solver_declaration( void *info );
+  void finish_event_solver_declaration( void *info );
+
+  void start_event_solver_init_solvers_block( void *info );
+  void finish_event_solver_init_solvers_block( void *info );
+  void start_event_solver_init_constraints_block( void *info );
+  void finish_event_solver_init_constraints_block( void *info );
+  void start_event_solver_function( void *info, const std::string &ret_type,
 				      const std::string &name);
-  void finish_complex_solver_function( void *info );
-  void complex_solver_require_operand( void *info, const std::string &op );
-  void complex_solver_require_function( void *info, const std::string &func );
-  void complex_solver_require_solver_func( void *info, 
+  void finish_event_solver_function( void *info );
+  void start_event_solver_event_group( void *info, const std::string &name );
+  void finish_event_solver_event_group( void *info );
+  void start_event_solver_event(void *info, const std::string &name);
+
+  void event_condition( void *info, const std::string &operand );
+  void event_condition_container( void *info, 
+				  const std::string &name );
+  void event_condition_container_function( void *info, 
+					   const std::string &name,
+					   const std::string &return_type,
+					   const std::string &parameter_type );
+  void start_event_solver_init_code( void *info );
+  void finish_event_solver_init_code( void *info );
+  void start_event_group_reset_code( void *info );
+  void finish_event_group_reset_code( void *info );
+  void start_event_final_code( void *info );
+  void finish_event_final_code( void *info );
+  void start_event_reset_code( void *info );
+  void finish_event_reset_code( void *info );
+  void start_event_test_run_code( void *info );
+  void finish_event_test_run_code( void *info );
+
+  void event_solver_require_operand( void *info, const std::string &op );
+  void event_solver_require_function( void *info, const std::string &func );
+  void event_solver_require_solver_func( void *info, 
 					   const std::string &solver,
 					   const std::string &function );
+  void event_solver_require_event( void *info, const std::string &event );
+  void event_solver_require_event_group( void *info, const std::string &group);
+  void event_solver_require_container( void *info, const std::string &name );
+  void event_solver_require_container_function( void *info, 
+						const std::string &name, 
+						const std::string &return_type,
+						const std::string 
+						&parameter_type );
+  void event_solver_code_set( void *info, std::string operand, 
+			      std::string expression);
+  void event_solver_code_try( void *info, std::string operand, 
+			      std::string expression);
+  void event_solver_code_try_reject( void *info );
+  void event_solver_code_is_solved_in_try( void *info, std::string operand );
+  void event_solver_code_is_just_solved( void *info, std::string operand );
+  void user_code_prop_op( void *info, std::string );
+  void user_code_prop_op_try( void *info, std::string );
+  void user_code_solver_function( void *info, std::string solver, 
+					  std::string function, 
+					  std::string parameter, 
+					  std::string opt_fail_bool_var );
+  void user_code_return_prop( void *info, std::string operand );
+  void user_code_return( void *info, std::string expression );
+  void user_code_return_solver_function( void *info, 
+						 std::string solver, 
+						 std::string function, 
+						 std::string parameter );
+  void user_code_return_fail( void *info );
+  void user_code_return_if_fail( void *info );
 
   void function_parameter( void *info, const std::string &type, 
 			   const std::string &name );
@@ -261,6 +326,8 @@ namespace funcgen
   void ref_node_first_child( void *info );
   void ref_node_last_child( void *info );
   void ref_node_child( void *info, double n );
+  
+  void common_add_identifier( void *info, std::string id );
 }
 
 #include "parser_functions_inline.cpp"

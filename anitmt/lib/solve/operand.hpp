@@ -106,9 +106,10 @@ namespace solve
 				// checks wheather an id belongs to curr. test
     inline id_type get_test_run_id() const; // returns current test run ID
     inline id_type new_test_run_id();	// adds and returns a new test run ID
+    inline void set_test_run_id( id_type id ); // sets current (valid) run ID
     inline void add_test_run_id( id_type id ); // adds a test run ID
-    inline void remove_test_run_id( id_type id ); // removes a test run ID
-
+    inline void remove_test_run_id( id_type id ); // removes test run ID and 
+						  // newer ones
     inline void set_trial_run( bool trial ); 
     inline bool is_trial_run();
     inline id_type get_inivalid_id() const; // get a definitely invalid id
@@ -144,12 +145,13 @@ namespace solve
   class Basic_Operand
   {
   public:    
+    virtual bool is_solved() const = 0;
     virtual bool is_solved_in_try( const Solve_Run_Info *info ) const = 0;
     virtual void use_test_value( Solve_Run_Info *info ) throw() = 0;
 
     virtual void add_listener( Operand_Listener *listener ) = 0;
     virtual void rm_listener( Operand_Listener *listener ) = 0;
-    virtual ~Basic_Operand() {}
+    virtual ~Basic_Operand();
   };
 
   //**********************************************************
@@ -176,7 +178,7 @@ namespace solve
     inline bool test_report_value( Solve_Run_Info *info ) 
       throw();
   public:	
-    inline bool is_solved() const;
+    bool is_solved() const;
     inline const T& get_value() const;
     inline const T& operator()() const;	// same as get_value
     inline bool set_value( T res, 

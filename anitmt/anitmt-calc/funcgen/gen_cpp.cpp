@@ -17,6 +17,9 @@
 #include <fstream>
 #include <bitset>
 
+#include <list>
+#include <string>
+
 #include "stdextend.hpp"
 
 namespace funcgen
@@ -108,37 +111,29 @@ namespace funcgen
     return prefix_res_fun + provider_type + '_' + ret_type + '_' + par_type 
       + "( " + par + " )";
   }
-  std::string Cpp_Code_Translator::start_return_res( std::string )
+  std::string Cpp_Code_Translator::start_return_result( std::string )
   {
     return "return(";
   }
-  std::string Cpp_Code_Translator::finish_return_res( std::string )
+  std::string Cpp_Code_Translator::finish_return_result( std::string )
   {
-    return ")";
+    return ");\n";
   }
-  std::string Cpp_Code_Translator::start_return_prop( std::string return_type )
+  std::string Cpp_Code_Translator::start_return_value( std::string return_type)
   {
     return "return std::pair< bool," + base_type(return_type) + " >(true,";
   }
-  std::string Cpp_Code_Translator::finish_return_prop( std::string )
+  std::string Cpp_Code_Translator::finish_return_value( std::string )
   {
-    return ")";
-  }
-  std::string Cpp_Code_Translator::start_return( std::string return_type )
-  {
-    return "return std::pair< bool," + base_type(return_type) + " >(true,";
-  }
-  std::string Cpp_Code_Translator::finish_return( std::string )
-  {
-    return ")";
+    return ");\n";
   }
   std::string Cpp_Code_Translator::return_fail()
   {
-    return "return no_res";
+    return "return __cc__no_res";
   }
   std::string Cpp_Code_Translator::return_if_fail()
   {
-    return "if( did_any_result_fail ) return no_res";
+    return "if( did_any_result_fail ) return __cc__no_res";
   }
 
   std::string Cpp_Code_Translator::start_param
@@ -160,6 +155,10 @@ namespace funcgen
   std::string Cpp_Code_Translator::prop_op_value( std::string name )
   {
     return prefix_prop_op + name + "()";
+  }
+  std::string Cpp_Code_Translator::prop_op_value_try( std::string name )
+  {
+    return prefix_prop_op + name + ".get_value( __cc__info )";
   }
   std::string Cpp_Code_Translator::node_prop( std::string name )
   {
@@ -321,6 +320,92 @@ namespace funcgen
   {
     return function_name + "( " + parameters + " )";
   }
+  std::string Cpp_Code_Translator::event_code_set( std::string operand, 
+						   std::string expression )
+  {
+    return 
+      "// [[ set " + operand + " = " + expression + "; ]]\n"
+      "__cc__res = " + prop_op(operand) + ".test_set_value( " + expression + 
+      ", __cc__info );\n" 
+      "if( (__cc__event->get_retry_at_once()) || (__cc__res == false) )\n"
+      "{\n"
+      "  return __cc__res;\n"
+      "}\n"
+      "else\n"
+      "  __cc__event->solved_operands.push_back( &" + prop_op(operand) +");\n";
+  }
+  std::string Cpp_Code_Translator::event_code_try( std::string operand, 
+						   std::string expression )
+  {
+    return
+      "// [[ try " + operand + " = " + expression + "; ]]\n"
+      "__cc__was_trial_run = __cc__info->is_trial_run();\n"
+      "__cc__info->set_trial_run(true);\n"
+      "__cc__res = " + prop_op(operand) + ".test_set_value( " + expression 
+      + ", __cc__info );\n"
+      "__cc__info->set_trial_run(__cc__was_trial_run);\n"
+      "if( __cc__res == false )\n"
+      "{\n"
+      "  __cc__info->remove_test_run_id( id );"
+      "		// lot's of resets increase id very much\n"
+      "  __cc__info->set_test_run_id( save_id );\n"
+      "}\n"
+      "else if( __cc__event->get_retry_at_once() )\n"
+      "{\n"
+      "  return true;\n"
+      "}\n";
+      "else\n"
+      "  __cc__event->solved_operands.push_back( &" + prop_op(operand) +");\n";
+  }
+  std::string Cpp_Code_Translator::event_code_try_reject
+  ( const std::list<std::string> &bad_ops )
+  {
+    std::string code = "// [[ try_reject <operand>,... ]];\n";
+
+    std::list<std::string>::const_iterator operand;
+    for( operand = bad_ops.begin(); operand != bad_ops.end(); ++operand )
+      code += "__cc__bad_ops.push_back( &" + prop_op(*operand) 
+	+ " );\n";
+	
+    return code +
+      "__cc__res = __cc__info->problem_handler->may_operand_reject_val( "
+      "__cc__bad_ops, __cc__info, this );\n"
+      "__cc__bad_ops.clear();\n"
+      "if( __cc__res==true ) return false;\n";
+  }
+  std::string Cpp_Code_Translator::event_code_is_solved_in_try
+  ( std::string operand )
+  {
+    return
+      "(/*[[ is_solved_in_try( " + operand + ") ]]*/ "
+      + prop_op(operand) + ".is_solved_in_try(__cc__info))";
+  }
+  std::string Cpp_Code_Translator::event_code_is_just_solved
+  ( std::string operand )
+  {
+    return
+      "(/*[[ is_just_solved( " + operand + ") ]]*/ __cc__solved_op == &"
+      + prop_op(operand) + ")";
+  }
+
+  std::string Cpp_Code_Translator::solver_function_value
+  ( std::string solver, std::string function, std::string parameter, 
+    std::string opt_fail_bool_var )
+  {
+    if( opt_fail_bool_var == "" ) opt_fail_bool_var = "did_result_fail";
+    return
+      "(/*[[ solver." + solver + "." + function + "(" + parameter + ")"
+      ", " + opt_fail_bool_var +
+      " ]]*/ extract_status(" + solver_identifier(solver) + "->" + function +
+      "(" + parameter + ")" + ", " + opt_fail_bool_var + 
+      ", did_any_result_fail ))";
+  }
+  std::string Cpp_Code_Translator::solver_function_result
+  ( std::string solver, std::string function, std::string parameter )
+  {
+    return
+      solver_identifier(solver) + "->" + function + "(" + parameter + ")";
+  }
 
   Cpp_Code_Translator::Cpp_Code_Translator( code_gen_info *info )
     : Code_Translator(info), prefix_priority_label("_pl_"),
@@ -330,13 +415,14 @@ namespace funcgen
       prefix_container_type("_container_"), 
       prefix_serial_container_type("_serial_container_"), 
       prefix_container_name("_cn_"),
-      prefix_solver_identifier(""), // user should access this in C++ code
+      prefix_solver_identifier("_si_"), 
       prefix_operator_class_name("_oc_"),
       prefix_solver_class_name("_sc_")
   {}
 
   // ****************************************
   //! Cpp_Code_Generator: generates C++ code
+
 
   void Cpp_Code_Generator::generate_header()
   {
@@ -356,6 +442,7 @@ namespace funcgen
     *decl << "#include <solve/operand.hpp>" << std::endl;
     *decl << "#include <solve/operator.hpp>" << std::endl;
     *decl << "#include <solve/solver.hpp>" << std::endl;
+    *decl << "#include <solve/event_solver.hpp>" << std::endl;
     *decl << "#include <proptree/property.hpp>" << std::endl;
     *decl << "#include <proptree/proptree.hpp>" << std::endl;
     *decl << "#include <message/message.hpp>" << std::endl;
@@ -570,7 +657,7 @@ namespace funcgen
       for( j  = provider_type.result_types.begin(); 
 	   j != provider_type.result_types.end(); ++j )
       {
-	*decl << "    solve::Operand<bool> " 
+	*decl << "    solve::Operand<flag> " 
 	      << translator.is_avail( provides, j->return_type, 
 				      j->parameter_type ) << ";"
 	      << std::endl;
@@ -644,15 +731,16 @@ namespace funcgen
       // ****************
       // container class
 
-      *impl << "  // ********************************************************"
-	    << "************" << std::endl
-	    << "  // serial container for nodes that provide " << provides 
-	    << ":" << std::endl
-	    << "  //   " << translator.serial_container(provides) << std::endl
-	    << std::endl;
- 
       if( provider_type.serial )	// is serial provider type?
       {				// ... create serial container class
+	*impl << "  // *******************************************************"
+	      << "************" << std::endl
+	      << "  // serial container for nodes that provide " << provides 
+	      << ":" << std::endl
+	      << "  //   " << translator.serial_container(provides) 
+	      << std::endl
+	      << std::endl;
+ 
 	*decl << "  class " << translator.serial_container( provides )
 	      << std::endl
 	      << "  {" << std::endl
@@ -758,7 +846,8 @@ namespace funcgen
 	      << translator.serial_container( provides ) << "::"
 	      << "get_first_element()" << std::endl
 	      << "  {" << std::endl 
-	      << "    if( elements_begin() == elements_end() ) return 0;" << std::endl 
+	      << "    if( elements_begin() == elements_end() ) return 0;" 
+	      << std::endl 
 	      << "    else return *elements_begin();" << std::endl 
 	      << "  }" << std::endl;
 	
@@ -768,7 +857,8 @@ namespace funcgen
 	      << translator.serial_container( provides ) << "::"
 	      << "get_last_element()" << std::endl
 	      << "  {" << std::endl 
-	      << "    if( elements_begin() == elements_end() ) return 0;" << std::endl 
+	      << "    if( elements_begin() == elements_end() ) return 0;" 
+	      << std::endl 
 	      << "    else return *(--elements_end());" << std::endl 
 	      << "  }" << std::endl;
 
@@ -779,7 +869,8 @@ namespace funcgen
 	      << "get_element( int n )" << std::endl
 	      << "  {" << std::endl 
 	      << "    elements_type::iterator i; int z;" << std::endl 
-	      << "    for( i = elements_begin(), z=0; i != elements_end(); ++i, ++z )" << std::endl 
+	      << "    for( i = elements_begin(), z=0; i != elements_end(); "
+	      << "++i, ++z )" << std::endl 
 	      << "      if( z == n ) return *i;" << std::endl 
 	      << "    return 0;" << std::endl 
 	      << "  }" << std::endl;
@@ -838,10 +929,13 @@ namespace funcgen
 		<< std::endl;
 	}
 	*decl << "    // ** is result availible **" << std::endl;
+	*decl << "    solve::Operand<flag> is_avail; "
+	      << "// are all results available" 
+	      << std::endl;
 	for( j  = provider_type.result_types.begin(); 
 	     j != provider_type.result_types.end(); ++j )
 	{
-	  *decl << "    solve::Operand<bool> " 
+	  *decl << "    solve::Operand<flag> " 
 		<< translator.is_avail( provides, j->return_type, 
 					j->parameter_type ) << ";" 
 		<< std::endl;
@@ -892,7 +986,7 @@ namespace funcgen
 	      << translator.serial_container( provides )
 	      << "(bool _max1, bool _min1, message::Message_Consultant *c)" 
 	      << std::endl
-	      << "    : max1(_max1), min1(_min1)";
+	      << "    : max1(_max1), min1(_min1), is_avail(c)";
 	for( j  = provider_type.result_types.begin(); 
 	     j != provider_type.result_types.end(); ++j )
 	{
@@ -903,6 +997,9 @@ namespace funcgen
 	}
 	*impl << std::endl
 	      << "  {" << std::endl;
+	*impl << "    solve::Multi_And_Operator *m_and = "
+	      << "new solve::Multi_And_Operator(c);" << std::endl;
+	*impl << "    is_avail = m_and->get_result();";
 	for( j  = provider_type.result_types.begin(); 
 	     j != provider_type.result_types.end(); ++j )
 	{
@@ -914,7 +1011,12 @@ namespace funcgen
 		<< " = avail_operator_" << j->return_type << "_" 
 		<< j->parameter_type << "->get_result();"
 		<< std::endl;
+	  *impl << "    m_and->add_operand( "
+		<< translator.is_avail( provides, j->return_type, 
+					j->parameter_type )
+		<< " );" << std::endl;
 	}
+	*impl << "    m_and->finish_adding();" << std::endl;
 	*impl << "  }" << std::endl
 	      << "  //! function that is called after hierarchy was set up "
 	      << "for each node" << std::endl
@@ -932,6 +1034,14 @@ namespace funcgen
       }
       else
       {				// ... create container class
+	*impl << "  // *******************************************************"
+	      << "************" << std::endl
+	      << "  // container for nodes that provide " << provides 
+	      << ":" << std::endl
+	      << "  //   " << translator.container(provides) 
+	      << std::endl
+	      << std::endl;
+
 	*decl << "  class " << translator.container( provides )
 	      << std::endl
 	      << "  {" << std::endl
@@ -942,8 +1052,16 @@ namespace funcgen
 	      << "  private:" << std::endl
 	      << "    bool max1; // maximal one element" << std::endl 
 	      << "    bool min1; // minimal one element" << std::endl
-	      << "    elements_type elements;" << std::endl
-	      << "    typedef std::map<std::string, "
+	      << "    elements_type elements;" << std::endl;
+	Provider_Type::result_types_type::const_iterator j;
+	for( j  = provider_type.result_types.begin(); 
+	     j != provider_type.result_types.end(); ++j )
+	{
+	  *decl << "    solve::Multi_And_Operator *avail_operator_" 
+		<< j->return_type << "_" << j->parameter_type << ";"
+		<< std::endl;
+	}
+	*decl << "    typedef std::map<std::string, "
 	      << "proptree::Basic_Node_Factory< "
 	      << translator.provider_type(provides) <<" >*> "
 	      << "node_factories_type;" << std::endl
@@ -955,8 +1073,7 @@ namespace funcgen
 	      << "    proptree::Prop_Tree_Node *add_child( std::string type, "
 	      << "std::string name, proptree::tree_info *info, "
 	      << "message::Message_Consultant *msg, "
-	      << "proptree::Prop_Tree_Node *already_obj );" << std::endl
-	      << "    // ** result functions **" << std::endl;
+	      << "proptree::Prop_Tree_Node *already_obj );" << std::endl;
 
 	*impl << "  " << translator.container( provides ) << "::"
 	      << "node_factories_type "
@@ -992,8 +1109,18 @@ namespace funcgen
 	      << "      node = nf->cast(already_obj);" << std::endl
 	      << "    else" << std::endl
 	      << "      node = nf->create(name,info,msg);" << std::endl
-	      << "    elements.push_back(node.first); "
-	      << "// store provided type pointer" << std::endl
+	      << "    elements.push_back(node.first); ";
+	for( j  = provider_type.result_types.begin(); 
+	     j != provider_type.result_types.end(); ++j )
+	{
+	  *impl << "    avail_operator_" << j->return_type << "_" 
+		<< j->parameter_type
+		<< "->add_operand( node.first->" 
+		<< translator.is_avail( provides, j->return_type, 
+					j->parameter_type ) << " );"
+		<< std::endl;
+	}
+	*impl << "// store provided type pointer" << std::endl
 	      << "    return node.second;                      "
 	      << "// return general prop tree node pointer" << std::endl
 	      << "  }" << std::endl
@@ -1001,8 +1128,20 @@ namespace funcgen
 
 	*decl << "    elements_type::iterator elements_begin(); " << std::endl
 	      << "    elements_type::iterator elements_end(); " << std::endl
-	      << "    bool elements_empty(); " << std::endl
-	      << "    // ** constructor **" << std::endl
+	      << "    bool elements_empty(); " << std::endl;
+	*decl << "    // ** is result availible **" << std::endl;
+	*decl << "    solve::Operand<flag> is_avail; "
+	      << "// are all results available" 
+	      << std::endl;
+	for( j  = provider_type.result_types.begin(); 
+	     j != provider_type.result_types.end(); ++j )
+	{
+	  *decl << "    solve::Operand<flag> " 
+		<< translator.is_avail( provides, j->return_type, 
+					j->parameter_type ) << ";" 
+		<< std::endl;
+	}
+	*decl << "    // ** constructor **" << std::endl
 	      << "    " << translator.container( provides ) 
 	      << "(bool max1, bool min1, message::Message_Consultant* );" 
 	      << std::endl
@@ -1040,11 +1179,32 @@ namespace funcgen
 	      << std::endl
 	      << "  " << translator.container( provides ) << "::"
 	      << translator.container( provides )
-	      << "(bool _max1, bool _min1, message::Message_Consultant * )" 
+	      << "(bool _max1, bool _min1, message::Message_Consultant *c )" 
 	      << std::endl
-	      << "    : max1(_max1), min1(_min1)" << std::endl
-	      << "  {" << std::endl
-	      << "  }" << std::endl
+	      << "    : max1(_max1), min1(_min1), is_avail(c)" << std::endl;
+	for( j  = provider_type.result_types.begin(); 
+	     j != provider_type.result_types.end(); ++j )
+	{
+	  *impl << "," << std::endl
+		<< "      " << translator.is_avail( provides, j->return_type, 
+						    j->parameter_type )
+		<< "(c)";
+	}
+	*impl << std::endl
+	      << "  {" << std::endl;
+	for( j  = provider_type.result_types.begin(); 
+	     j != provider_type.result_types.end(); ++j )
+	{
+	  *impl << "    avail_operator_" << j->return_type << "_" 
+		<< j->parameter_type << " = new solve::Multi_And_Operator(c);"
+		<< std::endl
+		<< "    " << translator.is_avail( provides, j->return_type, 
+						  j->parameter_type )
+		<< " = avail_operator_" << j->return_type << "_" 
+		<< j->parameter_type << "->get_result();"
+		<< std::endl;
+	}
+	*impl << "  }" << std::endl
 	      << std::endl
 	      << "    // ** Don't call the following functions! ** " 
 	      << std::endl
@@ -1053,8 +1213,14 @@ namespace funcgen
 	      << "  void " << translator.container( provides ) << "::"
 	      << "hierarchy_final_init()" << std::endl
 	      << std::endl
-	      << "  {" << std::endl
-	      << "  }" << std::endl;
+	      << "  {" << std::endl;
+	for( j  = provider_type.result_types.begin(); 
+	     j != provider_type.result_types.end(); ++j )
+	{
+	  *impl << "    avail_operator_" << j->return_type << "_" 
+		<< j->parameter_type << "->finish_adding();" << std::endl;
+	}
+	*impl << "  }" << std::endl;
       }
     }
     *decl << std::endl;
@@ -1230,8 +1396,8 @@ namespace funcgen
     *decl << "}" << std::endl;
     *decl << "namespace solve" << std::endl;
     *decl << "{" << std::endl;
+    *decl << "  using namespace functionality;" << std::endl;
     *decl << std::endl;
-
     int i; bool first;
     AFD_Root::operators_type::iterator op;
     for( op = afd->operators.begin();
@@ -1479,12 +1645,13 @@ namespace funcgen
     *impl << std::endl;
 
     bool first;
-    AFD_Root::complex_solver_type::iterator solver;
+    int i;
+    AFD_Root::event_solver_type::iterator solver;
     for( solver = afd->solvers.begin();
 	 solver != afd->solvers.end(); ++solver )
     {
       const std::string &solver_name = solver->first;
-      const Complex_Solver &solver_decl = solver->second;
+      const Event_Solver &solver_decl = solver->second;
 
       if( solver_decl.don_t_create_code ) continue;
 
@@ -1496,13 +1663,15 @@ namespace funcgen
 	 solver != afd->solvers.end(); ++solver )
     {
       const std::string &solver_name = solver->first;
-      const Complex_Solver &solver_decl = solver->second;
+      const Event_Solver &solver_decl = solver->second;
+
+      const std::string solver_class_name 
+	= translator.solver_class_name( solver_name );
 
       if( solver_decl.don_t_create_code ) continue;
 
-      *decl << "  class " << translator.solver_class_name( solver_name ) 
-	    << " : public message::Message_Reporter"
-	    << std::endl;
+      *decl << "  class " << solver_class_name 
+	    << " : public solve::Event_Solver" << std::endl;
       *decl << "  {" << std::endl;
       *decl << "  public:" << std::endl;
 
@@ -1512,10 +1681,13 @@ namespace funcgen
       for( func = solver_decl.functions.begin();
 	   func != solver_decl.functions.end(); ++func )
       {
-	*decl << "    " << func->return_type << " " << func->name << "( ";
-	*impl << "  " << func->return_type << " " 
-	      << translator.solver_class_name( solver_name ) << "::" 
-	      << func->name << "( ";
+	*decl << "    std::pair< bool," 
+	  + translator.base_type(func->return_type) + " > " << func->name 
+	      << "( ";
+	*impl << "  std::pair< bool," 
+	  + translator.base_type(func->return_type) + " > "
+	      << solver_class_name << "::" 
+	      << func->name << " ( ";
 	std::list<Variable>::const_iterator var;
 	first = true;
 	for( var = func->variable_list.begin(); 
@@ -1529,6 +1701,13 @@ namespace funcgen
 	*decl << " );" << std::endl;
 	*impl << " )" << std::endl;
 	*impl << "  {" << std::endl;
+	*impl << "    std::pair< bool," 
+	      << translator.base_type(func->return_type) 
+	      << " > __cc__no_res;" << std::endl;
+	*impl << "    __cc__no_res.first = false;" << std::endl;
+	*impl << "    bool did_any_result_fail = false;" << std::endl;
+	*impl << "    bool did_result_fail = false;" << std::endl;
+	*impl << std::endl;
 	*impl << "    // *** user code following... line:" 
 	      << func->start_src_line << " ***" << std::endl;
 	// indent like in AFD source file
@@ -1537,7 +1716,7 @@ namespace funcgen
 	*impl << func->code << std::endl;
 	*impl << "  }" << std::endl;
 
-	*decl << "  solve::Operand<bool> " 
+	*decl << "  solve::Operand<flag> " 
 	      << translator.is_avail( func->name ) << ";"
 	      << std::endl;
       }      
@@ -1545,23 +1724,55 @@ namespace funcgen
 
       // ************
       // constructor
-      *decl << "    " << translator.solver_class_name( solver_name ) 
+      *decl << "    " << solver_class_name 
 	    << "( ";
-      *impl << "  " << translator.solver_class_name( solver_name ) << "::"
-	    << translator.solver_class_name( solver_name ) << "( ";
-      std::list<Operand>::const_iterator par;
-      for( par = solver_decl.parameter.operand_list.begin();
-	   par != solver_decl.parameter.operand_list.end(); ++par )
+      *impl << "  " << solver_class_name << "::"
+	    << solver_class_name << "( ";
+      std::list<Solver_Parameter>::const_iterator par;
+      for( par = solver_decl.parameters.parameters.begin();
+	   par != solver_decl.parameters.parameters.end(); ++par )
       {
-	*decl << translator.operand_type( par->type ) << "&"
-	      << par->name << ", ";
-	*impl << translator.operand_type( par->type ) << "& " 
-	      << "_" << translator.prop_op( par->name ) << ", ";
+	switch( par->get_type() )
+	{
+	case Solver_Parameter::t_operand:
+	  *decl << translator.operand_type( par->get_operand().type ) << "&"
+		<< par->get_operand().name << ", ";
+	  *impl << translator.operand_type( par->get_operand().type ) << "& " 
+		<< "_" << translator.prop_op( par->get_operand().name ) 
+		<< ", ";
+	  break;
+	case Solver_Parameter::t_container:
+	  if( par->get_container().serial )
+	  {
+	    *decl << translator.serial_container
+	      ( par->get_container().provider_type ) 
+		  << "&" << par->get_container().name << ", ";
+	    *impl << translator.serial_container
+	      ( par->get_container().provider_type ) 
+		  << "& _" 
+		  << translator.container_name( par->get_container().name ) 
+		  << ", ";
+	  }
+	  else
+	  {
+	    *decl << translator.container
+	      ( par->get_container().provider_type ) 
+		  << "&" << par->get_container().name << ", ";
+	    *impl << translator.container
+	      ( par->get_container().provider_type ) 
+		  << "& _" 
+		  << translator.container_name( par->get_container().name ) 
+		  << ", ";
+	  }
+	  break;
+	default:
+	  assert( false );
+	}
       }
       *decl << " message::Message_Consultant* );" << std::endl;
       *impl << " message::Message_Consultant* consultant )" << std::endl;
 
-      *impl << "    : message::Message_Reporter(consultant)";
+      *impl << "    : Event_Solver(consultant)";
       // avail variables of functions
       for( func = solver_decl.functions.begin();
 	   func != solver_decl.functions.end(); ++func )
@@ -1569,15 +1780,29 @@ namespace funcgen
 	*impl << "," << std::endl;
 	*impl << "      " 
 	      << translator.is_avail( func->name ) 
-	      << "( get_consultant() )";
+	      << "( consultant )";
       }
-      // parameter operands
-      for( par = solver_decl.parameter.operand_list.begin();
-	   par != solver_decl.parameter.operand_list.end(); ++par )
+      // parameter operands and containers
+      for( par = solver_decl.parameters.parameters.begin();
+	   par != solver_decl.parameters.parameters.end(); ++par )
       {
-	*impl << "," << std::endl;
-	*impl << "      " << translator.prop_op( par->name ) << "(" 
-	      << "_" << translator.prop_op(par->name) << ")";
+	switch( par->get_type() )
+	{
+	case Solver_Parameter::t_operand:
+	  *impl << "," << std::endl;
+	  *impl << "      " << translator.prop_op( par->get_operand().name ) 
+		<< "(_" << translator.prop_op(par->get_operand().name) << ")";
+	  break;
+	case Solver_Parameter::t_container:
+	  *impl << "," << std::endl;
+	  *impl << "      " 
+		<< translator.container_name( par->get_container().name ) 
+		<< "(_" << translator.container_name(par->get_container().name)
+		<< ")";
+	  break;
+	default:
+	  assert( false );
+	}
       }
       // other operands
       std::list<Operand>::const_iterator op;
@@ -1586,10 +1811,73 @@ namespace funcgen
       {
 	*impl << "," << std::endl;
 	*impl << "      " << translator.prop_op( op->name ) 
-	      << "( get_consultant() )";
+	      << "( consultant )";
+      }
+      std::list<Event_Group>::const_iterator group;
+      for( group = solver_decl.event_groups.begin(), i=1;
+	   group != solver_decl.event_groups.end(); ++group, ++i )
+      {
+	*impl << "," << std::endl;
+	*impl << "      __cc__group" << i << "( this, &" << solver_class_name
+	      << "::__cc__group" << i << "_reset, consultant )";
+
+	std::list<Event>::const_iterator event;
+	int j;
+	for( event = group->events.begin(), j=1;
+	     event != group->events.end(); ++event, ++j )
+	{
+	  *impl << "," << std::endl;
+	  *impl << "      __cc__group" << i << "_event" << j << "( this, "
+		<< "&__cc__group" << i << ", &" << solver_class_name 
+		<< "::__cc__group" << i << "_event" << j << "_test_run, &"
+		<< solver_class_name 
+		<< "::__cc__group" << i << "_event" << j << "_reset, &"
+		<< solver_class_name 
+		<< "::__cc__group" << i << "_event" << j << "_final, "
+		<< "consultant )";
+	}
+
       }
       *impl << std::endl;
       *impl << "  {" << std::endl;
+      *impl << std::endl;
+      for( group = solver_decl.event_groups.begin(), i=1;
+	   group != solver_decl.event_groups.end(); ++group, ++i )
+      {
+	std::list<Event>::const_iterator event;
+	int j;
+	for( event = group->events.begin(), j=1;
+	     event != group->events.end(); ++event, ++j )
+	{
+	  *impl << "    __cc__group" << i << ".events_added();"	<< std::endl;
+	  std::list<std::string>::const_iterator op;
+	  for( op = event->required_operands.begin();
+	       op != event->required_operands.end(); ++op )
+	  {
+	    *impl << "    __cc__group" << i << "_event" << j 
+		  << ".add_operand( " << translator.prop_op(*op) << " );"
+		  << std::endl;
+	  }
+	}
+      }
+      *impl << "    connect_operands_to_listener();" << std::endl;
+      *impl << std::endl;
+      *impl << "    // *** user code following... line:" 
+	    << solver_decl.init_code.start_src_line << " ***"
+	    << std::endl;
+      // indent like in AFD source file
+      for( int cnt = 0; cnt < solver_decl.init_code.start_src_column;++cnt )
+	*impl << ' ';
+      *impl << solver_decl.init_code.code << std::endl;
+      *impl << "    // *** end of user code ***" << std::endl;
+      *impl << std::endl;
+      
+      // constraints & solvers in init blocks
+      write_constraint_statements( impl, solver_decl.init_constraint_code, 
+				     translator );
+      write_solver_statements( impl, solver_decl.init_solver_code, 
+			       translator );
+      *impl << std::endl;
       if( !solver_decl.functions.empty() )
 	*impl << "    solve::Multi_And_Operator *m_and;" << std::endl;
       // avail variables of functions
@@ -1620,30 +1908,108 @@ namespace funcgen
 	     sol_func != func->required_solver_functions.end(); ++sol_func )
 	{
 	  *impl << "    m_and->add_operand( " 
-  		<< sol_func->solver << "->" 
+  		<< translator.solver_identifier(sol_func->solver) << "->" 
 		<< translator.is_avail( sol_func->function ) 
+		<< " );" << std::endl;
+	}
+	std::list<std::string>::const_iterator event_name;
+	for( event_name = func->required_events.begin();
+	     event_name != func->required_events.end(); ++event_name )
+	{
+	  int i;
+	  for( group = solver_decl.event_groups.begin(), i=1;
+	       group != solver_decl.event_groups.end(); ++group, ++i )
+      	  {
+	    std::list<Event>::const_iterator event;
+	    int j;
+	    for( event = group->events.begin(), j=1;
+	         event != group->events.end(); ++event, ++j )
+	    {
+	      if( event->name == *event_name )
+	        *impl << "    m_and->add_operand( __cc__group" << i << "_event"
+	              << j << ".data_ok );" << std::endl;
+	    }
+	  }
+	}
+	std::list<std::string>::const_iterator event_group_name;
+	for( event_group_name = func->required_event_groups.begin();
+	     event_group_name != func->required_event_groups.end();
+	     ++event_group_name )
+	{
+	  int i;
+	  for( group = solver_decl.event_groups.begin(), i=1;
+	       group != solver_decl.event_groups.end(); ++group, ++i )
+      	  {
+	    if( group->name == *event_group_name )
+	      *impl << "    m_and->add_operand( __cc__group" << i
+		    << ".data_ok );" << std::endl;
+	  }
+	}
+	std::list<std::string>::const_iterator container;
+	for( container = func->required_containers.begin();
+	     container != func->required_containers.end();
+	     ++container )
+	{
+	  *impl << "    m_and->add_operand( " 
+		<< translator.container_name( *container ) 
+		<< ".is_avail );" << std::endl;
+	}
+	std::list<Container_Function>::const_iterator container_function;
+	for( container_function = func->required_container_functions.begin();
+	     container_function != func->required_container_functions.end();
+	     ++container_function )
+	{
+	  *impl << "    m_and->add_operand( " 
+		<< translator.container_name( container_function->name ) << "."
+		<< translator.is_avail( container_function->provider_type,
+					container_function->return_type,
+					container_function->parameter_type )
 		<< " );" << std::endl;
 	}
 	*impl << "    m_and->finish_adding();" << std::endl;
       }
-      // constraints & solvers in init blocks
-      write_constraint_statements( impl, solver_decl.init_constraint_code, 
-				     translator );
-      write_solver_statements( impl, solver_decl.init_code, translator );
       *impl << "  }" << std::endl;
 
       *decl << std::endl;
       *decl << "  private:" << std::endl;
-      write_solver_declarations( decl, solver_decl.init_code, translator );
-      // *********
-      // operands
+      write_solver_declarations( decl, solver_decl.init_solver_code, 
+				 translator );
+      // **************************
+      // operands (and containers)
 
-      // parameter references
-      for( par = solver_decl.parameter.operand_list.begin();
-	   par != solver_decl.parameter.operand_list.end(); ++par )
+      // parameter references 
+      for( par = solver_decl.parameters.parameters.begin();
+	   par != solver_decl.parameters.parameters.end(); ++par )
       {
-	*decl << "    " << translator.operand_type( par->type ) << "& "
-	      << translator.prop_op( par->name ) << ";" << std::endl;
+	switch( par->get_type() )
+	{
+	case Solver_Parameter::t_operand:
+	  *decl << "    " << translator.operand_type( par->get_operand().type )
+		<< "& "	<< translator.prop_op( par->get_operand().name ) 
+		<< ";" << std::endl;
+	  break;
+	case Solver_Parameter::t_container:
+	  if( par->get_container().serial )
+	  {
+	    *decl << "    " 
+		  << translator.serial_container( par->get_container().
+						  provider_type )
+		  << "& " 
+		  << translator.container_name( par->get_container().name ) 
+		  << ";" << std::endl;
+	  }
+	  else
+	  {
+	    *decl << "    " 
+		  << translator.container( par->get_container().provider_type )
+		  << "& " 
+		  << translator.container_name( par->get_container().name ) 
+		  << ";" << std::endl;
+	  }
+	  break;
+	default:
+	  assert( false );
+	}
       }
       // other operands
       for( op = solver_decl.operand_list.begin();
@@ -1661,30 +2027,283 @@ namespace funcgen
 	*decl << "    " << var->type << " "
 	      << var->name << ";" << std::endl;
       }
+      *decl << std::endl;
+
+      // *************
+      // events
+
+      if( solver_decl.event_groups.size() != 0 )
+      {
+	// generic event group class
+	*decl << "    class Local_Event_Group : public solve::Event_Group" 
+	      << std::endl;
+	*decl << "    {" << std::endl;
+	*decl << "    public:" << std::endl;
+	*decl << "      typedef void (" << solver_class_name 
+	      << "::*reset_func_type)();" << std::endl;
+	*decl << "      Local_Event_Group( " << solver_class_name 
+	      << " *solver, reset_func_type reset, "
+	      << "message::Message_Consultant* );" << std::endl;
+	*decl << "    private:" << std::endl;
+	*decl << "      " << solver_class_name << " *solver;" << std::endl;
+	*decl << "      reset_func_type reset_func;" << std::endl;
+	*decl << "      virtual void call_reset();" << std::endl;
+	*decl << "    };" << std::endl;
+
+	*impl << "  " << solver_class_name 
+	      << "::Local_Event_Group::Local_Event_Group( "
+	      << solver_class_name << " *solver, reset_func_type reset_func, "
+	      << "message::Message_Consultant *consultant )"
+	      << std::endl;
+	*impl << "    : Event_Group(consultant)," << std::endl;
+	*impl << "      solver(solver), reset_func(reset_func)" << std::endl;
+	*impl << "  {}" << std::endl;
+	*impl << std::endl;
+	*impl << "  void " << solver_class_name 
+	      << "::Local_Event_Group::call_reset()" << std::endl;
+	*impl << "  {" << std::endl;
+	*impl << "    (solver->*reset_func)();" << std::endl;
+	*impl << "  }" << std::endl;
+	// generic event class
+	*decl << "    class Local_Event : public solve::Event" << std::endl;
+	*decl << "    {" << std::endl;
+	*decl << "    public:" << std::endl;
+	*decl << "      typedef bool (" << solver_class_name 
+	      << "::*test_run_func_type)" << std::endl;
+	*decl << "        (const solve::Basic_Operand*, "
+	      << "solve::Solve_Run_Info*, solve::Event*);" 
+	      << std::endl;
+	*decl << "      typedef void (" << solver_class_name 
+	      << "::*reset_func_type)();" << std::endl;
+	*decl << "      typedef void (" << solver_class_name 
+	      << "::*final_func_type)();" << std::endl;
+	*decl << "      Local_Event( " << solver_class_name 
+	      << " *solver, solve::Event_Group *group, "
+	      << "test_run_func_type test_run_func, "
+	      << "reset_func_type reset_func, final_func_type final_func, "
+	      << "message::Message_Consultant* );" << std::endl;
+	*decl << "    private:" << std::endl;
+	*decl << "      " << solver_class_name << " *solver;" << std::endl;
+	*decl << "      test_run_func_type test_run_func;" << std::endl;
+	*decl << "      reset_func_type reset_func;" << std::endl;
+	*decl << "      final_func_type final_func;" << std::endl;
+	*decl << "      virtual bool call_test_run(const solve::Basic_Operand "
+	      << "*solver_op, solve::Solve_Run_Info* info, "
+	      << "solve::Event *event);" << std::endl;
+	*decl << "      virtual void call_reset();" << std::endl;
+	*decl << "      virtual void call_final();" << std::endl;
+	*decl << "    };" << std::endl;
+	*decl << std::endl;
+
+	*impl << "  " << solver_class_name 
+	      << "::Local_Event::Local_Event( "
+	      << solver_class_name << " *solver, solve::Event_Group *group,"
+	      << " test_run_func_type test_run_func, "
+	      << "reset_func_type reset_func, final_func_type final_func, "
+	      << "message::Message_Consultant *consultant )"
+	      << std::endl;
+	*impl << "    : solve::Event(solver,group,consultant), solver(solver),"
+	      << std::endl;
+	*impl << "      test_run_func(test_run_func), reset_func(reset_func), "
+	      << "final_func(final_func) " << std::endl;
+	*impl << "  {}" << std::endl;
+	*impl << std::endl;
+	*impl << "  bool " << solver_class_name 
+	      << "::Local_Event::call_test_run(const solve::Basic_Operand* "
+	      << "solved_op, solve::Solve_Run_Info *info, solve::Event *event)"
+	      << std::endl;
+	*impl << "  {" << std::endl;
+	*impl << "    return (solver->*test_run_func)(solved_op,info,event);" 
+	      << std::endl;
+	*impl << "  }" << std::endl;
+	*impl << "  void " << solver_class_name 
+	      << "::Local_Event::call_reset()" << std::endl;
+	*impl << "  {" << std::endl;
+	*impl << "    (solver->*reset_func)();" << std::endl;
+	*impl << "  }" << std::endl;
+	*impl << "  void " << solver_class_name 
+	      << "::Local_Event::call_final()" << std::endl;
+	*impl << "  {" << std::endl;
+	*impl << "    (solver->*final_func)();" << std::endl;
+	*impl << "  }" << std::endl; 
+	*impl << std::endl;
+      }
+      //above: std::list<Event_Group>::const_iterator group; 
+      for( group = solver_decl.event_groups.begin(), i=1;
+	   group != solver_decl.event_groups.end(); ++group, ++i )
+      {
+	*decl << "    Local_Event_Group __cc__group" << i << ";" << std::endl;
+	*decl << "    void __cc__group" << i << "_reset();" << std::endl;
+
+	*impl << "  void " << solver_class_name << "::__cc__group" << i 
+	      << "_reset()" << std::endl;
+	*impl << "  {" << std::endl;
+	*impl << "    // *** user code following... line:" 
+	      << group->reset_code.start_src_line << " ***"
+	      << std::endl;
+	  // indent like in AFD source file
+	  for( int cnt = 0; cnt < group->reset_code.start_src_column; ++cnt )
+	    *impl << ' ';
+	  *impl << group->reset_code.code << std::endl;
+	*impl << "  }" << std::endl;
+
+	std::list<Event>::const_iterator event;
+	int j;
+	for( event = group->events.begin(), j=1;
+	     event != group->events.end(); ++event, ++j )
+	{
+	  *decl << "    Local_Event __cc__group" << i << "_event" << j << ";" 
+		<< std::endl;
+	  *decl << "    bool __cc__group" << i << "_event" << j 
+		<< "_test_run(const solve::Basic_Operand *solved_op, "
+		<< "solve::Solve_Run_Info* info, solve::Event *event);" 
+		<< std::endl;
+	  *decl << "    void __cc__group" << i << "_event" << j << "_reset();" 
+		<< std::endl;
+	  *decl << "    void __cc__group" << i << "_event" << j << "_final();" 
+		<< std::endl;
+
+	  *impl << "  bool " << solver_class_name << "::__cc__group" << i 
+		<< "_event" << j 
+		<< "_test_run(const solve::Basic_Operand *__cc__solved_op, "
+		<< "solve::Solve_Run_Info* __cc__info, "
+		<< "solve::Event *__cc__event)" << std::endl;
+	  *impl << "  {" << std::endl;
+	  *impl << "    bool did_any_result_fail = false;" << std::endl;
+	  *impl << "    bool did_result_fail = false;" << std::endl;
+	  *impl << "    bool __cc__res, __cc__was_trial_run;" << std::endl;
+	  *impl << "    solve::Solve_Run_Info::id_type __cc__id, "
+		<< "__cc__save_id;" 
+		<< std::endl;
+	  *impl << "    std::list<solve::Basic_Operand*> __cc__bad_ops;" 
+		<< std::endl;
+	  *impl << std::endl;
+	  *impl << "    // *** user code following... line:" 
+		<< event->test_run_code.start_src_line << " ***"
+		<< std::endl;
+	  // indent like in AFD source file
+	  for( int cnt = 0; cnt < event->test_run_code.start_src_column;++cnt )
+	    *impl << ' ';
+	  *impl << event->test_run_code.code << std::endl;
+	  *impl << "    // *** end user code" << std::endl;
+	  *impl << "	__cc__save_id = __cc__info->get_test_run_id();" 
+		<< std::endl;
+	  *impl << "	__cc__event->stored_id =__cc__info->new_test_run_id();"
+		<< std::endl;
+	  *impl << "    if( !__cc__group" << i << "_event" << j 
+		<< ".data_ok.test_set_value(true,__cc__info) ) " << std::endl;
+	  *impl << "    {" << std::endl;
+	  *impl << "      "
+		<< "__cc__info->remove_test_run_id(__cc__event->stored_id);" 
+		<< std::endl;
+	  *impl << "      __cc__event->stored_id = -1;" << std::endl;
+	  *impl << "    }" << std::endl;
+	  *impl << "    else" << std::endl;
+	  *impl << "      __cc__event->solved_operands.push_back( &__cc__group"
+		<< i << "_event" << j << ".data_ok );" << std::endl;
+	  *impl << "	__cc__info->set_test_run_id(__cc__save_id);" 
+		<< std::endl;
+	  *impl << "    return true;" << std::endl;
+	  *impl << "  }" << std::endl;
+	  *impl << "  void " << solver_class_name << "::__cc__group" << i 
+		<< "_event" << j << "_reset()" << std::endl;
+	  *impl << "  {" << std::endl;
+	  *impl << "    // *** user code following... line:" 
+		<< event->reset_code.start_src_line << " ***"
+		<< std::endl;
+	  // indent like in AFD source file
+	  for( int cnt = 0; cnt < event->reset_code.start_src_column; ++cnt )
+	    *impl << ' ';
+	  *impl << event->reset_code.code << std::endl;
+	  *impl << "  }" << std::endl;
+	  *impl << "  void " << solver_class_name << "::__cc__group" << i 
+		<< "_event" << j << "_final()" << std::endl;
+	  *impl << "  {" << std::endl;
+	  *impl << "    // *** user code following... line:" 
+		<< event->final_code.start_src_line << " ***"
+		<< std::endl;
+	  // indent like in AFD source file
+	  for( int cnt = 0; cnt < event->final_code.start_src_column; ++cnt )
+	    *impl << ' ';
+	  *impl << event->final_code.code << std::endl;
+	  *impl << "  }" << std::endl;
+	}
+      }
+
       *decl << "  };" << std::endl;
       *decl << std::endl;
-      *decl << "  " << translator.solver_class_name( solver_name ) << "* "
+
+      // solver class end
+      // *****************
+
+      // ****************************
+      // write solver access function
+      *decl << "  " << solver_class_name << "* "
 	    << solver_name << "( ";
-      *impl << "  " << translator.solver_class_name( solver_name ) << "* "
+      *impl << "  " << solver_class_name << "* "
 	    << solver_name << "( ";
-      for( par = solver_decl.parameter.operand_list.begin();
-	   par != solver_decl.parameter.operand_list.end(); ++par )
+
+      for( par = solver_decl.parameters.parameters.begin();
+	   par != solver_decl.parameters.parameters.end(); ++par )
       {
-	*decl << translator.operand_type( par->type ) << "&"
-	      << par->name << ", ";
-	*impl << translator.operand_type( par->type ) << "& " 
-	      << "_" << translator.prop_op( par->name ) << ", ";
+	switch( par->get_type() )
+	{
+	case Solver_Parameter::t_operand:
+	  *decl << translator.operand_type( par->get_operand().type ) << "&"
+		<< par->get_operand().name << ", ";
+	  *impl << translator.operand_type( par->get_operand().type ) << "& " 
+		<< "_" << translator.prop_op( par->get_operand().name ) 
+		<< ", ";
+	  break;
+	case Solver_Parameter::t_container:
+	  if( par->get_container().serial )
+	  {
+	    *decl << translator.serial_container( par->get_container().
+						  provider_type ) 
+		  << "&" << par->get_container().name << ", ";
+	    *impl << translator.serial_container( par->get_container().
+						  provider_type ) 
+		  << "& _" << translator.container( par->get_container().name )
+		  << ", ";
+	  }
+	  else
+	  {
+	    *decl << translator.container( par->get_container().provider_type )
+		  << "&" << par->get_container().name << ", ";
+	    *impl << translator.container( par->get_container().
+					   provider_type ) 
+		  << "& _" << translator.container( par->get_container().name )
+		  << ", ";
+	  }
+	  break;
+	default:
+	  assert( false );
+	}
       }
       *decl << "message::Message_Consultant * );" << std::endl;
       *decl << std::endl;
       *impl << "message::Message_Consultant *msgc )" << std::endl;
       *impl << "  {" << std::endl;
-      *impl << "    return new " << translator.solver_class_name( solver_name )
+      *impl << "    return new " << solver_class_name
 	    << "( ";
-      for( par = solver_decl.parameter.operand_list.begin();
-	   par != solver_decl.parameter.operand_list.end(); ++par )
+
+      for( par = solver_decl.parameters.parameters.begin();
+	   par != solver_decl.parameters.parameters.end(); ++par )
       {
-	*impl << "_" << translator.prop_op( par->name ) << ", ";
+	switch( par->get_type() )
+	{
+	case Solver_Parameter::t_operand:
+	  *impl << "_" << translator.prop_op( par->get_operand().name ) 
+		<< ", ";
+	  break;
+	case Solver_Parameter::t_container:
+	  *impl << "_" 
+		<< translator.container_name( par->get_container().name ) 
+		<< ", ";
+	  break;
+	default:
+	  assert( false );
+	}
       }
       *impl << "msgc );" << std::endl;
       *impl << "  }" << std::endl;
@@ -1860,12 +2479,14 @@ namespace funcgen
 	  // is nothing required?
 	  if( (res_code.required_properties.empty()) &&
 	      (res_code.required_children.empty()) &&
-	      (res_code.required_results.empty()) )
+	      (res_code.required_results.empty()) &&
+	      (res_code.required_solver_functions.empty()) )
 	  {
 	    *impl << "    " 
 		  << translator.is_avail( provides, res_type.return_type, 
 					  res_type.parameter_type ) 
-		  << " = solve::const_op( true, get_consultant() );" 
+		  << " = solve::const_op( values::Flag(true), "
+		  << "get_consultant() );" 
 		  << std::endl;
 	  }
 	  else			// if something is required
@@ -1925,6 +2546,20 @@ namespace funcgen
 		    << translator.is_avail( provider_type, return_type, 
 					    parameter_type ) << " );" 
 		    << std::endl;
+	    }
+	    std::list< std::pair<std::string,std::string> >::const_iterator 
+	      req_fun;
+	    for( req_fun = res_code.required_solver_functions.begin();
+		 req_fun != res_code.required_solver_functions.end();
+		 ++req_fun )
+	    {
+	      const std::string &solver_name = req_fun->first;
+	      const std::string &function_name = req_fun->second;
+
+	      *impl << "    m_and->add_operand( " 
+		    << translator.solver_identifier(solver_name) << "->" 
+		    << translator.is_avail( function_name ) 
+		    << " );" << std::endl;
 	    }
 	    *impl << "    m_and->finish_adding();" << std::endl;
 	  }
@@ -2021,13 +2656,11 @@ namespace funcgen
 		<< std::endl
 		<< "  {" << std::endl
 		<< "    std::pair< bool," 
-		<< translator.base_type(res_type.return_type) << " > no_res;"
-		<< std::endl
-		<< "    no_res.first = false;" << std::endl
-		<< "    bool did_any_result_fail;" << std::endl
-		<< "    bool did_result_fail;" << std::endl
-		<< "    did_any_result_fail = false;" << std::endl
-		<< "    did_result_fail = false;" << std::endl;
+		<< translator.base_type(res_type.return_type) 
+		<< " > __cc__no_res;" << std::endl
+		<< "    __cc__no_res.first = false;" << std::endl
+		<< "    bool did_any_result_fail = false;" << std::endl
+		<< "    bool did_result_fail = false;" << std::endl;
 
 	  if( !res_code.required_properties.empty() )
 	  {
@@ -2044,9 +2677,10 @@ namespace funcgen
 	    }
 	    *impl << " )" << std::endl
 		  << "    {" << std::endl
-		  << "      error() << \"required property wasn't solved\";" 
+		  << "      error(get_position()) << "
+		  << "\"required property wasn't solved\";"
 		  << std::endl
-		  << "      return no_res;" << std::endl
+		  << "      return __cc__no_res;" << std::endl
 		  << "    }" << std::endl;
 	  }
 
@@ -2070,9 +2704,10 @@ namespace funcgen
 	    }
 	    *impl << " )" << std::endl
 		  << "    {" << std::endl 
-		  << "      error() << \"required child container "
-		  << "wasn't solved\";" << std::endl
-		  << "      return no_res;" << std::endl
+		  << "      error(get_position()) << \"" << node_name 
+		  << " node \" << get_name() << "
+		  << "\" couldn't solve child container\";"  << std::endl
+		  << "      return __cc__no_res;" << std::endl
 		  << "    }" << std::endl;
 	  }
 
@@ -2095,9 +2730,10 @@ namespace funcgen
 	    }
 	    *impl << " )" << std::endl
 		  << "    {" << std::endl 
-		  << "      error() << \"required result for provided type " 
+		  << "      error(get_position()) << "
+		  << "\"required result for provided type "
 		  << " wasn't solved\";" << std::endl
-		  << "      return no_res;" << std::endl
+		  << "      return __cc__no_res;" << std::endl
 		  << "    }" << std::endl;
 	  }
 

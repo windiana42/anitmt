@@ -16,18 +16,17 @@ libfunctionality_a_SOURCES= solver.afd base_func.afd scene_base.afd   \
 			sp_curve.hpp sp_curve.cpp \
 			make_avail.cpp make_avail.hpp 
 nodist_libfunctionality_a_SOURCES= solver.hpp solver.cpp \
+			complex_solver.hpp complex_solver.cpp \
 			base_func.hpp base_func.cpp \
 			scene_base.hpp scene_base.cpp \
 			scalar_base.hpp scalar_base.cpp \
 			scalar.hpp scalar.cpp \
 			object_base.hpp object_base.cpp \
-			object.hpp object.cpp \
-			complex_solver.hpp complex_solver.cpp \
-			sp_curve.hpp sp_curve.cpp \
-			make_avail.cpp make_avail.hpp 
+			object.hpp object.cpp 
 
 check_PROGRAMS=		test_functionality
-CXXFLAGS =		@CXXFLAGS@ -Wno-non-template-friend -ftemplate-depth-30
+CXXFLAGS =		@CXXFLAGS@ -Wno-non-template-friend -Wno-unused\
+			-ftemplate-depth-30
 
 test_functionality_SOURCES= \
 			test_functionality.cpp

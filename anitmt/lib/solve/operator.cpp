@@ -37,27 +37,28 @@ namespace solve
   // Multi_And_Operator: Logical and with any number of operands
   //***************************************************************************
 
-  bool Multi_And_Operator::initial_result()
+  values::Flag Multi_And_Operator::initial_result()
   {
     return true;
   }
-  bool Multi_And_Operator::no_operands_result()
+  values::Flag Multi_And_Operator::no_operands_result()
   {
     return true;
   }
 
-  bool Multi_And_Operator::calc( const bool &op, const bool &old_res )
+  values::Flag Multi_And_Operator::calc( const values::Flag &op, 
+					 const values::Flag &old_res )
   {
     return old_res && op;
   }
 
-  bool Multi_And_Operator::is_op_sufficient( const bool &op )
+  bool Multi_And_Operator::is_op_sufficient( const values::Flag &op )
   {
     return !op;			// one false is sufficient
   }
 
   Multi_And_Operator::Multi_And_Operator( message::Message_Consultant *c )
-    : Basic_Multi_Operand_Operator<bool,bool>(c)
+    : Basic_Multi_Operand_Operator<values::Flag,values::Flag>(c)
   {}
 
   //*******************************************************************

@@ -42,8 +42,9 @@ int main(int argc,char **argv,char **envp)
     message::Message_Manager manager(&msg_handler);
 
     // parameter objects
+    message::Message_Consultant parameter_consultant(&manager, 
+						     anitmt::MID_Parameter);
     param::Commandline_Parameter_Source param_source(argc,argv,envp);
-    message::Message_Consultant parameter_consultant(&manager, anitmt::MID_Parameter);
     param::Parameter_Manager param_manager(param_source, parameter_consultant);
 
     // animation objects

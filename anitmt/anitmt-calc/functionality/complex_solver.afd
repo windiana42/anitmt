@@ -19,6 +19,7 @@ avoid_recursion adl_complex_solvers;	// avoid recursion of this file
 include declaration "base_func.afd";
 include declaration "solver.afd";
 include header "sp_curve.hpp";
+include header "math.h";
 
 /* test /*nested*/ */
 
@@ -30,60 +31,88 @@ solvers
     {
       int cooler_wert() 
       {
-	return 3;
+	[[ return 3; ]];
       }
     }
   }
-  bezier_solver( vector p1, vector p2, vector p3, vector p4, scalar length )
+  bezier_solver( vector p1, vector p2, vector p3, vector p4, scalar length,
+		 vector start_dir, vector end_dir,
+		 vector start_up, vector end_up, scalar up_roll )
   {
     declarations
     {
       bezier_curve *bezier;
     }
-    init constraints 
+    operands
     {
-      length >= 0;
+      bool length_calculated;
     }
-    init
+    init_operands
     {
-      test_solver test;
+      constraints 
+      {
+	length >= 0;
+      }
+      solvers
+      {
+	test_solver test;
+	start_dir = vec_normalize( p2 - p1 );
+	end_dir = vec_normalize( p4 - p3 );
+      }
+    }
+    init_code
+    {
     }
     events
     {
-      condition p1 & p2 & p3 & p4
+      event points_avail requires p1, p2, p3, p4
       {
 	test_run 
 	{
-	  bezier = new bezier_curve( p1(), p2(), p3(), p4() );
+	  vector p1 = [[ p1 ]];
+	  vector p2 = [[ p2 ]];
+	  vector p3 = [[ p3 ]];
+	  vector p4 = [[ p4 ]];
+	  
+	  scalar len_sum = abs(p2-p1) + abs(p3-p2) + abs(p4-p3);
+	  bezier = new bezier_curve( p1, p2, p3, p4,
+	    1./180*values::PI, len_sum/100, len_sum/10000, 10 );
 	  scalar len = bezier->length;
-	  //[ [ test length = len ]];
-	  //[ [ test length = bezier.get_length() ]];
+	  [[ set length_calculated = true; ]]
+	  [[ set length = len; ]]
+	  //[[ set length = bezier.get_length(); ]]
 	}
 	reset
 	{
 	  delete bezier;
 	}
       }
-      condition length
+      event reject_length requires length
       {
 	test_run
 	{
-	  /*
-	  if( ![[ is_solved_in_try p1 ]] && ![[ is_solved_in_try p2 ]] &&
-	      ![[ is_solved_in_try p1 ]] && ![[ is_solved_in_try p2 ]] &&
-	       [[ may_reject ]] ) 
-          */
-	    return false;
+	  if( ![[ is_solved_in_try(length_calculated) ]] ) 
+	    [[ try_reject p1,p2,p3,p4; ]]
 	}
       }
     }
     provide
     {
       vector get_pos ( stretch s ) 
-        requires p1,p2,p3,p4, test.cooler_wert
+        requires event.points_avail, test.cooler_wert
       {
-	int t = test->cooler_wert();
-	return bezier->get_pos( s );
+	int t = [[ solver.test.cooler_wert() ]];
+	[[ return bezier->get_pos( s ); ]]
+      }
+      vector get_dir ( stretch s ) 
+        requires event.points_avail
+      {
+	[[ return bezier->get_front( s ); ]]
+      }
+      vector get_up ( stretch s ) 
+        requires event.points_avail
+      {
+	[[ return bezier->get_up( s ); ]]
       }
     }
   }
@@ -98,26 +127,54 @@ solvers
 	ve2; v02; prod; as;
       }
     }
-    init
+    init_operands
     {
-      // ve = v0 + a * t
-      product_solver ( at, a, t );	// at = a * t
-      sum_solver( ve, v0, at );		// ve = v0 + at
-
-      // v0 = s/t - 0.5*a*t
-      v0 = s/t - 0.5 * a * t;
-      
-      // s = 0.5 * (v0 + ve) * t;
-      sum_solver( v0_ve, v0, ve );	// v0_ve = v0 + ve
-      product_solver( vt, v0_ve, t );	// vt = v0ve * t
-      product_solver( s, 0.5, vt );	// s = 0.5 * vt
-
-      // ve^2 = v0^2 + 2*a*s
-      product_solver( as, a, s );	// as = a * s;
-      product_solver( prod, 2, as );	// prod = 2 * as
-      square_solver( ve2, ve );		// ve2 = ve^2
-      square_solver( v02, v0 );		// v02 = v0^2
-      sum_solver( ve2, v02, prod );	// ve2 = v02 + prod
+      constraints
+      {
+	t >= 0;
+      }
+      solvers
+      {
+	// ve = v0 + a * t
+	product_solver ( at, a, t );	// at = a * t
+	sum_solver( ve, v0, at );		// ve = v0 + at
+	
+	// v0 = s/t - 0.5*a*t
+	v0 = s/t - 0.5 * a * t;
+	
+	// s = 0.5 * (v0 + ve) * t;
+	sum_solver( v0_ve, v0, ve );	// v0_ve = v0 + ve
+	product_solver( vt, v0_ve, t );	// vt = v0ve * t
+	product_solver( s, 0.5, vt );	// s = 0.5 * vt
+	
+	// ve^2 = v0^2 + 2*a*s
+	product_solver( as, a, s );	// as = a * s;
+	product_solver( prod, 2, as );	// prod = 2 * as
+	square_solver( ve2, ve );		// ve2 = ve^2
+	square_solver( v02, v0 );		// v02 = v0^2
+	sum_solver( ve2, v02, prod );	// ve2 = v02 + prod
+      }
+    }
+    provide
+    {
+      scalar get_stretch ( time _t ) 
+        requires a,v0
+      {
+	scalar ret = [[ v0 ]] * _t + 0.5 * [[ a ]] * _t*_t ;
+	[[ return ret; ]]
+      }
+      scalar get_speed_t ( time _t ) 
+        requires a,v0
+      {
+	scalar ret = [[ v0 ]] + [[ a ]] * _t;
+	[[ return ret; ]]
+      }
+      scalar get_speed_s ( stretch _s ) 
+        requires a,v0
+      {
+	scalar ret = sqrt( 2 * _s * [[ a ]] ) + [[ v0 ]];
+	[[ return ret; ]]
+      }
     }
   }
 }

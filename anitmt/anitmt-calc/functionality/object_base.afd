@@ -82,7 +82,7 @@ node object provides object_component, object_state
     {
       vector position = [[ child.object_state.position( time t ) ]];
       vector translate = position - [[ center ]];
-      [[ return translate ]];
+      [[ return translate; ]]
     }
     resulting rotation( time t ) 
       requires front, child.object_state.front( time ),
@@ -92,28 +92,28 @@ node object provides object_component, object_state
       vector dest_up_vector = [[ child.object_state.up_vector( time t ) ]];
       vector rotate = vec_rotate_pair_pair( [[ front ]], [[ up_vector ]], 
            dest_front, dest_up_vector );
-      [[ return rotate ]];
+      [[ return rotate; ]]
     }
 
     resulting position( time t ) 
       requires child.object_state.position( time )
     {
-      [[ return child.object_state.position( time t ) ]];
+      [[ return child.object_state.position( time t ); ]]
     }
     resulting front( time t ) 
       requires child.object_state.front( time )
     {
-      [[ return child.object_state.front( time t ) ]];
+      [[ return child.object_state.front( time t ); ]]
     }
     resulting up_vector( time t ) 
       requires child.object_state.up_vector( time )
     {
-      [[ return child.object_state.up_vector( time t ) ]];
+      [[ return child.object_state.up_vector( time t ); ]]
     }
     resulting speed( time t ) 
       requires child.object_state.speed( time )
     {
-      [[ return child.object_state.speed( time t ) ]];
+      [[ return child.object_state.speed( time t ); ]]
     }
   }
 
@@ -123,69 +123,69 @@ node object provides object_component, object_state
     resulting position( time t ) 
       requires child.object_state.position( time )
     {
-      [[ return child.object_state.position( time t ) ]];
+      [[ return child.object_state.position( time t ); ]]
     }
     resulting position( stretch s ) 
       requires child.object_state.position( stretch )
     {
-      [[ return child.object_state.position( stretch s ) ]];
+      [[ return child.object_state.position( stretch s ); ]]
     }
     resulting direction( time t ) 
       requires child.object_state.direction( time )
     {
-      [[ return child.object_state.direction( time t ) ]];
+      [[ return child.object_state.direction( time t ); ]]
     }
     resulting direction( stretch s ) 
       requires child.object_state.direction( stretch )
     {
-      [[ return child.object_state.direction( stretch s ) ]];
+      [[ return child.object_state.direction( stretch s ); ]]
     }
 // timing 
     resulting stretch( time t ) 
       requires child.object_state.stretch( time )
     {
-      [[ return child.object_state.stretch( time t ) ]];
+      [[ return child.object_state.stretch( time t ); ]]
     }
     resulting speed( time t ) 
       requires child.object_state.speed( time )
     {
-      [[ return child.object_state.speed( time t ) ]];
+      [[ return child.object_state.speed( time t ); ]]
     }
     resulting speed( stretch s ) 
       requires child.object_state.speed( stretch )
     {
-      [[ return child.object_state.speed( stretch s ) ]];
+      [[ return child.object_state.speed( stretch s ); ]]
     }
     resulting acceleration( time t ) 
       requires child.object_state.acceleration( time )
     {
-      [[ return child.object_state.acceleration( time t ) ]];
+      [[ return child.object_state.acceleration( time t ); ]]
     }
     resulting acceleration( stretch s ) 
       requires child.object_state.acceleration( stretch )
     {
-      [[ return child.object_state.acceleration( stretch s ) ]];
+      [[ return child.object_state.acceleration( stretch s ); ]]
     }
 // orientation on track
     resulting front( time t ) 
       requires child.object_state.front( time )
     {
-      [[ return child.object_state.front( time t ) ]];
+      [[ return child.object_state.front( time t ); ]]
     }
     resulting front( stretch s ) 
       requires child.object_state.front( stretch )
     {
-      [[ return child.object_state.front( stretch s ) ]];
+      [[ return child.object_state.front( stretch s ); ]]
     }
     resulting up_vector( time t ) 
       requires child.object_state.up_vector( time )
     {
-      [[ return child.object_state.up_vector( time t ) ]];
+      [[ return child.object_state.up_vector( time t ); ]]
     }
     resulting up_vector( stretch s ) 
       requires child.object_state.up_vector( stretch )
     {
-      [[ return child.object_state.up_vector( stretch s ) ]];
+      [[ return child.object_state.up_vector( stretch s ); ]]
     }
   }
 }

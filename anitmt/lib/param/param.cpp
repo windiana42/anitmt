@@ -37,6 +37,9 @@ namespace param
     start_source.set_manager(this);
     sources.push_back( &start_source );
   }
+  Parameter_Manager::~Parameter_Manager()
+  {}
+
 
   //! start reading the parameters
   //! \return 0 means no errors
@@ -74,5 +77,7 @@ namespace param
   
     if(!cmd.Check_Unused() )
       return -2;
+
+    return 0;
   }
 }

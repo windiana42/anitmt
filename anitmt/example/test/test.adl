@@ -2,6 +2,7 @@ scene testscene {
   filename "test.pov";
   scene_type "pov";
   scalar testval {
+/*
     if {
       if_condition 1 < 2;
       start_time 0;
@@ -16,6 +17,7 @@ scene testscene {
 	}
       }
     }	
+*/
     linear testlinear1 {
       start_time 1;
       end_time 3;
@@ -43,8 +45,10 @@ scene testscene {
     linear {
       end_time 23; // autoset from ini file doesn't work
     }
+    /*
     test {
     }
+    */
   }
 /*
   scalar testval2 {
@@ -55,12 +59,24 @@ scene testscene {
 */
   object testobj
   {
+/*
     move_straight test_straight
     {
       duration 15;
       start_pos <0,0,0>;
       end_pos <1,2,3>;
       acceleration 0.02;
+    }
+*/
+    move_bezier test_bezier
+    {
+      duration 30;
+      start_pos <0,0,0>;
+      cp1 <0,0,1>;
+      cp2 <1,0,1>;
+      end_pos <1,0,0>;
+      //acceleration 0.5;
+      start_speed 0.01;
     }
   }
 }

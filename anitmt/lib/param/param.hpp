@@ -46,6 +46,7 @@ namespace param
   class Parameter_Manager : public message::Message_Reporter {
   public:
     Parameter_Manager( Parameter_Source &start_source, message::Message_Consultant &consultant );
+    ~Parameter_Manager();
     //! start reading the parameters
     //! \return 0 means no errors
     int read_parameters();

@@ -67,6 +67,7 @@ namespace anitmt
 
       message::Message_Stream msg(message::noinit);
       info->msg.warn( pos ).copy_to(msg);
+      delete pos;
       return msg;
     }
 

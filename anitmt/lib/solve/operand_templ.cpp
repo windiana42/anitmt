@@ -34,6 +34,18 @@ namespace solve
   User_Problem_Handler Operand<T>::default_handler;
 
   template<class T>
+  bool Operand<T>::is_solved_in_try( const Solve_Run_Info *info ) const
+  { 
+    return solved || info->is_id_valid( last_test_run_id ); 
+  }
+
+  template<class T>
+  bool Operand<T>::is_solved() const 
+  { 
+    return solved; 
+  }
+
+  template<class T>
   void Operand<T>::add_listener( Operand_Listener *listener ) 
   {
     listeners.push_back( listener );

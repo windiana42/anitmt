@@ -30,7 +30,7 @@ namespace solve {
     // calc 1 + 2 = 3
     {
       Operand<values::Scalar> &op = 
-	(*(new Add_Operator<values::Scalar,values::Scalar,values::Scalar>
+	(*(new _oc_add<values::Scalar,values::Scalar,values::Scalar>
 	   (*(new Constant<values::Scalar>(1, msg)), 
 	    *(new Constant<values::Scalar>(2, msg))))).get_result();
     
@@ -49,8 +49,8 @@ namespace solve {
     // calc (!1) + 2 = 2
     {
       Operand<values::Scalar> &op = 
-	(*(new Add_Operator<values::Scalar,values::Scalar,values::Scalar>
-	   ((new Not_Operator<values::Scalar,values::Scalar>
+	(*(new _oc_add<values::Scalar,values::Scalar,values::Scalar>
+	   ((new _oc_not<values::Scalar,values::Scalar>
 	     (*(new Constant<values::Scalar>(1, msg))))->get_result(), 
 	    *(new Constant<values::Scalar>(2, msg))))).get_result();
       if( op.is_solved() )
@@ -69,7 +69,7 @@ namespace solve {
     {
       Operand<values::Scalar> x(msg);
       Operand<values::Scalar> &op = 
-	(*(new Add_Operator<values::Scalar,values::Scalar,values::Scalar>
+	(*(new _oc_add<values::Scalar,values::Scalar,values::Scalar>
 	   (*(new Constant<values::Scalar>(2, msg)), 
 	    x))).get_result();
 
@@ -99,7 +99,7 @@ namespace solve {
     {
       Operand<values::Scalar> x(msg);
       Operand<values::Scalar> &op = 
-	(*(new Add_Operator<values::Scalar,values::Scalar,values::Scalar>
+	(*(new _oc_add<values::Scalar,values::Scalar,values::Scalar>
 	   (x,
 	    *(new Constant<values::Scalar>(2, msg))))).get_result();
 
@@ -128,8 +128,8 @@ namespace solve {
     {
       Operand<values::Scalar> x(msg);
       Operand<values::Scalar> &op = 
-	(*(new Add_Operator<values::Scalar,values::Scalar,values::Scalar>
-	   ((new Not_Operator<values::Scalar,values::Scalar>(x))->get_result(),
+	(*(new _oc_add<values::Scalar,values::Scalar,values::Scalar>
+	   ((new _oc_not<values::Scalar,values::Scalar>(x))->get_result(),
 	    *(new Constant<values::Scalar>(2, msg))))).get_result();
 
       if( op.is_solved() )
@@ -157,7 +157,7 @@ namespace solve {
     // calc <1,2,3> + <5,4,7>     
     {
       Operand<values::Vector> &op = 
-	(*(new Add_Operator<values::Vector,values::Vector,values::Vector>
+	(*(new _oc_add<values::Vector,values::Vector,values::Vector>
 	   (*(new Constant<values::Vector>( values::Vector(1,2,3), msg )),
 	    *(new Constant<values::Vector>( values::Vector(5,4,7), msg ))))).get_result();
 
@@ -178,7 +178,7 @@ namespace solve {
     {
       Operand<values::Vector> v(msg); 
       Operand<values::Vector> &op = 
-	(*(new Add_Operator<values::Vector,values::Vector,values::Vector>
+	(*(new _oc_add<values::Vector,values::Vector,values::Vector>
 	   (*(new Constant<values::Vector>( values::Vector(1,2,3), msg )),
 	    v))).get_result();
 
@@ -226,7 +226,7 @@ namespace solve {
     }
     // calc !(1 + 2) = false
     {
-      Operand<bool> &op = 
+      Operand<flag> &op = 
 	!(*(new Constant<values::Scalar>(1, msg)) + 
 	  *(new Constant<values::Scalar>(2, msg)));
 
@@ -299,7 +299,7 @@ namespace solve {
     // calc !(x(=5) - 5) 
     {
       Operand<values::Scalar> x(msg);
-      Operand<bool> &op = !(x - 5);
+      Operand<flag> &op = !(x - 5);
 
       if( op.is_solved() )
       {
@@ -616,7 +616,7 @@ namespace solve {
     // calc 5 == x> 
     {
       Operand<values::Scalar> x(msg); 
-      Operand<bool> &op = (5 == x);
+      Operand<flag> &op = (5 == x);
 
       if( op.is_solved() )
       {
@@ -643,7 +643,7 @@ namespace solve {
     // calc x(=5.1) == 5> 
     {
       Operand<values::Scalar> x(msg); 
-      Operand<bool> &op = x == 5;
+      Operand<flag> &op = x == 5;
 
       if( op.is_solved() )
       {
@@ -670,7 +670,7 @@ namespace solve {
     // calc 5 != x(=0)> 
     {
       Operand<values::Scalar> x(msg); 
-      Operand<bool> &op = 5 != x;
+      Operand<flag> &op = 5 != x;
 
       if( op.is_solved() )
       {
@@ -1674,7 +1674,7 @@ namespace solve {
       std::cout << " is_solved Operator..." << std::endl;
       {
 	Operand<values::Scalar> a(msg);
-	Operand<bool> res(msg);
+	Operand<flag> res(msg);
 	res = is_solved( a );
 	if( res.is_solved() )
 	{
@@ -1691,7 +1691,7 @@ namespace solve {
       }
       {
 	Operand<values::Scalar> a(msg);
-	Operand<bool> res(msg);
+	Operand<flag> res(msg);
 	a.set_value(1);
 	res = is_solved( a );
 	if( !res.is_solved() )
@@ -1707,7 +1707,7 @@ namespace solve {
       {
 	Multi_And_Operator *and = new Multi_And_Operator(msg);
 	Operand<values::Scalar> a(msg), b(msg), c(msg); 
-	Operand<bool> res(msg);
+	Operand<flag> res(msg);
 	res = and->get_result();
 	and->add_operand( is_solved( a ) );
 	and->add_operand( is_solved( b ) );
@@ -1746,11 +1746,11 @@ namespace solve {
       {
 	Multi_And_Operator *and = new Multi_And_Operator(msg);
 	Operand<values::Scalar> a(msg), b(msg), c(msg); 
-	Operand<bool> res(msg);
+	Operand<flag> res(msg);
 	res = and->get_result();
 	a.set_value(1);
 	and->add_operand( is_solved( a ) );
-	and->add_operand( const_op(true,msg) );
+	and->add_operand( const_op(values::Flag(true),msg) );
 	and->add_operand( is_solved( b ) );
 	and->add_operand( is_solved( c ) );
 	and->finish_adding();
@@ -1788,11 +1788,11 @@ namespace solve {
       {
 	Multi_And_Operator *and = new Multi_And_Operator(msg);
 	Operand<values::Scalar> a(msg); 
-	Operand<bool> res(msg);
+	Operand<flag> res(msg);
 	res = and->get_result();
 	a.set_value(1);
 	and->add_operand( is_solved( a ) );
-	and->add_operand( const_op(true,msg) );
+	and->add_operand( const_op(values::Flag(true),msg) );
 	and->finish_adding();
 	if( !res.is_solved() )
 	{
@@ -2053,7 +2053,7 @@ namespace solve {
       Operand<values::Scalar> v0(msg); // startspeed
       Operand<values::Scalar> ve(msg); // endspeed
 
-      accel_solver( s, t, a, v0, ve );
+      accel_solver( s, t, a, v0, ve, msg );
       sum_solver( se, s, s0 );
 
       std::cout << "s0=" << s0 << " s=" << s << " se=" << se << " t=" <<  t 
@@ -2104,7 +2104,7 @@ namespace solve {
     std::cout << " beginning" << std::endl;
     std::cout << "  s0="<< s0 << " se=" << se << " s=" << s << " t=" <<  t << " a=" << a << " v0=" << v0 << " ve=" << ve << std::endl;
 
-    accel_solver( s, t, a, v0, ve );
+    accel_solver( s, t, a, v0, ve, msg );
     sum_solver( se, s, s0 );
 
     Priority_System sys;

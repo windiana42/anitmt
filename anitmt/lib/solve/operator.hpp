@@ -429,11 +429,12 @@ namespace solve
   //***************************************************************************
 
   //! Logical and with any number of operands
-  class Multi_And_Operator : public Basic_Multi_Operand_Operator<bool,bool>
+  class Multi_And_Operator 
+    : public Basic_Multi_Operand_Operator<values::Flag,values::Flag>
   {
   private:
-    typedef bool RES;
-    typedef bool OP;
+    typedef values::Flag RES;
+    typedef values::Flag OP;
 
     virtual RES initial_result();	
     virtual RES no_operands_result();
@@ -451,7 +452,7 @@ namespace solve
   //! tests whether operands are solved (but not when this is already the case)
   class Is_Solved_Operator : public Operand_Listener
   {
-    Operand<bool> result;
+    Operand<values::Flag> result;
 
     //**********************************
     // Virtual Operand_Listener methods
@@ -464,13 +465,13 @@ namespace solve
     void disconnect( const Basic_Operand *ID );
 
   public:
-    inline Operand<bool> &get_result() { return result; }
+    inline Operand<values::Flag> &get_result() { return result; }
     Is_Solved_Operator( Basic_Operand &op, 
 			message::Message_Consultant *c );
   };
 
   template< class OP >
-  inline Operand<bool> &is_solved( Operand<OP> &op );
+  inline Operand<values::Flag> &is_solved( Operand<OP> &op );
 
 //**********************************************
 //**********************************************

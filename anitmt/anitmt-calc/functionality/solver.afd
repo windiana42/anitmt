@@ -4,6 +4,24 @@ include declaration "base_func.afd";
 include header "val/val.hpp";
 include header "complex_solver.hpp";
 
+// ************************************************
+// Needed operators:
+// ************************************************
+/*
+done: operator?:(); choose( bool, scalar, scalar ); ...
+pass_if
+pass_if_equal
+pass_if_not_equal
+reject_if
+reject_if_equal
+reject_if_not_equal
+0 <= to_angle <360
+round
+truncate
+floor
+ceil
+*/
+
 operators
 {
   // *******************************************************
@@ -363,6 +381,242 @@ operators
       scalar plus_minus( scalar );
       vector plus_minus( vector );
       matrix plus_minus( matrix );
+    }
+  }
+
+  // *********************
+  // to_angle
+  // *********************
+  one_operand_operator to_angle
+  {
+    calc_result( angle ) 
+    {
+      int quotient = int(angle) / 360;
+      scalar res = angle - quotient * 360;
+      if( res < 0 ) res += 360;
+      return res;
+    }
+    versions
+    {
+      scalar to_angle( scalar );
+    }
+  }
+  
+  // *********************
+  // round
+  // *********************
+  one_operand_operator round
+  {
+    calc_result( val ) 
+    {
+      return round( val );
+    }
+    versions
+    {
+      scalar round( scalar );
+    }
+  }
+  
+  // *********************
+  // ceil
+  // *********************
+  one_operand_operator ceil
+  {
+    calc_result( val ) 
+    {
+      return ceil( val );
+    }
+    versions
+    {
+      scalar ceil( scalar );
+    }
+  }
+  
+  // *********************
+  // trunc
+  // *********************
+  one_operand_operator trunc
+  {
+    calc_result( val ) 
+    {
+      return trunc( val );
+    }
+    versions
+    {
+      scalar trunc( scalar );
+    }
+  }
+  
+  // *********************
+  // floor
+  // *********************
+  one_operand_operator floor
+  {
+    calc_result( val ) 
+    {
+      return floor( val );
+    }
+    versions
+    {
+      scalar floor( scalar );
+    }
+  }
+
+  // ****************************
+  // choose used as operator?:()
+  // ****************************
+
+  simple_three_operands_operator choose
+  {
+    calc_result( val1, val2, val3 ) 
+    {
+      return (val1?val2:val3);
+    }
+    versions
+    {
+      flag   choose( flag,flag,flag );
+      scalar choose( flag,scalar,scalar );
+      vector choose( flag,vector,vector );
+      matrix choose( flag,matrix,matrix );
+      string choose( flag,string,string );
+    }
+  }
+
+  // ***********************************************************
+  // pass_if( val, flag Bool ) passes the value if Bool is true
+  // ***********************************************************
+  two_operands_operator pass_if
+  {
+    calc_result( op1, op2 )
+    {
+      return op1;
+    }
+    are_operands_enough( op1, op2 )
+    {
+      return op2;			
+    }
+    versions
+    {
+      flag   pass_if( flag,   flag );
+      scalar pass_if( scalar, flag );
+      vector pass_if( vector, flag );
+      matrix pass_if( matrix, flag );
+      string pass_if( string, flag );
+    }
+  }
+  
+  // *************************************************************
+  // pass_if_equal( val, val ) passes the value if both are equal
+  // *************************************************************
+  two_operands_operator pass_if_equal
+  {
+    calc_result( op1, op2 )
+    {
+      return op1;
+    }
+    are_operands_enough( op1, op2 )
+    {
+      return op1 == op2;			
+    }
+    versions
+    {
+      flag   pass_if_equal( flag,   flag );
+      scalar pass_if_equal( scalar, scalar );
+      vector pass_if_equal( vector, vector );
+      matrix pass_if_equal( matrix, matrix );
+      string pass_if_equal( string, string );
+    }
+  }
+  
+  // ******************************************************************
+  // pass_if_not_equal( val1, val2 ) passes val1 if both are not equal
+  // ******************************************************************
+  two_operands_operator pass_if_not_equal
+  {
+    calc_result( op1, op2 )
+    {
+      return op1;
+    }
+    are_operands_enough( op1, op2 )
+    {
+      return op1 != op2;			
+    }
+    versions
+    {
+      flag   pass_if_not_equal( flag,   flag );
+      scalar pass_if_not_equal( scalar, scalar );
+      vector pass_if_not_equal( vector, vector );
+      matrix pass_if_not_equal( matrix, matrix );
+      string pass_if_not_equal( string, string );
+    }
+  }
+  
+  // **************************************************************
+  // reject_if( val, flag Bool ) rejects the value if Bool is true
+  // **************************************************************
+  two_operands_operator reject_if
+  {
+    calc_result( op1, op2 )
+    {
+      return op1;
+    }
+    are_operands_ok( op1, op2, info )
+    {
+      return !op2;
+    }
+    versions
+    {
+      flag   reject_if( flag,   flag );
+      scalar reject_if( scalar, flag );
+      vector reject_if( vector, flag );
+      matrix reject_if( matrix, flag );
+      string reject_if( string, flag );
+    }
+  }
+  
+  // ****************************************************************
+  // reject_if_equal( val, val ) rejects the value if both are equal
+  // ****************************************************************
+  two_operands_operator reject_if_equal
+  {
+    calc_result( op1, op2 )
+    {
+      return op1;
+    }
+    are_operands_ok( op1, op2, info )
+    {
+      return !(op1 == op2);
+    }
+    versions
+    {
+      flag   reject_if_equal( flag,   flag );
+      scalar reject_if_equal( scalar, scalar );
+      vector reject_if_equal( vector, vector );
+      matrix reject_if_equal( matrix, matrix );
+      string reject_if_equal( string, string );
+    }
+  }
+  
+  // ******************************************************************
+  // reject_if_not_equal( val1, val2 ) rejectes val1 if both are not equal
+  // ******************************************************************
+  two_operands_operator reject_if_not_equal
+  {
+    calc_result( op1, op2 )
+    {
+      return op1;
+    }
+    are_operands_ok( op1, op2, info )
+    {
+      return !(op1 != op2);
+    }
+    versions
+    {
+      flag   reject_if_not_equal( flag,   flag );
+      scalar reject_if_not_equal( scalar, scalar );
+      vector reject_if_not_equal( vector, vector );
+      matrix reject_if_not_equal( matrix, matrix );
+      string reject_if_not_equal( string, string );
     }
   }
 
