@@ -37,14 +37,18 @@ the installation should not be done by root.
 
 1. In the source directory, call aclocal, autoconf and automake:
    
-   /home/me/source/anitmt# aclocal && autoconf && automake
+   /home/me/source/anitmt# aclocal && autoconf && autoheader && automake
 
-   Then, do the same in the subdir hlib/ 
+   Then, do the same in the subdirs hlib/ and rendview/. 
    
-   /home/me/source/anitmt# ( cd hlib && aclocal && autoconf && automake )
+   /home/me/source/anitmt# ( cd hlib && aclocal && autoconf && \
+                             autoheader && automake )
+   /home/me/source/anitmt# ( cd rendview && aclocal && autoconf && \
+                             autoheader && automake )
    
    Alternatively, you may simply call the script ./autogen.sh which does all 
    that for you. Pass option -f to be sure the files are really re-made. 
+   (autogen.sh will NOT run configure for you.) 
    
    /home/me/source/anitmt# ./autogen.sh
    
@@ -80,6 +84,10 @@ the installation should not be done by root.
    CXXFLAGS - set the compiler flags for C++ sources. 
    Example: 
    /home/me/source/anitmt-build# make CXXFLAGS="-O -g"
+   
+   NOTE: Passing CXXFLAGS is tricky. Different versions of gcc and 
+         of flex++ may need additional flags. (E.g. -DGCC_HACK=1 for 
+         gcc versions prior to 3.0)
 
 5. Do checks: 
    You may get some internal checks done by calling `make check'. 
