@@ -180,7 +180,7 @@ class ParameterSource :
 	public: _CPP_OPERATORS_FF
 		// Constructor automatically registers ParameterSource at 
 		// ParameterManager. 
-		ParameterSource(int *failflag=NULL);
+		ParameterSource(ParameterManager *manager,int *failflag=NULL);
 		virtual ~ParameterSource();
 		
 		// Search a ParamInfo corresponding to a parameter name (with 

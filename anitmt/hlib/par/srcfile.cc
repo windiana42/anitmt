@@ -331,8 +331,9 @@ void ParameterSource_File::_ResetLinebuf()
 	linelen=0;
 }
 
-ParameterSource_File::ParameterSource_File(int *failflag=NULL) : 
-	ParameterSource(failflag)
+ParameterSource_File::ParameterSource_File(
+	ParameterManager *_manager,int *failflag=NULL) : 
+	ParameterSource(_manager,failflag)
 {
 	file_top_sect=NULL;
 	curr_sect=NULL;

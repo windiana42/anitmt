@@ -437,14 +437,14 @@ void ParameterSource::ParamGetsDeleted(Section *s,ParamInfo *pi)
 }
 
 
-ParameterSource::ParameterSource(int *failflag) : 
+ParameterSource::ParameterSource(ParameterManager *_manager,int *failflag) : 
 	LinkedListBase<ParameterSource>(),
 	snlist()
 {
 	int failed=0;
 	#warning parsources should register at the manager so that the manager can tell them \
 		when parameters get deleted. 
-	manager=ParameterManager::manager;
+	manager=_manager;
 	
 	if(manager->RegisterParameterSource(this))
 	{  ++failed;  }

@@ -31,7 +31,7 @@ namespace par
 {
 
 // Static global manager: 
-ParameterManager *ParameterManager::manager=NULL;
+//ParameterManager *ParameterManager::manager=NULL;
 
 static inline int ABS(int x)
 {  return((x<0) ? (-x) : x);  }
@@ -45,6 +45,24 @@ int ParameterManager::_CountParams(Section *top)
 	for(Section *s=top->sub.first(); s; s=s->next)
 	{  num+=_CountParams(s);  }
 	return(num);
+}
+
+
+// You should call this after having written the parameters and 
+// before actually running the main part of the program. 
+// This calls the CheckParams() of all parameter consumers. 
+// Return value: 
+//   0 -> success
+//  >0 -> errors written; must exit
+int ParameterManager::CheckParams()
+{
+	int rv=0;
+	for(ParameterConsumerBase *pc=pclist.first(); pc; pc=pc->next)
+	{
+		if(pc->CheckParams())
+		{  ++rv;  }
+	}
+	return(rv);
 }
 
 
@@ -110,13 +128,16 @@ size_t ParameterManager::FullParamName(ParamInfo *pi,char *dest,size_t len)
 }
 
 
-PAR::ParamInfo *ParameterManager::AddParam(ParameterConsumerBase *pc,_AddParInfo *api)
+PAR::ParamInfo *ParameterManager::AddParam(ParameterConsumerBase *pc,
+	_AddParInfo *api)
 {
-	// NO leading `-' allowed. 
-	if(!pc || !api->section || !api->name)  return(NULL);
-	if(!(*api->name))  return(NULL);
+	ParamInfo *pi=NULL;
 	
-	ParamInfo *pi=ParamInfo::NewPi(api->name);
+	// NO leading `-' allowed. 
+	if(!pc || !api->section || !api->name)  goto done;
+	if(!(*api->name))  goto done;
+	
+	pi=ParamInfo::NewPi(api->name);
 	if(pi)
 	{
 		pi->helptext=api->helptext;
@@ -124,6 +145,7 @@ PAR::ParamInfo *ParameterManager::AddParam(ParameterConsumerBase *pc,_AddParInfo
 		pi->pc=pc;
 		pi->section=api->section;
 		pi->vhdl=api->hdl;
+		pi->exclusive_vhdl=api->exclusive_hdl;
 		pi->valptr=api->valptr;
 		pi->is_set=api->has_default ? 1 : 0;
 		
@@ -146,6 +168,13 @@ PAR::ParamInfo *ParameterManager::AddParam(ParameterConsumerBase *pc,_AddParInfo
 			api->section->pilist.append(pi);
 		}
 	}
+	
+	done:;
+	// Must delete value handler if the call to AddParam() is just failing 
+	// and the value handler is exclusive: 
+	if(!pi && api->exclusive_hdl && api->hdl)
+	{  delete api->hdl;  api->hdl=NULL;  }
+	
 	return(pi);
 }
 
@@ -471,11 +500,11 @@ ParameterManager::ParameterManager() :
 	add_help_text=NULL;
 	
 	// static global manager: 
-	#if TESTING
-	if(manager)
-	{  fprintf(stderr,"ParameterManager: more than one manager\n");  exit(1);  }
-	#endif
-	manager=this;
+	//#if TESTING
+	//if(manager)
+	//{  fprintf(stderr,"ParameterManager: more than one manager\n");  exit(1);  }
+	//#endif
+	//manager=this;
 }
 
 ParameterManager::~ParameterManager()
@@ -495,7 +524,7 @@ ParameterManager::~ParameterManager()
 	#endif
 	
 	// static global manager: 
-	manager=NULL;
+	//manager=NULL;
 }
 
 }  // namespace end 

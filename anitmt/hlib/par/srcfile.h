@@ -72,7 +72,7 @@ class ParameterSource_File : public ParameterSource
 			int op);
 		
 	public:  _CPP_OPERATORS_FF
-		ParameterSource_File(int *failflag=NULL);
+		ParameterSource_File(ParameterManager *manager,int *failflag=NULL);
 		~ParameterSource_File();
 		
 		// Add all the params in file to the params here. 

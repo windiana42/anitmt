@@ -17,7 +17,7 @@ class ParameterManager : public PAR
 	friend class ParameterSource_CmdLine;
 	public:
 		// Static global manager: 
-		static ParameterManager *manager;
+		//static ParameterManager *manager;
 	private:
 		// List of registered ParameterConsumerBases: 
 		LinkedList<ParameterConsumerBase> pclist;
@@ -53,6 +53,14 @@ class ParameterManager : public PAR
 	public:  _CPP_OPERATORS
 		ParameterManager();
 		virtual ~ParameterManager();
+		
+		// You should call this after having written the parameters and 
+		// before actually running the main part of the program. 
+		// This calls the CheckParams() of all parameter consumers. 
+		// Return value: 
+		//   0 -> success
+		//  >0 -> errors written; must exit
+		int CheckParams();
 		
 		// Returns the section with the specified name(s) or NULL 
 		// if it does not exist (leading `-' in name are skipped). 

@@ -44,8 +44,10 @@ struct PAR  // This serves as a namespace and a base class.
 		PPSIllegalArg,   // argument badly formatted 
 		PPSValOORange,   // value out of range 
 		PPSArgTooLong,   // argument too long
+		PPSArgUnterminated,  // argument (e.g. string) not terminated
 		PPSOptAssign,    // assignment of an (counted) _option_ (-opt=value) 
 		PPSIllegalAssMode, // specified ParamArg::assmode not supported 
+		PPSAssFailed,    // assignment of value failed 
 		PPSUnknown       // arg name unknown; only used internally 
 	};
 
@@ -69,6 +71,8 @@ struct PAR  // This serves as a namespace and a base class.
 		const char *helptext; // help text (not copied) or NULL. 
 		ParameterType ptype;  // type (see above)
 		ValueHandler *vhdl;   // associated value handler 
+		int exclusive_vhdl;   // vhdl exclusively allocated for this param; free 
+		                      // on destruction if param
 		void *valptr;         // pointer to the original var (as specified 
 		                      // by the ParameterConsumerBase-derived class) 
 		int is_set;           // Value set? AddParam sets this to 1 if there 
@@ -92,6 +96,11 @@ struct PAR  // This serves as a namespace and a base class.
 		
 		ParamInfo(int *failflag=NULL);
 		~ParamInfo();
+		
+		private:
+			// Never use one of these (assignment & copy constructor): 
+			ParamInfo(const ParamInfo &) : LinkedListBase<ParamInfo>() {}
+			ParamInfo &operator=(const ParamInfo &)  {}
 	};
 	
 	struct Section : LinkedListBase<Section>
@@ -129,6 +138,7 @@ struct PAR  // This serves as a namespace and a base class.
 		ParameterType ptype;
 		void *valptr;
 		ValueHandler *hdl;
+		int exclusive_hdl;  // & allocated via new & must be deleted
 		bool has_default;
 	};
 	

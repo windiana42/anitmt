@@ -62,14 +62,16 @@ extern char *templ_val2str(unsigned int val,char *dest,size_t len);
 extern char *templ_val2str(double val,char *dest,size_t len);
 extern char *templ_val2str(bool val,char *dest,size_t len);
 
+extern bool ValueInNextArg(ParamArg *arg);
+
 }  // end of namespace internal
 
 
 // Simple value handlers for simple types like int, long, double. 
 template<class T>struct SimpleValueHandler : ValueHandler
 {
-	inline SimpleValueHandler() : ValueHandler()  { }
-	inline ~SimpleValueHandler()  { }
+	SimpleValueHandler(int *failflag=NULL) : ValueHandler(failflag)  { }
+	~SimpleValueHandler()  { }
 	
 	size_t cpsize()            // May be copied via memcpy(); does not 
 	{  return(sizeof(T));  }   // need construction or destruction. 
@@ -88,8 +90,8 @@ template<class T>struct SimpleValueHandler : ValueHandler
 // Value handler for options (this is mostly a do-nothing wrapper...)
 struct OptionValueHandler : ValueHandler
 {
-	inline OptionValueHandler() : ValueHandler()  { }
-	inline ~OptionValueHandler()  { }
+	OptionValueHandler(int *failflag=NULL) : ValueHandler(failflag)  { }
+	~OptionValueHandler()  { }
 	
 	size_t cpsize()             // May be copied via memcpy(); does not 
 	{  return(sizeof(int));  }  // need construction or destruction. 
@@ -105,7 +107,7 @@ struct OptionValueHandler : ValueHandler
 // ignore -> 0; warning -> 1; error -> 2. 
 // The strings to convert are stored in an array of type MapEntry. 
 // NOTE: The last element of that array MUST contain str=NULL. 
-struct EnumValueHandler
+struct EnumValueHandler : ValueHandler
 {
 	struct MapEntry
 	{
@@ -114,26 +116,74 @@ struct EnumValueHandler
 	};
 	
 	// map: array of string - value pairs; last element with str=NULL. 
-	EnumValueHandler(MapEntry *map,int *failflag=NULL);
-	~EnumValueHandler();
-		
-		
+	EnumValueHandler(const MapEntry *_map,int *failflag=NULL) : 
+		ValueHandler(failflag)  {  map=_map;  }
+	~EnumValueHandler()
+		{  map=NULL;  }
+	
+	size_t cpsize()              // May be copied via memcpy(); does not 
+	{  return(sizeof(int));  }   // need construction or destruction. 
+	
+	ParParseState parse(ParamInfo *pi,void *val,ParamArg *arg);
+	char *print(ParamInfo *,void *val,char *dest,size_t len);
+	
 	private:
-		MapEntry *map;  // NULL or array; last elem with str=NULL. 
+		const MapEntry *map;  // NULL or array; last elem with str=NULL. 
 };
+
+
+// Using RefString as underlaying string implementation. 
+struct StringValueHandler : ValueHandler
+{
+	StringValueHandler(int *failflag=NULL) : ValueHandler(failflag) {}
+	~StringValueHandler() {}
+	
+	void *alloc(ParamInfo *pi);
+	void free(ParamInfo *pi,void *val);
+	
+	// Note: SOPCopy -> copy string
+	//       SOPAdd ->  append string
+	//       SOPSub ->  prepend string
+	int copy(ParamInfo *,void *dest,void *src,int operation = PAR::SOPCopy);
+	
+	ParParseState parse(ParamInfo *pi,void *val,ParamArg *pa);
+	char *print(ParamInfo *pi,void *val,char *dest,size_t len);
+};
+
+
+// Using RefStrList as underlaying string list implementation. 
+struct StringListValueHandler : ValueHandler
+{
+	StringListValueHandler(int *failflag=NULL) : ValueHandler(failflag) {}
+	~StringListValueHandler() {}
+	
+	void *alloc(ParamInfo *pi);
+	void free(ParamInfo *pi,void *val);
+	
+	// Note: SOPCopy -> copy list
+	//       SOPAdd ->  append list
+	//       SOPSub ->  remove entries from list
+	int copy(ParamInfo *,void *dest,void *src,int operation = PAR::SOPCopy);
+	
+	ParParseState parse(ParamInfo *pi,void *val,ParamArg *pa);
+	char *print(ParamInfo *pi,void *val,char *dest,size_t len);
+};
+
+
 
 
 // These value handlers already exist (pointers to static structs): 
 // They are used e.g. by ParameterConsumer_Overloaded and are the 
 // default value handlers. 
-extern ValueHandler *int_handler;
-extern ValueHandler *uint_handler;
-extern ValueHandler *long_handler;
-extern ValueHandler *ulong_handler;
-extern ValueHandler *double_handler;
-extern ValueHandler *switch_handler;
-extern ValueHandler *option_handler;
-
+extern ValueHandler *default_int_handler;
+extern ValueHandler *default_uint_handler;
+extern ValueHandler *default_long_handler;
+extern ValueHandler *default_ulong_handler;
+extern ValueHandler *default_double_handler;
+extern ValueHandler *default_switch_handler;
+extern ValueHandler *default_option_handler;
+extern ValueHandler *default_string_handler;
+extern ValueHandler *default_stringlist_handler;
 
 }  // end of namespace par
 

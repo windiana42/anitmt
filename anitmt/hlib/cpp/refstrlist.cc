@@ -1,5 +1,5 @@
 /*
- * strlist.cc 
+ * refstrlist.cc 
  * 
  * Implementation of simple linked string list. 
  * 
@@ -15,9 +15,9 @@
  */
 
 #include <string.h>
-#include "strlist.h"
+#include "refstrlist.h"
 
-const StrList::Node *StrList::find(const char *str)
+const RefStrList::Node *RefStrList::find(const char *str)
 {
 	if(!str)
 	{  // Find first NULL-ref: 
@@ -52,7 +52,7 @@ const StrList::Node *StrList::find(const char *str)
 }
 
 
-int StrList::queue(const RefString &str,Node *where,int loc)
+int RefStrList::queue(const RefString &str,Node *where,int loc)
 {
 	if(!loc || !where)  return(-2);
 	Node *n=NEW<Node>();
@@ -64,7 +64,7 @@ int StrList::queue(const RefString &str,Node *where,int loc)
 }
 
 
-int StrList::insert(const StrList *lst)
+int RefStrList::insert(const RefStrList *lst)
 {
 	for(const Node *n=lst->list.last(); n; n=n->prev)
 	{
@@ -74,7 +74,7 @@ int StrList::insert(const StrList *lst)
 	return(0);
 }
 
-int StrList::append(const StrList *lst)
+int RefStrList::append(const RefStrList *lst)
 {
 	for(const Node *n=lst->list.first(); n; n=n->next)
 	{
@@ -85,7 +85,7 @@ int StrList::append(const StrList *lst)
 }
 
 
-int StrList::_insapp(const RefString &ref,int where)
+int RefStrList::_insapp(const RefString &ref,int where)
 {
 	Node *n=NEW<Node>();
 	if(!n)  return(-1);
@@ -96,7 +96,7 @@ int StrList::_insapp(const RefString &ref,int where)
 	return(0);
 }
 
-int StrList::_insapp(const char *str,int where)
+int RefStrList::_insapp(const char *str,int where)
 {
 	RefString cp;
 	if(cp.set(str))
@@ -105,18 +105,18 @@ int StrList::_insapp(const char *str,int where)
 }
 
 
-void StrList::clear()
+void RefStrList::clear()
 {
 	Node *n;
 	while((n=list.popfirst()))
 	{  delete n;  }   // delete node with string ref
 }
 
-StrList::StrList(int * /*failflag*/=NULL) : list()
+RefStrList::RefStrList(int * /*failflag*/=NULL) : list()
 {
 }
 
-StrList::~StrList()
+RefStrList::~RefStrList()
 {
 	clear();
 }

@@ -134,7 +134,9 @@ reterror:;
 }
 
 
-ParameterSource_CmdLine::ParameterSource_CmdLine(int * /*failflag*/)
+ParameterSource_CmdLine::ParameterSource_CmdLine(
+	ParameterManager *_manager,int *failflag) : 
+	ParameterSource(_manager,failflag)
 {
 	n_iquery_opts=0;
 }

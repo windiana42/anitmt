@@ -1,6 +1,6 @@
 #include <hlib/prototypes.h>
 
-#include "parintrnl.h"
+#include "valhdl.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -161,6 +161,7 @@ PAR::ParamInfo::ParamInfo(int *failflag)
 	helptext=NULL;
 	ptype=ParameterType(-1);
 	vhdl=NULL;
+	exclusive_vhdl=0;
 	valptr=NULL;
 	is_set=0;
 	locked=0;
@@ -175,6 +176,10 @@ PAR::ParamInfo::ParamInfo(int *failflag)
 
 PAR::ParamInfo::~ParamInfo()
 {
+	if(exclusive_vhdl && vhdl)
+	{  delete vhdl;  }
+	vhdl=NULL;
+	
 	// name not copied. 
 	name=NULL;
 	section=NULL;

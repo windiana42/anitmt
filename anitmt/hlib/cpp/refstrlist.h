@@ -1,5 +1,5 @@
 /*
- * strlist.h 
+ * refstrlist.h 
  * 
  * Simple linked string list (based on linkedlist.h) using RefStrings. 
  * 
@@ -14,15 +14,15 @@
  * 
  */
 
-#ifndef _HLIB_StringList_H_
-#define _HLIB_StringList_H_ 1
+#ifndef _HLIB_RefStringList_H_
+#define _HLIB_RefStringList_H_ 1
 
 #include <stddef.h>
 #include "cplusplus.h"
 #include "linkedlist.h"
 #include "refstring.h"
 
-class StrList
+class RefStrList
 {
 	public:
 		struct Node : LinkedListBase<Node>, RefString
@@ -43,8 +43,8 @@ class StrList
 		int _insapp(const RefString &ref,int where);
 		int _insapp(const char *str,int where);
 	public:  _CPP_OPERATORS_FF
-		StrList(int *failflag=NULL);
-		~StrList();
+		RefStrList(int *failflag=NULL);
+		~RefStrList();
 		
 		// Delete (and free) all elements in the list. 
 		void clear();
@@ -82,8 +82,8 @@ class StrList
 		// Return value: 
 		//  0 -> OK
 		// -1 -> allocation failure
-		int insert(const StrList *lst);
-		int append(const StrList *lst);
+		int insert(const RefStrList *lst);
+		int append(const RefStrList *lst);
 		
 		// These return the first and the last node in the list. 
 		// Be careful...

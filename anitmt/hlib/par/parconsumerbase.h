@@ -58,9 +58,25 @@ class ParameterConsumerBase :
 	friend class LinkedList<ParameterConsumerBase>;
 	private:
 		Section *curr_section;  // Set by SetSection(). 
+		ParameterManager *manager;
+	protected:
+		
+		// This is called when ParameterManager::CheckParams() is called, 
+		// normally that is when all the parameters are set up and before 
+		// the program actually does its job. 
+		// Return value: 
+		//   0 -> okay 
+		//   1 -> errors written (must stop)
+		virtual int CheckParams()
+			{  return(0);  }
 	public:  _CPP_OPERATORS_FF
-		ParameterConsumerBase(int *failflag=NULL);
+		ParameterConsumerBase(ParameterManager *manager,
+			int *failflag=NULL);
 		virtual ~ParameterConsumerBase();
+		
+		// Returns pointer to the parameter manager: 
+		ParameterManager *parmanager()
+			{  return(manager);  }
 		
 		// Returns the current section pointer; you probably do not need this. 
 		Section *CurrentSection()  {  return(curr_section);  }
@@ -140,6 +156,12 @@ class ParameterConsumerBase :
 		//  - PTSwitch: must check ParamArg::name (`no-' prefix) if 
 		//       ParamArg::value=NULL.
 		//       (You will normally use the internal parser for this.) 
+		// exclusive_hdl: 
+		//     1 -> handler was allocated using operator new and is used 
+		//          exclusively by this param. This means that the handler 
+		//          is deleted as soon as the parameter ceases to exist; 
+		//          if the parameter allocation failed at all, the handler 
+		//          is deleted immediately. 
 		// Return value: 
 		//   NULL -> failed (malloc() or SetSection() not called/failed) 
 		//   else -> handle for the parameter 
@@ -150,7 +172,8 @@ class ParameterConsumerBase :
 			ParameterType ptype,
 			const char *helptext,   // pass NULL if there is no help text 
 			void *valptr,
-			ValueHandler *hdl);
+			ValueHandler *hdl,
+			int exclusive_hdl=0);
 		inline ParameterType NoDefault(ParameterType ptype) const
 			{  return(ParameterType(ptype | PTNoDefault));  }
 		

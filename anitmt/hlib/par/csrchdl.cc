@@ -21,7 +21,7 @@ int ParameterSource::OverrideError(ParamCopy * /*thiscopy*/,
 	return(0);
 }
 
-#define vpe_size 9
+#define vpe_size 11
 static const struct vpe_info
 {
 	PAR::ParParseState pps;
@@ -34,8 +34,10 @@ static const struct vpe_info
 	{ PAR::PPSIllegalArg, "argument badly formatted" },
 	{ PAR::PPSValOORange, "value out of range" },
 	{ PAR::PPSArgTooLong, "argument too long" },
+	{ PAR::PPSArgUnterminated, "argument unterminated" },
 	{ PAR::PPSOptAssign,  "assignment to _option_" },
 	{ PAR::PPSIllegalAssMode, "assignment mode not supported" },
+	{ PAR::PPSAssFailed,  "value assignment failed" },
 	{ PAR::PPSUnknown,    "unknown argument name" },
 	// warnings: 
 	{ PAR::PPSGarbageEnd, "garbage at end of argument" }

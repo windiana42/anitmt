@@ -2,7 +2,7 @@ INCLUDES = -I../include/
 noinst_LIBRARIES = libpar.a
 libpar_a_SOURCES = \
 	sindentcout.cc \
-		parintrnl.cc defhdl.cc valhdl.cc \
+		parintrnl.cc defhdl.cc defstrhdl.cc defstrlsthdl.cc valhdl.cc \
 		paramarg.cc cmdline.cc \
 		parconsumerbase.cc parmanager.cc \
 		parsource.cc \
@@ -12,4 +12,6 @@ libpar_a_SOURCES = \
 		paramarg.h cmdline.h \
 		parconsumerbase.h parconsumerovl.h parmanager.h \
 		parsource.h \
-		srcfile.h srccmd.h parintrnl.h
+		srcfile.h srccmd.h \
+		parintrnl.h valhdl.h valuehandler.h \
+		parbase.h

@@ -29,7 +29,8 @@ PAR::ParamInfo *ParameterConsumerBase::AddParam(
 	ParameterType ptype,
 	const char *helptext,
 	void *valptr,
-	ValueHandler *hdl)
+	ValueHandler *hdl,
+	int exclusive_hdl)
 {
 	if(!name || !curr_section)
 		return(NULL);
@@ -41,15 +42,16 @@ PAR::ParamInfo *ParameterConsumerBase::AddParam(
 	info.ptype=ParameterType(ptype & PTTypeMask);
 	info.valptr=valptr;
 	info.hdl=hdl;
+	info.exclusive_hdl=exclusive_hdl;
 	info.has_default=(ptype & PTNoDefault);
-	return(ParameterManager::manager->AddParam(this,&info));
+	return(parmanager()->AddParam(this,&info));
 }
 
 
 int ParameterConsumerBase::SetSection(const char *sect_name,
 	const char *helptext,Section *top)
 {
-	Section *s=ParameterManager::manager->RegisterSection(this,
+	Section *s=parmanager()->RegisterSection(this,
 		sect_name,helptext,top);
 	if(!s)  return(-1);
 	curr_section=s;
@@ -60,15 +62,19 @@ int ParameterConsumerBase::SetSection(const char *sect_name,
 
 PAR::Section *ParameterConsumerBase::FindSection(const char *name,Section *top)
 {
-	return(ParameterManager::manager->FindSection(name,top));
+	return(parmanager()->FindSection(name,top));
 }
 
 
-ParameterConsumerBase::ParameterConsumerBase(int *failflag)
+ParameterConsumerBase::ParameterConsumerBase(ParameterManager *_manager,
+	int *failflag)
 {
 	int failed=0;
 	
-	if(ParameterManager::manager->RegisterParameterConsumerBase(this))
+	manager=_manager;
+	curr_section=NULL;
+	
+	if(parmanager()->RegisterParameterConsumerBase(this))
 	{  --failed;  }
 	
 	if(failflag)
@@ -80,7 +86,9 @@ ParameterConsumerBase::ParameterConsumerBase(int *failflag)
 
 ParameterConsumerBase::~ParameterConsumerBase()
 {
-	ParameterManager::manager->UnregisterParameterConsumerBase(this);
+	parmanager()->UnregisterParameterConsumerBase(this);
+	
+	manager=NULL;
 }
 
 #warning delete me
@@ -88,7 +96,7 @@ ParameterConsumerBase::~ParameterConsumerBase()
 GlobalParameterHandler::GlobalParameterHandler(int *failflag)
 {
 	int failed=0;
-	if(ParameterManager::manager->RegisterGlobalHandler(this))
+	if(parmanager()->RegisterGlobalHandler(this))
 	{  --failed;  }
 	
 	if(failflag)
@@ -99,7 +107,7 @@ GlobalParameterHandler::GlobalParameterHandler(int *failflag)
 
 GlobalParameterHandler::~GlobalParameterHandler()
 {
-	ParameterManager::manager->UnregisterGlobalHandler(this);
+	parmanager()->UnregisterGlobalHandler(this);
 }
 #endif
 

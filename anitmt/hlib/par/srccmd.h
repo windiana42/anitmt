@@ -12,7 +12,7 @@ class ParameterSource_CmdLine : public ParameterSource
 	private:
 		int _CheckSpecialOpts(ParamArg *pa,Section *topsect);
 	public:  _CPP_OPERATORS_FF
-		ParameterSource_CmdLine(int *failflag=NULL);
+		ParameterSource_CmdLine(ParameterManager *manager,int *failflag=NULL);
 		~ParameterSource_CmdLine();
 		
 		// This counts the number of special info query options 

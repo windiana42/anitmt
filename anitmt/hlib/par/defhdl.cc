@@ -18,17 +18,6 @@ static inline int is_trim(char c)
 }
 
 
-// The value cannot be stored in the next arg when this is false. 
-static inline bool _ValueInNextArg(ParamArg *arg)
-{
-	if(arg->atype!=ParamArg::Option ||  // NOT ParamArg::Assignment
-	   arg->origin.otype!=ParamArg::FromCmdLine ||
-	   !arg->next)
-	{  return(false);  }
-	return(arg->next->arg.str() ? true : false);
-}
-
-
 static inline void _val2str_ensure_len(char **dest,size_t *len,size_t minlen)
 {
 	if((*len)>=minlen)  return;
@@ -38,15 +27,16 @@ static inline void _val2str_ensure_len(char **dest,size_t *len,size_t minlen)
 
 
 // NON-inline!!
-static PAR::ParParseState _check_trim_val(const char **a,ParamArg *arg)
+static PAR::ParParseState _check_trim_val(const char **a,ParamArg *arg,
+	int allow_all)
 {
 	*a=arg->value;
-	if(_ValueInNextArg(arg))
+	if(internal::ValueInNextArg(arg))
 	{
 		ParamArg *nx=arg->next;  // not NULL here 
 		bool okay=nx->atype!=ParamArg::Assignment && 
 		          nx->atype!=ParamArg::Filename;
-		if(okay)
+		if(okay && !allow_all)
 		{
 			const char *v=nx->arg;  // not NULL here 
 			if(*v=='-')  ++v;
@@ -140,6 +130,18 @@ static inline PAR::ParParseState templ_str2val(double *val,
 namespace internal
 {
 
+// The value cannot be stored in the next arg when this is false. 
+// NOT inline as usef in other files, too. 
+bool ValueInNextArg(ParamArg *arg)
+{
+	if(arg->atype!=ParamArg::Option ||  // NOT ParamArg::Assignment
+	   arg->origin.otype!=ParamArg::FromCmdLine ||
+	   !arg->next)
+	{  return(false);  }
+	return(arg->next->arg.str() ? true : false);
+}
+
+
 char *templ_val2str(long val,char *dest,size_t len)
 {
 	_val2str_ensure_len(&dest,&len,(sizeof(val)*5+1)/2 + 2);
@@ -186,7 +188,7 @@ PAR::ParParseState simple_parse(PAR::ParamInfo *,bool *valptr,ParamArg *arg)
 	PAR::ParParseState rv=PAR::PPSSuccess;
 	
 	const char *value=arg->value;
-	if(_ValueInNextArg(arg))
+	if(ValueInNextArg(arg))
 	{
 		ParamArg *nx=arg->next;  // not NULL here 
 		if(nx->atype==ParamArg::Unknown)
@@ -196,7 +198,7 @@ PAR::ParParseState simple_parse(PAR::ParamInfo *,bool *valptr,ParamArg *arg)
 		}
 	}
 	
-	if(value)
+	if(value)  // Value may be omitted here. 
 	{
 		// skip whitespace
 		const char *p=value;
@@ -214,12 +216,14 @@ PAR::ParParseState simple_parse(PAR::ParamInfo *,bool *valptr,ParamArg *arg)
 		if(!strcasecmp(tmpp,"yes")  ||
 		   !strcasecmp(tmpp,"on")   ||
 		   !strcasecmp(tmpp,"true") ||
-		   !strcasecmp(tmpp,"1")	 )
+		   !strcasecmp(tmpp,"1")	||
+		   !strcasecmp(tmpp,"y")	 )
 		{  val=1;  }
 		else if(!strcasecmp(tmpp,"no") ||
 		   !strcasecmp(tmpp,"off")   ||
 		   !strcasecmp(tmpp,"false") ||
-		   !strcasecmp(tmpp,"0")	 )
+		   !strcasecmp(tmpp,"0")	 ||
+		   !strcasecmp(tmpp,"n")	 )
 		{  val=0;  }
 		else 
 		{  return(PAR::PPSIllegalArg);  }
@@ -233,6 +237,11 @@ PAR::ParParseState simple_parse(PAR::ParamInfo *,bool *valptr,ParamArg *arg)
 	if(!strncmp(arg->name,"no-",3))
 	{  val=!val;  }
 	
+	// other modes than `=' currently unsupported. 
+	if(arg->assmode!='\0' && rv<=0)
+	{  rv=PAR::PPSIllegalAssMode;  }
+	
+	// Assign value: 
 	*(bool*)(valptr)=(val ? true : false);
 	return(rv);
 }
@@ -242,7 +251,7 @@ template<class T> PAR::ParParseState simple_parse(
 	PAR::ParamInfo *,T *valptr,ParamArg *arg)
 {
 	const char *a;
-	PAR::ParParseState rv=_check_trim_val(&a,arg);
+	PAR::ParParseState rv=_check_trim_val(&a,arg,/*allow_all=*/0);
 	if(rv>0)  return(rv);
 	
 	T val;
@@ -255,7 +264,7 @@ template<class T> PAR::ParParseState simple_parse(
 	// rv<=0 here. 
 	
 	// other modes than `=' currently unsupported. 
-	if(arg->assmode!='\0' && rv>=0)
+	if(arg->assmode!='\0' && rv<=0)
 	{  rv=PAR::PPSIllegalAssMode;  }
 	
 	// Store it: 
@@ -273,17 +282,17 @@ static SimpleValueHandler<long> static_long_handler;
 static SimpleValueHandler<unsigned long> static_ulong_handler;
 static SimpleValueHandler<double> static_double_handler;
 
-ValueHandler *int_handler=&static_int_handler;
-ValueHandler *uint_handler=&static_uint_handler;
-ValueHandler *long_handler=&static_long_handler;
-ValueHandler *ulong_handler=&static_ulong_handler;
-ValueHandler *double_handler=&static_double_handler;
+ValueHandler *default_int_handler=&static_int_handler;
+ValueHandler *default_uint_handler=&static_uint_handler;
+ValueHandler *default_long_handler=&static_long_handler;
+ValueHandler *default_ulong_handler=&static_ulong_handler;
+ValueHandler *default_double_handler=&static_double_handler;
 
 static SimpleValueHandler<bool> static_switch_handler;
-ValueHandler *switch_handler=&static_switch_handler;
+ValueHandler *default_switch_handler=&static_switch_handler;
 
 static OptionValueHandler static_option_handler;
-ValueHandler *option_handler=&static_option_handler;
+ValueHandler *default_option_handler=&static_option_handler;
 
 
 char *OptionValueHandler::print(PAR::ParamInfo *,void *_val,char *dest,size_t len)
@@ -301,6 +310,69 @@ char *OptionValueHandler::print(PAR::ParamInfo *,void *_val,char *dest,size_t le
 		}
 	}
 	return(dest);
+}
+
+
+char *EnumValueHandler::print(ParamInfo *,void *_val,char *dest,size_t len)
+{
+	int val=*(int*)_val;
+	static const char *_unknown="[unknown]";
+	const char *vstr=_unknown;
+	
+	if(map) for(const MapEntry *m=map; m->str; m++)
+	{
+		if(m->val==val)
+		{  vstr=m->str;  break;  }
+	}
+	
+	_val2str_ensure_len(&dest,&len,strlen(vstr)+1);
+	if(dest)
+	{  strcpy(dest,vstr);  }
+	return(dest);
+}
+
+
+PAR::ParParseState EnumValueHandler::parse(
+	ParamInfo *,void *valptr,ParamArg *arg)
+{
+	const char *a;
+	PAR::ParParseState rv=_check_trim_val(&a,arg,/*allow_all=*/1);
+	if(rv>0)  return(rv);
+	
+	const MapEntry *vent=NULL;
+	const char *endptr=a;
+	// Do lookup: 
+	#warning this algorithm needs fixing and should support abbreviations if not ambiguous
+	if(map)  for(const MapEntry *m=map; m->str; m++)
+	{
+		if(*(m->str)!=*a)  continue;
+		const char *A=a+1,*B=m->str+1;
+		for(; *B; A++,B++)
+		{  if(*A!=*B)  goto different;  }
+		if(!(*B))
+		{
+			if(isalpha(*A) || isdigit(*A) || *A=='_')
+			{  goto different;  }
+			vent=m;
+			endptr=A;
+			break;
+		}
+		different:;
+	}
+	if(!vent)
+	{  rv=PAR::PPSIllegalArg;  }
+	if(rv>0)  return(rv);   // error
+	
+	rv=_check_arg_end(rv,endptr,arg);
+	// rv<=0 here. 
+	
+	// other modes than `=' unsupported. 
+	if(arg->assmode!='\0' && rv<=0)
+	{  rv=PAR::PPSIllegalAssMode;  }
+	
+	// Store it: 
+	*(int*)(valptr)=vent->val;
+	return(rv);
 }
 
 

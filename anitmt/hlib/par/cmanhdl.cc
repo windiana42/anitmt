@@ -89,18 +89,17 @@ int ParameterManager::PrintHelp(Section *top,FILE *out)
 		}
 		
 		fprintf(out,
-			"Available parameters:\n"
+			"Standard query options:\n"
 			"  --version: print version string\n"
 			"  --help:    print this help\n"
-			"  --section-help: print help for specified section only\n");
+			"  --section-help: print help for specified section only\n"
+			"Available parameters:\n");
 	}
 	
 	SimpleIndentConsoleOutput sico;
 	#warning should interprete $COLUMNS when in terminal...
 	sico.SetFile(out);
 	_RecursivePrintHelp(top ? top : &topsect,sico);
-	
-	sico("\nheh?\n");
 	
 	if(top==&topsect && add_help_text)
 	{
