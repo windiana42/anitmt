@@ -20,6 +20,8 @@
 #ifndef _NS_values_val_HPP_
 #define _NS_values_val_HPP_ 1
 
+#define friend
+
 #include "flag.hpp"
 #include "scalar.hpp"
 #include "vector.hpp"
@@ -49,5 +51,7 @@ class Valtype
 };
 
 }  // namespace end 
+
+#undef friend
 
 #endif  /* _NS_values_val_HPP_ */
