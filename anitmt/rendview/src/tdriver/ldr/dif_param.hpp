@@ -32,7 +32,12 @@ class TaskDriverInterfaceFactory_LDR :
 		{
 			RefString name;   // as specified by the user (without port)
 			MyAddrInfo addr;
-			RefString password;  // needef for auth at client
+			RefString password;  // needed for auth at client
+			
+			// Client or NULL. 
+			LDRClient *client;
+			// 0 -> no; 1 -> this reconnect_trigger; n -> n-th reconnect trigger
+			int shall_reconnect;
 			
 			_CPP_OPERATORS_FF
 			ClientParam(int *failflag=NULL);
@@ -50,6 +55,7 @@ class TaskDriverInterfaceFactory_LDR :
 		RefString default_password;
 		
 		long connect_timeout;   // connect(2) timeout in msec; -1 -> none
+		long reconnect_interval;  // reconnect to lost clients (msec)
 		
 		struct DTPrm
 		{

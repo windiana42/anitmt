@@ -19,14 +19,12 @@
 #define _RNDV_TDRIVER_LDRCLIENT_HPP_ 1
 
 
-#include <lib/ldrproto.hpp>
-
-
 // THE LINKED TASK DRIVER LIST IS HELD BY TaskDriverInterface_Local
 // (which is the right hand of TaskManager).  
 // (NOT BY ComponentDataBase). 
 class LDRClient : 
-	public LinkedListBase<LDRClient>
+	public LinkedListBase<LDRClient>,
+	public NetworkIOBase_LDR
 {
 	friend class TaskDriverInterface_LDR;
 	private:
@@ -38,17 +36,6 @@ class LDRClient :
 		// Allocated by TaskDriverInterface; it is responsible for it. 
 		ClientParam *cp;
 		
-		// Socket for client connection: 
-		int sock_fd;
-		FDBase::PollID pollid;
-		
-		inline void PollFD(short events)
-			{  tdif->PollFD(pollid,events);  }
-		inline void ShutdownFD()
-			{  tdif->ShutdownFD(pollid);  sock_fd=-1;  }
-		inline void UnpollFD()
-			{  tdif->UnpollFD(pollid);  sock_fd=-1;  }
-		
 		// connected_state: 2 -> connected; 1 -> waiting for conn; 0 -> not conn.
 		int connected_state : 3;  // 0,1,2
 		int auth_passed : 1;
@@ -57,33 +44,17 @@ class LDRClient :
 		int : (sizeof(int)*8 - 8);   // <-- Use modulo if more than 16 bits. 
 		
 		// Next command to send to client: 
+		// THESE HAVE NO EFFECT IF AUTH IS DONE. 
 		LDR::LDRCommand next_send_cmd;
-		LDR::LDRCommand last_recv_cmd;
 		LDR::LDRCommand expect_cmd;  // what we expect to get
-		struct RespBuf
-		{
-			size_t alloc_len;
-			char *data;
-			// Note: while the RespBuf is in use, this is !=Cmd_NoCommand; 
-			// You may only modify the buffer if that is Cmd_NoCommand. 
-			LDR::LDRCommand content;
-		};
-		// Send and receive buffers (used for different things): 
-		RespBuf recv_buf;
-		RespBuf send_buf;
 		
-		// Return value: 1 -> alloc failure 
-		inline int _ResizeRespBuf(RespBuf *buf,size_t newlen);
-		
-		#if 0
-		#error HACK ME...
-		struct DataPump
-		{
-			FDCopyBase::CopyID cpid;  // or NULL if inactive
-			LDR::LDRCommand cmd;  // or Cmd_NoCommand if not active
-		};
-		DataPump send_pump,recv_pump;
-		#endif
+		// Task scheduled to be sent to the client or NULL. 
+		// This is set until the task is completely sent (including 
+		// all the files). 
+		CompleteTask *scheduled_to_send;
+		// Stores what has to be sent for task *scheduled_to_send; 
+		// Required file or main task struct. 
+		LDR::LDRCommand task_send_next_cmd;
 		
 		// Client data: 
 		int c_jobs;  // njobs reported by client. 
@@ -96,6 +67,7 @@ class LDRClient :
 		int _StoreChallengeResponse(LDR::LDRChallengeRequest *d,RespBuf *dest);
 		int _Create_DoTask_Packet(CompleteTask *ctsk,RespBuf *dest);
 		
+		// Accept and return LDRHeader in HOST order. 
 		int     _AtomicSendData(LDR::LDRHeader *d);
 		ssize_t _AtomicRecvData(LDR::LDRHeader *d,size_t len,size_t min_len);
 		
@@ -108,18 +80,10 @@ class LDRClient :
 		int _DoAuthHandshake(FDBase::FDInfo *fdi);
 		void _DoSendQuit(FDBase::FDInfo *fdi);
 		
-		#if 0
-		#error HACK ME...
-		// Calling TaskDriverInterface_LDR::DoCopyFdBuf(): 
-		CopyID DoCopyFD2Buf(int fd,char *buf,size_t len)
-			{  return(tdif->DoCopyFdBuf(this,fd,buf,len,-1));  }
-		CopyID DoCopyBuf2FD(int fd,const char *buf,size_t len)
-			{  return(tdif->DoCopyFdBuf(this,fd,(char*)buf,len,+1));  }
-		#endif
-		
-		// Called via TaskDriverInterface_LDR: 
-		void fdnotify(FDBase::FDInfo *fdi);
-		void cpnotify(FDCopyBase::CopyInfo *cpi);
+		// FDBase (contained in FDCopyBase) virtual: 
+		int fdnotify2(FDBase::FDInfo *fdi);
+		// FDCopyBase virtual:
+		int cpnotify(FDCopyBase::CopyInfo *cpi);
 	public:  _CPP_OPERATORS_FF
 		// Driver name copied into RefString. 
 		LDRClient(TaskDriverInterface_LDR *tdif,int *failflag=NULL);
@@ -141,7 +105,7 @@ class LDRClient :
 		// less than c_jobs tasks assigned.). 
 		// That is, SendTaskToClient() can be called. 
 		int CanDoTask()
-		{  return(auth_passed && assigned_jobs<c_jobs /*&& MISSING!!!*/ );  }
+		{  return(auth_passed && assigned_jobs<c_jobs && !scheduled_to_send);  }
 		
 		// Actually start sending the passed task to the client. 
 		// Only one task at a time can be sent to the client. 

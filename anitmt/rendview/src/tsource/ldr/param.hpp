@@ -27,6 +27,7 @@ class TaskSourceFactory_LDR :
 	public TaskSourceFactory
 {
 	friend class TaskSource_LDR;
+	friend class TaskSource_LDR_ServerConn;
 	private:
 		// We may access ComponentDataBase::component_db. 
 		

@@ -47,7 +47,8 @@ static int max_jobs_per_client=24;
 //  -1 -> error
 int LDRClient::ConnectTo(ClientParam *cp)
 {
-	Verbose(TDR,"  Client %s (%s): ",cp->name.str(),cp->addr.GetAddress().str());
+	Verbose(TDR,"  Client %s (%s): ",
+		cp->name.str(),cp->addr.GetAddress().str());
 	
 	const char *failure="FAILURE\n";
 	
@@ -98,7 +99,8 @@ int LDRClient::ConnectTo(ClientParam *cp)
 	
 	if(!fail)
 	{
-		pollid=tdif->PollFD_Init(this,sock);  // does POLLIN. 
+		if(PollFD(sock,POLLIN,/*dptr=*/NULL,&pollid)<0)
+		{  pollid=NULL;  }
 		if(!pollid)
 		{  Error("PollFD failed.\n");  fail=1;  }
 	}
@@ -112,6 +114,11 @@ int LDRClient::ConnectTo(ClientParam *cp)
 	this->sock_fd=sock;
 	assert(pollid);  // otherwise great internal error
 	
+	out.io_sock->pollid=pollid;
+	out.io_sock->max_iolen=4096;
+	in.io_sock->pollid=pollid;
+	in.io_sock->max_iolen=4096;
+	
 	connected_state=already_connected+1;
 	// Okay, now we're doing POLLIN and waiting for answer. 
 	
@@ -122,7 +129,7 @@ int LDRClient::ConnectTo(ClientParam *cp)
 
 
 // Return value: 
-//  1 -> already connected
+//  1 -> already disconnected
 //  0 -> wait for disconnect to happen. 
 int LDRClient::Disconnect()
 {
@@ -130,7 +137,7 @@ int LDRClient::Disconnect()
 	{
 		Verbose(TDR,"  Nothing to do for disconnect from %s.\n",
 			_ClientName().str());
-		ShutdownFD();
+		ShutdownFD(pollid);
 		return(1);
 	}
 	
@@ -140,7 +147,7 @@ int LDRClient::Disconnect()
 		// as send_quit_cmd has precedence and the other vars might be 
 		// changed again before fdnotify() by some other notify. 
 		send_quit_cmd=1;
-		PollFD(POLLOUT);
+		_DoPollFD(POLLOUT,POLLIN);
 	}
 	
 	return(0);
@@ -150,8 +157,10 @@ int LDRClient::Disconnect()
 // Return value: 0 -> OK; -1 -> error
 int LDRClient::_AtomicSendData(LDRHeader *d)
 {
+	// Translate to network order: 
 	size_t len=d->length;
 	d->length=htonl(len);
+	d->command=htons(d->command);
 	
 	ssize_t wr=write(sock_fd,(char*)d,len);
 	if(wr<0)
@@ -191,6 +200,9 @@ ssize_t LDRClient::_AtomicRecvData(LDRHeader *dest,size_t len,size_t min_len)
 			_ClientName().str(),LDRCommandString(expect_cmd),rd,min_len);
 		return(-1);
 	}
+	// Translate to host order: 
+	dest->length=ntohl(dest->length);
+	dest->command=ntohs(dest->command);
 	return(len);
 }
 
@@ -257,7 +269,7 @@ int LDRClient::_StoreChallengeResponse(LDRChallengeRequest *d,RespBuf *dest)
 	dest->content=Cmd_ChallengeResponse;
 	LDRChallengeResponse *r=(LDRChallengeResponse *)(dest->data);
 	r->length=sizeof(LDRChallengeResponse);  // STILL IN HOST ORDER
-	r->command=htons(next_send_cmd);
+	r->command=next_send_cmd;
 	
 	LDRSetIDString((char*)r->id_string,LDRIDStringLength);
 	LDRComputeCallengeResponse(d,(char*)r->response,cp->password.str());
@@ -266,6 +278,7 @@ int LDRClient::_StoreChallengeResponse(LDRChallengeRequest *d,RespBuf *dest)
 }
 
 
+// NOTE: LDRHeader in HOST order. 
 // Returns packet length or 0 -> error. 
 size_t LDRClient::_CheckRespHeader(LDRHeader *d,size_t read_len,
 	size_t min_len,size_t max_len)
@@ -276,7 +289,7 @@ size_t LDRClient::_CheckRespHeader(LDRHeader *d,size_t read_len,
 			_ClientName().str(),read_len);
 		return(0);  // YES!!
 	}
-	last_recv_cmd=(LDRCommand)ntohs(d->command);
+	LDRCommand last_recv_cmd=LDRCommand(d->command);
 	if(last_recv_cmd!=expect_cmd)
 	{
 		Error("Client %s: Conversation error (expected: %s; received: %s)\n",
@@ -285,7 +298,7 @@ size_t LDRClient::_CheckRespHeader(LDRHeader *d,size_t read_len,
 			LDRCommandString(last_recv_cmd));
 		return(0);  // YES!!
 	}
-	size_t len=ntohl(d->length);
+	size_t len=d->length;
 	if(len<min_len || len>max_len)
 	{
 		Error("Client %s: Packet too %s (header: %u bytes; %s: %u bytes)\n",
@@ -342,7 +355,7 @@ int LDRClient::_DoAuthHandshake(FDBase::FDInfo *fdi)
 			expect_cmd=Cmd_NoCommand;
 			_StoreChallengeResponse(&d,&send_buf);  // DO NOT MOVE
 			
-			PollFD(POLLOUT);
+			_DoPollFD(POLLOUT,POLLIN);
 			handeled=1;
 		}
 		else if(expect_cmd==Cmd_NowConnected)
@@ -401,10 +414,13 @@ int LDRClient::_DoAuthHandshake(FDBase::FDInfo *fdi)
 				up_since.PrintTime(1));
 			
 			auth_passed=1;
+			// out.ioaction, in.ioaction currently IOA_Locked: 
+			out.ioaction=IOA_None;
+			in.ioaction=IOA_None;
 			next_send_cmd=Cmd_NoCommand;
 			expect_cmd=Cmd_NoCommand;
 			
-			PollFD(POLLIN);  // EOF and things
+			_DoPollFD(POLLIN,POLLOUT);  // EOF and things
 			handeled=1;
 			
 			// Tell interface to that we are now connected. 
@@ -426,7 +442,7 @@ int LDRClient::_DoAuthHandshake(FDBase::FDInfo *fdi)
 			expect_cmd=Cmd_NowConnected;
 			send_buf.content=Cmd_NoCommand;
 			
-			PollFD(POLLIN);
+			_DoPollFD(POLLIN,POLLOUT);
 			handeled=1;
 		}
 	}
@@ -476,7 +492,7 @@ void LDRClient::_DoSendQuit(FDBase::FDInfo *fdi)
 			// Must send quit cmd. 
 			LDRQuitNow d;
 			d.length=sizeof(LDRQuitNow);  // STILL IN HOST ORDER
-			d.command=htons(Cmd_QuitNow);
+			d.command=Cmd_QuitNow;    // STILL IN HOST ORDER
 			
 			if(_AtomicSendData(&d))
 			{
@@ -487,7 +503,7 @@ void LDRClient::_DoSendQuit(FDBase::FDInfo *fdi)
 			{
 				Verbose(TDR,"  Sent quit to client %s.\n",_ClientName().str());
 				send_quit_cmd=2;
-				PollFD(POLLIN);
+				_DoPollFD(POLLIN,POLLOUT);
 			}
 		}
 		else
@@ -518,8 +534,12 @@ void LDRClient::_DoSendQuit(FDBase::FDInfo *fdi)
 		{  Verbose(TDR,"Client %s disconnected due to our quit request.\n",
 			_ClientName().str());  }
 		else
-		{  Warning("Client %s: did not disconnect after our request. "
-			"Shutting down conn.\n",_ClientName().str());  }
+		{
+			// Hmmm... this may have a problem: There were just still 
+			// some bytes on the network wire. We should wait. ##FIXME
+			Warning("Client %s: did not disconnect after our request. "
+				"Shutting down conn.\n",_ClientName().str());
+		}
 		
 		// Disconnect done. 
 		send_quit_cmd=3;
@@ -528,7 +548,7 @@ void LDRClient::_DoSendQuit(FDBase::FDInfo *fdi)
 	if(send_quit_cmd==3)
 	{
 		// We must shutdown anyway...
-		ShutdownFD();
+		ShutdownFD(pollid);
 		
 		tdif->ClientDisconnected(this);  // This will delete us. 
 		return;
@@ -536,27 +556,8 @@ void LDRClient::_DoSendQuit(FDBase::FDInfo *fdi)
 }
 
 
-static inline size_t _SumUpSize(RefStrList *l)
-{
-	size_t len=0;
-	for(const RefStrList::Node *i=l->first(); i; i=i->next)
-	{  len+=(i->len()+1);  }
-	return(len);
-}
-
-// Returns updated dest pointer; copies '\0' at the end. 
-static char *_CopyStrList2Data(char *dest,RefStrList *l)
-{
-	for(const RefStrList::Node *i=l->first(); i; i=i->next)
-	{
-		const char *s=i->str();
-		while( (*(dest++)=*(s++)) );  // The routine that made C famous - ;)
-	}
-	return(dest);
-}
-
-
 // This formats the whole LDRDoTask data into the RespBuf *dest. 
+// (Note: Header in HOST oder)
 // Return value: 
 //   0 -> OK complete packet in resp_buf; ready to send it 
 //  -1 -> alloc failure
@@ -575,7 +576,7 @@ int LDRClient::_Create_DoTask_Packet(CompleteTask *ctsk,RespBuf *dest)
 	size_t r_desc_slen,r_oformat_slen;
 	if(rt)
 	{
-		r_add_args_size=_SumUpSize(&rt->add_args);
+		r_add_args_size=SumUpSize(&rt->add_args);
 		r_desc_slen=rt->rdesc->name.len();
 		r_oformat_slen=strlen(rt->oformat->name);
 	} else {
@@ -589,7 +590,7 @@ int LDRClient::_Create_DoTask_Packet(CompleteTask *ctsk,RespBuf *dest)
 	size_t f_desc_slen;
 	if(ft)
 	{
-		f_add_args_size=_SumUpSize(&ft->add_args);
+		f_add_args_size=SumUpSize(&ft->add_args);
 		f_desc_slen=ft->fdesc->name.len();
 	} else {
 		f_add_args_size=0;
@@ -618,9 +619,10 @@ int LDRClient::_Create_DoTask_Packet(CompleteTask *ctsk,RespBuf *dest)
 	}
 	
 	// Actually format the packet: 
-	LDRDoTask *pack=(LDRDoTask *)dest->data;
-	pack->length=htonl(totsize);
-	pack->command=htons(Cmd_TaskRequest);
+	// (Header still in HOST oder)
+	LDRDoTask *pack=(LDRDoTask *)(dest->data);
+	pack->length=totsize;
+	pack->command=Cmd_TaskRequest;
 	
 	pack->frame_no=htonl(ctsk->frame_no);
 	#warning MISSING: task_id!!
@@ -650,15 +652,18 @@ int LDRClient::_Create_DoTask_Packet(CompleteTask *ctsk,RespBuf *dest)
 	
 	char *dptr=(char*)(pack->data);
 	if(rt)
+	{  strcpy(dptr,rt->rdesc->name.str());  dptr+=r_desc_slen;  }
+	if(ft)
+	{  strcpy(dptr,ft->fdesc->name.str());  dptr+=f_desc_slen;  }
+	
+	if(rt)
 	{
-		strcpy(dptr,rt->rdesc->name.str());  dptr+=r_desc_slen;
 		strcpy(dptr,rt->oformat->name);      dptr+=r_oformat_slen;
-		dptr=_CopyStrList2Data(dptr,&rt->add_args);
+		dptr=CopyStrList2Data(dptr,&rt->add_args);
 	}
 	if(ft)
 	{
-		strcpy(dptr,ft->fdesc->name.str());  dptr+=f_desc_slen;
-		dptr=_CopyStrList2Data(dptr,&ft->add_args);
+		dptr=CopyStrList2Data(dptr,&ft->add_args);
 	}
 	
 	#warning MISSING: copy file info!
@@ -666,6 +671,18 @@ int LDRClient::_Create_DoTask_Packet(CompleteTask *ctsk,RespBuf *dest)
 	
 	// Now, we must be exactly at the end of the buffer: 
 	assert(dptr==dest->data+totsize);
+	
+	#if 1
+	fprintf(stderr,"DUMP(length=%u)>>",pack->length);
+	for(char *c=(char*)pack,*cend=c+pack->length; c<cend; c++)
+	{
+		if(*(unsigned char*)c>=32 && *(unsigned char*)c!=127)
+		{  write(2,c,1);  }
+		else
+		{  write(2,".",1);  }
+	}
+	fprintf(stderr,"<<\n");
+	#endif
 	
 	dest->content=Cmd_TaskRequest;
 	return(0);
@@ -678,20 +695,34 @@ int LDRClient::SendTaskToClient(CompleteTask *ctsk)
 	if(!auth_passed)  return(-1);
 	if(assigned_jobs>=c_jobs)  return(2);
 	
-	//if(currently_sending_task_to_client)  <--- MISSING!!
-	//{  return(1);  }
+	// See if there is already a task scheduled to be sent to the client: 
+	if(scheduled_to_send || out.ioaction==IOA_Locked)
+	{  return(1);  }
+	
+	scheduled_to_send=ctsk;
+	task_send_next_cmd=Cmd_TaskRequest;
+	if(out.ioaction==IOA_None && out_active_cmd==Cmd_NoCommand)
+	{
+		// We can go right on. 
+		_DoPollFD(POLLOUT,0);
+	}
+	else
+	{
+		// Must schedule it. That means that at that position where 
+		// out.ioaction gets set to IOA_None, we have to do the 
+		// _DoPollFD(POLLOUT,0);
+		assert(0);  // <-- remove me when ^^that^^ is done 
+	}
 	
 	#warning ! must make sure that we put back those tasks assigned to a client when it disconnects unexpectedly. 
 	#warning check CanDoTask (&& MISSING -> when we are currently busy sending a task)
-	
-	assert(0);
 	
 	return(0);
 }
 
 
 // Called via TaskDriverInterface_LDR: 
-void LDRClient::fdnotify(FDBase::FDInfo *fdi)
+int LDRClient::fdnotify2(FDBase::FDInfo *fdi)
 {
 	assert(fdi->fd==sock_fd && fdi->pollid==pollid);
 	assert(connected_state);  /* otherwise: we may not be here; we have no fd */
@@ -702,18 +733,18 @@ void LDRClient::fdnotify(FDBase::FDInfo *fdi)
 		{
 			// Failed; we are not connected; give up. 
 			connected_state=0;
-			ShutdownFD();
+			ShutdownFD(pollid);
 			assert(pollid==NULL);
 			tdif->FailedToConnect(this);  // This will delete us. 
-			return;
+			return(0);
 		}
-		return;
+		return(0);
 	}
 	
 	if(send_quit_cmd)
 	{
 		_DoSendQuit(fdi);
-		return;
+		return(0);
 	}
 	
 	// We're connected. 
@@ -724,44 +755,110 @@ void LDRClient::fdnotify(FDBase::FDInfo *fdi)
 		{
 			// Failed. Give up. 
 			connected_state=0;
-			ShutdownFD();
+			ShutdownFD(pollid);
 			tdif->FailedToConnect(this);  // This will delete us. 
-			return;
+			return(0);
 		}
-		return;
+		return(0);
 	}
+	
+	// NOTE: next_send_cmd in no longer used if auth is done. 
+	assert(next_send_cmd==Cmd_NoCommand);
 	
 	// We have passed auth. We are the server the client listenes to. 
-	Error("*** hack on...\n");
-	assert(0);
-}
-
-
-void LDRClient::cpnotify(FDCopyBase::CopyInfo *cpi)
-{
-	assert(0);
-}
-
-
-int LDRClient::_ResizeRespBuf(RespBuf *buf,size_t newlen)
-{
-	// This assertion is for implementation security reason. 
-	// If there is a case in which is fails although the code is okay, then 
-	// remove it. 
-	assert(buf->content==Cmd_NoCommand);
-	
-	if(buf->alloc_len<newlen || newlen*2<buf->alloc_len)
+	if(scheduled_to_send && 
+	   out.ioaction==IOA_None)
 	{
-		char *oldval=buf->data;
-		buf->data=(char*)LRealloc(buf->data,newlen);
-		if(!buf->data)
+		// Okay; we shall send this task or one of the needed files. 
+		if(task_send_next_cmd==Cmd_TaskRequest)
 		{
-			LFree(oldval);
-			buf->alloc_len=0;
-			return(1);
+			// Okay, we have to send the main task data. 
+			int fail=1;
+			do {
+				if(_Create_DoTask_Packet(scheduled_to_send,&send_buf))  break;
+				// Okay, make ready to send it: 
+				if(_FDCopyStartSendBuf((LDRHeader*)(send_buf.data)))  break;
+				fail=0;
+			} while(0);
+			fprintf(stderr,"hack code to handle failure.\n");
+			if(fail)
+			{
+				// Failure. 
+				#warning HANDLE FAILURE. 
+				Error("Cannot handle failure (HACK ME!)\n");
+				assert(0);
+			}
 		}
-		buf->alloc_len=newlen;
+		else
+		{
+			fprintf(stderr,"hack on...\n");
+			assert(0);
+		}
+		return(0);
 	}
+	
+	Error("fdnotify2(): WHY ARE WE HERE???\n");
+	assert(0);
+	
+	return(0);
+}
+
+
+int LDRClient::cpnotify(FDCopyBase::CopyInfo *cpi)
+{
+	fprintf(stderr,"cpnotify(scode=0x%x (final=%s; limit=%s), err_no=%d (%s))\n",
+		cpi->scode,
+		(cpi->scode & FDCopyPump::SCFinal) ? "yes" : "no",
+		(cpi->scode & FDCopyPump::SCLimit) ? "yes" : "no",
+		cpi->err_no,strerror(cpi->err_no));
+	
+	// NOTE: next_send_cmd in no longer used if auth is done. 
+	assert(next_send_cmd==Cmd_NoCommand);
+	
+	// We are only interested in FINAL codes. 
+	if(!(cpi->scode & FDCopyPump::SCFinal))
+	{  return(0);  }
+	
+	if(cpi->pump==out.pump_s && out_active_cmd==Cmd_TaskRequest)
+	{
+		assert(scheduled_to_send);
+		
+		if((cpi->scode & FDCopyPump::SCFinal))
+		{
+			// NOTE: scheduled_to_send!=NULL, i.e. still the task we're talking 
+			//       about. But task_send_next_cmd=NoCommand so that we do not 
+			//       (accidentally) send it again. When clients wants that we 
+			//       send a file, then this has to be set accordingly. 
+			task_send_next_cmd=Cmd_NoCommand;
+			out.ioaction=IOA_None;
+			out_active_cmd=Cmd_NoCommand;
+			send_buf.content=Cmd_NoCommand;
+			// Poll(events=0)? - not necessary (FDCopyPump does that). 
+			
+			fprintf(stderr,"Sending task struct done.\n");
+			
+			Error("hack on... (expect cmd? check it!)\n");
+		}
+		else
+		{
+			// #error #warning ### must hack message for different errors (timeout, pollerr, etc)
+			// Must also check for EOF. 
+			Error("Client %s: Sending failed during command %s: %d,%s [<- HACK ME!]\n",
+				_ClientName().str(),
+				LDRCommandString(send_buf.content),
+				cpi->err_no,strerror(cpi->err_no));
+			// Act correctly (quit now: only disconnect?). 
+			assert(0);
+		}
+		
+		Error("DONE.\n");
+		assert(0);
+		return(0);
+	}
+	
+	fprintf(stderr,"Why am I here?\n");
+	assert(0);
+	
 	return(0);
 }
 
@@ -781,15 +878,13 @@ RefString LDRClient::_ClientName()
 
 LDRClient::LDRClient(TaskDriverInterface_LDR *_tdif,
 	int *failflag) : 
-	LinkedListBase<LDRClient>()
+	LinkedListBase<LDRClient>(),
+	NetworkIOBase_LDR(failflag)
 {
 	int failed=0;
 	
 	tdif=_tdif;
 	cp=NULL;
-	
-	sock_fd=-1;
-	pollid=NULL;
 	
 	connected_state=0;
 	auth_passed=0;
@@ -797,23 +892,10 @@ LDRClient::LDRClient(TaskDriverInterface_LDR *_tdif,
 	send_quit_cmd=0;
 	
 	next_send_cmd=Cmd_NoCommand;
-	last_recv_cmd=Cmd_NoCommand;
 	expect_cmd=Cmd_NoCommand;
 	
-	send_buf.alloc_len=0;
-	send_buf.data=NULL;
-	send_buf.content=Cmd_NoCommand;
-	recv_buf.alloc_len=0;
-	recv_buf.data=NULL;
-	recv_buf.content=Cmd_NoCommand;
-	
-	#if 0
-	#error HACK ME...
-	send_pump.cpid=NULL;
-	send_pump.cmd=Cmd_NoCommand;
-	recv_pump.cpid=NULL;
-	recv_pump.cmd=Cmd_NoCommand;
-	#endif
+	scheduled_to_send=NULL;
+	task_send_next_cmd=Cmd_NoCommand;
 	
 	c_jobs=0;
 	assigned_jobs=0;
@@ -831,14 +913,8 @@ LDRClient::LDRClient(TaskDriverInterface_LDR *_tdif,
 
 LDRClient::~LDRClient()
 {
-	ShutdownFD();  // be sure...
-	
-	send_buf.data=(char*)LFree(send_buf.data);
-	recv_buf.data=(char*)LFree(recv_buf.data);
-	
 	// Unrergister at TaskDriverInterface_LDR (-> task manager): 
 	tdif->UnregisterLDRClient(this);
 	
 	assert(!cp);  // TaskDriverInterface_LDR must have cleaned up. 
 }
-

@@ -21,7 +21,7 @@
 
 #include "../driverif.hpp"
 
-#include <hlib/fdcopybase.h>
+#include <lib/netiobase_ldr.hpp>
 
 
 class TaskDriverInterfaceFactory_LDR;
@@ -29,7 +29,7 @@ class TaskDriverInterfaceFactory_LDR;
 
 class TaskDriverInterface_LDR : 
 	public TaskDriverInterface,
-	private FDCopyBase,
+	private FDBase,
 	private TimeoutBase
 {
 	private:
@@ -47,22 +47,35 @@ class TaskDriverInterface_LDR :
 		
 		void _JobsAddClient(LDRClient *client,int mode);
 		
-		// client connect timeout: 
+		// Client connect timeout: 
 		TimeoutID tid_connedt_to;
+		
+		// Reconnect trigger timer: 
+		TimerID reconnect_trigger_tid;
+		
+		void _StartReconnectTrigger();
+		void _StopReconnectTrigger();
 		
 		int already_started_processing : 1;  // ReallyStartProcessing() called?
 		int shall_quit : 1;   // Was PleaseQuit() called?
 		
-		int : (sizeof(int)*8 - 2);   // <-- Use modulo if more than 16 bits. 
+		int reconnect_trigger_running : 1;
+		int dont_reconnect : 1;
+		
+		int : (sizeof(int)*8 - 4);   // <-- Use modulo if more than 16 bits. 
+		
+		// ARGUMENT MUST BE OF TYPE TaskDriverInterfaceFactory_LDR::ClientParam *
+		LDRClient *NEW_LDRClient(void *p);
 		
 		void _WriteStartProcInfo(const char *msg);
 		void _WriteProcInfoUpdate();
 		void _WriteEndProcInfo();
 		
+		void _PrintInitConnectMsg(const char *msg);
+		
 		// FDBase virtuals: 
 		int fdnotify(FDInfo *fdi);
-		// FDCopyBase virtual:
-		int cpnotify(CopyInfo *cpi);
+		int timernotify(TimerInfo *ti);
 		// TimeoutBase virtual:
 		int timeoutnotify(TimeoutInfo *ti);
 	public:  _CPP_OPERATORS_FF
@@ -118,23 +131,6 @@ class TaskDriverInterface_LDR :
 		// Return value: 0 -> OK; !=0 -> failed
 		int RegisterLDRClient(LDRClient *client);
 		void UnregisterLDRClient(LDRClient *client);
-		
-		// FD Management: 
-		PollID PollFD_Init(LDRClient *client,int fd);
-		void PollFD(PollID pollid,short events)
-			{  FDBase::PollFD(pollid,events);  }
-		int ShutdownFD(PollID &pollid)
-			{  return(FDBase::ShutdownFD(pollid));  }
-		void UnpollFD(PollID &pollid)
-			{  FDBase::UnpollFD(pollid);  }
-		
-		#if 0
-		#error HACK ME!!
-		// FD copy management: 
-		// Used by LDRClient::DoCopyFD2Buf(), LDRClient::DoCopyBuf2FD(): 
-		CopyID DoCopyFdBuf(LDRClient *client,int fd,char *buf,
-			size_t len,int dir);
-		#endif
 		
 		// Called if connect(2) or authentification failed. 
 		// The client gets removed now. 

@@ -19,17 +19,81 @@
 
 #include "../tasksource.hpp"
 
-#include <lib/myaddrinfo.hpp>
-#include <lib/ldrproto.hpp>
-
-#include <hlib/fdcopybase.h>
+#include <lib/netiobase_ldr.hpp>
 
 
 class TaskSourceFactory_LDR;
+class ComponentDataBase;
+class TaskSource_LDR;
+
+
+// Describing a server connection. Currently, only 
+// one server may be connected at a time which is 
+// the first in the list. 
+struct TaskSource_LDR_ServerConn : 
+	LinkedListBase<TaskSource_LDR_ServerConn>,
+	NetworkIOBase_LDR
+{
+	TaskSource_LDR *back;
+	
+	MyAddrInfo addr;  // server address
+	
+	// This is 1 if that is the authenticated server we are 
+	// taking orders from. (Only sconn.first().) 
+	int authenticated;
+	
+	union
+	{
+		char expect_chresp[LDRChallengeLength];
+		int now_conn_auth_code;
+	};
+	
+	// LDE Commands (host order)
+	LDR::LDRCommand next_send_cmd;
+	LDR::LDRCommand expect_cmd;
+	
+	_CPP_OPERATORS_FF
+	TaskSource_LDR_ServerConn(TaskSource_LDR *back,int *failflag=NULL);
+	~TaskSource_LDR_ServerConn();
+	int Setup(int sock,MyAddrInfo *addr);
+	
+	// Called to close down the connection or if it was closed down. 
+	// reason: 0 -> general / error
+	//         1 -> received Cmd_QuitNow
+	//         2 -> auth failure
+	void _ConnClose(int reason);
+	
+	int _AtomicSendData(LDR::LDRHeader *d);
+	int _AtomicRecvData(LDR::LDRHeader *d,size_t len);
+	
+	// Returns packet length or 0 -> error. 
+	size_t _CheckRespHeader(
+		LDR::LDRHeader *d,size_t read_len,
+		size_t min_len,size_t max_len);
+	
+	// Packet handling: 
+	int _SendChallengeRequest();
+	int _RecvChallengeResponse();
+	int _SendNowConnected();
+	
+	int _HandleReceivedHeader(LDR::LDRHeader *hdr);
+	
+	int _ParseTaskRequest(RespBuf *buf);
+	
+	int _AuthSConnFDNotify(FDInfo *fdi);
+	
+	// Overriding virtual from FDCopyBase: 
+	int fdnotify2(FDBase::FDInfo *fdi);
+	int cpnotify(FDCopyBase::CopyInfo *cpi);
+	
+	private:
+		inline TaskSourceFactory_LDR *P();
+		inline ComponentDataBase *component_db();
+};
 
 class TaskSource_LDR : 
 	public TaskSource,
-	public FDCopyBase
+	public FDBase
 {
 	private:
 		// Our parameters: 
@@ -48,35 +112,9 @@ class TaskSource_LDR :
 		// correct behavior of the other classes...
 		int connected;  // <- to TaskManager, NOT to server. 
 		
-		// Describing a server connection. Currently, only 
-		// one server may be connected at a time which is 
-		// the first in the list. 
-		struct ServerConn : LinkedListBase<ServerConn>
-		{
-			MyAddrInfo addr;  // server address
-			int fd;           // socket fd 
-			PollID pollid;    // PollID of socket fd
-			
-			// This is 1 if that is the authenticated server we are 
-			// taking orders from. (Only sconn.first().) 
-			int authenticated;
-			
-			union
-			{
-				char expect_chresp[LDRChallengeLength];
-				int now_conn_auth_code;
-			};
-			
-			// LDE Commands (host order)
-			LDR::LDRCommand next_send_cmd;
-			LDR::LDRCommand last_recv_cmd;
-			LDR::LDRCommand expect_cmd;
-			
-			_CPP_OPERATORS_FF
-			ServerConn(int *failflag=NULL);
-			~ServerConn();
-		};
-		LinkedList<ServerConn> sconn;
+		// Struct TaskSource_LDR_ServerConn describing a 
+		// connection to a server. 
+		LinkedList<TaskSource_LDR_ServerConn> sconn;
 		
 		// Update/start rtid timer: 
 		inline void _StartSchedTimer()
@@ -84,29 +122,11 @@ class TaskSource_LDR :
 		inline void _StopSchedTimer()
 			{  UpdateTimer(rtid,-1,0);  }
 		
-		int _AtomicSendData(ServerConn *sc,LDR::LDRHeader *d);
-		int _AtomicRecvData(ServerConn *sc,LDR::LDRHeader *d,size_t len);
-		
-		// Returns packet length or 0 -> error. 
-		size_t _CheckRespHeader(ServerConn *sc,
-			LDR::LDRHeader *d,size_t read_len,
-			size_t min_len,size_t max_len);
-		
-		// Packet handling: 
-		void _SendChallengeRequest(ServerConn *sc);
-		int _RecvChallengeResponse(ServerConn *sc);
-		void _SendNowConnected(ServerConn *sc);
-		
-		// FD handling: 
-		void _ListenFdNotify(FDInfo *fdi);
-		void _SConnFDNotify(FDInfo *fdi,ServerConn *sc);
-		int _AuthSConnFDNotify(FDInfo *fdi,ServerConn *sc);
-		
-		void _ConnClose(ServerConn *sc,int reason);
 		
 		// overriding virtuals from FDbase: 
 		int timernotify(TimerInfo *);
 		int fdnotify(FDInfo *);
+		
 		// overriding virtuals from TaskSource: 
 		int srcConnect(TaskSourceConsumer *);
 		int srcGetTask(TaskSourceConsumer *);
@@ -117,6 +137,25 @@ class TaskSource_LDR :
 	public: _CPP_OPERATORS_FF
 		TaskSource_LDR(TaskSourceFactory_LDR *,int *failflag=NULL);
 		~TaskSource_LDR();
+		
+		TaskSourceFactory_LDR *P()
+			{  return(p);  }
+		
+		// Returns authenticated server if we have one; else NULL. 
+		TaskSource_LDR_ServerConn *GetAuthenticatedServer()
+		{
+			TaskSource_LDR_ServerConn *sc=sconn.first();
+			return((sc && sc->authenticated) ? sc : NULL);
+		}
+		
+		void ServerHasNowAuthenticated(TaskSource_LDR_ServerConn *sc)
+		{
+			sconn.dequeue(sc);
+			sconn.insert(sc);
+		}
+		
+		// Called by TaskSource_LDR_ServerConn::_ConnClose(). 
+		void ConnClose(TaskSource_LDR_ServerConn *sc,int reason);
 };
 
 #endif  /* _RNDV_TSOURCE_LDR_HPP_ */

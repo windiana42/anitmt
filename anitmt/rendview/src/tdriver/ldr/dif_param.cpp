@@ -132,10 +132,10 @@ int TaskDriverInterfaceFactory_LDR::FinalInit()
 			
 			// Read in password if needed: 
 			{
-				char tmp[128];
-				snprintf(tmp,128,"Password for client %s (%s): ",
+				char prompt[128];
+				snprintf(prompt,128,"Password for client %s (%s): ",
 					cp->name.str(),cp->addr.GetAddress().str());
-				LDRGetPassIfNeeded(&cp->password,tmp,&default_password);
+				LDRGetPassIfNeeded(&cp->password,prompt,&default_password);
 			}
 			
 			// Okay, everything went fine; put client params in queue: 
@@ -203,6 +203,19 @@ int TaskDriverInterfaceFactory_LDR::CheckParams()
 		default_port=DefaultLDRPort;
 		++failed;
 	}
+	
+	// NOTE: We may want to allow reconnect_interval=0 some day in future. 
+	if(connect_timeout<=0)  connect_timeout=-1;
+	if(reconnect_interval<=0)  reconnect_interval=-1;
+	ConvertTimeout2MSec(&reconnect_interval,"reconnect interval timer");
+	
+	if(reconnect_interval>=0 && connect_timeout<0)
+	{  Error("Cannot use reconnection interval (-rcinterval) is connect "
+		"timeout (-ctimeout) is switched off.\n");  ++failed;  }
+	else if((reconnect_interval/2-1000)<connect_timeout)
+	{  Error("Reconnection interval (-rcinterval; seconds) must be "
+		"significantly larger than connect timeout (-ctimeout; msec).\n");
+		++failed;  }
 	
 	return(failed ? 1 : 0);
 }
@@ -275,6 +288,11 @@ int TaskDriverInterfaceFactory_LDR::_RegisterParams()
 		"connection timeout in _msec_ (time until connection & auth "
 		"must have succeded)",
 		&connect_timeout);
+	AddParam("rcinterval",
+		"reonnect interval: try to re-connect to lost clients after the "
+		"specified time in seconds (note: actual reconnect may not happen "
+		"until two times that interval; -1 to disable)",
+		&reconnect_interval);
 	
 	AddParam("task-res-min",
 		"try to always have that many task MORE than currently running",
@@ -327,7 +345,8 @@ TaskDriverInterfaceFactory_LDR::TaskDriverInterfaceFactory_LDR(
 	
 	default_port=DefaultLDRPort;
 	
-	connect_timeout=15000;  // 15 seconds
+	connect_timeout=15000;  // 15 seconds  (MSEC, YES!)
+	reconnect_interval=300;  // 5 minutes (SECONDS)
 	
 	for(int i=0; i<_DTLast; i++)
 	{
@@ -349,6 +368,8 @@ TaskDriverInterfaceFactory_LDR::~TaskDriverInterfaceFactory_LDR()
 	// Clean up client parameter list: 
 	while(!cparam.is_empty())
 	{  delete cparam.popfirst();  }
+	
+	default_password.zero();
 }
 
 
@@ -359,10 +380,11 @@ TaskDriverInterfaceFactory_LDR::ClientParam::ClientParam(int *failflag) :
 	addr(failflag),
 	password(failflag)
 {
-	
+	client=NULL;
 }
 
 TaskDriverInterfaceFactory_LDR::ClientParam::~ClientParam()
 {
 	password.zero();
+	assert(!client);
 }
