@@ -324,7 +324,7 @@ namespace anitmt
 
   template<class T_Result, class T_Op1, class T_Op2>
   class Add_Operator
-    : public Basic_Operator_for_b2_Operands<T_Result, T_Op1, T_Op2> 
+    : public Basic_Operator_for_2_Operands<T_Result, T_Op1, T_Op2> 
   {
     /*! has to calculate the result when both is_operand_ok and 
       is_operand_enough  return true */
