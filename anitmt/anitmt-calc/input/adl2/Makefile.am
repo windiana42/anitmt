@@ -38,12 +38,14 @@ YLWRAP  = 		$(top_srcdir)/ylwrap
 # A .cc-File is a must here. The ylwrap script doesn't accept other file
 # suffixes.
 scanner.cc:	$(srcdir)/scanner.ll tokens.h 
-	$(SHELL) $(YLWRAP) "$(LEX)" \
-	$(srcdir)/scanner.ll lex.adlparser_.cc scanner.cc 
+	$(SHELL) $(YLWRAP) \
+	$(srcdir)/scanner.ll lex.adlparser_.cc scanner.cc \
+	-- $(LEX)
 
 #-- Parser
 parser.cc tokens.h:	$(srcdir)/parser.yy 
-	$(SHELL) $(YLWRAP) "$(YACC)" $(srcdir)/parser.yy \
+	$(SHELL) $(YLWRAP) $(srcdir)/parser.yy \
 	y.tab.c parser.cc \
-	y.tab.h tokens.h -- -d
+	y.tab.h tokens.h \
+	-- $(YACC) -d
 
