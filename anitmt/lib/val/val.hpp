@@ -20,7 +20,16 @@
 #ifndef _NS_values_val_HPP_
 #define _NS_values_val_HPP_ 1
 
+#if __GNUC__ < 3
+#define GCC_HACK 1
+#warning GCC_HACK enabled as gcc version < 3.0
+#else
+#undef GCC_HACK
+#endif
+
+#ifdef GCC_HACK
 #define friend
+#endif
 
 #include "flag.hpp"
 #include "scalar.hpp"
@@ -52,6 +61,8 @@ class Valtype
 
 }  // namespace end 
 
+#ifdef GCC_HACK
 #undef friend
+#endif
 
 #endif  /* _NS_values_val_HPP_ */

@@ -147,6 +147,56 @@ template<int C=4,int R=4>class Matrix
 		template<int c,int r>friend ostream& operator<<(ostream& s,const Matrix<c,r> &m);
 };
 
+#ifdef GCC_HACK
+inline Matrix<4,4>::Matrix(enum MatRotX,double angle) : x(0)
+{
+	double sina=sin(angle);
+	double cosa=cos(angle);
+	x(1,1, cosa);  x(2,1,-sina);
+	x(1,2, sina);  x(2,2, cosa);
+}
+
+inline Matrix<4,4>::Matrix(enum MatRotY,double angle) : x(0)
+{
+	double sina=sin(angle);
+	double cosa=cos(angle);
+	x(0,0, cosa);  x(2,0, sina);
+	x(0,2,-sina);  x(2,2, cosa);
+}
+
+inline Matrix<4,4>::Matrix(enum MatRotZ,double angle) : x(0)
+{
+	double sina=sin(angle);
+	double cosa=cos(angle);
+	x(0,0, cosa);  x(1,0,-sina);
+	x(0,1, sina);  x(1,1, cosa);
+}
+
+inline Matrix<4,4>::Matrix(enum MatScale,double fact,int idx) : x(0)
+{
+	x(idx,idx,fact);
+}
+
+inline Matrix<4,4>::Matrix(enum MatScale,const Vector<3> &v) : x(0)
+{
+	x(0,0,v[0]);
+	x(1,1,v[1]);
+	x(2,2,v[2]);
+}
+
+inline Matrix<4,4>::Matrix(enum MatTrans,double delta,int idx) : x(0)
+{
+	x(3,idx,delta);
+}
+
+inline Matrix<4,4>::Matrix(enum MatTrans,const Vector<3> &v) : x(0)
+{
+	x(3,0,v[0]);
+	x(3,1,v[1]);
+	x(3,2,v[2]);
+}
+#endif
+
 template<int C,int R>inline Matrix<C,R> operator*(const Matrix<C,R> &a,Scalar b)
 {  Matrix<C,R> r(Matrix<C,R>::noinit);  r.x.mul(a.x,b);  return(r);  }
 template<int C,int R>inline Matrix<C,R> operator*(Scalar a,const Matrix<C,R> &b)

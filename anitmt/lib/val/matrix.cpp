@@ -20,6 +20,7 @@
 namespace vect
 {
 
+#ifndef GCC_HACK
 Matrix<4,4>::Matrix(enum MatRotX,double angle) : x(0)
 {
 	double sina=sin(angle);
@@ -67,6 +68,7 @@ Matrix<4,4>::Matrix(enum MatTrans,const Vector<3> &v) : x(0)
 	x(3,1,v[1]);
 	x(3,2,v[2]);
 }
+#endif
 
 // rotates a specified angle around v 
 Matrix<4,4> Mrotate_around(const Vector<3> &v,double angle)
