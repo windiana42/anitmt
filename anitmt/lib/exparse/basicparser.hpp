@@ -70,8 +70,6 @@ class BasicParser :
 		// Pointer to some class derived from BasicParserConfig 
 		// in the derived class. 
 		const BasicParserConfig *config;
-		
-		void _ResetParser();
 	protected:
 		//! Internal use only: 
 		// Please email me if you know how to make the 
@@ -111,6 +109,10 @@ class BasicParser :
 		
 		const Position *currpos()
 			{  return(&p);  }
+		
+		//! Reset the parser; sets errors=0 and currtok=-1. 
+		//! FIXME: should allow position to be set. 
+		void ResetParser();
 	public:
 		//! You should call SetConfig() after construction. 
 		BasicParser();

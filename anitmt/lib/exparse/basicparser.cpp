@@ -218,6 +218,13 @@ int BasicParser::NextTok()
 }
 
 
+void BasicParser::ResetParser()
+{
+	errors=0;
+	currtok=-1;
+}
+
+
 BasicParserConfig::BasicParserConfig()
 {
 	// Set up compiled-in defaults: 
@@ -240,8 +247,7 @@ BasicParser::BasicParser() :
 	yy_text=NULL;
 	yy_leng=NULL;
 	
-	errors=0;
-	currtok=-1;
+	ResetParser();
 	config=&_default_conf;
 	
 	p.file="";
