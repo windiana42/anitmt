@@ -131,8 +131,10 @@ int main(int argc, char *argv[], char *envp[])
   std::cout << std::endl;
   int failed=manager.get_num_messages( message::MT_Error )>0;
   if(!failed)
-  {  std::cout << "Code generation (" << out_basename << 
-      ") successful." << std::endl;  }
+  { 
+    std::cout << "Code generation (" << out_basename 
+	      << ") successful." << std::endl;  
+  }
 
   // Proper return code: 1 -> error; 0 -> success
   return(failed);

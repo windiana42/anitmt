@@ -27,6 +27,7 @@
 namespace vect
 {
 
+const double PI = 3.14159265358979323846;
 extern double epsilon;  // Max. difference for comparisons. 
 
 // Inline function which computes x*x; often useful if you want to 

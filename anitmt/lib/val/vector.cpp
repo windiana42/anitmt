@@ -127,10 +127,11 @@ Vector<3> &Vector<3>::to_rectangular()
 }
 
 
-// get the rotation from v1 to v2 around axis 
+// get the rotation from v1 to v2 around axis in range 0..2PI
 double get_rotation_around(
 	const Vector<3> &v1,const Vector<3> &v2,const Vector<3> &axis)
 {
+  /*
 	// rotate both vectors so that axis maches z and v1 is 
 	// in the x-z-plain
 	Matrix<4,4> rot_easy=mat_rotate_pair_pair(axis,v1,
@@ -141,6 +142,20 @@ double get_rotation_around(
 	double z_angle = atan2(easy_v2[1],easy_v2[0]);
 
 	return(z_angle);
+  */
+	Vector<3> norm_axis = vec_normalize(axis);
+	Vector<3> proj_v1 = v1 - (v1 * norm_axis) * norm_axis;
+	Vector<3> proj_v2 = v2 - (v2 * norm_axis) * norm_axis;
+	// if one vector is parallel to axis: no chance
+	if( (proj_v1 == Neutral0()) || (proj_v2 == Neutral0()) )
+		return 0;
+	Vector<3> orth_proj_v1 = cross(axis,proj_v1);
+	Scalar angle = vec_angle(proj_v1, proj_v2);
+	// correction for angle > PI
+	if( orth_proj_v1 * proj_v2 < 0 ) 
+		angle = 2 * PI - angle;
+
+	return(angle);
 }
 
 // rotates a vector pair to another

@@ -838,161 +838,176 @@ namespace funcgen
       // ****************
       // container class
 
+      std::string container_class;
+      std::string provider_type_class;
       if( provider_type.serial )	// is serial provider type?
-      {				// ... create serial container class
-	*impl << "  // *******************************************************"
-	      << "************" << std::endl
-	      << "  // serial container for nodes that provide " << provides 
-	      << ":" << std::endl
-	      << "  //   " << translator.serial_container(provides) 
-	      << std::endl
-	      << std::endl;
+      {
+	container_class = translator.serial_container( provides );
+      }
+      else
+      {
+	container_class = translator.container( provides );
+      }
+      provider_type_class = translator.provider_type( provides );
+
+      *impl << "  // *******************************************************"
+	    << "************" << std::endl
+	    << "  // " << ( provider_type.serial? "serial" : "" )
+	    <<" container for nodes that provide " << provides 
+	    << ":" << std::endl
+	    << "  //   " << container_class 
+	    << std::endl
+	    << std::endl;
  
-	*prot << "  class " << translator.serial_container( provides ) << ";"
+      *prot << "  class " << container_class << ";"
+	    << std::endl;
+      *decl << "  class " << container_class
+	    << std::endl
+	    << "  {" << std::endl
+	    << "  public:" << std::endl
+	    << "    typedef std::list<" << provider_type_class << "*>"
+	    <<        "elements_type;" << std::endl
+	    << "  private:" << std::endl
+	    << "    bool max1; // maximal one element" << std::endl 
+	    << "    bool min1; // minimal one element" << std::endl
+	    << "    elements_type elements;" << std::endl;
+      Provider_Type::result_types_type::const_iterator j;
+      for( j  = provider_type.result_types.begin(); 
+	   j != provider_type.result_types.end(); ++j )
+      {
+	*decl << "    solve::Multi_And_Operator *avail_operator_" 
+	      << j->return_type << "_" << j->parameter_type << ";"
 	      << std::endl;
-	*decl << "  class " << translator.serial_container( provides )
-	      << std::endl
-	      << "  {" << std::endl
-	      << "  public:" << std::endl
-	      << "    typedef std::list<" 
-	      << translator.provider_type(provides) << "*>"
-	      <<        "elements_type;" << std::endl
-	      << "  private:" << std::endl
-	      << "    bool max1; // maximal one element" << std::endl 
-	      << "    bool min1; // minimal one element" << std::endl
-	      << "    elements_type elements;" << std::endl;
-	Provider_Type::result_types_type::const_iterator j;
-	for( j  = provider_type.result_types.begin(); 
-	     j != provider_type.result_types.end(); ++j )
-	{
-	  *decl << "    solve::Multi_And_Operator *avail_operator_" 
-		<< j->return_type << "_" << j->parameter_type << ";"
-		<< std::endl;
-	}
+      }
+      
+      *decl << "    typedef std::map<std::string, "
+	    << "proptree::Basic_Node_Factory< "
+	    << provider_type_class <<" >*> "
+	    << "node_factories_type;" << std::endl;
+      *decl << "    static node_factories_type node_factories;" << std::endl;
+      
+      *impl << "  " << container_class << "::"
+	    << "node_factories_type "
+	    << container_class << "::"
+	    << "node_factories;" 
+	    << std::endl;
 
-	*decl << "    typedef std::map<std::string, "
-	      << "proptree::Basic_Node_Factory< "
-	      << translator.provider_type(provides) <<" >*> "
-	      << "node_factories_type;" << std::endl;
-	*decl << "    static node_factories_type node_factories;" << std::endl;
+      *decl << "  public:" << std::endl;
+      *decl << "    static void add_node_factory( std::string name, "
+	    << "proptree::Basic_Node_Factory< "
+	    << provider_type_class <<" >* );" << std::endl;
 
-	*impl << "  " << translator.serial_container( provides ) << "::"
-	      << "node_factories_type "
-	      << translator.serial_container( provides ) << "::"
-	      << "node_factories;" 
-	      << std::endl;
-
-	*decl << "  public:" << std::endl;
-	*decl << "    static void add_node_factory( std::string name, "
-	      << "proptree::Basic_Node_Factory< "
-	      << translator.provider_type(provides) <<" >* );" << std::endl;
-
-	*impl << "  void "
-	      << translator.serial_container( provides ) << "::"
-	      << "add_node_factory( std::string name, "
-	      << "proptree::Basic_Node_Factory< "
-	      << translator.provider_type(provides) <<" >* nf )" << std::endl;
-	*impl << "  {" << std::endl;
-	*impl << "    node_factories[name] = nf;" << std::endl;
-	*impl << "  }" << std::endl;
-	*impl << std::endl;
-
-	*decl << "    proptree::Prop_Tree_Node *add_child( std::string type, "
-	      << "std::string name, proptree::tree_info *info, "
-	      << "message::Message_Consultant *msg, "
-	      << "proptree::Prop_Tree_Node *already_obj );" << std::endl;
-
-	*impl << "  proptree::Prop_Tree_Node *"
-	      << translator.serial_container( provides ) << "::" << std::endl;
-	*impl << "  add_child( std::string type, std::string name, "
-	      << "proptree::tree_info *info, " << std::endl;
-	*impl << "             message::Message_Consultant *msg, "
-	      << "proptree::Prop_Tree_Node *already_obj )" << std::endl
-	      << "  {" << std::endl
-	      << "    node_factories_type::iterator i;" << std::endl
-	      << "    i = node_factories.find(type);" << std::endl
-	      << "    if( i == node_factories.end() ) return already_obj;"
-	      << std::endl
-	      << "    proptree::Basic_Node_Factory< "
-	      << translator.provider_type(provides) <<" >* &nf = i->second;"
-	      << std::endl
-	      << "    proptree::Basic_Node_Factory< "
-	      << translator.provider_type(provides) <<" >::node_return_type "
-	      << "node;" << std::endl
-	      << "    if( already_obj != 0 ) " << std::endl
-	      << "      node = nf->cast(already_obj);" << std::endl
-	      << "    else" << std::endl
-	      << "      node = nf->create(name,info,msg);" << std::endl
-	      << "    if( !elements.empty() ) " << std::endl
+      *impl << "  void "
+	    << container_class << "::"
+	    << "add_node_factory( std::string name, "
+	    << "proptree::Basic_Node_Factory< "
+	    << provider_type_class <<" >* nf )" << std::endl;
+      *impl << "  {" << std::endl;
+      *impl << "    node_factories[name] = nf;" << std::endl;
+      *impl << "  }" << std::endl;
+      *impl << std::endl;
+      
+      *decl << "    proptree::Prop_Tree_Node *add_child( std::string type, "
+	    << "std::string name, proptree::tree_info *info, "
+	    << "message::Message_Consultant *msg, "
+	    << "proptree::Prop_Tree_Node *already_obj );" << std::endl;
+      
+      *impl << "  proptree::Prop_Tree_Node *"
+	    << container_class << "::" << std::endl;
+      *impl << "  add_child( std::string type, std::string name, "
+	    << "proptree::tree_info *info, " << std::endl;
+      *impl << "             message::Message_Consultant *msg, "
+	    << "proptree::Prop_Tree_Node *already_obj )" << std::endl
+	    << "  {" << std::endl
+	    << "    node_factories_type::iterator i;" << std::endl
+	    << "    i = node_factories.find(type);" << std::endl
+	    << "    if( i == node_factories.end() ) return already_obj;"
+	    << std::endl
+	    << "    proptree::Basic_Node_Factory< "
+	    << provider_type_class <<" >* &nf = i->second;"
+	    << std::endl
+	    << "    proptree::Basic_Node_Factory< "
+	    << provider_type_class <<" >::node_return_type "
+	    << "node;" << std::endl
+	    << "    if( already_obj != 0 ) " << std::endl
+	    << "      node = nf->cast(already_obj);" << std::endl
+	    << "    else" << std::endl
+	    << "      node = nf->create(name,info,msg);" << std::endl;
+      if( provider_type.serial )
+      {
+	*impl << "    if( !elements.empty() ) " << std::endl
 	      << "    { // link contained elements if not empty" << std::endl
-	      << "      " << translator.provider_type(provides) << " *last = "
+	      << "      " << provider_type_class << " *last = "
 	      << "*(--elements.end());"<< std::endl
 	      << "      last->set_next_" << provides << "( node.first );" 
 	      << std::endl
 	      << "      node.first->set_prev_" << provides << "( last );" 
 	      << std::endl
-	      << "    }" << std::endl
-	      << "    elements.push_back(node.first); " << std::endl;
-	for( j  = provider_type.result_types.begin(); 
-	     j != provider_type.result_types.end(); ++j )
-	{
-	  *impl << "    avail_operator_" << j->return_type << "_" 
-		<< j->parameter_type
-		<< "->add_operand( node.first->" 
-		<< translator.is_avail( provides, j->return_type, 
-					j->parameter_type ) << " );"
-		<< std::endl;
-	}
-	*impl << "// store provided type pointer" << std::endl
-	      << "    return node.second;                      "
-	      << "// return general prop tree node pointer" << std::endl
-	      << "  }" << std::endl
+	      << "    }" << std::endl;
+      }
+      *impl << "    elements.push_back(node.first); " << std::endl;
+      for( j  = provider_type.result_types.begin(); 
+	   j != provider_type.result_types.end(); ++j )
+      {
+	*impl << "    avail_operator_" << j->return_type << "_" 
+	      << j->parameter_type
+	      << "->add_operand( node.first->" 
+	      << translator.is_avail( provides, j->return_type, 
+				      j->parameter_type ) << " );"
 	      << std::endl;
+      }
+      *impl << "// store provided type pointer" << std::endl
+	    << "    return node.second;                      "
+	    << "// return general prop tree node pointer" << std::endl
+	    << "  }" << std::endl
+	    << std::endl;
 
-	*decl << "    " << translator.provider_type(provides) 
-	      << "* get_first_element();" << std::endl;
-	*impl << "  " << translator.provider_type(provides) << "* "
-	      << translator.serial_container( provides ) << "::"
-	      << "get_first_element()" << std::endl
-	      << "  {" << std::endl 
-	      << "    if( elements_begin() == elements_end() ) return 0;" 
-	      << std::endl 
-	      << "    else return *elements_begin();" << std::endl 
-	      << "  }" << std::endl;
-	
-	*decl << "    " << translator.provider_type(provides) 
-	      << "* get_last_element();" << std::endl;
-	*impl << "  " << translator.provider_type(provides) << "* "
-	      << translator.serial_container( provides ) << "::"
-	      << "get_last_element()" << std::endl
-	      << "  {" << std::endl 
-	      << "    if( elements_begin() == elements_end() ) return 0;" 
-	      << std::endl 
-	      << "    else return *(--elements_end());" << std::endl 
-	      << "  }" << std::endl;
+      *decl << "    " << provider_type_class 
+	    << "* get_first_element();" << std::endl;
+      *impl << "  " << provider_type_class << "* "
+	    << container_class << "::"
+	    << "get_first_element()" << std::endl
+	    << "  {" << std::endl 
+	    << "    if( elements_begin() == elements_end() ) return 0;" 
+	    << std::endl 
+	    << "    else return *elements_begin();" << std::endl 
+	    << "  }" << std::endl;
+      
+      *decl << "    " << provider_type_class 
+	    << "* get_last_element();" << std::endl;
+      *impl << "  " << provider_type_class << "* "
+	    << container_class << "::"
+	    << "get_last_element()" << std::endl
+	    << "  {" << std::endl 
+	    << "    if( elements_begin() == elements_end() ) return 0;" 
+	    << std::endl 
+	    << "    else return *(--elements_end());" << std::endl 
+	    << "  }" << std::endl;
+      
+      *decl << "    " << provider_type_class 
+	    << "* get_element( int n );" << std::endl
+	    << "    int get_element_count(); " << std::endl;
+      *impl << "  " << provider_type_class << "* "
+	    << container_class << "::"
+	    << "get_element( int n )" << std::endl
+	    << "  {" << std::endl 
+	    << "    elements_type::iterator i; int z;" << std::endl 
+	    << "    for( i = elements_begin(), z=0; i != elements_end(); "
+	    << "++i, ++z )" << std::endl 
+	    << "      if( z == n ) return *i;" << std::endl 
+	    << "    return 0;" << std::endl 
+	    << "  }" << std::endl
+	    << "  int " << container_class 
+	    << "::get_element_count()" << std::endl
+	    << "  {" << std::endl
+	    << "    return elements.size();" << std::endl
+	    << "  }" << std::endl
+	    << std::endl;
 
-	*decl << "    " << translator.provider_type(provides) 
-	      << "* get_element( int n );" << std::endl
-	      << "    int get_element_count(); " << std::endl;
-	*impl << "  " << translator.provider_type(provides) << "* "
-	      << translator.serial_container( provides ) << "::"
-	      << "get_element( int n )" << std::endl
-	      << "  {" << std::endl 
-	      << "    elements_type::iterator i; int z;" << std::endl 
-	      << "    for( i = elements_begin(), z=0; i != elements_end(); "
-	      << "++i, ++z )" << std::endl 
-	      << "      if( z == n ) return *i;" << std::endl 
-	      << "    return 0;" << std::endl 
-	      << "  }" << std::endl
-	      << "  int " << translator.serial_container(provides) 
-	      << "::get_element_count()" << std::endl
-	      << "  {" << std::endl
-	      << "    return elements.size();" << std::endl
-	      << "  }" << std::endl
-	      << std::endl;
-
+      if( provider_type.serial )
+      {
 	*decl << "    // ** result functions **" << std::endl;
-
+	
 	for( j  = provider_type.result_types.begin(); 
 	     j != provider_type.result_types.end(); ++j )
 	{
@@ -1001,9 +1016,9 @@ namespace funcgen
 		<< translator.result_function_decl( provides, j->return_type, 
 						    j->parameter_type )
 		<< ";" << std::endl;
-
+	
 	  *impl << "  std::pair< bool," << translator.base_type(j->return_type)
-		<< " > " << translator.serial_container( provides ) << "::"
+		<< " > " << container_class << "::"
 		<< translator.result_function_impl( provides, j->return_type, 
 						    j->parameter_type,"_par_" )
 		<< std::endl
@@ -1044,312 +1059,111 @@ namespace funcgen
 		<< "  }" << std::endl
 		<< std::endl;
 	}
-	*decl << "    // ** is result availible **" << std::endl;
-	*decl << "    solve::Operand<flag> is_avail; "
-	      << "// are all results available" 
-	      << std::endl;
-	for( j  = provider_type.result_types.begin(); 
-	     j != provider_type.result_types.end(); ++j )
-	{
-	  *decl << "    solve::Operand<flag> " 
-		<< translator.is_avail( provides, j->return_type, 
-					j->parameter_type ) << ";" 
-		<< std::endl;
-	}
-	*decl << "    // ** access functions **" << std::endl
-	      << "    elements_type::iterator elements_begin(); " << std::endl
-	      << "    elements_type::iterator elements_end(); " << std::endl
-	      << std::endl
-	      << "    bool elements_empty(); " << std::endl
-	      << "    // ** constructor **" << std::endl
-	      << "    " << translator.serial_container( provides ) 
-	      << "(bool max1, bool min1, message::Message_Consultant* );" 
-	      << std::endl
-	      << "    // ** virtual destructor **" << std::endl
-	      << "    virtual ~" << translator.serial_container( provides ) 
-	      << "() {}" << std::endl
-	      << "    // ** Don't call the following functions! ** " 
-	      << std::endl
-	      << "    //! function that is called after hierarchy was set up "
-	      << "for each node" << std::endl
-	      << "    void hierarchy_final_init();" << std::endl
-	      << "  };" << std::endl
-	      << std::endl;
-
-	*impl << "  " << translator.serial_container( provides ) 
-	      << "::elements_type::iterator "
-	      << translator.serial_container(provides) << "::elements_begin()"
-	      << std::endl
-	      << "  {" << std::endl
-	      << "    return elements.begin();" << std::endl
-	      << "  }" << std::endl
-	      << std::endl
-	      << "  " << translator.serial_container(provides) 
-	      << "::elements_type::iterator "
-	      << translator.serial_container( provides ) << "::elements_end()"
-	      << std::endl
-	      << "  {" << std::endl
-	      << "    return elements.end();" << std::endl
-	      << "  }" << std::endl
-	      << std::endl
-	      << "  bool "
-	      << translator.serial_container(provides) << "::elements_empty()"
-	      << std::endl
-	      << "  {" << std::endl
-	      << "    return elements.empty();" << std::endl
-	      << "  }" << std::endl
-	      << std::endl
-	      << "  " << translator.serial_container( provides ) << "::"
-	      << translator.serial_container( provides )
-	      << "(bool _max1, bool _min1, message::Message_Consultant *c)" 
-	      << std::endl
-	      << "    : max1(_max1), min1(_min1), is_avail(c)";
-	for( j  = provider_type.result_types.begin(); 
-	     j != provider_type.result_types.end(); ++j )
-	{
-	  *impl << "," << std::endl
-		<< "      " << translator.is_avail( provides, j->return_type, 
-						    j->parameter_type )
-		<< "(c)";
-	}
-	*impl << std::endl
-	      << "  {" << std::endl;
-	*impl << "    solve::Multi_And_Operator *m_and = "
-	      << "new solve::Multi_And_Operator(c);" << std::endl;
-	*impl << "    is_avail = m_and->get_result();" << std::endl;
-	for( j  = provider_type.result_types.begin(); 
-	     j != provider_type.result_types.end(); ++j )
-	{
-	  *impl << "    avail_operator_" << j->return_type << "_" 
-		<< j->parameter_type << " = new solve::Multi_And_Operator(c);"
-		<< std::endl
-		<< "    " << translator.is_avail( provides, j->return_type, 
-						  j->parameter_type )
-		<< " = avail_operator_" << j->return_type << "_" 
-		<< j->parameter_type << "->get_result();"
-		<< std::endl;
-	  *impl << "    m_and->add_operand( "
-		<< translator.is_avail( provides, j->return_type, 
-					j->parameter_type )
-		<< " );" << std::endl;
-	}
-	*impl << "    m_and->finish_adding();" << std::endl;
-	*impl << "  }" << std::endl
-	      << "  //! function that is called after hierarchy was set up "
-	      << "for each node" << std::endl
-	      << "  void " << translator.serial_container( provides ) << "::"
-	      << "hierarchy_final_init()" << std::endl
-	      << std::endl
-	      << "  {" << std::endl;
-	for( j  = provider_type.result_types.begin(); 
-	     j != provider_type.result_types.end(); ++j )
-	{
-	  *impl << "    avail_operator_" << j->return_type << "_" 
-		<< j->parameter_type << "->finish_adding();" << std::endl;
-	}
-	*impl << "  }" << std::endl;
       }
-      else
-      {				// ... create container class
-	*impl << "  // *******************************************************"
-	      << "************" << std::endl
-	      << "  // container for nodes that provide " << provides 
-	      << ":" << std::endl
-	      << "  //   " << translator.container(provides) 
-	      << std::endl
+      *decl << "    // ** is result availible **" << std::endl;
+      *decl << "    solve::Operand<flag> is_avail; "
+	    << "// are all results available" 
+	    << std::endl;
+      for( j  = provider_type.result_types.begin(); 
+	   j != provider_type.result_types.end(); ++j )
+      {
+	*decl << "    solve::Operand<flag> " 
+	      << translator.is_avail( provides, j->return_type, 
+				      j->parameter_type ) << ";" 
 	      << std::endl;
-
-	*prot << "  class " << translator.container( provides ) << ";"
-	      << std::endl;
-	*decl << "  class " << translator.container( provides )
-	      << std::endl
-	      << "  {" << std::endl
-	      << "  public:" << std::endl
-	      << "    typedef std::list<" 
-	      << translator.provider_type(provides) << "*>"
-	      <<        "elements_type;" << std::endl
-	      << "  private:" << std::endl
-	      << "    bool max1; // maximal one element" << std::endl 
-	      << "    bool min1; // minimal one element" << std::endl
-	      << "    elements_type elements;" << std::endl;
-	Provider_Type::result_types_type::const_iterator j;
-	for( j  = provider_type.result_types.begin(); 
-	     j != provider_type.result_types.end(); ++j )
-	{
-	  *decl << "    solve::Multi_And_Operator *avail_operator_" 
-		<< j->return_type << "_" << j->parameter_type << ";"
-		<< std::endl;
-	}
-	*decl << "    typedef std::map<std::string, "
-	      << "proptree::Basic_Node_Factory< "
-	      << translator.provider_type(provides) <<" >*> "
-	      << "node_factories_type;" << std::endl
-	      << "    static node_factories_type node_factories;" << std::endl
-	      << "  public:" << std::endl
-	      << "    static void add_node_factory( std::string name, "
-	      << "proptree::Basic_Node_Factory< "
-	      << translator.provider_type(provides) <<" >* );" << std::endl
-	      << "    proptree::Prop_Tree_Node *add_child( std::string type, "
-	      << "std::string name, proptree::tree_info *info, "
-	      << "message::Message_Consultant *msg, "
-	      << "proptree::Prop_Tree_Node *already_obj );" << std::endl;
-
-	*impl << "  " << translator.container( provides ) << "::"
-	      << "node_factories_type "
-	      << translator.container( provides ) << "::"
-	      << "node_factories;" 
-	      << std::endl
-	      << "  void "
-	      << translator.container( provides ) << "::"
-	      << "add_node_factory( std::string name, "
-	      << "proptree::Basic_Node_Factory< "
-	      << translator.provider_type(provides) <<" >* nf )" << std::endl
-	      << "  {" << std::endl
-	      << "    node_factories[name] = nf;" << std::endl
-	      << "  }" << std::endl
-	      << "  proptree::Prop_Tree_Node *"
-	      << translator.container( provides ) << "::" << std::endl
-	      << "  add_child( std::string type, std::string name, "
-	      << "proptree::tree_info *info, " << std::endl 
-	      << "             message::Message_Consultant *msg, "
-	      << "proptree::Prop_Tree_Node *already_obj )" << std::endl
-	      << "  {" << std::endl
-	      << "    node_factories_type::iterator i;" << std::endl
-	      << "    i = node_factories.find(type);" << std::endl
-	      << "    if( i == node_factories.end() ) return already_obj;"
-	      << std::endl
-	      << "    proptree::Basic_Node_Factory< "
-	      << translator.provider_type(provides) <<" >* &nf = i->second;"
-	      << std::endl
-	      << "    proptree::Basic_Node_Factory< "
-	      << translator.provider_type(provides) <<" >::node_return_type "
-	      << "node;" << std::endl
-	      << "    if( already_obj != 0 ) " << std::endl
-	      << "      node = nf->cast(already_obj);" << std::endl
-	      << "    else" << std::endl
-	      << "      node = nf->create(name,info,msg);" << std::endl
-	      << "    elements.push_back(node.first); " << std::endl;
-	for( j  = provider_type.result_types.begin(); 
-	     j != provider_type.result_types.end(); ++j )
-	{
-	  *impl << "    avail_operator_" << j->return_type << "_" 
-		<< j->parameter_type
-		<< "->add_operand( node.first->" 
-		<< translator.is_avail( provides, j->return_type, 
-					j->parameter_type ) << " );"
-		<< std::endl;
-	}
-	*impl << "// store provided type pointer" << std::endl
-	      << "    return node.second;                      "
-	      << "// return general prop tree node pointer" << std::endl
-	      << "  }" << std::endl
-	      << std::endl;
-
-	*decl << "    elements_type::iterator elements_begin(); " << std::endl
-	      << "    elements_type::iterator elements_end(); " << std::endl
-	      << "    bool elements_empty(); " << std::endl;
-	*decl << "    // ** is result availible **" << std::endl;
-	*decl << "    solve::Operand<flag> is_avail; "
-	      << "// are all results available" 
-	      << std::endl;
-	for( j  = provider_type.result_types.begin(); 
-	     j != provider_type.result_types.end(); ++j )
-	{
-	  *decl << "    solve::Operand<flag> " 
-		<< translator.is_avail( provides, j->return_type, 
-					j->parameter_type ) << ";" 
-		<< std::endl;
-	}
-	*decl << "    // ** constructor **" << std::endl
-	      << "    " << translator.container( provides ) 
-	      << "(bool max1, bool min1, message::Message_Consultant* );" 
-	      << std::endl
-	      << "    // ** virtual destructor **" << std::endl
-	      << "    virtual ~" << translator.container( provides ) 
-	      << "() {}" << std::endl
-	      << "    //! function that is called after hierarchy was set up "
-	      << "for each node" << std::endl
-	      << "    void hierarchy_final_init();" << std::endl
-	      << "  };" << std::endl
-	      << std::endl;
-
-	*impl << "  " << translator.container( provides ) 
-	      << "::elements_type::iterator "
-	      << translator.container( provides ) << "::elements_begin()"
-	      << std::endl
-	      << "  {" << std::endl
-	      << "    return elements.begin();" << std::endl
-	      << "  }" << std::endl
-	      << std::endl
-	      << "  " << translator.container( provides ) 
-	      << "::elements_type::iterator "
-	      << translator.container( provides ) << "::elements_end()"
-	      << std::endl
-	      << "  {" << std::endl
-	      << "    return elements.end();" << std::endl
-	      << "  }" << std::endl
-	      << std::endl
-	      << "  bool "
-	      << translator.container( provides ) << "::elements_empty()"
-	      << std::endl
-	      << "  {" << std::endl
-	      << "    return elements.empty();" << std::endl
-	      << "  }" << std::endl
-	      << std::endl
-	      << "  " << translator.container( provides ) << "::"
-	      << translator.container( provides )
-	      << "(bool _max1, bool _min1, message::Message_Consultant *c )" 
-	      << std::endl
-	      << "    : max1(_max1), min1(_min1), is_avail(c)";
-	for( j  = provider_type.result_types.begin(); 
-	     j != provider_type.result_types.end(); ++j )
-	{
-	  *impl << "," << std::endl
-		<< "      " << translator.is_avail( provides, j->return_type, 
-						    j->parameter_type )
-		<< "(c)";
-	}
-	*impl << std::endl
-	      << "  {" << std::endl;
-	*impl << "    solve::Multi_And_Operator *m_and = "
-	      << "new solve::Multi_And_Operator(c);" << std::endl;
-	*impl << "    is_avail = m_and->get_result();" << std::endl;
-	for( j  = provider_type.result_types.begin(); 
-	     j != provider_type.result_types.end(); ++j )
-	{
-	  *impl << "    avail_operator_" << j->return_type << "_" 
-		<< j->parameter_type << " = new solve::Multi_And_Operator(c);"
-		<< std::endl
-		<< "    " << translator.is_avail( provides, j->return_type, 
-						  j->parameter_type )
-		<< " = avail_operator_" << j->return_type << "_" 
-		<< j->parameter_type << "->get_result();"
-		<< std::endl;
-
-	  *impl << "    m_and->add_operand( "
-		<< translator.is_avail( provides, j->return_type, 
-					j->parameter_type )
-		<< " );" << std::endl;
-	}
-	*impl << "    m_and->finish_adding();" << std::endl;
-	*impl << "  }" << std::endl
-	      << std::endl
-	      << "    // ** Don't call the following functions! ** " 
-	      << std::endl
-	      << "  //! function that is called after hierarchy was set up "
-	      << "for each node" << std::endl
-	      << "  void " << translator.container( provides ) << "::"
-	      << "hierarchy_final_init()" << std::endl
-	      << std::endl
-	      << "  {" << std::endl;
-	for( j  = provider_type.result_types.begin(); 
-	     j != provider_type.result_types.end(); ++j )
-	{
-	  *impl << "    avail_operator_" << j->return_type << "_" 
-		<< j->parameter_type << "->finish_adding();" << std::endl;
-	}
-	*impl << "  }" << std::endl;
       }
+      *decl << "    // ** access functions **" << std::endl
+	    << "    elements_type::iterator elements_begin(); " << std::endl
+	    << "    elements_type::iterator elements_end(); " << std::endl
+	    << std::endl
+	    << "    bool elements_empty(); " << std::endl
+	    << "    // ** constructor **" << std::endl
+	    << "    " << container_class 
+	    << "(bool max1, bool min1, message::Message_Consultant* );" 
+	    << std::endl
+	    << "    // ** virtual destructor **" << std::endl
+	    << "    virtual ~" << container_class 
+	    << "() {}" << std::endl
+	    << "    // ** Don't call the following functions! ** " 
+	    << std::endl
+	    << "    //! function that is called after hierarchy was set up "
+	    << "for each node" << std::endl
+	    << "    void hierarchy_final_init();" << std::endl
+	    << "  };" << std::endl
+	    << std::endl;
+      
+      *impl << "  " << container_class 
+	    << "::elements_type::iterator "
+	    << container_class << "::elements_begin()"
+	    << std::endl
+	    << "  {" << std::endl
+	    << "    return elements.begin();" << std::endl
+	    << "  }" << std::endl
+	    << std::endl
+	    << "  " << container_class 
+	    << "::elements_type::iterator "
+	    << container_class << "::elements_end()"
+	    << std::endl
+	    << "  {" << std::endl
+	    << "    return elements.end();" << std::endl
+	    << "  }" << std::endl
+	    << std::endl
+	    << "  bool "
+	    << container_class << "::elements_empty()"
+	    << std::endl
+	    << "  {" << std::endl
+	    << "    return elements.empty();" << std::endl
+	    << "  }" << std::endl
+	    << std::endl
+	    << "  " << container_class << "::"
+	    << container_class
+	    << "(bool _max1, bool _min1, message::Message_Consultant *c)" 
+	    << std::endl
+	    << "    : max1(_max1), min1(_min1), is_avail(c)";
+      for( j  = provider_type.result_types.begin(); 
+	   j != provider_type.result_types.end(); ++j )
+      {
+	*impl << "," << std::endl
+	      << "      " << translator.is_avail( provides, j->return_type, 
+						  j->parameter_type )
+	      << "(c)";
+      }
+      *impl << std::endl
+	    << "  {" << std::endl;
+      *impl << "    solve::Multi_And_Operator *m_and = "
+	    << "new solve::Multi_And_Operator(c);" << std::endl;
+      *impl << "    is_avail = m_and->get_result();" << std::endl;
+      for( j  = provider_type.result_types.begin(); 
+	   j != provider_type.result_types.end(); ++j )
+      {
+	*impl << "    avail_operator_" << j->return_type << "_" 
+	      << j->parameter_type << " = new solve::Multi_And_Operator(c);"
+	      << std::endl
+	      << "    " << translator.is_avail( provides, j->return_type, 
+						j->parameter_type )
+	      << " = avail_operator_" << j->return_type << "_" 
+	      << j->parameter_type << "->get_result();"
+	      << std::endl;
+	*impl << "    m_and->add_operand( "
+	      << translator.is_avail( provides, j->return_type, 
+				      j->parameter_type )
+	      << " );" << std::endl;
+      }
+      *impl << "    m_and->finish_adding();" << std::endl;
+      *impl << "  }" << std::endl
+	    << "  //! function that is called after hierarchy was set up "
+	    << "for each node" << std::endl
+	    << "  void " << container_class << "::"
+	    << "hierarchy_final_init()" << std::endl
+	    << std::endl
+	    << "  {" << std::endl;
+      for( j  = provider_type.result_types.begin(); 
+	   j != provider_type.result_types.end(); ++j )
+      {
+	*impl << "    avail_operator_" << j->return_type << "_" 
+	      << j->parameter_type << "->finish_adding();" << std::endl;
+      }
+      *impl << "  }" << std::endl;
     }
     *decl << std::endl;
   }

@@ -152,7 +152,7 @@ priority_list{				// old values
   default_first_state_pre4;
   default_last_state_pre4;
 
-  default_first_up_norm;
+  default_first_up_vector;
 
   default_first_state;			// 1000
   default_last_state;	

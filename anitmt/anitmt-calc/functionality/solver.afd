@@ -17,7 +17,6 @@ avoid_recursion __adl_solver_declarations__;
 // ****************************************************************************
 
 include declaration "base_func.afd";
-include declaration "complex_solver.afd";
 include header "val/val.hpp";
 include header "break_point.hpp";
 

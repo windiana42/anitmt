@@ -117,15 +117,16 @@ Matrix<4,4>::Matrix(MatRowVec,const Vector<4> &r0,
 Matrix<4,4> mat_rotate_around(const Vector<3> &v,double angle)
 {
 	Matrix<4,4> rv;
+	Matrix<4,4> rot = mat_rotate_vect_vect(v,Vector<3>(0.0,0.0,1.0));
 
 	// rotate v to z
-	rv*=mat_rotate_vect_vect(v,Vector<3>(0.0,0.0,1.0));
+	rv=rot;
 
 	// z-rotation (around v)
-	rv*=mat_rotate_z(angle);
+	rv=mat_rotate_z(angle)*rv;
 
 	// rotate z back to v
-	rv*=mat_rotate_vect_vect(Vector<3>(0.0,0.0,1.0),v);
+	rv=rot.inverse()*rv;
 
 	return(rv);
 }
@@ -135,19 +136,21 @@ Matrix<4,4> mat_rotate_vect_vect(const Vector<3> &from,const Vector<3> &to)
 {
 	Matrix<4,4> rv;
 
-	Vector<3> vf=from,vt=to;
+	Vector<3> vf=from,vt=to,tmp;
 	double angle;
 
 	// ******** rotation from v1 to <1,0,0> (save to matrix)
 	// z-rotation 
 	angle = -atan2(vf[1],vf[0]);
 	vf.rotate_z(angle);
-	rv*=mat_rotate_z(angle);
+	rv=mat_rotate_z(angle);
+	tmp = rv * from;
 
 	// y-rotation 
 	angle = atan2(vf[2],vf[0]);
-	//vf.rotate_y(angle);
-	rv*=mat_rotate_y(angle);
+	/**/vf.rotate_y(angle);
+	rv=mat_rotate_y(angle) * rv;
+	tmp = rv * from;
 
 	// ******** rotation from v2 to <1,0,0>
 	// z-rotation 
@@ -156,11 +159,11 @@ Matrix<4,4> mat_rotate_vect_vect(const Vector<3> &from,const Vector<3> &to)
 
 	// y-rotation 
 	double y_angle = atan2(vt[2],vt[0]);
-	//vt.rotate_y(y_angle);
+	/**/vt.rotate_y(y_angle);
 
 	// ******** save rotation from <1,0,0> to vt
-	rv*=mat_rotate_y(-y_angle);  // y-rotation
-	rv*=mat_rotate_z(-z_angle);  // z-rotation 
+	rv=mat_rotate_y(-y_angle)*rv;  // y-rotation
+	rv=mat_rotate_z(-z_angle)*rv;  // z-rotation 
 
 	return(rv);
 }
@@ -179,7 +182,7 @@ Matrix<4,4> mat_rotate_vect_vect_up(const Vector<3> &from,const Vector<3> &to,
 		Vector<3>(0.0,0.0,1.0),Vector<3>(1.0,0.0,0.0) );
 
 	// rotate to map the up-rotation to a z-rotation
-	rv*=up_from_2_z_x;
+	rv=up_from_2_z_x;
 
 	Vector<3> v1 = up_from_2_z_x * from;
 	// y-rotation 
@@ -200,15 +203,15 @@ Matrix<4,4> mat_rotate_vect_vect_up(const Vector<3> &from,const Vector<3> &to,
 
 	// additional rotation around y-axis
 	angle -= y_angle;
-	rv*=mat_rotate_y(angle);
+	rv=mat_rotate_y(angle)*rv;
 
 	// rotate around z-axis
 	angle = -z_angle;
-	rv*=mat_rotate_z(angle);
+	rv=mat_rotate_z(angle)*rv;
 
 	// rotate back
-	rv*=mat_rotate_pair_pair(Vector<3>(0.0,0.0,1.0),Vector<3>(1.0,0.0,0.0),
-		up,from);
+	rv=mat_rotate_pair_pair(Vector<3>(0.0,0.0,1.0),Vector<3>(1.0,0.0,0.0),
+				up,from)*rv;
 
 	return(rv);
 }
@@ -274,29 +277,29 @@ Matrix<4,4> mat_rotate_pair_pair(
 
 	// rotate around z-axis
 	angle=z_angle1;
-	rv*=mat_rotate_z(angle);
+	rv=mat_rotate_z(angle);
 
 	// rotate around y-axis
 	angle=y_angle1;
-	rv*=mat_rotate_y(angle);
+	rv=mat_rotate_y(angle)*rv;
 
 	// rotate around x-axis
 	angle=x_angle1;
-	rv*=mat_rotate_x(angle);
+	rv=mat_rotate_x(angle)*rv;
 
 	// ****** save the rotation from origin to pair2 
 
 	// rotate around x-axis
 	angle=-x_angle2;
-	rv*=mat_rotate_x(angle);
+	rv=mat_rotate_x(angle)*rv;
 
 	// rotate around y-axis
 	angle=-y_angle2;
-	rv*=mat_rotate_y(angle);
+	rv=mat_rotate_y(angle)*rv;
 
 	// rotate around z-axis
 	angle=-z_angle2;
-	rv*=mat_rotate_z(angle);
+	rv=mat_rotate_z(angle)*rv;
 
 	return(rv);
 }
@@ -316,12 +319,12 @@ Matrix<4,4> mat_rotate_spherical_pair(
 
 	// then around up
 	Matrix<4,4> rv2(mat_rotate_around(up,angles[1]));
-	rv*=rv2;
+	rv=rv2*rv;
 
 	Vector<3> f(rv2*front);   // get the new front vector
 
 	// and last around u x f
-	rv*=mat_rotate_around(f.cross(u),angles[2]);
+	rv=mat_rotate_around(f.cross(u),angles[2])*rv;
 
 	return(rv);
 }

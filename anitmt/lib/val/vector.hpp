@@ -302,7 +302,7 @@ extern Vector<3> vec_rotate_z(const Vector<3> &v,double theta);
 extern Vector<3> vec_to_spherical(const Vector<3> &v);
 extern Vector<3> vec_to_rectangular(const Vector<3> &v);
 
-//! Get the rotation from v1 to v2 around axis 
+//! Get the rotation from v1 to v2 around axis in range 0..2PI
 extern double get_rotation_around(
 	const Vector<3> &v1,const Vector<3> &v2,const Vector<3> &axis);
 

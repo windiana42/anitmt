@@ -18,6 +18,7 @@ avoid_recursion __adl_scalar_basic_functionality__;
 
 include declaration "base_func.afd";
 include declaration "solver.afd";
+include declaration "complex_solver.afd";
 
 // ****************************************************************************
 // ****************************************************************************

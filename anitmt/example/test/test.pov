@@ -31,7 +31,7 @@ union { // testobj
     <1,1,1>
     pigment{color rgb <1,0,0>} 
     scale 0.4
-    translate <0,0,1>
+    translate <1,0,0>
   }
   scale 0.4
 }

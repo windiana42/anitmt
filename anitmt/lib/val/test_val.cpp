@@ -325,6 +325,49 @@ int main()
 	}
 	cerr << " done\n";
 	
+	Vector x(1.0,0.0,0.0);
+	Vector y(0.0,1.0,0.0);
+	Vector z(0.0,0.0,1.0);
+	cerr << "Testing mat_rotate_around..." << std::endl;
+	if( mat_rotate_around(z,PI/2) * x != y )
+		cerr << "  *** ERROR in mat_rotate_around(z,PI/2) * x: " 
+				 << mat_rotate_around(z,PI/2) * x
+				 << std::endl;
+	if( mat_rotate_around(x+y+z,2*PI/3) * x != y )
+		cerr << "  *** ERROR in mat_rotate_around(<1,1,1>,2*PI/3) * x: " 
+				 << mat_rotate_around(x+y+z,2*PI/3) * x 
+				 << std::endl;
+	if( mat_rotate_around(x+y+z,2*PI/3) * y != z )
+		cerr << "  *** ERROR in mat_rotate_around(<1,1,1>,2*PI/3) * y: " 
+				 << mat_rotate_around(x+y+z,2*PI/3) * y
+				 << std::endl;
+	if( mat_rotate_around(x+y+z,2*PI/3) * z != x )
+		cerr << "  *** ERROR in mat_rotate_around(<1,1,1>,2*PI/3) * z: " 
+				 << mat_rotate_around(x+y+z,2*PI/3) * z
+				 << std::endl;
+
+	cerr << "Testing get_rotation_around..." << std::endl;
+	if( get_rotation_around(x,y,z) != Scalar(PI/2.0) )
+		cerr << "  *** ERROR in get_rotation_around(x,y,z): " 
+				 << get_rotation_around(x,y,z)
+				 << std::endl;
+	if( get_rotation_around(x,y,x+y+z) != Scalar(2.0*PI/3.0) )
+		cerr << "  *** ERROR in get_rotation_around(x,y,<1,1,1>): " 
+				 << get_rotation_around(x,y,x+y+z) 
+				 << std::endl;
+	if( get_rotation_around(y,z,x+y+z) != Scalar(2.0*PI/3.0) )
+		cerr << "  *** ERROR in get_rotation_around(y,z,<1,1,1>): " 
+				 << get_rotation_around(y,z,x+y+z)
+				 << std::endl;
+	if( get_rotation_around(z,x,x+y+z) != Scalar(2.0*PI/3.0) )
+		cerr << "  *** ERROR in get_rotation_around(z,x,<1,1,1>): " 
+				 << get_rotation_around(z,x,x+y+z)
+				 << std::endl;
+	if( get_rotation_around(x,y,-x-y-z) != Scalar(4.0*PI/3.0) )
+		cerr << "  *** ERROR in get_rotation_around(x,y,<-1,-1,-1>): " 
+				 << get_rotation_around(x,y,-x-y-z)
+				 << std::endl;
+
 	/*********************************************/
 	
 	// Well, this is not a test suite, this is just to see if things compile. 

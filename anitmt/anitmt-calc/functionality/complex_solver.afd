@@ -98,7 +98,7 @@ solvers
 	test_run
 	{
 	  if( ![[ is_solved_in_try(length_calculated) ]] ) 
-	    [[ try_reject p1,p2,p3,p4; ]]
+	    [[ try_reject length; ]]
 	}
       }
       group up_vector
@@ -189,7 +189,11 @@ solvers
     }
     operands
     {
-      flag length_calculated;
+      type flag
+      {
+	length_calculated;
+	up_vector_calculated;
+      }
     }
     init_operands
     {
@@ -240,7 +244,8 @@ solvers
 	  scalar len = spline->length;
 	  [[ set length_calculated = true; ]]
 	  [[ set length = len; ]]
-	  //[[ set length = spline.get_length(); ]]
+	  [[ set start_dir = spline->get_front(0); ]]
+	  [[ set end_dir = spline->get_front(len); ]]
 	}
 	reset
 	{
@@ -252,7 +257,80 @@ solvers
 	test_run
 	{
 	  if( ![[ is_solved_in_try(length_calculated) ]] ) 
-	    ;//[[ try_reject container.points; ]]
+	    [[ try_reject length; ]];
+	}
+      }
+      event start_dir requires start_dir
+      {
+	test_run
+	{
+	  if( ![[ is_solved_in_try(length_calculated) ]] ) 
+	    [[ try_reject start_dir; ]]
+	}
+      }
+      event end_dir requires end_dir
+      {
+	test_run
+	{
+	  if( ![[ is_solved_in_try(length_calculated) ]] ) 
+	    [[ try_reject end_dir; ]]
+	}
+      }
+      group up_vector
+      {
+	event calc_end_up requires start_up, end_dir, up_roll, 
+	  event.points_avail
+	{
+	  test_run
+	  {
+	    if( ![[ is_solved_in_try(up_vector_calculated) ]] ) 
+	    {
+	      vector vend_dir = [[ end_dir ]];
+	      spline->calc_up_forward( [[ start_up ]] );
+	      vector vend_up = spline->get_end_up();
+	      vend_up = mat_rotate_around( vend_dir, [[ up_roll ]] ) * 
+	        vend_up;
+	      vend_up = 
+	        vec_normalize( cross( vend_dir, cross( vend_up, vend_dir) ) );
+	      [[ set up_vector_calculated = true; ]]
+	      [[ set end_up = vend_up; ]]
+	    }
+	  }	
+	}
+	event calc_start_up requires end_up, start_dir, up_roll, 
+	  event.points_avail
+	{
+	  test_run
+	  {
+	    if( ![[ is_solved_in_try(up_vector_calculated) ]] ) 
+	    {
+	      vector vstart_dir = [[ start_dir ]];
+	      spline->calc_up_backward( [[ end_up ]] );
+	      vector vstart_up = spline->get_beg_up();
+	      vstart_up = 
+	        mat_rotate_around( vstart_dir, -[[ up_roll ]] ) * vstart_up;
+	      vstart_up = 
+	        vec_normalize(cross(vstart_dir,cross(vstart_up, vstart_dir)));
+	      [[ set up_vector_calculated = true; ]]
+	      [[ set start_up = vstart_up; ]]
+	    }
+	  }	
+	}
+	event calc_up_roll requires start_up, end_up, end_dir,  
+	  event.points_avail
+	{
+	  test_run
+	  {
+	    if( ![[ is_solved_in_try(up_vector_calculated) ]] ) 
+	    {
+	      vector start_up = [[ start_up ]];
+	      spline->calc_up_forward( start_up );
+	      vector end_up = spline->get_end_up();
+	      vector axis = [[ end_dir ]];
+	      [[ set up_vector_calculated = true; ]]
+	      [[ set up_roll = get_rotation_around( start_up, end_up, axis); ]]
+	    }
+	  }	
 	}
       }
     }
@@ -269,7 +347,7 @@ solvers
 	[[ return spline->get_front( s ); ]]
       }
       vector get_up ( stretch s ) 
-        requires event.points_avail
+        requires group.up_vector
       {
 	[[ return spline->get_up( s ); ]]
       }
@@ -285,7 +363,11 @@ solvers
     }
     operands
     {
-      flag length_calculated;
+      type flag
+      {
+	length_calculated;
+	up_vector_calculated;
+      }
     }
     init_operands
     {
@@ -336,7 +418,8 @@ solvers
 	  scalar len = spline->length;
 	  [[ set length_calculated = true; ]]
 	  [[ set length = len; ]]
-	  //[[ set length = spline.get_length(); ]]
+	  [[ set start_dir = spline->get_front(0); ]]
+	  [[ set end_dir = spline->get_front(len); ]]
 	}
 	reset
 	{
@@ -348,7 +431,80 @@ solvers
 	test_run
 	{
 	  if( ![[ is_solved_in_try(length_calculated) ]] ) 
-	    ;//[[ try_reject container.points; ]]
+	    [[ try_reject length; ]]
+	}
+      }
+      event start_dir requires start_dir
+      {
+	test_run
+	{
+	  if( ![[ is_solved_in_try(length_calculated) ]] ) 
+	    [[ try_reject start_dir; ]]
+	}
+      }
+      event end_dir requires end_dir
+      {
+	test_run
+	{
+	  if( ![[ is_solved_in_try(length_calculated) ]] ) 
+	    [[ try_reject end_dir; ]]
+	}
+      }
+      group up_vector
+      {
+	event calc_end_up requires start_up, end_dir, up_roll, 
+	  event.points_avail
+	{
+	  test_run
+	  {
+	    if( ![[ is_solved_in_try(up_vector_calculated) ]] ) 
+	    {
+	      vector vend_dir = [[ end_dir ]];
+	      spline->calc_up_forward( [[ start_up ]] );
+	      vector vend_up = spline->get_end_up();
+	      vend_up = mat_rotate_around( vend_dir, [[ up_roll ]] ) * 
+	        vend_up;
+	      vend_up = 
+	        vec_normalize( cross( vend_dir, cross( vend_up, vend_dir) ) );
+	      [[ set up_vector_calculated = true; ]]
+	      [[ set end_up = vend_up; ]]
+	    }
+	  }	
+	}
+	event calc_start_up requires end_up, start_dir, up_roll, 
+	  event.points_avail
+	{
+	  test_run
+	  {
+	    if( ![[ is_solved_in_try(up_vector_calculated) ]] ) 
+	    {
+	      vector vstart_dir = [[ start_dir ]];
+	      spline->calc_up_backward( [[ end_up ]] );
+	      vector vstart_up = spline->get_beg_up();
+	      vstart_up = 
+	        mat_rotate_around( vstart_dir, -[[ up_roll ]] ) * vstart_up;
+	      vstart_up = 
+	        vec_normalize(cross(vstart_dir,cross(vstart_up, vstart_dir)));
+	      [[ set up_vector_calculated = true; ]]
+	      [[ set start_up = vstart_up; ]]
+	    }
+	  }	
+	}
+	event calc_up_roll requires start_up, end_up, end_dir,  
+	  event.points_avail
+	{
+	  test_run
+	  {
+	    if( ![[ is_solved_in_try(up_vector_calculated) ]] ) 
+	    {
+	      vector start_up = [[ start_up ]];
+	      spline->calc_up_forward( start_up );
+	      vector end_up = spline->get_end_up();
+	      vector axis = [[ end_dir ]];
+	      [[ set up_vector_calculated = true; ]]
+	      [[ set up_roll = get_rotation_around( start_up, end_up, axis); ]]
+	    }
+	  }	
 	}
       }
     }
@@ -365,7 +521,7 @@ solvers
 	[[ return spline->get_front( s ); ]]
       }
       vector get_up ( stretch s ) 
-        requires event.points_avail
+        requires group.up_vector
       {
 	[[ return spline->get_up( s ); ]]
       }

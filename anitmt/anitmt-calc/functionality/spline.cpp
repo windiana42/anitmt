@@ -63,7 +63,8 @@ namespace functionality
       // following code needs equal sized intervals of t range per part
       int part = int(t * parts); // 0 <= part <= parts - 1
 
-      if( part == parts ) return control_points.back();	// for t == 1
+      if( part < 0 )      return control_points.front();// false range 
+      if( part >= parts ) return control_points.back();	// for t == 1
 
       assert( (0 <= part) && (part < parts) );
 

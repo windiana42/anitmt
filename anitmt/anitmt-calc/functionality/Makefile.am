@@ -51,74 +51,82 @@ AFD_COMMON=$(FUNCGEN) $(srcdir)/base_func.afd
 # exec funcgen...
 base_func.cpp \
 base_func.hpp: $(srcdir)/base_func.afd $(AFD_COMMON)
-	@if test -e $(FUNCGEN); then					\
-	  $(FUNCGEN) -i $(srcdir)/base_func.afd -o base_func	 	\
-	    -n functionality -I+=$(srcdir)/ $(FUNCGEN_DEBUG);		\
-	else								\
-	  echo "No funcgen availible, cannot create code.";		\
+	@if test -e $(FUNCGEN); then				\
+	  $(FUNCGEN) -i $(srcdir)/base_func.afd -o base_func	\
+	    -n functionality -I+=$(srcdir)/ $(FUNCGEN_DEBUG)	\
+	  || touch $(srcdir)/base_func.afd;			\
+	else							\
+	  echo "No funcgen availible, cannot create code.";	\
 	fi
 
 scene_base.cpp \
 scene_base.hpp: $(srcdir)/scene_base.afd $(AFD_COMMON)
-	@if test -e $(FUNCGEN); then					     \
-	  $(FUNCGEN) -i $(srcdir)/scene_base.afd -o scene_base		     \
-	    -n functionality -I+=$(srcdir)/ $(FUNCGEN_DEBUG);		     \
-	else								     \
-	  echo "No funcgen availible, cannot create code.";		     \
+	@if test -e $(FUNCGEN); then				\
+	  $(FUNCGEN) -i $(srcdir)/scene_base.afd -o scene_base	\
+	    -n functionality -I+=$(srcdir)/ $(FUNCGEN_DEBUG) 	\
+	  || touch $(srcdir)/scene_base.afd;			\
+	else							\
+	  echo "No funcgen availible, cannot create code.";	\
 	fi
 
 scalar_base.cpp \
 scalar_base.hpp: $(srcdir)/scalar_base.afd $(AFD_COMMON)
-	@if test -e $(FUNCGEN); then					    \
-	  $(FUNCGEN) -i $(srcdir)/scalar_base.afd -o scalar_base 	    \
-	    -n functionality -I+=$(srcdir)/ $(FUNCGEN_DEBUG);  		    \
-	else								    \
-	  echo "No funcgen availible, cannot create code.";		    \
+	@if test -e $(FUNCGEN); then					\
+	  $(FUNCGEN) -i $(srcdir)/scalar_base.afd -o scalar_base	\
+	    -n functionality -I+=$(srcdir)/ $(FUNCGEN_DEBUG) 		\
+	  || touch $(srcdir)/scalar_base.afd;				\
+	else								\
+	  echo "No funcgen availible, cannot create code.";		\
 	fi
 
 scalar.cpp \
 scalar.hpp: $(srcdir)/scalar.afd $(srcdir)/scalar_base.afd $(AFD_COMMON)
-	@if test -e $(FUNCGEN); then					    \
-	  $(FUNCGEN) -i $(srcdir)/scalar.afd -o scalar -n functionality     \
-	    -I+=$(srcdir)/ $(FUNCGEN_DEBUG); 				    \
-	else								    \
-	  echo "No funcgen availible, cannot create code.";		    \
+	@if test -e $(FUNCGEN); then					\
+	  $(FUNCGEN) -i $(srcdir)/scalar.afd -o scalar -n functionality	\
+	    -I+=$(srcdir)/ $(FUNCGEN_DEBUG) 				\
+	  || touch $(srcdir)/scalar.afd;				\
+	else								\
+	  echo "No funcgen availible, cannot create code.";		\
 	fi
 
 object_base.cpp \
 object_base.hpp: $(srcdir)/object_base.afd $(AFD_COMMON)
-	@if test -e $(FUNCGEN); then					    \
-	  $(FUNCGEN) -i $(srcdir)/object_base.afd -o object_base 	    \
-	    -n functionality -I+=$(srcdir)/ $(FUNCGEN_DEBUG); 		    \
-	else								    \
-	  echo "No funcgen availible, cannot create code.";		    \
+	@if test -e $(FUNCGEN); then					\
+	  $(FUNCGEN) -i $(srcdir)/object_base.afd -o object_base	\
+	    -n functionality -I+=$(srcdir)/ $(FUNCGEN_DEBUG) 		\
+	  || touch $(srcdir)/object_base.afd;				\
+	else								\
+	  echo "No funcgen availible, cannot create code.";		\
 	fi
 
 object.cpp \
 object.hpp: $(srcdir)/object.afd $(srcdir)/object_base.afd $(AFD_COMMON)
-	@if test -e $(FUNCGEN); then					    \
-	  $(FUNCGEN) -i $(srcdir)/object.afd -o object -n functionality     \
-	    -I+=$(srcdir)/ $(FUNCGEN_DEBUG); 				    \
-	else								    \
-	  echo "No funcgen availible, cannot create code.";		    \
+	@if test -e $(FUNCGEN); then					\
+	  $(FUNCGEN) -i $(srcdir)/object.afd -o object -n functionality	\
+	    -I+=$(srcdir)/ $(FUNCGEN_DEBUG) 				\
+	  || touch $(srcdir)/object.afd;				\
+	else								\
+	  echo "No funcgen availible, cannot create code.";		\
 	fi
 
 solver.cpp \
 solver.hpp: $(srcdir)/solver.afd $(AFD_COMMON)
-	@if test -e $(FUNCGEN); then					    \
-	  $(FUNCGEN) -i $(srcdir)/solver.afd -o solver -n functionality     \
-	    -I+=$(srcdir)/ $(FUNCGEN_DEBUG); 				    \
-	else								    \
-	  echo "No funcgen availible, cannot create code.";		    \
+	@if test -e $(FUNCGEN); then					\
+	  $(FUNCGEN) -i $(srcdir)/solver.afd -o solver -n functionality	\
+	    -I+=$(srcdir)/ $(FUNCGEN_DEBUG) 				\
+	  || touch $(srcdir)/solver.afd;				\
+	else								\
+	  echo "No funcgen availible, cannot create code.";		\
 	fi
 
 complex_solver.cpp \
 complex_solver.hpp: $(srcdir)/complex_solver.afd $(AFD_COMMON)
-	@if test -e $(FUNCGEN); then					    \
-	  $(FUNCGEN) -i $(srcdir)/complex_solver.afd -o complex_solver      \
-	    -n functionality -I+=$(srcdir)/ $(FUNCGEN_DEBUG); 		    \
-	else								    \
-	  echo "No funcgen availible, cannot create code.";		    \
+	@if test -e $(FUNCGEN); then					\
+	  $(FUNCGEN) -i $(srcdir)/complex_solver.afd -o complex_solver	\
+	    -n functionality -I+=$(srcdir)/ $(FUNCGEN_DEBUG) 		\
+	  || touch $(srcdir)/complex_solver.afd;			\
+	else								\
+	  echo "No funcgen availible, cannot create code.";		\
 	fi
 
 
