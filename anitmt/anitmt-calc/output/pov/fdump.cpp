@@ -326,7 +326,7 @@ int Frame_Dump::Write(const std::string &file,values::Scalar t,int frame)
 	}
 	if(ctx.undefined_scalars || ctx.undefined_objects)
 	{
-		cerr << "  Warning: UNDEFINED: ";
+		cerr << "  warning: in frame " << frame << ": UNDEFINED: ";
 		if(ctx.undefined_scalars)
 		{  cerr << ctx.undefined_scalars << " scalars; ";  }
 		if(ctx.undefined_objects)

@@ -1291,6 +1291,10 @@ void File_Parser::_Sub_Parser_Done()
 
 int File_Parser::Setup_Frame_Dump(Frame_Dump *fdump)
 {
+	if(verbose>1)
+	{  vout << "Preparing frame output...";  vout.flush();  }
+	
+	int nent=0;
 	for(AValue *av=av_list.first; av; av=av->next)
 	{
 		Frame_Dump::NType nt;
@@ -1338,9 +1342,15 @@ int File_Parser::Setup_Frame_Dump(Frame_Dump *fdump)
 			default:  assert(0);  break;
 		}
 		if(dump_it)
-		{  fdump->Add_Entry(nt,av->ptn,
-			(Frame_Dump::Dump_Flags)dflags,av->serial);  }
+		{
+			fdump->Add_Entry(nt,av->ptn,
+				(Frame_Dump::Dump_Flags)dflags,av->serial);
+			++nent;
+		}
 	}
+	
+	if(verbose>1)
+	{  vout << "done [" << nent << " entries]" << std::endl;  }
 	
 	return(0);
 }
@@ -1446,11 +1456,8 @@ int File_Parser::Go(Animation *ani,Ani_Scene *sc)
 		av_list.Warn_Unused(cerr);
 		Warn_Active_Mismatch();
 		
-		if(verbose>1)
-		{  vout << "Preparing frame output...";  vout.flush();  }
+		// This function writes a verbose message itself: 
 		Setup_Frame_Dump(fdump);
-		if(verbose>1)
-		{  vout << "done" << std::endl;  }
 	}
 	
 	// Note: parse_errors has the number of parse errors which 
@@ -2877,9 +2884,9 @@ int File_Parser::Declare_Parser::parse(int eof)
 					{
 						Error_Header() << "cannot declare " << 
 							_dectype_of(expect.id) << "`" << expect.name << "\' " 
-							"inside an instace of itself. "
-							"Previous instance beginning in " << 
-							Rel_Pos(&dec_start) << std::endl;
+							"inside an instace of itself. " << std::endl;
+						Error_Header() << "Previous instance beginning in " << 
+							Rel_Pos(&dec_start) << "." << std::endl;
 						++errors;
 						done=true;
 						return(0);  // keep that
