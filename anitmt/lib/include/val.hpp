@@ -535,12 +535,20 @@ namespace values
   extern double get_rotation_around(
     const Vector &v1,const Vector &v2,const Vector &axis);
 
-  //! returns the scale components of each axis as vector, caused by Matrix
+  /*! returns a vector which tells the resulting scalation of an x,y and z 
+     vector when being multipied with Matrix m.
+     To reproduce the effet of m, scale, then rotate and finally translate */
   extern Vector get_scale_component( const Matrix &mat );
-  //! returns the translation caused by transformation Matrix
-  extern Vector get_translation_component( const Matrix &mat );
-  //! returns the rotations about X,Y and Z axes as vector, caused by Matrix
+  /*! returns a vector representing the rotation around the x, y and finally 
+     the z axis that are done to a vector when being multiplied with the 
+     Matrix m.
+     To reproduce the effet of m, scale, then rotate and finally translate */
   extern Vector get_rotation_component( const Matrix &mat );
+  /*! returns the position independant
+     translation as vector, that is done to a vector when being multipied
+     with the Matrix m
+     To reproduce the effet of m, scale, then rotate and finally translate */
+  extern Vector get_translation_component( const Matrix &mat );
 /******************************************************************************/
 /*   STRING                                                                   */
 /******************************************************************************/
