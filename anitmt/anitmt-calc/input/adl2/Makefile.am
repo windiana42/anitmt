@@ -6,7 +6,7 @@ check_PROGRAMS=		testadlparser
 CXXFLAGS =		@CXXFLAGS@ -Wno-non-template-friend -DYYDEBUG \
 			-D__CPLUSPLUS -DTHROW_NIL=throw\(\)
 
-libadlparser_a_SOURCES=	parser.yy tokens.h \
+libadlparser_a_SOURCES=	parser.yy \
 			parser_functions.hpp parser_functions.cpp \
 			parser_functions_inline.cpp \
 			adlparser.hpp adlparser.cpp adlparser_inline.cpp \
@@ -35,12 +35,12 @@ YLWRAP  = 		$(top_srcdir)/ylwrap
 #-- Scanner
 # A .cc-File is a must here. The ylwrap script doesn't accept other file
 # suffixes.
-$(srcdir)/scanner.cc:	$(srcdir)/scanner.ll $(srcdir)/tokens.h 
+scanner.cc:	$(srcdir)/scanner.ll tokens.h 
 	$(SHELL) $(YLWRAP) "$(LEX)" \
 	$(srcdir)/scanner.ll lex.adlparser_.cc scanner.cc 
 
 #-- Parser
-$(srcdir)/parser.cc $(srcdir)/tokens.h:	$(srcdir)/parser.yy 
+parser.cc tokens.h:	$(srcdir)/parser.yy 
 	$(SHELL) $(YLWRAP) "$(YACC)" $(srcdir)/parser.yy \
-	y.tab.c $(srcdir)/parser.cc \
-	y.tab.h $(srcdir)/tokens.h -- -d
+	y.tab.c parser.cc \
+	y.tab.h tokens.h -- -d
