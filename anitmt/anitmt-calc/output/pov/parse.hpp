@@ -338,13 +338,13 @@ class File_Parser :
 		void Put_Back_Tok(Find_String::RV *rv);
 		void Consumed(size_t n,int nlines);
 		
-		message::Message_Stream &Error_Header()
+		message::Message_Stream Error_Header()
 			{  return(Recursive_Input_Stream::Error_Header(error(),cc.line));  }
-		message::Message_Stream &Error_Header(int line)
+		message::Message_Stream Error_Header(int line)
 			{  return(Recursive_Input_Stream::Error_Header(error(),line));  }
-		message::Message_Stream &Warning_Header()
+		message::Message_Stream Warning_Header()
 			{  return(Recursive_Input_Stream::Error_Header(warn(),cc.line));  }
-		message::Message_Stream &Warning_Header(int line)
+		message::Message_Stream Warning_Header(int line)
 			{  return(Recursive_Input_Stream::Error_Header(warn(),line));  }
 
 		AValue_List av_list;

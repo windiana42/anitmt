@@ -199,13 +199,13 @@ struct File_Parser::Sub_Parser : public message::Message_Reporter
 		{  fp->Consumed(n,nlines);  }
 	
 	// Write an error/warning header to error/warning stream. 
-	message::Message_Stream &Error_Header()
+	message::Message_Stream Error_Header()
 		{  return(fp->Recursive_Input_Stream::Error_Header(error(),cc->line));  }
-	message::Message_Stream &Error_Header(int line)
+	message::Message_Stream Error_Header(int line)
 		{  return(fp->Recursive_Input_Stream::Error_Header(error(),line));  }
-	message::Message_Stream &Warning_Header()
+	message::Message_Stream Warning_Header()
 		{  return(fp->Recursive_Input_Stream::Error_Header(warn(),cc->line));  }
-	message::Message_Stream &Warning_Header(int line)
+	message::Message_Stream Warning_Header(int line)
 		{  return(fp->Recursive_Input_Stream::Error_Header(warn(),line));  }
 	
 	// Either returns "line xx" or "path/file:xx" depending if 

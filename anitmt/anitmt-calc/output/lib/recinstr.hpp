@@ -205,7 +205,7 @@ class Recursive_Input_Stream :
 		
 		// Print error header. Must be called from within 
 		// Parse_Input() or Parse_EOF(). 
-		message::Message_Stream &Error_Header(message::Message_Stream os,
+		message::Message_Stream Error_Header(message::Message_Stream os,
 			int line,bool force_print_hierarchy=false);
 		
 		// Abort paring; Start_Parser() will return an error. 

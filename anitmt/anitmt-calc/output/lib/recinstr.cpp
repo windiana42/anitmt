@@ -485,7 +485,7 @@ std::string Recursive_Input_Stream::Include_Hierarchy_String()
 }
 
 
-message::Message_Stream &Recursive_Input_Stream::Error_Header(
+message::Message_Stream Recursive_Input_Stream::Error_Header(
 	message::Message_Stream os,
 	int line,bool force_print_hierarchy)
 {
