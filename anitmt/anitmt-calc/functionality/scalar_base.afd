@@ -1,0 +1,133 @@
+///////////////////////////////////////////////////////////////////////////////
+/*****************************************************************************/
+/*                                                                           */
+/*                              scalar base                                  */
+/*                                                                           */
+/* basic functionality for scalar animations                                 */
+/*                                                                           */
+/*****************************************************************************/
+///////////////////////////////////////////////////////////////////////////////
+
+
+// ****************************************************************************
+// ****************************************************************************
+// ** dependence
+// ****************************************************************************
+// ****************************************************************************
+
+
+include declaration "base_func.afd";
+
+
+// ****************************************************************************
+// ****************************************************************************
+// ** type definitions
+// ****************************************************************************
+// ****************************************************************************
+
+
+// type for output
+type scalar_component {
+  provides value ( time );
+}
+
+// main scalar type
+serial type scalar_vsa {
+  provides value ( time );
+  provides slope ( time );
+  provides acceleration ( time );
+}
+
+
+// ****************************************************************************
+// ****************************************************************************
+// ** node definitions
+// ****************************************************************************
+// ****************************************************************************
+
+
+// +-------------+
+// | scalar_base |
+// +-------------+
+
+// abstract base type for all scalars 
+abstract node scalar_base {
+
+  // standart scalar properties
+  properties {
+    type scalar {    
+      start_time;  end_time;  duration;
+      start_value; end_value; difference;
+      start_slope; end_slope; slope_difference;
+    }
+  }  
+  aliases {
+    diff_slope = slope_difference;
+    diff_value = difference;
+  }
+  // standart scalar constraints and solver
+  common {
+    constraints {
+      duration >= 0;
+    }
+    solvers {
+      sum_solver ( end_time, /*=*/ duration, start_time );      // t0 + d = te
+      sum_solver ( end_value,/*=*/ difference, start_value );       
+      sum_solver ( end_slope,/*=*/ slope_difference, start_slope );
+    }
+  }
+}
+
+// +--------+
+// | scalar |
+// +--------+
+
+// main node for scalars
+node scalar extends scalar_base provides scalar_component, scalar_vsa {
+
+  // scalar subfunction provider type 
+  contains {
+    min1 scalar_vsa;
+  }
+
+  // connection to subfunctions
+  common {
+    solvers {
+      equal_solver ( start_time , first_child.start_time  );
+      equal_solver ( start_value, first_child.start_value );
+      equal_solver ( start_slope, first_child.start_slope );
+      equal_solver ( end_time , last_child.end_time  );      
+      equal_solver ( end_value, last_child.end_value );      
+      equal_solver ( end_slope, last_child.end_slope );      
+    }
+  }
+
+  // default start_time and start_value
+  // MM: can first also be common ?
+  first scalar_vsa {
+    actions {
+      default (  100, start_time, 0 ); 
+      default ( 1000, start_value, 0 );
+    }
+  }
+  
+  // result functions using the scalar subfunctions
+  provide scalar_vsa {
+    resulting value ( time t ) requires child.scalar_vsa.value ( time ) { 
+      [return_res child.scalar_vsa.value ( time t )];
+    } 
+    resulting slope ( time t ) requires child.scalar_vsa.slope ( time ) {
+      [return_res child.scalar_vsa.slope ( time t )];
+    }
+    resulting acceleration ( time t ) requires child.scalar_vsa.acceleration ( time ) {
+      [return_res child.scalar_vsa.acceleration ( time t )];
+    }
+  }
+  
+  // output result function
+  provide scalar_component {
+    resulting value ( time t ) requires child.scalar_vsa.value (time) { 
+      [return_res child.scalar_vsa.value (time t)];
+    } 
+  }
+}

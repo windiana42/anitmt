@@ -1,0 +1,193 @@
+include declaration "base_func.afd";
+
+// ******************
+// object anitmtion
+// ******************
+
+type object_component {
+  provides translation( time );
+  provides rotation( time );
+// just in case some additional information
+  provides position( time );
+  provides front( time );
+  provides up_vector( time );
+  provides speed( time );
+}
+
+serial type object_state {
+// track
+  provides position( time );
+  provides position( stretch );
+  provides direction( time );
+  provides direction( stretch );
+// timing 
+  provides stretch( time );
+  provides speed( time );
+  provides speed( stretch );
+  provides acceleration( time );
+  provides acceleration( stretch );
+// orientation on track
+  provides front( time );
+  provides front( stretch );
+  provides up_vector( time );
+  provides up_vector( stretch );
+}
+
+serial type track {
+  provides position( stretch );
+  provides direction( stretch );
+}
+
+serial type timing {
+  provides stretch( time );
+  provides speed( time );
+  provides speed( stretch );
+  provides acceleration( time );
+  provides acceleration( stretch );
+}
+
+
+// ******************
+// object anitmtion
+// ******************
+
+node object provides object_component, object_state
+{
+  properties
+  {
+    vector center;
+    vector front;
+    vector up_vector;
+  }
+  contains
+  {
+    min1 object_state;
+  }  
+  common
+  {
+//!!! connect start/end params !!!
+
+    actions
+    {
+      default( 3000, center,    vector(0,0,0) );
+      default( 3001, front,     vector(1,0,0) );
+      default( 3002, up_vector, vector(0,1,0) );
+    }
+  }
+  provide object_component
+  {
+    resulting translation( time t ) 
+      requires center, child.object_state.position( time )
+    {
+      vector position = [child.object_state.position( time t )].second;
+      vector translate = position - [center];
+      [return translate];
+    }
+    resulting rotation( time t ) 
+      requires front, child.object_state.front( time ),
+         up_vector, child.object_state.up_vector( time )
+    {
+      vector dest_front = [child.object_state.front( time t )].second;
+      vector dest_up_vector = [child.object_state.up_vector( time t )].second;
+      vector rotate = Vrotate_pair_pair( [front], [up_vector], 
+           dest_front, dest_up_vector );
+      [return rotate];
+    }
+
+    resulting position( time t ) 
+      requires child.object_state.position( time )
+    {
+      [return_res child.object_state.position( time t )];
+    }
+    resulting front( time t ) 
+      requires child.object_state.front( time )
+    {
+      [return_res child.object_state.front( time t )];
+    }
+    resulting up_vector( time t ) 
+      requires child.object_state.up_vector( time )
+    {
+      [return_res child.object_state.up_vector( time t )];
+    }
+    resulting speed( time t ) 
+      requires child.object_state.speed( time )
+    {
+      [return_res child.object_state.speed( time t )];
+    }
+  }
+
+  provide object_state
+  {
+// track
+    resulting position( time t ) 
+      requires child.object_state.position( time )
+    {
+      [return_res child.object_state.position( time t )];
+    }
+    resulting position( stretch s ) 
+      requires child.object_state.position( stretch )
+    {
+      [return_res child.object_state.position( stretch s )];
+    }
+    resulting direction( time t ) 
+      requires child.object_state.direction( time )
+    {
+      [return_res child.object_state.direction( time t )];
+    }
+    resulting direction( stretch s ) 
+      requires child.object_state.direction( stretch )
+    {
+      [return_res child.object_state.direction( stretch s )];
+    }
+// timing 
+    resulting stretch( time t ) 
+      requires child.object_state.stretch( time )
+    {
+      [return_res child.object_state.stretch( time t )];
+    }
+    resulting speed( time t ) 
+      requires child.object_state.speed( time )
+    {
+      [return_res child.object_state.speed( time t )];
+    }
+    resulting speed( stretch s ) 
+      requires child.object_state.speed( stretch )
+    {
+      [return_res child.object_state.speed( stretch s )];
+    }
+    resulting acceleration( time t ) 
+      requires child.object_state.acceleration( time )
+    {
+      [return_res child.object_state.acceleration( time t )];
+    }
+    resulting acceleration( stretch s ) 
+      requires child.object_state.acceleration( stretch )
+    {
+      [return_res child.object_state.acceleration( stretch s )];
+    }
+// orientation on track
+    resulting front( time t ) 
+      requires child.object_state.front( time )
+    {
+      [return_res child.object_state.front( time t )];
+    }
+    resulting front( stretch s ) 
+      requires child.object_state.front( stretch )
+    {
+      [return_res child.object_state.front( stretch s )];
+    }
+    resulting up_vector( time t ) 
+      requires child.object_state.up_vector( time )
+    {
+      [return_res child.object_state.up_vector( time t )];
+    }
+    resulting up_vector( stretch s ) 
+      requires child.object_state.up_vector( stretch )
+    {
+      [return_res child.object_state.up_vector( stretch s )];
+    }
+  }
+}
+
+
+
