@@ -14,7 +14,7 @@ ADDFLAGS=""
 
 SUBDIRS = src doc cfg
 
-EXTRA_DIST = BUILD mkbindist.sh
+EXTRA_DIST = BUILD mkbindist.sh rendview.spec
 
 # Make a binary distribution: 
 bindist: FORCE
