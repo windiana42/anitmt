@@ -145,6 +145,7 @@ void TaskManager::DontStartMoreTasks()
 	if(GetTaskSourceType()==TST_Active)
 	{
 		// Tell active task source that we no longer take tasks. 
+		// The task source then will recject tasks from the server. 
 Error("MISSING!!!!!!!!!!!! (taskmanager.cpp:%d)\n",__LINE__);
 		// (...still able to deliver done tasks...???)
 		//assert(0);
