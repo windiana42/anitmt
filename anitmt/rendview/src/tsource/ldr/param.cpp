@@ -181,6 +181,44 @@ int TaskSourceFactory_LDR::CheckParams()
 		}
 	}
 	
+	if(server_net_str.str() && *server_net_str.str())
+	{
+		const char *str=(char*)server_net_str.str();
+		int nsn=0;   // -1 -> error
+		for(;;)
+		{
+			// Skip whitespace: 
+			while(isspace(*str))  ++str;
+			if(!(*str))  break;
+			++nsn;
+			// Skip server name/net: 
+			while(*str && !isspace(*str))  ++str;
+		}
+		if(!nsn)
+		{  Warning("Ignoring empty -servernet spec.\n");  }
+		else
+		{
+			server_net=(ServerNet*)LMalloc(nsn*sizeof(ServerNet));
+			if(!server_net)
+			{  Error("Alloc failure (ldr/param, %u)\n",nsn*sizeof(ServerNet));
+				++failed;  }
+			n_server_nets=nsn;
+			str=(char*)server_net_str.str();
+			for(nsn=0; nsn<n_server_nets; nsn++,str++)
+			{
+				while(isspace(*str))  ++str;
+				assert(*str);
+				const char *host=str;
+				while(*str && *str!='/' && !isspace(*str))  ++str;
+				char *hostend=(char*)str;
+				// Parse host: 
+// ACHTUNG!!! number of bits spec!!
+				fprintf(stderr,"<<%.*s>>\n",hostend-host,host);
+			}
+		}
+	}
+	server_net_str.deref();
+	
 	return(failed ? 1 : 0);
 }
 
@@ -208,6 +246,10 @@ int TaskSourceFactory_LDR::_RegisterParams()
 		"to connect to this client; leave away or \"none\" to disable; "
 		"\"prompt\" to prompt for one ",&password);
 	
+//	AddParam("servernet","space separated list of hosts or hosts with "
+//		"netmasks (e.g. 192.168.1.1/24) to allow as servers.",
+//		&server_net_str);
+	
 	return(add_failed ? (-1) : 0);
 }
 
@@ -232,6 +274,7 @@ TaskSourceFactory_LDR::TaskSourceFactory_LDR(
 	ComponentDataBase *cdb,int *failflag) : 
 	TaskSourceFactory("LDR",cdb,failflag),
 	password(failflag),
+	server_net_str(failflag),
 	transfer_spec_str(failflag)
 {
 	listen_fd=-1;
@@ -242,6 +285,9 @@ TaskSourceFactory_LDR::TaskSourceFactory_LDR(
 	transfer.render_dest=1;
 	transfer.filter_dest=1;
 	transfer.additional=1;
+	
+	n_server_nets=0;
+	server_net=NULL;
 	
 	int failed=0;
 	
@@ -263,6 +309,9 @@ TaskSourceFactory_LDR::~TaskSourceFactory_LDR()
 		::close(listen_fd);
 		listen_fd=-1;
 	}
+	
+	n_server_nets=0;
+	server_net=(ServerNet*)LFree(server_net);
 	
 	password.zero();
 }

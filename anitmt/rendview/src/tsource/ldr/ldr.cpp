@@ -192,6 +192,15 @@ int TaskSource_LDR::fdnotify(FDInfo *fdi)
 			return(0);
 		}
 		
+		if(p->server_net)
+		{
+			for(int i=0; i<p->n_server_nets; i++)
+			{
+				// Check server net. [must also dump it at startup]
+				assert(0);
+			}
+		}
+		
 		// Okay, we may receive a connection. 
 		TaskSource_LDR_ServerConn *sc=NEW1<TaskSource_LDR_ServerConn>(this);
 		if(sc && sc->Setup(as,&addr))
@@ -204,7 +213,8 @@ int TaskSource_LDR::fdnotify(FDInfo *fdi)
 		}
 		
 		// Okay, accepted a connection: 
-		Verbose(TSLLR,"LDR: Accepted connection from %s.\n",sc->addr.GetAddress().str());
+		Verbose(TSLLR,"LDR: Accepted connection from %s.\n",
+			sc->addr.GetAddress().str());
 		sconn.append(sc);
 		return(0);
 	}

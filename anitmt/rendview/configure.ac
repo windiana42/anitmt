@@ -26,6 +26,10 @@ else
 	AC_MSG_RESULT([$hlibdir])
 fi
 
+# Set hlib's compiler: 
+CC="$($hlibdir/HConfigVars CC)"
+CXX="$($hlibdir/HConfigVars CXX)"
+
 # Checks for header files. HLIB already does a lot of these checks, some 
 # are repeated here. 
 AC_HEADER_STDC

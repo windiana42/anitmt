@@ -71,6 +71,9 @@ class TaskManager :
 		// For execution time timeout: 
 		RefString exec_timeout_spec;
 		TimeoutID timeout_id;
+		// For cycle execution timeout: 
+		long cyc_idle_timeout;   // -1 -> disable
+		TimeoutID cyc_timeout_id;
 		
 		HTime starttime;  // same as ProcessManager::starttime. 
 		// When the last work cycle started (first task from active task 
@@ -171,6 +174,9 @@ class TaskManager :
 		void _StartLoadPolling();
 		void _DoCheckLoad();
 		void _DisableLoadFeature();
+		
+		// Enable/disable work cycle timeout. 
+		void _ControlWorkCycleTimeout(int install);
 		
 		// Do things which are said to be `scheduled'... 
 		// Called by timernotify(): 

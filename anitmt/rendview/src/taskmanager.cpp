@@ -990,8 +990,17 @@ int TaskManager::timeoutnotify(TimeoutInfo *ti)
 	if(_actually_quit_step)
 	{  return(0);  }
 	
-	assert(ti->tid==timeout_id);
-	Warning("Execution timeout.\n");
+	if(ti->tid==timeout_id)
+	{  Warning("Execution timeout. Task queue: todo=%d, proc=%d, done=%d\n",
+		tasklist.todo_nelem,tasklist.proc_nelem,tasklist.done_nelem);  }
+	else if(ti->tid==cyc_timeout_id)
+	{
+		HTime tmp;
+		tmp.Set(cyc_idle_timeout,HTime::seconds);
+		Warning("Execution cycle idle timeout. "
+			"(Idle for %s; I'm bored.)\n",tmp.PrintElapsed(/*with_msec=*/0));
+	}
+	else assert(0);
 	Warning("  Timeout time: %s\n",ti->timeout->PrintTime(1));
 	Warning("  Current time: %s\n",ti->current->PrintTime(1));
 	
@@ -999,6 +1008,21 @@ int TaskManager::timeoutnotify(TimeoutInfo *ti)
 	_ActOnSignal(SIGINT,/*real_signal=*/0);
 	
 	return(0);
+}
+
+
+// Enable/disable work cycle timeout. 
+void TaskManager::_ControlWorkCycleTimeout(int install)
+{
+	if(install && cyc_idle_timeout>=0)
+	{
+		// Install cyc exec timeout: 
+		HTime end_time(HTime::Curr);
+		end_time.Add(cyc_idle_timeout,HTime::seconds);
+		UpdateTimeout(cyc_timeout_id,end_time);
+	}
+	else if(!install)
+	{  UpdateTimeout(cyc_timeout_id,HTime(HTime::Invalid));  }
 }
 
 
@@ -1213,6 +1237,9 @@ fprintf(stderr,"todo-thresh: low=%d, high=%d [debug]\n",
 	interface->Get_todo_thresh_low(),
 	interface->Get_todo_thresh_high());
 		
+		// Okay, start work cycle idle timeout if we have one: 
+		_ControlWorkCycleTimeout(/*install=*/1);
+		
 		// Tell the task source: 
 		// (It is an active task source as checked above,)
 		// This is a special situation; we call TSGetTask for the 
@@ -1348,7 +1375,7 @@ int TaskManager::_StartProcessing()
 		if(delta<tmp)
 		{
 			UpdateTimeout(timeout_id,HTime(HTime::Invalid));
-			Error("He... you will give me at least 10 seconds, will you?!\n");
+			Error("He... you will give me more than 10 seconds, will you?!\n");
 			return(-1);
 		}
 	}
@@ -1387,6 +1414,14 @@ int TaskManager::_StartProcessing()
 	ProcessManager::manager->GetTimeUsage(-1,&ptu);
 	starttime=ptu.starttime;
 	Verbose(TDI,"  Starting at (local): %s\n",starttime.PrintTime(1,1));
+	HTime timetmp;
+	timetmp=*TimeoutTime(timeout_id);
+	Verbose(TDI,"  Execution timeout: %s\n",
+		timetmp.IsInvalid() ? "[none]" : timetmp.PrintTime(/*local=*/1,/*with_msec=*/0));
+	if(cyc_idle_timeout<0)  timetmp.SetInvalid();
+	else  timetmp.Set(cyc_idle_timeout,HTime::seconds);
+	Verbose(TDI,"  Cycle timeout: %s\n",
+		cyc_idle_timeout<0 ? "[none]" : timetmp.PrintElapsed(/*width_msec=*/0));
 	
 	// Tell the interface to really start things; this will call 
 	// TaskManager::ReallyStartProcessing(). 
@@ -1409,17 +1444,24 @@ void TaskManager::ReallyStartProcessing(int error_occured)
 	interface->WriteProcessingInfo(0,
 		(GetTaskSourceType()==TST_Active) ? "waiting for" : "beginning to");
 	
-	// Active tas source (TST_Active) will call tsnotify(AActive). 
-	if(GetTaskSourceType()==TST_Passive)
+	// Active task source (TST_Active) will call tsnotify(AActive). 
+	switch(GetTaskSourceType())
 	{
-		// Do start exchange with task source: 
-		int rv=_CheckStartExchange();
-		if(rv==1)
+		case TST_Passive:
 		{
-			Warning("Erm... Nothing will be done. I'm bored.\n");
-			_ActuallyQuit(0);
-			return;
-		}
+			// Do start exchange with task source: 
+			int rv=_CheckStartExchange();
+			if(rv==1)
+			{
+				Warning("Erm... Nothing will be done. I'm bored.\n");
+				_ActuallyQuit(0);
+				return;
+			}
+		}  break;
+		case TST_Active:
+			_ControlWorkCycleTimeout(/*install=*/1);
+			break;
+		default: assert(0);
 	}
 }
 
@@ -1428,6 +1470,8 @@ void TaskManager::PrintWorkCycleStart()
 {
 	assert(!recovering);
 	assert(tasklist.todo_nelem==0 && tasklist.proc_nelem==0);  // bug trap...
+	
+	_ControlWorkCycleTimeout(/*install=*/0);
 	
 	// Save some info from work start: 
 	ProcessManager::manager->GetTimeUsage(0,&ptu_self_start_work);
@@ -2011,6 +2055,9 @@ int TaskManager::CheckParams()
 	}
 	exec_timeout_spec.deref();
 	
+	if(cyc_idle_timeout<0)
+	{  cyc_idle_timeout=-1;  }  // disabled;
+	
 	// Always open /dev/null: 
 	dev_null_fd=open("/dev/null",O_RDONLY);
 	// We must PollFD() the fd so that it gets properly closed on 
@@ -2052,8 +2099,13 @@ int TaskManager::_SetUpParams()
 	AddParam("etimeout",
 		"execution timeout; will behave like catching SIGINT when the "
 		"timeout expires; use absolute time (\"[DD.MM.[YYYY]] HH:MM[:SS]\") "
-		"or relative time (\"now + {DD | [[HH:]MM]:SS\") or \"none\" to "
+		"or relative time (\"now + {DD | [[HH:]MM]:SS}\") or \"none\" to "
 		"switch off",&exec_timeout_spec);
+	AddParam("cycitimeout",
+		"run cycle idle timeout in seconds; max inactivity time after "
+		"run cycle end (LDR client); will behave like catching SIGINT when "
+		"it expires; -1 to disable",
+		&cyc_idle_timeout);
 	
 	AddParam("load-max","do not start jobs if the system load multiplied "
 		"with 100 is >= this value; instead wait unitl it is lower than "
@@ -2228,6 +2280,7 @@ TaskManager::TaskManager(ComponentDataBase *cdb,int *failflag) :
 	failed_in_sequence_reported=0;
 	
 	work_cycle_count=0;
+	cyc_idle_timeout=-1;   // disabled
 	
 	int failed=0;
 	
@@ -2258,7 +2311,8 @@ TaskManager::TaskManager(ComponentDataBase *cdb,int *failflag) :
 	
 	// Install timeout node: 
 	timeout_id=InstallTimeout(HTime(HTime::Invalid));
-	if(!timeout_id)  ++failed;
+	cyc_timeout_id=InstallTimeout(HTime(HTime::Invalid));
+	if(!timeout_id || !cyc_timeout_id)  ++failed;
 	
 	if(_SetUpParams())
 	{  ++failed;  }

@@ -37,6 +37,15 @@ class TaskSourceFactory_LDR :
 		// Password required by server to connect. 
 		RefString password;
 		
+		// Allowed server address/netmask, comma or space-separated list. 
+		RefString server_net_str;
+		int n_server_nets;
+		struct ServerNet
+		{
+			u_int32_t adr;
+			u_int32_t mask;
+		} *server_net;
+		
 		// Param spec string for the flags below. 
 		RefString transfer_spec_str;
 		struct
