@@ -56,7 +56,8 @@ void StringListValueHandler::free(ParamInfo *,void *valptr)
 }
 
 
-int StringListValueHandler::copy(ParamInfo *,void *_dest,void *_src,int operation)
+int StringListValueHandler::copy(ParamInfo *,void *_dest,void *_src,
+	int operation)
 {
 	RefStrList *dest=(RefStrList*)_dest;
 	RefStrList *src=(RefStrList*)_src;
@@ -114,6 +115,7 @@ PAR::ParParseState StringListValueHandler::parse(ParamInfo *,void *valptr,
 			// Check length of whitespace at the end of the string: 
 			const char *pend=p+strlen(p);
 			while(isspace(*(--pend)));
+			if(*pend=='\\' && pend[1])  ++pend;
 			++pend;
 			// *pend is where the '\0' should be. 
 			
@@ -177,26 +179,25 @@ PAR::ParParseState StringListValueHandler::parse(ParamInfo *,void *valptr,
 			}
 			else  // non-encapsulated string 
 			{
-				if(arg->origin.otype==ParamArg::FromFile)
+				char *dest=begin;
+				for(;*tc;tc++)
 				{
-					while(*tc && !isspace(*tc) && *tc!='#')  ++tc;
-					if(*tc=='#')  *tc='\0';  // Rest of line is comment
+					if(*tc=='\\')
+					{
+						if(tc[1]==' ')
+						{  *(dest++)=*(++tc);  }
+						else
+						{  *(dest++)=*tc;  }
+					}
+					else if(isspace(*tc))
+					{  ++tc;  break;  }
+					else
+					{  *(dest++)=*tc;  }
 				}
-				else
-				{  while(*tc && !isspace(*tc))  ++tc;  }
 				
-				if(*tc)
-				{
-					*(tc++)='\0';
-					if(list.append(begin))
-					{  rv=PAR::PPSAssFailed;  }
-				}
-				else
-				{
-					if(list.append(begin))
-					{  rv=PAR::PPSAssFailed;  }
-					break;   // success: reached list end
-				}
+				*dest='\0';
+				if(list.append(begin))
+				{  rv=PAR::PPSAssFailed;  goto breakout;  }
 			}
 		}
 		breakout:;

@@ -42,6 +42,9 @@ RefString ParamArg::Origin::OriginStr() const
 		case FromCmdLine:
 			str.sprintf(0,"[cmdline]:%d",opos);
 			break;
+		case FromEnviron:
+			str.sprintf(0,"[environ]");
+			break;
 		default:
 			str.sprintf(0,_three_qm);
 			break;
@@ -224,6 +227,50 @@ ParamArg::ParamArg(const char *par,const RefString &_file,int _line,
 	
 	if(!namelen)
 	{  name=NULL;  }
+	
+	pdone=0;
+}
+
+
+ParamArg::ParamArg(const char *env_arg,int *failflag) : 
+	arg(env_arg,failflag),
+	origin(FromEnviron,NULL,0,failflag)
+{
+	#if TESTING
+	if(!failflag)
+	{  fprintf(stderr,"Oops: ParamArg::ParamArg(ENV) called with failflag=NULL\n");  }
+	#endif
+	
+	next=NULL;
+	atype=Assignment;
+	
+	name=NULL;
+	value=NULL;
+	namelen=0;
+	assmode='\0';
+	const char *argstr=arg.str();
+	while(argstr)
+	{
+		name=argstr;
+		while(isspace(*name))  ++name;
+		if(!*name)  break;
+		const char *nameend=name;
+		while(*nameend && *nameend!='=')  ++nameend;
+		if(!*nameend || nameend<=name)  break;
+		namelen=nameend-name;
+		value=nameend+1;
+		// Remove blanks between NAME and '=': 
+		while(isspace(name[namelen]) && namelen>0)  --namelen;
+		//if(!namelen)  break;  <-- redundant
+		
+		break;  // MUST BE THERE AT THE END.
+	}
+	
+	if(!namelen)
+	{
+		name=NULL;
+		value=NULL;
+	}
 	
 	pdone=0;
 }

@@ -36,6 +36,10 @@ namespace par
 int ParameterSource::FindCopyParseParam(ParamArg *pa,
 	ParamCopy **ret_pc,ParamInfo **ret_pi,Section *topsect)
 {
+	// YOU SHOULD NOT use this function for ENV VAR parsing. 
+	// srcenv.cc has its own (primitive) routine skipping all the 
+	// section stuff. 
+	
 	if(ret_pc)  *ret_pc=NULL;
 	if(ret_pi)  *ret_pi=NULL;
 	if(pa->pdone)  return(0);  // correct. 
@@ -105,7 +109,17 @@ PAR::ParamCopy *ParameterSource::CopyParseParam(ParamInfo *pi,ParamArg *pa)
 	ParParseState pps=pc->info->vhdl->parse(pi,pc->copyval,pa);
 	// pps: >0 -> errors <0 -> warnings
 	if(pps)  // >0 -> errors <0 -> warnings
-	{  ValueParseError(pps,pa,pc);  }
+	{
+		#if 0
+		if(pps==PPSValOmitted && pa->origin.otype==ParamArg::Environ)
+		{
+			// For Environment vars, we ifnore if they lack a value 
+			// and treat it as ####FIXME###
+		}
+		else
+		#endif
+		{  ValueParseError(pps,pa,pc);  }
+	}
 	if(pps>0)
 	{
 		_RemoveParamCopy(pc);

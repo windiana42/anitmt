@@ -68,6 +68,9 @@ PAR::ParamInfo *ParameterConsumer::AddParam(
 	if(!name || !curr_section || (flags && flags<5))
 		return(NULL);
 	
+	if((flags & PEnvironVar) && ptype!=PTParameter)
+		return(NULL);
+	
 	_AddParInfo info;
 	info.section=curr_section;
 	info.name=name;
@@ -75,9 +78,7 @@ PAR::ParamInfo *ParameterConsumer::AddParam(
 	info.ptype=ptype;
 	info.valptr=valptr;
 	info.hdl=hdl;
-	info.exclusive_hdl=(flags & PExclusiveHdl) ? 1 : 0;
-	info.skip_in_help=(flags & PSkipInHelp) ? 1 : 0;
-	info.has_default=!(flags & PNoDefault);
+	info.flags=(flags & ~_STMask);
 	info.spectype=PSpecType(flags & _STMask);
 	
 	ParamInfo *pi=parmanager()->AddParam(this,&info);

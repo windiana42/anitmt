@@ -76,10 +76,11 @@ void ParameterManager::_HelpPrintParamInfo(ParamInfo *pi,
 	
 	if(highlight_opt_start)
 	{  sico.Puts0(highlight_opt_start);  }
-	sico("-%s",pi->name);
+	sico("%s%s",pi->environ_var ? " " : "-",pi->name);
 	if(highlight_opt_end)
 	{  sico.Puts0(highlight_opt_end);  }
-	sico(" (%s): ",ParamTypeString(pi->ptype));
+	sico(" (%s%s): ",ParamTypeString(pi->ptype),
+		pi->environ_var ? ",environ" : "");
 	
 	int indent=sico.GetIndent();
 	sico.SetIndent(indent+4);

@@ -3,7 +3,7 @@ HlibHeaders = hconfig.h hlib-config.h \
 	fd/procbase.h fd/procmanager.h fd/fdmanager.h fd/htime.h fd/intprocbase.h fd/fdbase.h \
 		fd/fdfifobuf.h fd/fdcopybase.h fd/timeoutbase.h fd/timeoutmanager.h fd/searchpath.h \
 	par/cmdline.h par/parsource.h par/parintrnl.h par/paramarg.h par/parconsumer.h \
-		par/parconsumerovl.h par/parmanager.h par/sindentcout.h par/srccmd.h par/srcfile.h \
+		par/parconsumerovl.h par/parmanager.h par/sindentcout.h par/srccmd.h par/srcfile.h par/srcenv.h \
 		par/valhdl.h par/valuehandler.h par/parbase.h par/secthdl.h \
 	misc/prototypes.h misc/hlib.h misc/lmalloc.h \
 	crypto/base64.h

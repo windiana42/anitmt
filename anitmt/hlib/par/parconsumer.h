@@ -206,6 +206,8 @@ class ParameterConsumer :
 		//          exist; if the parameter allocation failed at all, the 
 		//          handler is deleted immediately. 
 		//    PSkipInHelp -> hide that param on help screen 
+		//    PEnvironVar -> accept this param as env var; only use for 
+		//          params, else NULL is returned. 
 		//  - One of the spec types: 
 		//     STNone         (=0 and can be left away)
 		//     STAtLeastOnce  param must be specified at least once

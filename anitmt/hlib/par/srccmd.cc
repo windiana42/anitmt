@@ -41,7 +41,7 @@ namespace par
 #warning should introduce possibility for custom virtual parser in SectionParameterHandler 
 		
 
-int ParameterSource_CmdLine::ReadCmdLine(CmdLineArgs *cmd,
+int ParameterSource_CmdLine::ReadCmdLine(ParamArg *pa_array,int argc,
 	Section *topsect)
 {
 	if(!topsect)
@@ -58,9 +58,9 @@ int ParameterSource_CmdLine::ReadCmdLine(CmdLineArgs *cmd,
 	Section *curr_sect=topsect;
 	
 	int errors=0;
-	for(int i=1; i<cmd->argc; i++)
+	for(int i=0 /*YES*/; i<argc; i++)
 	{
-		ParamArg *pa=&cmd->args[i];
+		ParamArg *pa=&pa_array[i];
 		if(pa->pdone)  continue;  // Needed. 
 		
 		// Check for fancy section specs ( -sect-{ ... -} )
@@ -158,7 +158,7 @@ int ParameterSource_CmdLine::ReadCmdLine(CmdLineArgs *cmd,
 int ParameterSource_CmdLine::Parse(ParamArg *pa,Section *topsect)
 {
 	if(pa->pdone)
-	{  return(0);  }
+	{  return(1);  }
 	
 	if(!topsect)
 	{  topsect=manager->TopSection();  }
@@ -167,7 +167,7 @@ int ParameterSource_CmdLine::Parse(ParamArg *pa,Section *topsect)
 	if(parmanager()->CheckHandleHelpOpts(pa,topsect))
 	{
 		++n_iquery_opts;
-		return(3);
+		return(10);
 	}
 	
 	return(FindCopyParseParam(pa,NULL,NULL,topsect));

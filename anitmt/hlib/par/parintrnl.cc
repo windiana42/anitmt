@@ -176,6 +176,7 @@ PAR::ParamInfo::ParamInfo(int *failflag)
 	vhdl=NULL;
 	exclusive_vhdl=0;
 	skip_in_help=0;
+	environ_var=0;
 	valptr=NULL;
 	is_set=0;
 	spectype=STNone;

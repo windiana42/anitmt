@@ -154,6 +154,12 @@ class ParameterManager : public PAR
 		//           parameter name until *ret_endp. 
 		ParamInfo *FindParam(const char *name,size_t namelen,Section *top,
 			const char **ret_endp,Section **ret_sect);
+		// This is FindParam() for environment params. Just looks up 
+		// the passed param name in the passed section *top (or NULL). 
+		// Only ParamInfos with environ_var (PEnvironVar) set can match. 
+		// Returns ParamInfo on match, else NULL. 
+		ParamInfo *FindParamForEnviron(const char *name,size_t namelen,
+			Section *top);
 		
 		// Stores the full section name of the passed section in dest 
 		// of size len (actually len-1 bytes + '\0'). In case len is too 

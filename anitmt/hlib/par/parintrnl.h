@@ -49,7 +49,8 @@ struct PAR  // This serves as a namespace and a base class.
 	{
 		PNoDefault=   0x010,  // parameter has no default value
 		PExclusiveHdl=0x020,  // handler exclusively for that parameter
-		PSkipInHelp=  0x040   // do not mention that param on the help screen
+		PSkipInHelp=  0x040,  // do not mention that param on the help screen
+		PEnvironVar=  0x080   // accept this arg as environment var (parameter only)
 	};
 	
 	enum  // FLAGS FOR SetSection()
@@ -107,7 +108,8 @@ struct PAR  // This serves as a namespace and a base class.
 		int exclusive_vhdl:1; // vhdl exclusively allocated for this param; free 
 		                      // on destruction if param
 		int skip_in_help:1;   // PSkipInHelp: skip param in help output 
-		int :(sizeof(int)*8 - 2);   // <-- Use modulo if more than 16 bits. 
+		int environ_var:1;    // PEnvironVar: accept as environ var
+		int :(sizeof(int)*8 - 3);   // <-- Use modulo if more than 16 bits. 
 		void *valptr;         // pointer to the original var (as specified 
 		                      // by the ParameterConsume-derived class) 
 		int is_set;           // Value set? AddParam sets this to 1 if there 
@@ -181,10 +183,8 @@ struct PAR  // This serves as a namespace and a base class.
 		ParameterType ptype;
 		void *valptr;
 		ValueHandler *hdl;
-		int exclusive_hdl : 1;  // & allocated via new & must be deleted
-		int skip_in_help : 1;
-		int :(sizeof(int)*8 - 2);   // <-- Use modulo if more than 16 bits. 
-		bool has_default;
+		int flags;   // without _STMask; has_default, exclusive_hdl, 
+		             // skip_in_help, environ_var, ...
 		PSpecType spectype;
 	};
 	

@@ -338,7 +338,7 @@ size_t ParameterManager::FullSectionName(const Section *s,char *dest,size_t len)
 size_t ParameterManager::FullParamName(const ParamInfo *pi,char *dest,
 	size_t len,int with_synp)
 {
-	char *d0=dest;
+	//char *d0=dest;
 	if(!pi)  return(0);
 	size_t sectlen=FullSectionName(pi->section,dest,len);
 	// Get size for name: synpos[0] is too large by 1 char (that is `-'). 
@@ -378,10 +378,11 @@ PAR::ParamInfo *ParameterManager::AddParam(ParameterConsumer *pc,
 		pi->pc=pc;
 		pi->section=api->section;
 		pi->vhdl=api->hdl;
-		pi->exclusive_vhdl=api->exclusive_hdl;
-		pi->skip_in_help=api->skip_in_help;
+		pi->exclusive_vhdl=(api->flags & PExclusiveHdl) ? 1 : 0;
+		pi->skip_in_help=(api->flags & PSkipInHelp) ? 1 : 0;
+		pi->is_set=!(api->flags & PNoDefault);
+		pi->environ_var=(api->flags & PEnvironVar) ? 1 : 0;
 		pi->valptr=api->valptr;
-		pi->is_set=api->has_default ? 1 : 0;
 		pi->spectype=api->spectype;
 		
 		// Check if one of the names in pi->name is already used: 
@@ -407,7 +408,7 @@ PAR::ParamInfo *ParameterManager::AddParam(ParameterConsumer *pc,
 	done:;
 	// Must delete value handler if the call to AddParam() is just failing 
 	// and the value handler is exclusive: 
-	if(!pi && api->exclusive_hdl && api->hdl)
+	if(!pi && (api->flags & PExclusiveHdl) && api->hdl)
 	{  delete api->hdl;  api->hdl=NULL;  }
 	
 	return(pi);
@@ -611,6 +612,19 @@ PAR::ParamInfo *ParameterManager::FindParam(const char *name,
 		{  return(pi);  }
 	}
 	
+	return(NULL);
+}
+
+PAR::ParamInfo *ParameterManager::FindParamForEnviron(const char *name,
+	size_t namelen,Section *top)
+{
+	if(!top)  top=&topsect;
+	for(ParamInfo *pi=top->pilist.first(); pi; pi=pi->next)
+	{
+		if(!pi->environ_var)  continue;
+		if(!pi->NameCmp(name,namelen))
+		{  return(pi);  }
+	}
 	return(NULL);
 }
 

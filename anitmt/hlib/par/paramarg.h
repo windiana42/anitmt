@@ -37,7 +37,8 @@ class ParamArg
 		{
 			_FromNowhere=0,   // Special value; used internally 
 			FromFile,
-			FromCmdLine
+			FromCmdLine,
+			FromEnviron
 		};
 		
 		static Type Classify(const char *cmd_arg);
@@ -97,6 +98,9 @@ class ParamArg
 	// Construct a file par (par always copied; file just 
 	// referenced): [May fail: RefString alloc for par]
 	ParamArg(const char *par,const RefString &file,int line,int *failflag=NULL);
+	// Construct an environ param (env_arg copied) 
+	// [May fail: RefString alloc for arg]
+	ParamArg(const char *env_arg,int *failflag=NULL);
 	// NULL constructor to be used to build arrays; use with care: 
 	ParamArg(int *failflag=NULL);  // never fails
 	// Destructor...

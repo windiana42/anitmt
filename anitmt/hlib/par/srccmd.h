@@ -67,7 +67,10 @@ class ParameterSource_CmdLine : public ParameterSource
 		// topsect is the topmost section and defaults to 
 		// the root section (when passed NULL). 
 		// Returns 0 on success; else errors. 
-		int ReadCmdLine(CmdLineArgs *cmd,Section *topsect=NULL);
+		int ReadCmdLine(CmdLineArgs *cmd,Section *topsect=NULL)
+			{  return(ReadCmdLine(&cmd->args[1],cmd->argc-1,topsect));  }
+		// NOTE: pa_array[0] is also parsed (NOT program name). 
+		int ReadCmdLine(ParamArg *pa_array,int argc,Section *topsect=NULL);
 		
 		// Parses in the specified ParamArg. 
 		// This function gets called by ReadCmdLine(). 
@@ -75,8 +78,9 @@ class ParameterSource_CmdLine : public ParameterSource
 		//   0 -> success
 		//  -1 -> error 
 		//   1 -> pa->pdone set (nothing done)
-		//   2 -> this was a special arg (--version, --help); 
+		//  10 -> this was a special arg (--version, --help); 
 		//        exit after processing cmd line. 
+		// See also: FindCopyParseParam(). 
 		int Parse(ParamArg *pa,Section *topsect=NULL);
 };
 
