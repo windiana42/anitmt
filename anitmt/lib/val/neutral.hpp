@@ -34,6 +34,10 @@ class Neutral0
 		friend std::ostream& operator<<(std::ostream& s,const Neutral0 &n);
 };
 
+inline bool operator==(const Neutral0 &, const Neutral0 &)  { return(true);  }
+inline bool operator!=(const Neutral0 &, const Neutral0 &)  { return(false); }
+
+
 class Neutral1
 {
 	public:
@@ -45,6 +49,14 @@ class Neutral1
 		
 		friend std::ostream& operator<<(std::ostream& s,const Neutral1 &n);
 };
+
+inline bool operator==(const Neutral1 &, const Neutral1 &)  { return(true);  }
+inline bool operator!=(const Neutral1 &, const Neutral1 &)  { return(false); }
+
+//inline bool operator==(const Neutral0 &, const Neutral1 &)  { return(false); }
+//inline bool operator==(const Neutral1 &, const Neutral0 &)  { return(false); }
+//inline bool operator!=(const Neutral0 &, const Neutral1 &)  { return(true);  }
+//inline bool operator!=(const Neutral1 &, const Neutral0 &)  { return(true);  }
 
 
 #if 0
@@ -66,8 +78,17 @@ class Neutral
 		operator int() const  {  return(n);  }
 		int val() const  {  return(n);  }
 		
+		friend bool operator==(const Neutral &a,const Neutral &b);
+		friend bool operator!=(const Neutral &a,const Neutral &b);
+		
 		friend std::ostream& operator<<(std::ostream& s,const Neutral &n);
 };
+
+inline bool operator==(const Neutral &a,const Neutral &b)
+	{  return(a.n==b.n);  }
+inline bool operator!=(const Neutral &a,const Neutral &b)
+	{  return(a.n!=b.n);  }
+
 #endif
 
 }  // namespace end 
