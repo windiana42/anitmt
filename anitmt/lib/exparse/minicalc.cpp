@@ -34,7 +34,7 @@ int DoExpr(const char *expr,Parser *fl,ExpressionTree *etree)
 	int rv=fl->Parse(expr,etree);
 	if(rv)
 	{
-		cerr << "Parse errors: " << rv << std::endl;
+		std::cerr << "Parse errors: " << rv << std::endl;
 		++errors;
 		if(!cont_on_errors)  return(errors);
 	}
@@ -44,7 +44,7 @@ int DoExpr(const char *expr,Parser *fl,ExpressionTree *etree)
 		rv=etree->Optimize();
 		if(rv)
 		{
-			cerr << "Optimize errors: " << rv << std::endl;
+			std::cerr << "Optimize errors: " << rv << std::endl;
 			++errors;
 			if(!cont_on_errors)  return(errors);
 		}
@@ -53,37 +53,37 @@ int DoExpr(const char *expr,Parser *fl,ExpressionTree *etree)
 	rv=etree->Compute(&val);
 	if(rv)
 	{
-		cerr << "Compute errors: " << rv << std::endl;
+		std::cerr << "Compute errors: " << rv << std::endl;
 		++errors;
 		if(!cont_on_errors)  return(errors);
 	}
 	
-	cout << "Result: " << val << std::endl;
+	std::cout << "Result: " << val << std::endl;
 	return(errors);
 }
 
 
 void PrintHelp(char *name)
 {
-	cout << name << " [-oi-] [--help] [--] [expression....]" << std::endl;
-	cout << "  -o   optimize expression tree before calculating; no practical" << std::endl;
-	cout << "       use besides testing." << std::endl;
-	cout << "  -i   ignore parse/optimize/compute errors; always print result" << std::endl;
-	cout << "       use besides testing." << std::endl;
-	cout << "  -t   expressions in interactive mode are terminated by `;' followed" << std::endl;
-	cout << "       by a newline rather than simply a newline." << std::endl;
-	cout << "  --   expressions follow; you may also append a `-' to an options" << std::endl;
-	cout << "       string (e.g. -o- 2*(3+7)); only required if expr. starts with `-'" << std::endl;
-	cout << "expression: any expression to compute; if none is given and no `--'" << std::endl;
-	cout << "            is specified, enter interactive mode." << std::endl;
-	cout << "       Don't forget to mask expressions with \'\' on the shell prompt." << std::endl;
-	cout << "Bugs to: Wolfgang Wieser <wwieser@gmx.de>" << std::endl;
+	std::cout << name << " [-oi-] [--help] [--] [expression....]" << std::endl;
+	std::cout << "  -o   optimize expression tree before calculating; no practical" << std::endl;
+	std::cout << "       use besides testing." << std::endl;
+	std::cout << "  -i   ignore parse/optimize/compute errors; always print result" << std::endl;
+	std::cout << "       use besides testing." << std::endl;
+	std::cout << "  -t   expressions in interactive mode are terminated by `;' followed" << std::endl;
+	std::cout << "       by a newline rather than simply a newline." << std::endl;
+	std::cout << "  --   expressions follow; you may also append a `-' to an options" << std::endl;
+	std::cout << "       string (e.g. -o- 2*(3+7)); only required if expr. starts with `-'" << std::endl;
+	std::cout << "expression: any expression to compute; if none is given and no `--'" << std::endl;
+	std::cout << "            is specified, enter interactive mode." << std::endl;
+	std::cout << "       Don't forget to mask expressions with \'\' on the shell prompt." << std::endl;
+	std::cout << "Bugs to: Wolfgang Wieser <wwieser@gmx.de>" << std::endl;
 }
 
 
 void OnLineHelp()
 {
-	cout << 
+	std::cout << 
 	  "YOU need help?! Beware; this is an expert-only parser. But well...\n"
 	  "Try " << myname << " --help for help on command line options.\n"
 	  "Hit ^D to quit interactive mode.\n"
@@ -121,7 +121,7 @@ int main(int argc,char **arg)
 							if(!c[1])
 							{  expr_start=i+1;  goto breakargs;  }
 							// fall through
-						default: cerr << "Illegal option `" << *c << "' in arg "
+						default: std::cerr << "Illegal option `" << *c << "' in arg "
 							"\"" << arg[i] << "\"." << std::endl;  return(1);
 					}
 				}
@@ -145,11 +145,11 @@ int main(int argc,char **arg)
 	}
 	else
 	{
-		cerr << "Try " << myname << " --help for info on options." << std::endl;
-		cerr << "Entering interactive mode." << std::endl;
-		cerr << "Expressions terminated by " << (semicol_term ? "semicolon + " : "") << 
+		std::cerr << "Try " << myname << " --help for info on options." << std::endl;
+		std::cerr << "Entering interactive mode." << std::endl;
+		std::cerr << "Expressions terminated by " << (semicol_term ? "semicolon + " : "") << 
 			"newline." << std::endl;
-		cerr.flush();
+		std::cerr.flush();
 		
 		std::string ebuf;
 		size_t buflen=4096;   // read buffer; expressions may be longer
@@ -158,15 +158,15 @@ int main(int argc,char **arg)
 		{
 			ebuf="";
 			
-			cout << myname << "> ";
-			cout.flush();
+			std::cout << myname << "> ";
+			std::cout.flush();
 			for(;;)
 			{
 				*buf='\0';
 				if(!fgets(buf,buflen,stdin))
 				{
 					if(feof(stdin))
-					{  cout << std::endl;  goto breakall;  }
+					{  std::cout << std::endl;  goto breakall;  }
 					fprintf(stderr,"read error: %s\n",strerror(errno));
 					return(1);
 				}
@@ -191,7 +191,7 @@ int main(int argc,char **arg)
 				}
 				if(term)  break;
 				if(pnl)
-				{  cout << ">> ";  cout.flush();  }
+				{  std::cout << ">> ";  std::cout.flush();  }
 			}
 			
 			if(ebuf.length())

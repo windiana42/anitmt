@@ -32,7 +32,7 @@ int bt_quiet=0;   // be quiet (benchmark test)
 
 namespace exparse {
 
-ostream &cwarn=cerr;
+std::ostream &cwarn=std::cerr;
 
 namespace  // static namespace
 {
