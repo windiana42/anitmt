@@ -46,6 +46,20 @@ namespace anitmt{
     Up_Vector( values::Vector v ) : values::Vector(v) {}
   };
 
+  // State types
+
+  class Object_State : public values::Vector {
+  public:
+    Object_State() : values::Vector() {}
+    Object_State( values::Vector v ) : values::Vector(v) {}
+  };
+
+  class Scalar_State : public values::Scalar {
+  public:
+    Scalar_State() : values::Scalar() {}
+    Scalar_State( values::Scalar v ) : values::Scalar(v) {}
+  };
+
 }
 
 #endif

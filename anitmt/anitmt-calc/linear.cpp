@@ -45,8 +45,8 @@ namespace anitmt{
     // add_default_value( &s, values::Scalar(0), 5 );
   }
     
-  values::Scalar Scal_Linear::get_return_value( values::Scalar t,
-						values::Scalar ) {
+  Scalar_State Scal_Linear::get_return_value( values::Scalar t,
+					      Scalar_State ) {
     return v0 + s * t;
   }
 

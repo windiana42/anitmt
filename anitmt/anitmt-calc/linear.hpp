@@ -32,7 +32,7 @@ namespace anitmt{
   // Scal_Linear: moves Objects on a staight flight path
   //**********************************************************
   class Scal_Linear : public Prop_Tree_Node, 
-		      public Return< values::Scalar > {
+		      public Return< Scalar_State > {
     static const std::string type_name;
 
     Scalar_Property v0;		// startvalue
@@ -53,8 +53,8 @@ namespace anitmt{
 
     Scal_Linear( std::string name );
     
-    values::Scalar get_return_value( values::Scalar t, 
-				     values::Scalar = values::Scalar() );
+    Scalar_State get_return_value( values::Scalar t, 
+				   Scalar_State = Scalar_State() );
 
     bool try_add_child( Prop_Tree_Node *node );
   };
