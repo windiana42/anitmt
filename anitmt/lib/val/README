@@ -308,11 +308,13 @@ Functions:
         around the specified vector. angle is the rotation angle. 
       * Mrotate_vect_vect(Vector from,to) rotates the first vector to 
         the second and returns the rotation matrix which can do that. 
+	(may be done in different ways...)
       * Mrotate_vect_vect_up(Vector from,to,up) rotates the first vector 
-        to the second using a spherical rotation with (along?) the horizontal 
-        plane defined by the normal vector up (third arg). 
-      * Mrotate_pair_pair() ... see val.hpp ... or ask Matrin
-      * Mrotate_spherical_pair() ... see Mrotate_pair_pair() :)
+        to the second by first rotating around up vector (third arg)
+      * Mrotate_pair_pair(Vector from_front,from_up,to_front,to_up) 
+	rotates the first vector pair to the second
+      * Mrotate_spherical_pair(Vector front,up,angles) the components of angles
+	specify the rotation angles around front-, up- and cross(front,up)-axis
       * get_scale_component(Matrix m) returns a vector which tells the resulting
         scalation of an x,y and z vector when multipied with Matrix m.
 	To reproduce the effet of m, scale, then rotate and finally translate
