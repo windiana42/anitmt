@@ -150,7 +150,7 @@ namespace funcgen
 
   bool avoid_recursion( void *infoptr, const std::string &unique_id )
   {
-    afd_info *info = static_cast<afd_info*>(info);
+    afd_info *info = static_cast<afd_info*>(infoptr);
     AFD_Root *afd = info->afd;
     if( afd->avoid_recursion_of.find( unique_id )
 	!= afd->avoid_recursion_of.end() )
