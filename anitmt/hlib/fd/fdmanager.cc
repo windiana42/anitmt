@@ -21,8 +21,8 @@
 //------------------------------------------------------------------------------
 // TODO LIST:
 //  * NEED TO SEE WHAT TO DO WHEN WE HAVE NO FREE SIGNODES LEFT.  
-//  * FIX RACE CONDITION before usleep()/pause()/poll() (pipe trick?)
-//  * what to do if signal node allocation fails in CaughtSignal()?
+//  * what to do if pollfd array LMalloc() fails? 
+//    (or geerally switch to malloc() for that array?)
 //  * can make __GetTimeout() faster?
 //  * can make AlignTimer() faster?
 //  * check timer alignment code...?
@@ -48,27 +48,27 @@
 #define TESTING_CHECK 1
 
 #if TESTING
-#warning TESTING switched on. 
+#  warning TESTING switched on. 
 #endif
 
 #if !TESTING
-#undef TESTING_CHECK
-#define TESTING_CHECK 0
+#  undef TESTING_CHECK
+#  define TESTING_CHECK 0
 #endif
 
 #if TESTING_CHECK
-#warning !! ESTING_CHECK switched on. This will slow down performance. !!
+#  warning !! ESTING_CHECK switched on. This will slow down performance. !!
 #endif
 
 #if DEBUG
-  #if !TESTING
-    #define DEBUG 0
-  #else
-    #warning DEBUG switched on. 
-    #define pdebug(fmt...)   fprintf(stdout, "FD:" fmt);
-  #endif
+#  if !TESTING
+#    define DEBUG 0
+#  else
+#    warning DEBUG switched on. 
+#    define pdebug(fmt...)   fprintf(stdout, "FD:" fmt);
+#  endif
 #else
-  #define pdebug(fmt...)
+#  define pdebug(fmt...)
 #endif
 
 
@@ -120,52 +120,6 @@ static inline int fd_close(int fd)
 /************************ INLINE FROM FDBase *************************/
 // NOW IN fdbase.h AS SOME EARLIER GCC VERSIONS SOMETIMES GENERATE 
 // PROBLEMS WHEN LINKING. 
-
-// Be careful: old_msec_left may be -1 (after AddTimer). 
-void FDBase::_MsecLeftChanged(
-	FDManager::TimerNode *i,long old_msec_left)
-{
-	if(sh_timer_dirty)  return;
-	if(i==sh_timer)
-	{
-		#if TESTING
-		if(old_msec_left<0)
-		{  fprintf(stderr,"FD:%d: OOPS! BUG! old_msec_left=%ld while i==sh_timer=%p\n",
-			__LINE__,old_msec_left,sh_timer);  abort();  }
-		#endif
-		if(i->msec_left>old_msec_left)
-		{  sh_timer_dirty=1;  fdmanager()->TimeoutChange();  }
-		return;
-	}
-	if(i->msec_val>=0)  // Not for disabled timers: 
-	{
-		if(!sh_timer || sh_timer->msec_left>i->msec_left)
-		{  sh_timer=i;  fdmanager()->TimeoutChange();  }
-	}
-	
-	#if TESTING_CHECK
-	// Check if sh_timer really is the shortest timer node: 
-	// If we reach here, sh_timer_dirty=0. 
-	if((sh_timer && !timers))
-	{
-		fprintf(stderr,"FD:%d: OOPS: BUG! sh_timer=%p, timers=%p\n",
-			__LINE__,sh_timer,timers);
-		abort();
-	}
-	// If we reach here, sh_timer!=NULL. 
-	for(FDManager::TimerNode *ii=timers; ii; ii=ii->next)
-	{
-		if(ii->msec_left<0)  continue;
-		if(ii->msec_left<sh_timer->msec_left)
-		{
-			fprintf(stderr,"FD:%d: OOPS: BUG! sh_timer->msec_left=%ld, "
-				"i->msec_left=%ld; old=%ld (msec_val=%ld)\n",__LINE__,
-				sh_timer->msec_left,i->msec_left,old_msec_left,i->msec_val);
-			abort();
-		}
-	}
-	#endif
-}
 
 /************************ FDManager *************************/
 
@@ -356,20 +310,24 @@ int FDManager::Register(FDBase *fdb)
 	if(fdblist.Add(fdb))
 	{  return(-1);  }
 	fdb->deleted=0;
-	if(!fdb->ismanager)   // one more non-manager
+	if(!fdb->manager_type)   // one more non-manager
 	{  ++fdblist.n_no_managers;  }
+	else if(fdb->manager_type==MT_Timeout)
+	{  timeout_manager=fdb;  }
 	pdebug("registered FDBase %p (manager=%d)\n",fdb,fdb->manager);
 	return(0);
 }
 
 
-int FDManager::SetManager(FDBase *fdb,int flag)
+int FDManager::SetManager(FDBase *fdb,ManagerType mtype)
 {
 	FDBNode *n=fdblist.FindNode(fdb);
 	if(!n)  return(-1);
-	if(!fdb->ismanager)  --fdblist.n_no_managers;
-	fdb->ismanager=(flag ? 1 : 0);
-	if(!fdb->ismanager)  ++fdblist.n_no_managers;
+	if(!fdb->manager_type)  --fdblist.n_no_managers;
+	fdb->manager_type=mtype;
+	if(!fdb->manager_type)  ++fdblist.n_no_managers;
+	else if(fdb->manager_type==MT_Timeout)
+	{  timeout_manager=fdb;  }
 	return(0);
 }
 
@@ -394,8 +352,10 @@ void FDManager::Unregister(FDBase *fdb,int flag)
 	if(!i)
 	{  return;  }
 	
-	if(!fdb->ismanager)   // one non-manager unregistered 
+	if(!fdb->manager_type)   // one non-manager unregistered 
 	{  --fdblist.n_no_managers;  }
+	else if(fdb->manager_type==MT_Timeout)
+	{  timeout_manager=NULL;  }
 	
 	// Move i from the list of FDBases to the list of dead FDBases: 
 	// If iterator_next is set, it may be necessary to update it. 
@@ -925,7 +885,7 @@ int FDManager::MainLoop()
 	timertv.SetCurr();
 	for(;;)
 	{
-		long timeout0=_GetTimeout();
+		long timeout0=_GetTimeout(&timertv);
 		timeout_change=0;
 		HTime starttv,currtv;
 		
@@ -1089,6 +1049,8 @@ FDManager::FDManager(int *failflag=NULL) :
 {
 	int failed=0;
 	
+	timeout_manager=NULL;
+	
 	timeout_change=1;  // yes...
 	fdlist_change_serial=0;
 	
@@ -1174,7 +1136,7 @@ FDManager::FDManager(int *failflag=NULL) :
 	// Init global manager: 
 	#if TESTING
 	if(manager)
-	{  fprintf(stderr,"%s: more than one FDManager.\n",prg_name);  exit(1);  }
+	{  fprintf(stderr,"%s: more than one FDManager.\n",prg_name);  abort();  }
 	#endif
 	
 	manager=this;
@@ -1265,6 +1227,11 @@ FDManager::~FDManager()
 	
 	if(sig_pipe_fd_r>=0)  fd_close(sig_pipe_fd_r);  sig_pipe_fd_r=-1;
 	if(sig_pipe_fd_w>=0)  fd_close(sig_pipe_fd_w);  sig_pipe_fd_w=-1;
+	
+	#if TESTING
+	if(timeout_manager)
+	{  fprintf(stderr,"FD: *** OOPS: timeoutmanager still there.\n");  }
+	#endif
 	
 //fprintf(stderr,"E\n");
 	manager=NULL;
@@ -1544,7 +1511,11 @@ int FDManager::UpdateTimer(FDBase *fdb,TimerID tid,long msec,int align)
 	#endif
 	
 	FDManager::TimerNode *i=(FDManager::TimerNode *)tid;
-	// just re-set and update timer:
+	
+	if(i->msec_val<0 && msec<0)   // (deleted or) disabled timer
+	{  return(0);  }   // nothing to do disabling disabled timer...
+	
+	// just re-set and update timer: 
 	long old_msec_left=i->msec_left;
 	i->msec_val=msec;
 	i->msec_left=msec;
@@ -1705,8 +1676,24 @@ long FDManager::__GetTimeout()
 }
 
 // Returns -1 if no timers 
-inline long FDManager::_GetTimeout()
+inline long FDManager::_GetTimeout(const HTime *current)
 {
+	// Give TimeoutManager a chance to update the timeout node: 
+	if(timeout_manager)
+	{
+		// NOTE: This will NOT make timeout_manager be linked in as we 
+		//       only see the ManagerType set by SetManager() and then 
+		//       use virtual timernotify(). So, FDManager does not 
+		//       require TimeoutManager (and it will not be liked in 
+		//       unless used by user). 
+		TimerInfo tinfo;
+		HTime tmp=*current;
+		tinfo.tid=NULL;  // special
+		tinfo.current=&tmp;
+		tinfo.dptr=NULL;
+		timeout_manager->timernotify(&tinfo);
+	}
+	
 	if(timeout_change)  // timeout_change set to 0 in main loop 
 	{  last_timeout=__GetTimeout();  }
 	
@@ -1817,7 +1804,7 @@ int FDManager::_PollFD(FDBase * /*fdb*/,FDManager::FDNode *j,
 	return(0);
 }
 
-// Never removes an entry from the list; that is only node by Unpoll(). 
+// Never removes an entry from the list; that is only done by Unpoll(). 
 int FDManager::PollFD(FDBase *fdb,int fd,short events,
 	const void **dptr,PollID *ret_id)
 {

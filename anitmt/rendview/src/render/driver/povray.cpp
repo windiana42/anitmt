@@ -178,7 +178,7 @@ int POVRayDriver::Execute(
 	{
 		if(failed>0)
 		{  Error("POV: Requested image format %s/%dbpp not supported.\n",
-			rt->oformat->name,rt->oformat->bitspp);  }
+			rt->oformat->name,rt->oformat->bits_p_rgb);  }
 		return(-1);
 	}
 	
@@ -262,7 +262,7 @@ int POVRayDriver::_FillOutputFormat(char *dest,int len,const ImageFormat *fmt)
 	switch(fmt->fmtid)
 	{
 		case IF_PNG:
-			snprintf(dest,len,"+FN%d",fmt->bitspp/3);
+			snprintf(dest,len,"+FN%d",fmt->bits_p_rgb);
 			break;
 		case IF_PPM:
 			snprintf(dest,len,"+FP");
@@ -277,8 +277,9 @@ int POVRayDriver::_FillOutputFormat(char *dest,int len,const ImageFormat *fmt)
 }
 
 
-POVRayDriver::POVRayDriver(POVRayDriverFactory *pf,int *failflag) : 
-	RenderDriver(pf,failflag)
+POVRayDriver::POVRayDriver(POVRayDriverFactory *pf,TaskDriverInterface_Local *tdif,
+	int *failflag) : 
+	RenderDriver(pf,tdif,failflag)
 {
 	
 }
@@ -293,9 +294,9 @@ POVRayDriver::~POVRayDriver()
 /********************************** FACTORY **********************************/
 
 
-TaskDriver *POVRayDriverFactory::Create()
+TaskDriver *POVRayDriverFactory::Create(TaskDriverInterface_Local *tdif)
 {
-	return(NEW1<POVRayDriver>(this));
+	return(NEW2<POVRayDriver>(this,tdif));
 }
 
 

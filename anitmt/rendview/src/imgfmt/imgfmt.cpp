@@ -23,7 +23,7 @@ ImageFormat::ImageFormat(int *failflag=NULL)
 {
 	fmtid=IF_None;
 	name=NULL;
-	bitspp=-1;
+	bits_p_rgb=-1;
 }
 
 ImageFormat::~ImageFormat()

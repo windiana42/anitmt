@@ -74,6 +74,14 @@ class FDManager
 			HTime time;       // time when signal was caught
 			siginfo_t info;   // see sigaction(2)
 		};
+		enum ManagerType  // manager type
+		{
+			MT_None=0,   // MUST!!! BE 0. 
+			MT_Other,    // anybody using SetManager should use that 
+			MT_Process,  // ProcessManager
+			MT_FDCopy,   // FDCopyManager
+			MT_Timeout   // TimeoutManager
+		};
 	private:
 		// LIST OF ALL FDBase CLASSES: 
 		// NOTE: The prev/next queuing cannot be put into the FDBase because 
@@ -131,10 +139,10 @@ class FDManager
 		inline void TimeoutChange()   // used by FDBase. 
 			{  ++timeout_change;  }
 	private:
-		
+		FDBase *timeout_manager;  // registered TimeoutManager (MT_Timeout) or NULL
 		void AlignTimer(TimerNode *n,int align);
 		long __GetTimeout();
-		inline long _GetTimeout();  // or -1 if no timers 
+		inline long _GetTimeout(const HTime *current);  // or -1 if no timers 
 		inline void _DeliverTimers(long elapsed,HTime *currtv);
 		
 		int fd_nnodes;  // number of nodes in fd list. 
@@ -221,8 +229,8 @@ class FDManager
 		int UnpollFD(FDBase *fdb,int fd);
 		int UnpollFD(FDBase *fdb,PollID pollid);   // faster, of course...
 		
-		/* (Un)Set manager flag: */
-		int SetManager(FDBase *fdb,int flag);
+		/* Set manager type: */
+		int SetManager(FDBase *fdb,ManagerType mtype);
 		
 		// Close all FDs except those in the list `exclude' of size n. 
 		// Called by ProcessManager before executing a process. 

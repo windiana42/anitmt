@@ -20,6 +20,14 @@
 
 #include <hlib/prototypes.h>
 
+// AFTER the HLIB config, include our config. 
+// And make sure the version is correct. 
+#undef VERSION
+#undef PACKAGE
+
+#include "config.h"
+
+
 class RefString;
 
 // Used to switch on/off colored output: (Initially 0)

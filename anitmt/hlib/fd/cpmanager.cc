@@ -39,8 +39,18 @@
 #endif
 
 
-#error Check poll()s return value on SIGPIPE / EPIPE? - POLLERR??
+#warning Check poll()s return value on SIGPIPE / EPIPE? - POLLERR??
 
+// NOTE on thresh vals: 
+// high_read_thresh: stop reading if bufuse>=high_read_thresh. 
+//   high_read_thresh = bufsize -> stop reading if buffer is completely full. 
+// low_read_thresh: start reading if bufuse<=low_read_thresh. 
+//   low_read_thresh = 0 -> start reading when buffer is completely empty. 
+// ==> constraint: low_read_thresh<high_read_thresh (may not be >=)
+// high_write_thresh: start writing if bufuse>=high_write_thresh. 
+//   high_write_thresh = bufsize -> start writing if buffer is completely full. 
+// low_write_thresh: stop writing if bufuse<=low_write_thresh. 
+//   low_write_thresh = 0 -> stop writing when buffer is completely empty. 
 
 // Static global manager: 
 FDCopyManager *FDCopyManager::manager=NULL;
@@ -113,7 +123,7 @@ void FDCopyManager::_WriteError(MCopyNode *cpn,HTime *fdtime)
 void FDCopyManager::_ReadInData_Buf(MCopyNode *cpn,HTime *fdtime)
 {
 	assert(cpn->opmode==OM_Fd2Buf);
-	assert(!(cpn->cpstate & CPSFlusing));  // may not happen with OM_Fd2Buf
+	assert(!(cpn->cpstate & CPSFlushing));  // may not happen with OM_Fd2Buf
 	
 	// Read data from fd and write to buffer. Easy case. 
 	size_t need=cpn->bufend-cpn->bufheadW;
@@ -123,7 +133,7 @@ void FDCopyManager::_ReadInData_Buf(MCopyNode *cpn,HTime *fdtime)
 	ssize_t rd=read(cpn->req.srcfd,cpn->bufheadW,need);
 	if(rd<0)
 	{
-		_ReadError(cpn,fdi->current);
+		_ReadError(cpn,fdtime);
 		return;
 	}
 	if(rd>0)
@@ -137,14 +147,14 @@ void FDCopyManager::_ReadInData_Buf(MCopyNode *cpn,HTime *fdtime)
 		// Send progress info: 
 		if(cpn->bufheadW<cpn->bufend)
 		{
-			_SendProgressInfo(cpn,fdi->current,PARead);
+			_SendProgressInfo(cpn,fdtime,PARead);
 			return;
 		}
 		// If we reach here: reading done; so request is done. 
 	}
 	// rd==0 or rd>0 and reading done. 
 	CopyInfo cpi(cpn,rd ? SCLimit : SCRead0);
-	cpi.fdtime=fdi->current;  // may be modified (FDManager copies it)
+	cpi.fdtime=fdtime;  // may be modified (FDManager copies it)
 	_FinishRequest(cpn,&cpi);
 }
 
@@ -153,17 +163,17 @@ void FDCopyManager::_ReadInData_Buf(MCopyNode *cpn,HTime *fdtime)
 void FDCopyManager::_WriteOutData_Buf(MCopyNode *cpn,HTime *fdtime)
 {
 	assert(cpn->opmode==OM_Buf2Fd);
-	assert(!(cpm->cpstate & CPSFlusing));  // may not happen with OM_Buf2Fd
+	assert(!(cpn->cpstate & CPSFlushing));  // may not happen with OM_Buf2Fd
 	
 	// Read data from buf and write to fd. Easy case. 
 	size_t avail=cpn->bufend-cpn->bufheadR;
 	if(cpn->req.max_write_len && avail>cpn->req.max_write_len)
 	{  avail=cpn->req.max_write_len;  }
 	
-	ssize_t rw=write(cpn->req.destfd,cpn->bufheadR,avail);
+	ssize_t wr=write(cpn->req.destfd,cpn->bufheadR,avail);
 	if(wr<0)
 	{
-		_WriteError(cpn,fdi->current);
+		_WriteError(cpn,fdtime);
 		return;
 	}
 	if(wr>0)
@@ -177,7 +187,7 @@ void FDCopyManager::_WriteOutData_Buf(MCopyNode *cpn,HTime *fdtime)
 		// Send progress info: 
 		if(cpn->bufheadR<cpn->bufend)  // otherwise: done
 		{
-			_SendProgressInfo(cpn,fdi->current,PAWrite);
+			_SendProgressInfo(cpn,fdtime,PAWrite);
 			return;
 		}
 		// If we reach here we're done. 
@@ -190,7 +200,7 @@ void FDCopyManager::_WriteOutData_Buf(MCopyNode *cpn,HTime *fdtime)
 	#endif
 	// Done. 
 	CopyInfo cpi(cpn,wr ? SCLimit : SCWrite0);
-	cpi.fdtime=fdi->current;  // may be modified (FDManager copies it)
+	cpi.fdtime=fdtime;  // may be modified (FDManager copies it)
 	_FinishRequest(cpn,&cpi);
 }
 
@@ -202,8 +212,7 @@ void FDCopyManager::_ReadInData_FD(MCopyNode *cpn,HTime *fdtime)
 	assert(cpn->opmode==OM_Fd2Fd);
 	
 	assert(cpn->iobufsize>=cpn->bufuse);
-	if(cpn->bufuse>cpn->req.high_read_thresh)
-	#warning check '>'
+	if(cpn->bufuse>=size_t(cpn->req.high_read_thresh))
 	{
 		#if TESTING
 		// There is not enough free space in the buffer; we should 
@@ -240,7 +249,7 @@ void FDCopyManager::_ReadInData_FD(MCopyNode *cpn,HTime *fdtime)
 	{  rio->iov_len=avail;  }
 	else
 	{
-		need_readv=1:
+		need_readv=1;
 		rio[1].iov_base=cpn->buf;
 		rio[1].iov_len=avail-rio->iov_len;
 	}
@@ -273,13 +282,13 @@ void FDCopyManager::_ReadInData_FD(MCopyNode *cpn,HTime *fdtime)
 		// Send progress info: 
 		if(!read_limit || rrd<avail)  // read limit not reached
 		{
-			_SendProgressInfo(cpn,fdime,PARead);
+			_SendProgressInfo(cpn,fdtime,PARead);
 			return;
 		}
 		// If we're here -> read limit reached. 
 	}
 	// rd==0 or read limit reached. 
-	CopyInfo cpi(cpn,rd ? SCLimit | SCRead0);
+	CopyInfo cpi(cpn,rd ? SCLimit : SCRead0);
 	cpi.fdtime=fdtime;  // may be modified (FDManager copies it)
 	_FinishInput(cpn,&cpi);
 }
@@ -292,8 +301,7 @@ void FDCopyManager::_WriteOutData_FD(MCopyNode *cpn,HTime *fdtime)
 	assert(cpn->opmode==OM_Fd2Fd);
 	
 	assert(cpn->iobufsize>=cpn->bufuse);
-	if(cpn->bufuse<cpn->req.low_write_thresh && 
-	#warning check '<'
+	if(cpn->bufuse<=size_t(cpn->req.low_write_thresh) && 
 	   !(cpn->cpstate & CPSFlushing))
 	{
 		#if TESTING
@@ -309,8 +317,8 @@ void FDCopyManager::_WriteOutData_FD(MCopyNode *cpn,HTime *fdtime)
 	size_t avail=cpn->bufuse;
 	
 	// Okay, see how much we may write: 
-	if(cpn->max_write_len && avail>cpn->max_write_len)
-	{  avail=cpn->max_write_len;  }
+	if(cpn->req.max_write_len && avail>cpn->req.max_write_len)
+	{  avail=cpn->req.max_write_len;  }
 	
 	// Now, set up write io vector: 
 	struct iovec wio[2];  // never need more than 2
@@ -321,7 +329,7 @@ void FDCopyManager::_WriteOutData_FD(MCopyNode *cpn,HTime *fdtime)
 	{  wio->iov_len=avail;  }
 	else
 	{
-		need_writev=1:
+		need_writev=1;
 		wio[1].iov_base=cpn->buf;
 		wio[1].iov_len=avail-wio->iov_len;
 	}
@@ -339,7 +347,7 @@ void FDCopyManager::_WriteOutData_FD(MCopyNode *cpn,HTime *fdtime)
 	if(wr>0)
 	{
 		// Wrote out data; update buffer stuff: 
-		size_t wwd=wd;
+		size_t wwd=wr;
 		size_t to_end=cpn->bufend-cpn->bufheadR;
 		if(wwd<to_end)
 		{  cpn->bufheadR+=wwd;  }
@@ -366,7 +374,7 @@ void FDCopyManager::_WriteOutData_FD(MCopyNode *cpn,HTime *fdtime)
 	{  fprintf(stderr,"OOPS: CP: wrote 0/%u bytes on fd %d\n",
 		avail,cpn->req.destfd);  }
 	#endif
-	CopyInfo cpi(cpn,wr ? 0 : SCWrite0);
+	CopyInfo cpi(cpn,wr ? SCNone : SCWrite0);
 	cpi.fdtime=fdtime;  // may be modified (FDManager copies it)
 	_FinishRequest(cpn,&cpi);
 }
@@ -376,7 +384,7 @@ void FDCopyManager::_WriteOutData_FD(MCopyNode *cpn,HTime *fdtime)
 void FDCopyManager::_StartCopyRequest(MCopyNode *cpn)
 {
 	assert(cpn->cpstate & CPSStopped);
-	assert(cpm->opmode);
+	assert(cpn->opmode);
 	
 	// Set start time: 
 	cpn->stat.starttime.SetCurr();
@@ -448,17 +456,16 @@ void FDCopyManager::_ReDecidePollEvents_In(MCopyNode *cpn)
 		return;
 	}
 	
-	#error check > and >= here!!
 	if(cpn->srcfd_ev & POLLIN)  // currently reading
 	{
 		// Stop if high thresh reached: 
-		if(cpn->bufuse>cpn->req->high_read_thresh)
+		if(cpn->bufuse>=size_t(cpn->req.high_read_thresh))
 		{  PollFD(cpn->psrcid, cpn->srcfd_ev=0);  }
 	}
 	else  // currently not reading
 	{
 		// Start if low thresh reached: 
-		if(cpn->bufuse<cpn->req->low_read_thresh)
+		if(cpn->bufuse<=size_t(cpn->req.low_read_thresh))
 		{  PollFD(cpn->psrcid, cpn->srcfd_ev=POLLIN);  }
 	}
 }
@@ -467,7 +474,8 @@ void FDCopyManager::_ReDecidePollEvents_In(MCopyNode *cpn)
 void FDCopyManager::_ReDecidePollEvents_Out(MCopyNode *cpn)
 {
 	assert(cpn->opmode==OM_Fd2Fd);
-	assert(!(cpn->cpstate & CPSStopped));  ###//könnte Probleme machen...
+	#warning this could make problems: (check me)
+	assert(!(cpn->cpstate & CPSStopped));
 	
 	// Current events in cpn->srcfd_ev, cpn->destfd_ev
 	if(cpn->cpstate & CPSFlushing)
@@ -477,17 +485,16 @@ void FDCopyManager::_ReDecidePollEvents_Out(MCopyNode *cpn)
 		return;
 	}
 	
-	#error check > and >= here!!
 	if(cpn->destfd_ev & POLLOUT)  // currently writing
 	{
 		// Stop if low thresh reached: 
-		if(cpn->bufuse<cpn->req->low_write_thresh)
+		if(cpn->bufuse<=size_t(cpn->req.low_write_thresh))
 		{  PollFD(cpn->pdestid, cpn->destfd_ev=0);  }
 	}
 	else  // currently not writing
 	{
 		// Start if high thresh reached: 
-		if(cpn->bufuse>cpn->req->high_write_thresh)
+		if(cpn->bufuse>=size_t(cpn->req.high_write_thresh))
 		{  PollFD(cpn->pdestid, cpn->destfd_ev=POLLOUT);  }
 	}
 }
@@ -631,24 +638,93 @@ FDCopyManager::CopyID FDCopyManager::CopyFD(FDCopyBase *client,
 	if(!req->len && (req->srcbuf || req->destbuf))
 	{  req->errcode=1;  return(NULL);  }
 	
-	#warning A more clever algorithm should be invented here: 
-	ssize_t iobs=req->iobufsize;
-	if(req->low_read_thresh<0 || low_read_thresh>=iobs)
-	{  req->low_read_thresh=iobs/8;  }
-	if(req->high_read_thresh<0 || req->high_read_thresh>=iobs)
-	{  req->high_read_thresh=iobs-iobs/8;  }
-	if(req->high_read_thresh<=req->low_read_thresh)
+	// See some more details: 
+	if(req->srcfd>=0 && req->destfd>=0)  // fd -> fd
 	{
-		#error ...
+		// If iobufsize is 0, set up default: 
+		if(!req->iobufsize)
+		{  req->iobufsize=default_iobufsize;  }
+		// If we shall copy less bytes than iobufsize, make buffer smaller: 
+		if(req->len && req->len<copylen_t(req->iobufsize))
+		{  req->iobufsize=size_t(req->len);  }
 	}
+	else 
+	{  req->iobufsize=0;  }
 	
-	if(req->low_write_thresh<0 || low_write_thresh>=iobs)
-	{  req->low_write_thresh=iobs/8;  }
-	if(req->high_write_thresh<0 || req->high_write_thresh>=iobs)
-	{  req->high_write_thresh=iobs-iobs/8;  }
-	if(req->high_write_thresh<=req->low_write_thresh)
+	// Set up thresh values: 
+	if(req->srcfd>=0 && req->destfd>=0)  // fd -> fd
 	{
-		#error ...
+		if(req->iobufsize<32)
+		{
+			// The calculations below will not work for too small buffers. 
+			// As we use such small buffers if the length limit is such 
+			// small, this case has to be dealt with. We simply assume 
+			// that IO will be atomic: 
+			req->low_read_thresh=0;
+			req->high_read_thresh=req->iobufsize;
+			req->low_write_thresh=0;
+			req->high_write_thresh=req->iobufsize;
+		}
+		else
+		{
+			// First, set high defaults if needed: 
+			ssize_t def_high_io_thresh=req->iobufsize-req->iobufsize/8;
+			if(req->high_read_thresh<0)
+			{  req->high_read_thresh=def_high_io_thresh;  }
+			if(req->high_write_thresh<0)
+			{  req->high_write_thresh=def_high_io_thresh;  }
+
+			// Then, make sure that the upper limits are okay: 
+			ssize_t max_io_thresh=req->iobufsize-req->iobufsize/8;
+			if(req->high_read_thresh>max_io_thresh)
+			{  req->high_read_thresh=max_io_thresh;  }
+			if(req->high_write_thresh>max_io_thresh)
+			{  req->high_write_thresh=max_io_thresh;  }
+
+			// Okay, if the low thresh is <0, use defaults: 
+			ssize_t def_low_io_thresh=req->iobufsize/8;
+			if(req->low_read_thresh<0)
+			{  req->low_read_thresh=def_low_io_thresh;  }
+			if(req->low_write_thresh<0)
+			{  req->low_write_thresh=def_low_io_thresh;  }
+
+			// NOTE: All these calculations expect a buffer which is at least 
+			//       16 or 32 bytes long. 
+			// Okay, now make sure that the low thresh is below 
+			// the high thresh: 
+			// Adjust the value which is <50% iobufsize. 
+			ssize_t min_io_hysteresis=req->iobufsize/8;
+			if(req->high_read_thresh-req->low_read_thresh < min_io_hysteresis)
+			{
+				if(size_t(req->low_read_thresh)*2>req->iobufsize)
+				{  req->low_read_thresh=req->high_read_thresh-min_io_hysteresis;  }
+				else if(size_t(req->high_read_thresh)*2<req->iobufsize)
+				{  req->high_read_thresh=req->low_read_thresh+min_io_hysteresis;  }
+			}
+			if(req->high_write_thresh-req->low_write_thresh < min_io_hysteresis)
+			{
+				if(size_t(req->low_write_thresh)*2>req->iobufsize)
+				{  req->low_write_thresh=req->high_write_thresh-min_io_hysteresis;  }
+				else if(size_t(req->high_write_thresh)*2<req->iobufsize)
+				{  req->high_write_thresh=req->low_write_thresh+min_io_hysteresis;  }
+			}
+		}
+		
+		// NOTE: These comparations ade CORRECT. ALL. 
+		assert(req->low_read_thresh<req->high_read_thresh);
+		assert(req->low_write_thresh<req->high_write_thresh);
+		assert(req->low_read_thresh>=0 && req->low_write_thresh>=0);
+		assert(size_t(req->high_read_thresh)<=req->iobufsize && 
+		       size_t(req->high_write_thresh)<=req->iobufsize );
+	}
+	else
+	{
+		// Thresh values not needed. 
+		// Do not meddle around with them: 
+		req->low_read_thresh=-1;
+		req->high_read_thresh=-1;
+		req->low_write_thresh=-1;
+		req->high_write_thresh=-1;
 	}
 	
 	// Last chance to quit without much effort...
@@ -683,12 +759,6 @@ FDCopyManager::CopyID FDCopyManager::CopyFD(FDCopyBase *client,
 	if(cpn->psrcid && cpn->pdestid)
 	{
 		cpn->opmode=OM_Fd2Fd;
-		// If iobufsize is 0, set up default: 
-		if(!cpn->req.iobufsize)
-		{  cpn->req.iobufsize=default_iobufsize;  }
-		// If we shall copy less bytes than iobufsize, make buffer smaller: 
-		if(cpn->req.len && cpn->req.len<copylen_t(cpn->req.iobufsize))
-		{  cpn->req.iobufsize=size_t(cpn->req.len);  }
 		// Actually allocate buffer: 
 		cpn->buf=(char*)LMalloc(cpn->req.iobufsize);
 		if(!cpn->buf)
@@ -703,7 +773,7 @@ FDCopyManager::CopyID FDCopyManager::CopyFD(FDCopyBase *client,
 	// to CopyFD()). 
 	if(cpn->req.srcbuf)
 	{
-		cpm->opmode=OM_Buf2Fd;
+		cpn->opmode=OM_Buf2Fd;
 		cpn->bufheadR = cpn->req.srcbuf;
 		// cpn->bufheadW stays NULL
 		cpn->bufend = cpn->bufheadR + cpn->req.len;
@@ -712,7 +782,7 @@ FDCopyManager::CopyID FDCopyManager::CopyFD(FDCopyBase *client,
 	}
 	else if(cpn->req.destbuf)
 	{
-		cpm->opmode=OM_Fd2Buf;
+		cpn->opmode=OM_Fd2Buf;
 		//cpn->bufheadR must stay 0
 		cpn->bufheadW = cpn->req.destbuf;
 		cpn->bufend = cpn->bufheadW + cpn->req.len;
@@ -739,7 +809,6 @@ retfreebuf:;
 retunpoll:;
 	if(cpn->psrcid)   {  UnpollFD(cpn->psrcid);   cpn->psrcid=NULL;   }
 	if(cpn->pdestid)  {  UnpollFD(cpn->pdestid);  cpn->pdestid=NULL;  }
-retfree:;
 	if(cpn)  delete cpn;
 	return(NULL);
 }
@@ -754,14 +823,16 @@ int FDCopyManager::CopyControl(CopyID cpid,ControlCommand cc)
 	switch(cc)
 	{
 		case CCKill:
+		{
 			CopyInfo cpi(cpn,SCKilled);
 			_FinishRequest(cpn,&cpi);
-			break;
+		}  break;
 		case CCTerm:
-			#error add CCTerm; it simply terms input; buffer still flushed. 
-			CopyInfo cpi(cpn,SCTerminated);
-			_FinshInput(cpn,&cpi);
-			break;
+		{
+			#warning [does it work as expected?] add CCTerm; it simply terms input; buffer still flushed. 
+			CopyInfo cpi(cpn,SCTerm);
+			_FinishInput(cpn,&cpi);
+		}  break;
 		case CCStop:
 			if(cpn->cpstate & CPSStopped)
 			{  return(1);  }
@@ -816,7 +887,7 @@ int FDCopyManager::_RestorePollEvents(MCopyNode *cpn,int only_input_ev)
 		if(pollid)
 		{  fdb->PollFD(pollid,cpn->orig_src_events);  }
 		// Flags are restored, we shall not do that more than once: 
-		(int)cpn->orig_flags&=~MCopyNode::OFSrcSet;
+		cpn->orig_flags&=~MCopyNode::OFSrcSet;
 	}
 	if(only_input_ev)
 	{  return(0);  }
@@ -825,14 +896,14 @@ int FDCopyManager::_RestorePollEvents(MCopyNode *cpn,int only_input_ev)
 		PollID pollid=fdb->FDPollID(cpn->req.destfd);
 		if(pollid)
 		{  fdb->PollFD(pollid,cpn->orig_dest_events);  }
-		(int)cpn->orig_flags&=~MCopyNode::OFDestSet;
+		cpn->orig_flags&=~MCopyNode::OFDestSet;
 	}
 	
 	return(0);
 }
 
 
-inline void FDCopyManager::_SendCpNotify(MCopyNode *cpn,ProgressInfo *pgi)
+void FDCopyManager::_SendCpNotify(MCopyNode *cpn,ProgressInfo *pgi)
 {
 	// These vars are held in cpn to prevent modification by client: 
 	cpn->req.iobufsize=cpn->iobufsize;
@@ -883,7 +954,7 @@ void FDCopyManager::_KillRequest(MCopyNode *cpn)
 	#warning missing: kill timeout timer
 	
 	// Finally delete it: 
-	cpn->client->rlist.deqeueu(cpn);
+	cpn->client->rlist.dequeue(cpn);
 	delete cpn;
 }
 
@@ -897,7 +968,7 @@ void FDCopyManager::_KillRequest(MCopyNode *cpn)
 void FDCopyManager::_FinishInput(MCopyNode *cpn,CopyInfo *cpi)
 {
 	assert(!(cpn->cpstate & CPSFlushing));
-	if(cpm->opmode==OM_Fd2Buf || !cpn->bufuse)
+	if(cpn->opmode==OM_Fd2Buf || !cpn->bufuse)
 	{
 		// There's nothing to flush; we're done. 
 		_FinishRequest(cpn,cpi);
@@ -911,7 +982,7 @@ void FDCopyManager::_FinishInput(MCopyNode *cpn,CopyInfo *cpi)
 	
 	(int)cpn->persistent_sc|=cpi->scode;
 	cpi->scode=cpn->persistent_sc;
-	assert(!(cpn->scode & SCFinal));
+	assert(!(cpi->scode & SCFinal));
 	_SendCpNotify(cpn,cpi);
 	
 	// Don't need any more input: 
@@ -940,7 +1011,7 @@ int FDCopyManager::Register(FDCopyBase *client)
 {
 	if(client)
 	{
-		if(client.next || client==clients.last())
+		if(client->next || client==clients.last())
 		{  return(1);  }   // already registered
 		clients.append(client);
 	}
@@ -952,7 +1023,7 @@ void FDCopyManager::Unregister(FDCopyBase *client)
 	if(!client)  return;
 	
 	// Client registered?
-	if(client.next || client==clients.last())
+	if(client->next || client==clients.last())
 	{
 		// Terminate all the client's copy requests without notifying it: 
 		for(MCopyNode *r=client->rlist.first(); r; r=r->next)
@@ -964,14 +1035,14 @@ void FDCopyManager::Unregister(FDCopyBase *client)
 }
 
 
-FDCopyManager::FDCopyManger(int *failflag=NULL) : 
+FDCopyManager::FDCopyManager(int *failflag) : 
 	FDBase(failflag),
 	clients(failflag)
 {
 	int failed=0;
 	
 	// Tell FDManager that we're a manager: 
-	if(SetManager(1))
+	if(SetManager(FDManager::MT_FDCopy))
 	{  ++failed;  }
 	
 	if(failed)
@@ -987,13 +1058,13 @@ FDCopyManager::FDCopyManger(int *failflag=NULL) :
 	#if TESTING
 	if(manager)
 	{  fprintf(stderr,"%s: more than one FDCopyManager.\n",
-		prg_name);  exit(1);  }
+		prg_name);  abort();  }
 	#endif
 	
 	manager=this;
 }
 
-FDCopyManager::~FDCopyManger()
+FDCopyManager::~FDCopyManager()
 {
 	#if TESTING
 	if(!clients.is_empty())
@@ -1013,6 +1084,7 @@ FDCopyManager::~FDCopyManger()
 /******************************************************************************/
 
 FDCopyManager::MCopyNode::MCopyNode(int *failflag) : 
+	LinkedListBase<MCopyNode>(),
 	req(failflag),
 	stat(failflag)
 {
@@ -1071,8 +1143,8 @@ FDCopyManager::CopyStatistics::CopyStatistics(int * /*failflag*/) :
 /******************************************************************************/
 
 FDCopyManager::CopyInfo::CopyInfo(
-	FDCopyManager::StatusCode _scode,
 	const FDCopyManager::MCopyNode *cpn,
+	FDCopyManager::StatusCode _scode,
 	int * /*failflag*/)
 {
 	req=&cpn->req;

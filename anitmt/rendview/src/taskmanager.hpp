@@ -20,16 +20,18 @@
 // Well that is pretty much, but we won't need more: 
 #include "database.hpp"
 #include "tsource/tasksource.hpp"
+#include "tdriver/driverif.hpp"
 
 
 class TaskManager : 
 	public FDBase, 
-	public ProcessBase,
 	public TaskSourceConsumer,
 	public par::ParameterConsumer_Overloaded
 {
 	private:
 		ComponentDataBase *component_db;
+		
+		TaskDriverInterface *interface;
 		
 		// 0msec timer for scheduling purposes: 
 		TimerID tid0;
@@ -38,9 +40,6 @@ class TaskManager :
 		TimerID tid_ts_cwait;
 		
 		HTime starttime;  // same as ProcessManager::starttime. 
-		
-		// Note: all existing TaskDrivers are in this queue: 
-		LinkedList<TaskDriver> joblist;
 		
 		// This is the list of tasks (NOT jobs, do not mix up). 
 		// tasklist_todo holds tasks in state ToBe*. 
@@ -57,29 +56,7 @@ class TaskManager :
 		
 		CompleteTask *scheduled_for_start;
 		
-		// Number of simultanious jobs (limit and optimum): 
-		int njobs;
-		
-		struct DTPrm
-		{
-			// Limit for simultanious render and filter jobs: 
-			int maxjobs;
-			// Nice value or NoNiceValSpec
-			int niceval;
-			// Call setsid() (recommended): 
-			bool call_setsid;
-			// Change nice value by +-1 
-			bool nice_jitter;
-			// Execution timeout or -1: 
-			long timeout;
-		} prm[_DTLast];
-		
-		// What to do with renderer FDs: 
-		bool mute_renderer,quiet_renderer;
-		int dev_null_fd;  // or -1
-		
-		// Number of running tasks: 
-		int running_jobs[_DTLast];
+		int dev_null_fd;  // always open
 		
 		// Number of jobs that failed in sequence. Set to 0 for 
 		// each successful job and incremented for failed ones. 
@@ -131,21 +108,13 @@ class TaskManager :
 		int lpf_hist_idx;
 		int *last_proc_frames;
 		
-		// tasklist_todo thresholds: 
-		// If there are less than todo_thresh_low (>=1) tasks in 
-		// the todo queue, the exchange with the task queue is 
-		// started. No more than todo_thresh_high tasks will ever 
-		// be in the task queue. 
-		int todo_thresh_low;
-		int todo_thresh_high;
+		// tasklist_todo thresholds: Now hidden in interface. 
 		
 		TSAction tsgod_next_action;  // used by _TS_GetOrDoneTask()
 		int nth_call_to_get_task;  // increased for each call to TSGetTask. 
 		void _TS_GetOrDoneTask();
 		
 		inline bool _ProcessedTask(const CompleteTask *ctsk);
-		bool _RenderedTask(const CompleteTask *ctsk);
-		bool _FilteredTask(const CompleteTask *ctsk);
 		
 		bool _TS_CanDo_DoneTask(CompleteTask **special_done=NULL);
 		bool _TS_CanDo_GetTask(bool can_done);
@@ -168,8 +137,6 @@ class TaskManager :
 		
 		// These are called by _schedule(): 
 		int _StartProcessing();   // actually starts things 
-		int _LaunchJobForTask(CompleteTask *ctsk,TaskDriver **ret_td);
-		void _HandleFailedJob(CompleteTask *ctsk,TaskDriver *td);
 		
 		// Do some things with new tasks (set up state & TaskParams): 
 		int _DealWithNewTask(CompleteTask *ctsk);
@@ -181,7 +148,6 @@ class TaskManager :
 		
 		// Initialisation of parameter stuff: 
 		int _SetUpParams();
-		int _SetUpParams(TaskDriverType dtype);
 		
 		// Simply call fdmanager()->Quit(status) and write 
 		void _DoQuit(int status);
@@ -197,15 +163,22 @@ class TaskManager :
 		TaskManager(ComponentDataBase *cdb,int *failflag=NULL);
 		~TaskManager();
 		
-		// These are called by the constructor/destructor of TaskDriver: 
-		// Return value: 0 -> OK; !=0 -> failed
-		int RegisterTaskDriver(TaskDriver *td);
-		void UnregisterTaskDriver(TaskDriver *td);
+		static bool IsARenderedTask(const CompleteTask *ctsk);
+		static bool IsAFilteredTask(const CompleteTask *ctsk);
 		
-		// Called by TaskDriver when ever estat/esdetail changed. 
-		void StateChanged(TaskDriver *td);
-		// Called by TaskDriver when he is done and wants to get deleted: 
-		void IAmDone(TaskDriver *td);
+		// ******** INTERFACE TO TaskDriverInterface ********
+		
+		// Called by TaskDriverInterface becuase a TaskDriver or LDR client 
+		// unregistered 
+		// Only there to check if we want to start new tasks. 
+		void CheckStartNewJobs();
+		
+		void HandleSuccessfulJob(CompleteTask *ctsk);
+		void HandleFailedTask(CompleteTask *ctsk,int running_jobs);
+		
+		// Get /dev/null fd. 
+		int DevNullFD()
+			{  return(dev_null_fd);  }
 };
 
 #endif  /* _RNDV_TASKMANAGER_HPP_ */

@@ -159,6 +159,58 @@ int TaskSourceFactory_Local::_CheckFramePattern(
 }
 
 
+// Check the output patterns or set reasonable defaults according to 
+// input frame pattern: 
+int TaskSourceFactory_Local::_SetUpAndCheckOutputFramePatterns(
+	PerFrameTaskInfo *fi)
+{
+	int mfailed=0;
+	
+	// render output: 
+	if(!fi->routfpattern.str())
+	{
+		// No output pattern. 
+		// Use input pattern without extension: 
+		const char *ip=fi->rinfpattern.str();
+		const char *es=strrchr(ip,'.');
+		if(es)
+		{
+			// Make sure we're right of the `%´: 
+			const char *pp=strrchr(ip,'%');
+			if(es<pp)  es=NULL;
+		}
+		if(!es)  es=ip+strlen(ip);
+		_CheckAllocFail(fi->routfpattern.set0(ip,es-ip));
+	}
+	mfailed+=_CheckFramePattern(&fi->routfpattern,"render output",fi);
+	// NOTE: The extension is appended below so that we can use it without 
+	//       extension for the foutfpattern. 
+	// filter output: 
+	if(!fi->foutfpattern.str())
+	{
+		// No output pattern. 
+		// Use render output pattern and append -f. 
+		fi->foutfpattern=fi->routfpattern;
+		assert(fi->oformat);  // MUST have been set above. ALWAYS. 
+		char ext_tmp[strlen(fi->oformat->file_extension)+3+1];
+		strcpy(ext_tmp,"-f.");
+		strcpy(ext_tmp+3,fi->oformat->file_extension);
+		_CheckAllocFail(fi->foutfpattern.append(ext_tmp));
+	}
+	mfailed+=_CheckFramePattern(&fi->foutfpattern,"filter output",fi);
+	// Okay, now append extension to render output file pattern: 
+	assert(fi->oformat);  // MUST have been set above. ALWAYS. 
+	{
+		char ext_tmp[strlen(fi->oformat->file_extension)+1+1];
+		ext_tmp[0]='.';
+		strcpy(ext_tmp+1,fi->oformat->file_extension);
+		_CheckAllocFail(fi->routfpattern.append(ext_tmp));
+	}
+	
+	return(mfailed);
+}
+
+
 // Return value: 0 -> OK; 1 -> failed. 
 int TaskSourceFactory_Local::_Param_ParseInSizeString(PerFrameTaskInfo *fi)
 {
@@ -278,8 +330,9 @@ void TaskSourceFactory_Local::_VPrintFrameInfo(PerFrameTaskInfo *fi,
 		// YES! It makes sense to dump oformat if renderer is unspecified. 
 		// Because it is used e.g. for frame pattern names. 
 		Verbose("; output format: ");
-		if(fi->oformat)
-		{  Verbose("%s (%d bpp)\n",fi->oformat->name,fi->oformat->bitspp);  }
+		if(fi->oformat)  // pbc = bits per channel
+		{  Verbose("%s (%d bpc)\n",fi->oformat->name,
+			fi->oformat->bits_p_rgb);  }
 		else
 		{  Verbose("[unspecified]\n");  }
 	}
@@ -389,48 +442,7 @@ int TaskSourceFactory_Local::FinalInit()
 	// Check frame pattern: 
 	// NOTE: master_fi.rinfpattern has default set in constructor. 
 	mfailed+=_CheckFramePattern(&master_fi.rinfpattern,"input",&master_fi);
-	// render output: 
-	if(!master_fi.routfpattern.str())
-	{
-		// No output pattern. 
-		// Use input pattern without extension: 
-		const char *ip=master_fi.rinfpattern.str();
-		const char *es=strrchr(ip,'.');
-		if(es)
-		{
-			// Make sure we're right of the `%´: 
-			const char *pp=strrchr(ip,'%');
-			if(es<pp)  es=NULL;
-		}
-		if(!es)  es=ip+strlen(ip);
-		_CheckAllocFail(master_fi.routfpattern.set0(ip,es-ip));
-	}
-	mfailed+=_CheckFramePattern(&master_fi.routfpattern,
-		"render output",&master_fi);
-	// NOTE: The extension is appended below so that we can use it without 
-	//       extension for the foutfpattern. 
-	// filter output: 
-	if(!master_fi.foutfpattern.str())
-	{
-		// No output pattern. 
-		// Use render output pattern and append -f. 
-		master_fi.foutfpattern=master_fi.routfpattern;
-		assert(master_fi.oformat);  // MUST have been set above. ALWAYS. 
-		char ext_tmp[strlen(master_fi.oformat->file_extension)+3+1];
-		strcpy(ext_tmp,"-f.");
-		strcpy(ext_tmp+3,master_fi.oformat->file_extension);
-		_CheckAllocFail(master_fi.foutfpattern.append(ext_tmp));
-	}
-	mfailed+=_CheckFramePattern(&master_fi.foutfpattern,
-		"filter output",&master_fi);
-	// Okay, now append extension to render output file pattern: 
-	assert(master_fi.oformat);  // MUST have been set above. ALWAYS. 
-	{
-		char ext_tmp[strlen(master_fi.oformat->file_extension)+1+1];
-		ext_tmp[0]='.';
-		strcpy(ext_tmp+1,master_fi.oformat->file_extension);
-		_CheckAllocFail(master_fi.routfpattern.append(ext_tmp));
-	}
+	mfailed+=_SetUpAndCheckOutputFramePatterns(&master_fi);
 	
 	if(!mfailed)
 	{
@@ -547,6 +559,17 @@ int TaskSourceFactory_Local::FinalInit()
 			failed+=_Param_ParseRenderDesc(fi,0);
 			failed+=_Param_ParseFilterDesc(fi);
 			
+			// Check frame patterns: 
+			if(!fi->rinfpattern)
+			{  fi->rinfpattern=master_fi.rinfpattern;  }
+			int pfailed=_CheckFramePattern(&fi->rinfpattern,"input",fi);
+			failed+=pfailed;
+			if(!pfailed)
+			{
+				// Check other patterns or assign reasonable defaults: 
+				failed+=_SetUpAndCheckOutputFramePatterns(fi);
+			}
+			
 			// Delete unneeded internal info: 
 			if(fi->ii->section)
 			{  RecursiveDeleteParams(fi->ii->section);  }
@@ -574,18 +597,10 @@ int TaskSourceFactory_Local::FinalInit()
 			if(!fi->fdir)  fi->fdir=master_fi.fdir;
 			else  _PathAppendSlashIfNeeded(&fi->fdir);
 			
-			// Okay, not so easy... 
 			// If the first NULL-string is still there, we prepend 
 			// the master params, else we override. 
 			_AppendOverrideStrListArgs(&fi->radd_args,&master_fi.radd_args);
 			_AppendOverrideStrListArgs(&fi->fadd_args,&master_fi.fadd_args);
-			
-			// Hard part: file name patterns...
-			Error("Handle file name patterns!! (to be hacked; aborting)\n");
-			abort();
-			//rinfpattern
-			//routfpattern
-			//foutfpattern
 			
 			// NOTE: We will NOT delete fdesc=rdesc=NULL blocks UNLESS the 
 			//       master block is also fdesc=rdesc=NULL. This allows to 

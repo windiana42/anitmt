@@ -77,7 +77,7 @@ class FilterDriver : public TaskDriver
 		{  return(TaskDriver::StartProcess(ft,ftp,sp_p,sp_a,sp_m,sp_f,sp_e));  }
 	public:  _CPP_OPERATORS_FF
 		// Driver name copied into RefString. 
-		FilterDriver(TaskDriverFactory *f,int *failflag=NULL);
+		FilterDriver(TaskDriverFactory *f,TaskDriverInterface_Local *tdif,int *failflag=NULL);
 		virtual ~FilterDriver();
 		
 		// Called on statup to initialize the filter drivers factories; 

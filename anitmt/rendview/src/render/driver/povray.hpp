@@ -14,7 +14,7 @@
  * 
  */
 
-#include "../../database.hpp"
+#include "../../../database.hpp"
 
 
 class POVRayDriverFactory : 
@@ -38,7 +38,7 @@ class POVRayDriverFactory :
 		int CheckDesc(RF_DescBase *d);
 		
 		// Create a task driver: 
-		TaskDriver *Create();
+		TaskDriver *Create(TaskDriverInterface_Local *tdif);
 		
 		// Overriding virtual: 
 		const char *DriverDesc() const;
@@ -64,7 +64,7 @@ class POVRayDriver :
 		// Return value: currently ignored; use 0. 
 		int ProcessError(ProcessErrorInfo *pei);
 	public:  _CPP_OPERATORS_FF
-		POVRayDriver(POVRayDriverFactory *pf,int *failflag=NULL);
+		POVRayDriver(POVRayDriverFactory *pf,TaskDriverInterface_Local *tdif,int *failflag=NULL);
 		~POVRayDriver();
 		
 		// Overriding virtual: 

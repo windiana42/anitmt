@@ -4,11 +4,15 @@ libfd_a_SOURCES = \
 	htime.cc htimeprint.cc htimecalc.cc \
 		fdbase.cc fdmanager.cc \
 		procmanager.cc intprocbase.cc \
+		cpbase.cc cpmanager.cc \
+		timeoutmanager.cc \
 	htime.h \
 		fdmanager.h fdbase.h \
 		procmanager.h intprocbase.h procbase.h \
-		cpbase.h cpmanager.h
-#		cpbase.cc cpmanager.cc 
+		cpbase.h cpmanager.h \
+		timeoutbase.h timeoutmanager.h
+
+EXTRA_DIST = depend.txt
 
 check_PROGRAMS = check_fd
 check_fd_SOURCES = check_fd.cc

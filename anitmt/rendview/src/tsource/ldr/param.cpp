@@ -14,7 +14,7 @@
  * 
  */
 
-#include <hlib/prototypes.h>
+#include <lib/myaddrinfo.hpp>
 
 #include "ldr.hpp"
 #include "param.hpp"
@@ -22,7 +22,6 @@
 #include <assert.h>
 #include <ctype.h>
 
-#include <netinet/in.h>
 
 
 #define UnsetNegMagic  (-29659)
@@ -48,24 +47,21 @@ int TaskSourceFactory_LDR::FinalInit()
 		failed=1;
 		
 		// Open socket: 
-		listen_fd=::socket(AF_INET,SOCK_STREAM,IPPROTO_TCP);
+		listen_fd=MyAddrInfo::TCPSocket();
 		if(listen_fd<0)
 		{  Error("Failed to open inet socket: %s\n",
 			strerror(errno));  break;  }
 		
 		// Bind socket to port: 
-		sockaddr_in sin;
-		memset(&sin,0,sizeof(sin));
-		sin.sin_family=AF_INET;
-		sin.sin_addr.s_addr=INADDR_ANY;
-		sin.sin_port=htons(listen_port);
-		if(::bind(listen_fd,(sockaddr*)&sin,sizeof(sin)))
-		{  Error("Failed to bind to port %u: %s\n",ntohs(sin.sin_port),
+		MyAddrInfo addr;
+		addr.SetPassiveAny(listen_port);
+		if(addr.bind(listen_fd))
+		{  Error("Failed to bind to port %d: %s\n",addr.GetPort(),
 			strerror(errno));  break;  }
 		
 		// Say we want connections to that port: 
-		if(::listen(listen_fd,/*backlog=*/2))
-		{  Error("Failed to listen to port %u: %s\n",ntohs(sin.sin_port),
+		if(MyAddrInfo::listen(listen_fd,/*backlog=*/2))
+		{  Error("Failed to listen to port %d: %s\n",addr.GetPort(),
 			strerror(errno));  break;  }
 		
 		// We want non-blocking IO, right?
@@ -77,12 +73,12 @@ int TaskSourceFactory_LDR::FinalInit()
 		failed=0;
 	} while(0);
 	if(failed && listen_fd>0)
-	{  close(listen_fd);  listen_fd=-1;  }
+	{  MyAddrInfo::close(listen_fd);  listen_fd=-1;  }
 	
 	if(!failed)
 	{
 		Verbose("LDR task source: Listening on port %d (procotol version %d)\n",
-			listen_port,LDR_ProtocolVersion);
+			listen_port,LDRProtocolVersion);
 	}
 	
 	return(failed ? 1 : 0);

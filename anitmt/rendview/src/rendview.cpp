@@ -17,6 +17,11 @@
 
 #include "taskmanager.hpp"
 #include "tsource/tsfactory.hpp"
+#include "tdriver/tdfactory.hpp"
+
+#include <hlib/timeoutmanager.h>
+#include <hlib/timeoutbase.h>
+#include <hlib/cpmanager.h>
 
 
 char *prg_name=NULL;
@@ -24,7 +29,7 @@ char *prg_name=NULL;
 
 static const char *fti="Failed to initialize %s.\n";
 
-static void _color_setup(int &argc,char **argv,char **envp)
+static void _color_setup(int &argc,char **argv,char ** /*envp*/)
 {
 	int color_arg=0;
 	for(int i=1; i<argc; i++)
@@ -82,6 +87,22 @@ static int MAIN(int argc,char **argv,char **envp)
 	if(!fdman)
 	{
 		Error(fti,"FD manager");
+		return(1);
+	}
+	
+	Verbose("[timeout] ");
+	TimeoutManager *timeoutman=NEW<TimeoutManager>();
+	if(!timeoutman)
+	{
+		Error(fti,"timeout manager");
+		return(1);
+	}
+	
+	Verbose("[CP] ");
+	FDCopyManager *cpman=NEW<FDCopyManager>();
+	if(!cpman)
+	{
+		Error(fti,"copy manager");
 		return(1);
 	}
 	
@@ -166,6 +187,7 @@ static int MAIN(int argc,char **argv,char **envp)
 	fail+=ImageFormat::init(cdb);
 	fail+=TaskDriverFactory::init(cdb);
 	fail+=TaskSourceFactory::init_factories(cdb);
+	fail+=TaskDriverInterfaceFactory::init_factories(cdb);
 	
 	// NOW IT IS TIME TO LOOK AT THE COMMAND LINE ARGS: 
 	par::CmdLineArgs cmdline(argc,argv,envp);
@@ -234,11 +256,13 @@ static int MAIN(int argc,char **argv,char **envp)
 	
 	// Cleanup: 
 	Verbose("Cleanup:");
-    if(taskman)  Verbose(" [Task");       delete taskman;
-    if(cdb)      Verbose("] [CDB");        delete cdb;
-    if(parman)   Verbose("] [parameter");  delete parman;
-    if(procman)  Verbose("] [process");    delete procman;
-    if(fdman)    Verbose("] [FD");           delete fdman;
+    if(taskman)     Verbose(" [Task");        delete taskman;
+    if(cdb)         Verbose("] [CDB");        delete cdb;
+    if(parman)      Verbose("] [parameter");  delete parman;
+    if(procman)     Verbose("] [process");    delete procman;
+    if(cpman)       Verbose("] [CP");         delete cpman;
+    if(timeoutman)  Verbose("] [timeout");    delete timeoutman;
+    if(fdman)    Verbose("] [FD");            delete fdman;
 	Verbose("] OK\n");
 	
 	Verbose("Exiting: status=%s\n",fail ? "failure" : "success");

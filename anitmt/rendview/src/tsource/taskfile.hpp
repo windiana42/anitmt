@@ -17,6 +17,7 @@
 #ifndef _RNDV_TASKFILECLASS_HPP_
 #define _RNDV_TASKFILECLASS_HPP_ 1
 
+#include <lib/prototypes.hpp>
 #include <hlib/refstring.h>
 
 

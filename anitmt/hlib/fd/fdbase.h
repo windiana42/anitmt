@@ -90,6 +90,8 @@ class HTime;
 
 class FDBase
 {
+	friend class FDManager;
+	friend class FDManager::FDBList;
 	public:
 		typedef FDManager::SigInfo SigInfo;
 		typedef FDManager::FDInfo FDInfo;
@@ -97,11 +99,9 @@ class FDBase
 		typedef FDManager::TimerID TimerID;
 		typedef FDManager::PollID PollID;
 	private:
-		friend class FDManager;
-		friend class FDManager::FDBList;
 		
 		short int deleted;   // NEVER CHANGE THIS. 
-		short int ismanager;   // NEVER CHANGE THIS. 
+		short int manager_type;   // NEVER CHANGE THIS. 
 		
 		// Not locked: -1; else locked and number of `deleted' entries. 
 		int timerlock,fdslock;
@@ -145,6 +145,13 @@ class FDBase
 		// Important to call these to keep sh_timer up to date: 
 		inline void _DoResetTimer(FDManager::TimerNode *i);
 		void _MsecLeftChanged(FDManager::TimerNode *i,long old_msec_left);
+		
+		inline int _CloseFD(int fd)
+		{
+			UnpollFD(fd);  
+			int rv;  do {  rv=close(fd);  }  while(rv<0 && errno==EINTR);
+			return(rv);
+		}
 		
 		// The actual `data' fields: 
 		struct FDManager::TimerNode *timers;  // timer list 
@@ -279,6 +286,7 @@ class FDBase
 			{  fdmanager()->KillAllTimers(this);  }
 		
 		// Query timer parameters: 
+		// Note for hackers: NEVER CHANGE THE VALUE -3. IT IS MAGIC!!!
 		// Timer interval in msec; -1 for disabled, -3 if tid==NULL. 
 		long TimerInterval(TimerID tid)
 			{  return(tid ? ((FDManager::TimerNode*)tid)->msec_val : -3);  }
@@ -331,6 +339,9 @@ class FDBase
 			{  return(fdmanager()->PollFD(this,pollid,events,NULL));  }
 		int PollFD(PollID pollid,short events,const void *dptr)
 			{  return(fdmanager()->PollFD(this,pollid,events,&dptr));  }
+		int PollFDDPtr(PollID pollid,const void *dptr)
+			{  if(!pollid)  return(-2);
+				((FDManager::FDNode*)pollid)->dptr=dptr;  return(1);  }
 		// Return value: 
 		//    0 -> OK; 
 		//    1 -> nothing to un-poll: no such fd for *this. 
@@ -340,20 +351,17 @@ class FDBase
 			{  return(fdmanager()->UnpollFD(this,pollid));  }
 		// Return value: that of close(fd). 
 		int CloseFD(int fd)
-		{
-			if(fd<0)  return(0);
-			UnpollFD(fd);  
-			int rv;  do {  rv=close(fd);  }
-			while(rv<0 && errno==EINTR);
-			return(rv);
-		}
+			{  return(fd<0 ? 0 : _CloseFD(fd));  }
+		int CloseFD(PollID &pollid)
+			{  int fd=FDfd(pollid);  pollid=NULL;  return(CloseFD(fd));  }
 		int ShutdownFD(int fd)  // shutdown & close
 		{
 			if(fd<0)  return(0);
-			int rv;  do {  rv=shutdown(fd,2);  }
-			while(rv<0 && errno==EINTR);
-			return(CloseFD(fd));
+			int rv;  do {  rv=shutdown(fd,2);  }  while(rv<0 && errno==EINTR);
+			return(_CloseFD(fd));
 		}
+		int ShutdownFD(PollID &pollid)
+			{  int fd=FDfd(pollid);  pollid=NULL;  return(ShutdownFD(fd));  }
 		
 		// Get PollID associated with specified fd: 
 		// Note: one PollID corresponds to one fd. A PollID is created when 
@@ -362,6 +370,9 @@ class FDBase
 		// the apropriate FDNode, so use it with care; illegal PollIDs 
 		// (dangling pointers) can hardly be detected. 
 		PollID FDPollID(int fd);
+		// The other way round: get fd from PollID (or -1): 
+		int FDfd(PollID pollid)
+			{  return(pollid ? ((FDManager::FDNode*)pollid)->fd : (-1));  }
 		// Query FD data (only fds that this FDBase is polling for): 
 		// Get custon data pointer associated with fd/PollID or NULL: 
 		const void *FDDPtr(int fd);
@@ -380,13 +391,14 @@ class FDBase
 		void DeleteMe(int free_me=1)
 			{  fdmanager()->Unregister(this,free_me ? 3 : 2);  }
 		
-		// Tell the FDManager that we are a manager class (flag=1) or 
-		// no manager class (flag=0; default). 
+		// Tell the FDManager that we are a manager class 
+		// (mtype!=FDManager::MT_None) or no manager class (MT_None; default). 
 		// FDManager quits the main loop if no FDBases of non-manager 
 		// type are left. 
+		// Please use FDManager::MT_Other unless you know what you're doing. 
 		// Returns: 0 -> success; -1 -> failed (not registered) 
-		int SetManager(int flag=1)
-			{  return(fdmanager()->SetManager(this,flag));  }
+		int SetManager(FDManager::ManagerType mtype)
+			{  return(fdmanager()->SetManager(this,mtype));  }
 		
 		// Checks if that signal is queued for delivery: 
 		// Returns number of queued signals of type sig. 

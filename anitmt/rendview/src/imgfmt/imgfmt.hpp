@@ -17,8 +17,9 @@
 #ifndef _RNDV_IMGFMT_IMGFMT_HPP_
 #define _RNDV_IMGFMT_IMGFMT_HPP_ 1
 
-#include <hlib/prototypes.h>
+#include <lib/prototypes.hpp>
 #include <hlib/linkedlist.h>
+
 
 class ComponentDataBase;
 
@@ -33,10 +34,10 @@ enum ImageFormatID
 // Linked list hold by ComponentDataBase. 
 struct ImageFormat : LinkedListBase<ImageFormat>
 {
-	ImageFormatID fmtid;  //                 e.g.     PNG
-	const char *name;     //                 e.g. "png", "png6"
-	int bitspp;           // bits per pixel, e.g. 8,     6
-	const char *file_extension;   //        e.g. "png", "png"
+	ImageFormatID fmtid;  //               e.g.     PNG
+	const char *name;     //               e.g. "png", "png6"
+	int bits_p_rgb;       // bits per RGB, e.g. 8,     6
+	const char *file_extension;   //      e.g. "png", "png"
 	
 	// NEED MORE HERE (query/verify routines/depth)
 	

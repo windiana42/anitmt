@@ -96,6 +96,21 @@ TaskSourceFactory *ComponentDataBase::_FindSourceFactoryByName(const char *name)
 }
 
 
+TaskDriverInterfaceFactory *ComponentDataBase::_FindDriverInterfaceFactoryByName(
+	const char *name)
+{
+	size_t nlen=strlen(name);
+	for(TaskDriverInterfaceFactory *n=tdinterfaces.first(); n; n=tdinterfaces.next(n))
+	{
+		const char *dn=n->DriverInterfaceName();
+		if(strlen(dn)!=nlen)  continue;
+		if(strcasecmp(dn,name))  continue;
+		return(n);
+	}
+	return(NULL);
+}
+
+
 const RF_DescBase *ComponentDataBase::_FindDescByName(const char *name,
 	TaskDriverType dtype)
 {
@@ -218,6 +233,33 @@ int ComponentDataBase::RegisterImageFormat(ImageFormat *ifmt)
 	iflist.append(ifmt);
 	
 	return(0);
+}
+
+
+int ComponentDataBase::RegisterDriverInterfaceFactory(TaskDriverInterfaceFactory *f)
+{
+	if(!f)  return(0);
+	
+	if(!f->DriverInterfaceName())
+	{  return(1);  }
+	if(_FindDriverInterfaceFactoryByName(f->DriverInterfaceName()))
+	{  return(1);  }
+	
+	// Make sure that it is not queued: 
+	assert(!tdinterfaces.prev(f) && tdinterfaces.first()!=f);
+	tdinterfaces.append(f);
+	
+	return(0);
+}
+
+void ComponentDataBase::UnregisterDriverInterfaceFactory(TaskDriverInterfaceFactory *f)
+{
+	if(!f)  return;
+	
+	// Check if queued: 
+	if(tdinterfaces.first()!=f && !tdinterfaces.prev(f))  return;
+	
+	tdinterfaces.dequeue(f);
 }
 
 
@@ -378,13 +420,15 @@ int ComponentDataBase::PrintSpecialHelp(RefStrList *dest,
 	{
 		// List image formats:
 		RefString tmp;
-		tmp.set("List of knwon image formats:");  dest->append(tmp);
-		tmp.set("\r2:name  bpp  ext");  dest->append(tmp);
+		tmp.set("List of knwon image formats: (pbc: bits per channel)");
+		dest->append(tmp);
+		
+		tmp.set("\r2:name  bpc  ext");  dest->append(tmp);
 		
 		for(const ImageFormat *i=iflist.first(); i; i=i->next)
 		{
 			tmp.sprintf(0,"\r2:%-4s  %3d  %-3s",
-				i->name,i->bitspp,i->file_extension);
+				i->name,i->bits_p_rgb,i->file_extension);
 			dest->append(tmp);
 		}
 	}
@@ -583,6 +627,9 @@ void ComponentDataBase::_RegisterFilterDescParams(FilterDesc *fd)
 
 int ComponentDataBase::_RegisterParams(TaskDriverType dtype)
 {
+	if(SetSection(NULL))
+	{  return(-1);  }
+	
 	InfoPerType *dti=&ift[dtype];
 	StaticInfoPerType *sdti=&static_ift[dtype];
 	
@@ -651,7 +698,8 @@ ComponentDataBase::ComponentDataBase(par::ParameterManager *pman,int *failflag) 
 	par::ParameterConsumer_Overloaded(pman,failflag),
 	par::SectionParameterHandler(pman,failflag),
 	tsources(failflag),
-	iflist(failflag)
+	iflist(failflag),
+	tdinterfaces(failflag)
 {
 	int failed=0;
 	taskman=NULL;
@@ -709,6 +757,12 @@ ComponentDataBase::~ComponentDataBase()
 	Verbose(".");
 	while(!iflist.is_empty())
 	{  delete iflist.popfirst();  }
+	
+	// ...and finally the task driver interface factories: 
+	//Verbose("[task driver interfaces] ");
+	Verbose(".");
+	while(!tdinterfaces.is_empty())
+	{  delete tdinterfaces.popfirst();  }
 	
 	//Verbose("OK\n");
 }

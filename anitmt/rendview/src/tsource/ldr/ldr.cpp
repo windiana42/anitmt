@@ -21,20 +21,98 @@
 
 #include <assert.h>
 
-#include <netinet/in.h>
-
-#if HAVE_ARPA_INET_H
-# include <arpa/inet.h>
-#endif
+using namespace LDR;
 
 
-int TaskSource_LDR::fdnotify(FDInfo *fdi)
+// Actually send data; only do if you may POLLOUT. 
+// NOTE: This will get the data length from d->length, then 
+//       translate d->length to network order. 
+// Gives up if the write is not atomically. 
+// Retun value: 
+//  0 -> OK, written
+// -1 -> error; called _ConnCloseUnexpected(). 
+// -2 -> short write; called _ConnCloseUnexpected(). 
+int TaskSource_LDR::_AtomicSendData(ServerConn *sc,LDRHeader *d)
 {
-	if(fdi->fd==p->listen_fd)
+	size_t len=d->length;
+	d->length=htonl(len);
+	
+	ssize_t wr=write(sc->fd,(char*)d,len);
+	if(wr<0)
 	{
-		_ListenFdNotify(fdi);
-		return(0);
+		Warning("Failed to send %u bytes to %s: %s\n",
+			len,sc->addr.GetAddress().str(),strerror(errno));
+		_ConnCloseUnexpected(sc);
+		return(-1);
 	}
+	if(size_t(wr)<len)
+	{
+		Warning("Short write (sent %u/%u bytes) to %s: %s\n",
+			size_t(wr),len,sc->addr.GetAddress().str(),strerror(errno));
+		_ConnCloseUnexpected(sc);
+		return(-1);
+	}
+	return(0);
+}
+
+
+// Called to close down the connection unexpectedly 
+// or if the connection was closed unexpectedly by peer: 
+void TaskSource_LDR::_ConnCloseUnexpected(ServerConn *sc)
+{
+	// First, make sure we close down. 
+	PollFDDPtr(sc->pollid,NULL);
+	ShutdownFD(sc->pollid);  // sets pollid=NULL
+	sc->fd=-1;
+	
+	// Okay, if that was not our server, then everything is okay: 
+	if(!sc->authenticated)
+	{
+		Verbose("Closed connection to %s.\n",
+			sc->addr.GetAddress().str());
+		// Hehe... simply delete it: 
+		delete sconn.dequeue(sc);
+		return;
+	}
+	
+	Warning("Unexpected connection close with auth server %s.\n",
+		sc->addr.GetAddress().str());
+	assert(0);  // handle me! kill all tasks,...
+}
+
+
+void TaskSource_LDR::_FillInLDRHEader(ServerConn *sc,
+	LDRHeader *d,LDRCommand cmd,size_t length)
+{
+	assert(length<0xffffffff);
+	
+	d->length=length;  // STILL IN HOST ORDER
+	d->command=htons(cmd);
+	d->seq_no=htons(sc->next_send_seq_no);
+	d->ack_no=htons(sc->next_send_ack_no);
+	
+	++sc->next_send_seq_no;
+}
+
+
+void TaskSource_LDR::_SendChallengeRequest(ServerConn *sc)
+{
+	LDRChallengeRequest d;
+	_FillInLDRHEader(sc,&d,LDR_ChallengeRequest,sizeof(LDR_ChallengeRequest));
+	uchar *cr=((uchar*)&d)+sizeof(LDRHeader);
+	uchar *ce=((uchar*)&d)+sizeof(LDR_ChallengeRequest);
+	memset(cr,0,ce-cr);
+	strcpy((char*)d.id_string,"RendView-");
+	strncpy((char*)d.id_string+9,VERSION,LDRIDStringLength-9);
+	d.protocol_vers=htons(LDRProtocolVersion);
+	#warning missing: challenge
+	//d.challenge
+	
+	// That was the packet. Send it. 
+	// I assume the challenge request is so small (64 bytes or so) 
+	// that it can be sent atomically. Otherwise, we give up. 
+	if(_AtomicSendData(sc,&d))  return;
+	
 }
 
 
@@ -48,11 +126,8 @@ void TaskSource_LDR::_ListenFdNotify(FDInfo *fdi)
 	}
 	if(fdi->revents & POLLIN)
 	{
-		// Okay, we may receive a connection. 
-		sockaddr_in sin;
-		socklen_t slen=sizeof(sin);
-		memset(&sin,0,sizeof(sin));
-		int as=::accept(p->listen_fd,(sockaddr*)&sin,&slen);
+		MyAddrInfo addr;
+		int as=addr.accept(p->listen_fd);
 		if(as<0)
 		{
 			// Oh dear, something failed. 
@@ -61,19 +136,73 @@ void TaskSource_LDR::_ListenFdNotify(FDInfo *fdi)
 			return;
 		}
 		
-		// Okay, accepted a connection: 
-		Verbose("Accepted connection from %s:%u\n",
-			inet_ntoa(sin.sin_addr),ntohs(sin.sin_port));
-		
-			Error("GO ON!!! (aborting)\n");
-			abort();
-		#if 0
-		if(server.connected)
+		// Okay, we may receive a connection. 
+		ServerConn *sc=NEW<ServerConn>();
+		if(sc)
 		{
-			// Well, we're already connected to a server. 
+			if(PollFD(sc->fd,POLLOUT,sc,&sc->pollid))
+			{  delete sc;  sc=NULL;  }
 		}
-		#endif
+		if(sc)
+		{
+			sc->addr=addr;
+			sc->fd=as;
+			sc->next_send_cmd=LDR_ChallengeRequest;
+		}
+		else
+		{
+			Error("LDR: Accept failed (alloc failure).\n");
+			close(as);
+			return;
+		}
+		
+		// Okay, accepted a connection: 
+		Verbose("Accepted connection from %s.\n",sc->addr.GetAddress().str());
+		sconn.append(sc);
 	}
+}
+
+
+void TaskSource_LDR::_SConnFDNotify(FDInfo *fdi,ServerConn *sc)
+{
+	// See what we must do...
+	if(fdi->revents & POLLIN)
+	{
+		
+	}
+	if(fdi->revents & POLLOUT)
+	{
+		switch(sc->next_send_cmd)
+		{
+			case LDR_ChallengeRequest:  _SendChallengeRequest(sc);  break;
+		}
+	}
+}
+
+
+int TaskSource_LDR::fdnotify(FDInfo *fdi)
+{
+	if(fdi->dptr)
+	{
+		// This must be one of the ServerConns: 
+		ServerConn *sc=(ServerConn*)fdi->dptr;
+		assert(sc->pollid==fdi->pollid);
+		assert(sc->fd==fdi->fd);
+		
+		// Okay, process that: 
+		_SConnFDNotify(fdi,sc);
+		
+		return(0);
+	}
+	
+	if(fdi->fd==p->listen_fd)
+	{
+		_ListenFdNotify(fdi);
+		return(0);
+	}
+	
+	assert(0);
+	return(0);
 }
 
 
@@ -180,7 +309,9 @@ long TaskSource_LDR::ConnectRetryMakesSense()
 
 TaskSource_LDR::TaskSource_LDR(TaskSourceFactory_LDR *tsf,int *failflag) : 
 	TaskSource(tsf->component_db(),failflag),
-	FDBase(failflag)
+	FDBase(failflag),
+	FDCopyBase(failflag),
+	sconn(failflag)
 {
 	// Important: set TaskSourceType: 
 	tstype=TST_Active;
@@ -202,9 +333,6 @@ TaskSource_LDR::TaskSource_LDR(TaskSourceFactory_LDR *tsf,int *failflag) :
 	{  ++failed;  }
 	else assert(l_pid);  // l_pid may only be/stay NULL if PollFD returns failure
 	
-	a_fd=-1;
-	a_pid=NULL;
-	
 	if(failflag)
 	{  *failflag-=failed;  }
 	else if(failed)
@@ -216,18 +344,47 @@ TaskSource_LDR::TaskSource_LDR(TaskSourceFactory_LDR *tsf,int *failflag) :
 	//assert(sizeof(LDR::LDRHeader)==6);  <---- UNCOMMENT!!
 }
 
+
 TaskSource_LDR::~TaskSource_LDR()
 {
 	assert(pending==ANone);
 	assert(!connected);
 	
-	// Must have disconnected...
-	assert(a_fd<0);
-	
-	// Unpoll accept PollID: 
-	UnpollFD(a_pid);  a_pid=NULL;
+	// Make sure we disconnect from all servers...
+	while(!sconn.is_empty())
+	{
+		ServerConn *sc=sconn.popfirst();
+		if(sc->fd>=0)
+		{
+			fprintf(stderr,"OOPS: still connected to %s\n",
+				sc->addr.GetAddress().str());
+			ShutdownFD(sc->fd);  sc->pollid=NULL;
+		}
+		delete sc;
+	}
 	
 	// The listen FD is closed & shut down by the factory. 
 	// We just have to explicitly unpoll it: 
 	UnpollFD(l_pid);  l_pid=NULL;
+}
+
+
+/******************************************************************************/
+
+TaskSource_LDR::ServerConn::ServerConn(int *failflag) : 
+	LinkedListBase<ServerConn>(),
+	addr(failflag)
+{
+	fd=-1;
+	pollid=NULL;
+	
+	authenticated=0;
+	
+	next_send_cmd=LDR_NoCommand;
+	last_recv_cmd=LDR_NoCommand;
+	
+	next_send_seq_no=1;
+	next_send_ack_no=0;
+	next_expect_ack_no=65535;  // any value
+	next_expect_seq_no=65535;  // any value
 }

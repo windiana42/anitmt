@@ -31,6 +31,8 @@ void ParameterConsumer::CheckParamError(ParamInfo *pi)
 	char tmp[len+1];
 	parmanager()->FullParamName(pi,tmp,len+1);
 	
+	fprintf(stderr,"<<%d %d>>\n",pi->is_set,pi->nspec);
+	
 	if(pi->spectype==STAtLeastOnce ||
 	   (pi->spectype==STExactlyOnce && !pi->nspec))
 	{  fprintf(stderr,"%s: required %s `%s´ not specified.\n",

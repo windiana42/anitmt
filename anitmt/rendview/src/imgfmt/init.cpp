@@ -20,14 +20,14 @@
 
 
 static int _SetupIFmt(ComponentDataBase *cdb,
-	ImageFormatID fmtid, const char *name, int bitspp,const char *ext)
+	ImageFormatID fmtid, const char *name, int bits,const char *ext)
 {
 	Verbose("[%s] ",name);
 	ImageFormat *fmt=NEW<ImageFormat>();
 	if(!fmt)  return(1);
 	fmt->fmtid=fmtid;
 	fmt->name=name;
-	fmt->bitspp=bitspp;
+	fmt->bits_p_rgb=bits;
 	fmt->file_extension=ext;
 	if(cdb->RegisterImageFormat(fmt))
 	{  delete fmt;  return(1);  }
@@ -40,6 +40,7 @@ int ImageFormat::init(ComponentDataBase *cdb)
 	Verbose("Setting up image formats: ");
 	failed+=_SetupIFmt(cdb,IF_PNG,"PNG",8,"png");
 	failed+=_SetupIFmt(cdb,IF_PNG,"PNG6",6,"png");
+	failed+=_SetupIFmt(cdb,IF_PNG,"PNG5",5,"png");
 	failed+=_SetupIFmt(cdb,IF_PPM,"PPM",8,"ppm");
 	failed+=_SetupIFmt(cdb,IF_TGA,"TGA",8,"tga");
 	Verbose(failed ? "FAILED\n" : "OK\n");

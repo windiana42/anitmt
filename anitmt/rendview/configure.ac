@@ -31,8 +31,11 @@ AC_CONFIG_FILES([ \
 	src/Makefile \
 	src/lib/Makefile \
 	src/imgfmt/Makefile \
-	src/render/Makefile src/render/driver/Makefile \
-	src/filter/Makefile src/filter/driver/Makefile \
+	src/tdriver/Makefile \
+	src/tdriver/ldr/Makefile \
+	src/tdriver/local/Makefile \
+	src/tdriver/render/Makefile src/tdriver/render/driver/Makefile \
+	src/tdriver/filter/Makefile src/tdriver/filter/driver/Makefile \
 	src/tsource/Makefile \
 	src/tsource/local/Makefile src/tsource/ldr/Makefile src/tsource/nrp/Makefile \
 	cfg/Makefile])

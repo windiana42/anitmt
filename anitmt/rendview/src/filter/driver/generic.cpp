@@ -35,8 +35,8 @@ int GenericFilterDriver::Execute(const FilterTask *rt,const FilterTaskParams *rt
 
 
 GenericFilterDriver::GenericFilterDriver(GenericFilterDriverFactory *gf,
-	int *failflag) : 
-	FilterDriver(gf,failflag)
+	TaskDriverInterface_Local *tdif,int *failflag) : 
+	FilterDriver(gf,tdif,failflag)
 {
 	
 }
@@ -51,9 +51,9 @@ GenericFilterDriver::~GenericFilterDriver()
 /********************************** FACTORY **********************************/
 
 
-TaskDriver *GenericFilterDriverFactory::Create()
+TaskDriver *GenericFilterDriverFactory::Create(TaskDriverInterface_Local *tdif)
 {
-	return(NEW1<GenericFilterDriver>(this));
+	return(NEW2<GenericFilterDriver>(this,tdif));
 }
 
 

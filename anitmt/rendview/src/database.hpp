@@ -21,10 +21,13 @@
 #include <lib/taskmanagement.h>
 
 // Generic TaskDriver stuff: 
-#include "gdriver.hpp"
+#include "tdriver/local/tdriver.hpp"
 
 // TaskSourceFactory: 
 #include "tsource/tsfactory.hpp"
+
+// TaskDriverInterfaceFactory: 
+#include "tdriver/tdfactory.hpp"
 
 
 class ImageFormat;
@@ -86,6 +89,9 @@ class ComponentDataBase :
 		// List of known image formats: 
 		LinkedList<ImageFormat> iflist;
 		
+		// List of known TaskDriverInterface factories:  
+		LinkedList<TaskDriverInterfaceFactory> tdinterfaces;
+		
 		// Return driver factory with specified type & name 
 		// or NULL (exact match). 
 		TaskDriverFactory *_FindDriverFactoryByName(
@@ -93,6 +99,7 @@ class ComponentDataBase :
 		const RF_DescBase *_FindDescByName(
 			const char *name,TaskDriverType _dtype);
 		TaskSourceFactory *_FindSourceFactoryByName(const char *name);
+		TaskDriverInterfaceFactory *_FindDriverInterfaceFactoryByName(const char *name);
 		
 		int _RegisterParams();
 		int _RegisterParams(TaskDriverType dtype);
@@ -143,6 +150,10 @@ class ComponentDataBase :
 		// Return image format with specified name (not case sensitive): 
 		const ImageFormat *FindImageFormatByName(const char *name);
 		
+		// Return TaskDriverInterface (e.g. local, LDR [server]): 
+		TaskDriverInterfaceFactory *FindDriverInterfaceFactoryByName(const char *name)
+			{  return(_FindDriverInterfaceFactoryByName(name));  }
+		
 		// Used by task drivers to get binary search path (one per 
 		// task driver type). 
 		const RefStrList *GetBinSearchPath(TaskDriverType dtype)
@@ -172,10 +183,15 @@ class ComponentDataBase :
 		// the destructor of ComponentDataBase. 
 		// Return value: as usual 
 		int RegisterImageFormat(ImageFormat *ifmt);
+		
+		// Used by TaskDriverInterfaceFactory just in the way as by 
+		// other factories. 
+		int RegisterDriverInterfaceFactory(TaskDriverInterfaceFactory *f);
+		void UnregisterDriverInterfaceFactory(TaskDriverInterfaceFactory *f);
 };
 
 #include "imgfmt/imgfmt.hpp"
-#include "render/render.hpp"
-#include "filter/filter.hpp"
+#include "tdriver/render/render.hpp"
+#include "tdriver/filter/filter.hpp"
 
 #endif  /* _RNDV_DATABASE_HPP_ */

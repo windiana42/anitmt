@@ -43,6 +43,7 @@
 //     tasks in the queue before quitting. 
 /******************************************************************************/
 
+
 // Returns 1 if the passed task is being processed or was processed 
 // by us: 
 inline bool TaskManager::_ProcessedTask(const CompleteTask *ctsk)
@@ -53,113 +54,61 @@ inline bool TaskManager::_ProcessedTask(const CompleteTask *ctsk)
 }
 
 // True, if we rendered the task: 
-bool TaskManager::_RenderedTask(const CompleteTask *ctsk)
+bool TaskManager::IsARenderedTask(const CompleteTask *ctsk)
 {
 	if(!ctsk->rt)  return(false);
 	if(ctsk->state==CompleteTask::TaskDone || 
 	   ctsk->state==CompleteTask::ToBeFiltered )
 	{  return(true);  }
 	if(ctsk->state==CompleteTask::ToBeRendered && ctsk->td)
-	{  if(ctsk->td->f->DType()==DTRender)  return(true);  }
+	{  if(ctsk->td->GetFactory()->DType()==DTRender)  return(true);  }
 	return(false);
 }
 
-bool TaskManager::_FilteredTask(const CompleteTask *ctsk)
+bool TaskManager::IsAFilteredTask(const CompleteTask *ctsk)
 {
 	if(!ctsk->ft)  return(false);
 	if(ctsk->state==CompleteTask::TaskDone)
 	{  return(true);  }
 	if(ctsk->state==CompleteTask::ToBeFiltered && ctsk->td)
-	{  if(ctsk->td->f->DType()==DTFilter)  return(true);  }
+	{  if(ctsk->td->GetFactory()->DType()==DTFilter)  return(true);  }
 	return(false);
 }
-
 
 inline int cmpMAX(int a,int b)
 {  return((a>b) ? a : b);  }
 
 
-// Called by TaskDriver when ever estat/esdetail changed. 
-void TaskManager::StateChanged(TaskDriver *)
+void TaskManager::HandleSuccessfulJob(CompleteTask *ctsk)
 {
-	// This is currently unused. IAmDone() gets called if the state 
-	// changed to ESDone. 
+	// Great, everything went fine. 
+	// Reset this counter: 
+	jobs_failed_in_sequence=0;
+	
+	if(ctsk->state==CompleteTask::TaskDone)
+	{
+		// Good, task is done completely. 
+		tasklist_todo.dequeue(ctsk);
+		tasklist_done.append(ctsk);
+		// See if we have to connect to the task source and schedule 
+		// that if needed: 
+		_CheckStartExchange();
+	}
 }
 
-// Called by TaskDriver when he is done and wants to get deleted: 
-void TaskManager::IAmDone(TaskDriver *td)
+
+// running_jobs: number of still running jobs; ONLY FOR emergency error handling. 
+void TaskManager::HandleFailedTask(CompleteTask *ctsk,int running_jobs)
 {
-	if(!td)  return;
+	// Error info already stored. 
 	
-	assert(td->estat==TaskDriver::ESDone);
-	
-	CompleteTask *ctsk=td->pinfo.ctsk;
-	if(!ctsk)
-	{
-		// Now, if pinfo.ctsk is NULL, then we did not yet successfully start 
-		// the task driver. 
-		// In this case, simply delete it again. 
-		// (We may NOT decrease running_jobs as this job was not RUNING.) 
-		// (Also, ctsk->td is NULL here.)
-		assert(ctsk->td==NULL);  // YES!!
-		td->DeleteMe();  // will unregister
-		return;
-	}
-	
-	// See if data is consistent: 
-	assert(ctsk->td==td);
-	
-	// Okay, the job is done, so the CompleteTask is no longer processed: 
-	ctsk->td=NULL;
-	// Dealt with it: 
-	td->pinfo.ctsk=NULL;
-	td->DeleteMe();  // will unregister
-	
-	// Also, fewer processes are running:
-	--running_jobs[td->f->DType()];
-	
-	// See what happened to the task...
-	if(td->esdetail==TaskDriver::EDSuccess)
-	{
-		// Great, everything went fine. 
-		// Reset this counter: 
-		jobs_failed_in_sequence=0;
-		
-		// Copy status info & statistics: 
-		// Also, decide what to do next: 
-		switch(ctsk->state)
-		{
-			case CompleteTask::ToBeRendered:
-				ctsk->rtes=td->pinfo.tes;
-				// Either waiting to be filtered or done. 
-				if(ctsk->ft)  ctsk->state=CompleteTask::ToBeFiltered;
-				else  ctsk->state=CompleteTask::TaskDone;
-				break;
-			case CompleteTask::ToBeFiltered:
-				ctsk->ftes=td->pinfo.tes;
-				// Task now done. 
-				ctsk->state=CompleteTask::TaskDone;
-				break;
-			default:  assert(0);  break;
-		}
-		if(ctsk->state==CompleteTask::TaskDone)
-		{
-			// Good, task is done completely. 
-			tasklist_todo.dequeue(ctsk);
-			tasklist_done.append(ctsk);
-			// See if we have to connect to the task source and schedule 
-			// that if needed: 
-			_CheckStartExchange();
-		}
-	}
+	tasklist_todo.dequeue(ctsk);
+	tasklist_done.append(ctsk);
 	
 	if(kill_tasks_and_quit_now)
 	{
 		// No, we only kill 'em and quit. Nothing else. 
-		int nrunning=0;
-		for(int i=0; i<_DTLast; i++)
-		{  nrunning+=running_jobs[i];  }
-		if(!nrunning)
+		if(!running_jobs)
 		{
 			Warning("No more running jobs, QUITTING NOW.\n");
 			fdmanager()->Quit(2);
@@ -167,20 +116,30 @@ void TaskManager::IAmDone(TaskDriver *td)
 		return;  // necessary! ...
 		// ... because it will be normal that the tasks have 
 		//     edsetail==TaskDriver::EDATerm (thus not EDSuccess) 
-		//     here. And we won't muck with errors now. 
+		//     here. And we won't muck with errors now and we 
+		//     do NOT (try to) connect to the task source. We 
+		//     are here becuase of severe error (probably because 
+		//     connecton to TaskSource failed). 
 	}
 	
-	if(td->esdetail!=TaskDriver::EDSuccess)
+	++jobs_failed_in_sequence;
+	if(max_failed_in_sequence && 
+	   jobs_failed_in_sequence>=max_failed_in_sequence)
 	{
-		// Um, yeah. -- Okay, let's deal with failed job. 
-		// Must save failure code in CompleteTask, mark it as done 
-		// and feed it into the TaskSource next time. 
-		// Should stop if more than failed_thresh tasks failed. 
-		_HandleFailedJob(ctsk,td);
-		// See if we have to connect to the task source and schedule 
-		// that if needed: 
-		_CheckStartExchange();
+		Error("%d jobs failed in sequence. Giving up.\n",
+			jobs_failed_in_sequence);
+		dont_start_more_tasks=1;
+		schedule_quit=2;
+		ReSched();
 	}
+	
+	_CheckStartExchange();
+	
+	// Furthermore, we should probably send back the 
+	// done (and failed) tasks first before getting 
+	// new ones: 
+	if(connected_to_tsource)
+	{  ts_done_all_first=true;  }
 }
 
 
@@ -265,22 +224,13 @@ int TaskManager::tsnotify(TSNotifyInfo *ni)
 				
 				assert(ni->ctsk);   // otherwise internal error
 				
+				// Put task into queue (at the END of the queue): 
+				tasklist_todo.append(ni->ctsk);
+				
 				// NOTE: ni->ctsk->state = TaskDone here. Must set up 
 				//       proper value now and set up TaskParams: 
-				int rv=_DealWithNewTask(ni->ctsk);
-				if(rv)
-				{
-					// Grmbl...
-					// Something is wrong with the task or allocation 
-					// failure. 
-					// (Note that task is already queued.)
-					
-					// This will dequeue the job from todo and put it 
-					// into done, then set internal error and increase 
-					// start failed in sequence counter. 
-					// (It will even set ts_done_all_first if connected.) 
-					_HandleFailedJob(ni->ctsk,NULL);
-				}
+				interface->DealWithNewTask(ni->ctsk);
+				// This called HandleFailedTask() on error. 
 				
 				// Great. Task queued; now see if we want to start a job 
 				// and go on talking to task source: 
@@ -502,37 +452,7 @@ int TaskManager::signotify(const SigInfo *si)
 		    (!exec_stopped && si->info.si_signo==SIGTSTP) )
 		{
 			int signo=exec_stopped ? SIGCONT : SIGSTOP;
-			// send signal to the tasks: 
-			Warning("Sending SIG%s to all jobs... ",
-				signo==SIGCONT ? "CONT" : "STOP");
-			int nkilled=0;
-			int nfailed=0;
-			for(TaskDriver *i=joblist.first(); i; i=joblist.next(i))
-			{
-				if(i->pinfo.pid<0)  continue;
-				if(::kill(i->pinfo.pid,signo))
-				{
-					// We simply ignore these errors because the task may 
-					// have just exited. 
-					if(!nfailed)  Warning("\n");
-					if(i->pinfo.ctsk)
-					{  Warning("Failed for job %s (pid %ld) [frame %d]: "
-						"%s (ignored)\n",i->pinfo.args.first()->str(),
-						long(i->pinfo.pid),i->pinfo.ctsk->frame_no,
-						strerror(errno));  }
-					else
-					{  Warning("Failed for pid %ld: %s (ignored)\n",
-						i->pinfo.pid,strerror(errno));  }
-					++nfailed;
-				}
-				else ++nkilled;
-			}
-			if(nfailed)
-			{  Warning("Sending signals: success: %d jobs; failed: %d jobs\n",
-				nkilled,nfailed);  }
-			else
-			{  Warning("okay, %d jobs%s\n",nkilled,
-				exec_stopped ? "" : " [STOPPING]");  }
+			interface->StopContTasks(signo);
 			
 			// Swap state: 
 			exec_stopped=exec_stopped ? 0 : 1;
@@ -605,18 +525,8 @@ void TaskManager::_schedule(TimerInfo *ti)
 	if(sched_kill_tasks)
 	{
 		// Schedule TERM & KILL for all tasks. 
-		Warning("Scheduling TERM & KILL on all jobs...\n");
-		int nkilled=0;
-		for(TaskDriver *i=joblist.first(); i; i=joblist.next(i))
-		{
-			if(i->pinfo.pid<0)  continue;
-			int rv=i->KillProcess(
-				(sched_kill_tasks==1) ? JK_UserInterrupt : JK_ServerError);
-			if(!rv)
-			{  ++nkilled;  }
-
-			#warning !!!! HANDLE THE RACE CASE !!!!
-		}
+		int nkilled=interface->TermAllJobs(
+			(sched_kill_tasks==1) ? JK_UserInterrupt : JK_ServerError);
 		
 		Verbose("Sent SIGTERM to %d jobs.%s",nkilled,
 			kill_tasks_and_quit_now ? "" : "\n");
@@ -641,22 +551,7 @@ void TaskManager::_schedule(TimerInfo *ti)
 	if(scheduled_for_start && load_permits_starting)
 	{
 		// We have to start a job for a task. Okay, let's do it: 
-		TaskDriver *tmp_td=NULL;
-		int rv=_LaunchJobForTask(scheduled_for_start,&tmp_td);
-		if(rv)
-		{
-			// Launching the task failed. 
-			
-			// So, the task must be queued in the done list with proper 
-			// error info set: 
-			_HandleFailedJob(scheduled_for_start,tmp_td);
-		}
-		else
-		{
-			// Successful start. 
-			//  running_jobs[dtype] already incremened 
-			//  by _LaunchJobForTask(). 
-		}
+		interface->LaunchTask(scheduled_for_start);
 		
 		_KillScheduledForStart();
 		
@@ -668,11 +563,7 @@ void TaskManager::_schedule(TimerInfo *ti)
 	{
 		// Quit is scheduled. So, we quit if everything is cleaned up: 
 		
-		//fprintf(stderr,"Counts = %d,%d,%d; connected=%d, pending_action=%d\n",
-		//	joblist.count(),tasklist_todo.count(),tasklist_done.count(),
-		//	connected_to_tsource,pending_action);
-		
-		if(joblist.is_empty() && 
+		if(!interface->AreThereJobsRunning() && 
 		   tasklist_todo.is_empty() && 
 		   tasklist_done.is_empty() && 
 		   !connected_to_tsource && 
@@ -759,7 +650,10 @@ void TaskManager::_DoQuit(int status)
 	VerboseSpecial("Now exiting with status=%s (%d)",
 		status ? "failure" : "success",status);
 	
-	ProcTimeUsage ptu_self,ptu_chld;
+	if(interface)
+	{  interface->WriteProcessingInfo(1,NULL);  }
+	
+	ProcessManager::ProcTimeUsage ptu_self,ptu_chld;
 	ProcessManager::manager->GetTimeUsage(0,&ptu_self);
 	ProcessManager::manager->GetTimeUsage(1,&ptu_chld);
 	
@@ -818,6 +712,7 @@ void TaskManager::_DoQuit(int status)
 }
 
 
+
 // Called via timernotify() after everything has been set up and 
 // as the first action in the main loop. Used to get the TaskSource 
 // and begin actually doing something...
@@ -825,94 +720,71 @@ void TaskManager::_DoQuit(int status)
 int TaskManager::_StartProcessing()
 {
 	assert(tasksource()==NULL);  // yes, must be NULL here. 
+	assert(!interface);
 	
+	const char *tdif_name="local";
+	#warning fixme: allow for other interfaces: 
 	const char *ts_name="local";
 	#warning fixme: allow for other task sources
 	//ts_name="LDR";
+	
+	Verbose("Choosing: %s task source; %s task driver (interface)\n",
+		ts_name,tdif_name);
+	
+	// OKAY; SET UP TASK SOURCE: 
 	TaskSourceFactory *tsf=component_db->FindSourceFactoryByName(ts_name);
+	if(!tsf)
+	{
+		Error("Fatal: Task source \"%s\" not present. Giving up.\n",ts_name);
+		return(-1);
+	}
 	
 	// Let TaskSourceFactory do final init: 
 	if(tsf->FinalInit())
-	{
-		// Failed; message(s) written. 
-		return(-1);
-	}
+	{  return(-1);  }  // Failed; message(s) written. 
 	
-	TaskSource *ts = tsf ? tsf->Create() : NULL;
+	TaskSource *ts=tsf->Create();
 	if(!ts)
 	{
-		// `Task source not available´ means that it was not built 
-		// into this program. 
-		Error("Failed to set up %s task source: %s\n",ts_name,
-			tsf ? "initialisation failed" : "task source not available");
+		Error("Failed to initialize %s task source.\n",ts_name);
 		return(-1);
 	}
 	
+	// NOW, SET UP TASK DRIVER INTERFACE: 
+	TaskDriverInterfaceFactory *tdiff=
+		component_db->FindDriverInterfaceFactoryByName(tdif_name);
+	if(!tdiff)
+	{
+		Error("Fatal: Task driver interface \"%s\" not present. "
+			"Giving up.\n",tdif_name);
+		return(-1);
+	}
+	
+	// Let TaskDriverInterfaceFactory do final init: 
+	if(tdiff->FinalInit())
+	{  return(-1);  }    // Failed; message(s) written. 
+	
+	interface=tdiff->Create();  // MUST be done after FinalInit(). 
+	if(!interface)
+	{
+		Error("Failed to initialize %s task driver interface\n",tdif_name);
+		return(-1);
+	}
+	
+	// Set some important vars: 
 	connected_to_tsource=0;
 	pending_action=ANone;
-	
 	UseTaskSource(ts);
-	Verbose("Task source (%s) set up successfully.\n",ts_name);
-	
-	// Adjust task limits (if not told otherwise by user): 
-	if(njobs<1)
-	{
-		njobs=GetNumberOfCPUs();
-		assert(njobs>=1);
-	}
-	for(int i=0; i<_DTLast; i++)
-	{
-		if(prm[i].maxjobs<0)  prm[i].maxjobs=njobs;
-		// Convert timeout from seconds to msec: 
-		prm[i].timeout=(prm[i].timeout<0) ? -1 : (prm[i].timeout*1000);
-	}
-	
-	if(todo_thresh_low<1)  // YES: <1, NOT <0
-	{  todo_thresh_low=njobs+1;  }
-	
-	#warning todo_thresh values need optimization. 
-	// Adjust task queue thresholds: 
-	if(todo_thresh_low<njobs+1)
-	{  Warning("It is very unwise to set low task queue threshold (%d) "
-		"smaller than njobs+1 (%d)\n",todo_thresh_low,njobs+1);  }
-	if(todo_thresh_high+1<todo_thresh_low)
-	{
-		int oldval=todo_thresh_high;
-		todo_thresh_high=todo_thresh_low+5;
-		if(oldval>=0)  // oldval=-1 for initial value set by constructor
-		{  Warning("Adjusted high task queue threshold to %d (was %d)\n",
-			todo_thresh_high,oldval);  }
-	}
 	
 	// Write out useful verbose information: 
-	VerboseSpecial("Okay, %s work: njobs=%d (parallel tasks)",
-		(GetTaskSourceType()==TST_Active) ? "waiting for" : "beginning to",
-		njobs);
-	Verbose("  jtype    jmax  nice   timeout  tty\n");
-	for(int i=0; i<_DTLast; i++)
-	{
-		DTPrm *p=&prm[i];
-		Verbose("  %s:  %4d  ",DTypeString(TaskDriverType(i)),p->maxjobs);
-		if(p->niceval==TaskParams::NoNice)
-		{  Verbose("  --");  }
-		else
-		{  Verbose("%s%3d%s",p->nice_jitter ? "" : " ",
-			p->niceval,p->nice_jitter ? "±" : "");  }
-		if(p->timeout<0)
-		{  Verbose("        --");  }
-		else
-		{  long x=(p->timeout+500)/1000;
-			Verbose("  %02d:%02d:%02d",x/3600,(x/60)%60,x%60);  }
-		Verbose("  %s",p->call_setsid ? " no" : "yes");
-		if(i==DTRender && (mute_renderer || quiet_renderer))
-		{  Verbose(quiet_renderer ? "  (quiet)" : "  (mute)");  }
-		Verbose("\n");
-	}
 	
-	Verbose("  task-thresh: low=%d, high=%d; max-failed-in-seq=",
-		todo_thresh_low,todo_thresh_high);
-	if(max_failed_in_sequence)  Verbose("%d\n",max_failed_in_sequence);
-	else Verbose("OFF\n");
+	interface->WriteProcessingInfo(0,
+		(GetTaskSourceType()==TST_Active) ? "waiting for" : "beginning to");
+	
+	char tmp[24];
+	if(max_failed_in_sequence)  snprintf(tmp,24,"%d",max_failed_in_sequence);
+	else  strcpy(tmp,"OFF");
+	Verbose("  max-failed-in-seq=%s\n",tmp);
 	
 	// Get load val for first time; see if it is >0: 
 	int loadval=_GetLoadValue();
@@ -932,7 +804,7 @@ int TaskManager::_StartProcessing()
 		assert(load_poll_msec>0);  // we want it LARGER THAN 0
 	}
 	
-	ProcTimeUsage ptu;
+	ProcessManager::ProcTimeUsage ptu;
 	ProcessManager::manager->GetTimeUsage(-1,&ptu);
 	starttime=ptu.starttime;
 	Verbose("  starting at (local): %s\n",starttime.PrintTime(1,1));
@@ -952,57 +824,24 @@ int TaskManager::_StartProcessing()
 }
 
 
-// Actually launch a job for a task. No check if we may do that. 
-int TaskManager::_LaunchJobForTask(CompleteTask *ctsk,TaskDriver **td)
+// Called by TaskDriverInterface becuase a TaskDriver or LDR client 
+// unregistered 
+// Only there to check if we want to start new tasks. 
+void TaskManager::CheckStartNewJobs()
 {
-	// See which task to launch: 
-	const RF_DescBase *d=NULL;
-	TaskStructBase *tsb=NULL;
-	TaskParams *tp=NULL;
-	TaskDriverType dtype=DTNone;
-	switch(ctsk->state)
+	// See if we want to start more jobs: 
+	_CheckStartTasks();
+	
+	if(!scheduled_for_start)  // _CheckStartTasks() did not schedule a start 
 	{
-		case CompleteTask::ToBeRendered:
-			tsb=ctsk->rt;
-			tp=ctsk->rtp;
-			d=ctsk->rt ? ctsk->rt->rdesc : NULL;
-			dtype=DTRender;
-			break;
-		case CompleteTask::ToBeFiltered:
-			tsb=ctsk->ft;
-			tp=ctsk->ftp;
-			d=ctsk->ft ? ctsk->ft->fdesc : NULL;
-			dtype=DTFilter;
-			break;
-		default:  assert(0);  break;
+		// Okay, quit handling: 
+		if(schedule_quit_after && tasklist_todo.is_empty())
+		{
+			if(schedule_quit<schedule_quit_after)
+			{  schedule_quit=schedule_quit_after;  }
+			ReSched();
+		}
 	}
-	
-	assert(d);
-	assert(d->dfactory);
-	*td=d->dfactory->Create();
-	
-	if(!*td)
-	{
-		Error("Failed to set up (%s) task driver %s for %s\n",
-			DTypeString(dtype),(*td)->f->DriverName(),d->name.str());
-		return(1);
-	}
-	
-	// Already set ctsk; task driver removes it again if an error occurs: 
-	(*td)->pinfo.ctsk=ctsk;
-	int rv=(*td)->Run(tsb,tp);
-	if(rv)   // Error was already written. 
-	{  return(2);  }  // IAmDone() was called...
-	
-	// This is that we know which TaskDriver does which CompleteTask: 
-	// NOTE that this is set AFTER Run() returns success. 
-	// Because now, the task counts as `running' (as we've performed 
-	// the fork()). 
-	(*td)->pinfo.ctsk=ctsk;
-	ctsk->td=*td;
-	++running_jobs[dtype];
-	
-	return(0);
 }
 
 
@@ -1015,41 +854,8 @@ void TaskManager::_CheckStartTasks()
 	// See if there's already a task scheduled for start: 
 	if(scheduled_for_start)  return;
 	
-	int jobs_running=0;
-	for(int i=0; i<_DTLast; i++)
-	{  jobs_running+=running_jobs[i];  }
-	if(jobs_running>=njobs)  return;
+	CompleteTask *startme=interface->GetTaskToStart(&tasklist_todo,schedule_quit);
 	
-	bool may_start[_DTLast];
-	int may_start_anything=0;
-	for(int i=0; i<_DTLast; i++)
-	{
-		bool tmp=(running_jobs[i]<prm[i].maxjobs);
-		may_start[i]=tmp;
-		if(tmp)  ++may_start_anything;
-	}
-	if(!may_start_anything)  return;
-	
-	// Okay, less jobs are running than possible. 
-	// We should start one if there is one. 
-	CompleteTask *startme=NULL;
-	for(CompleteTask *i=tasklist_todo.first(); i; i=i->next)
-	{
-		assert(i->state!=CompleteTask::TaskDone);
-		if(i->td)  continue;  // task is currently processed 
-		// See if we can start a job for task *i: 
-		if( (i->state==CompleteTask::ToBeRendered && may_start[DTRender]) ||
-			(i->state==CompleteTask::ToBeFiltered && may_start[DTFilter]) )
-		{
-			startme=i;
-			// Okay, if we have quit scheduled, we do not start NEW tasks. 
-			if(schedule_quit && 
-				( i->state==CompleteTask::ToBeRendered || 
-				 (i->state==CompleteTask::ToBeFiltered && !_RenderedTask(i))) )
-			{  startme=NULL;  }
-			if(startme)  break;
-		}
-	}
 	if(!startme)  return;
 	
 	// Okay, actually schedule task for starting: 
@@ -1105,7 +911,7 @@ int TaskManager::_CheckStartExchange()
 			++n_todo;
 			// currently getting processed if(i->td)
 		}
-		if(n_todo<todo_thresh_low)  // NOT <= 
+		if(n_todo<interface->Get_todo_thresh_low())  // NOT <= 
 		{  must_connect=1;  }
 	}
 	if(must_connect<0)
@@ -1157,7 +963,8 @@ bool TaskManager::_TS_CanDo_GetTask(bool can_done)
 	     if(dont_start_more_tasks)  can_get=false;
 	else if(schedule_quit || schedule_quit_after)  can_get=false;
 	else if(ts_done_all_first && can_done)  can_get=false;
-	else if(tasklist_todo.count()>=todo_thresh_high)  can_get=false;
+	else if(tasklist_todo.count()>=interface->Get_todo_thresh_high())
+		can_get=false;
 	return(can_get);
 }
 
@@ -1246,124 +1053,6 @@ void TaskManager::_TS_GetOrDoneTask()
 		}
 		default:  assert(0);  break;
 	}
-}
-
-
-void TaskManager::_HandleFailedJob(CompleteTask *ctsk,TaskDriver *td)
-{
-	tasklist_todo.dequeue(ctsk);
-	tasklist_done.append(ctsk);
-	
-	// Store error info: 
-	TaskExecutionStatus *uset=NULL;
-	switch(ctsk->state)
-	{
-		case CompleteTask::ToBeRendered:  uset=&ctsk->rtes;  break;
-		case CompleteTask::ToBeFiltered:  uset=&ctsk->ftes;  break;
-		default:  assert(0);  break;
-	}
-	if(td)
-	{  *uset=td->pinfo.tes;  }
-	else
-	{
-		// We have td=NULL. This can happen if we fail at lauch time. 
-		uset->status=TTR_ExecFailed;
-		uset->signal=JK_InternalError;
-	}
-	
-	++jobs_failed_in_sequence;
-	if(max_failed_in_sequence && 
-	   jobs_failed_in_sequence>=max_failed_in_sequence)
-	{
-		Error("%d jobs failed in sequence. Giving up.\n",
-			jobs_failed_in_sequence);
-		dont_start_more_tasks=1;
-		schedule_quit=2;
-		ReSched();
-	}
-	
-	_CheckStartExchange();
-	
-	// Furthermore, we should probably send back the 
-	// done (and failed) tasks first before getting 
-	// new ones: 
-	if(connected_to_tsource)
-	{  ts_done_all_first=true;  }
-}
-
-
-int TaskManager::_DealWithNewTask(CompleteTask *ctsk)
-{
-	// First, set up state: 
-	if(ctsk->rt)
-	{  ctsk->state=CompleteTask::ToBeRendered;  }
-	else if(ctsk->ft)
-	{  ctsk->state=CompleteTask::ToBeFiltered;  }
-	else 
-	{
-		// This is an internal error. Task source may not 
-		// return a task without anything to do (i.e. with 
-		// rt and ft set to NULL). 
-		assert(ctsk->rt || ctsk->ft);
-	}
-	
-	// Queue task: 
-	tasklist_todo.append(ctsk);
-	
-	// Then, create TaskParams: 
-	if(ctsk->rt)
-	{
-		ctsk->rtp=NEW<RenderTaskParams>();
-		if(!ctsk->rtp)  return(1);
-		
-		// Setup special fields for renderer: 
-		if(quiet_renderer || mute_renderer)
-		{  ctsk->rtp->stdout_fd=dev_null_fd;  }
-		if(quiet_renderer)
-		{  ctsk->rtp->stderr_fd=dev_null_fd;  }
-	}
-	if(ctsk->ft)
-	{
-		ctsk->ftp=NEW<FilterTaskParams>();
-		if(!ctsk->ftp)  return(1);
-		
-		Error("Cannot yet deal with filter.\n");
-		abort();
-	}
-	
-	// Set up common fields in TaskParams:
-	for(int i=0; i<_DTLast; i++)
-	{
-		TaskParams *tp=NULL;
-		TaskStructBase *tsb=NULL;
-		switch(i)
-		{
-			case DTRender:  tp=ctsk->rtp;  tsb=ctsk->rt;  break;
-			case DTFilter:  tp=ctsk->ftp;  tsb=ctsk->ft;  break;
-			default:  assert(0);  break;
-		}
-		// tp=NULL -> not a `i´ (DTRender/DTFilter) - task. 
-		if(!tp)  continue;
-		
-		DTPrm *p=&prm[i];
-		if(p->niceval!=TaskParams::NoNice)
-		{
-			tp->niceval=p->niceval;
-			if(p->nice_jitter)
-			{
-				tp->niceval+=(random()%3-1);
-				// Prevent nice to be <0 if the original value was >=0. 
-				if(p->niceval>=0 && tp->niceval<0)
-				{  tp->niceval=0;  }
-			}
-		}
-		tp->timeout=(p->timeout<=0) ? (-1) : p->timeout;
-		if(tsb->timeout>0 && tp->timeout>tsb->timeout)
-		{  tp->timeout=tsb->timeout;  }  // Another timeout. Take shorter one. 
-		tp->call_setsid=p->call_setsid ? 1 : 0;
-	}
-	
-	return(0);
 }
 
 
@@ -1486,7 +1175,7 @@ void TaskManager::_PrintDoneInfo(CompleteTask *ctsk)
 			ctsk->rt->width,ctsk->rt->height,
 			ctsk->rt->oformat ? ctsk->rt->oformat->name : NULL);
 		_DoPrintTaskExecuted(ctsk->rtp,ctsk->rt->rdesc->binpath.str(),
-			!_RenderedTask(ctsk));
+			!IsARenderedTask(ctsk));
 		_PrintTaskExecStatus(&ctsk->rtes);
 	}
 	else
@@ -1498,63 +1187,11 @@ void TaskManager::_PrintDoneInfo(CompleteTask *ctsk)
 		Verbose("** Filter task info not yet supported. [FIXME!] **\n");
 		
 		_DoPrintTaskExecuted(ctsk->ftp,ctsk->ft->fdesc->binpath.str(),
-			!_FilteredTask(ctsk));
+			!IsAFilteredTask(ctsk));
 		_PrintTaskExecStatus(&ctsk->ftes);
 	}
 	else
 	{  Verbose("  Filter task: [none]\n");  }
-}
-
-
-// These are called by the constructor/destructor of TaskDriver: 
-int TaskManager::RegisterTaskDriver(TaskDriver *td)
-{
-	if(!td)  return(0);
-	
-	// Check if queued: 
-	if(joblist.prev(td) || td==joblist.first())  return(1);
-	
-	joblist.append(td);
-	
-	
-	return(0);
-}
-
-void TaskManager::UnregisterTaskDriver(TaskDriver *td)
-{
-	if(!td)  return;
-	// Check if queued: 
-	if(!joblist.prev(td) && td!=joblist.first())  return;
-	
-	// Check state...
-	// TaskDriver::ESNone: 
-	//   Well, seems this one did not do anything. So 
-	//   there should not be a problem. 
-	// TaskDriver::ESDone:
-	//   That was caught in IAmDone(). 
-	if(td->estat!=TaskDriver::ESNone && 
-	   td->estat!=TaskDriver::ESDone )
-	{
-		// How can it unregister when not being in state ESNone or ESDone?
-		assert(0);
-	}
-	
-	// Dequeue task: 
-	joblist.dequeue(td);
-	
-	// See if we want to start more jobs: 
-	_CheckStartTasks();
-	
-	if(!scheduled_for_start)  // _CheckStartTasks() did not schedule a start 
-	{
-		// Okay, quit handling: 
-		if(schedule_quit_after && tasklist_todo.is_empty())
-		{
-			if(schedule_quit<schedule_quit_after)
-			{  schedule_quit=schedule_quit_after;  }
-			ReSched();
-		}
-	}
 }
 
 
@@ -1602,151 +1239,59 @@ int TaskManager::CheckParams()
 		}
 	}
 	
-	// See if we need /dev/null FD and open it if needed: 
-	if(mute_renderer || quiet_renderer)
-	{ 
-		dev_null_fd=open("/dev/null",O_RDONLY);
-		// We must PollFD() the fd so that it gets properly closed on 
-		// execution of other processes. 
-		if(dev_null_fd<0 || PollFD(dev_null_fd))
-		{  Error("Failed to open /dev/null: %s\n",
-			(dev_null_fd<0) ? strerror(errno) : "alloc failure");  }
-	}
+	// Always open /dev/null: 
+	dev_null_fd=open("/dev/null",O_RDONLY);
+	// We must PollFD() the fd so that it gets properly closed on 
+	// execution of other processes. 
+	if(dev_null_fd<0 || PollFD(dev_null_fd))
+	{  Error("Failed to open /dev/null: %s\n",
+		(dev_null_fd<0) ? strerror(errno) : "alloc failure");  }
 	
 	return(failed ? 1 : 0);
-}
-
-
-static struct _ParamDescStuff
-{
-	const char *jobs_max_str;
-	const char *nice_str;
-	const char *timeout_str;
-	const char *nice_jitter_str;
-	const char *detach_term_str;
-} _pds[_DTLast]=
-{
-  { // _DTRender: 
-	"max number of simultanious render jobs",
-	"render job nice value",
-	"render job time limit (seconds; -1 for none)",
-	"switch on/off render job nice jitter (change nice value +/- 1 to "
-		"prevent jobs from running completely simultaniously; no effect "
-		"unless -rnice is used)",
-	"disable this to allow terminal to control render process "
-		"(-no-rdetach-term is NOT recommended)"
-  },
-  { // _DTFilter;
-	"max number of simultanious filter jobs",
-	"filter job nice value",
-	"filter job time limit (seconds; -1 for none)",
-	"switch on/off filter job nice jitter (see also -r-nice-jitter)",
-	"terminal control over filter process"
-  }
-};
-
-
-int TaskManager::_SetUpParams(TaskDriverType dtype)
-{
-	switch(dtype)
-	{
-		case DTRender:
-			if(SetSection("r","render parameters"))  return(1);
-			break;
-		case DTFilter:
-			if(SetSection("f","filter parameters"))  return(1);
-			break;
-		default:  assert(0);  break;
-	}
-	
-	DTPrm *p=&prm[dtype];
-	const _ParamDescStuff *s=&_pds[dtype];
-	AddParam("jobs-max",s->jobs_max_str,&p->maxjobs);
-	AddParam("nice",s->nice_str,&p->niceval);
-	AddParam("timeout",s->timeout_str,&p->timeout);
-	AddParam("nice-jitter",s->nice_jitter_str,&p->nice_jitter);
-	AddParam("detach-term",s->detach_term_str,&p->call_setsid);
-	
-	return(0);  // add_failed checked somewhere else
 }
 
 
 // Return value: 0 -> OK; 1 -> error
 int TaskManager::_SetUpParams()
 {
-	if(_SetUpParams(DTRender) ||
-	   _SetUpParams(DTFilter) )
-	{  return(1);  }
-	
 	if(SetSection(NULL))
 	{  return(1);  }
 	
-	AddParam("njobs","number of simultanious jobs",&njobs);
 	AddParam("max-failed-in-seq|mfis",
 		"max number of jobs to fail in sequence until giving up "
 		"(0 to disable [NOT recommended])",&max_failed_in_sequence);
-	AddParam("task-thresh-low",
-		"start getting new tasks from the task source if there are less "
-		"than this number of non-completely processed tasks in the task "
-		"queue",&todo_thresh_low);
-	AddParam("task-thresh-high",
-		"never store more than this number of tasks in the local task queue",
-		&todo_thresh_high);
 	
-	AddParam("load-poll-msec","load value poll delay",&load_poll_msec);
 	AddParam("load-max","do not start jobs if the system load multiplied "
 		"with 100 is >= this value; instead wait unitl it is lower than "
 		"load-min",&load_high_thresh);
 	AddParam("load-min","resume to start jobs if the system load (multiplied "
 		"with 100) is < than this value; 0 turns off load check feature",
 		&load_low_thresh);
+	AddParam("load-poll-msec","load value poll delay",&load_poll_msec);
 	
 	#warning further params: delay_between_tasks, max_failed_jobs, \
-		dont_fail_on_failed_jobs, launch_if_load_smaller_than, \
+		dont_fail_on_failed_jobs, \
 		brutal_on_first_sigint, ignore_sigint, signal_never_abort
-	
-	// Also added to section `r´: 
-	if(SetSection("r"))  return(1);
-	AddParam("mute","direct renderer output (stdout) to /dev/null",
-		&mute_renderer);
-	AddParam("quiet","direct renderer output (stdout & stderr) to "
-		"/dev/null; implies -rmute",
-		&quiet_renderer);
 	
 	return(add_failed ? 1 : 0);
 }
 
-
 TaskManager::TaskManager(ComponentDataBase *cdb,int *failflag) :
 	FDBase(failflag),
-	ProcessBase(failflag),
 	TaskSourceConsumer(failflag),
 	par::ParameterConsumer_Overloaded(cdb->parmanager(),failflag),
 	starttime(),
-	joblist(failflag),
 	tasklist_todo(failflag),tasklist_done(failflag)
 {
 	component_db=cdb;
 	component_db->_SetTaskManager(this);
 	
-	// Initial values: 
-	njobs=-1;
+	interface=NULL;
 	
-	for(int i=0; i<_DTLast; i++)
-	{
-		running_jobs[i]=0;
-		DTPrm *p=&prm[i];
-		p->maxjobs=-1;   // initial value
-		p->niceval=TaskParams::NoNice;
-		p->call_setsid=true;
-		p->nice_jitter=true;
-		p->timeout=-1;
-	}
+	// Initial values: 
 	jobs_failed_in_sequence=0;
 	max_failed_in_sequence=3;   // 0 -> switch off `failed in sequence´-feature
 	
-	mute_renderer=false;
-	quiet_renderer=false;
 	dev_null_fd=-1;
 	
 	scheduled_for_start=NULL;
@@ -1758,9 +1303,6 @@ TaskManager::TaskManager(ComponentDataBase *cdb,int *failflag) :
 	sched_kill_tasks=0;
 	kill_tasks_and_quit_now=0;
 	exec_stopped=0;
-	
-	todo_thresh_low=-1;  // initial value
-	todo_thresh_high=-1;
 	
 	connected_to_tsource=0;
 	pending_action=ANone;
@@ -1820,9 +1362,6 @@ TaskManager::~TaskManager()
 	
 	// Make sure there are no jobs and no tasks left: 
 	assert(!scheduled_for_start);
-	for(int i=0; i<_DTLast; i++)
-	{  assert(!running_jobs[i]);  }
-	assert(joblist.is_empty());
 	if(!kill_tasks_and_quit_now)
 	{
 		assert(tasklist_todo.is_empty());
@@ -1836,6 +1375,9 @@ TaskManager::~TaskManager()
 	UseTaskSource(NULL);
 	if(ts)
 	{  delete ts;  }
+	
+	if(interface)
+	{  delete interface;  interface=NULL;  }
 	
 	if(last_proc_frames)  last_proc_frames=(int*)LFree(last_proc_frames);
 }

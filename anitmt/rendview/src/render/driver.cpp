@@ -14,7 +14,7 @@
  * 
  */
 
-#include "../database.hpp"
+#include "../../database.hpp"
 
 #include <assert.h>
 
@@ -34,8 +34,9 @@ int RenderDriver::Run(
 }
 
 
-RenderDriver::RenderDriver(TaskDriverFactory *df,int *failflag=NULL) : 
-	TaskDriver(df,failflag)
+RenderDriver::RenderDriver(TaskDriverFactory *df,TaskDriverInterface_Local *tdif,
+	int *failflag) : 
+	TaskDriver(df,tdif,failflag)
 {
 	/*int failed=0;
 	

@@ -154,7 +154,7 @@ struct PAR  // This serves as a namespace and a base class.
 		ParamInfo *info;
 		void *copyval;    // copy of the value
 		int nspec;    // how often the parameter was encountered in source
-		              // (gets summed up when overridden)
+		              // (added to info->nspec and reset when overridden)
 		
 		// [previous] location of the arg: 
 		ParamArg::Origin porigin;

@@ -40,6 +40,7 @@ class HTime
 		{  usec=0,msec,seconds,minutes,hours,days,_tslast  };
 		enum _CurrentTime { Curr };
 		enum _NullTime { Null };
+		enum _InvalidTime { Invalid };
 	private:
 		timeval tv;
 		static const int64_t conv_fact[];
@@ -62,6 +63,7 @@ class HTime
 		HTime()  { }
 		HTime(_CurrentTime)  {  SetCurr();  }
 		HTime(_NullTime)  {  tv.tv_sec=0;  tv.tv_usec=0;  }
+		HTime(_InvalidTime)  {  tv.tv_usec=-2000000;  }  // see SetInvalid()
 		~HTime()  { }
 		
 		// Copy: 
@@ -79,7 +81,7 @@ class HTime
 		
 		// Get stored time. This is only useful if HTime stores some 
 		// elapsed time (e.g. consumed system time) and not a real 
-		// date. 
+		// date. Only call if !IsInvalid(). 
 		// Get() -> get integer value; result truncated at division
 		// GetR() -> get integer value; result rounded at division
 		// GetD() -> get floating point value 
@@ -94,15 +96,15 @@ class HTime
 		void SetTimeval(timeval *stv)
 			{  tv=*stv;  _Normalize(&tv);  }
 		
-		// Arithmetics: (val may be <0) 
+		// Arithmetics: (val may be <0) [Do not call if IsInvalid().]
 		HTime &Add(long val,TimeSpec sp=msec);
 		HTime &Sub(long val,TimeSpec sp=msec);
 		
-		// Calc time differences: (*this = endtime)
+		// Calc time differences: (*this = endtime) [Do not call if IsInvalid().]
 		HTime operator-(const HTime &start) const;
 		HTime &operator-=(const HTime &start);
 		
-		// Add time differences: 
+		// Add time differences: [Do not call if IsInvalid().]
 		HTime operator+(const HTime &start) const;
 		HTime &operator+=(const HTime &start);
 		
@@ -129,7 +131,7 @@ class HTime
 		
 		// Time differences: 
 		// starttime: *this; endtime: NULL=current 
-		// BEWARE OF OVERFLOWS. 
+		// BEWARE OF OVERFLOWS. Only call if !IsInvalid(). 
 		// Note: Elapsed()  -> result truncated at division
 		//       ElapsedR() -> result rounded at division
 		//       ElapsedD() -> floating point division
@@ -139,7 +141,7 @@ class HTime
 			{  return((sp<_tslast) ? long(_RoundAdd(_Delta(endtime),sp)/conv_fact[sp]) : (-1L));  }
 		double ElapsedD(TimeSpec sp,const HTime *endtime=NULL) const
 			{  return((sp<_tslast) ? (double(_Delta(endtime))/conv_factD[sp]) : (-1.0));  }
-		// Faster for milliseconds: 
+		// Faster for milliseconds: Only call if !IsInvalid(). 
 		// MsecElapsed()  -> result truncated at division
 		// MsecElapsedR() -> result rounded at division
 		// NEVER supply NULL as argument endtime here! 
@@ -168,6 +170,13 @@ class HTime
 		// (You may use operator-() to calc elapsed time.) 
 		// Returns static buffer. 
 		const char *PrintElapsed();
+		
+		// This is special functionality as used e.g. by TimeoutManager. 
+		// SetInvalid() sets an invalid time (currently usec=-2000000 
+		// which never happens otherwise as usec must always be >0) 
+		// and IsInvalid() checks if time is invalid. 
+		void SetInvalid()  {  tv.tv_usec=-2000000;  }
+		int IsInvalid() const  {  return(tv.tv_usec==-2000000);  }
 };
 
 #endif  /* _HLIB_HTime_H_ */

@@ -91,7 +91,7 @@ class RenderDriver : public TaskDriver
 		{  return(TaskDriver::StartProcess(rt,rtp,sp_p,sp_a,sp_m,sp_f,sp_e));  }
 	public:  _CPP_OPERATORS_FF
 		// Driver name copied into RefString. 
-		RenderDriver(TaskDriverFactory *f,int *failflag=NULL);
+		RenderDriver(TaskDriverFactory *f,TaskDriverInterface_Local *tdif,int *failflag=NULL);
 		virtual ~RenderDriver();
 		
 		// Called on statup to initialize the render drivers factories; 

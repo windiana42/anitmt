@@ -14,7 +14,7 @@
  * 
  */
 
-#include "../../database.hpp"
+#include "../../../database.hpp"
 
 
 class GenericFilterDriverFactory : 
@@ -37,7 +37,7 @@ class GenericFilterDriverFactory :
 		int CheckDesc(RF_DescBase *d);
 		
 		// Create a task driver: 
-		TaskDriver *Create();
+		TaskDriver *Create(TaskDriverInterface_Local *tdif);
 		
 		const char *DriverDesc() const;
 };
@@ -51,7 +51,7 @@ class GenericFilterDriver :
 		// Overriding virtual: 
 		int ProcessError(ProcessErrorInfo*);
 	public:  _CPP_OPERATORS_FF
-		GenericFilterDriver(GenericFilterDriverFactory *gf,int *failflag=NULL);
+		GenericFilterDriver(GenericFilterDriverFactory *gf,TaskDriverInterface_Local *tdif,int *failflag=NULL);
 		~GenericFilterDriver();
 		
 		// Overriding virtual: 

@@ -722,11 +722,13 @@ int ParameterManager::WriteParam(ParamCopy *pc)
 		rv=pi->vhdl->copy(pi,pi->valptr,pc->copyval,PAR::SOPCopy);
 		pi->nspec+=pc->nspec;   // sum up
 		++pi->is_set;
+		pc->nspec=0;  // reset
 	}
 	#if TESTING
-	else
+	else if(!pc->info->nspec)
 	{  fprintf(stderr,"ParameterManager: OOps: WriteParam() shall write "
-		"param %s with nspec=%d\n",pc->info->name,pc->nspec);  }
+		"param %s with copy->nspec=%d, info->nspec=%d\n",
+		pc->info->name,pc->nspec,pc->info->nspec);  }
 	#endif
 	
 	return(rv);

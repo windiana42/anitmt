@@ -1260,7 +1260,7 @@ ProcessManager::ProcessManager(char *const _envp[],int *failflag=NULL) :
 	envp=_envp;
 	limitproc=-1;
 	
-	if(SetManager())
+	if(SetManager(FDManager::MT_Process))
 	{  --failed;  }
 	if(!(tid=InstallTimer(-1,0)))  // alloc timer node 
 	{  --failed;  }
@@ -1277,7 +1277,7 @@ ProcessManager::ProcessManager(char *const _envp[],int *failflag=NULL) :
 	// init global manager: 
 	#if TESTING
 	if(manager)
-	{  fprintf(stderr,"%s: more than one ProcessManager.\n",prg_name);  exit(1);  }
+	{  fprintf(stderr,"%s: more than one ProcessManager.\n",prg_name);  abort();  }
 	#endif
 	
 	// Set starttime: 

@@ -108,6 +108,7 @@ class TaskSourceFactory_Local :
 		const char *_FrameInfoLocationString(const PerFrameTaskInfo *fi);
 		int _CheckFramePattern(RefString *s,const char *name,
 			const PerFrameTaskInfo *fi);
+		int _SetUpAndCheckOutputFramePatterns(PerFrameTaskInfo *fi);
 		int _Param_ParseInSizeString(PerFrameTaskInfo *fi);
 		int _Param_ParseOutputFormat(PerFrameTaskInfo *fi);
 		int _Param_ParseRenderDesc(PerFrameTaskInfo *fi,int warn_unspec);

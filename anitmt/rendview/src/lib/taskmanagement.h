@@ -3,12 +3,11 @@
 #ifndef _LIB_TASKMANAGEMENT_H_
 #define _LIB_TASKMANAGEMENT_H_ 1
 
-// Basic hlib stuff: 
-#include <hlib/prototypes.h>
-#include <hlib/refstring.h>
-
-// Our misc stuff: 
+// Our misc stuff and config and HLIB config: 
 #include "prototypes.hpp"
+
+// Basic hlib stuff: 
+#include <hlib/refstring.h>
 
 // Process management & related: 
 #include <hlib/htime.h>
@@ -23,9 +22,18 @@
 
 class TaskManager;
 class TaskSource;
+class TaskDriverInterface;
 
 class TaskFile;
 class CompleteTask;
+
+enum TaskDriverType
+{
+	DTNone=-1,
+	DTRender,
+	DTFilter,
+	_DTLast
+};
 
 #endif  /* _LIB_TASKMANAGEMENT_H_ */
 

@@ -15,7 +15,7 @@
  * 
  */
 
-#include "../database.hpp"
+#include "../../database.hpp"
 
 
 RenderDesc::RenderDesc(int *failflag=NULL) :

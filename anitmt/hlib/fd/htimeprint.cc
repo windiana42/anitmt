@@ -16,6 +16,7 @@
 
 #include <hlib/htime.h>
 
+static const char *_is_invalid_str="[invalid time]";
 
 const char *HTime::PrintTime(int local=1,int with_msec=0)
 {
@@ -23,6 +24,8 @@ const char *HTime::PrintTime(int local=1,int with_msec=0)
 	// (Or should that be before 1970?!)
 	if(tv.tv_sec<0)  // This check is correct and sufficient. (usec NEVER negative)
 	{  return("[negative time]");  }
+	if(IsInvalid())
+	{  return(_is_invalid_str);  }
 	
 	time_t timep=tv.tv_sec;
 	int msec=(tv.tv_usec+500)/1000;
@@ -49,6 +52,9 @@ const char *HTime::PrintTime(int local=1,int with_msec=0)
 
 const char *HTime::PrintElapsed()
 {
+	if(IsInvalid())
+	{  return(_is_invalid_str);  }
+	
 	static char tmp[32];
 	char *ptr=tmp;
 	char *end=tmp+32;

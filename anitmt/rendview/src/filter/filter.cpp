@@ -15,7 +15,7 @@
  * 
  */
 
-#include "../database.hpp"
+#include "../../database.hpp"
 
 
 FilterDesc::FilterDesc(int *failflag=NULL) :

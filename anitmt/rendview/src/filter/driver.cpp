@@ -14,7 +14,7 @@
  * 
  */
 
-#include "../database.hpp"
+#include "../../database.hpp"
 
 #include <assert.h>
 
@@ -35,8 +35,9 @@ int FilterDriver::Run(
 }
 
 
-FilterDriver::FilterDriver(TaskDriverFactory *df,int *failflag=NULL) : 
-	TaskDriver(df,failflag)
+FilterDriver::FilterDriver(TaskDriverFactory *df,TaskDriverInterface_Local *tdif,
+	int *failflag) : 
+	TaskDriver(df,tdif,failflag)
 {
 	/*int failed=0;
 	

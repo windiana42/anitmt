@@ -44,11 +44,12 @@ int ParameterConsumer::CheckParam(ParamInfo *pi)
 	switch(pi->spectype)
 	{
 		case STNone:  break;
-		case STAtLeastOnce:  complain=(!pi->nspec);    break;
+		case STAtLeastOnce:  complain=(!pi->nspec);  break;
 		case STExactlyOnce:  complain=(pi->nspec!=1);  break;
 		case STMaxOnce:      complain=(pi->nspec>1);   break;
 		default:  complain=1;  break;
 	}
+	assert(!pi->nspec || pi->is_set);
 	if(complain)
 	{  CheckParamError(pi);  }
 	return(complain ? 1 : 0);

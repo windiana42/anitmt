@@ -137,6 +137,52 @@ void FDBase::_UnlockTimers()
 }
 
 
+// Be careful: old_msec_left may be -1 (after AddTimer). 
+void FDBase::_MsecLeftChanged(FDManager::TimerNode *i,long old_msec_left)
+{
+	if(sh_timer_dirty)  return;
+	if(i==sh_timer)
+	{
+		#if TESTING
+		if(old_msec_left<0)
+		{  fprintf(stderr,"FD:%d: OOPS! BUG! old_msec_left=%ld while i==sh_timer=%p\n",
+			__LINE__,old_msec_left,sh_timer);  abort();  }
+		#endif
+		if(i->msec_left>old_msec_left)
+		{  sh_timer_dirty=1;  fdmanager()->TimeoutChange();  }
+		return;
+	}
+	if(i->msec_val>=0)  // Not for disabled timers: 
+	{
+		if(!sh_timer || sh_timer->msec_left>i->msec_left)
+		{  sh_timer=i;  fdmanager()->TimeoutChange();  }
+	}
+	
+	#if TESTING_CHECK
+	// Check if sh_timer really is the shortest timer node: 
+	// If we reach here, sh_timer_dirty=0. 
+	if((sh_timer && !timers))
+	{
+		fprintf(stderr,"FD:%d: OOPS: BUG! sh_timer=%p, timers=%p\n",
+			__LINE__,sh_timer,timers);
+		abort();
+	}
+	// If we reach here, sh_timer!=NULL. 
+	for(FDManager::TimerNode *ii=timers; ii; ii=ii->next)
+	{
+		if(ii->msec_left<0)  continue;
+		if(ii->msec_left<sh_timer->msec_left)
+		{
+			fprintf(stderr,"FD:%d: OOPS: BUG! sh_timer->msec_left=%ld, "
+				"i->msec_left=%ld; old=%ld (msec_val=%ld)\n",__LINE__,
+				sh_timer->msec_left,i->msec_left,old_msec_left,i->msec_val);
+			abort();
+		}
+	}
+	#endif
+}
+
+
 // Go through list and find shortest enabled timer: 
 struct FDManager::TimerNode *FDBase::_GetShortestTimer()
 {
@@ -319,7 +365,7 @@ FDBase::FDBase(int *failflag=NULL)
 	timers=NULL;
 	fds=NULL;
 	deleted=1;  // Registering will set deleted=0. 
-	ismanager=0;
+	manager_type=0;  // FDManager::MT_None
 	timerlock=-1;
 	fdslock=-1;
 	sh_timer=NULL;

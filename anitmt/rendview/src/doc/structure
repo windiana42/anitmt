@@ -31,7 +31,7 @@ LLB = LinkedListBase<>
  +--------------------+------------------+
 
 
-                ,--TaskManager (between GetTask() / DoneTask()
+                ,--TaskDriverInterface (between GetTask() / DoneTask()
                 V
  +-------------------------------+
  |             LLB               |
@@ -50,14 +50,14 @@ MISSING: TaskFile
 
 TaskDriverType  { DTNone=-1, DTRender=0, DTFilter=1, _DTLast=2 };
 
-    ,--TaskManager
+    ,--TaskDriverInterface
     V
  +-----+---------+-------------+
  | LLB | FDBase  | ProcessBase |
  +-----+---------+-------------+
  |       ==TaskDriver==        |    One TaskDriver per running task; queue held
- | TaskDriverFactory *f;       |    by TaskManager; Pointer *f to associated
- |                             |    factory to access settings.
+ | TaskDriverFactory *f;       |    by TaskDriverInterface; Pointer *f to
+ |                             |    associated factory to access settings.
  |                             |
  |                             |
  |#############################|
@@ -150,9 +150,22 @@ TaskDriverType  { DTNone=-1, DTRender=0, DTFilter=1, _DTLast=2 };
  | FDBase | ProcessBase | TaskSourceConsumer |
  +-------------------------------------------+
  |              ==TaskManager==              |
- | LIST<TaskDriver> joblist;                 | 
  | LIST<CompleteTask> tasklist;              |
- | job limits / etc.                         |
- |                                           |
+ | TaskDriverInterface *interface;           |
  +-------------------------------------------+
 
+ +-------------------------------------------------------------+
+ |                   ==TaskDriverInterface==                   |
+ +-------------------------------------------------------------+
+ |          ProcessBase          |                             |
+ +-------------------------------+                             |
+ | ==TaskDriverInterface_Local== | ==TaskDriverInterface_LDR== |
+ | LIST<TaskDriver> joblist;     | LIST<> clientlist;          |
+ | job limits / etc.             | number of clients, ...      |
+ +-------------------------------+-----------------------------+
+
+ So, the TaskManager is the main class. It gets tasks from the TaskSource and 
+ then brings them to execution. This is done via TaskDriverInterface. 
+ The TaskDriverInterface is the virtualisation of the interface to the 
+ actual task execution, because local execution requires significant different 
+ routines as LDR. 

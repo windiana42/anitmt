@@ -83,16 +83,31 @@ class FDCopyManager : FDBase
 			ProgressAction progress_mask;
 			
 			//*** More tuning: ***
-			size_t iobufsize;  // Size of IO buffer allocated for the copy job 
-			// This needs some explanation: The filedescriptor is 
-			// polled for reading, if less than low_read_thresh bytes are 
-			// in the buffer and is no longer polled for reading if more 
-			// than high_read_thresh is in the buffer. 
-			// The dest fd is polled for writing if more than 
-			// high_write_thresh bytes are in the buffer and not polled 
-			// for writing if less than low_write_thresh in the buffer. 
+			// Size of IO buffer allocated for the copy job. 
+			// This is set to 0 for fd->buf and buf->fd modes. 
+			// This is automatically made smaller if larger than len. 
+			size_t iobufsize;
+			// This needs some explanation: 
+			// The source file descriptor is 
+			// * polled for reading, if less than low_read_thresh bytes 
+			//   are in the buffer 
+			//   (exactly: start reading if bufuse<=low_read_thresh) 
+			// * and is no longer polled for reading if more than 
+			//   high_read_thresh is in the buffer 
+			//   (exactly: stop reading if bufuse>=high_read_thresh). 
+			// The dest file descriptor is 
+			// * polled for writing if more than high_write_thresh bytes 
+			//   are in the buffer 
+			//   (exactly: start writing if bufuse>=high_write_thresh) 
+			// * and not polled for writing if less than low_write_thresh 
+			//   bytes are in the buffer 
+			//   (exactly: stop writing if bufuse<=low_write_thresh). 
+			// THUS: hard max for thresh is iobufsize, 
+			//       hard min for thresh is 0 and
+			//       high thresh must be larger than low thresh (NOT equal)
 			// You may count on reasonable defaults; 
-			// values of -1 mean -> set defaults according to iobufsize. 
+			// Values of -1 mean -> set defaults according to iobufsize. 
+			// No meaning for buf -> fd or fd -> buf modes. 
 			ssize_t low_read_thresh;
 			ssize_t high_read_thresh;
 			ssize_t low_write_thresh;
@@ -195,7 +210,7 @@ class FDCopyManager : FDBase
 			//   which may have POLLERR and POLLNVAL set. 
 			// - In case of SCTimeout it is the timeout which 
 			//   elapsed: 
-			#warning <hack me>
+			#warning <hack me> (timeout number 0,1,2)
 			int err_no;          // errno value 
 			
 			_CPP_OPERATORS_FF
@@ -237,7 +252,7 @@ class FDCopyManager : FDBase
 			OM_Fd2Buf    // fd -> buf 
 		};
 		
-		struct MCopyNode
+		struct MCopyNode : LinkedListBase<MCopyNode>
 		{
 			FDCopyBase *client;  // client back pointer
 			
@@ -290,17 +305,33 @@ class FDCopyManager : FDBase
 		// List of all FDCopyBase classes: 
 		LinkedList<FDCopyBase> clients;
 		
-		void _ReadError(MCopyNode *cpn,HTime *fdtime);
+		void _ReadInData_Buf(MCopyNode *cpn,HTime *fdtime);
+		void _WriteOutData_Buf(MCopyNode *cpn,HTime *fdtime);
+		void _ReadInData_FD(MCopyNode *cpn,HTime *fdtime);
+		void _WriteOutData_FD(MCopyNode *cpn,HTime *fdtime);
 		
-		int _SavePollEvents(MCopyNode *cpn);
-		int _RestorePollEvents(MCopyNode *cpn,int only_input_ev=0);
+		void _ReadError(MCopyNode *cpn,HTime *fdtime);
+		void _WriteError(MCopyNode *cpn,HTime *fdtime);
+		
+		void _StartCopyRequest(MCopyNode *cpn);
+		void _ContCopyRequest(MCopyNode *cpn);
+		void _StopCopyRequest(MCopyNode *cpn);
 		
 		void _KillRequest(MCopyNode *cpn);
 		void _FinishInput(MCopyNode *cpn,CopyInfo *cpi);
 		void _FinishRequest(MCopyNode *cpn,CopyInfo *cpi);
 		
+		void _ReDecidePollEvents_In(MCopyNode *cpn);
+		void _ReDecidePollEvents_Out(MCopyNode *cpn);
+		
+		int _SavePollEvents(MCopyNode *cpn);
+		int _RestorePollEvents(MCopyNode *cpn,int only_input_ev=0);
+		
+		void _SendProgressInfo(MCopyNode *cpn,HTime *fdtime,ProgressAction act);
 		void _FillProgressInfoStruct(ProgressInfo *pgi,MCopyNode *cpn,
 			HTime *fdtime=NULL,ProgressAction act=PAQuery);
+		void _SendCpNotify(MCopyNode *cpn,ProgressInfo *pgi);
+		void _SendCpNotify(MCopyNode *cpn,CopyInfo *cpi);
 		
 		// Overriding virtuals: 
 		int fdnotify(FDInfo *);
