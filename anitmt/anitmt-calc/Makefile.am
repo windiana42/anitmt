@@ -1,7 +1,8 @@
 INCLUDES=-I$(srcdir)/../lib/include/
 SUBDIRS=parser
+noinst_LIBRARIES=libanitmt.a
 bin_PROGRAMS=anitmt-calc
-anitmt_calc_SOURCES = 	error.hpp error.cpp\
+libanitmt_a_SOURCES = 	error.hpp error.cpp\
 			operand_classes.hpp operand.hpp \
 			operand.cpp operand_templ.cpp \
 			property_classes.hpp property.hpp \
@@ -14,7 +15,8 @@ anitmt_calc_SOURCES = 	error.hpp error.cpp\
 			animation.hpp animation.cpp scene.hpp scene.cpp \
 			scalar.hpp scalar.cpp linear.hpp linear.cpp \
 			object.hpp object.cpp move.hpp move.cpp \
-			save_filled.hpp save_filled.cpp \
-			anitmt.cpp 
-anitmt_calc_LDADD=../lib/val/libval.a
+			save_filled.hpp save_filled.cpp
+anitmt_calc_SOURCES =	anitmt.cpp
+
+anitmt_calc_LDADD=../lib/val/libval.a libanitmt.a
 

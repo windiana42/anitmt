@@ -68,25 +68,32 @@ YACC = @YACC@
 
 INCLUDES = -I$(srcdir)/../lib/include/
 SUBDIRS = parser
+noinst_LIBRARIES = libanitmt.a
 bin_PROGRAMS = anitmt-calc
-anitmt_calc_SOURCES = error.hpp error.cpp 			operand_classes.hpp operand.hpp 			operand.cpp operand_templ.cpp 			property_classes.hpp property.hpp 			property_templ.cpp property.cpp 			solver.cpp solver.hpp caller.hpp caller.cpp 			priority.hpp priority.cpp priority_templ.cpp 			proptree.hpp proptree.cpp proptree_templ.cpp 			return.hpp return.cpp nodes.hpp nodes.cpp 			options.hpp 			animation.hpp animation.cpp scene.hpp scene.cpp 			scalar.hpp scalar.cpp linear.hpp linear.cpp 			object.hpp object.cpp move.hpp move.cpp 			save_filled.hpp save_filled.cpp 			anitmt.cpp 
+libanitmt_a_SOURCES = error.hpp error.cpp 			operand_classes.hpp operand.hpp 			operand.cpp operand_templ.cpp 			property_classes.hpp property.hpp 			property_templ.cpp property.cpp 			solver.cpp solver.hpp caller.hpp caller.cpp 			priority.hpp priority.cpp priority_templ.cpp 			proptree.hpp proptree.cpp proptree_templ.cpp 			return.hpp return.cpp nodes.hpp nodes.cpp 			options.hpp 			animation.hpp animation.cpp scene.hpp scene.cpp 			scalar.hpp scalar.cpp linear.hpp linear.cpp 			object.hpp object.cpp move.hpp move.cpp 			save_filled.hpp save_filled.cpp
 
-anitmt_calc_LDADD = ../lib/val/libval.a
+anitmt_calc_SOURCES = anitmt.cpp
+
+anitmt_calc_LDADD = ../lib/val/libval.a libanitmt.a
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_CLEAN_FILES = 
-PROGRAMS =  $(bin_PROGRAMS)
+LIBRARIES =  $(noinst_LIBRARIES)
 
 
 DEFS = @DEFS@ -I. -I$(srcdir) 
 CPPFLAGS = @CPPFLAGS@
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
-anitmt_calc_OBJECTS =  error.o operand.o operand_templ.o \
+libanitmt_a_LIBADD = 
+libanitmt_a_OBJECTS =  error.o operand.o operand_templ.o \
 property_templ.o property.o solver.o caller.o priority.o \
 priority_templ.o proptree.o proptree_templ.o return.o nodes.o \
-animation.o scene.o scalar.o linear.o object.o move.o save_filled.o \
-anitmt.o
-anitmt_calc_DEPENDENCIES =  ../lib/val/libval.a
+animation.o scene.o scalar.o linear.o object.o move.o save_filled.o
+AR = ar
+PROGRAMS =  $(bin_PROGRAMS)
+
+anitmt_calc_OBJECTS =  anitmt.o
+anitmt_calc_DEPENDENCIES =  ../lib/val/libval.a libanitmt.a
 anitmt_calc_LDFLAGS = 
 CXXFLAGS = @CXXFLAGS@
 CXXCOMPILE = $(CXX) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
@@ -109,8 +116,8 @@ DEP_FILES =  .deps/animation.P .deps/anitmt.P .deps/caller.P \
 .deps/priority_templ.P .deps/property.P .deps/property_templ.P \
 .deps/proptree.P .deps/proptree_templ.P .deps/return.P \
 .deps/save_filled.P .deps/scalar.P .deps/scene.P .deps/solver.P
-SOURCES = $(anitmt_calc_SOURCES)
-OBJECTS = $(anitmt_calc_OBJECTS)
+SOURCES = $(libanitmt_a_SOURCES) $(anitmt_calc_SOURCES)
+OBJECTS = $(libanitmt_a_OBJECTS) $(anitmt_calc_OBJECTS)
 
 all: all-redirect
 .SUFFIXES:
@@ -122,6 +129,36 @@ Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status $(BUILT_SOURCES)
 	cd $(top_builddir) \
 	  && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= $(SHELL) ./config.status
 
+
+mostlyclean-noinstLIBRARIES:
+
+clean-noinstLIBRARIES:
+	-test -z "$(noinst_LIBRARIES)" || rm -f $(noinst_LIBRARIES)
+
+distclean-noinstLIBRARIES:
+
+maintainer-clean-noinstLIBRARIES:
+
+.s.o:
+	$(COMPILE) -c $<
+
+.S.o:
+	$(COMPILE) -c $<
+
+mostlyclean-compile:
+	-rm -f *.o core *.core
+
+clean-compile:
+
+distclean-compile:
+	-rm -f *.tab.c
+
+maintainer-clean-compile:
+
+libanitmt.a: $(libanitmt_a_OBJECTS) $(libanitmt_a_DEPENDENCIES)
+	-rm -f libanitmt.a
+	$(AR) cru libanitmt.a $(libanitmt_a_OBJECTS) $(libanitmt_a_LIBADD)
+	$(RANLIB) libanitmt.a
 
 mostlyclean-binPROGRAMS:
 
@@ -147,22 +184,6 @@ uninstall-binPROGRAMS:
 	list='$(bin_PROGRAMS)'; for p in $$list; do \
 	  rm -f $(DESTDIR)$(bindir)/`echo $$p|sed 's/$(EXEEXT)$$//'|sed '$(transform)'|sed 's/$$/$(EXEEXT)/'`; \
 	done
-
-.s.o:
-	$(COMPILE) -c $<
-
-.S.o:
-	$(COMPILE) -c $<
-
-mostlyclean-compile:
-	-rm -f *.o core *.core
-
-clean-compile:
-
-distclean-compile:
-	-rm -f *.tab.c
-
-maintainer-clean-compile:
 
 anitmt-calc: $(anitmt_calc_OBJECTS) $(anitmt_calc_DEPENDENCIES)
 	@rm -f anitmt-calc
@@ -272,7 +293,7 @@ distdir: $(DISTFILES)
 	@for file in $(DISTFILES); do \
 	  d=$(srcdir); \
 	  if test -d $$d/$$file; then \
-	    cp -pr $$/$$file $(distdir)/$$file; \
+	    cp -pr $$d/$$file $(distdir)/$$file; \
 	  else \
 	    test -f $(distdir)/$$file \
 	    || ln $$d/$$file $(distdir)/$$file 2> /dev/null \
@@ -359,7 +380,7 @@ install-am: all-am
 install: install-recursive
 uninstall-am: uninstall-binPROGRAMS
 uninstall: uninstall-recursive
-all-am: Makefile $(PROGRAMS)
+all-am: Makefile $(LIBRARIES) $(PROGRAMS)
 all-redirect: all-recursive
 install-strip:
 	$(MAKE) $(AM_MAKEFLAGS) AM_INSTALL_PROGRAM_FLAGS=-s install
@@ -377,38 +398,42 @@ distclean-generic:
 	-rm -f config.cache config.log stamp-h stamp-h[0-9]*
 
 maintainer-clean-generic:
-mostlyclean-am:  mostlyclean-binPROGRAMS mostlyclean-compile \
-		mostlyclean-tags mostlyclean-depend mostlyclean-generic
+mostlyclean-am:  mostlyclean-noinstLIBRARIES mostlyclean-compile \
+		mostlyclean-binPROGRAMS mostlyclean-tags \
+		mostlyclean-depend mostlyclean-generic
 
 mostlyclean: mostlyclean-recursive
 
-clean-am:  clean-binPROGRAMS clean-compile clean-tags clean-depend \
-		clean-generic mostlyclean-am
+clean-am:  clean-noinstLIBRARIES clean-compile clean-binPROGRAMS \
+		clean-tags clean-depend clean-generic mostlyclean-am
 
 clean: clean-recursive
 
-distclean-am:  distclean-binPROGRAMS distclean-compile distclean-tags \
-		distclean-depend distclean-generic clean-am
+distclean-am:  distclean-noinstLIBRARIES distclean-compile \
+		distclean-binPROGRAMS distclean-tags distclean-depend \
+		distclean-generic clean-am
 
 distclean: distclean-recursive
 
-maintainer-clean-am:  maintainer-clean-binPROGRAMS \
-		maintainer-clean-compile maintainer-clean-tags \
-		maintainer-clean-depend maintainer-clean-generic \
-		distclean-am
+maintainer-clean-am:  maintainer-clean-noinstLIBRARIES \
+		maintainer-clean-compile maintainer-clean-binPROGRAMS \
+		maintainer-clean-tags maintainer-clean-depend \
+		maintainer-clean-generic distclean-am
 	@echo "This command is intended for maintainers to use;"
 	@echo "it deletes files that may require special tools to rebuild."
 
 maintainer-clean: maintainer-clean-recursive
 
-.PHONY: mostlyclean-binPROGRAMS distclean-binPROGRAMS clean-binPROGRAMS \
-maintainer-clean-binPROGRAMS uninstall-binPROGRAMS install-binPROGRAMS \
+.PHONY: mostlyclean-noinstLIBRARIES distclean-noinstLIBRARIES \
+clean-noinstLIBRARIES maintainer-clean-noinstLIBRARIES \
 mostlyclean-compile distclean-compile clean-compile \
-maintainer-clean-compile install-data-recursive \
-uninstall-data-recursive install-exec-recursive \
-uninstall-exec-recursive installdirs-recursive uninstalldirs-recursive \
-all-recursive check-recursive installcheck-recursive info-recursive \
-dvi-recursive mostlyclean-recursive distclean-recursive clean-recursive \
+maintainer-clean-compile mostlyclean-binPROGRAMS distclean-binPROGRAMS \
+clean-binPROGRAMS maintainer-clean-binPROGRAMS uninstall-binPROGRAMS \
+install-binPROGRAMS install-data-recursive uninstall-data-recursive \
+install-exec-recursive uninstall-exec-recursive installdirs-recursive \
+uninstalldirs-recursive all-recursive check-recursive \
+installcheck-recursive info-recursive dvi-recursive \
+mostlyclean-recursive distclean-recursive clean-recursive \
 maintainer-clean-recursive tags tags-recursive mostlyclean-tags \
 distclean-tags clean-tags maintainer-clean-tags distdir \
 mostlyclean-depend distclean-depend clean-depend \
