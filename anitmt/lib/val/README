@@ -318,7 +318,7 @@ Functions:
       * get_scale_component(Matrix m) returns a vector which tells the resulting
         scalation of an x,y and z vector when multipied with Matrix m.
 	To reproduce the effet of m, scale, then rotate and finally translate
-      * get_rotation_component(Matrix m) returns a vector representing the
+      * get_rotate_component(Matrix m) returns a vector representing the
 	rotation around the x, y and finally the z axis that are done to a 
         vector when being multiplied with the Matrix m.
 	To reproduce the effet of m, scale, then rotate and finally translate
