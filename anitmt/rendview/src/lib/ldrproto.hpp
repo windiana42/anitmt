@@ -100,6 +100,21 @@ typedef u_int64_t LDRTime;
 void LDRTime2HTime(const LDRTime *t,HTime *h);
 void HTime2LDRTime(const HTime *h,LDRTime *t);
 
+// Double conversion: 
+// Range: +/- 9.8e19, precision: bettern than 1ppm (2.4e-7): 
+// Return value: 
+//   0 -> OK 
+//   +/-1 -> out of range   (only DoubleToInt32())
+//   +/-2 -> val is +/-Inf, 
+//   3 -> val is NaN
+// (Note that Inf anf NaN can be converted to u_int32_t and back 
+// again; overflow is converted to Inf.)
+// NOTE: u_int32_t value is converted to/from network order. 
+int DoubleToInt32(double val,u_int32_t *x);
+int Int32ToDouble(u_int32_t x,double *val);
+// This can be used to test / set NaN as u_int32_t - double val: 
+#define Tnt32Double_NAN      (htonl(0x7ffffffeU))
+
 #define LDRIDStringLength 18
 #define LDRChallengeLength 16
 #define LDRChallengeRespLength 20   /* Yes, SHA hash size */
@@ -183,6 +198,7 @@ struct LDRTaskRequest : LDRHeader
 	u_int32_t r_add_args_size;  // size of additional args (each \0-terminated)
 	u_int16_t r_oformat_slen;   // length of oformat string
 	u_int16_t r_flags;       // flags, see above, TaskRequestFlags
+	u_int32_t r_frame_clock;  // frame clock value or NaN, see DoubleToInt32()
 	
 	// Filter task: 
 	u_int32_t f_timeout;   // render timeout (seconds; 0xffffffff to disable)

@@ -119,11 +119,12 @@ static int MAIN(int argc,char **argv,char **envp)
 		"\n\nExamples:\n"
 		"# rendview --rdfile=/dir/to/renderers.par -l-rd=povray3.5 "
 		"-l-n=240 -l-f0=10 -l-size=320x200 -l-oformat=ppm -l-cont -l-rcont "
-		"-ld-r-quiet\n"
+		"-ld-r-quiet -ld-njobs=2\n"
 		"# rendview -opmode=ldrclient --rdfile=... -L-port=7001 "
-		"-L-servernet=192.168.0.0/8 -ld-njobs=2 -ld-r-quiet -ld-r-nice=15\n"
+		"-L-servernet=192.168.0.0/8 -L-password=prompt -ld-njobs=2 -ld-r-quiet "
+		"-ld-r-nice=15\n"
 		"# rendview -opmode=ldrserver --rdfile=... -Ld-clients=\"localhost/7001 "
-		"192.168.0.2/7001 192.168.0.3/7001\" -Ld-ctimeout=5000 "
+		"192.168.0.2/7001/PaSsWoRd 192.168.0.3/7001/prompt\" -Ld-ctimeout=5000 "
 		"-l-rd=povray3.1g -l-n=245 -l-r-args=\"-display 192.168.0.1:0.0\" "
 		"-l-size=320x240 -l-r-files=\"scene.pov colors.inc\" -l-cont\n");
 		// ...as well as only rendering changed frames or resuming operation

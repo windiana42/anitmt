@@ -9,4 +9,5 @@ libsupport_a_SOURCES = \
 	myaddrinfo.hpp myaddrinfo.cpp \
 	ldrproto.hpp ldrproto.cpp \
 	netiobase.hpp netiobase.cpp \
-	netiobase_ldr.hpp netiobase_ldr.cpp
+	netiobase_ldr.hpp netiobase_ldr.cpp \
+	sha1hash.cpp sha1hash.hpp

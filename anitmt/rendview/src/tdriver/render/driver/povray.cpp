@@ -21,6 +21,8 @@
 
 #include <assert.h>
 
+#include <math.h>     /* for NAN */
+
 
 // Overriding virtual; gets called by TaskDriver on an error 
 // or to notify driver of things (for verbose messages): 
@@ -120,7 +122,7 @@ int POVRayDriver::Execute(
 	{  return(SPSi_IllegalParams);  }
 	
 	// What gets called: 
-	// povray +Wwith +Hheight +-/-C +Iinput +Ooutput 
+	// povray +Wwith +Hheight +/-C [+Kxxx] +Iinput +Ooutput 
 	//        +F? +Lpath +Lpath <required_args> <add_args>
 	
 	// Output format:
@@ -138,12 +140,22 @@ int POVRayDriver::Execute(
 	if(args.append(rt->rdesc->binpath))  ++failed;
 	
 	// Width & height args: 
-	char Wtmp[24],Htmp[24];
-	snprintf(Wtmp,24,"+W%d",rt->width);    if(args.append(Wtmp))  ++failed;
-	snprintf(Htmp,24,"+H%d",rt->height);   if(args.append(Htmp))  ++failed;
+	{
+		char WHtmp[24];
+		snprintf(WHtmp,24,"+W%d",rt->width);    if(args.append(WHtmp))  ++failed;
+		snprintf(WHtmp,24,"+H%d",rt->height);   if(args.append(WHtmp))  ++failed;
+	}
 	
 	// Resume? 
 	if(args.append(rt->resume ? "+C" : "-C"))  ++failed;
+	
+	// Pass frame clock value?
+	if(finite(rt->frame_clock))
+	{
+		char tmp[32];
+		snprintf(tmp,32,"+K%g",rt->frame_clock);
+		if(args.append(tmp))  ++failed;
+	}
 	
 	// Input & output: 
 	if(Ifile.sprintf(0,"+I%s",infile.str()))  ++failed;
@@ -252,6 +264,7 @@ int POVRayDriverFactory::CheckDesc(RF_DescBase *d)
 	assert(d->dtype==DTRender);
 	RenderDesc *rd=(RenderDesc*)d;
 	rd->can_resume_render=true;
+	rd->can_pass_frame_clock=true;
 	return(0);
 }
 

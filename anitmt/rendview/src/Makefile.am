@@ -1,6 +1,7 @@
 SUBDIRS = lib imgfmt tdriver tsource
 INCLUDES = -I$(top_srcdir)/src/ -I$(top_builddir)/../hlib/include
 bin_PROGRAMS = rendview
+LIBS = -lm
 
 rendview_SOURCES = rendview.cpp \
 	database.hpp database.cpp \

@@ -21,8 +21,13 @@
 #include <assert.h>
 #include <ctype.h>
 
+#include <math.h>
+
 
 #define UnsetNegMagic  (-985430913)
+
+// Used to compare double float values (for frame clock): 
+#define DBL_EPSILON 1.0e-10
 
 
 static volatile void __CheckAllocFailFailed()
@@ -69,8 +74,8 @@ const char *TaskSourceFactory_Local::_FrameInfoLocationString(
 const TaskSourceFactory_Local::PerFrameTaskInfo *TaskSourceFactory_Local::
 	GetPerFrameTaskInfo(int frame_no)
 {
-	if(frame_no<startframe || 
-	   (nframes>=0 && frame_no>=startframe+nframes) )
+	if(frame_no<master_fi.first_frame_no || 
+	   (master_fi.nframes>=0 && frame_no>=master_fi.first_frame_no+master_fi.nframes) )
 	{  return(NULL);  }
 	
 	int next_pfbs;
@@ -83,22 +88,22 @@ const TaskSourceFactory_Local::PerFrameTaskInfo *TaskSourceFactory_Local::
 	//        (to next block which has rdesc || fdesc). 
 	// If we have unlimited frames and this is the master block, 
 	// then we may run into trouble. 
-	if(fi==&master_fi && nframes<0)
+	if(fi==&master_fi && master_fi.nframes<0)
 	{
 		// See if there are non-empty blocks following: 
-		// (startframe-1 is a special value)
-		if(next_pfbs<startframe)  return(NULL);  // no more tasks to do
+		// (first_frame_no-1 is a special value)
+		if(next_pfbs<master_fi.first_frame_no)  return(NULL);  // no more tasks to do
 	}
 	
 	return(fi);
 }
 
-// next_pfbs: saves next per-frame block start frame number (or startframe-1). 
+// next_pfbs: saves next per-frame block start frame number (or first_frame_no-1). 
 // Only valid if return value is &master_fi. 
 TaskSourceFactory_Local::PerFrameTaskInfo *TaskSourceFactory_Local::
 	_DoGetPerFrameTaskInfo(int frame_no,int *next_pfbs)
 {
-	*next_pfbs=startframe-1;
+	*next_pfbs=master_fi.first_frame_no-1;
 	
 	// NOTE!! last_looked_up may !!NEVER!! be master_fi. 
 	
@@ -175,17 +180,26 @@ TaskSourceFactory_Local::PerFrameTaskInfo *TaskSourceFactory_Local::
 }
 
 
-// Check if the passed pattern is something containing EXACTLY ONE 
+// Check if the passed pattern is something containing no more than ONE 
 // %d - modifier, e.g. "%123d" or "%07x" or "%03X". 
-// Return value: 0 -> OK; 1 -> error
+// may_miss_spec: 0 -> s must contain EXACTLY ONE %d-spec
+//                1 -> s may contain NO or ONE %d-spec
+// Return value: 
+//   0 -> OK, found exactly / max. one %d - spec
+//   1 -> error
 int TaskSourceFactory_Local::_CheckFramePattern(
-	RefString *s,const char *name,const PerFrameTaskInfo *fi)
+	RefString *s,const char *name,const PerFrameTaskInfo *fi,
+	int may_miss_spec)
 {
 	const char *ptr=s->str();
 	do {
 		if(!ptr)  break;
 		ptr=strchr(ptr,'%');
-		if(!ptr)  break;
+		if(!ptr)
+		{
+			if(may_miss_spec)  return(0);
+			break;
+		}
 		++ptr;
 		while(isdigit(*ptr))  ++ptr;
 		if(*ptr!='x' && *ptr!='d' && *ptr!='X')
@@ -221,12 +235,19 @@ int TaskSourceFactory_Local::_SetUpAndCheckOutputFramePatterns(
 		{
 			// Make sure we're right of the `%´: 
 			const char *pp=strrchr(ip,'%');
-			if(es<pp)  es=NULL;
+			if(pp && es<pp)  es=NULL;
 		}
 		if(!es)  es=ip+strlen(ip);
 		_CheckAllocFail(fi->routfpattern.set0(ip,es-ip));
+		if(!strchr(fi->routfpattern.str(),'%'))
+		{
+			// File pattern has no %-spec (we might be using 
+			// frame clock value). Append -%07d to name: 
+			_CheckAllocFail(fi->routfpattern.append("-%07d"));
+		}
 	}
-	mfailed+=_CheckFramePattern(&fi->routfpattern,"render output",fi);
+	mfailed+=_CheckFramePattern(&fi->routfpattern,"render output",fi,
+		/*may_miss_spec=*/0);
 	// NOTE: The extension is appended below so that we can use it without 
 	//       extension for the foutfpattern. 
 	// filter output: 
@@ -241,7 +262,8 @@ int TaskSourceFactory_Local::_SetUpAndCheckOutputFramePatterns(
 		strcpy(ext_tmp+3,fi->oformat->file_extension);
 		_CheckAllocFail(fi->foutfpattern.append(ext_tmp));
 	}
-	mfailed+=_CheckFramePattern(&fi->foutfpattern,"filter output",fi);
+	mfailed+=_CheckFramePattern(&fi->foutfpattern,"filter output",fi,
+		/*may_miss_spec=*/0);
 	// Okay, now append extension to render output file pattern: 
 	assert(fi->oformat);  // MUST have been set above. ALWAYS. 
 	{
@@ -377,6 +399,17 @@ void TaskSourceFactory_Local::_VPrintFrameInfo_DumpListIfNeeded(
 }
 
 
+static inline bool _different_clock(
+	const TaskSourceFactory_Local::PerFrameTaskInfo *a,
+	const TaskSourceFactory_Local::PerFrameTaskInfo *b)
+{
+	if(a->use_clock!=b->use_clock)  return(true);
+	if(!a->use_clock && !b->use_clock)  return(false);
+	return(
+		fabs(a->clock_start-b->clock_start)>=DBL_EPSILON || 
+		fabs(a->clock_step-b->clock_step)>=DBL_EPSILON );
+}
+
 // Only print info if it is different from the one in compare_to. 
 // Pass compare_to=NULL to get it all dumped. 
 void TaskSourceFactory_Local::_VPrintFrameInfo(PerFrameTaskInfo *fi,
@@ -421,6 +454,27 @@ void TaskSourceFactory_Local::_VPrintFrameInfo(PerFrameTaskInfo *fi,
 			else
 			{  snprintf(tmp,32,"%ld seconds",fi->rtimeout/1000);  }
 			Verbose(TSI,"      Render timeout: %s\n",tmp);
+		}
+		if(!compare_to || _different_clock(fi,compare_to))
+		{
+			char tmp[96];
+			if(fi->use_clock)
+			{
+				char *ptr=tmp;
+				ptr+=snprintf(ptr,96,"start: %g",fi->clock_start);
+				if(finite(fi->clock_step) && (tmp+96>ptr))
+				{
+					ptr+=snprintf(ptr,tmp+96-ptr,", step: %g",fi->clock_step);
+					if(fi->nframes>1 && (tmp+96>ptr))
+					{
+						ptr+=snprintf(ptr,tmp+96-ptr,", end: %g",
+							fi->clock_start+fi->clock_step*fi->nframes);
+					}
+				}
+			}
+			else
+			{  strcpy(tmp,"[none]");  }
+			Verbose(TSI,"      Clock value: %s\n",tmp);
 		}
 		_VPrintFrameInfo_DumpListIfNeeded("      Add args",
 			compare_to ? &compare_to->radd_args : NULL,&fi->radd_args);
@@ -515,7 +569,9 @@ static const char *_ltsft_str="local task source filter timeout";
 // Check if the per-frame block f0,n will ever be used (1) or not (0): 
 inline int TaskSourceFactory_Local::_CheckWillUseFrameBlock(int f0,int n)
 {
-	return( !((nframes>=0 && f0>=(startframe+nframes)) || (f0+n)<startframe) );
+	return( !((master_fi.nframes>=0 && 
+		f0>=(master_fi.first_frame_no+master_fi.nframes)) || 
+		(f0+n)<master_fi.first_frame_no) );
 }
 
 
@@ -563,6 +619,14 @@ int TaskSourceFactory_Local::_PFBMergeBool(bool *dest,
 {
 	if(!set_a && !set_b)  return(0);
 	if(set_a && set_b && sa!=sb)  return(-1);
+	*dest=(set_a ? sa : sb);
+	return(1);
+}
+int TaskSourceFactory_Local::_PFBMergeDouble(double *dest,
+	double sa,bool set_a,double sb,bool set_b)
+{
+	if(!set_a && !set_b)  return(0);
+	if(set_a && set_b && fabs(sa-sb)>=DBL_EPSILON)  return(-1);
 	*dest=(set_a ? sa : sb);
 	return(1);
 }
@@ -640,6 +704,17 @@ int TaskSourceFactory_Local::_MergePerFrameBlock(PerFrameTaskInfo *dest,
 		&sa->radd_files,sa->set_flags & SF_radd_files,
 		&sb->radd_files,sb->set_flags & SF_radd_files),
 		SF_radd_files,&failed,&dest->set_flags);
+	_PFBMergeHelper(_PFBMergeBool(&dest->use_clock,
+		sa->use_clock,sa->set_flags & SF_use_clock,
+		sb->use_clock,sb->set_flags & SF_use_clock),
+		SF_use_clock,&failed,&dest->set_flags);
+	_PFBMergeHelper(_PFBMergeDouble(&dest->clock_start,
+		sa->clock_start,sa->set_flags & SF_clock_start,
+		sb->clock_start,sb->set_flags & SF_clock_start),
+		SF_clock_start,&failed,&dest->set_flags);
+// #####FIXME#####
+Error("local/param.cpp:%d: MISSING in frame imfo: merge clock_start values.\n",
+	__LINE__);
 	
 	_PFBMergeHelper(_PFBMergePtr((const void**)&dest->fdesc,
 		sa->fdesc,sa->set_flags & SF_fdesc,
@@ -693,7 +768,8 @@ bool TaskSourceFactory_Local::_ComparePerFrameInfo(
 		a->render_resume_flag == b->render_resume_flag &&
 		a->rtimeout == b->rtimeout &&
 		a->radd_files.exact_compare(&b->radd_files) &&
-
+		!_different_clock(a,b) && 
+		
 		a->fdesc == b->fdesc &&
 		a->fadd_args.exact_compare(&b->fadd_args) &&
 		a->fdir == b->fdir &&
@@ -736,6 +812,13 @@ void TaskSourceFactory_Local::_FillIn_SetFlags(PerFrameTaskInfo *fi)
 	{  fi->set_flags|=SF_routfpattern;  }
 	if(!!fi->foutfpattern)  // KEEP "!!"
 	{  fi->set_flags|=SF_foutfpattern;  }
+	
+	if(IsSet(fi->ii->use_frameclock_pi))
+	{  fi->set_flags|=SF_use_clock;  }
+	if(finite(fi->clock_start))
+	{  fi->set_flags|=SF_clock_start;  }
+	if(finite(fi->clock_step))
+	{  fi->set_flags|=SF_clock_step;  }
 }
 
 
@@ -788,10 +871,12 @@ int TaskSourceFactory_Local::_FixupAdditionalFileSpec(RefStrList *add_files,
 
 int TaskSourceFactory_Local::_FixupPerFrameBlock(PerFrameTaskInfo *fi)
 {
+	int errors=0;
+	
 	if(fi->rdesc && fi->render_resume_flag && !fi->rdesc->can_resume_render)
 	{
 		Warning("Local: %s: Disabled render resume feature (-rcont) "
-			"(no support by renderer / %s driver).",
+			"(no support by renderer / %s driver).\n",
 			_FrameInfoLocationString(fi),
 			fi->rdesc ? fi->rdesc->dfactory->DriverName() : "[none]");
 		fi->render_resume_flag=false;
@@ -800,11 +885,78 @@ int TaskSourceFactory_Local::_FixupPerFrameBlock(PerFrameTaskInfo *fi)
 	if(fi->rtimeout<-1)  {  fi->rtimeout=-1;  }
 	if(fi->ftimeout<-1)  {  fi->ftimeout=-1;  }
 	
-	int errors=0;
+	// Set use_clock if clock was specified and use_clock 
+	// was neither set to yes nor no: 
+	if(!(fi->set_flags & SF_use_clock))
+	{
+		// So, user did not say if the frame clock shall be used. 
+		// Let's see if frame clock values were specified and the 
+		// render driver supports it: 
+		bool start_spec=(fi->set_flags & SF_clock_start);
+		bool step_spec=(fi->set_flags & SF_clock_step);
+		if(start_spec && fi->rdesc && fi->rdesc->can_pass_frame_clock && 
+		// Do NOT use fi->nframes<=1 here! (master_fi has nframes=-1 if unknown).
+			(step_spec || fi->nframes==1))
+		{
+			assert(finite(fi->clock_start));
+			assert(finite(fi->clock_step) || fi->nframes==1);
+			fi->use_clock=true;
+		}
+		else
+		{  fi->use_clock=false;  }
+	}
+	if(fi->rdesc && fi->use_clock)
+	{
+		// So, use_clock is set. See if that is correct...
+		static const char *_msg="Disabled use of clock value";
+		int is_error=1;
+		if(!!fi->rinfpattern && fi->rinfpattern.str() && 
+			strchr(fi->rinfpattern.str(),'%'))
+		{  is_error=0;  }
+		bool start_okay=finite(fi->clock_start);
+		// Do NOT use fi->nframes<=1 here! (master_fi has nframes=-1 if unknown).
+		bool step_okay=(finite(fi->clock_step) || fi->nframes==1);
+		if(fi->rdesc && !fi->rdesc->can_pass_frame_clock)
+		{
+			(*(is_error ? &Error : &Warning))(
+				"Local: %s: %s (no support by renderer / %s driver).\n",
+				_FrameInfoLocationString(fi),_msg,
+				(fi->rdesc ? fi->rdesc->dfactory->DriverName() : "[none]"));
+			fi->use_clock=0;
+		}
+		else if(!start_okay || !step_okay)
+		{
+			(*(is_error ? &Error : &Warning))(
+				"Local: %s: %s (clock %s%s%s not specified).\n",
+				_FrameInfoLocationString(fi),_msg,
+				!start_okay ? "start" : "",
+				(!start_okay && !step_okay) ? "/" : "",
+				!step_okay ? "step" : "");
+			fi->use_clock=0;
+		}
+		else is_error=0;
+		errors+=is_error;
+	}
+	// NOTE: master_fi has nframes=-1 here if number of frames unknown. 
+	if(fi->rdesc && fi->use_clock && 
+		fi->nframes!=1 && fabs(fi->clock_step)<DBL_EPSILON)
+	{
+		Warning("Local: %s: Frame clock step (-l-r-fcstep) is 0.\n",
+			_FrameInfoLocationString(fi));
+	}
+	if(fi->rdesc && !!fi->rinfpattern && 
+		!fi->use_clock && !strchr(fi->rinfpattern.str(),'%') && !errors)
+	{
+		Error("Local: %s: Neither frame clock nor frame spec in render "
+			"input file pattern (%%d,...).\n",
+			_FrameInfoLocationString(fi));
+		++errors;
+	}
+	
 	errors+=_FixupAdditionalFileSpec(&fi->radd_files,fi,DTRender);
 	errors+=_FixupAdditionalFileSpec(&fi->fadd_files,fi,DTFilter);
 	
-	return(0);
+	return(errors ? 1 : 0);
 }
 
 // Insert passed PerFrameTaskInfo (which may NOT be in the fi_list) 
@@ -885,7 +1037,8 @@ int TaskSourceFactory_Local::FinalInit()
 	
 	// Check frame pattern: 
 	// NOTE: master_fi.rinfpattern has default set in constructor. 
-	mfailed+=_CheckFramePattern(&master_fi.rinfpattern,"input",&master_fi);
+	mfailed+=_CheckFramePattern(&master_fi.rinfpattern,"input",&master_fi,
+		/*may_miss_spec=*/1);
 	mfailed+=_SetUpAndCheckOutputFramePatterns(&master_fi);
 	
 	// Convert timeout seconds -> msec: 
@@ -1141,11 +1294,25 @@ int TaskSourceFactory_Local::FinalInit()
 			if(!(fi->set_flags & SF_size))
 			{  fi->width=master_fi.width;  fi->height=master_fi.height;  }
 			
+			// For clock, use simple overriding for all three vars. 
+			// This should be most flexible. 
+			if(!(fi->set_flags & SF_use_clock))   fi->use_clock=master_fi.use_clock;
+			if(!(fi->set_flags & SF_clock_step))  fi->clock_step=master_fi.clock_step;
+			if(!(fi->set_flags & SF_clock_start) && 
+			   // ...and if clock_start and clock_step IS SET in master_ft; note 
+			   // that the "~" truns the "!" into IS SET rather than IS NOT SET. 
+			   !((~master_fi.set_flags) & (SF_clock_start | SF_clock_step)) )
+			{
+				fi->clock_start=master_fi.clock_start+
+					(fi->first_frame_no-master_fi.first_frame_no)*master_fi.clock_step;
+			}
+			
 			// Check frame patterns (and use defaults from master 
 			// if needed): 
 			if(!(fi->set_flags & SF_rinfpattern))
 			{  fi->rinfpattern=master_fi.rinfpattern;  }
-			int pfailed=_CheckFramePattern(&fi->rinfpattern,"input",fi);
+			int pfailed=_CheckFramePattern(&fi->rinfpattern,"input",fi,
+				/*may_miss_spec=*/1);
 			failed+=pfailed;
 			if(!pfailed)
 			{
@@ -1254,11 +1421,11 @@ int TaskSourceFactory_Local::FinalInit()
 		// Okay, last action here: Find the last frame in case 
 		// we are doing backwards steps and nframes is not 
 		// specified: 
-		if(nframes<0 && fjump<0)
+		if(master_fi.nframes<0 && fjump<0)
 		{
 			// This algorithm will stop at the first non-existing 
 			// frame file: 
-			int fno=startframe;
+			int fno=master_fi.first_frame_no;
 			Verbose(MiscInfo,"Local: Looking for last frame to render... %7d",fno);
 			RefString tmp;
 			for(int chk=0;;chk++,fno-=fjump)
@@ -1280,8 +1447,9 @@ int TaskSourceFactory_Local::FinalInit()
 				if(!(chk%50))
 				{  Verbose(MiscInfo,"\b\b\b\b\b\b\b%7d",fno);  }
 			}
-			nframes=fno-startframe;
-			Verbose(MiscInfo,"\b\b\b\b\b\b\b%d (nframes=%d)\n",fno,nframes);
+			master_fi.nframes=fno-master_fi.first_frame_no;
+			Verbose(MiscInfo,"\b\b\b\b\b\b\b%d (nframes=%d)\n",
+				fno,master_fi.nframes);
 		}
 	}
 	
@@ -1289,10 +1457,10 @@ int TaskSourceFactory_Local::FinalInit()
 	if(!failed)
 	{
 		char nf_tmp[24];
-		if(nframes>=0)  snprintf(nf_tmp,24,"%d",nframes);
+		if(master_fi.nframes>=0)  snprintf(nf_tmp,24,"%d",master_fi.nframes);
 		else  strcpy(nf_tmp,"[unlimited]");
 		Verbose(TSI,"Local task source: jump: %d; nframes: %s; startframe: %d\n",
-			fjump,nf_tmp,startframe);
+			fjump,nf_tmp,master_fi.first_frame_no);
 		Verbose(TSI,"  Continuing: %s\n",
 			cont_flag ? "yes" : "no");
 		
@@ -1336,9 +1504,10 @@ int TaskSourceFactory_Local::CheckParams()
 		Warning("Local: Illegal frame jump value 0 corrected to 1.\n");
 	}
 	
-	if(startframe<0)
+	if(master_fi.first_frame_no<0)
 	{
-		Error("Local: Illegal start frame number %d.\n",startframe);
+		Error("Local: Illegal start frame number %d.\n",
+			master_fi.first_frame_no);
 		++failed;
 	}
 	
@@ -1513,8 +1682,8 @@ int TaskSourceFactory_Local::_RegisterParams()
 		"process last frames first",&fjump);
 	AddParam("nframes|n","number of frames to process; if you do not "
 		"specify or use negative value -> unlimited (as long as input "
-		"files exist)",&nframes);
-	AddParam("startframe|f0","first frame to process",&startframe);
+		"files exist)",&master_fi.nframes);
+	AddParam("startframe|f0","first frame to process",&master_fi.first_frame_no);
 	
 	AddParam("cont","continue; don't render frames which have "
 		"already been rendered (i.e. image exists and is newer than input) "
@@ -1551,10 +1720,6 @@ int TaskSourceFactory_Local::_RegisterFrameInfoParams(PerFrameTaskInfo *fi,
 		"render/filter driver)",fi ? &fi->ii->oformat_string : NULL,flags);
 	AddParam("renderer|rd","renderer to use (render DESC name)",
 		fi ? &fi->ii->rdesc_string : NULL,flags);
-	AddParam("r-args","additional args to be passed to the renderer",
-		fi ? &fi->radd_args : NULL,flags);
-	AddParam("r-files","additional files needed by the rendering process",
-		fi ? &fi->radd_files : NULL,flags);
 	ParamInfo *tmp=AddParam("rcont",
 		"resume cont; This switch enables/disables render continue "
 		"feature: If enabled, interrupted files are named *-unfinished "
@@ -1565,16 +1730,29 @@ int TaskSourceFactory_Local::_RegisterFrameInfoParams(PerFrameTaskInfo *fi,
 		"(Default: yes, if driver supports it)",
 		fi ? &fi->render_resume_flag : NULL,PNoDefault | flags);
 	if(fi)  fi->ii->render_resume_pi=tmp;
+	AddParam("r-args","additional args to be passed to the renderer",
+		fi ? &fi->radd_args : NULL,flags);
+	AddParam("r-files","additional files needed by the rendering process",
+		fi ? &fi->radd_files : NULL,flags);
 	
 	AddParam("r-dir","chdir to this directory before calling renderer",
 		fi ? &fi->rdir : NULL,flags);
 	AddParam("r-ifpattern","render input file pattern (e.g. f%07d.pov; "
-		"can use %d,%x,%X) (relative to rdir)",
+		"can use %d,%x,%X to be replaced by frame number, no %-spec will "
+		"use same file for every frame) (relative to rdir)",
 		fi ? &fi->rinfpattern : NULL,flags);
 	AddParam("r-ofpattern","render output file pattern (e.g. f%07d; "
-		"can use %d,%x,%X); extension added according to output "
-		"format (relative to rdir)",
+		"must use one of %d,%x,%X to be replaced by frame number); "
+		"extension added according to output format (relative to rdir)",
 		fi ? &fi->routfpattern : NULL,flags);
+	tmp=AddParam("r-fc|r-frameclock","use frame clock value to be passed "
+		"to renderer, see options below to specify it.",
+		fi ? &fi->use_clock : NULL,PNoDefault | flags);
+	if(fi)  fi->ii->use_frameclock_pi=tmp;
+	AddParam("r-fc0|r-fcstart","frame clock value of first frame",
+		fi ? &fi->clock_start : NULL,flags);
+	AddParam("r-fcdt|r-fcstep","frame clock step between two frames",
+		fi ? &fi->clock_step : NULL,flags);
 	AddParam("r-timeout","render job time limit (seconds; -1 for none)",
 		fi ? &fi->rtimeout : NULL,flags);
 	
@@ -1587,7 +1765,7 @@ int TaskSourceFactory_Local::_RegisterFrameInfoParams(PerFrameTaskInfo *fi,
 	AddParam("f-dir","chdir to this directory before calling filter",
 		fi ? &fi->fdir : NULL,flags);
 	AddParam("f-ofpattern","filter output file pattern (e.g. f%07d-f.png; "
-		"can use %d,%x,%X) (relative to fdir)",
+		"must use %d,%x,%X to be replaced by frame number) (relative to fdir)",
 		fi ? &fi->foutfpattern : NULL,flags);
 	AddParam("f-timeout","filter job time limit (seconds; -1 for none)",
 		fi ? &fi->ftimeout : NULL,flags);
@@ -1620,6 +1798,9 @@ const char *TaskSourceFactory_Local::SF_FlagString(int flag)
 		case SF_foutfpattern:  return("fofpattern");
 		case SF_ftimeout:      return("ftimeout");
 		case SF_fadd_files:    return("ffiles");
+		case SF_use_clock:     return("frameclock");
+		case SF_clock_start:   return("fcstart");
+		case SF_clock_step:    return("fcstep");
 	}
 	return("???");
 }
@@ -1647,8 +1828,8 @@ TaskSourceFactory_Local::TaskSourceFactory_Local(
 	master_fi(failflag),
 	fi_list(failflag)
 {
-	nframes=-1;  // unlimited
-	startframe=0;
+	master_fi.nframes=-1;  // unlimited
+	master_fi.first_frame_no=0;
 	fjump=1;
 	
 	last_looked_up=NULL;
@@ -1712,6 +1893,10 @@ TaskSourceFactory_Local::PerFrameTaskInfo::PerFrameTaskInfo(int *failflag) :
 	render_resume_flag=true;
 	rtimeout=UnsetNegMagic;
 	
+	use_clock=false;
+	clock_start=NAN;
+	clock_step=NAN;
+	
 	fdesc=NULL;
 	ftimeout=UnsetNegMagic;
 	
@@ -1763,6 +1948,9 @@ TaskSourceFactory_Local::PerFrameTaskInfo::PerFrameTaskInfo(
 	render_resume_flag=c->render_resume_flag;
 	rtimeout=c->rtimeout;
 	if(radd_files.append(&c->radd_files))  ++failed;
+	use_clock=c->use_clock;
+	clock_start=c->clock_start;
+	clock_step=c->clock_step;
 	
 	fdesc=c->fdesc;
 	if(fadd_args.append(&c->fadd_args))  ++failed;
@@ -1791,4 +1979,5 @@ TaskSourceFactory_Local::PerFrameTaskInfo_Internal::PerFrameTaskInfo_Internal(in
 	fdesc_string(failflag)
 {
 	render_resume_pi=NULL;
+	use_frameclock_pi=NULL;
 }

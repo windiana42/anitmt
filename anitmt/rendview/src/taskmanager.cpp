@@ -21,6 +21,9 @@
 #include <fcntl.h>
 #include <assert.h>
 
+#include <math.h>  /* for NAN */
+
+
 /* This is for testing: before dequeuing a task from the todo/proc list, 
  * check if is actually on that list: */
 #define TEST_TASK_LIST_MEMBERSHIP   1
@@ -2090,8 +2093,13 @@ void TaskManager::_PrintDoneInfo(CompleteTask *ctsk)
 	{
 		Verbose(TDR,"  Render task: %s (%s driver)\n",
 			ctsk->rt->rdesc->name.str(),ctsk->rt->rdesc->dfactory->DriverName());
-		Verbose(TDR,"    Input file:  hd path: %s\n",
-			!!ctsk->rt->infile ? ctsk->rt->infile.HDPath().str() : NULL);
+		char tmp[32];
+		if(!finite(ctsk->rt->frame_clock))
+		{  strcpy(tmp,"[none]");  }
+		else
+		{  snprintf(tmp,32,"%g",ctsk->rt->frame_clock);  }
+		Verbose(TDR,"    Input file:  hd path: %s; frame clock: %s\n",
+			!!ctsk->rt->infile ? ctsk->rt->infile.HDPath().str() : NULL,tmp);
 		Verbose(TDR,"    Output file: hd path: %s; size %dx%d; format: %s (%d bpc)\n",
 			!!ctsk->rt->outfile ? ctsk->rt->outfile.HDPath().str() : NULL,
 			ctsk->rt->width,ctsk->rt->height,

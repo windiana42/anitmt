@@ -48,7 +48,10 @@ class TaskSourceFactory_Local :
 			SF_foutfpattern= 0x0002000,
 			SF_ftimeout=     0x0004000,
 			SF_fadd_files=   0x0008000,
-			SF_ALL_FLAGS=    0x000ffff   // <-- don't forget
+			SF_use_clock=    0x0010000,
+			SF_clock_start=  0x0020000,
+			SF_clock_step=   0x0040000,
+			SF_ALL_FLAGS=    0x007ffff   // <-- don't forget
 		};
 		// Return string representation of flag which must have 
 		// set EXACTLY ONE SF_* flag bit. 
@@ -65,6 +68,7 @@ class TaskSourceFactory_Local :
 			RefString fdesc_string;
 			
 			ParamInfo *render_resume_pi;  // internal use only
+			ParamInfo *use_frameclock_pi;  // internal use only
 			
 			_CPP_OPERATORS_FF
 			PerFrameTaskInfo_Internal(int *failflag=NULL);
@@ -73,6 +77,7 @@ class TaskSourceFactory_Local :
 		struct PerFrameTaskInfo : LinkedListBase<PerFrameTaskInfo>
 		{
 			// For which frames this record is valid: 
+			// master_fi: nframes=-1 -> as many as we can get
 			int first_frame_no,nframes;
 			// Flags: Which params were explicitly set by the user?
 			// NOTE: set_flags can have SF_rdesc set although 
@@ -94,6 +99,10 @@ class TaskSourceFactory_Local :
 			bool render_resume_flag;
 			long rtimeout;               // render timeout (msec; initially seconds)
 			RefStrList radd_files;       // Additional files
+			// For passing of clock values: 
+			bool use_clock;          // MUST BE bool !!
+			double clock_start;
+			double clock_step;
 			
 			// Filter stuff: 
 			const FilterDesc *fdesc;     // filter to use
@@ -116,11 +125,8 @@ class TaskSourceFactory_Local :
 	private:
 		// We may access ComponentDataBase::component_db. 
 		
-		int startframe;
 		// NOTE: fjump may be negative. 
 		int fjump;
-		// nframes=-1 -> as many as we can get
-		int nframes;
 		
 		// Here, all the information we have to know to be able to 
 		// render and filter the frames is stored: 
@@ -147,7 +153,7 @@ class TaskSourceFactory_Local :
 		
 		const char *_FrameInfoLocationString(const PerFrameTaskInfo *fi);
 		int _CheckFramePattern(RefString *s,const char *name,
-			const PerFrameTaskInfo *fi);
+			const PerFrameTaskInfo *fi,int may_miss_spec);
 		int _SetUpAndCheckOutputFramePatterns(PerFrameTaskInfo *fi);
 		int _Param_ParseInSizeString(PerFrameTaskInfo *fi);
 		int _Param_ParseOutputFormat(PerFrameTaskInfo *fi);
@@ -175,6 +181,8 @@ class TaskSourceFactory_Local :
 			long sa,bool set_a,long sb,bool set_b);
 		int _PFBMergeBool(bool *dest,
 			bool sa,bool set_a,bool sb,bool set_b);
+		int _PFBMergeDouble(double *dest,
+			double sa,bool set_a,double sb,bool set_b);
 		int _PFBMergeSize(int *dest_w,int *dest_h,
 			int sa_w,int sa_h,bool set_a,int sb_w,int sb_h,bool set_b);
 		int _MergePerFrameBlock(PerFrameTaskInfo *dest,

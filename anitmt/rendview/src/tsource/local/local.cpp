@@ -21,6 +21,8 @@
 
 #include <assert.h>
 
+#include <math.h>    /* for NAN */
+
 
 inline void TaskSource_Local::_StartRTimer()
 {
@@ -457,6 +459,21 @@ void TaskSource_Local::_ProcessGetTask(TSNotifyInfo *ni)
 			
 			rt->resume=ftpi.r_resume_flag;
 			
+			if(fi->use_clock)
+			{
+				// I do not use clock_step for the first frame (thus it may 
+				// be NAN for per-frame blocks containing only one frame). 
+				assert(finite(fi->clock_start));
+				rt->frame_clock=fi->clock_start;
+				if(ctsk->frame_no!=fi->first_frame_no)
+				{
+					assert(finite(fi->clock_step));
+					rt->frame_clock+=
+						fi->clock_step*(ctsk->frame_no-fi->first_frame_no);
+					
+				}
+			}
+			
 			if(_SetUpAddTaskFiles(&ctsk->radd,&fi->radd_files,
 				TaskFile::IOTRenderInput))  break;
 		}
@@ -679,14 +696,14 @@ TaskSource_Local::TaskSource_Local(TaskSourceFactory_Local *tsf,int *failflag) :
 	done_task=NULL;
 	
 	if(p->fjump>0)
-	{  next_frame_no=p->startframe;  }
+	{  next_frame_no=p->master_fi.first_frame_no;  }
 	else
 	{
-		assert(p->nframes>=0);  // checked by TaskSourceFactory_Local::CheckParams()
+		assert(p->master_fi.nframes>=0);  // checked by TaskSourceFactory_Local::CheckParams()
 		// Make sure we stop at start frame: 
 		int jv=-p->fjump;
-		int njumps=(p->nframes+jv-1)/jv - 1;
-		next_frame_no = p->startframe + njumps*jv;
+		int njumps=(p->master_fi.nframes+jv-1)/jv - 1;
+		next_frame_no = p->master_fi.first_frame_no + njumps*jv;
 	}
 	
 	nonexist_in_seq=0;

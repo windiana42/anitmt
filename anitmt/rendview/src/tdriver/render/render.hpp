@@ -26,7 +26,8 @@ struct RenderDesc : RF_DescBase
 	RefStrList include_path;    // [implicit] include path for the renderer 
 	
 	// This is set up by CheckDesc(): 
-	bool can_resume_render;    // can resume rendering a file (POVRay: option "+C")
+	bool can_resume_render;     // can resume rendering a file (POVRay: option "+C")
+	bool can_pass_frame_clock;  // can pass simple frame clock value (POVRay: option +K")
 	
 	_CPP_OPERATORS_FF
 	RenderDesc(int *failflag=NULL);
@@ -42,6 +43,7 @@ struct RenderTask : public TaskStructBase
 	const ImageFormat *oformat;  // image output format (static data, do NOT delete)
 	
 	int resume;    // Resume rendering 0/1
+	double frame_clock;  // Frame clock value or NAN for none; USE finite() TO TEST!
 	
 	_CPP_OPERATORS_FF
 	RenderTask(int *failflag=NULL);

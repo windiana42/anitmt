@@ -23,6 +23,8 @@
 #include <ctype.h>
 #include <assert.h>
 
+#include <math.h>   /* for NAN */
+
 
 using namespace LDR;
 
@@ -400,7 +402,7 @@ int LDRClient::_DoAuthHandshake(FDBase::FDInfo *fdi)
 			{
 				case CAC_Success:  okay=1;  break;
 				case CAC_AuthFailed:
-					Warning("Client %s: Auth failed (illegal challenge).\n",
+					Warning("Client %s: Auth failed (wrong password?!).\n",
 						_ClientName().str());
 					break;
 				case CAC_AlreadyConnected:
@@ -611,6 +613,7 @@ void LDRClient::_DoSendQuit(FDBase::FDInfo *fdi)
 // Return value: 
 //   0 -> OK complete packet in resp_buf; ready to send it 
 //  -1 -> alloc failure
+//  -2 -> failed to convert frame_clock to u_int32_t
 int LDRClient::_Create_TaskRequest_Packet(RespBuf *dest)
 {
 	CompleteTask *ctsk=tri.scheduled_to_send;
@@ -675,6 +678,15 @@ int LDRClient::_Create_TaskRequest_Packet(RespBuf *dest)
 		r_flags|=TRRF_Unfinished;
 	}
 	
+	u_int32_t r_frame_clock=Tnt32Double_NAN;
+	if(rt && finite(rt->frame_clock))
+	{
+		int rv=DoubleToInt32(rt->frame_clock,&r_frame_clock);
+		assert(rv!=3);  // ...which is NaN which should not happen here. 
+		if(rv)  // frame clock conversion failure (overflow)
+		{  return(-2);  }
+	}
+	
 	// Okay, these limits are meant to be never exceeded. 
 	// But we must be sure: 
 	assert(r_desc_slen<=0xffff && r_oformat_slen<=0xffff);
@@ -710,6 +722,7 @@ int LDRClient::_Create_TaskRequest_Packet(RespBuf *dest)
 	pack->r_add_args_size=htonl(r_add_args_size);
 	pack->r_oformat_slen=htons(r_oformat_slen);
 	pack->r_flags=htons(r_flags);
+	pack->r_frame_clock=r_frame_clock;  // already network order
 	
 	if(ft)
 	{  pack->f_timeout = ft->timeout<0 ? 0xffffffffU : htonl(ft->timeout);  }

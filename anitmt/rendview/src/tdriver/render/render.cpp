@@ -17,6 +17,8 @@
 
 #include "../../database.hpp"
 
+#include <math.h>   /* for NAN */
+
 
 RenderDesc::RenderDesc(int *failflag) :
 	RF_DescBase(failflag),
@@ -27,6 +29,7 @@ RenderDesc::RenderDesc(int *failflag) :
 	dtype=DTRender;
 	
 	can_resume_render=false;
+	can_pass_frame_clock=false;
 }
 
 RenderDesc::~RenderDesc()
@@ -61,6 +64,7 @@ RenderTask::RenderTask(int *failflag) :
 	oformat=NULL;
 	//timeout=-1;
 	resume=0;
+	frame_clock=NAN;
 }
 
 RenderTask::~RenderTask()

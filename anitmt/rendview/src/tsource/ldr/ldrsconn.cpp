@@ -683,7 +683,24 @@ int TaskSource_LDR_ServerConn::_ParseTaskRequest_Intrnl(
 		if((r_flags & ~TRRF_Unfinished)!=0)
 		{
 			Error("%s%d] with illegal flags 0x%x.\n",_rtr,frame_no,r_flags);
-			delete ctsk;  return(2);
+			delete ctsk;  return(1);
+		}
+		
+		int rv=Int32ToDouble(pack->r_frame_clock,&rt->frame_clock);
+		if(rv==0)
+		{
+			// Valid frame clock was found. Check if that is okay. 
+			if(!rdesc->can_pass_frame_clock)
+			{
+				Error("%s%d] containing unsupported frame clock (%g).\n",
+				_rtr,frame_no,rt->frame_clock);
+				delete ctsk;  return(1);
+			}
+		}
+		else if(rv!=3)  // 3 -> NaN -> okay (no frame clock val)
+		{
+			Error("%s%d] with out of range frame clock.\n",_rtr,frame_no);
+			delete ctsk;  return(1);
 		}
 	}
 	if(fdesc)

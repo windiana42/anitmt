@@ -22,6 +22,10 @@
 #include <assert.h>
 #include <netinet/in.h>
 
+#include <math.h>
+
+#include "sha1hash.hpp"
+
 
 namespace LDR
 {
@@ -113,6 +117,68 @@ void HTime2LDRTime(const HTime *h,LDRTime *t)
 }
 
 
+// Range: +/- 9.8e19, precision: bettern than 1ppm (2.4e-7):
+// Return value: 
+//   0 -> OK 
+//   +/-1 -> out of range   (only DoubleToInt32())
+//   +/-2 -> val is +/-Inf, 
+//   3 -> val is NaN
+// (Note that Inf anf NaN can be converted to u_int32_t and back 
+// again; overflow is converted to Inf.)
+int DoubleToInt32(double val,u_int32_t *x)
+{
+	u_int32_t sign;
+	if(val<0.0)
+	{  sign=1U<<31;  val=-val;  }
+	else
+	{  sign=0U;  }
+	
+	if(isinf(val))
+	{  *x=htonl(0x7fffffffU | sign);  return(sign ? (-2) : (+2));  }
+	if(isnan(val))
+	{  *x=Tnt32Double_NAN;  return(3);  }
+	
+	if(val<=1e-15)  // This is treated as 0.0.
+	{  *x=htonl(2000000U);  return(0);  }
+	
+	static const double log15=log(15.0);
+	int ev=int(floor(log(val)/log15)+0.1);
+	if(ev<-15)  // This is treated as 0.0.
+	{  *x=htonl(2000000U);  return(0);  }
+	if(ev>16)   // overflow
+	{  *x=htonl(0x7fffffffU | sign);  return(sign ? (-1) : (+1));  }
+	
+	val*=pow(15.0,double(-ev));
+	int32_t man=int(val*4.19e6 + 0.5)+2000000;
+	assert(man>=0 && man<0x3fffffe);  // Note: ...ffe and above special
+	
+	*x=htonl(sign | (u_int32_t(ev+15)<<26) | u_int32_t(man));
+	return(0);
+}
+
+int Int32ToDouble(u_int32_t x,double *val)
+{
+	x=ntohl(x);
+	int man=int(x & 0x3ffffffU);
+	int sign=(x>>31);
+	if(man==0x3ffffff)
+	{
+		if(sign)
+		{  *val=-HUGE_VAL;  return(-2);  }
+		*val=HUGE_VAL;  return(+2);
+	}
+	if(man==0x3fffffe)
+	{  *val=NAN;  return(3);  }
+	man-=2000000;
+	int ev=((x>>26) & 31)-15;
+	double tmp=(man/4.19e6);
+	if(ev)
+	{  tmp*=pow(15.0,double(ev));  }
+	*val = sign ? (-tmp) : tmp;
+	return(0);
+}
+
+
 // Store RendView ID string in id_dest of size len: 
 void LDRSetIDString(char *id_dest,size_t len)
 {
@@ -142,19 +208,15 @@ void LDRComputeCallengeResponse(LDRChallengeRequest *d,char *resp_buf,
 	// For non-empty passwords, a hash is computed: 
 	// Feed challenge and password several times into hash...
 	size_t pwl=strlen(passwd);
+	SHA1Hash hash;
 	for(int i=0; i<17; i++)
 	{
-		#warning Challenge response not yet implemented. 
-		
-		// THIS IS FOR TESTING ONLY: COPY PASSWORD: 
-		strncpy(resp_buf,passwd,LDRChallengeRespLength);
-		
-		// h.Feed(d->challenge,LDRChallengeLength);
-		// h.Feed(passwd,pwl);
+		hash.Feed((char*)d->challenge,LDRChallengeLength);
+		hash.Feed(passwd,pwl);
 	}
-	// h.Final();
-	// assert(h.hash_len==LDRChallengeRespLength);
-	// h.Get(resp_buf);
+	hash.Final();
+	assert(hash.HashSize()==LDRChallengeRespLength);
+	hash.GetHash(resp_buf);
 }
 
 
