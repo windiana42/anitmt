@@ -177,7 +177,7 @@ int FDCopyPump_Simple::HandleFDNotify(FDManager::FDInfo *fdi)
 		if(rv)
 		{
 			// In this case, the job got finished, client was informed. 
-			return(1);
+			return(rv);
 		}
 	}
 	
@@ -328,7 +328,9 @@ void FDCopyPump_Simple::_Cleanup(int go_dead)
 // Always returns -1 if SCError is set, otherwise +1. 
 int FDCopyPump_Simple::_EndJob(CopyInfo cpi)
 {
-	_Cleanup(/*go_dead=*/1);  // Hope setting go_dead=1 here is okay. 
+	_Cleanup(/*go_dead=*/1);  // Hope setting go_dead=1 here is okay. - [YES!]
+	
+	int rv=(cpi.scode & SCError) ? (-1) : (+1);
 	
 	// Inform client: 
 	(int)cpi.scode|=SCFinal;
@@ -338,9 +340,14 @@ int FDCopyPump_Simple::_EndJob(CopyInfo cpi)
 	// back in fdnotify() / Control() (we're called on it's stack). 
 	//is_dead already set. 
 	//is_dead=1;  // <- We will get deleted [if !persistent]
-	assert(is_dead);
+	// See fdcopybase.cc for information on the on_stack_of_fdnotify 
+	// issue. 
+	#if TESTING
+	if(on_stack_of_fdnotify==1)  assert(!is_dead);
+	else assert(is_dead);
+	#endif
 	
-	return((cpi.scode & SCError) ? (-1) : (+1));
+	return(rv);
 }
 
 
@@ -370,14 +377,8 @@ int FDCopyPump_Simple::_StopContJob(int stop)
 // were not modified. 
 int FDCopyPump_Simple::SetIO(FDCopyIO *nsrc,FDCopyIO *ndest)
 {
-	// Are we active? If so, we refuse: 
-	if(IsActive() || (is_dead && (nsrc || ndest)) )
-	{  return(-5);  }
-	
-	// First, check if the passed FDCopyIO's are active: 
-	if((nsrc  && nsrc->active) ||
-	   (ndest && ndest->active) )
-	{  return(-3);  }
+	int _rv=_BasicSetIOLogic(nsrc,ndest);
+	if(_rv)  return(_rv);
 	
 	// See if we support that: 
 	int nfd_dir=0;

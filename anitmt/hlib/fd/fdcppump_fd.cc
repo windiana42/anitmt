@@ -207,7 +207,7 @@ int FDCopyPump_FD2FD::HandleFDNotify(FDManager::FDInfo *fdi)
 		{
 			// We will no longer be alive. 
 			assert(is_dead);
-			return(0);
+			return(rv);
 		}
 		_ReDecidePollEvents();
 	}
@@ -563,6 +563,8 @@ int FDCopyPump_FD2FD::_FinishJob(int dir,CopyInfo cpi)
 	// not just end input. 
 	_Cleanup(/*go_dead=*/1);
 	
+	int rv=(cpi.scode & SCError) ? (-1) : (+1);
+	
 	(int)cpi.scode|=SCFinal;
 	(int)cpi.scode|=persistent_sc;
 	_CallCPNotify(&cpi);
@@ -572,7 +574,7 @@ int FDCopyPump_FD2FD::_FinishJob(int dir,CopyInfo cpi)
 	//is_dead already set. 
 	assert(is_dead);
 	
-	return((cpi.scode & SCError) ? (-1) : (+1));
+	return(rv);
 }
 
 
@@ -598,7 +600,9 @@ void FDCopyPump_FD2FD::_Cleanup(int go_dead)
 	
 	// Detach from the FDDataHook: 
 	// (Also removes controlled events.) 
-	int rv=DoneJob(src->pollid,dest->pollid);  // -> FDCopyBase
+	int rv=DoneJob(
+		src ? src->pollid : NULL,
+		dest ? dest->pollid : NULL);  // -> FDCopyBase
 	#if TESTING
 	if(rv)
 	{  fprintf(stderr,"Hm... DoneJob() failed (%d) (FD2FD pump; fd=%d,%d)\n",
@@ -629,14 +633,8 @@ void FDCopyPump_FD2FD::_Cleanup(int go_dead)
 // were not modified. 
 int FDCopyPump_FD2FD::SetIO(FDCopyIO *nsrc,FDCopyIO *ndest)
 {
-	// Are we active? If so, we refuse: 
-	if(IsActive() || (is_dead && (nsrc || ndest)) )
-	{  return(-5);  }
-	
-	// First, check if the passed FDCopyIO's are active: 
-	if((nsrc  && nsrc->active) ||
-	   (ndest && ndest->active) )
-	{  return(-3);  }
+	int _rv=_BasicSetIOLogic(nsrc,ndest);
+	if(_rv)  return(_rv);
 	
 	// See if we support that: 
 	int retval=-2;
@@ -700,5 +698,7 @@ FDCopyPump_FD2FD::FDCopyPump_FD2FD(FDCopyBase *_fcb,int *failflag) :
 
 FDCopyPump_FD2FD::~FDCopyPump_FD2FD()
 {
-	
+	// src/dest cleanup done by FDCopyPump::~FDCopyPump()
+	if(!is_dead)
+	{  _Cleanup(/*go_dead=*/1);  }
 }

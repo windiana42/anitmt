@@ -60,9 +60,9 @@ int FDCopyBase::fdnotify(FDManager::FDInfo *fdi)
 	
 	short remove_flags = (h->in.ctrl_ev | h->out.ctrl_ev);
 	
-	if(h->in.pump)
+	if(/*!h->gets_deleted &&*/ h->in.pump)
 	{  _DoHandleFDNotify(fdi,h,h->in.pump);  }
-	if(h->out.pump)
+	if(!h->gets_deleted && h->out.pump)
 	{  _DoHandleFDNotify(fdi,h,h->out.pump);  }
 	
 	// Forward the call: 
@@ -97,16 +97,45 @@ void FDCopyBase::_DoHandleFDNotify(FDManager::FDInfo *fdi,
 	}
 	
 	// Internal error if failing. 
-	// Only actine pumps may ne attached to FDDataHook. 
+	// Only active pumps may be attached to FDDataHook. 
 	assert(pump->IsActive());
 	
+	pump->on_stack_of_fdnotify=2;
 	int rv=pump->HandleFDNotify(fdi);
 	if(rv)
 	{
-		assert(pump->is_dead);
-		// Okay, then delete it: 
-		pump->_DoSuicide();  // will just "reset" if persistent
+		// NOTE: Normal way: FD notify is fatal for pump and it calls 
+		// cpnotify(SCFinal). During this call, the info in the pump is 
+		// still valid, but is_dead is set. When we're back (from the 
+		// stack) here at _DoHandleFDNotify() we call _DoSuicide() 
+		// so that the pump gets deleted or resets itself (if persistent). 
+		// BUT, it may be the case that the user wants to use the same 
+		// pump again right in cpnotify(). For this case, we set 
+		// pump->on_stack_of_fdnotify=2 above. 
+		// The User may then call PumpReuseNow() on the pump BEFORE 
+		// calling SetIO AND BEFORE SETTING THE PARAMS IN THE FDCopyIOs. 
+		// PumpReuseNow() may only be called for persistent pumps and 
+		// will then do _DoSuicide() itself and set 
+		// pump->on_stack_of_fdnotify=1 so that we know. 
+		// Note that doing PumpReuseNow() in SetIO automagically is not 
+		// a possible becuase this calls DoSuicide on the pumps which 
+		// causes them to do a reset and thus would delete the data in 
+		// the pumps deliberately set for the call to SetIO(). 
+		if(pump->on_stack_of_fdnotify==1)
+		{
+			assert(!pump->is_dead);
+			pump->on_stack_of_fdnotify=0;
+		}
+		else
+		{
+			assert(pump->is_dead);
+			// Okay, then delete it: 
+			pump->on_stack_of_fdnotify=0;
+			pump->_DoSuicide();  // will just "reset" if persistent
+		}
 	}
+	else
+	{  pump->on_stack_of_fdnotify=0;  }
 }
 
 
@@ -541,6 +570,55 @@ FDCopyBase::FDDataHook::~FDDataHook()
 /******************************************************************************/
 /**** FDCopyPump                                                           ****/
 
+// Long explanation in fdcopybase.h. 
+int FDCopyPump::PumpReuseNow()
+{
+	if(!persistent)  // persistent is IMPORTANT
+	{
+		#if TESTING
+		fprintf(stderr,"OOPS: PumpReuseNow() called on non-persistent pump.\n");
+		#endif
+		return(-1);
+	}
+	
+	// See above for an explanation on 
+	// the on_stack_of_fdnotify issue. 
+	if(!on_stack_of_fdnotify)
+	{
+		#if TESTING
+		fprintf(stderr,"OOPS: PumpReuseNow() called but not on stack of fdnotify().\n");
+		#endif
+		return(-2);
+	}
+	
+	// If !is_dead, there is nothing to do. 
+	if(is_dead)
+	{
+		_DoSuicide();   // Will not kill us because we're persistent. 
+		on_stack_of_fdnotify=1;
+	}
+	
+	return(0);
+}
+
+
+int FDCopyPump::_BasicSetIOLogic(FDCopyIO *nsrc,FDCopyIO *ndest)
+{
+	// Are we active? If so, we refuse: 
+	if(IsActive())
+	{  return(-5);  }
+	
+	if(is_dead && (nsrc || ndest))
+	{  return(-5);  }
+	
+	// First, check if the passed FDCopyIO's are active: 
+	if((nsrc  && nsrc->active) ||
+	   (ndest && ndest->active) )
+	{  return(-3);  }
+	
+	return(0);
+}
+
 // This does a "delete this;" if we're not persistent 
 // Or resets the is_dead flag and the class if persistent. 
 void FDCopyPump::_DoSuicide()
@@ -597,6 +675,7 @@ FDCopyPump::FDCopyPump(FDCopyBase *_fcb,int *failflag) :
 	req_timeout=-1;
 	persistent=0;
 	is_dead=0;
+	on_stack_of_fdnotify=0;
 	dptr=NULL;
 	
 	if(fcb)

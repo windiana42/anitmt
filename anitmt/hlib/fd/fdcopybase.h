@@ -430,7 +430,12 @@ class FDCopyPump :
 		// Used to call virtual cpnotify() of the associated FDCopyBase: 
 		inline int _CallCPNotify(CopyInfo *ci);
 		
+		// This must be called by SetIO() of the derived class for 
+		// basic checking. 
+		int _BasicSetIOLogic(FDCopyIO *nsrc,FDCopyIO *ndest);
+		
 	private:
+		// This is (normally) not meant to be called by derived classes. 
 		void _DoSuicide();
 		
 	public:
@@ -447,7 +452,13 @@ class FDCopyPump :
 		
 		// 1 -> waiting to get deleted. 
 		int is_dead : 1;
+	
+	protected:
+		// See fdcopybase.cc for an explanation on this flag: 
+		int on_stack_of_fdnotify : 3;
 		
+	public:
+	
 		// Custom data pointer attached to the FDCopyIO. Defaults 
 		// to NULL and may be set to anything at any time. 
 		void *dptr;
@@ -499,7 +510,7 @@ class FDCopyPump :
 		//  -3 -> one of the passed FDCopyIO classes is maked active
 		//  -4 -> FDCopyPump's current src / dest set and active 
 		//  -5 -> FDCopyPump currently marked active or it is dead 
-		//        AND dest or src are non-NULL. 
+		//        AND dest or src are non-NULL. SEE ALSO PumpReuseNow(). 
 		// UNLESS 0 is returned, the source and dest stored in *this 
 		// were not modified. 
 		// NOTE!! Unless 0 or -3 is returned and unless src / dest (as 
@@ -508,6 +519,24 @@ class FDCopyPump :
 		// ** Additional return values are possible according to 
 		// ** derived class. 
 		virtual int SetIO(FDCopyIO * /*src*/,FDCopyIO * /*dest*/) HL_PureVirt(-2);
+		
+		// This function needs some explanation: 
+		// If you want to re-use a pump during the call to (i.e. on the 
+		// stack of) cpnotify(SCFinal), then you normally can not (solution 
+		// below). That is because during the call to cpnotify() the data in 
+		// the pump and the FDCopyIOs is still valid but the is_dead flag is 
+		// set. In case the pump is non-persistent, it gets deleted when you 
+		// return from cpnotify(). In case it is persistent, it simply does 
+		// _DoSuicide(), i.e. gets rid of the FDCopyIOs and resets the 
+		// is_dead flag. Now, if you want to re-use a persistent pump during 
+		// a call to cpnotify(), then first cleanup the old state in your 
+		// proggy, then call PumpReuseNow(), THEN (NOT BEFORE!) set the 
+		// params for the FDCopyIOs and THEN call SetIO(). 
+		// Return value: 
+		//   0 -> OK
+		//  -1 -> pump not persistent
+		//  -2 -> not called on stack of fdnotify 
+		int PumpReuseNow();
 		
 		// For available control commands see above. 
 		// Note that not all FDCopyPumps must support all commands 
