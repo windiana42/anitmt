@@ -4,4 +4,16 @@ AC_PROG_CC
 AC_PROG_CXX
 AC_PROG_INSTALL
 AC_PROG_RANLIB
-AC_OUTPUT(Makefile anitmt-calc/Makefile lib/Makefile lib/val/Makefile lib/utl/Makefile lib/include/Makefile test/Makefile)
+dnl FIXME: Yacc check seems to necessary.
+AC_PROG_YACC
+AM_PROG_LEX
+if test "$LEX" != "flex"; then echo "Warning: You need flex for rebuild of .lxx-sources!"; fi
+AC_OUTPUT(
+	Makefile \
+	anitmt-calc/Makefile \
+	lib/Makefile \
+	lib/val/Makefile \
+	lib/utl/Makefile \
+	lib/include/Makefile \
+	test/Makefile \
+	anitmt-calc/parser/Makefile)
