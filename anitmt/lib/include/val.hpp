@@ -15,15 +15,18 @@
 
 #include <string>
 
+#include "vector.hpp"
+
 namespace values{
 
   class Scalar;
   class Vector;
+  class Matrix;
   class String;
   class Flag;
 
   class Valtype{
-    enum Types{ scalar, vector, string, flag };
+    enum Types{ scalar, vector, matrix, string, flag };
 
     Types type;
   public:
@@ -34,12 +37,28 @@ namespace values{
     double x;
   public:
     operator double() const;
+    friend Vector operator*( const Scalar, const Vector );
+    friend Vector operator*( const Vector, const Scalar );
 
     Scalar( double i );
     Scalar();
   };
   
   class Vector : public Valtype{
+    vect::vector3 x;
+  public:
+    operator vect::vector3() const;
+    friend Vector operator*( const Scalar, const Vector );
+    friend Vector operator*( const Vector, const Scalar );
+    friend Vector operator+( const Vector, const Vector );
+    friend Scalar operator*( const Vector, const Vector );
+    friend Scalar abs( const Vector );
+
+    Vector( vect::vector3 v );
+    Vector();
+  };
+
+  class Matrix : public Valtype{
   public:
   };
 
@@ -52,5 +71,15 @@ namespace values{
     bool x;
   public:
   };
+
+  //**********
+  // Operators
+  //**********
+
+  Vector operator*( const Scalar, const Vector );
+  Vector operator*( const Vector, const Scalar );
+  Vector operator+( const Vector, const Vector );
+  Scalar operator*( const Vector, const Vector );
+  Scalar abs( const Vector );
 }
 #endif

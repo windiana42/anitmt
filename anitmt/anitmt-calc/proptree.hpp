@@ -17,6 +17,7 @@
 
 #include <list>
 #include <map>
+#include <vector>
 
 namespace anitmt{
   class Prop_Tree_Node;
@@ -38,23 +39,12 @@ namespace anitmt{
   class Prop_Tree_Node{
     // navigation in tree
     Prop_Tree_Node *parent;	// parent node
-    Prop_Tree_Node *child;	// first child node
+    Prop_Tree_Node *first_child;// first child node
     Prop_Tree_Node *next;	// next node
     Prop_Tree_Node *prev;	// previous node
 
-    // Prop_Tree_Nodes that were involved in a solve run
-    static involve_list_type involve_list;
-
-    // remove all entries from the involve list
-    static void clear_involve_list();
-    // return the actual involve list
-    static const involve_list_type &get_involve_list();
-    friend Priority_Action::do_it(); // uses the two functions above
-  protected:
-
-    // check each priority level until max_priority for allowed actions
-    // and return a list of all involved Prop_Tree_Nodes
-    //involve_list_type check_priorities( int max_priority );
+    std::string type;		// type of this node
+    std::string name;		// name for reference
 
     // properties
     typedef std::map<std::string, Property*> properties_type;
@@ -62,18 +52,62 @@ namespace anitmt{
 
     // priority levels for actions like a transmission of properties to 
     // neighbour nodes or like setting default values
-    typedef vector< Priority_Action* > priority_levels_type;
+    typedef std::vector< Priority_Action* > priority_levels_type;
     priority_levels_type priority_level;
+
+  protected:
+    // Access functions for hiding data structure
+    inline void add_property( std::string name, Property *prop ){
+      properties[ name ] = prop;
+    }
+
+    inline void add_action( int level, Priority_Action *act ){
+      priority_level[ level ] = act;
+    }
+
   public:
+    std::string	get_name();	// return name
+    std::string get_type();	// return type
+    Property *get_property( std::string name );	
+				// return property
+    std::list<std::string> get_properties(); 
+				// returns all property names
+
+    Prop_Tree_Node *get_child( std::string name );
+				// return child with name
+    std::list<Prop_Tree_Node*> get_all_childs();
+				// return all childs
+    virtual bool is_child_type_valid( std::string type ) = 0;
+				// check if type of child is valid
+    virtual Prop_Tree_Node *add_child( std::string type, 
+				       std::string name ) = 0;
+				// add child of type with name
+    virtual Prop_Tree_Node *get_referenced_node( std::string ref );
+				// returns node by interpreting the hierachical
+ 				// reference string. 
+
+    Prop_Tree_Node( std::string type, std::string name );
+    virtual ~Prop_Tree_Node();
+
+    //-- Templates
+
+    class exception_unknown_property {}; // should be better integrated 
+
+    // set property
+    template< class T >  
+    void set_property( std::string name, T val ) 
+      throw( exception_unknown_property ) {
+
+      if( get_property( name ) != 0 )
+	properties[ name ] = val;
+      else
+	throw exception_unknown_property();
+    }
   };
 
   class Priority_Action{
-  protected:
-    involve_list_type recheck_priorities( int max_priority, 
-					  involve_list_type involved_nodes );
   public:
-    // do the action which is on the given priority level 
-    virtual involve_list_type do_it( int level ) = 0;
+    virtual involve_list_type do_it() = 0;
     
     virtual ~Priority_Action() {}
   };
@@ -84,14 +118,10 @@ namespace anitmt{
     T val;
     Prop_Tree_Node *node;
   public:
-    virtual involve_list_type do_it( int level ){ 
-      Prop_Tree_Node::clear_involve_list(); // prepare an empty involve list
-      // set will try to set the value and its results and additionally
-      // it will fill the involve list with the involved nodes
-      if( !prop->set_if_ok( val ) ) // set failed?
-	return involve_list_type(); // return empty list
-      
-      return recheck_priorities( level, Prop_Tree_Node::get_involve_list() );
+    virtual involve_list_type do_it(){ 
+      //node->clear_involve_list();
+      prop->set_if_ok( val ); 
+      //return node->get_involve_list();
     }
 
     Default_Value( Type_Property<T> *p, T v, Prop_Tree_Node *n ) 
