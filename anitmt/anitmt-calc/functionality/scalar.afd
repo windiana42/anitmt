@@ -25,6 +25,7 @@
 include declaration "base_func.afd";
 include declaration "scalar_base.afd";
 
+
 // ****************************************************************************
 // ****************************************************************************
 // ** node definitions
@@ -40,6 +41,8 @@ abstract node scalar_subfunction extends scalar_base provides scalar_vsa {
   
   common {
     actions {
+      // MM: the action levels have to be checked !!!
+      
       // times, forward and backward
       push( push_time_fw, end_time, scalar_vsa.next.start_time );
       push( push_time_bw, start_time, scalar_vsa.prev.end_time );
@@ -53,8 +56,6 @@ abstract node scalar_subfunction extends scalar_base provides scalar_vsa {
   }
 
 }
-
-
 
 // +--------+
 // | change |
@@ -101,8 +102,6 @@ node change extends scalar_subfunction {
     }
   }
 }
-
-// --- MM: work marker! ---
 
 // +----------+
 // | constant |
@@ -192,6 +191,8 @@ node linear extends scalar_subfunction provides scalar_vsa {
       equal_solver( slope, end_slope   );
     }
     actions {
+      // MM: the action levels have to be checked
+
       default( default_speed, slope, 0 );
       default( default_duration, duration, 0 );
       default( default_state, start_value, 0 );
@@ -246,8 +247,9 @@ node accelerated extends scalar_subfunction provides scalar_vsa {
       // accel_solver(difference, duration, acceleration, start_slope, end_slope, slope_difference);
     }
     actions {
-      default( default_acceleration,  acceleration, 0 ); 
-      // <-- still wrong better is:
+      // MM: the action levels have to be checked !!! 
+      
+      default( default_acceleration,  acceleration, 0 ); // <-- still wrong better is:
       // default(200,  slope_difference, 0 );
       default( default_speed, start_slope, 0 );
       default( default_duration, duration, 0 );
@@ -261,8 +263,7 @@ node accelerated extends scalar_subfunction provides scalar_vsa {
     requires start_value, start_time, start_slope, acceleration
     {
       scalar t = abs_t - [[ start_time ]];
-      scalar res = [[ start_value ]] + [[ start_slope ]]*t 
-                   + 0.5*[[ acceleration ]]*t*t;
+      scalar res = [[ start_value ]] + [[ start_slope ]]*t + 0.5*[[ acceleration ]]*t*t;
       [[ return res ]];
     }
     resulting slope( time abs_t ) 
@@ -280,24 +281,24 @@ node accelerated extends scalar_subfunction provides scalar_vsa {
   }
 }
 
-// ****************************************************************************
-// ****************************************************************************
-// ** Just for Fun ähhh Test
-// ****************************************************************************
-// ****************************************************************************
+// +----+
+// | if |
+// +----+
 
-// +----------+
-// | separator |
-// +----------+
-
-// separator value
-node separator extends scalar_subfunction {
+// switching between scalar functions (container for then and else)
+node if extends scalar_subfunction provides scalar_vsa {
   
-  // special properties for separator
-  properties{
-    type scalar {    
+  properties {
+    // MM: boolean property not finished yet
+    type flag {    
       condition;
     }
+  }
+  
+  // scalar subfunction provider type 
+  contains {
+    max1 min1 scalar_then_vsa;
+    max1 min1 scalar_else_vsa;
   }
   
   common {
@@ -309,50 +310,151 @@ node separator extends scalar_subfunction {
       equal_solver( end_time  , scalar_vsa.slope(time).end_param   );
       equal_solver( start_time, scalar_vsa.acceleration(time).start_param );
       equal_solver( end_time  , scalar_vsa.acceleration(time).end_param   );
-
-      // solvers for separator
     }
-    
+
+    // special actions connecting only when condition is determined 
+    // on a low level with high priority 
+    // MM: Have to be implemented 
     actions {
-      default( default_duration, duration, 0 );
-      default( default_state, start_value, 0 );
+      //conditional_push (  1, child.scalar_then_vsa.first.start_time        , start_time                                    ,     condition  );
+      //conditional_push (  1, child.scalar_else_vsa.first.start_time        , start_time                                    , not(condition) );
+      //conditional_push (  2, start_time                                    , child.scalar_then_vsa.first.start_time        ,     condition  );
+      //conditional_push (  2, start_time                                    , child.scalar_else_vsa.first.start_time        , not(condition) );
+      //conditional_push (  3, child.scalar_then_vsa.last.end_time           , end_time                                      ,     condition  );
+      //conditional_push (  3, child.scalar_else_vsa.last.end_time           , end_time                                      , not(condition) );
+      //conditional_push (  4, end_time                                      , child.scalar_then_vsa.last.end_time           ,     condition  );
+      //conditional_push (  4, end_time                                      , child.scalar_else_vsa.last.end_time           , not(condition) );
+      //conditional_push (  5, child.scalar_then_vsa.first.start_slope       , start_slope                                   ,     condition  );
+      //conditional_push (  5, child.scalar_else_vsa.first.start_slope       , start_slope                                   , not(condition) );
+      //conditional_push (  6, start_slope                                   , child.scalar_then_vsa.first.start_slope       ,     condition  );
+      //conditional_push (  6, start_slope                                   , child.scalar_else_vsa.first.start_slope       , not(condition) );
+      //conditional_push (  7, child.scalar_then_vsa.last.end_slope          , end_slope                                     ,     condition  );
+      //conditional_push (  7, child.scalar_else_vsa.last.end_slope          , end_slope                                     , not(condition) );
+      //conditional_push (  8, end_slope                                     , child.scalar_then_vsa.last.end_slope          ,     condition  );
+      //conditional_push (  8, end_slope                                     , child.scalar_else_vsa.last.end_slope          , not(condition) );
+      //conditional_push (  9, child.scalar_then_vsa.first.start_acceleration, start_acceleration                            ,     condition  );
+      //conditional_push (  9, child.scalar_else_vsa.first.start_acceleration, start_acceleration                            , not(condition) );
+      //conditional_push ( 10, start_acceleration                            , child.scalar_then_vsa.first.start_acceleration,     condition  );
+      //conditional_push ( 10, start_acceleration                            , child.scalar_else_vsa.first.start_acceleration, not(condition) );
+      //conditional_push ( 11, child.scalar_then_vsa.last.end_acceleration   , end_acceleration                              ,     condition  );
+      //conditional_push ( 11, child.scalar_else_vsa.last.end_acceleration   , end_acceleration                              , not(condition) );
+      //conditional_push ( 12, end_acceleration                              , child.scalar_then_vsa.last.end_acceleration   ,     condition  );
+      //conditional_push ( 12, end_acceleration                              , child.scalar_else_vsa.last.end_acceleration   , not(condition) );
+
     }
   }
 
-  common {
-    actions {
-      // times, forward and backward
-      condition_push( push_time_fw, start_time, scalar_vsa.next.start_time,
-	condition > 0 );
-      condition_push( push_time_bw, end_time, scalar_vsa.prev.end_time,
-	condition > 0 );
-      // values, forward and backward
-      condition_push( push_state_fw, start_value, scalar_vsa.next.start_value,
-	condition > 0 );
-      condition_push( push_state_bw, end_value, scalar_vsa.prev.end_value,
-	condition > 0 );
-      // slopes, forward and backward
-      condition_push( push_speed_fw, start_slope, scalar_vsa.next.start_slope,
-	condition > 0 );
-      condition_push( push_speed_bw, end_slope, scalar_vsa.prev.end_slope,
-	condition > 0 );
-    }
-  }
 
-  // result functions for separator
+  // result functions using the scalar subfunctions
+  // MM: Using the boolean type, may not work in the moment
   provide scalar_vsa {
-    resulting value( time t ) requires start_value
-    {
-      [[ return_prop start_value ]];
+    resulting value ( time t ) 
+    requires child.scalar_then_vsa.value ( time ), child.scalar_else_vsa.value ( time ) { 
+      scalar res = [[condition]] ? [[ child.scalar_then_vsa.value ( time t ) ]] : [[ child.scalar_else_vsa.value ( time t ) ]];
+      [[ return res]];
+    } 
+    resulting slope ( time t ) 
+    requires child.scalar_then_vsa.slope ( time ), child.scalar_else_vsa.slope ( time ) { 
+      scalar res = [[ condition ]] ? [[child.scalar_then_vsa.slope ( time t ) ]] : [[child.scalar_else_vsa.slope ( time t ) ]];
+      [[ return res]];
+    } 
+    resulting acceleration ( time t ) 
+    requires child.scalar_then_vsa.acceleration ( time ), child.scalar_else_vsa.acceleration ( time ) { 
+      scalar res = [[ condition ]] ? [[child.scalar_then_vsa.acceleration ( time t ) ]] : [[child.scalar_else_vsa.acceleration ( time t ) ]];
+      [[ return res]];
+    } 
+  }
+}
+
+// +------+
+// | then |
+// +------+
+
+// then container for if function (container for scalar functions)
+node then extends scalar_base provides scalar_then_vsa {
+  
+  // scalar subfunction provider type 
+  contains {
+    min1 scalar_vsa;
+  }
+  
+  common {
+    solvers {
+      // setting result function parameters
+      equal_solver( start_time, scalar_then_vsa.value(time).start_param );
+      equal_solver( end_time  , scalar_then_vsa.value(time).end_param   );
+      equal_solver( start_time, scalar_then_vsa.slope(time).start_param );
+      equal_solver( end_time  , scalar_then_vsa.slope(time).end_param   );
+      equal_solver( start_time, scalar_then_vsa.acceleration(time).start_param );
+      equal_solver( end_time  , scalar_then_vsa.acceleration(time).end_param   );
+
+      // connection to subfunctions (then)
+      equal_solver ( start_time , child.scalar_vsa.first.start_time  );
+      equal_solver ( start_value, child.scalar_vsa.first.start_value );
+      equal_solver ( start_slope, child.scalar_vsa.first.start_slope );
+      equal_solver ( end_time   , child.scalar_vsa.last.end_time     );      
+      equal_solver ( end_value  , child.scalar_vsa.last.end_value    );      
+      equal_solver ( end_slope  , child.scalar_vsa.last.end_slope    );      
     }
-    resulting slope( time t ) 
-    {
-      [[ return_prop start_slope ]];
+  }
+
+  // result functions using the scalar subfunctions
+  provide scalar_then_vsa {
+    resulting value ( time t ) requires child.scalar_vsa.value ( time ) { 
+      [[ return child.scalar_vsa.value ( time t )]];
+    } 
+    resulting slope ( time t ) requires child.scalar_vsa.slope ( time ) { 
+      [[ return child.scalar_vsa.slope ( time t )]];
+    } 
+    resulting acceleration ( time t ) requires child.scalar_vsa.acceleration ( time ) { 
+      [[ return child.scalar_vsa.acceleration ( time t )]];
+    } 
+  }
+}
+
+// +------+
+// | else |
+// +------+
+
+// else container for if function (container for scalar functions)
+node else extends scalar_base provides scalar_else_vsa{
+  
+  // scalar subfunction provider type 
+  contains {
+    min1 scalar_vsa;
+  }
+  
+  common {
+    solvers {
+      // setting result function parameters
+      equal_solver( start_time, scalar_else_vsa.value(time).start_param );
+      equal_solver( end_time  , scalar_else_vsa.value(time).end_param   );
+      equal_solver( start_time, scalar_else_vsa.slope(time).start_param );
+      equal_solver( end_time  , scalar_else_vsa.slope(time).end_param   );
+      equal_solver( start_time, scalar_else_vsa.acceleration(time).start_param );
+      equal_solver( end_time  , scalar_else_vsa.acceleration(time).end_param   );
+
+      // connection to subfunctions (then)
+      equal_solver ( start_time , child.scalar_vsa.first.start_time  );
+      equal_solver ( start_value, child.scalar_vsa.first.start_value );
+      equal_solver ( start_slope, child.scalar_vsa.first.start_slope );
+      equal_solver ( end_time   , child.scalar_vsa.last.end_time     );      
+      equal_solver ( end_value  , child.scalar_vsa.last.end_value    );      
+      equal_solver ( end_slope  , child.scalar_vsa.last.end_slope    );      
     }
-    resulting acceleration( time t ) 
-    {
-      [[ return 0 ]];
-    }
+  }
+
+  // result functions using the scalar subfunctions
+  provide scalar_else_vsa {
+    resulting value ( time t ) requires child.scalar_vsa.value ( time ) { 
+      [[ return child.scalar_vsa.value ( time t )]];
+    } 
+    resulting slope ( time t ) requires child.scalar_vsa.slope ( time ) { 
+      [[ return child.scalar_vsa.slope ( time t )]];
+    } 
+    resulting acceleration ( time t ) requires child.scalar_vsa.acceleration ( time ) { 
+      [[ return child.scalar_vsa.acceleration ( time t )]];
+    } 
   }
 }
 
