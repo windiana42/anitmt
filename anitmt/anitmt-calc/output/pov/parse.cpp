@@ -1088,7 +1088,7 @@ void File_Parser::Comment_Cutout(Position *start,Position *end)
 int File_Parser::_Finder_Check_Copy_Name(const ComponentInterface &cif,
 	unsigned int *counter)
 {
-	std::string str_name = cif.get_name(); // !! must exist longer than name !!
+	std::string str_name=cif.get_name();
 	const char *name=str_name.c_str();
 	
 	// Check if the name is valid: 

@@ -31,22 +31,6 @@ namespace POV
 
 using namespace anitmt;
 
-/* !!! can't work because it returns pointer to temporary string
-const char *ComponentInterface::get_name_c() const
-{
-	switch(type)
-	{
-		case tNone:
-			return(NULL);
-		case taScalar:
-			return(((Scalar_Component_Interface*)cif)->get_name().c_str());
-		case taObject:
-			return(((Object_Component_Interface*)cif)->get_name().c_str());
-	}
-	assert(0);
-	return(NULL);
-}
-*/
 std::string ComponentInterface::get_name() const
 {
 	switch(type)

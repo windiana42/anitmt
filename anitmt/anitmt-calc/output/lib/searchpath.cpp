@@ -43,8 +43,7 @@ bool Search_Path::try_open(class Input_Stream *is,
 	if(search_current)
 	{
 		// check if current_file has a path component: 
-		std::string tmp; tmp.assign(current_file); // !! tmp must exist longer than currfile !!
-#warning why assign? what about tmp = current_file?
+		std::string tmp(current_file);
 
 		const char *currfile=tmp.c_str();
 		const char *cfend=strrchr(currfile,'/');
