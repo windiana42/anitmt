@@ -82,7 +82,7 @@ int main(int argn,char **argv)
       printf("   [-j step]       use every step frames (1)\n");
       printf("\n");
       printf(" example:\n");
-      printf("   avi2tga -o %c04d.tga -i dest.avi -e29\n",'%');
+      printf("   avi2tga -o %c04d.tga -i src.avi -e29\n",'%');
 
       return 0;
     }
