@@ -106,9 +106,11 @@
 %token TOK_FUNC__debug
 %token TOK_FUNC_abs
 %token TOK_FUNC_abs2
+%token TOK_FUNC_angle_range
 %token TOK_FUNC_ceil
 %token TOK_FUNC_choose
 %token TOK_FUNC_cross
+%token TOK_FUNC_deg2rad
 %token TOK_FUNC_floor
 %token TOK_FUNC_get_element
 %token TOK_FUNC_get_rotate_component
@@ -137,12 +139,12 @@
 %token TOK_FUNC_pass_if_equal
 %token TOK_FUNC_pass_if_not_equal
 %token TOK_FUNC_plus_minus
+%token TOK_FUNC_rad2deg
 %token TOK_FUNC_reject_if
 %token TOK_FUNC_reject_if_equal
 %token TOK_FUNC_reject_if_not_equal
 %token TOK_FUNC_round
 %token TOK_FUNC_sqrt
-%token TOK_FUNC_to_angle
 %token TOK_FUNC_to_vector
 %token TOK_FUNC_trunc
 %token TOK_FUNC_vec_angle
@@ -335,6 +337,10 @@ scalar_exp:
         { $$ = abs2 ( $3  ); }
   | TOK_FUNC_ceil '(' scalar_exp  ')'
         { $$ = ceil ( $3  ); }
+  | TOK_FUNC_deg2rad '(' scalar_exp  ')'
+        { $$ = deg2rad ( $3 ); }
+  | TOK_FUNC_rad2deg '(' scalar_exp  ')'
+        { $$ = rad2deg ( $3 ); }
   | TOK_FUNC_floor '(' scalar_exp  ')'
         { $$ = floor ( $3  ); }
   | TOK_FUNC_get_element '(' matrix_exp ',' scalar_exp ',' 
@@ -348,8 +354,8 @@ scalar_exp:
         { $$ = round ( $3  ); }
   | TOK_FUNC_sqrt '(' scalar_exp  ')'
         { $$ = sqrt ( $3  ); }
-//  | TOK_FUNC_to_angle '(' scalar_exp  ')'
-//        { $$ = to_angle ( $3  ); } // Wolfgang will implement this
+//  | TOK_FUNC_angle_range '(' scalar_exp  ')'
+//        { $$ = angle_range ( $3  ); } // Wolfgang will implement this
   | TOK_FUNC_trunc '(' scalar_exp  ')'
         { $$ = trunc ( $3  ); }
   | TOK_FUNC_get_element '(' vector_exp ',' scalar_exp  ')'
@@ -557,6 +563,8 @@ op_scalar_exp:
         { $$ = ceil ( $3()  ); }
   | TOK_FUNC_choose '(' op_flag_exp ',' op_scalar_exp ',' op_scalar_exp  ')'
         { $$ = choose ( $3() , $5() , $7()  ); }
+  | TOK_FUNC_deg2rad '(' op_scalar_exp  ')'
+        { $$ = deg2rad ( $3() ); }
   | op_scalar_exp '/' op_scalar_exp			{ $$ = $1() / $3(); }
   | TOK_FUNC_floor '(' op_scalar_exp  ')'
         { $$ = floor ( $3()  ); }
@@ -578,6 +586,8 @@ op_scalar_exp:
         { $$ = pass_if_not_equal ( $3() , $5()  ); }
   | TOK_FUNC_plus_minus '(' op_scalar_exp  ')'
         { $$ = plus_minus ( $3()  ); }
+  | TOK_FUNC_rad2deg '(' op_scalar_exp  ')'
+        { $$ = rad2deg ( $3() ); }
   | TOK_FUNC_reject_if '(' op_scalar_exp ',' op_flag_exp  ')'
         { $$ = reject_if ( $3() , $5()  ); }
   | TOK_FUNC_reject_if_equal '(' op_scalar_exp ',' op_scalar_exp  ')'
@@ -589,8 +599,8 @@ op_scalar_exp:
   | TOK_FUNC_sqrt '(' op_scalar_exp  ')'
         { $$ = sqrt ( $3()  ); }
   | op_scalar_exp '-' op_scalar_exp			{ $$ = $1() - $3(); }
-  | TOK_FUNC_to_angle '(' op_scalar_exp  ')'
-        { $$ = to_angle ( $3()  ); }
+  | TOK_FUNC_angle_range '(' op_scalar_exp  ')'
+        { $$ = angle_range ( $3()  ); }
   | TOK_FUNC_trunc '(' op_scalar_exp  ')'
         { $$ = trunc ( $3()  ); }
   | TOK_FUNC_get_element '(' op_vector_exp ',' op_scalar_exp  ')'

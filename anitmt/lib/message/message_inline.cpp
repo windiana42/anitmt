@@ -188,7 +188,7 @@ namespace message
   }
 
   Message_Stream Message_Reporter::error( const Abstract_Position *pos, 
-					  int position_detail )
+					  int position_detail ) const
   {
     if( pos == 0 ) pos = default_position;
     Message_Stream ret( MT_Error, pos, position_detail, 
@@ -197,7 +197,7 @@ namespace message
   }
 
   Message_Stream Message_Reporter::warn( const Abstract_Position *pos, 
-					 int position_detail )
+					 int position_detail ) const
   {
     if( pos == 0 ) pos = default_position;
     Message_Stream ret( MT_Warning, pos, position_detail, 
@@ -207,7 +207,7 @@ namespace message
 
   Message_Stream Message_Reporter::verbose ( int min_verbose_level,
 					     const Abstract_Position *pos, 
-					     int position_detail )
+					     int position_detail ) const
   {
     if( pos == 0 ) pos = default_position;
     Message_Stream ret( MT_Verbose, pos, position_detail, 

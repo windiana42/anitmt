@@ -269,12 +269,12 @@ namespace message
     inline Message_Consultant *get_consultant() const;
 
     inline Message_Stream error   ( const Abstract_Position *pos = 0,
-				    int position_detail=2 );
+				    int position_detail=2 ) const;
     inline Message_Stream warn    ( const Abstract_Position *pos = 0, 
-				    int position_detail=2 );
+				    int position_detail=2 ) const;
     inline Message_Stream verbose ( int min_verbose_level = 1,
 				    const Abstract_Position *pos = 0, 
-				    int position_detail = 2 );
+				    int position_detail = 2 ) const;
 
     inline int get_num_errors();
     inline int get_num_warnings();

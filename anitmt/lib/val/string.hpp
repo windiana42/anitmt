@@ -47,14 +47,16 @@ inline bool operator!=(Neutral0,const String &a)
 	{  return(a != std::string());  }
 
 // needed for gcc 2.95:
-/*
+
 #ifdef GCC_HACK
 inline std::ostream& operator<<(std::ostream& s,const String &m)
 	{  s << static_cast<std::string>(m);  return(s);  }
+    /*
 inline std::ostrstream& operator<<(std::ostrstream& s,const String &m)
 	{  s << static_cast<std::string>(m);  return(s);  }
+    */
 #endif
-*/
+
 }  // namespace end 
 
 #endif  /* _NS_vect_string_HPP_*/

@@ -123,10 +123,10 @@ Matrix<4,4> mat_rotate_around(const Vector<3> &v,double angle)
 	rv=rot;
 
 	// z-rotation (around v)
-	rv=mat_rotate_z(angle)*rv;
+	rv.lmul(mat_rotate_z(angle));
 
 	// rotate z back to v
-	rv=rot.inverse()*rv;
+	rv.lmul(rot.inverse());
 
 	return(rv);
 }
@@ -162,8 +162,8 @@ Matrix<4,4> mat_rotate_vect_vect(const Vector<3> &from,const Vector<3> &to)
 	/**/vt.rotate_y(y_angle);
 
 	// ******** save rotation from <1,0,0> to vt
-	rv=mat_rotate_y(-y_angle)*rv;  // y-rotation
-	rv=mat_rotate_z(-z_angle)*rv;  // z-rotation 
+	rv.lmul(mat_rotate_y(-y_angle));  // y-rotation
+	rv.lmul(mat_rotate_z(-z_angle));  // z-rotation 
 
 	return(rv);
 }
@@ -203,11 +203,11 @@ Matrix<4,4> mat_rotate_vect_vect_up(const Vector<3> &from,const Vector<3> &to,
 
 	// additional rotation around y-axis
 	angle -= y_angle;
-	rv=mat_rotate_y(angle)*rv;
+	rv.lmul(mat_rotate_y(angle));
 
 	// rotate around z-axis
 	angle = -z_angle;
-	rv=mat_rotate_z(angle)*rv;
+	rv.lmul(mat_rotate_z(angle));
 
 	// rotate back
 	rv=mat_rotate_pair_pair(Vector<3>(0.0,0.0,1.0),Vector<3>(1.0,0.0,0.0),
@@ -281,25 +281,25 @@ Matrix<4,4> mat_rotate_pair_pair(
 
 	// rotate around y-axis
 	angle=y_angle1;
-	rv=mat_rotate_y(angle)*rv;
+	rv.lmul(mat_rotate_y(angle));
 
 	// rotate around x-axis
 	angle=x_angle1;
-	rv=mat_rotate_x(angle)*rv;
+	rv.lmul(mat_rotate_x(angle));
 
 	// ****** save the rotation from origin to pair2 
 
 	// rotate around x-axis
 	angle=-x_angle2;
-	rv=mat_rotate_x(angle)*rv;
+	rv.lmul(mat_rotate_x(angle));
 
 	// rotate around y-axis
 	angle=-y_angle2;
-	rv=mat_rotate_y(angle)*rv;
+	rv.lmul(mat_rotate_y(angle));
 
 	// rotate around z-axis
 	angle=-z_angle2;
-	rv=mat_rotate_z(angle)*rv;
+	rv.lmul(mat_rotate_z(angle));
 
 	return(rv);
 }
@@ -319,12 +319,12 @@ Matrix<4,4> mat_rotate_spherical_pair(
 
 	// then around up
 	Matrix<4,4> rv2(mat_rotate_around(up,angles[1]));
-	rv=rv2*rv;
+	rv.lmul(rv2);
 
 	Vector<3> f(rv2*front);   // get the new front vector
 
 	// and last around u x f
-	rv=mat_rotate_around(f.cross(u),angles[2])*rv;
+	rv.lmul(mat_rotate_around(f.cross(u),angles[2]));
 
 	return(rv);
 }

@@ -124,9 +124,11 @@ false	  { tok_pos(); yylval->flag() = false; return TOK_FLAG; }
 _debug			{ tok_pos(); return TOK_FUNC__debug; }
 abs			{ tok_pos(); return TOK_FUNC_abs; }
 abs2			{ tok_pos(); return TOK_FUNC_abs2; }
+angle_range		{ tok_pos(); return TOK_FUNC_angle_range; }
 ceil			{ tok_pos(); return TOK_FUNC_ceil; }
 choose			{ tok_pos(); return TOK_FUNC_choose; }
 cross			{ tok_pos(); return TOK_FUNC_cross; }
+deg2rad			{ tok_pos(); return TOK_FUNC_deg2rad; }
 floor			{ tok_pos(); return TOK_FUNC_floor; }
 mat_inverse		{ tok_pos(); return TOK_FUNC_mat_inverse; }
 get_element		{ tok_pos(); return TOK_FUNC_get_element; }
@@ -155,12 +157,12 @@ pass_if			{ tok_pos(); return TOK_FUNC_pass_if; }
 pass_if_equal		{ tok_pos(); return TOK_FUNC_pass_if_equal; }
 pass_if_not_equal	{ tok_pos(); return TOK_FUNC_pass_if_not_equal; }
 plus_minus		{ tok_pos(); return TOK_FUNC_plus_minus; }
+rad2deg			{ tok_pos(); return TOK_FUNC_rad2deg; }
 reject_if		{ tok_pos(); return TOK_FUNC_reject_if; }
 reject_if_equal		{ tok_pos(); return TOK_FUNC_reject_if_equal; }
 reject_if_not_equal	{ tok_pos(); return TOK_FUNC_reject_if_not_equal; }
 round			{ tok_pos(); return TOK_FUNC_round; }
 sqrt			{ tok_pos(); return TOK_FUNC_sqrt; }
-to_angle		{ tok_pos(); return TOK_FUNC_to_angle; }
 to_vector		{ tok_pos(); return TOK_FUNC_to_vector; }
 trunc			{ tok_pos(); return TOK_FUNC_trunc; }
 vec_angle		{ tok_pos(); return TOK_FUNC_vec_angle; }

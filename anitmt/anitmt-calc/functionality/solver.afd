@@ -33,7 +33,7 @@ pass_if_not_equal
 reject_if
 reject_if_equal
 reject_if_not_equal
-0 <= to_angle <360
+0 <= angle_range <360
 round
 truncate
 floor
@@ -422,20 +422,47 @@ operators
   }
 
   // *********************
-  // to_angle
+  // angle_range
   // *********************
-  one_operand_operator to_angle
+  one_operand_operator angle_range
   {
     calc_result( angle ) 
     {
-      int quotient = int(angle) / 360;
-      scalar res = angle - quotient * 360;
-      if( res < 0 ) res += 360;
-      return res;
+      return angle_range(angle);
     }
     versions
     {
-      scalar to_angle( scalar );
+      scalar angle_range( scalar );
+    }
+  }
+  
+  // *********************
+  // deg2rad
+  // *********************
+  one_operand_operator deg2rad
+  {
+    calc_result( angle ) 
+    {
+      return deg2rad(angle);
+    }
+    versions
+    {
+      scalar deg2rad( scalar );
+    }
+  }
+  
+  // *********************
+  // rad2deg
+  // *********************
+  one_operand_operator rad2deg
+  {
+    calc_result( angle ) 
+    {
+      return rad2deg(angle);
+    }
+    versions
+    {
+      scalar rad2deg( scalar );
     }
   }
   

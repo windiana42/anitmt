@@ -119,7 +119,7 @@ namespace solve
   template<class T>
   std::ostream &operator <<( std::ostream &os, const Operand<T> &op )
   {
-    if( !op.is_solved() ) return os << "???";
+    if( !op.is_solved() ) return os << "<not yet solved>";
 
     return os << op.get_value();
   }
