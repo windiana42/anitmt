@@ -82,6 +82,9 @@ void TaskSource_LDR::ConnClose(TaskSource_LDR_ServerConn *sc,int reason)
 		quit_reason=1;
 	}
 	
+	// Forget about reporting new tasks now. 
+	active_taketask=NULL;
+	
 	// Okay, when we are here, what we have to do is basically: 
 	// Get into a state similar to when the program was started. 
 	// Wait for new connections. 

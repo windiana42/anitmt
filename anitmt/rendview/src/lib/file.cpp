@@ -62,6 +62,16 @@ int64_t GetFileLength(const char *path,HTime *mtime)
 		(long long)(st.st_size),
 		mtime ? ", mtime=" : "",
 		mtime ? mtime->PrintTime() : "");
+	
+	// This is for testing purposes only: 
+	static int wait=0;
+	if(++wait>5)
+	{
+		fprintf(stderr,"NOTE: RETURNING WRONG SIZE****\n");
+		int rv=rand()%128;
+		if(st.st_size>rv)  st.st_size+=rv;
+	}
+	
 	return(st.st_size);
 }
 

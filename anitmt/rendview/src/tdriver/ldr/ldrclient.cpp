@@ -1581,7 +1581,7 @@ int LDRClient::cpnotify_inpump(FDCopyBase::CopyInfo *cpi)
 						int errn=errno;
 						Error("Client %s: While closing \"%s\": %s\n",
 							_ClientName().str(),
-							tri.req_tfile.HDPath().str(),strerror(errn));
+							tdi.recv_file.HDPath().str(),strerror(errn));
 						_KickMe(0);  return(1);
 					}
 				}
@@ -1630,6 +1630,154 @@ int LDRClient::cpnotify_inpump(FDCopyBase::CopyInfo *cpi)
 }
 
 
+// Handle status code reported by cpnotify. 
+// NOTE: cpnotify_outpump_done() contains the "success path", 
+//       while this function contains the "error path". 
+// Return value:
+//   0 -> OK
+//   1 -> _KickMe() called
+int LDRClient::cpnotify_handle_errors(FDCopyBase::CopyInfo *cpi)
+{
+	// Check some status info. 
+	// SCLimit <- Always set here. 
+	// SCTimeout <- not implemented
+	// SCKilled <- see above
+	// SCTerm <- not used
+	// SCInHup,SCOutHup,SCInPipe,SCOutPipe,SCRead0,SCWrite0
+	//   SCEOI=(SCInHup|SCInPipe|SCRead0)
+	//   SCEOO=(SCOutHup|SCOutPipe|SCWrite0)
+	// SCErrPollI,SCErrPollO,SCErrRead,SCErrWrite,SCErrCopyIO
+	//   SCError=(SCErrPollI|SCErrPollO|SCErrRead|SCErrWrite|SCErrCopyIO)
+	assert(!(cpi->scode & (FDCopyPump::SCTimeout | FDCopyPump::SCTerm)));
+	
+	int illegal=0;
+	
+	if(cpi->scode & FDCopyPump::SCError)
+	{
+		// Well, this HAD to be done at some time...
+		
+		// Remove final flag for error message...
+		(int)cpi->scode&=~FDCopyPump::SCFinal;
+		Error("Client %s: Filesys/network IO error: %s\n",
+			_ClientName().str(),CPNotifyStatusString(cpi));
+		(int)cpi->scode|=FDCopyPump::SCFinal;
+		if(cpi->pump==out.pump_fd && out_active_cmd==Cmd_FileDownload && 
+			tri.task_request_state==TRC_SendFileDownloadB)
+		{
+			assert(tri.scheduled_to_send);  // can be left away
+			Error("   after %lld/%lld bytes while reading \"%s\".\n",
+				out.io_fd->transferred,tri.req_file_size,
+				tri.req_tfile.HDPath().str());
+			// Closing file done by _KickMe(). 
+		}
+		if(cpi->pump==in.pump_fd && in_active_cmd==Cmd_FileUpload && 
+			tdi.task_done_state==TDC_UploadBody)
+		{
+			assert(tdi.done_ctsk);  // otherwise: BUG
+			Error("   after %lld/%lld bytes while writing \"%s\".\n",
+				in.io_fd->transferred,tdi.recv_file.GetFixedState(),
+				tdi.recv_file.HDPath().str());
+			// Closing file done by _KicKMe(). 
+		}
+		_KickMe(0);  return(1);
+	}
+	else
+	{
+		if(cpi->scode & FDCopyPump::SCEOI)
+		{
+			// End of input...
+			if(cpi->pump==in.pump_fd || cpi->pump==in.pump_s)
+			{
+				// This means, the client disconnected. 
+				Error("Client %s: Disconnected unexpectedly.\n",
+					_ClientName().str());
+				_KickMe(0);  return(1);
+			}
+			else if(cpi->pump==out.pump_fd)
+			{
+				// This means, we are sending a file and encountered EOF. 
+				// Probably early EOF because the file changed its size. 
+				if(out_active_cmd==Cmd_FileDownload && 
+				   tri.task_request_state==TRC_SendFileDownloadB)
+				{
+					assert(tri.scheduled_to_send);  // can be left away
+					assert(outpump_lock==IOPL_Download);  // can be left away
+					
+					assert(cpi->pump->Src()==out.io_fd);
+					Error("Client %s: Early EOF (after %lld/%lld bytes) while "
+						"serving \"%s\" for download. Kicking client.\n",
+						_ClientName().str(),
+						out.io_fd->transferred,tri.req_file_size,
+						tri.req_tfile.HDPath().str());
+					
+					// As we used the FD->FD pump, we must close the input file. 
+					// Done by _KickMe(): 
+					
+					_KickMe(0);  return(1);
+				}
+				else ++illegal;
+			}
+			else ++illegal;
+		}
+		if(cpi->scode & FDCopyPump::SCEOO)
+		{
+			// Cannot send any more...
+			if(cpi->pump==out.pump_fd || cpi->pump==out.pump_s)
+			{
+				// This means, the client disconnected. 
+				Error("Client %s: Disconnected unexpectedly.\n",
+					_ClientName().str());
+				_KickMe(0);  return(1);
+			}
+			else if(cpi->pump==in.pump_fd)
+			{
+				if(in_active_cmd==Cmd_FileUpload && 
+					tdi.task_done_state==TDC_UploadBody)
+				{
+					assert(tdi.done_ctsk);  // otherwise: BUG
+					
+					assert(cpi->pump->Dest()==in.io_fd);  // otherwise: BUG!
+					Error("Client %s: Mysterious output EOF (after %lld/%lld bytes) "
+						"while receiving \"%s\" from upload. Kicking client.\n",
+						_ClientName().str(),
+						in.io_fd->transferred,tdi.recv_file.GetFixedState(),
+						tdi.recv_file.HDPath().str());
+					
+					// As we used the FD->FD pump, we must close the output file. 
+					// Done by _KickMe(). 
+					
+					_KickMe(0);  return(1);
+				}
+				else ++illegal;
+			}
+			else ++illegal;
+		} // if(EOO)
+	}
+	
+	if(illegal)
+	{
+		const char *pumpstr="???";
+		if(cpi->pump==in.pump_s)  pumpstr="in.pump_s";
+		else if(cpi->pump==in.pump_fd)  pumpstr="in.pump_fd";
+		else if(cpi->pump==out.pump_s)  pumpstr="out.pump_s";
+		else if(cpi->pump==out.pump_fd)  pumpstr="out.pump_fd";
+		Error("Client %s: Internal (?) error: Received illegal cpnotify.\n"
+			"  pump: %s, src=%d, dest=%d; code: %s\n",
+			_ClientName().str(),
+			pumpstr,
+			cpi->pump->Src() ? cpi->pump->Src()->Type() : (-1),
+			cpi->pump->Dest() ? cpi->pump->Dest()->Type() : (-1),
+			CPNotifyStatusString(cpi));
+		// For now, I do a hack_assert(0), because I want to catch these 
+		// in case they ever happen: 
+		hack_assert(0);
+		_KickMe(0);  return(1);
+	}
+	
+	return(0);
+}
+
+
 int LDRClient::cpnotify(FDCopyBase::CopyInfo *cpi)
 {
 	Verbose(DBG,"--<cpnotify>--<%s%s: %s>--\n",
@@ -1644,40 +1792,41 @@ int LDRClient::cpnotify(FDCopyBase::CopyInfo *cpi)
 	if((cpi->scode & FDCopyPump::SCKilled))
 	{
 		// Killed? Dann wird's das schon gebraucht haben! ;)
+		if(pollid && (cpi->pump==in.pump_s || cpi->pump==in.pump_fd))
+		{  _DoPollFD(POLLIN,0);  }
 		return(0);
-	}
-	
-	if( ! (cpi->scode & FDCopyPump::SCLimit) )
-	{
-		// SCError and SCEOF; handling probably in cpnotify_inpump() 
-		// and cpnotify_outpump_done(). 
-		Error("%s pump: %s\n",
-			(cpi->pump==in.pump_s || cpi->pump==in.pump_fd) ? "Input" : "Output",
-			CPNotifyStatusString(cpi));
-		// NOTE: Also handle case where EOF is reported because 
-		//       we were sending a file which is shorter than expected. 
-		hack_assert(0);  // ##
 	}
 	
 	// NOTE: next_send_cmd in no longer used if auth is done. 
 	assert(next_send_cmd==Cmd_NoCommand);
 	
-	if(cpi->pump==in.pump_s || cpi->pump==in.pump_fd)
+	// Check error conditions etc. 
+	if(cpnotify_handle_errors(cpi))
 	{
-		cpnotify_inpump(cpi);
-		// We're always listening to the client. 
-		if(in_active_cmd==Cmd_NoCommand && pollid)
+		// This is probably not needed but should not harm. 
+		if(pollid && (cpi->pump==in.pump_s || cpi->pump==in.pump_fd))
 		{  _DoPollFD(POLLIN,0);  }
+		return(0);
 	}
-	else if(cpi->pump==out.pump_s || cpi->pump==out.pump_fd)
-	{
-		if(!cpnotify_outpump_done(cpi))
+	
+	do {
+		if(cpi->pump==in.pump_s || cpi->pump==in.pump_fd)
 		{
-			assert(out.ioaction==IOA_None);  // If FDCopyPump is running, we may not be here. 
-			cpnotify_outpump_start();
+			if(cpnotify_inpump(cpi))  break;  // _KickMe() called
+			
+			// We're always listening to the client. 
+			if(in_active_cmd==Cmd_NoCommand && pollid)
+			{  _DoPollFD(POLLIN,0);  }
 		}
-	}
-	else assert(0);
+		else if(cpi->pump==out.pump_s || cpi->pump==out.pump_fd)
+		{
+			if(cpnotify_outpump_done(cpi))  break;  // _KickMe() called
+			
+			assert(out.ioaction==IOA_None);  // If FDCopyPump is running, we may not be here. 
+			if(cpnotify_outpump_start())  break;   // _KickMe() called
+		}
+		else assert(0);
+	} while(0);
 	
 	return(0);
 }
@@ -1725,6 +1874,19 @@ void LDRClient::_KickMe(int do_send_quit)
 	
 	if(sock_fd>=0)  // Otherwise: Not connected or already disconnected. 
 	{
+		// Make sure we close files: 
+		if(out.io_fd && out.io_fd->pollid && CloseFD(out.io_fd->pollid)<0)
+		{  hack_assert(0);  }  // Actually, this may not fail, right?
+		if(in.io_fd && in.io_fd->pollid && CloseFD(in.io_fd->pollid)<0)
+		{
+			int errn=errno;
+			// This may write "(null)" as file name... 
+			Error("Client %s: While closing \"%s\": %s\n",
+				_ClientName().str(),
+				tdi.recv_file.HDPath().str(),strerror(errn));
+			// Do not call _KickMe()... we're already there!
+		}
+		
 		fprintf(stderr,"kicking %s...\n",_ClientName().str());
 		if(do_send_quit)
 		{

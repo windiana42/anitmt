@@ -154,6 +154,7 @@ class LDRClient :
 		
 		int _AuthConnFDNotify(FDBase::FDInfo *fdi);
 		
+		int cpnotify_handle_errors(FDCopyBase::CopyInfo *cpi);
 		int cpnotify_outpump_done(FDCopyBase::CopyInfo *cpi);
 		int cpnotify_outpump_start();
 		int cpnotify_inpump(FDCopyBase::CopyInfo *cpi);

@@ -285,10 +285,10 @@ int NetworkIOBase::_FDCopyStartSendFile(const char *path,int64_t filelen)
 	out.pump_fd->io_bufsize=16384;
 	// Reset thresh values: This is necessary so that they are re-calculated 
 	// again because thresh values are never larger than copy length limit. 
-    out.pump_fd->low_read_thresh=-1;
-    out.pump_fd->high_read_thresh=-1;
-    out.pump_fd->low_write_thresh=-1;
-    out.pump_fd->high_write_thresh=-1;
+	out.pump_fd->low_read_thresh=-1;
+	out.pump_fd->high_read_thresh=-1;
+	out.pump_fd->low_write_thresh=-1;
+	out.pump_fd->high_write_thresh=-1;
 	
 	assert(out.io_sock->pollid==pollid);
 	
@@ -376,10 +376,10 @@ int NetworkIOBase::_FDCopyStartRecvFile(const char *path,int64_t filelen)
 	in.pump_fd->io_bufsize=16384;
 	// Reset thresh values: This is necessary so that they are re-calculated 
 	// again because thresh values are never larger than copy length limit. 
-    in.pump_fd->low_read_thresh=-1;
-    in.pump_fd->high_read_thresh=-1;
-    in.pump_fd->low_write_thresh=-1;
-    in.pump_fd->high_write_thresh=-1;
+	in.pump_fd->low_read_thresh=-1;
+	in.pump_fd->high_read_thresh=-1;
+	in.pump_fd->low_write_thresh=-1;
+	in.pump_fd->high_write_thresh=-1;
 	
 	assert(in.io_sock->pollid==pollid);
 	
