@@ -16,45 +16,27 @@
 #define __AniTMT_Operator__
 
 #include "val.hpp"
-
-namespace anitmt 
-{
-  //********
-  // classes
-
-  // operators with one operand
-  template<class T_Result=values::Scalar, class T_Operand = T_Result> 
-  class Not_Operator;
-  template<class T_Result=values::Scalar, class T_Operand = T_Result> 
-  class Negative_Operator;
-  template<class T_Result=values::Scalar, class T_Operand = T_Result> 
-  class Abs_Operator;
-
-  // operators with two operands
-  template<class T_Result=values::Scalar, 
-	   class T_Op1 = T_Result, class T_Op2 = T_Op1> 
-  class Add_Operator;
-  template<class T_Result=values::Scalar, 
-	   class T_Op1 = T_Result, class T_Op2 = T_Op1> 
-  class Sub_Operator;
-  template<class T_Result=values::Scalar, 
-	   class T_Op1 = T_Result, class T_Op2 = T_Op1> 
-  class Mul_Operator;
-  template<class T_Result=values::Scalar, 
-	   class T_Op1 = T_Result, class T_Op2 = T_Op1> 
-  class Div_Operator;
-}
-
 #include "error.hpp"
 #include "operand.hpp"
 
 namespace anitmt
 {
+  //************
+  // Exceptions:
+  //************
 
+  class EX_Initial_Operand_Not_Valid : public EX 
+  {
+  public:
+    EX_Initial_Operand_Not_Valid() : EX( "initial operand not valid" ) {}
+  };
+  
   //***************************************************************
   // Basic_Operator_for_1_Operand: one parameter Operator
   //***************************************************************
 
+  /*! Base class for expression tree operators, that calculate the results
+    from one operand*/
   template<class T_Result, class T_Operand>
   class Basic_Operator_for_1_Operand 
     : public Operand_Listener 
@@ -65,9 +47,9 @@ namespace anitmt
 
     //! has to check the result of the operand with ID as pointer to operand
     virtual bool is_result_ok( const void *ID, 
-			       const Solve_Run_Info *info ) throw(EX);
+			       Solve_Run_Info *info ) throw(EX);
     //! tells to use the result calculated by is_result_ok()
-    virtual void use_result( const void *ID, const Solve_Run_Info *info )
+    virtual void use_result( const void *ID, Solve_Run_Info *info )
       throw(EX);
 
     //! disconnect operand
@@ -88,7 +70,8 @@ namespace anitmt
     Operand<T_Result> result;
 
   protected:
-    //! must be called from constructors of derived classes
+    /*! must be called from constructors of derived classes 
+      (calls virtual functions) */
     void init() throw( EX );
   public:
     inline Operand<T_Result> &get_result() { return result; }
@@ -97,10 +80,68 @@ namespace anitmt
     virtual ~Basic_Operator_for_1_Operand() {}
   };
 
+  //********************************************************************
+  // Basic_Dual_Solution_Operator_for_1_Operand: one parameter Operator
+  //********************************************************************
+
+  /*! Base class for expression tree operators, that have two possible results
+    from one operand*/
+  template<class T_Result, class T_Operand>
+  class Basic_Dual_Solution_Operator_for_1_Operand 
+    : public Operand_Listener 
+  {
+    bool just_solved;		// did operator just solve the result
+
+    //*** Operand_Listener methods ***
+
+    //! has to check the result of the operand with ID as pointer to operand
+    virtual bool is_result_ok( const void *ID, Solve_Run_Info *info ) 
+      throw(EX);
+    //! tells to use the result calculated by is_result_ok()
+    virtual void use_result( const void *ID, Solve_Run_Info *info )
+      throw(EX);
+
+    //! disconnect operand
+    virtual void disconnect( const void *ID );
+
+    //*** virtual Operator methods ***
+
+    //! is operand ok, or should it be rejected
+    virtual bool is_operand_ok( const T_Operand &test_value ) { return true; }
+    //! can result1 be calculated? operand won't be rejected when this is false
+    virtual bool is_operand_enough1( const T_Operand &test_value ) 
+    { return true; }
+    //! can result2 be calculated? operand won't be rejected when this is false
+    virtual bool is_operand_enough2( const T_Operand &test_value ) 
+    { return true; }
+    /*! has to calculate the result when both is_operand_ok and 
+      is_operand_enough1 return true */
+    virtual T_Result calc_result1( const T_Operand &value ) = 0;
+    /*! has to calculate the result when both is_operand_ok and 
+      is_operand_enough2 return true */
+    virtual T_Result calc_result2( const T_Operand &value ) = 0;
+
+    Operand<T_Operand> &operand;
+    Operand<T_Result> result;
+
+  protected:
+    /*! must be called from constructors of derived classes 
+      (calls virtual functions) */
+    void init() throw( EX );
+  public:
+    inline Operand<T_Result> &get_result() { return result; }
+
+    Basic_Dual_Solution_Operator_for_1_Operand( Operand<T_Operand> &operand ) 
+      throw(EX);
+    virtual ~Basic_Dual_Solution_Operator_for_1_Operand() {}
+  };
+
   //***************************************************************
   // Basic_Operator_for_2_Operands: two parameter Operator
   //***************************************************************
 
+  /*! Base class for expression tree operators, that calculate the result
+    from two operands*/
   template<class T_Result, class T_Op1, class T_Op2>
   class Basic_Operator_for_2_Operands
     : public Operand_Listener
@@ -111,9 +152,9 @@ namespace anitmt
 
     //! has to check the result of the operand with ID as pointer to operand
     virtual bool is_result_ok( const void *ID, 
-			       const Solve_Run_Info *info ) throw(EX);
+			       Solve_Run_Info *info ) throw(EX);
     //! tells to use the result calculated by is_result_ok()
-    virtual void use_result( const void *ID, const Solve_Run_Info *info )
+    virtual void use_result( const void *ID, Solve_Run_Info *info )
       throw(EX);
 
     //! disconnect operand
@@ -157,7 +198,8 @@ namespace anitmt
     Operand<T_Result> result;
 
   protected:
-    // must be called from constructors of derived classes
+    /*! must be called from constructors of derived classes 
+      (calls virtual functions) */
     void init() throw( EX );
   public:
     inline Operand<T_Result> &get_result() { return result; }
@@ -251,13 +293,38 @@ namespace anitmt
   // sqrt function for operand expression trees
   inline Operand<values::Scalar>& sqrt( Operand<values::Scalar> &op );
 
+  //***************************************************************************
+  // Plus_Minus_Operator: result is either the positive or the negative operand
+  //***************************************************************************
+
+  template<class T_Result, class T_Operand>
+  class Plus_Minus_Operator
+    : public Basic_Dual_Solution_Operator_for_1_Operand<T_Result, T_Operand> 
+  {
+    /*! has to calculate the result when both is_operand_ok and 
+      is_operand_enough1 return true */
+    virtual T_Result calc_result1( const T_Operand &value ); 
+
+    /*! has to calculate the result when both is_operand_ok and 
+      is_operand_enough2 return true */
+    virtual T_Result calc_result2( const T_Operand &value ); 
+
+  public:
+    Plus_Minus_Operator( Operand<T_Operand> &operand1 );
+  };
+
+  //! +- Operator for operand expression trees (+-scalar)
+  inline Operand<values::Scalar>& plus_minus( Operand<values::Scalar> &op );
+  //! +- Operator for operand expression trees (+-vector)
+  inline Operand<values::Vector>& plus_minus( Operand<values::Vector> &op );
+
   //**********************************************************************
   // Add_Operator: operator for adding 2 operands of different types
   //**********************************************************************
 
   template<class T_Result, class T_Op1, class T_Op2>
   class Add_Operator
-    : public Basic_Operator_for_2_Operands<T_Result, T_Op1, T_Op2> 
+    : public Basic_Operator_for_b2_Operands<T_Result, T_Op1, T_Op2> 
   {
     /*! has to calculate the result when both is_operand_ok and 
       is_operand_enough  return true */
@@ -565,6 +632,178 @@ namespace anitmt
   operator!=( Operand<values::String> &op1, const values::String &op2 );
   inline Operand<bool>&
   operator!=( const values::String &op1, Operand<values::String> &op2 );
+
+  //***************************************************
+  // Less_Operator: operator for comparing 2 operands 
+  //***************************************************
+
+  template<class T_Result=bool, class T_Op1, class T_Op2>
+  class Less_Operator
+    : public Basic_Operator_for_2_Operands<T_Result, T_Op1, T_Op2> 
+  {
+    /*! has to calculate the result when both is_operand_ok and 
+      is_operand_enough  return true */
+    virtual T_Result calc_result( const T_Op1 &value1, const T_Op2 &value2 ); 
+
+  public:
+    Less_Operator( Operand<T_Op1> &operand1, Operand<T_Op2> &operand2 );
+  };
+
+  //**********
+  // Operators
+
+  // scalar < scalar
+  inline Operand<bool>&
+  operator<( Operand<values::Scalar> &op1, Operand<values::Scalar> &op2 );
+  inline Operand<bool>&
+  operator<( Operand<values::Scalar> &op1, const values::Scalar &op2 );
+  inline Operand<bool>&
+  operator<( const values::Scalar &op1, Operand<values::Scalar> &op2 );
+
+  // vector < vector
+  inline Operand<bool>&
+  operator<( Operand<values::Vector> &op1, Operand<values::Vector> &op2 );
+  inline Operand<bool>&
+  operator<( Operand<values::Vector> &op1, const values::Vector &op2 );
+  inline Operand<bool>&
+  operator<( const values::Vector &op1, Operand<values::Vector> &op2 );
+
+  // string < string
+  inline Operand<bool>&
+  operator<( Operand<values::String> &op1, Operand<values::String> &op2 );
+  inline Operand<bool>&
+  operator<( Operand<values::String> &op1, const values::String &op2 );
+  inline Operand<bool>&
+  operator<( const values::String &op1, Operand<values::String> &op2 );
+
+  //***************************************************
+  // Greater_Operator: operator for comparing 2 operands 
+  //***************************************************
+
+  template<class T_Result=bool, class T_Op1, class T_Op2>
+  class Greater_Operator
+    : public Basic_Operator_for_2_Operands<T_Result, T_Op1, T_Op2> 
+  {
+    /*! has to calculate the result when both is_operand_ok and 
+      is_operand_enough  return true */
+    virtual T_Result calc_result( const T_Op1 &value1, const T_Op2 &value2 ); 
+
+  public:
+    Greater_Operator( Operand<T_Op1> &operand1, Operand<T_Op2> &operand2 );
+  };
+
+  //**********
+  // Operators
+
+  // scalar > scalar
+  inline Operand<bool>&
+  operator>( Operand<values::Scalar> &op1, Operand<values::Scalar> &op2 );
+  inline Operand<bool>&
+  operator>( Operand<values::Scalar> &op1, const values::Scalar &op2 );
+  inline Operand<bool>&
+  operator>( const values::Scalar &op1, Operand<values::Scalar> &op2 );
+
+  // vector > vector
+  inline Operand<bool>&
+  operator>( Operand<values::Vector> &op1, Operand<values::Vector> &op2 );
+  inline Operand<bool>&
+  operator>( Operand<values::Vector> &op1, const values::Vector &op2 );
+  inline Operand<bool>&
+  operator>( const values::Vector &op1, Operand<values::Vector> &op2 );
+
+  // string > string
+  inline Operand<bool>&
+  operator>( Operand<values::String> &op1, Operand<values::String> &op2 );
+  inline Operand<bool>&
+  operator>( Operand<values::String> &op1, const values::String &op2 );
+  inline Operand<bool>&
+  operator>( const values::String &op1, Operand<values::String> &op2 );
+
+  //***************************************************
+  // Not_Greater_Operator: operator for comparing 2 operands 
+  //***************************************************
+
+  template<class T_Result=bool, class T_Op1, class T_Op2>
+  class Not_Greater_Operator
+    : public Basic_Operator_for_2_Operands<T_Result, T_Op1, T_Op2> 
+  {
+    /*! has to calculate the result when both is_operand_ok and 
+      is_operand_enough  return true */
+    virtual T_Result calc_result( const T_Op1 &value1, const T_Op2 &value2 ); 
+
+  public:
+    Not_Greater_Operator( Operand<T_Op1> &operand1, Operand<T_Op2> &operand2 );
+  };
+
+  //**********
+  // Operators
+
+  // scalar <= scalar
+  inline Operand<bool>&
+  operator<=( Operand<values::Scalar> &op1, Operand<values::Scalar> &op2 );
+  inline Operand<bool>&
+  operator<=( Operand<values::Scalar> &op1, const values::Scalar &op2 );
+  inline Operand<bool>&
+  operator<=( const values::Scalar &op1, Operand<values::Scalar> &op2 );
+
+  // vector <= vector
+  inline Operand<bool>&
+  operator<=( Operand<values::Vector> &op1, Operand<values::Vector> &op2 );
+  inline Operand<bool>&
+  operator<=( Operand<values::Vector> &op1, const values::Vector &op2 );
+  inline Operand<bool>&
+  operator<=( const values::Vector &op1, Operand<values::Vector> &op2 );
+
+  // string <= string
+  inline Operand<bool>&
+  operator<=( Operand<values::String> &op1, Operand<values::String> &op2 );
+  inline Operand<bool>&
+  operator<=( Operand<values::String> &op1, const values::String &op2 );
+  inline Operand<bool>&
+  operator<=( const values::String &op1, Operand<values::String> &op2 );
+
+  //***************************************************
+  // Not_Less_Operator: operator for comparing 2 operands 
+  //***************************************************
+
+  template<class T_Result=bool, class T_Op1, class T_Op2>
+  class Not_Less_Operator
+    : public Basic_Operator_for_2_Operands<T_Result, T_Op1, T_Op2> 
+  {
+    /*! has to calculate the result when both is_operand_ok and 
+      is_operand_enough  return true */
+    virtual T_Result calc_result( const T_Op1 &value1, const T_Op2 &value2 ); 
+
+  public:
+    Not_Less_Operator( Operand<T_Op1> &operand1, Operand<T_Op2> &operand2 );
+  };
+
+  //**********
+  // Operators
+
+  // scalar >= scalar
+  inline Operand<bool>&
+  operator>=( Operand<values::Scalar> &op1, Operand<values::Scalar> &op2 );
+  inline Operand<bool>&
+  operator>=( Operand<values::Scalar> &op1, const values::Scalar &op2 );
+  inline Operand<bool>&
+  operator>=( const values::Scalar &op1, Operand<values::Scalar> &op2 );
+
+  // vector >= vector
+  inline Operand<bool>&
+  operator>=( Operand<values::Vector> &op1, Operand<values::Vector> &op2 );
+  inline Operand<bool>&
+  operator>=( Operand<values::Vector> &op1, const values::Vector &op2 );
+  inline Operand<bool>&
+  operator>=( const values::Vector &op1, Operand<values::Vector> &op2 );
+
+  // string >= string
+  inline Operand<bool>&
+  operator>=( Operand<values::String> &op1, Operand<values::String> &op2 );
+  inline Operand<bool>&
+  operator>=( Operand<values::String> &op1, const values::String &op2 );
+  inline Operand<bool>&
+  operator>=( const values::String &op1, Operand<values::String> &op2 );
 
   //***************
   // test function

@@ -23,7 +23,7 @@ namespace anitmt{
 
   // has to check the result of the operand with ID as pointer to operand
   bool Action_Caller::is_result_ok( const void *ID, 
-				    const Solve_Run_Info *info ) 
+				    Solve_Run_Info *info ) 
     throw(EX)
   {
 #ifdef __DEBUG__
@@ -35,7 +35,7 @@ namespace anitmt{
   }
 
   // tells to use the result calculated by is_result_ok()
-  void Action_Caller::use_result( const void *ID, const Solve_Run_Info * )
+  void Action_Caller::use_result( const void *ID, Solve_Run_Info * )
     throw(EX)
   {
     assert( ID == trigger );

@@ -35,7 +35,7 @@ namespace anitmt
     return test_run_id;
   }
 
-  // returns a new test run ID
+  // adds and returns a new test run ID
   Solve_Run_Info::id_type Solve_Run_Info::new_test_run_id()
   {
     test_run_id = current_default_test_run_id++;
@@ -68,7 +68,7 @@ namespace anitmt
   //**********************************************************
 
   template<class T>
-  void Operand<T>::report_value( const Solve_Run_Info *info ) throw(EX)
+  void Operand<T>::report_value( Solve_Run_Info *info ) throw(EX)
   {
     listeners_type::iterator i;    
     for( i = listeners.begin(); i != listeners.end(); i++ )
@@ -78,7 +78,7 @@ namespace anitmt
   }
 
   template<class T>
-  bool Operand<T>::test_report_value( const Solve_Run_Info *info )
+  bool Operand<T>::test_report_value( Solve_Run_Info *info )
     throw(EX)
   {
     listeners_type::iterator i;    
@@ -136,7 +136,7 @@ namespace anitmt
   }
 
   template<class T>
-  bool Operand<T>::test_set_value( T val, const Solve_Run_Info *info ) 
+  bool Operand<T>::test_set_value( T val, Solve_Run_Info *info ) 
     throw(EX)
   {
     if( is_solved_in_try(info) )
@@ -158,7 +158,7 @@ namespace anitmt
   }
 
   template<class T>
-  void Operand<T>::use_test_value( const Solve_Run_Info *info ) throw(EX) 
+  void Operand<T>::use_test_value( Solve_Run_Info *info ) throw(EX) 
   { 
     assert( is_solved_in_try(info) ); 
     solved = true; 

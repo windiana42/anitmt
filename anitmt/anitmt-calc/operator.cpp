@@ -16,9 +16,11 @@
 
 #include <iostream>
 #include <assert.h>
+#include <math.h>
 
 #include "operand.hpp"
 #include "property.hpp"
+#include "constraint.hpp"
 
 using namespace std;
 
@@ -36,11 +38,11 @@ namespace anitmt
     cout << "------------------------" << endl;
     cout << "Operand/Operator Test..." << endl;
     cout << "------------------------" << endl;
-  
+
     // calc 1 + 2 = 3
     {
       Operand<values::Scalar> &op = 
-	(*(new Add_Operator<values::Scalar>
+	(*(new Add_Operator<values::Scalar,values::Scalar,values::Scalar>
 	   (*(new Constant<values::Scalar>(1)), 
 	    *(new Constant<values::Scalar>(2))))).get_result();
     
@@ -51,7 +53,7 @@ namespace anitmt
       }
       else
       {
-	cerr << "!!Error could not calc 1 + 2 ;)!! " << endl;
+	cerr << "!!Error: could not calc 1 + 2 ;)!! " << endl;
 	errors++;
       }
     }
@@ -59,8 +61,8 @@ namespace anitmt
     // calc (!1) + 2 = 2
     {
       Operand<values::Scalar> &op = 
-	(*(new Add_Operator<values::Scalar>
-	   ((new Not_Operator<values::Scalar>
+	(*(new Add_Operator<values::Scalar,values::Scalar,values::Scalar>
+	   ((new Not_Operator<values::Scalar,values::Scalar>
 	     (*(new Constant<values::Scalar>(1))))->get_result(), 
 	    *(new Constant<values::Scalar>(2))))).get_result();
       if( op.is_solved() )
@@ -70,7 +72,7 @@ namespace anitmt
       } 
       else
       {
-	cerr << "!!Error could not calc (!1) + 2 ;)!! " << endl;
+	cerr << "!!Error: could not calc (!1) + 2 ;)!! " << endl;
 	errors++;
       }
     }
@@ -79,13 +81,13 @@ namespace anitmt
     {
       Operand<values::Scalar> x;
       Operand<values::Scalar> &op = 
-	(*(new Add_Operator<values::Scalar>
+	(*(new Add_Operator<values::Scalar,values::Scalar,values::Scalar>
 	   (*(new Constant<values::Scalar>(2)), 
 	    x))).get_result();
 
       if( op.is_solved() )
       {
-	cerr << "!!Error why can he solve 2 + x without knowing x?!! " 
+	cerr << "!!Error: why can he solve 2 + x without knowing x?!! " 
 	     << endl;
 	errors++;
       }
@@ -99,7 +101,7 @@ namespace anitmt
       }
       else
       {
-	cerr << "!!Error could not calc 2 + x !!" << endl;
+	cerr << "!!Error: could not calc 2 + x !!" << endl;
 	errors++;
       }
     }
@@ -109,13 +111,13 @@ namespace anitmt
     {
       Operand<values::Scalar> x;
       Operand<values::Scalar> &op = 
-	(*(new Add_Operator<values::Scalar>
+	(*(new Add_Operator<values::Scalar,values::Scalar,values::Scalar>
 	   (x,
 	    *(new Constant<values::Scalar>(2))))).get_result();
 
       if( op.is_solved() )
       {
-	cerr << "!!Error why can he solve x + 2 without knowing x?!! " 
+	cerr << "!!Error: why can he solve x + 2 without knowing x?!! " 
 	     << endl;
 	errors++;
       }
@@ -129,7 +131,7 @@ namespace anitmt
       }
       else
       {
-	cerr << "!!Error could not calc x + 2 !!" << endl;
+	cerr << "!!Error: could not calc x + 2 !!" << endl;
 	errors++;
       }
     }
@@ -138,13 +140,13 @@ namespace anitmt
     {
       Operand<values::Scalar> x;
       Operand<values::Scalar> &op = 
-	(*(new Add_Operator<values::Scalar>
-	   ((new Not_Operator<values::Scalar>(x))->get_result(),
+	(*(new Add_Operator<values::Scalar,values::Scalar,values::Scalar>
+	   ((new Not_Operator<values::Scalar,values::Scalar>(x))->get_result(),
 	    *(new Constant<values::Scalar>(2))))).get_result();
 
       if( op.is_solved() )
       {
-	cerr << "!!Error why can he solve (!x) + 2 without knowing x?!! " 
+	cerr << "!!Error: why can he solve (!x) + 2 without knowing x?!! " 
 	     << endl;
 	errors++;
       }
@@ -158,7 +160,7 @@ namespace anitmt
       }
       else
       {
-	cerr << "!!Error could not calc (!x) + 2 !!" << endl;
+	cerr << "!!Error: could not calc (!x) + 2 !!" << endl;
 	errors++;
       }
     }
@@ -167,7 +169,7 @@ namespace anitmt
     // calc <1,2,3> + <5,4,7>     
     {
       Operand<values::Vector> &op = 
-	(*(new Add_Operator<values::Vector>
+	(*(new Add_Operator<values::Vector,values::Vector,values::Vector>
 	   (*(new Constant<values::Vector>( values::Vector(1,2,3) )),
 	    *(new Constant<values::Vector>( values::Vector(5,4,7) ))))).get_result();
 
@@ -179,7 +181,7 @@ namespace anitmt
       }
       else
       {
-	cerr << "!!Error could not calc <1,2,3> + <5,4,7>!! " << endl;
+	cerr << "!!Error: could not calc <1,2,3> + <5,4,7>!! " << endl;
 	errors++;
       }
     }
@@ -188,13 +190,13 @@ namespace anitmt
     {
       Operand<values::Vector> v; 
       Operand<values::Vector> &op = 
-	(*(new Add_Operator<values::Vector>
+	(*(new Add_Operator<values::Vector,values::Vector,values::Vector>
 	   (*(new Constant<values::Vector>( values::Vector(1,2,3) )),
 	    v))).get_result();
 
       if( op.is_solved() )
       {
-	cerr << "!!Error why can he solve <1,2,3> + v without knowing v?!! " 
+	cerr << "!!Error: why can he solve <1,2,3> + v without knowing v?!! " 
 	     << endl;
 	errors++;
       }
@@ -209,7 +211,7 @@ namespace anitmt
       }
       else
       {
-	cerr << "!!Error could not calc <1,2,3> + <5,4,7>!! " << endl;
+	cerr << "!!Error: could not calc <1,2,3> + <5,4,7>!! " << endl;
 	errors++;
       }
     }
@@ -230,7 +232,7 @@ namespace anitmt
       }
       else
       {
-	cerr << "!!Error could not calc 1 + 2 ;)!! " << endl;
+	cerr << "!!Error: could not calc 1 + 2 ;)!! " << endl;
 	errors++;
       }
     }
@@ -247,7 +249,7 @@ namespace anitmt
       } 
       else
       {
-	cerr << "!!Error could not calc !(1 + 2) !! " << endl;
+	cerr << "!!Error: could not calc !(1 + 2) !! " << endl;
 	errors++;
       }
     }
@@ -259,7 +261,7 @@ namespace anitmt
 
       if( op.is_solved() )
       {
-	cerr << "!!Error why can he solve 2 + x without knowing x?!! " 
+	cerr << "!!Error: why can he solve 2 + x without knowing x?!! " 
 	     << endl;
 	errors++;
       }
@@ -273,7 +275,7 @@ namespace anitmt
       }
       else
       {
-	cerr << "!!Error could not calc 2 + x !!" << endl;
+	cerr << "!!Error: could not calc 2 + x !!" << endl;
 	errors++;
       }
     }
@@ -286,7 +288,7 @@ namespace anitmt
 
       if( op.is_solved() )
       {
-	cerr << "!!Error why can he solve x + 2 without knowing x?!! " 
+	cerr << "!!Error: why can he solve x + 2 without knowing x?!! " 
 	     << endl;
 	errors++;
       }
@@ -300,7 +302,7 @@ namespace anitmt
       }
       else
       {
-	cerr << "!!Error could not calc x + 2 !!" << endl;
+	cerr << "!!Error: could not calc x + 2 !!" << endl;
 	errors++;
       }
     }
@@ -313,7 +315,7 @@ namespace anitmt
 
       if( op.is_solved() )
       {
-	cerr << "!!Error why can he solve !(x - 5) without knowing x?!! " 
+	cerr << "!!Error: why can he solve !(x - 5) without knowing x?!! " 
 	     << endl;
 	errors++;
       }
@@ -327,11 +329,109 @@ namespace anitmt
       }
       else
       {
-	cerr << "!!Error could not calc !(x(=5) - 5) !!" << endl;
+	cerr << "!!Error: could not calc !(x(=5) - 5) !!" << endl;
 	errors++;
       }
     }
 
+    // calc abs(v(=<1.1,2.2,3.3>)) 
+    {
+      Operand<values::Vector> x;
+      Operand<values::Scalar> &op = sqrt(abs(x));
+
+      if( op.is_solved() )
+      {
+	cerr << "!!Error: why can he solve abs(v(=<1.1,2.2,3.3>)) without" 
+	  " knowing x?!! " 
+	     << endl;
+	errors++;
+      }
+
+      x.set_value( values::Vector(1.1,2.2,3.3) );
+
+      if( op.is_solved() )
+      {
+	cout << "  abs(v(=<1.1,2.2,3.3>)) = " << op.get_value() 
+	     << "(4,115823125451)"
+	     << endl;
+	assert( op.get_value() == ::sqrt(1.1*1.1+2.2*2.2+3.3*3.3) );
+      }
+      else
+      {
+	cerr << "!!Error: could not calc abs(v(=<1.1,2.2,3.3>)) !!" << endl;
+	errors++;
+      }
+    }
+
+    // calc sqrt(x(=-4)) 
+    {
+      Operand<values::Scalar> x;
+      Operand<values::Scalar> &op = sqrt(x);
+
+      if( op.is_solved() )
+      {
+	cerr << "!!Error: why can he solve sqrt(x) without knowing x?!! " 
+	     << endl;
+	errors++;
+      }
+
+      try
+      {
+        if( x.set_value( -4 ) )
+	{
+	  cerr << "!!Error: why does he accept sqrt(x(=-4))?!! " ;
+	  if( op.is_solved() )
+	    cerr << "Result: " << op.get_value();
+	  cerr << endl;
+	  errors++;
+	}
+	else
+	{
+	  cout << "  sqrt(x(=-4)) rejected. OK" << endl;
+	  if( op.is_solved() )
+	  {
+	    cerr << "!!Error: why can he solve sqrt(x) with rejected x?!! " ;
+	    errors++;
+	  }
+	}
+      }
+      catch( EX )
+      {
+	cout << "  sqrt(x(=-4)) rejected with exception. OK" << endl;
+	if( op.is_solved() )
+	{
+	  cerr << "!!Error: why can he solve sqrt(x) with rejected x?!! " ;
+	  errors++;
+	}
+      }
+    }
+
+    // calc sqrt(abs(x(=-123.45))) 
+    {
+      Operand<values::Scalar> x;
+      Operand<values::Scalar> &op = sqrt(abs(x));
+
+      if( op.is_solved() )
+      {
+	cerr << "!!Error: why can he solve sqrt(abs(x)) without knowing x?!! " 
+	     << endl;
+	errors++;
+      }
+
+      x.set_value( -123.45 );
+
+      if( op.is_solved() )
+      {
+	cout << "  sqrt(abs(x(=123.45))) = " << op.get_value() << "(11,11081)"
+	     << endl;
+	assert( op.get_value() == ::sqrt(123.45) );
+      }
+      else
+      {
+	cerr << "!!Error: could not calc sqrt(abs(x(=-123.45))) !!" << endl;
+	errors++;
+      }
+    }
 
     // calc <1,2,3> + <5,4,7>     
     {
@@ -347,7 +447,7 @@ namespace anitmt
       }
       else
       {
-	cerr << "!!Error could not calc <1,2,3> + <5,4,7>!! " << endl;
+	cerr << "!!Error: could not calc <1,2,3> + <5,4,7>!! " << endl;
 	errors++;
       }
     }
@@ -359,7 +459,7 @@ namespace anitmt
 
       if( op.is_solved() )
       {
-	cerr << "!!Error why can he solve <1,2,3> + v without knowing v?!! " 
+	cerr << "!!Error: why can he solve <1,2,3> + v without knowing v?!! " 
 	     << endl;
 	errors++;
       }
@@ -374,7 +474,7 @@ namespace anitmt
       }
       else
       {
-	cerr << "!!Error could not calc <1,2,3> + <5,4,7>!! " << endl;
+	cerr << "!!Error: could not calc <1,2,3> + <5,4,7>!! " << endl;
 	errors++;
       }
     }
@@ -387,7 +487,7 @@ namespace anitmt
 
       if( op.is_solved() )
       {
-	cerr << "!!Error why can he solve x + 2 without knowing x?!! " 
+	cerr << "!!Error: why can he solve x + 2 without knowing x?!! " 
 	     << endl;
 	errors++;
       }
@@ -401,7 +501,7 @@ namespace anitmt
       }
       else
       {
-	cerr << "!!Error could assign x + 2 to operand!!" << endl;
+	cerr << "!!Error: could assign x + 2 to operand!!" << endl;
 	errors++;
       }
     }
@@ -413,7 +513,7 @@ namespace anitmt
 
       if( op.is_solved() )
       {
-	cerr << "!!Error why can he solve x * <1,2,3> without knowing x?!! " 
+	cerr << "!!Error: why can he solve x * <1,2,3> without knowing x?!! " 
 	     << endl;
 	errors++;
       }
@@ -428,7 +528,7 @@ namespace anitmt
       }
       else
       {
-	cerr << "!!Error could not calc x(=3) * <1,2,3>!! " << endl;
+	cerr << "!!Error: could not calc x(=3) * <1,2,3>!! " << endl;
 	errors++;
       }
     }
@@ -446,7 +546,7 @@ namespace anitmt
       }
       else
       {
-	cerr << "!!Error x needed for calculating x * <0,0,0>!! " << endl;
+	cerr << "!!Error: x needed for calculating x * <0,0,0>!! " << endl;
 	errors++;
       }
       
@@ -460,7 +560,7 @@ namespace anitmt
       }
       else
       {
-	cerr << "!!Error could not calc x(=3) * <0,0,0>!! " << endl;
+	cerr << "!!Error: could not calc x(=3) * <0,0,0>!! " << endl;
 	errors++;
       }
     }
@@ -480,7 +580,7 @@ namespace anitmt
       }
       else
       {
-	cerr << "!!Error v needed for calculating x(=0) * v!! " << endl;
+	cerr << "!!Error: v needed for calculating x(=0) * v!! " << endl;
 	errors++;
       }
       
@@ -494,7 +594,7 @@ namespace anitmt
       }
       else
       {
-	cerr << "!!Error could not calc x(=0) * v(=<0,0,0>)!! " << endl;
+	cerr << "!!Error: could not calc x(=0) * v(=<0,0,0>)!! " << endl;
 	errors++;
       }
     }
@@ -506,7 +606,7 @@ namespace anitmt
 
       if( op.is_solved() )
       {
-	cerr << "!!Error why can he solve 5 / x without knowing x?!! " 
+	cerr << "!!Error: why can he solve 5 / x without knowing x?!! " 
 	     << endl;
 	errors++;
       }
@@ -521,7 +621,7 @@ namespace anitmt
       }
       else
       {
-	cerr << "!!Error could not calc 5 / x(=3)!! " << endl;
+	cerr << "!!Error: could not calc 5 / x(=3)!! " << endl;
 	errors++;
       }
     }
@@ -533,7 +633,7 @@ namespace anitmt
 
       if( op.is_solved() )
       {
-	cerr << "!!Error why can he solve 5 == x without knowing x?!! " 
+	cerr << "!!Error: why can he solve 5 == x without knowing x?!! " 
 	     << endl;
 	errors++;
       }
@@ -548,19 +648,19 @@ namespace anitmt
       }
       else
       {
-	cerr << "!!Error could not calc 5 == x(=5)!! " << endl;
+	cerr << "!!Error: could not calc 5 == x(=5)!! " << endl;
 	errors++;
       }
     }
 
-    // calc x == 5> 
+    // calc x(=5.1) == 5> 
     {
       Operand<values::Scalar> x; 
       Operand<bool> &op = x == 5;
 
       if( op.is_solved() )
       {
-	cerr << "!!Error why can he solve x == 5 without knowing x?!! " 
+	cerr << "!!Error: why can he solve x == 5 without knowing x?!! " 
 	     << endl;
 	errors++;
       }
@@ -575,8 +675,221 @@ namespace anitmt
       }
       else
       {
-	cerr << "!!Error could not calc x(=5.1) == 5!! " << endl;
+	cerr << "!!Error: could not calc x(=5.1) == 5!! " << endl;
 	errors++;
+      }
+    }
+
+    // calc 5 != x(=0)> 
+    {
+      Operand<values::Scalar> x; 
+      Operand<bool> &op = 5 != x;
+
+      if( op.is_solved() )
+      {
+	cerr << "!!Error: why can he solve 5 != x without knowing x?!! " 
+	     << endl;
+	errors++;
+      }
+
+      x.set_value( 0 );
+
+      if( op.is_solved() )
+      {
+	cout << "  5 != x(=0) = " << op.get_value() 
+	     << " (true)" <<  endl;
+	assert( op.get_value() == true );
+      }
+      else
+      {
+	cerr << "!!Error: could not calc 5 != x(=0)!! " << endl;
+	errors++;
+      }
+    }
+
+    // calc constraint( x(=1) == 2 )
+    {
+      Operand<values::Scalar> x;
+      constraint( x == 2 );
+
+      try
+      {
+        if( x.set_value( 1 ) )
+	{
+	  cerr << "!!Error: why does he accept constraint( x(=1) == 2 )?!!"
+	       << endl;
+	  errors++;
+	}
+	else
+	{
+	  cout << "  constraint( x(=1) == 2) rejected. OK" << endl;
+	}
+      }
+      catch( EX )
+      {
+	cout << "  constraint( x(=1) == 2) rejected. OK" << endl;
+      }
+    }
+
+    // calc +-sqrt( x(=25) ) 
+    {
+      Operand<values::Scalar> x;
+      Operand<values::Scalar> &op = plus_minus( sqrt(x) );
+
+      if( op.is_solved() )
+      {
+	cerr << "!!Error: why can he solve +-sqrt(x(=25)) without knowing x?!!"
+	     << endl;
+	errors++;
+      }
+
+      try
+      {
+        if( x.set_value(25) )
+	{
+	  if( op.is_solved() )
+	  {
+	    cout << "  +-sqrt(x(=25)) = " << op.get_value() 
+		 << " (5)" <<  endl;
+	    assert( op.get_value() == 5 );
+	  }
+	  else
+	  {
+	    cerr << "!!Error: could not calc +-sqrt(x(=25))!!" << endl;
+	    errors++;
+	  }
+	}
+	else
+	{
+	  cerr << "!!Error: why was +-sqrt(x(=25)) rejected?!! " ;
+	  errors++;
+	  if( op.is_solved() )
+	  {
+	    cerr << "!!Error: why can he solve +-sqrt(x) with rejected x?!!";
+	    errors++;
+	  }
+	}
+      }
+      catch( EX )
+      {
+	cerr << "!!Error: why was +-sqrt(x(=25)) rejected with "
+	  "exception?!!";
+	errors++;
+	if( op.is_solved() )
+	{
+	  cerr << "!!Error: why can he solve +-sqrt(x) with rejected x?!!";
+	  errors++;
+	}
+      }
+    }
+
+    // calc +-sqrt( x(=25) ) mit constraint( result < 0 )
+    {
+      Operand<values::Scalar> x;
+      Operand<values::Scalar> &op = plus_minus( sqrt(x) );
+      constraint( op < 0 );
+
+      if( op.is_solved() )
+      {
+	cerr << "!!Error: why can he solve +-sqrt(x(=25))(<0) without knowing "
+	  "x?!!"
+	     << endl;
+	errors++;
+      }
+
+      try
+      {
+        if( x.set_value(25) )
+	{
+	  if( op.is_solved() )
+	  {
+	    cout << "  +-sqrt(x(=25)) (<0) = " << op.get_value() 
+		 << " (-5)" <<  endl;
+	    assert( op.get_value() == -5 );
+	  }
+	  else
+	  {
+	    cerr << "!!Error: could not calc +-sqrt(x(=25)) (<0)!!" << endl;
+	    errors++;
+	  }
+	}
+	else
+	{
+	  cerr << "!!Error: why was +-sqrt(x(=25))(<0) rejected?!! " ;
+	  errors++;
+	  if( op.is_solved() )
+	  {
+	    cerr << "!!Error: why can he solve +-sqrt(x) (<0) with rejected "
+	      "x?!!";
+	    errors++;
+	  }
+	}
+      }
+      catch( EX )
+      {
+	cerr << "!!Error: why was +-sqrt(x(=25))(<0) rejected with "
+	  "exception?!!";
+	errors++;
+	if( op.is_solved() )
+	{
+	  cerr << "!!Error: why can he solve +-sqrt(x)(<0) with rejected x?!!";
+	  errors++;
+	}
+      }
+    }
+
+    // calc +-sqrt( x(=25) ) mit constraint( result > 0 )
+    {
+      Operand<values::Scalar> x;
+      Operand<values::Scalar> &op = plus_minus( sqrt(x) );
+      constraint( op > 0 );
+
+      if( op.is_solved() )
+      {
+	cerr << "!!Error: why can he solve +-sqrt(x(=25))(>0) without knowing "
+	  "x?!!"
+	     << endl;
+	errors++;
+      }
+
+      try
+      {
+        if( x.set_value(25) )
+	{
+	  if( op.is_solved() )
+	  {
+	    cout << "  +-sqrt(x(=25)) (>0) = " << op.get_value() 
+		 << " (-5)" <<  endl;
+	    assert( op.get_value() == -5 );
+	  }
+	  else
+	  {
+	    cerr << "!!Error: could not calc +-sqrt(x(=25)) (>0)!!" << endl;
+	    errors++;
+	  }
+	}
+	else
+	{
+	  cerr << "!!Error: why was +-sqrt(x(=25)) (>0) rejected?!! " ;
+	  errors++;
+	  if( op.is_solved() )
+	  {
+	    cerr << "!!Error: why can he solve +-sqrt(x) (>0) with rejected "
+	      "x?!!";
+	    errors++;
+	  }
+	}
+      }
+      catch( EX )
+      {
+	cerr << "!!Error: why was +-sqrt(x(=25)) (>0) rejected with "
+	  "exception?!!";
+	errors++;
+	if( op.is_solved() )
+	{
+	  cerr << "!!Error: why can he solve +-sqrt(x)(>0) with rejected x?!!";
+	  errors++;
+	}
       }
     }
 
@@ -591,7 +904,7 @@ namespace anitmt
 
       if( op.is_solved() )
       {
-	cerr << "!!Error why can he solve x + 2 without knowing x?!! " 
+	cerr << "!!Error: why can he solve x + 2 without knowing x?!! " 
 	     << endl;
 	errors++;
       }
@@ -605,7 +918,7 @@ namespace anitmt
       }
       else
       {
-	cerr << "!!Error could assign x + 2 to operand!!" << endl;
+	cerr << "!!Error: could assign x + 2 to operand!!" << endl;
 	errors++;
       }
     }
@@ -625,7 +938,7 @@ namespace anitmt
       }
       else
       {
-	cerr << "!!Error could not assign 5 + 2 to property!!" << endl;
+	cerr << "!!Error: could not assign 5 + 2 to property!!" << endl;
 	errors++;
       }
     }

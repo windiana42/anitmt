@@ -108,7 +108,7 @@ namespace anitmt
     inline bool is_id_valid( id_type id ) const; 
 				// checks wheather an id belongs to curr. test
     inline id_type get_test_run_id() const; // returns current test run ID
-    inline id_type new_test_run_id();	// returns a new test run ID
+    inline id_type new_test_run_id();	// adds and returns a new test run ID
     inline void add_test_run_id( id_type id ); // adds a test run ID
     inline void remove_test_run_id( id_type id ); // removes a test run ID
     inline void set_test_run_id( id_type id ); // sets active test run ID
@@ -133,9 +133,9 @@ namespace anitmt
   public:
     // has to check the result of the operand with ID as pointer to operand
     virtual bool is_result_ok( const void *ID, 
-			       const Solve_Run_Info *info ) throw(EX) = 0;
+			       Solve_Run_Info *info ) throw(EX) = 0;
     // tells to use the result calculated by is_result_ok()
-    virtual void use_result( const void *ID, const Solve_Run_Info *info )
+    virtual void use_result( const void *ID, Solve_Run_Info *info )
       throw(EX) = 0;
 
     // disconnect operand
@@ -173,9 +173,9 @@ namespace anitmt
     typedef std::list<Operand_Listener*> listeners_type;
     listeners_type listeners; 
 
-    inline void report_value( const Solve_Run_Info *info ) 
+    inline void report_value( Solve_Run_Info *info ) 
       throw(EX);
-    inline bool test_report_value( const Solve_Run_Info *info ) 
+    inline bool test_report_value( Solve_Run_Info *info ) 
       throw(EX);
   public:	
     inline bool is_solved() const;
@@ -195,13 +195,13 @@ namespace anitmt
     // for functions in solve system (with correct info)
     inline bool is_solved_in_try( const Solve_Run_Info *info ) const;
     inline const T& get_value( const Solve_Run_Info *info ) const;
-    inline bool test_set_value( T val, const Solve_Run_Info *info )
+    inline bool test_set_value( T val, Solve_Run_Info *info )
       throw(EX);
     inline bool test_set_value( T val, 
 				Solve_Problem_Handler *handler = 
 				&default_handler )
       throw(EX);
-    inline void use_test_value( const Solve_Run_Info *info )
+    inline void use_test_value( Solve_Run_Info *info )
       throw(EX);
 
     void add_listener( Operand_Listener *listener );
@@ -243,10 +243,10 @@ namespace anitmt
     //** Operand Listener Methods **
 
     // has to check the result of the operand with ID as pointer to operand
-    virtual bool is_result_ok( const void *ID, const Solve_Run_Info *info ) 
+    virtual bool is_result_ok( const void *ID, Solve_Run_Info *info ) 
       throw(EX);
     // tells to use the result calculated by is_result_ok()
-    virtual void use_result( const void *ID, const Solve_Run_Info *info )
+    virtual void use_result( const void *ID, Solve_Run_Info *info )
       throw(EX);
     // disconnect operand
     virtual void disconnect( const void *ID );

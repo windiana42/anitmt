@@ -99,6 +99,24 @@ namespace anitmt
       ->get_result();
   }
 
+  //***************************************************************************
+  // Plus_Minus_Operator: result is either the positive or the negative operand
+  //***************************************************************************
+
+  //! +- Operator for operand expression trees (+-scalar)
+  inline Operand<values::Scalar>& plus_minus( Operand<values::Scalar> &op ) 
+  {
+    return (new Plus_Minus_Operator<values::Scalar,values::Scalar>( op ))
+      ->get_result();
+  }
+
+  //! +- Operator for operand expression trees (+-vector)
+  inline Operand<values::Vector>& plus_minus( Operand<values::Vector> &op ) 
+  {
+    return (new Plus_Minus_Operator<values::Vector,values::Vector>( op ))
+      ->get_result();
+  }
+
   //**********************************************************************
   // Add_Operator: operator for adding 2 operands of different types
   //**********************************************************************
@@ -552,6 +570,262 @@ namespace anitmt
   operator!=( const values::String &op1, Operand<values::String> &op2 ) 
   {
     return (new Unequal_Operator<bool,values::String,values::String>
+	    ( const_op(op1), op2 ))->get_result();
+  }
+
+  //***************************************************
+  // Less_Operator: operator for comparing 2 operands
+  //***************************************************
+
+  // scalar < scalar
+  inline Operand<bool>&
+  operator<( Operand<values::Scalar> &op1, Operand<values::Scalar> &op2 ) 
+  {
+    return (new Less_Operator<bool,values::Scalar,values::Scalar>
+	    ( op1, op2 ))->get_result();
+  }
+  inline Operand<bool>&
+  operator<( Operand<values::Scalar> &op1, const values::Scalar &op2 ) 
+  {
+    return (new Less_Operator<bool,values::Scalar,values::Scalar>
+	    ( op1, const_op(op2) ))->get_result();
+  }
+  inline Operand<bool>&
+  operator<( const values::Scalar &op1, Operand<values::Scalar> &op2 ) 
+  {
+    return (new Less_Operator<bool,values::Scalar,values::Scalar>
+	    ( const_op(op1), op2 ))->get_result();
+  }
+
+  // vector < vector
+  inline Operand<bool>&
+  operator<( Operand<values::Vector> &op1, Operand<values::Vector> &op2 ) 
+  {
+    return (new Less_Operator<bool,values::Vector,values::Vector>
+	    ( op1, op2 ))->get_result();
+  }
+  inline Operand<bool>&
+  operator<( Operand<values::Vector> &op1, const values::Vector &op2 ) 
+  {
+    return (new Less_Operator<bool,values::Vector,values::Vector>
+	    ( op1, const_op(op2) ))->get_result();
+  }
+  inline Operand<bool>&
+  operator<( const values::Vector &op1, Operand<values::Vector> &op2 ) 
+  {
+    return (new Less_Operator<bool,values::Vector,values::Vector>
+	    ( const_op(op1), op2 ))->get_result();
+  }
+
+  // string < string
+  inline Operand<bool>&
+  operator<( Operand<values::String> &op1, Operand<values::String> &op2 ) 
+  {
+    return (new Less_Operator<bool,values::String,values::String>
+	    ( op1, op2 ))->get_result();
+  }
+  inline Operand<bool>&
+  operator<( Operand<values::String> &op1, const values::String &op2 ) 
+  {
+    return (new Less_Operator<bool,values::String,values::String>
+	    ( op1, const_op(op2) ))->get_result();
+  }
+  inline Operand<bool>&
+  operator<( const values::String &op1, Operand<values::String> &op2 ) 
+  {
+    return (new Less_Operator<bool,values::String,values::String>
+	    ( const_op(op1), op2 ))->get_result();
+  }
+
+  //***************************************************
+  // Greater_Operator: operator for comparing 2 operands
+  //***************************************************
+
+  // scalar > scalar
+  inline Operand<bool>&
+  operator>( Operand<values::Scalar> &op1, Operand<values::Scalar> &op2 ) 
+  {
+    return (new Greater_Operator<bool,values::Scalar,values::Scalar>
+	    ( op1, op2 ))->get_result();
+  }
+  inline Operand<bool>&
+  operator>( Operand<values::Scalar> &op1, const values::Scalar &op2 ) 
+  {
+    return (new Greater_Operator<bool,values::Scalar,values::Scalar>
+	    ( op1, const_op(op2) ))->get_result();
+  }
+  inline Operand<bool>&
+  operator>( const values::Scalar &op1, Operand<values::Scalar> &op2 ) 
+  {
+    return (new Greater_Operator<bool,values::Scalar,values::Scalar>
+	    ( const_op(op1), op2 ))->get_result();
+  }
+
+  // vector > vector
+  inline Operand<bool>&
+  operator>( Operand<values::Vector> &op1, Operand<values::Vector> &op2 ) 
+  {
+    return (new Greater_Operator<bool,values::Vector,values::Vector>
+	    ( op1, op2 ))->get_result();
+  }
+  inline Operand<bool>&
+  operator>( Operand<values::Vector> &op1, const values::Vector &op2 ) 
+  {
+    return (new Greater_Operator<bool,values::Vector,values::Vector>
+	    ( op1, const_op(op2) ))->get_result();
+  }
+  inline Operand<bool>&
+  operator>( const values::Vector &op1, Operand<values::Vector> &op2 ) 
+  {
+    return (new Greater_Operator<bool,values::Vector,values::Vector>
+	    ( const_op(op1), op2 ))->get_result();
+  }
+
+  // string > string
+  inline Operand<bool>&
+  operator>( Operand<values::String> &op1, Operand<values::String> &op2 ) 
+  {
+    return (new Greater_Operator<bool,values::String,values::String>
+	    ( op1, op2 ))->get_result();
+  }
+  inline Operand<bool>&
+  operator>( Operand<values::String> &op1, const values::String &op2 ) 
+  {
+    return (new Greater_Operator<bool,values::String,values::String>
+	    ( op1, const_op(op2) ))->get_result();
+  }
+  inline Operand<bool>&
+  operator>( const values::String &op1, Operand<values::String> &op2 ) 
+  {
+    return (new Greater_Operator<bool,values::String,values::String>
+	    ( const_op(op1), op2 ))->get_result();
+  }
+
+  //******************************************************
+  // Not_Greater_Operator: operator for comparing 2 operands
+  //******************************************************
+
+  // scalar <= scalar
+  inline Operand<bool>&
+  operator<=( Operand<values::Scalar> &op1, Operand<values::Scalar> &op2 ) 
+  {
+    return (new Not_Greater_Operator<bool,values::Scalar,values::Scalar>
+	    ( op1, op2 ))->get_result();
+  }
+  inline Operand<bool>&
+  operator<=( Operand<values::Scalar> &op1, const values::Scalar &op2 ) 
+  {
+    return (new Not_Greater_Operator<bool,values::Scalar,values::Scalar>
+	    ( op1, const_op(op2) ))->get_result();
+  }
+  inline Operand<bool>&
+  operator<=( const values::Scalar &op1, Operand<values::Scalar> &op2 ) 
+  {
+    return (new Not_Greater_Operator<bool,values::Scalar,values::Scalar>
+	    ( const_op(op1), op2 ))->get_result();
+  }
+
+  // vector <= vector
+  inline Operand<bool>&
+  operator<=( Operand<values::Vector> &op1, Operand<values::Vector> &op2 ) 
+  {
+    return (new Not_Greater_Operator<bool,values::Vector,values::Vector>
+	    ( op1, op2 ))->get_result();
+  }
+  inline Operand<bool>&
+  operator<=( Operand<values::Vector> &op1, const values::Vector &op2 ) 
+  {
+    return (new Not_Greater_Operator<bool,values::Vector,values::Vector>
+	    ( op1, const_op(op2) ))->get_result();
+  }
+  inline Operand<bool>&
+  operator<=( const values::Vector &op1, Operand<values::Vector> &op2 ) 
+  {
+    return (new Not_Greater_Operator<bool,values::Vector,values::Vector>
+	    ( const_op(op1), op2 ))->get_result();
+  }
+
+  // string <= string
+  inline Operand<bool>&
+  operator<=( Operand<values::String> &op1, Operand<values::String> &op2 ) 
+  {
+    return (new Not_Greater_Operator<bool,values::String,values::String>
+	    ( op1, op2 ))->get_result();
+  }
+  inline Operand<bool>&
+  operator<=( Operand<values::String> &op1, const values::String &op2 ) 
+  {
+    return (new Not_Greater_Operator<bool,values::String,values::String>
+	    ( op1, const_op(op2) ))->get_result();
+  }
+  inline Operand<bool>&
+  operator<=( const values::String &op1, Operand<values::String> &op2 ) 
+  {
+    return (new Not_Greater_Operator<bool,values::String,values::String>
+	    ( const_op(op1), op2 ))->get_result();
+  }
+
+  //******************************************************
+  // Not_Less_Operator: operator for comparing 2 operands
+  //******************************************************
+
+  // scalar >= scalar
+  inline Operand<bool>&
+  operator>=( Operand<values::Scalar> &op1, Operand<values::Scalar> &op2 ) 
+  {
+    return (new Not_Less_Operator<bool,values::Scalar,values::Scalar>
+	    ( op1, op2 ))->get_result();
+  }
+  inline Operand<bool>&
+  operator>=( Operand<values::Scalar> &op1, const values::Scalar &op2 ) 
+  {
+    return (new Not_Less_Operator<bool,values::Scalar,values::Scalar>
+	    ( op1, const_op(op2) ))->get_result();
+  }
+  inline Operand<bool>&
+  operator>=( const values::Scalar &op1, Operand<values::Scalar> &op2 ) 
+  {
+    return (new Not_Less_Operator<bool,values::Scalar,values::Scalar>
+	    ( const_op(op1), op2 ))->get_result();
+  }
+
+  // vector >= vector
+  inline Operand<bool>&
+  operator>=( Operand<values::Vector> &op1, Operand<values::Vector> &op2 ) 
+  {
+    return (new Not_Less_Operator<bool,values::Vector,values::Vector>
+	    ( op1, op2 ))->get_result();
+  }
+  inline Operand<bool>&
+  operator>=( Operand<values::Vector> &op1, const values::Vector &op2 ) 
+  {
+    return (new Not_Less_Operator<bool,values::Vector,values::Vector>
+	    ( op1, const_op(op2) ))->get_result();
+  }
+  inline Operand<bool>&
+  operator>=( const values::Vector &op1, Operand<values::Vector> &op2 ) 
+  {
+    return (new Not_Less_Operator<bool,values::Vector,values::Vector>
+	    ( const_op(op1), op2 ))->get_result();
+  }
+
+  // string >= string
+  inline Operand<bool>&
+  operator>=( Operand<values::String> &op1, Operand<values::String> &op2 ) 
+  {
+    return (new Not_Less_Operator<bool,values::String,values::String>
+	    ( op1, op2 ))->get_result();
+  }
+  inline Operand<bool>&
+  operator>=( Operand<values::String> &op1, const values::String &op2 ) 
+  {
+    return (new Not_Less_Operator<bool,values::String,values::String>
+	    ( op1, const_op(op2) ))->get_result();
+  }
+  inline Operand<bool>&
+  operator>=( const values::String &op1, Operand<values::String> &op2 ) 
+  {
+    return (new Not_Less_Operator<bool,values::String,values::String>
 	    ( const_op(op1), op2 ))->get_result();
   }
 

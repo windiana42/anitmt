@@ -13,6 +13,7 @@ libanitmt_a_SOURCES = 	error.hpp error.cpp tmttype.hpp\
 			operand.hpp operand_templ.cpp operand_inline.cpp \
 			operator.cpp \
 			operator.hpp operator_templ.cpp operator_inline.cpp \
+			constraint.cpp constraint.hpp \
 			property.cpp property.hpp property_templ.cpp \
 			solver.cpp solver_templ.cpp solver.hpp \
 			caller.hpp caller.cpp \
