@@ -19,7 +19,6 @@ libanitmt_a_SOURCES= 	error.hpp error.cpp \
 			property_templ.cpp property_inline.cpp \
 			proptree.hpp proptree.cpp \
 			proptree_templ.cpp proptree_inline.cpp \
-			result.hpp result_templ.cpp \
 			return.hpp return.cpp nodes.hpp nodes.cpp \
 			animation_classes.hpp animation.hpp animation.cpp \
 			scene.hpp scene.cpp \

@@ -12,6 +12,11 @@ scene testscene {
 			endtime 10;
 			endvalue 1;
 		}
+		accelerated {
+			startslope 3;
+			endvalue 8;
+			endslope 0;
+		}
 		linear {}
 	}
 }
