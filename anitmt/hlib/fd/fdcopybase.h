@@ -578,7 +578,7 @@ class FDCopyPump_FD2FD : public FDCopyPump
 		
 		// Size of fifo buffer used to store the data which is 
 		// on the fly. Defaults to 16kb. 
-		size_t iobufsize;
+		size_t io_bufsize;
 		
 		// Read/Write threshold values; this needs some explanation: 
 		// The source file descriptor is 
@@ -595,11 +595,11 @@ class FDCopyPump_FD2FD : public FDCopyPump
 		// * and not polled for writing if less than low_write_thresh 
 		//   bytes are in the buffer 
 		//   (exactly: stop writing if bufuse<=low_write_thresh). 
-		// THUS: hard max for thresh is iobufsize, 
+		// THUS: hard max for thresh is io_bufsize, 
 		//       hard min for thresh is 0 and
 		//       high thresh must be larger than low thresh (NOT equal)
 		// You may count on reasonable defaults; 
-		// Values of -1 mean -> set defaults according to iobufsize. 
+		// Values of -1 mean -> set defaults according to io_bufsize. 
 		// NOTE: You may EITHER specify ALL values yourself OR use defaults 
 		//       for ALL 4 values (by passing -1). 
 		// 
@@ -659,7 +659,7 @@ class FDCopyPump_FD2FD : public FDCopyPump
 		
 		// Return value for CC_Start: 
 		//   -3 -> somebody else is active on PollID; we may not start
-		//   -4 -> fifo buffer (iobufsize) allocation failure
+		//   -4 -> fifo buffer (io_bufsize) allocation failure
 		//   -5 -> illegal thresh values or limity<0
 		int VControl(ControlCommand cc);
 };

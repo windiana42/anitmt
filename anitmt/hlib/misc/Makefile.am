@@ -1,5 +1,5 @@
-CFLAGS = @CFLAGS@ -W -Wall -D_GNU_SOURCE
-CXXFLAGS = @CXXFLAGS@ -W -Wall -D_GNU_SOURCE
+#CFLAGS = @CFLAGS@ -W -Wall -D_GNU_SOURCE
+#CXXFLAGS = @CXXFLAGS@ -W -Wall -D_GNU_SOURCE
 
 INCLUDES = -I../include/
 noinst_LIBRARIES = libmisc.a

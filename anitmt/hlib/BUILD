@@ -22,69 +22,118 @@ B) If you got hlib as source tarball:
 Unpack the archive. If you don't know how to do that better go doing 
 something else (hint: "tar xvfz ..." or "gzip -dc ... | tar xvf -"). 
 
+
+C) Configuring hlib:
+   ----------------
+
 First, I recommend creating a separate build directory. Yes, you can also 
 build hlib in the source dir but I strongly recommend against that. 
 So, change into the build directory and run configure: 
 
 bash# ../<sourcedir>/configure
 
+But wait; configuring hlib may be a bit different compared to configuring 
+standard GNU sources. PLEASE READ THIS. 
 You may want to pass some of the standard options to configure; 
 try configure --help. 
 
-There are two ways to build hlib: 
-Using "make opt" and using "make all" (or simple "make"). 
-In the latter case, CFLAGS and CXXFLAGS are passed to the compiler. 
-In the first case, OPTCFLAGS and OPTCXXFLAGS take their place. 
-I recommend using some nice optimization, especially to switch off 
-RTTI (gcc: -fno-rtti) and exceptions (gcc: -fno-exceptions). 
-(Do not switch off virtual functions if you compiler allows that). 
-If you do not pass OPTCFLAGS and OPTCXXFLAGS, then configure will choose 
-nice ones for some special architectures only. Configure dumps the used 
-flags quite early and you should stop and re-run configure with more 
-suitable compiler flags if you are not satisfied, especially if you are 
-not using the GNU C/C++ compiler. (Try your favourite ones.)
+However, the compiler flags are an issue of interest here becuase they 
+are handeled differently: 
 
-Note that if you are using gcc-3.0 or above, you may export COLUMNS so 
-that -fmessage-length=$COLUMNS is passed to the compiler. 
+You can build hlib by issuing "make" (i.e. "make all") or by using 
+"make debug" which is only available in the top build dir and probably of 
+little interest. 
 
-See what configure writes on the terminal. If everything works fine, 
-you can actually build hlib. Please use GNU make. All that automake-generated 
-stuff works best with GNU make. If you are not using GNU make, you may need 
-to pass AR=ar RM=rm, etc. Note that using GNU make can be as simple as 
-calling "gmake all" instead of "make all". 
-First, try using 
+For "make debug", you may pass DBGCFLAGS and DBGCXXFLAGS to configure; 
+these flags default to "-g": 
 
-bash# make opt
+bash# ../<sourcedir>/configure DBGCXXFLAGS="-fno-rtti -fno-exceptions -g"
 
-If that fails, you may consider changing your OPTCFLAGS / OPTCXXFLAGS in 
-case the error is related to them and re-run configure.
+(I don't fiddle around with debug args a lot; if you need debug, make 
+sure to pass the correct ones.) 
 
-NOTE: Just passing OPTCFLAGS/OPTCXXFLAGS on the command line for make 
-  will not change anything, neither for "make" nor for "make opt". 
-  If you want to pass special flags to make manually, use 
-  "make CFLAGS=... CXXFLAGS=... all" because "make opt" is simply 
-  calling "make CFLAGS=OPTCFLAGS CXXFLAGS=OPTCXXFLAGS all". 
-Note also that you may use ADDFLAGS to pass additional flags to both the 
-C and C++ compiler during "make opt" (but NOT during "make all"). 
+For standard "make" ("make all"), pre-setting CFLAGS and CXXFLAGS is 
+of NO effect at all (if you use gcc) UNLESS you pass some magic prefix, 
+so read on. 
 
-Otherwise you are probably in trouble. Make sure you are using the 
+Configure sets these flags by itself but this may, of course, not be what 
+you want. So, here is some more detail: 
+Configure takes optimization flags, misc flags, warning flags and 
+additional flags and puts them together into CFLAGS and CXXFLAGS. 
+- optimization flags: -Os -fomit-frame-pointer -fno-exceptions -fno-rtti ...
+- misc flags: -D_GNU_SOURCE if on GNU platform
+- warning flags: -W -Wall -Wformat ...
+- additional flags: -pipe -fmessage-length=$COLUMNS $(ADDFLAGS) ...
+
+So, the only thing you want to tweak around in configure are the 
+optimization flags. Configure outputs the autodetect optimization flags 
+and if you wish to use your own ones, you may pass CFLAGS and CXXFLAGS 
+in a special way prepending "opt> ": 
+
+bash# ../<sourcedir>/configure CFLAGS="opt> -O9 -fmy-secret-engenious-flag" \
+    CXXFLAGS="opt> -fremove-all-c++-overhead"
+
+For porting or if you want to change the optimization flags regularly, you 
+should simply pass "opt> " for both, CFLAGS and CXXFLAGS to configure. 
+Then, no optimization flags are set by configure, BUT you can use ADDFLAGS...
+
+Being smart, configure always appends "additional flags" to CFLAGS and 
+CXXFLAGS which are inserted by "make", so you can pass these 
+flags to "make" in the following way: 
+
+make ADDFLAGS="-fmessage-length=100" ADDCXXFLAGS="-frepo" ADDCFLAGS="-pedantic"
+
+ADDFLAGS get passed to C and C++ compiler, 
+ADDCFLAGS and ADDCXXFLAGS only to the C and C++ compiler, respectively. 
+
+So, for ADDFLAGS, etc. no re-configuring is needed; you simply pass them to 
+make. 
+
+Okay, if you really want your compiler flags and no configure-generated 
+flags, you can use the following trick: Prepend "zap> " instead of "opt> ": 
+
+bash# ../<sourcedir>/configure --disable-gccpipe \
+	CFLAGS="zap> -use -my" CXXFLAGS="zap> -flags -only"
+
+Do NOT pass CFLAGS= and CXXFLAGS= to "make" unless you really know what 
+you are doing. Use ADDFLAGS/ADDCFLAGS/ADDCXXFLAGS instead. 
+
+
+D) Compiling hlib:
+   --------------
+
+Okay, when configure finally ran through without errors, compile hlib. 
+Simply run 
+
+bash# make
+
+If you chose to pass additional flags, you may use 
+
+bash# make ADDFLAGS="..." ADDCFLAGS="..." ADDCXXFLAGS="..."
+
+To compile with debugging info, use 
+
+bash# make debug
+
+You can use ADDFLAGS for "make debug", too. 
+
+Hey, don't be confused about the #warning messages from the compiler. 
+That's okay. Special ones are maked by a box of asterisks. 
+
+If compiling fails, consider changing the optimization flags (e.g. using 
+configure with C[XX]FLAGS="opt> " and using ADDFLAGS to test which flags 
+work). 
+If compile failure is not related to optimization flags, you are probably in trouble. Make sure you are using the 
 GNU C/C++ compiler (gcc). I am using gcc-3.2, but hlib should also build 
 with any version since gcc-2.95. 
-In case gcc is unavailable you are already using gcc, you may fall back to 
-
-bash# make all
-..or..
-bash# make CFLAGS=... CXXFLAGS=... all
 
 Okay, if you have successfully build hlib, run the check programs: 
-If you compiled with any of the make opt, then call 
 
-bash# make check-opt
+If you compiled with "make" or "make all", run 
 
-If you compiled with simple "make" or "make all" or passed special 
-CFLAGS/CXXFLAGS, then run 
+bash# make [your additional flags] check
 
-make# make [your flags] check
+If you built with "make debug", you should use "make check-debug" instead. 
 
 Running the check programs is highly recommended. If they do not fail, then 
 that is a good sign, if something fails then you should look very carefully 
@@ -94,7 +143,7 @@ Note: If some check really fails, make should report that error as the check
 program returns an error (nonzero exit code), 
 
 
-C) Troubleshooting...
+D) Troubleshooting...
    ---------------
 
 If the configure script failed, check the reason for the failure. It may 
@@ -103,7 +152,7 @@ not checked for (for example, on FreeBSD you may need netinet/ip_compat.h
 instead of netinet/ip.h). 
 
 NOTE: The configure script checks for several header files but the result 
-of the check may be unused. I generally do `lazy error correction´ which 
+of the check may be unused. I generally do `lazy error correction' which 
 means that I only put complicated #ifdef stuff around #include alternatives 
 if problems actually show up and I do NOT spend hours thinking about what 
 could be checked. So, if you have problems and you know how to fix them, 
@@ -151,8 +200,8 @@ If compilation failed: If you did not use gcc, please consider using gcc.
 If gcc failed (versions since 2.95): 
 Is the issue some damn undefined symbol at linking: 
 - The function may be inlined and the compiler did get that wrong somehow. 
-  gcc-3.0 does not have that problem but gcc-2.95 has if you compile without 
-  "make opt". 
+  gcc>=3.0 does not have that problem but gcc-2.95 has if you do not pass 
+  optimization flags. 
 - Are all libraries present or does some compatibility lib need to be added?
 If the issue is a real compiler error: Please track it down, fix it and send 
 me the fix. 

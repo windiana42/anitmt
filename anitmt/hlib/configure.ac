@@ -22,6 +22,22 @@ AM_INIT_AUTOMAKE
 AC_CONFIG_SRCDIR([cpp/cplusplusff.cc])
 AM_CONFIG_HEADER(hlib-config.h)
 
+# Make sure that we get rid of the horrible default "-g -O2":
+# You can use ADDCFLAGS / ADDCXXFLAGS to pass additional flags to make. 
+# In order to pass your own optimization flags, use CFLAGS="opt> -flags...". 
+origCFLAGS="$CFLAGS"
+origCXXFLAGS="$CXXFLAGS"
+# For AC_PROG_CC and those, we only remove the "opt> " and "zap> " NOW, 
+# because we re-compute the flags complete new below. 
+case "$CFLAGS" in
+	"opt> "*)  CFLAGS="${CFLAGS:5}" ;;
+	"zap> "*)  CFLAGS="${CFLAGS:5}" ;;
+esac
+case "$CXXFLAGS" in
+	"opt> "*)  CXXFLAGS="${CXXFLAGS:5}" ;;
+	"zap> "*)  CXXFLAGS="${CXXFLAGS:5}" ;;
+esac
+
 # Checks for programs.
 AC_PROG_CC
 AC_PROG_CPP
@@ -35,42 +51,45 @@ AC_PROG_CXX
 # Where $enableval contains value in --enable-feature=VAL which is "yes" 
 # for --enable-feature and "no" for --disable-feature. 
 
+gccpipe_Enabled="yes"
+AC_ARG_ENABLE(gccpipe,AC_HELP_STRING([--disable-gccpipe],
+	[do not pass -pipe to gcc]),
+	[gccpipe_Enabled="$enableval"])
+
 # Optimization C / C++ compiler flags: 
-AC_SUBST(OPTCFLAGS)
-AC_SUBST(OPTCXXFLAGS)
+AC_SUBST(DBGCFLAGS)
+AC_SUBST(DBGCXXFLAGS)
 
-AC_ARG_VAR(OPTCFLAGS,[Optimization C compiler flags])
-AC_ARG_VAR(OPTCXXFLAGS,[Optimization C++ compiler flags])
+AC_ARG_VAR(DBGCFLAGS,[C compiler flags for debugging target (make debug)])
+AC_ARG_VAR(DBGCXXFLAGS,[C++ compiler flags for debugging targer (make debug)])
 
-opt_cflags_were_set="y"
-test "x$OPTCFLAGS" = "x" && opt_cflags_were_set="n"
-opt_cxxflags_were_set="y"
-test "x$OPTCXXFLAGS" = "x" && opt_cxxflags_were_set="n"
+test "x$DBGCFLAGS" = "x"   && DBGCFLAGS="-g"
+test "x$DBGCXXFLAGS" = "x" && DBGCXXFLAGS="-g"
 
 HLIB_CXXCOMPILER_VERSION=""
-hlibcfg_final_add_cflags=""
+hlibcfg_final_add_cflags="\$(ADDFLAGS) \$(ADDCFLAGS)"
+hlibcfg_final_add_cxxflags="\$(ADDFLAGS) \$(ADDCXXFLAGS)"
 
 # Check gcc version if gcc: 
-dnl check gcc version:
 # GCC = "yes" for GNU C; GXX = "yes" for GNU C++
 if test "$GXX" = "yes" ; then
 	HLIB_CXXCOMPILER_VERSION="GCC:"
 	
+	# Make sure that we get rid of the horrible default "-g -O2":
+	# See above for more info...
+	CFLAGS=""
+	CXXFLAGS=""
+	
 	# We're actually using gcc. 
-	if test "x$HLIB_CONFIGURE_NO_PIPE" != "xno" ; then
-		AC_MSG_NOTICE([Passing -pipe to compiler.])
-		AC_MSG_NOTICE([Use HLIB_CONFIGURE_NO_PIPE=no env var to disable.])
-		CC="$CC -pipe"
-		CXX="$CXX -pipe"
+	if test "$gccpipe_Enabled" != "no" ; then
+		AC_MSG_NOTICE([Passing -pipe to compiler; use --disable-gccpipe to disable.])
+		hlibcfg_final_add_cflags="-pipe $hlibcfg_final_add_cflags"
+		hlibcfg_final_add_cxxflags="-pipe $hlibcfg_final_add_cxxflags"
 	fi
 	
-	# Add warning flags: 
-	c_warnflags="-W -Wall -Wformat -Winline"
-	cxx_warnflags="$c_warnflags -Wreorder -Woverloaded-virtual"
-	CFLAGS="$CFLAGS $c_warnflags"
-	OPTCFLAGS="$OPTCFLAGS $c_warnflags"
-	CXXFLAGS="$CXXFLAGS $cxx_warnflags"
-	OPTCXXFLAGS="$OPTCXXFLAGS $cxx_warnflags"
+	# Set warning flags: 
+	WARNCFLAGS="-W -Wall -Wformat -Winline"
+	WARNCXXFLAGS="$WARNCFLAGS -Wreorder -Woverloaded-virtual"
 	
 	AC_MSG_CHECKING([checking GNU C++ version])
 	#gccvers="$($CXX -v 2>&1 | fgrep "version")"
@@ -91,7 +110,8 @@ if test "$GXX" = "yes" ; then
 		# NOTE: This works if you "export COLUMNS" in the shell before 
 		#       running configure and make. 
 		if test "x$COLUMNS" != "x" ; then
-			hlibcfg_final_add_cflags="-fmessage-length=\$\$COLUMNS"
+			hlibcfg_final_add_cflags="-fmessage-length=\$\$COLUMNS $hlibcfg_final_add_cflags"
+			hlibcfg_final_add_cxxflags="-fmessage-length=\$\$COLUMNS $hlibcfg_final_add_cxxflags"
 		else
 			AC_MSG_NOTICE([You may export COLUMNS and re-run configure if you wish that])
 			AC_MSG_NOTICE([-fmessage-length= is passed to the compiler.])
@@ -106,9 +126,9 @@ if test "$GXX" = "yes" ; then
 	case "$target" in
 		*-gnu)
 			CFLAGS="$CFLAGS -D_GNU_SOURCE"
-			OPTCFLAGS="$OPTCFLAGS -D_GNU_SOURCE"
 			CXXFLAGS="$CXXFLAGS -D_GNU_SOURCE"
-			OPTCXXFLAGS="$OPTCXXFLAGS -D_GNU_SOURCE"
+			DBGCFLAGS="$DBGCFLAGS -D_GNU_SOURCE"
+			DBGCXXFLAGS="$DBGCXXFLAGS -D_GNU_SOURCE"
 		;;
 	esac
 	
@@ -143,6 +163,21 @@ if test "$GXX" = "yes" ; then
 	AC_MSG_NOTICE([Autodetect optimization: C: $myOPTCFLAGS])
 	AC_MSG_NOTICE([Autodetect optimization: C++: $myOPTCXXFLAGS])
 	
+	# Okay, finally set the vars: 
+	DBGCFLAGS="$DBGCFLAGS $WARNCFLAGS"
+	DBGCXXFLAGS="$DBGCXXFLAGS $WARNCXXFLAGS"
+	
+	case "$origCFLAGS" in
+		"opt> "*) CFLAGS="${origCFLAGS:5} $CFLAGS $WARNCFLAGS" ;;
+		"zap> "*) CFLAGS="${origCFLAGS:5}" ;;
+		*) CFLAGS="$myOPTCFLAGS $CFLAGS $WARNCFLAGS" ;;
+	esac
+	case "$origCXXFLAGS" in
+		"opt> "*) CXXFLAGS="${origCXXFLAGS:5} $CXXFLAGS $WARNCXXFLAGS" ;;
+		"zap> "*) CXXFLAGS="${origCXXFLAGS:5}" ;;
+		*) CXXFLAGS="$myOPTCXXFLAGS $CXXFLAGS $WARNCXXFLAGS" ;;
+	esac
+	
 	# Note: OPTCFLAGS/OPTCXXFLAGS currently contain the warnings, even 
 	#       if not set. 
 	test "$opt_cflags_were_set" = "n" && OPTCFLAGS="$OPTCFLAGS $myOPTCFLAGS"
@@ -157,21 +192,8 @@ if test "$GXX" = "yes" ; then
 	unset gccvers
 else  # not GCC
 	HLIB_CXXCOMPILER_VERSION="GCC: no"
-	
-	if test "x$OPTCFLAGS" = "x" ; then
-		for i in $CFLAGS ; do 
-			test "$i" != "-g" && OPTCFLAGS="$OPTCFLAGS $i"
-		done
-	fi
-	if test "x$OPTCXXFLAGS" = "x" ; then
-		for i in $CXXFLAGS ; do 
-			test "$i" != "-g" && OPTCXXFLAGS="$OPTCXXFLAGS $i"
-		done
-	fi
+	AC_MSG_NOTICE([Not using gcc; not touching any compiler args...])
 fi
-
-AC_MSG_NOTICE([OPTCFLAGS = $OPTCFLAGS])
-AC_MSG_NOTICE([OPTCXXFLAGS = $OPTCXXFLAGS])
 
 # Rest of the program checks: 
 AC_PROG_LN_S
@@ -300,10 +322,22 @@ AC_MSG_CHECKING([for CLD_EXITED])
 	 AC_MSG_NOTICE([You are lacking CLD_EXITED. Not using it...])
 	 AC_DEFINE(HLIB_PROCMAN_USE_LESS_SIGINFO_T,,[Defined, if CLD_EXITED was not found])])
 
-# Finally write files: 
-CC="$CC $hlibcfg_final_add_cflags"
-CXX="$CXX $hlibcfg_final_add_cflags"
+# Last flags processing: 
+CFLAGS="$CFLAGS $hlibcfg_final_add_cflags"
+CXXFLAGS="$CXXFLAGS $hlibcfg_final_add_cxxflags"
+DBGCFLAGS="$DBGCFLAGS $hlibcfg_final_add_cflags"
+DBGCXXFLAGS="$DBGCXXFLAGS $hlibcfg_final_add_cxxflags"
+# Also, remove any debugging from CFLAGS/CXXFLAGS
+CFLAGS=" $CFLAGS " ; CFLAGS="${CFLAGS// -g / }"
+CXXFLAGS=" $CXXFLAGS " ; CXXFLAGS="${CXXFLAGS// -g / }"
 
+AC_MSG_NOTICE([CFLAGS = $CFLAGS])
+AC_MSG_NOTICE([CXXFLAGS = $CXXFLAGS])
+AC_MSG_NOTICE([DBGCFLAGS = $DBGCFLAGS])
+AC_MSG_NOTICE([DBGCXXFLAGS = $DBGCXXFLAGS])
+
+
+# Finally write files: 
 AC_CONFIG_FILES([include/Makefile \
 	include/hlib/Makefile \
 	cpp/Makefile \

@@ -427,15 +427,15 @@ int FDCopyPump_FD2FD::_StartSetup()
 	if(limit<0)
 	{  return(-5);  }
 	
-	// Force minimum for iobufsize (may only be smaller than that if 
+	// Force minimum for io_bufsize (may only be smaller than that if 
 	// the limit is smaller. 
-	if(iobufsize<32)
-	{  iobufsize=32;  }
+	if(io_bufsize<32)
+	{  io_bufsize=32;  }
 	
-	if(limit<copylen_t(iobufsize))
-	{  iobufsize=(size_t)limit;  }
+	if(limit<copylen_t(io_bufsize))
+	{  io_bufsize=(size_t)limit;  }
 	
-	// Okay, the limit and iobufsize are set. 
+	// Okay, the limit and io_bufsize are set. 
 	// Now check the thresholds: 
 	// -------------------------------------------------------------------------
 	// [Illustratuion see fdcopybase.h]
@@ -452,14 +452,14 @@ int FDCopyPump_FD2FD::_StartSetup()
 	//      high_read_thresh=buflen-max_read_len+1
 	//     (Think of these 2 values as "min read/write length".)
 	// -------------------------------------------------------------------------
-	size_t iobs=iobufsize;
-	if(iobufsize<32)
+	size_t iobs=io_bufsize;
+	if(io_bufsize<32)
 	{
 		// The calculations below will not work for too small buffers. 
 		// As we use such small buffers if the length limit is such 
 		// small, this case has to be dealt with. We simply assume 
 		// that IO will be atomic: 
-		// [Check: this also works for iobufsize=1: YES, DONE.]
+		// [Check: this also works for io_bufsize=1: YES, DONE.]
 		low_write_thresh=0;
 		low_read_thresh=iobs/8;
 		high_write_thresh=iobs-iobs/8;
@@ -502,7 +502,7 @@ int FDCopyPump_FD2FD::_StartSetup()
 	// Okay, seems that the thresholds are also okay now. 
 	
 	fifo.Clear();  // be sure...
-	int rv=fifo.ResizeBuf(iobufsize);
+	int rv=fifo.ResizeBuf(io_bufsize);
 	if(rv)
 	{
 		fifo.ResizeBuf(0);
@@ -671,7 +671,7 @@ FDCopyPump_FD2FD::FDCopyPump_FD2FD(FDCopyBase *_fcb,int *failflag) :
 {
 	limit=(copylen_t)0;
 	
-	iobufsize=16384;
+	io_bufsize=16384;
 	
 	flushing=0;
 	curr_reading=0;

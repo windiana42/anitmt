@@ -1,5 +1,7 @@
 # Pass ADDFLAGS if you want to set -fmessage-length or the like. 
 ADDFLAGS=""
+ADDCFLAGS=""
+ADDCXXFLAGS=""
 
 SUBDIRS = include cpp misc fd crypto par
 SUBLIBS = cpp/libcpp.a misc/libmisc.a fd/libfd.a crypto/libcrypto.a par/libpar.a
@@ -24,15 +26,15 @@ libhlib.a: $(SUBLIBS)
 # NOTE: See the configure script for more info on opt. 
 #       Check OPTCFLAGS, OPTCXXFLAGS. 
 
-opt: FORCE
+debug: FORCE
 	$(MAKE) \
-		CFLAGS="@OPTCFLAGS@ $(ADDFLAGS)" \
-		CXXFLAGS="@OPTCXXFLAGS@ $(ADDFLAGS)" \
+		CFLAGS="@DBGCFLAGS@" \
+		CXXFLAGS="@DBGCXXFLAGS@" \
 		all
-check-opt: FORCE
+check-debug: FORCE
 	$(MAKE) \
-		CFLAGS="@OPTCFLAGS@ $(ADDFLAGS)" \
-		CXXFLAGS="@OPTCXXFLAGS@ $(ADDFLAGS)" \
+		CFLAGS="@DBGCFLAGS@" \
+		CXXFLAGS="@DBGCXXFLAGS@" \
 		check
 
 FORCE:
