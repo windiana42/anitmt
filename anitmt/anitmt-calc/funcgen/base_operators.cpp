@@ -27,6 +27,12 @@ namespace funcgen
     case operand1:	return "operand1";
     case operand2:	return "operand2";
     case operand3:	return "operand3";
+    case operand4:	return "operand4";
+    case operand5:	return "operand5";
+    case operand6:	return "operand6";
+    case operand7:	return "operand7";
+    case operand8:	return "operand8";
+    case operand9:	return "operand9";
     case info:		return "info";
     }
     assert(0);
@@ -113,6 +119,21 @@ namespace funcgen
       + ", " + type_to_string(arg2) + ", " + type_to_string(arg3) + ", " 
       + type_to_string(arg4) + " )";
   }
+  void Basic_Operator::add_5_arg_fun( type return_type, std::string name, 
+				 type arg1, type arg2, type arg3, type arg4, type arg5 )
+  {
+    std::list<type> &args = functions[name];
+    args.push_back( return_type );
+    args.push_back( arg1 );
+    args.push_back( arg2 );
+    args.push_back( arg3 );
+    args.push_back( arg4 );
+    args.push_back( arg5 );
+    function_specification[name] 
+      = type_to_string(return_type) + " " + name + "( " + type_to_string(arg1)
+      + ", " + type_to_string(arg2) + ", " + type_to_string(arg3) + ", " 
+      + type_to_string(arg4) + ", " + type_to_string(arg5) + " )";
+  }
 
   bool Available_Basic_Operators::is_operator( std::string operator_name ) 
     const
@@ -161,6 +182,39 @@ namespace funcgen
       cur_operator.add_2_arg_fun( boolean, "are_operands_enough", operand1, operand2 );
       cur_operator.add_1_arg_fun( result, "calc_result_from_op1", operand1 );
       cur_operator.add_1_arg_fun( result, "calc_result_from_op2", operand2 );
+      cur_operator.required_functions.push_back("calc_result");
+    }
+    {
+      Basic_Operator &cur_operator 
+	= basic_operators["simple_three_operands_operator"];
+      cur_operator.real_name = "Basic_Simple_Operator_for_3_Operands";
+      cur_operator.num_operands = 3;
+      cur_operator.add_3_arg_fun( result, "calc_result", 
+				  operand1, operand2, operand3 );
+      cur_operator.add_2_arg_fun( boolean, "is_operand1_ok", operand1, info );
+      cur_operator.add_2_arg_fun( boolean, "is_operand2_ok", operand2, info );
+      cur_operator.add_2_arg_fun( boolean, "is_operand3_ok", operand3, info );
+      cur_operator.add_4_arg_fun( boolean, "are_operands_ok", 
+				  operand1, operand2, operand3, info );
+      cur_operator.add_3_arg_fun( boolean, "are_operands_enough", 
+				  operand1, operand2, operand3 );
+      cur_operator.required_functions.push_back("calc_result");
+    }
+    {
+      Basic_Operator &cur_operator 
+	= basic_operators["simple_four_operands_operator"];
+      cur_operator.real_name = "Basic_Simple_Operator_for_4_Operands";
+      cur_operator.num_operands = 4;
+      cur_operator.add_4_arg_fun( result, "calc_result", 
+				  operand1, operand2, operand3, operand4 );
+      cur_operator.add_2_arg_fun( boolean, "is_operand1_ok", operand1, info );
+      cur_operator.add_2_arg_fun( boolean, "is_operand2_ok", operand2, info );
+      cur_operator.add_2_arg_fun( boolean, "is_operand3_ok", operand3, info );
+      cur_operator.add_2_arg_fun( boolean, "is_operand4_ok", operand4, info );
+      cur_operator.add_5_arg_fun( boolean, "are_operands_ok", 
+				  operand1, operand2, operand3, operand4, info);
+      cur_operator.add_4_arg_fun( boolean, "are_operands_enough", 
+				  operand1, operand2, operand3, operand4 );
       cur_operator.required_functions.push_back("calc_result");
     }
   }

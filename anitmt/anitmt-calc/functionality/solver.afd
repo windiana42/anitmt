@@ -6,228 +6,15 @@ include header "complex_solver.hpp";
 
 operators
 {
-  // *********************
-  // not
-  // *********************
-  one_operand_operator not
-  {
-    calc_result( val ) 
-    {
-      return !val;
-    }
-    versions
-    {
-      flag operator!( flag );
-      flag operator!( scalar );
-      flag operator!( vector );
-      flag operator!( matrix );
-      flag operator!( string );
-    }
-  }
+  // *******************************************************
+  // *******************************************************
+  // Common Operators
+  // *******************************************************
+  // *******************************************************
 
-  // *********************
-  // negative
-  // *********************
-  one_operand_operator negative
-  {
-    calc_result( val ) 
-    {
-      return -val;
-    }
-    versions
-    {
-      scalar operator-( scalar );
-      vector operator-( vector );
-      matrix operator-( matrix );
-    }
-  }
-
-  // *********************
-  // abs
-  // *********************
-  one_operand_operator abs
-  {
-    calc_result( val ) 
-    {
-      return abs(val);
-    }
-    versions
-    {
-      scalar abs( scalar );
-      scalar abs( vector );
-    }
-  }
-
-  // *********************
-  // sqrt
-  // *********************
-  one_operand_operator sqrt
-  {
-    calc_result( val ) 
-    {
-      return sqrt(val);
-    }
-    is_operand_ok( op, info )
-    {
-      // value under square root must be positive
-      if( op < 0 )
-      {
-	if( !info->is_trial_run() )
-	error() << "cannot calculate square root of " << op;
-	return false;
-      }
-      return true;
-    }
-    versions
-    {
-      scalar sqrt( scalar );
-    }
-  }
-
-  // *********************
-  // plus_minus
-  // *********************
-  one_operand_dual_solution_operator plus_minus
-  {
-    calc_result1( val ) 
-    {
-      return val;
-    }
-    calc_result2( val ) 
-    {
-      return -val;
-    }
-    versions
-    {
-      scalar plus_minus( scalar );
-      vector plus_minus( vector );
-      matrix plus_minus( matrix );
-    }
-  }
-
-  // *********************
-  // normalize
-  // *********************
-  one_operand_operator normalize
-  {
-    calc_result( vect ) 
-    {
-      return normalize(vect);
-    }
-    versions
-    {
-      vector normalize( vector );
-    }
-  }
-
-  // *********************
-  // add
-  // *********************
-  two_operands_operator add
-  {
-    calc_result( op1, op2 )
-    {
-      return op1 + op2;
-    }
-    versions
-    {
-      scalar operator+( scalar, scalar );
-      vector operator+( vector, vector );
-      matrix operator+( matrix, matrix );
-      string operator+( string, string );
-    }
-  }
-
-  // *********************
-  // sub
-  // *********************
-  two_operands_operator sub
-  {
-    calc_result( op1, op2 )
-    {
-      return op1 - op2;
-    }
-    versions
-    {
-      scalar operator-( scalar, scalar );
-      vector operator-( vector, vector );
-      matrix operator-( matrix, matrix );
-    }
-  }
-
-  // *********************
-  // mul
-  // *********************
-  two_operands_operator mul
-  {
-    calc_result( op1, op2 )
-    {
-      return op1 * op2;
-    }
-    is_operand1_enough( op )
-    {
-      return !op;
-    }
-    is_operand2_enough( op )
-    {
-      return !op;
-    }
-    calc_result_from_op1( op )
-    {
-      return T_Result();		// return 0 in result Type
-    }
-    calc_result_from_op2( op )
-    {
-      return T_Result();		// return 0 in result Type
-    }
-    versions
-    {
-      scalar operator*( scalar, scalar );
-      vector operator*( scalar, vector );
-      matrix operator*( scalar, matrix );
-
-      scalar operator*( vector, vector );
-      scalar dot      ( vector, vector ); // dot product
-
-      matrix operator*( matrix, matrix );
-      vector operator*( matrix, vector );
-    }
-  }
-  // *********************
-  // divide
-  // *********************
-  two_operands_operator divide
-  {
-    calc_result( op1, op2 )
-    {
-      return op1 / op2;
-    }
-    are_operands_ok( op1, op2, i )
-    {
-      return (op1 == T_Operand1()) == (op2 == T_Operand2());	
-					// both zero or both not zero
-    }
-    are_operands_enough( op1, op2 )
-    {
-      return (op2 != T_Operand2());	// denominator != 0
-    }
-    calc_result_from_op1( op )
-    {
-      return T_Result();		// return 0 in result Type
-    }
-    is_operand1_enough(op1)
-    {
-      return op1 == T_Operand1();	//!!! replace by zero type
-    }
-    versions
-    {
-      scalar operator/( scalar, scalar );
-      vector operator/( vector, scalar );
-      vector operator/( scalar, vector );
-      matrix operator/( matrix, scalar );
-      matrix operator/( scalar, matrix );      
-    }
-  }
+  // ************************************************
+  // Comparisons
+  // ************************************************
 
   // *********************
   // equal
@@ -245,6 +32,17 @@ operators
       flag operator==( vector, vector );
       flag operator==( matrix, matrix );
       flag operator==( string, string );
+
+      flag operator==( flag,   neutral0 );
+      flag operator==( scalar, neutral0 );
+      flag operator==( vector, neutral0 );
+      flag operator==( matrix, neutral0 );
+      flag operator==( string, neutral0 );
+      flag operator==( neutral0, flag );
+      flag operator==( neutral0, scalar );
+      flag operator==( neutral0, vector );
+      flag operator==( neutral0, matrix );
+      flag operator==( neutral0, string );
     }
   }
 
@@ -264,6 +62,17 @@ operators
       flag operator!=( vector, vector );
       flag operator!=( matrix, matrix );
       flag operator!=( string, string );
+
+      flag operator!=( flag,   neutral0 );
+      flag operator!=( scalar, neutral0 );
+      flag operator!=( vector, neutral0 );
+      flag operator!=( matrix, neutral0 );
+      flag operator!=( string, neutral0 );
+      flag operator!=( neutral0, flag );
+      flag operator!=( neutral0, scalar );
+      flag operator!=( neutral0, vector );
+      flag operator!=( neutral0, matrix );
+      flag operator!=( neutral0, string );
     }
   }
 
@@ -340,6 +149,922 @@ operators
       flag operator>=( vector, vector );
       flag operator>=( matrix, matrix );
       flag operator>=( string, string );
+    }
+  }
+
+  // *********************
+  // logical not
+  // *********************
+  one_operand_operator not
+  {
+    calc_result( val ) 
+    {
+      return !val;
+    }
+    versions
+    {
+      flag operator!( flag );
+      flag operator!( scalar );
+      flag operator!( vector );
+      flag operator!( matrix );
+      flag operator!( string );
+    }
+  }
+
+  // *********************
+  // logical not (neutral0)
+  // *********************
+  one_operand_operator not_neutral0
+  {
+    calc_result( val ) 
+    {
+      return functionality::neutral1();
+    }
+    versions
+    {
+      neutral1 operator!( neutral0 );
+    }
+  }
+
+  // *********************
+  // logical not (neutral1)
+  // *********************
+  one_operand_operator not_neutral1
+  {
+    calc_result( val ) 
+    {
+      return functionality::neutral0();
+    }
+    versions
+    {
+      neutral0 operator!( neutral1 );
+    }
+  }
+
+  // ************************************************
+  // Arithmetics
+  // ************************************************
+  // *********************
+  // add
+  // *********************
+  two_operands_operator add
+  {
+    calc_result( op1, op2 )
+    {
+      return op1 + op2;
+    }
+    versions
+    {
+      scalar operator+( scalar, scalar );
+      vector operator+( vector, vector );
+      matrix operator+( matrix, matrix );
+      string operator+( string, string );
+    }
+  }
+
+  // *********************
+  // sub
+  // *********************
+  two_operands_operator sub
+  {
+    calc_result( op1, op2 )
+    {
+      return op1 - op2;
+    }
+    versions
+    {
+      scalar operator-( scalar, scalar );
+      vector operator-( vector, vector );
+      matrix operator-( matrix, matrix );
+    }
+  }
+
+  // *********************
+  // mul
+  // *********************
+  two_operands_operator mul
+  {
+    calc_result( op1, op2 )
+    {
+      return op1 * op2;
+    }
+    is_operand1_enough( op )
+    {
+      return !op;
+    }
+    is_operand2_enough( op )
+    {
+      return !op;
+    }
+    calc_result_from_op1( op )
+    {
+      return functionality::neutral0();	// return 0 in result Type
+    }
+    calc_result_from_op2( op )
+    {
+      return functionality::neutral0();		// return 0 in result Type
+    }
+    versions
+    {
+      scalar operator*( scalar, scalar );
+      vector operator*( scalar, vector );
+      matrix operator*( scalar, matrix );
+
+      scalar operator*( vector, vector );
+      scalar dot      ( vector, vector ); // dot product
+
+      matrix operator*( matrix, matrix );
+      vector operator*( matrix, vector );
+    }
+  }
+
+  // *********************
+  // divide
+  // *********************
+  two_operands_operator divide
+  {
+    calc_result( op1, op2 )
+    {
+      return op1 / op2;
+    }
+    are_operands_ok( op1, op2, i )
+    {
+      return ( (op1 == functionality::neutral0()) 
+	==     (op2 == functionality::neutral0()) );	
+					// both zero or both not zero
+    }
+    are_operands_enough( op1, op2 )
+    {
+      return (op2 != functionality::neutral0());	// denominator != 0
+    }
+    calc_result_from_op1( op )
+    {
+      return functionality::neutral0();		// return 0 in result Type
+    }
+    is_operand1_enough(op1)
+    {
+      return op1 == functionality::neutral0();	//!!! replace by zero type
+    }
+    versions
+    {
+      scalar operator/( scalar, scalar );
+      vector operator/( vector, scalar );
+      //vector operator/( scalar, vector );
+      matrix operator/( matrix, scalar );
+      //matrix operator/( scalar, matrix );      
+    }
+  }
+
+
+  // *********************
+  // negative
+  // *********************
+  one_operand_operator negative
+  {
+    calc_result( val ) 
+    {
+      return -val;
+    }
+    versions
+    {
+      scalar operator-( scalar );
+      vector operator-( vector );
+      matrix operator-( matrix );
+    }
+  }
+
+  // *********************
+  // abs
+  // *********************
+  one_operand_operator abs
+  {
+    calc_result( val ) 
+    {
+      return abs(val);
+    }
+    versions
+    {
+      scalar abs( scalar );
+      scalar abs( vector );
+    }
+  }
+
+  // *********************
+  // plus_minus
+  // *********************
+  one_operand_dual_solution_operator plus_minus
+  {
+    calc_result1( val ) 
+    {
+      return val;
+    }
+    calc_result2( val ) 
+    {
+      return -val;
+    }
+    versions
+    {
+      scalar plus_minus( scalar );
+      vector plus_minus( vector );
+      matrix plus_minus( matrix );
+    }
+  }
+
+  // *******************************************************
+  // *******************************************************
+  // Scalar Operators
+  // *******************************************************
+  // *******************************************************
+
+  // *************************
+  // to_scalar ( conversion )
+  // *************************
+
+  one_operand_operator to_scalar
+  {
+    calc_result( val ) 
+    {
+      return val;
+    }
+    versions
+    {
+      scalar to_scalar( cpp_scalar );
+      scalar to_scalar( neutral0 );
+      scalar to_scalar( neutral1 );
+    }
+  }
+
+  // *********************
+  // sqrt
+  // *********************
+  one_operand_operator sqrt
+  {
+    calc_result( val ) 
+    {
+      return sqrt(val);
+    }
+    is_operand_ok( op, info )
+    {
+      // value under square root must be positive
+      if( op < 0 )
+      {
+	if( !info->is_trial_run() )
+	  error() << "cannot calculate square root of " << op;
+	return false;
+      }
+      return true;
+    }
+    versions
+    {
+      scalar sqrt( scalar );
+    }
+  }
+
+  // *******************************************************
+  // *******************************************************
+  // Vector Operators
+  // *******************************************************
+  // *******************************************************
+
+  // *************************
+  // to_vector ( conversion )
+  // *************************
+
+  simple_three_operands_operator to_vector_from_scalar
+  {
+    calc_result( val1, val2, val3 ) 
+    {
+      return functionality::vector(val1,val2,val3);
+    }
+    versions
+    {
+      vector to_vector( scalar,scalar,scalar );
+    }
+  }
+
+  one_operand_operator to_vector
+  {
+    calc_result( val ) 
+    {
+      return functionality::vector(val);
+    }
+    versions
+    {
+      vector to_vector( neutral0 );
+      vector to_vector( neutral1 );
+    }
+  }
+
+  // *************************
+  // element access
+  // *************************
+
+  two_operands_operator vector_get_element
+  {
+    is_operand2_ok( vect, index, info )
+    {
+      // value under square root must be positive
+      if( (index < 0) || (index >= 3/*vect.size()*/) )
+      {
+	if( !info->is_trial_run() )
+	  error() << "index " << index << " not in range 0.." << /*vect.size()-1*/2;
+	return false;
+      }
+      return true;
+    }
+    calc_result( vect, index ) 
+    {
+      return vect[index];
+    }
+    versions
+    {
+      scalar get_element( vector, scalar );
+      //scalar operator[]( vector, scalar );
+    }
+  }
+
+  // *********************
+  // abs square
+  // *********************
+  one_operand_operator abs_square
+  {
+    calc_result( vect ) 
+    {
+      return abs2(vect);
+    }
+    versions
+    {
+      vector abs2( vector );
+    }
+  }
+
+  // *********************
+  // normalize
+  // *********************
+  one_operand_operator normalize
+  {
+    calc_result( vect ) 
+    {
+      return normalize(vect);
+    }
+    versions
+    {
+      vector normalize( vector );
+    }
+  }
+
+  // *********************
+  // cross product
+  // *********************
+  two_operands_operator cross_product
+  {
+    calc_result( v1, v2 ) 
+    {
+      return cross( v1, v2 );
+    }
+    versions
+    {
+      vector cross( vector, vector );
+    }
+  }
+
+  // *********************
+  // get angle
+  // *********************
+  two_operands_operator vector_angle
+  {
+    calc_result( v1, v2 ) 
+    {
+      return angle( v1, v2 );
+    }
+    versions
+    {
+      vector angle( vector, vector );
+    }
+  }
+
+  // *************************
+  // translate
+  // *************************
+
+  two_operands_operator vector_translate
+  {
+    is_operand2_ok( vect, index, info )
+    {
+      // value under square root must be positive
+      if( (index < 0) || (index >= 3/*vect.size()*/) )
+      {
+	if( !info->is_trial_run() )
+	  error() << "index " << index << " not in range 0.." << /*vect.size()-1*/2;
+	return false;
+      }
+      return true;
+    }
+    calc_result( vect, index ) 
+    {
+      return trans( vect, index );
+    }
+    versions
+    {
+      vector trans( vector, scalar );
+    }
+  }
+
+  // *************************
+  // scale
+  // *************************
+
+  two_operands_operator vector_scale
+  {
+    is_operand2_ok( vect, index, info )
+    {
+      // value under square root must be positive
+      if( (index < 0) || (index >= 3/*vect.size()*/) )
+      {
+	if( !info->is_trial_run() )
+	  error() << "index " << index << " not in range 0.." << /*vect.size()-1*/2;
+	return false;
+      }
+      return true;
+    }
+    calc_result( vect, index ) 
+    {
+      return scale( vect, index );
+    }
+    versions
+    {
+      vector scale( vector, scalar );
+    }
+  }
+
+  // *************************
+  // mirror
+  // *************************
+
+  two_operands_operator vector_mirror
+  {
+    is_operand2_ok( vect, index, info )
+    {
+      if( (index < 0) || (index >= 3/*vect.size()*/) )
+      {
+	if( !info->is_trial_run() )
+	  error() << "index " << index << " not in range 0.." << /*vect.size()-1*/2;
+	return false;
+      }
+      return true;
+    }
+    calc_result( vect, index ) 
+    {
+      return mirror( vect, index );
+    }
+    versions
+    {
+      vector mirror( vector, scalar );
+    }
+  }
+
+  one_operand_operator vector_mirror_all
+  {
+    calc_result( vect ) 
+    {
+      return mirror( vect );
+    }
+    versions
+    {
+      vector mirror( vector );
+    }
+  }
+
+  // *********************
+  // rotate around X axis
+  // *********************
+  two_operands_operator vector_rotate_X
+  {
+    calc_result( vect, angle ) 
+    {
+      return rotateX( vect, angle );
+    }
+    versions
+    {
+      vector rotateX( vector, scalar );
+    }
+  }
+
+  // *********************
+  // rotate around Y axis
+  // *********************
+  two_operands_operator vector_rotate_Y
+  {
+    calc_result( vect, angle ) 
+    {
+      return rotateY( vect, angle );
+    }
+    versions
+    {
+      vector rotateY( vector, scalar );
+    }
+  }
+
+  // *********************
+  // rotate around Z axis
+  // *********************
+  two_operands_operator vector_rotate_Z
+  {
+    calc_result( vect, angle ) 
+    {
+      return rotateZ( vect, angle );
+    }
+    versions
+    {
+      vector rotateZ( vector, scalar );
+    }
+  }
+
+  // ********************************************
+  // convert rectangular to spherical cooridnates
+  // ********************************************
+  one_operand_operator vector_to_spherical
+  {
+    calc_result( vect ) 
+    {
+      return to_spherical( vect );
+    }
+    versions
+    {
+      vector to_spherical( vector );
+    }
+  }
+
+  // ********************************************
+  // convert spherical to rectangular cooridnates
+  // ********************************************
+  one_operand_operator vector_to_rectangular
+  {
+    calc_result( vect ) 
+    {
+      return to_rectangular( vect );
+    }
+    versions
+    {
+      vector to_rectangular( vector );
+    }
+  }
+
+  // *******************************************************
+  // *******************************************************
+  // Matrix Operators
+  // *******************************************************
+  // *******************************************************
+
+  // *************************
+  // to_matrix ( conversion )
+  // *************************
+
+  one_operand_operator to_matrix
+  {
+    calc_result( val ) 
+    {
+      return val;
+    }
+    versions
+    {
+      matrix to_matrix( neutral0 );
+      matrix to_matrix( neutral1 );
+    }
+  }
+
+/*
+  simple_three_operand_operator to_matrix_from_vectors
+  {
+    calc_result( vect1, vect2, vect3 ) 
+    {
+      return functionality::matrix(vect1,vect2,vect3);
+    }
+    versions
+    {
+      matrix to_matrix( vector, vector, vector );
+    }
+  }
+*/
+
+  // *************************
+  // element access
+  // *************************
+
+  simple_three_operands_operator matrix_get_element
+  {
+    are_operands_ok( mat, row, col, info )
+    {
+      if( (row < 0) || (row >= 4/*vect.size()*/) )
+      {
+	if( !info->is_trial_run() )
+	  error() << "row of matrix " << row << " is not in range 0.." << /*vect.size()-1*/3;
+	return false;
+      }
+      if( (col < 0) || (col >= 4/*vect.size()*/) )
+      {
+	if( !info->is_trial_run() )
+	  error() << "column of matrix " << col << " is not in range 0.." << /*vect.size()-1*/3;
+	return false;
+      }
+      return true;
+    }
+    calc_result( mat, row, col ) 
+    {
+      return mat[row][col];		// !!! hope this is correct
+    }
+    versions
+    {
+      scalar get_element( vector, scalar, scalar );
+      //scalar operator()( vector, scalar, scalar );
+    }
+  }
+
+  // *************************
+  // get inverse matrix
+  // *************************
+
+  one_operand_operator matrix_invert
+  {
+    calc_result( val ) 
+    {
+      return invert(val);
+    }
+    versions
+    {
+      matrix invert( matrix );
+    }
+  }
+
+  // *******************************
+  // matrix to rotate around X axis
+  // *******************************
+
+  two_operands_operator matrix_rotate_X
+  {
+    calc_result( vect, angle ) 
+    {
+      return MrotateX( vect, angle );
+    }
+    versions
+    {
+      vector MrotateX( vector, scalar );
+    }
+  }
+
+  // *******************************
+  // matrix to rotate around Y axis
+  // *******************************
+
+  two_operands_operator matrix_rotate_Y
+  {
+    calc_result( vect, angle ) 
+    {
+      return MrotateY( vect, angle );
+    }
+    versions
+    {
+      vector MrotateY( vector, scalar );
+    }
+  }
+
+  // *******************************
+  // matrix to rotate around Z axis
+  // *******************************
+
+  two_operands_operator matrix_rotate_Z
+  {
+    calc_result( vect, angle ) 
+    {
+      return MrotateZ( vect, angle );
+    }
+    versions
+    {
+      vector MrotateZ( vector, scalar );
+    }
+  }
+
+  // ******************************
+  // matrix to scale around X axis
+  // ******************************
+
+  two_operands_operator matrix_scale_X
+  {
+    calc_result( vect, angle ) 
+    {
+      return MscaleX( vect, angle );
+    }
+    versions
+    {
+      vector MscaleX( vector, scalar );
+    }
+  }
+
+  // ******************************
+  // matrix to scale around Y axis
+  // ******************************
+
+  two_operands_operator matrix_scale_Y
+  {
+    calc_result( vect, angle ) 
+    {
+      return MscaleY( vect, angle );
+    }
+    versions
+    {
+      vector MscaleY( vector, scalar );
+    }
+  }
+
+  // ******************************
+  // matrix to scale around Z axis
+  // ******************************
+
+  two_operands_operator matrix_scale_Z
+  {
+    calc_result( vect, angle ) 
+    {
+      return MscaleZ( vect, angle );
+    }
+    versions
+    {
+      vector MscaleZ( vector, scalar );
+    }
+  }
+
+  // **********************************
+  // matrix to translate around X axis
+  // **********************************
+
+  two_operands_operator matrix_translate_X
+  {
+    calc_result( vect, angle ) 
+    {
+      return MtranslateX( vect, angle );
+    }
+    versions
+    {
+      vector MtranslateX( vector, scalar );
+    }
+  }
+
+  // **********************************
+  // matrix to translate around Y axis
+  // **********************************
+
+  two_operands_operator matrix_translate_Y
+  {
+    calc_result( vect, angle ) 
+    {
+      return MtranslateY( vect, angle );
+    }
+    versions
+    {
+      vector MtranslateY( vector, scalar );
+    }
+  }
+
+  // **********************************
+  // matrix to translate around Z axis
+  // **********************************
+
+  two_operands_operator matrix_translate_Z
+  {
+    calc_result( vect, angle ) 
+    {
+      return MtranslateZ( vect, angle );
+    }
+    versions
+    {
+      vector MtranslateZ( vector, scalar );
+    }
+  }
+
+  // *******************************
+  // matrix to rotate around vector
+  // *******************************
+
+  simple_three_operands_operator matrix_rotate_around
+  {
+    calc_result( vect, axis, angle ) 
+    {
+      return Mrotate_around( vect, axis, angle );
+    }
+    versions
+    {
+      vector Mrotate_around( vector, vector, scalar );
+    }
+  }
+
+  // **********************************
+  // matrix to rotate vector to vector
+  // **********************************
+
+  two_operands_operator matrix_rotate_vect_vect
+  {
+    calc_result( v1, v2 ) 
+    {
+      return Mrotate_vect_vect( v1, v2 );
+    }
+    versions
+    {
+      vector Mrotate_vect_vect( vector, vector );
+    }
+  }
+
+  // ****************************************************************
+  // matrix to rotate vector to vector with first rotation around up
+  // ****************************************************************
+
+  simple_three_operands_operator matrix_rotate_vect_vect_up
+  {
+    calc_result( v1, v2, up ) 
+    {
+      return Mrotate_vect_vect_up( v1, v2, up );
+    }
+    versions
+    {
+      vector Mrotate_vect_vect_up( vector, vector, vector );
+    }
+  }
+
+  // ******************************************
+  // matrix to rotate a vector pair to another
+  // ******************************************
+
+  simple_four_operands_operator matrix_rotate_pair_pair
+  {
+    calc_result( front1, up1, front2, up2 ) 
+    {
+      return Mrotate_pair_pair( front1, up1, front2, up2 );
+    }
+    versions
+    {
+      vector Mrotate_pair_pair( vector, vector, vector, vector );
+    }
+  }
+
+  // *************************************************************
+  // matrix to rotate around front-, up- and cross(front,up)-axis
+  // *************************************************************
+
+  simple_three_operands_operator matrix_rotate_spherical_pair
+  {
+    calc_result( front, up, angles ) 
+    {
+      return Mrotate_spherical_pair( front, up, angles );
+    }
+    versions
+    {
+      vector Mrotate_spherical_pair( vector, vector, vector );
+    }
+  }
+
+  // *************************
+  // get scale component
+  // *************************
+
+  one_operand_operator matrix_get_scale_component
+  {
+    calc_result( mat ) 
+    {
+      return get_scale_component(mat);
+    }
+    versions
+    {
+      scalar get_scale_component( matrix );
+    }
+  }
+
+  // ***********************
+  // get rotation component
+  // ***********************
+
+  one_operand_operator matrix_get_rotation_component
+  {
+    calc_result( mat ) 
+    {
+      return get_rotation_component(mat);
+    }
+    versions
+    {
+      vector get_rotation_component( matrix );
+    }
+  }
+
+  // ************************
+  // get translate component
+  // ************************
+
+  one_operand_operator matrix_get_translate_component
+  {
+    calc_result( mat ) 
+    {
+      return get_translate_component(mat);
+    }
+    versions
+    {
+      vector get_translate_component( matrix );
     }
   }
 }

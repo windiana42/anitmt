@@ -2,7 +2,7 @@ SUBDIRS = lib hlib anitmt-calc anitmt-view mkavi rendview example
 EXTRA_DIST = BUILD FAQ autogen.sh
 
 # Make rules currently used by me (Wolfgang): 
-COLUMNS:=$(shell echo \"$$COLUMNS\")
+COLUMNS=$(shell echo \"$$COLUMNS\")
 all-wolfgang: FORCE
 	$(MAKE) -C hlib opt
 	$(MAKE) -C rendview opt

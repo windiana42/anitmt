@@ -23,7 +23,7 @@
 namespace funcgen
 {
   enum type{ none, boolean, result, operand, operand1, operand2, operand3, 
-	     info };
+	     operand4, operand5, operand6, operand7, operand8, operand9, info };
   
   class Basic_Operator
   {
@@ -53,6 +53,8 @@ namespace funcgen
 			type arg2, type arg3 );
     void add_4_arg_fun( type return_type, std::string name, type arg1, 
 			type arg2, type arg3, type arg4 );
+    void add_5_arg_fun( type return_type, std::string name, type arg1, 
+			type arg2, type arg3, type arg4, type arg5 );
   };
   class Available_Basic_Operators
   {

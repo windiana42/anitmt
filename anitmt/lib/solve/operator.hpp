@@ -207,6 +207,159 @@ namespace solve
     virtual ~Basic_Operator_for_2_Operands() {}
   };
 
+
+  //*****************************************************************
+  // Basic_Simple_Operator_for_3_Operands: three parameter Operator
+  //					   without early calculation
+  //*****************************************************************
+
+  /*! Base class for expression tree operators, that calculate the result
+    from three operands
+    name in afd: simple_three_operands_operator */
+  template<class T_Result, class T_Op1, class T_Op2, class T_Op3>
+  class Basic_Simple_Operator_for_3_Operands
+    : public Operand_Listener, public message::Message_Reporter
+  {
+  private:
+    //*** Operand_Listener methods ***
+
+    //! has to check the result of the operand with ID as pointer to operand
+    virtual bool is_result_ok( const void *ID, 
+			       Solve_Run_Info *info ) throw();
+    //! tells to use the result calculated by is_result_ok()
+    virtual void use_result( const void *ID, Solve_Run_Info *info )
+      throw();
+
+    //! disconnect operand
+    virtual void disconnect( const void *ID );
+
+    //*** virtual Operator methods ***
+
+    /*! has to calculate the result when both are_operands_ok and 
+      are_operands_enough return true */
+    virtual T_Result calc_result( const T_Op1 &value1, 
+				  const T_Op2 &value2, 
+				  const T_Op3 &value3 ) = 0; 
+
+    //! is operand1 ok, or should it be rejected
+    virtual bool is_operand1_ok( const T_Op1 &test_value,
+				 Solve_Run_Info* ) { return true; }
+    //! is operand2 ok, or should it be rejected
+    virtual bool is_operand2_ok( const T_Op2 &test_value,
+				 Solve_Run_Info* ) { return true; }
+    //! is operand3 ok, or should it be rejected
+    virtual bool is_operand3_ok( const T_Op3 &test_value,
+				 Solve_Run_Info* ) { return true; }
+    //! are both operands ok, or should one be rejected
+    virtual bool are_operands_ok( const T_Op1 &test_value1, 
+				  const T_Op2 &test_value2,
+				  const T_Op3 &test_value3,
+				  Solve_Run_Info* ) { return true; }
+    //! can result be calculated? operand won't be rejected when this is false
+    virtual bool are_operands_enough( const T_Op1 &test_value1, 
+				      const T_Op2 &test_value2, 
+				      const T_Op3 &test_value3 )
+    { return true; }
+
+    Operand<T_Op1> &operand1;
+    Operand<T_Op2> &operand2;
+    Operand<T_Op3> &operand3;
+
+    Operand<T_Result> result;
+
+  protected:
+    /*! must be called from constructors of derived classes 
+      (calls virtual functions) */
+    void init() throw();
+  public:
+    inline Operand<T_Result> &get_result() { return result; }
+
+    Basic_Simple_Operator_for_3_Operands( Operand<T_Op1> &operand1, 
+					  Operand<T_Op2> &operand2, 
+					  Operand<T_Op3> &operand3 ) throw(); 
+    virtual ~Basic_Simple_Operator_for_3_Operands() {}
+  };
+
+  //*****************************************************************
+  // Basic_Simple_Operator_for_4_Operands: three parameter Operator
+  //					   without early calculation
+  //*****************************************************************
+
+  /*! Base class for expression tree operators, that calculate the result
+    from three operands
+    name in afd: simple_four_operands_operator */
+  template<class T_Result, class T_Op1, class T_Op2, class T_Op3, class T_Op4>
+  class Basic_Simple_Operator_for_4_Operands
+    : public Operand_Listener, public message::Message_Reporter
+  {
+  private:
+    //*** Operand_Listener methods ***
+
+    //! has to check the result of the operand with ID as pointer to operand
+    virtual bool is_result_ok( const void *ID, 
+			       Solve_Run_Info *info ) throw();
+    //! tells to use the result calculated by is_result_ok()
+    virtual void use_result( const void *ID, Solve_Run_Info *info )
+      throw();
+
+    //! disconnect operand
+    virtual void disconnect( const void *ID );
+
+    //*** virtual Operator methods ***
+
+    /*! has to calculate the result when both are_operands_ok and 
+      are_operands_enough return true */
+    virtual T_Result calc_result( const T_Op1 &value1, 
+				  const T_Op2 &value2, 
+				  const T_Op3 &value3, 
+				  const T_Op4 &value4 ) = 0; 
+
+    //! is operand1 ok, or should it be rejected
+    virtual bool is_operand1_ok( const T_Op1 &test_value,
+				 Solve_Run_Info* ) { return true; }
+    //! is operand2 ok, or should it be rejected
+    virtual bool is_operand2_ok( const T_Op2 &test_value,
+				 Solve_Run_Info* ) { return true; }
+    //! is operand3 ok, or should it be rejected
+    virtual bool is_operand3_ok( const T_Op3 &test_value,
+				 Solve_Run_Info* ) { return true; }
+    //! is operand4 ok, or should it be rejected
+    virtual bool is_operand4_ok( const T_Op3 &test_value,
+				 Solve_Run_Info* ) { return true; }
+    //! are both operands ok, or should one be rejected
+    virtual bool are_operands_ok( const T_Op1 &test_value1, 
+				  const T_Op2 &test_value2,
+				  const T_Op3 &test_value3,
+				  const T_Op4 &test_value4,
+				  Solve_Run_Info* ) { return true; }
+    //! can result be calculated? operand won't be rejected when this is false
+    virtual bool are_operands_enough( const T_Op1 &test_value1, 
+				      const T_Op2 &test_value2, 
+				      const T_Op3 &test_value3, 
+				      const T_Op4 &test_value4 )
+    { return true; }
+
+    Operand<T_Op1> &operand1;
+    Operand<T_Op2> &operand2;
+    Operand<T_Op3> &operand3;
+    Operand<T_Op4> &operand4;
+
+    Operand<T_Result> result;
+
+  protected:
+    /*! must be called from constructors of derived classes 
+      (calls virtual functions) */
+    void init() throw();
+  public:
+    inline Operand<T_Result> &get_result() { return result; }
+
+    Basic_Simple_Operator_for_4_Operands( Operand<T_Op1> &operand1, 
+					  Operand<T_Op2> &operand2, 
+					  Operand<T_Op3> &operand3, 
+					  Operand<T_Op4> &operand4 ) throw(); 
+    virtual ~Basic_Simple_Operator_for_4_Operands() {}
+  };
+
   //***************************************************************************
   // Basic_Multi_Operand_Operator: base class of operators with an unlimited 
   //				   number of operands

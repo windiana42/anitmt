@@ -21,6 +21,10 @@ base_types{
   matrix = values::Matrix;
   string = values::String;
   boolean = bool;
+  cpp_scalar = double;
+
+  neutral0 = values::Neutral0;		// neutral element for addition
+  neutral1 = values::Neutral1;		// neutral element for multiplication
 
   time = scalar;
   value = scalar;

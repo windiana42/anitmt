@@ -78,10 +78,23 @@ namespace solve
 
 	User_Problem_Handler handler;
 	Solve_Run_Info info( &handler );
-	if( is_operand_ok( op, &info ) )
+	if( !is_operand_ok( op, &info ) )
+	{
+	  error() << "initial value of operand conflicts with this operator"; 
+	  operand.caused_error();
+	}
+	else
 	{
 	  if( is_operand_enough(op) )
-	    result.set_value( calc_result(op) ); 
+	  {
+	    if( !result.test_set_value( calc_result(op), &info ) )
+	    {
+	      error() << "calculated result of initial value of operand was rejected";
+	      operand.caused_error();
+	    }
+	    else
+	      result.use_test_value(&info);
+	  }
 	}
       }
   }
@@ -167,23 +180,39 @@ namespace solve
   {
     if( operand.is_solved() ) 
     {
-      const T_Operand &op = operand.get_value();
-
       User_Problem_Handler handler;
       Solve_Run_Info info( &handler );
-      if( is_operand_ok( op, &info ) )
+
+      const T_Operand &op = operand.get_value();
+
+      if( !is_operand_ok( op, &info ) )
+      {
+	error() << "initial value of operand conflicts with this operator"; 
+	operand.caused_error();
+      }
+      else
       {
 	bool use_result2 = false;
 	if( is_operand_enough1(op) )
 	{
-	  if( !result.set_value( calc_result1(op) ) ) 
+	  if( !result.test_set_value( calc_result1(op) ) ) 
 	    use_result2 = true;
+	  else
+	    result.use_test_value(&info);
 	}
 	else
 	  use_result2 = true;
 
 	if( use_result2 && is_operand_enough2(op) )
-	  result.set_value( calc_result2(op) ); 
+	{
+	  if( !result.test_set_value( calc_result2(op), &info ) )
+	  {
+	    error() << "calculated result of initial value of operand was rejected";
+	    operand.caused_error();
+	  }
+	  else
+	    result.use_test_value(&info);
+	}
       }
     }
   }
@@ -301,29 +330,72 @@ namespace solve
   template<class T_Result, class T_Op1, class T_Op2>
   void Basic_Operator_for_2_Operands<T_Result,T_Op1,T_Op2>::init() throw()
   {
+    User_Problem_Handler handler;
+    Solve_Run_Info info( &handler );
     if( operand1.is_solved() )
     {
       const T_Op1 &op1 = operand1.get_value();
 
-      if( is_operand1_enough( op1 ) )
+      if( !is_operand1_ok( op1, &info ) )
       {
-	result.set_value( calc_result_from_op1( op1 ) ); 
+	error() << "initial value of operand conflicts with this operator"; 
+	operand1.caused_error();
+      }
+      else if( is_operand1_enough( op1 ) )
+      {
+	if( !result.test_set_value( calc_result_from_op1( op1 ), &info ) )
+	{
+	  error() << "calculated result of initial value of operand was rejected";
+	  operand1.caused_error();
+	}
+	else
+	  result.use_test_value(&info);
       }
     }
  
     if( operand2.is_solved() )
     {
       const T_Op2 &op2 = operand2.get_value();
-      if( is_operand2_enough( op2 ) )
+
+      if( !is_operand2_ok( op2, &info ) )
       {
-	result.set_value( calc_result_from_op2( op2 ) ); 
+	error() << "initial value of operand conflicts with this operator"; 
+	operand2.caused_error();
+      }
+      else if( is_operand2_enough( op2 ) )
+      {
+	if( !result.test_set_value( calc_result_from_op2( op2 ), &info ) )
+	{
+	  error() << "calculated result of initial value of operand was rejected";
+	  operand2.caused_error();
+	}
+	else
+	  result.use_test_value(&info);
       }
     }
 
     if( operand1.is_solved() && operand2.is_solved() ) 
     {
-      result.set_value( calc_result( operand1.get_value(), 
-				     operand2.get_value() ) ); 
+      const T_Op1 &op1 = operand1.get_value();
+      const T_Op2 &op2 = operand2.get_value();
+
+      if( !are_operands_ok( op1, op2, &info ) )
+      {
+	error() << "initial values of operands conflict with this operator"; 
+	operand1.caused_error();
+	operand2.caused_error();
+      }
+      if( are_operands_enough( op1, op2 ) )
+      {
+	if( !result.test_set_value( calc_result( op1, op2 ), &info ) )
+	{
+	  error() << "calculated result of initial values of operands was rejected";
+	  operand1.caused_error();
+	  operand2.caused_error();
+	}
+	else
+	  result.use_test_value(&info);
+      }
     }
   }
 
@@ -340,6 +412,394 @@ namespace solve
     
     operand1.add_listener( this );
     operand2.add_listener( this );
+
+    // init() cannot be called here as it calls a virtual function
+  }
+
+  //***************************************************************
+  // Basic_Simple_Oparator_for_3_Operands: three Operand Operator
+  //***************************************************************
+
+  //*** Operand_Listener methods ***
+
+  //! has to check the result of the operand with ID as pointer to operand
+  //!!! very critical function !!! change only carefully !!!
+  template<class T_Result, class T_Op1, class T_Op2, class T_Op3>
+  bool Basic_Simple_Operator_for_3_Operands<T_Result,T_Op1,T_Op2,T_Op3>::is_result_ok
+  ( const void *ID, Solve_Run_Info *info ) throw()
+  {
+    bool just_solved = false;	// reset flag
+    if( ID == &operand1 )	// is operand1 solved?
+    {
+      const T_Op1 &op1 = operand1.get_value( info );	// get value
+      if( !is_operand1_ok( op1, info ) ) // test value
+	return false;
+    }
+    else if( ID == &operand2 )	// is operand2 solved?
+    {
+      const T_Op2 &op2 = operand2.get_value( info );	// get value
+      if( !is_operand2_ok( op2, info ) ) // test value
+	return false;
+    }
+    else 
+    {
+      assert( ID == &operand3 );
+
+      const T_Op3 &op3 = operand3.get_value( info );	// get value
+      if( !is_operand3_ok( op3, info ) ) // test value
+	return false;
+    }
+
+    if( operand1.is_solved_in_try( info ) && operand2.is_solved_in_try( info ) 
+	&& operand3.is_solved_in_try( info ) )  // are operands solved?
+    {
+      T_Op1 op1 = operand1.get_value( info ); // get value1
+      T_Op2 op2 = operand2.get_value( info ); // get value2
+      T_Op3 op3 = operand3.get_value( info ); // get value3
+      // check operands
+      if( !are_operands_ok( op1, op2, op3, info ) ) 
+ 	return false;
+ 
+      // calculate result and test it
+      if( are_operands_enough( op1, op2, op3 ) )
+      {
+	just_solved = result.test_set_value( calc_result( op1, op2, op3 ), info );
+	return just_solved;	// return true if solving and test_set succeded
+      }
+    }
+
+    return true;
+  }
+
+  // tells to use the result calculated by is_result_ok()
+  template<class T_Result, class T_Op1, class T_Op2, class T_Op3>
+  void Basic_Simple_Operator_for_3_Operands<T_Result,T_Op1,T_Op2,T_Op3>::use_result
+  ( const void *ID, Solve_Run_Info *info ) throw()
+  {
+    assert( ID == &operand1 || ID == &operand2 || ID == &operand3 );
+    if( result.is_solved_in_try( info ) ) // if result was just solved 
+      result.use_test_value( info ); // tell result operand to accept value
+  }
+
+  // disconnect operand
+  template<class T_Result, class T_Op1, class T_Op2, class T_Op3>
+  void Basic_Simple_Operator_for_3_Operands<T_Result,T_Op1,T_Op2,T_Op3>::disconnect
+  ( const void *ID )
+  {
+    if( ID == &operand1 )
+    {
+      operand2.rm_listener( this );
+      operand3.rm_listener( this );
+    }
+    else if( ID == &operand2 )
+    {
+      operand1.rm_listener( this );
+      operand3.rm_listener( this );
+    }
+    else
+    {
+      assert( ID == &operand3 );
+      operand1.rm_listener( this );
+      operand2.rm_listener( this );
+    }
+
+    delete this;		// !!! no further commands !!!
+  }
+
+  template<class T_Result, class T_Op1, class T_Op2, class T_Op3>
+  void Basic_Simple_Operator_for_3_Operands<T_Result,T_Op1,T_Op2,T_Op3>::init() throw()
+  {
+    User_Problem_Handler handler;
+    Solve_Run_Info info( &handler );
+    if( operand1.is_solved() )
+    {
+      const T_Op1 &op1 = operand1.get_value();
+
+      if( !is_operand1_ok( op1, &info ) )
+      {
+	error() << "initial value of operand conflicts with this operator"; 
+	operand1.caused_error();
+      }
+    }
+ 
+    if( operand2.is_solved() )
+    {
+      const T_Op2 &op2 = operand2.get_value();
+
+      if( !is_operand2_ok( op2, &info ) )
+      {
+	error() << "initial value of operand conflicts with this operator"; 
+	operand2.caused_error();
+      }
+    }
+
+    if( operand3.is_solved() )
+    {
+      const T_Op3 &op3 = operand3.get_value();
+
+      if( !is_operand3_ok( op3, &info ) )
+      {
+	error() << "initial value of operand conflicts with this operator"; 
+	operand3.caused_error();
+      }
+    }
+
+    if( operand1.is_solved() && operand2.is_solved() && operand3.is_solved() ) 
+    {
+      const T_Op1 &op1 = operand1.get_value();
+      const T_Op2 &op2 = operand2.get_value();
+      const T_Op3 &op3 = operand3.get_value();
+      
+      if( !are_operands_ok( op1, op2, op3, &info ) )
+      {
+	error() << "initial values of operands conflict with this operator"; 
+	operand1.caused_error(); 
+	operand2.caused_error(); 
+	operand3.caused_error();
+      }
+      else
+	if( are_operands_enough( op1, op2, op3 ) )
+	{
+	  if( !result.test_set_value( calc_result( op1, op2, op3 ), &info ) )
+	  {
+	    error() << "calculated result of initial values of operands was rejected";
+	    operand1.caused_error(); 
+	    operand2.caused_error(); 
+	    operand3.caused_error();
+	  }
+	  else
+	    result.use_test_value(&info);
+	}
+    }
+  }
+
+  //***********************
+  // Constructor/Destructor
+
+  template<class T_Result, class T_Op1, class T_Op2, class T_Op3>
+  Basic_Simple_Operator_for_3_Operands<T_Result,T_Op1,T_Op2,T_Op3>
+  ::Basic_Simple_Operator_for_3_Operands( Operand<T_Op1> &op1, 
+					  Operand<T_Op2> &op2, 
+					  Operand<T_Op3> &op3 ) throw()
+    : message::Message_Reporter( op1.get_consultant() ),
+      operand1( op1 ), operand2( op2 ), operand3( op3 ), 
+      result( op1.get_consultant() )
+  { 
+    
+    operand1.add_listener( this );
+    operand2.add_listener( this );
+    operand3.add_listener( this );
+
+    // init() cannot be called here as it calls a virtual function
+  }
+
+  //***************************************************************
+  // Basic_Simple_Operator_for_4_Operands: four Operand Operator
+  //***************************************************************
+
+  //*** Operand_Listener methods ***
+
+  //! has to check the result of the operand with ID as pointer to operand
+  //!!! very critical function !!! change only carefully !!!
+  template<class T_Result, class T_Op1, class T_Op2, class T_Op3, class T_Op4>
+  bool Basic_Simple_Operator_for_4_Operands<T_Result,T_Op1,T_Op2,T_Op3,T_Op4>::is_result_ok
+  ( const void *ID, Solve_Run_Info *info ) throw()
+  {
+    bool just_solved = false;	// reset flag
+    if( ID == &operand1 )	// is operand1 solved?
+    {
+      const T_Op1 &op1 = operand1.get_value( info );	// get value
+      if( !is_operand1_ok( op1, info ) ) // test value
+	return false;
+    }
+    else if( ID == &operand2 )	// is operand2 solved?
+    {
+      const T_Op2 &op2 = operand2.get_value( info );	// get value
+      if( !is_operand2_ok( op2, info ) ) // test value
+	return false;
+    }
+    else if( ID == &operand3 )	// is operand3 solved?
+    {
+      const T_Op3 &op3 = operand3.get_value( info );	// get value
+      if( !is_operand3_ok( op3, info ) ) // test value
+	return false;
+    }
+    else 
+    {
+      assert( ID == &operand4 );
+
+      const T_Op4 &op4 = operand4.get_value( info );	// get value
+      if( !is_operand4_ok( op4, info ) ) // test value
+	return false;
+    }
+
+    if( operand1.is_solved_in_try( info ) 
+	&& operand2.is_solved_in_try( info )
+	&& operand3.is_solved_in_try( info ) 
+	&& operand4.is_solved_in_try( info ) )  // are operands solved?
+    {
+      T_Op1 op1 = operand1.get_value( info ); // get value1
+      T_Op2 op2 = operand2.get_value( info ); // get value2
+      T_Op3 op3 = operand3.get_value( info ); // get value3
+      T_Op4 op4 = operand4.get_value( info ); // get value3
+      // check operands
+      if( !are_operands_ok( op1, op2, op3, op4, info ) ) 
+ 	return false;
+ 
+      // calculate result and test it
+      if( are_operands_enough( op1, op2, op3, op4 ) )
+      {
+	just_solved = result.test_set_value( calc_result( op1, op2, op3, op4 ), info );
+	return just_solved;	// return true if solving and test_set succeded
+      }
+    }
+
+    return true;
+  }
+
+  // tells to use the result calculated by is_result_ok()
+  template<class T_Result, class T_Op1, class T_Op2, class T_Op3, class T_Op4>
+  void Basic_Simple_Operator_for_4_Operands<T_Result,T_Op1,T_Op2,T_Op3,T_Op4>::use_result
+  ( const void *ID, Solve_Run_Info *info ) throw()
+  {
+    assert( ID == &operand1 || ID == &operand2 || ID == &operand3 );
+    if( result.is_solved_in_try( info ) ) // if result was just solved 
+      result.use_test_value( info ); // tell result operand to accept value
+  }
+
+  // disconnect operand
+  template<class T_Result, class T_Op1, class T_Op2, class T_Op3, class T_Op4>
+  void Basic_Simple_Operator_for_4_Operands<T_Result,T_Op1,T_Op2,T_Op3,T_Op4>::disconnect
+  ( const void *ID )
+  {
+    if( ID == &operand1 )
+    {
+      operand2.rm_listener( this );
+      operand3.rm_listener( this );
+      operand4.rm_listener( this );
+    }
+    else if( ID == &operand2 )
+    {
+      operand1.rm_listener( this );
+      operand3.rm_listener( this );
+      operand4.rm_listener( this );
+    }
+    else if( ID == &operand3 )
+    {
+      operand1.rm_listener( this );
+      operand2.rm_listener( this );
+      operand4.rm_listener( this );
+    }
+    else
+    {
+      assert( ID == &operand4 );
+      operand1.rm_listener( this );
+      operand2.rm_listener( this );
+      operand3.rm_listener( this );
+    }
+
+    delete this;		// !!! no further commands !!!
+  }
+
+  template<class T_Result, class T_Op1, class T_Op2, class T_Op3, class T_Op4>
+  void Basic_Simple_Operator_for_4_Operands<T_Result,T_Op1,T_Op2,T_Op3,T_Op4>::init() throw()
+  {
+    User_Problem_Handler handler;
+    Solve_Run_Info info( &handler );
+    if( operand1.is_solved() )
+    {
+      const T_Op1 &op1 = operand1.get_value();
+
+      if( !is_operand1_ok( op1, &info ) )
+      {
+	error() << "initial value of operand conflicts with this operator"; 
+	operand1.caused_error();
+      }
+    }
+ 
+    if( operand2.is_solved() )
+    {
+      const T_Op2 &op2 = operand2.get_value();
+
+      if( !is_operand2_ok( op2, &info ) )
+      {
+	error() << "initial value of operand conflicts with this operator"; 
+	operand2.caused_error();
+      }
+    }
+
+    if( operand3.is_solved() )
+    {
+      const T_Op3 &op3 = operand3.get_value();
+
+      if( !is_operand3_ok( op3, &info ) )
+      {
+	error() << "initial value of operand conflicts with this operator"; 
+	operand3.caused_error();
+      }
+    }
+
+    if( operand4.is_solved() )
+    {
+      const T_Op4 &op4 = operand4.get_value();
+
+      if( !is_operand4_ok( op4, &info ) )
+      {
+	error() << "initial value of operand conflicts with this operator"; 
+	operand4.caused_error();
+      }
+    }
+
+    if( operand1.is_solved() && operand2.is_solved() && operand3.is_solved() && operand4.is_solved() ) 
+    {
+      const T_Op1 &op1 = operand1.get_value();
+      const T_Op2 &op2 = operand2.get_value();
+      const T_Op3 &op3 = operand3.get_value();
+      const T_Op4 &op4 = operand4.get_value();
+      
+      if( !are_operands_ok( op1, op2, op3, op4, &info ) )
+      {
+	error() << "initial values of operands conflict with this operator"; 
+	operand1.caused_error(); 
+	operand2.caused_error(); 
+	operand3.caused_error();
+	operand4.caused_error();
+      }
+      else
+	if( are_operands_enough( op1, op2, op3, op4 ) )
+	{
+	  if( !result.test_set_value( calc_result( op1, op2, op3, op4 ), &info ) )
+	  {
+	    error() << "calculated result of initial values of operands was rejected";
+	    operand1.caused_error(); 
+	    operand2.caused_error(); 
+	    operand3.caused_error();
+	    operand4.caused_error();
+	  }
+	  else
+	    result.use_test_value(&info);
+	}
+    }
+  }
+
+  //***********************
+  // Constructor/Destructor
+
+  template<class T_Result, class T_Op1, class T_Op2, class T_Op3, class T_Op4>
+  Basic_Simple_Operator_for_4_Operands<T_Result,T_Op1,T_Op2,T_Op3,T_Op4>
+  ::Basic_Simple_Operator_for_4_Operands( Operand<T_Op1> &op1, 
+					  Operand<T_Op2> &op2, 
+					  Operand<T_Op3> &op3, 
+					  Operand<T_Op4> &op4 ) throw()
+    : message::Message_Reporter( op1.get_consultant() ),
+      operand1( op1 ), operand2( op2 ), operand3( op3 ), operand4( op4 ), 
+      result( op1.get_consultant() )
+  { 
+    
+    operand1.add_listener( this );
+    operand2.add_listener( this );
+    operand3.add_listener( this );
+    operand4.add_listener( this );
 
     // init() cannot be called here as it calls a virtual function
   }

@@ -12,6 +12,6 @@ libsolve_a_SOURCES= 	\
 
 check_PROGRAMS=		test_solve
 test_solve_SOURCES=	test_solve.cpp
-test_solve_LDADD=	libsolve.a ../val/libval.a ../message/libmessage.a 
+test_solve_LDADD=	libsolve.a ../val/libval.a ../message/libmessage.a \
 			../../anitmt-calc/functionality/libfunctionality.a
 EXTRA_DIST=		README

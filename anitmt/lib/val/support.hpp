@@ -20,7 +20,7 @@
 #include <stddef.h>
 #include <math.h>
 
-#include <ostream.h>
+#include <iostream.h>
 
 namespace vect
 {

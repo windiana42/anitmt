@@ -1117,6 +1117,12 @@ namespace funcgen
     case operand1:	return "const T_Operand1 &";
     case operand2:	return "const T_Operand2 &";
     case operand3:	return "const T_Operand3 &";
+    case operand4:	return "const T_Operand4 &";
+    case operand5:	return "const T_Operand5 &";
+    case operand6:	return "const T_Operand6 &";
+    case operand7:	return "const T_Operand7 &";
+    case operand8:	return "const T_Operand8 &";
+    case operand9:	return "const T_Operand9 &";
     case info:		return "solve::Solve_Run_Info*";
     }
     assert(0);

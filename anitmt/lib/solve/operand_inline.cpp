@@ -203,7 +203,7 @@ namespace solve
 				   Solve_Problem_Handler *handler ) 
     throw()
   { 
-    Solve_Run_Info info( msg_reporter, handler );
+    Solve_Run_Info info( handler );
     return test_set_value(res,&info);
   }
 
