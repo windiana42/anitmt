@@ -76,7 +76,7 @@ Matrix<4,4>::Matrix(enum MatTrans,const Vector<3> &v) : x(0)
 	x[2][3]=v[2];
 }
 
-inline Matrix<4,4>::Matrix(enum MatColVec,const Vector<3> &c1,
+Matrix<4,4>::Matrix(enum MatColVec,const Vector<3> &c1,
 	const Vector<3> &c2,const Vector<3> &c3) : x()
 {
 	for(int i=0; i<3; i++)
@@ -87,7 +87,7 @@ inline Matrix<4,4>::Matrix(enum MatColVec,const Vector<3> &c1,
 	x[3][3]=1.0;
 }
 
-inline Matrix<4,4>::Matrix(enum MatRowVec,const Vector<3> &r1,
+Matrix<4,4>::Matrix(enum MatRowVec,const Vector<3> &r1,
 	const Vector<3> &r2,const Vector<3> &r3) : x()
 {
 	for(int i=0; i<3; i++)
@@ -96,6 +96,20 @@ inline Matrix<4,4>::Matrix(enum MatRowVec,const Vector<3> &r1,
 		x[i][3]=0.0;
 	}
 	x[3][3]=1.0;
+}
+
+Matrix<4,4>::Matrix(MatColVec,const Vector<4> &c0,
+	const Vector<4> &c1,const Vector<4> &c2,const Vector<4> &c3) : x()
+{
+	for(int i=0; i<4; i++)
+	{  x[i][0]=c0[i];  x[i][1]=c1[i];  x[i][2]=c2[i];  x[i][3]=c3[i];  }
+}
+
+Matrix<4,4>::Matrix(MatRowVec,const Vector<4> &r0,
+	const Vector<4> &r1,const Vector<4> &r2,const Vector<4> &r3) : x()
+{
+	for(int i=0; i<4; i++)
+	{  x[0][i]=r0[i];  x[1][i]=r1[i];  x[2][i]=r2[i];  x[3][i]=r3[i];  }
 }
 #endif
 

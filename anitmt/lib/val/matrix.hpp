@@ -132,11 +132,16 @@ public: // work around for the template friend problem
 		Matrix(enum MatTrans,double delta,int idx);  // idx unchecked. 
 		Matrix(enum MatTrans,const Vector<3> &v);
 		// Constructing 4x4 matrix [ c1 c2 c3 e4 ]. (e4=<0,0,0,1>)
-		Matrix(enum MatColVec,const Vector<3> &c1,
-			const Vector<3> &c2,const Vector<3> &c3);
+		Matrix(enum MatColVec,const Vector<3> &c0,
+			const Vector<3> &c1,const Vector<3> &c2);
 		// The same but transposed. 
-		Matrix(enum MatRowVec,const Vector<3> &r1,
-			const Vector<3> &r2,const Vector<3> &r3);
+		Matrix(enum MatRowVec,const Vector<3> &r0,
+			const Vector<3> &r1,const Vector<3> &r2);
+		// This can be used to set up the complete 4x4 matrix using vectors: 
+		Matrix(enum MatColVec,const Vector<4> &c0,const Vector<4> &c1,
+			const Vector<4> &c2,const Vector<4> &c3);
+		Matrix(enum MatRowVec,const Vector<4> &r0,const Vector<4> &r1,
+			const Vector<4> &r2,const Vector<4> &r3);
 		
 		// Assignment operator 
 		Matrix<R,C> &operator=(const Matrix<R,C> &m)  {  x=m.x;  return(*this);  }
@@ -341,26 +346,40 @@ inline Matrix<4,4>::Matrix(enum MatTrans,const Vector<3> &v) : x(0)
 	x[2][3]=v[2];
 }
 
-inline Matrix<4,4>::Matrix(enum MatColVec,const Vector<3> &c1,
-	const Vector<3> &c2,const Vector<3> &c3) : x()
+inline Matrix<4,4>::Matrix(enum MatColVec,const Vector<3> &c0,
+	const Vector<3> &c1,const Vector<3> &c2) : x()
 {
 	for(int i=0; i<3; i++)
 	{
-		x[i][0]=c1[i];  x[i][1]=c2[i];  x[i][2]=c3[i];  x[i][3]=0.0;
+		x[i][0]=c0[i];  x[i][1]=c1[i];  x[i][2]=c2[i];  x[i][3]=0.0;
 		x[3][i]=0.0;
 	}
 	x[3][3]=1.0;
 }
 
-inline Matrix<4,4>::Matrix(enum MatRowVec,const Vector<3> &r1,
-	const Vector<3> &r2,const Vector<3> &r3) : x()
+inline Matrix<4,4>::Matrix(enum MatRowVec,const Vector<3> &r0,
+	const Vector<3> &r1,const Vector<3> &r2) : x()
 {
 	for(int i=0; i<3; i++)
 	{
-		x[0][i]=r1[i];  x[1][i]=r2[i];  x[2][i]=r3[i];  x[3][i]=0.0;
+		x[0][i]=r0[i];  x[1][i]=r1[i];  x[2][i]=r2[i];  x[3][i]=0.0;
 		x[i][3]=0.0;
 	}
 	x[3][3]=1.0;
+}
+
+inline Matrix<4,4>::Matrix(MatColVec,const Vector<4> &c0,
+	const Vector<4> &c1,const Vector<4> &c2,const Vector<4> &c3) : x()
+{
+	for(int i=0; i<4; i++)
+	{  x[i][0]=c0[i];  x[i][1]=c1[i];  x[i][2]=c2[i];  x[i][3]=c3[i];  }
+}
+
+inline Matrix<4,4>::Matrix(MatRowVec,const Vector<4> &r0,
+	const Vector<4> &r1,const Vector<4> &r2,const Vector<4> &r3) : x()
+{
+	for(int i=0; i<4; i++)
+	{  x[0][i]=r0[i];  x[1][i]=r1[i];  x[2][i]=r2[i];  x[3][i]=r3[i];  }
 }
 #endif
 
