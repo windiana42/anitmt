@@ -8,6 +8,7 @@ check_PROGRAMS=		testadlparser
 CXXFLAGS =		@CXXFLAGS@ -Wno-non-template-friend 
 
 BUILT_SOURCES=		scanner.cc parser.cc tokens.h 
+CLEANFILES=		$(BUILT_SOURCES)
 libadlparser_a_SOURCES=	parser.yy tokens.h\
 			parser_functions.hpp parser_functions.cpp \
 			parser_functions_inline.cpp \
@@ -36,9 +37,6 @@ testadlparser_LDADD=	libadlparser.a \
 #also includes old adl/libadlparser.a for libanitmt
 
 YLWRAP  = 		$(top_srcdir)/ylwrap
-
-clean:
-	rm -f $(BUILT_SOURCES)
 
 #-- Scanner
 # A .cc-File is a must here. The ylwrap script doesn't accept other file
