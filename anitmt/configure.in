@@ -164,7 +164,6 @@ AC_CONFIG_FILES([ Makefile
 	anitmt-calc/output/lib/Makefile
 	anitmt-calc/output/pov/Makefile
 	anitmt-calc/output/raw/Makefile
-	anitmt-view/Makefile
 	utils/Makefile 
 	utils/mkavi/Makefile 
 	utils/tga2avi/Makefile
