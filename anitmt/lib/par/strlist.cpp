@@ -62,7 +62,7 @@ stringlist::stringlist(const char *str0,...) : // NULL-terminated!!!
 }
 
 
-ostream& operator<<(ostream& os,const stringlist &sl)
+std::ostream& operator<<(std::ostream& os,const stringlist &sl)
 {
 	#if 0
 	for(stringlist::Node *i=sl.first; i; i=i->next)

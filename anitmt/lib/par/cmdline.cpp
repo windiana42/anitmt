@@ -69,12 +69,12 @@ struct File_Description   // Needed nowhere else.
 };
 
 // Just prints version (for --version)
-static void Print_Version(ostream &os)
+static void Print_Version(std::ostream &os)
 {
-	os << "aniTMT version " << aniTMT_version << endl;
+	os << "aniTMT version " << aniTMT_version << std::endl;
 }
 
-static void _Help_Helper(ostream &os,
+static void _Help_Helper(std::ostream &os,
 	const char **opt_argname,const char *ftype)
 {
 	os << "    " << Arg_Prefix(opt_argname[0]) << opt_argname[0];
@@ -83,44 +83,44 @@ static void _Help_Helper(ostream &os,
 		if(!opt_argname[i])  continue;
 		os << ", " << Arg_Prefix(opt_argname[i]) << opt_argname[i];
 	}
-	os << "  specify " << ftype << " file to read" << endl;
+	os << "  specify " << ftype << " file to read" << std::endl;
 }
 
 // Prints help on file options...
-static void Print_Help(ostream &os)
+static void Print_Help(std::ostream &os)
 {
-	os << "** This is aniTMT, version " << aniTMT_version << " **" << endl;
-	os << endl;
-	os << "NOTE: - You may specify any number of options in any order." << endl;
-	os << "      - All options can be passed with one or two leading `-\'." << endl;
-	os << "      - Option values can either be specified as next argument (e.g. --fps 24)" << endl;
-	os << "        or as assignment using the same argument (e.g. --fps=24)" << endl;
-	os << endl;
-	os << "Supported standard options:" << endl;
-	os << "¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯" << endl;
-	os << "    --help     prints this phenomenous help" << endl;
-	os << "    --version  prints version string (and exits)" << endl;
-	os << "    --ovrwarn  print a message for each overridden parameter" << endl;
-	os << "    --dumppar  dump parameters; optional argument specifies which ones:" << endl;
-	os << "         --dumppar dcirlf for Default,Config,Ini,Rif,cmd Line,Final" << endl;
-	os << endl;
-	os << "Supported file options:" << endl;
-	os << "¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯" << endl;
+	os << "** This is aniTMT, version " << aniTMT_version << " **" << std::endl;
+	os << std::endl;
+	os << "NOTE: - You may specify any number of options in any order." << std::endl;
+	os << "      - All options can be passed with one or two leading `-\'." << std::endl;
+	os << "      - Option values can either be specified as next argument (e.g. --fps 24)" << std::endl;
+	os << "        or as assignment using the same argument (e.g. --fps=24)" << std::endl;
+	os << std::endl;
+	os << "Supported standard options:" << std::endl;
+	os << "¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯" << std::endl;
+	os << "    --help     prints this phenomenous help" << std::endl;
+	os << "    --version  prints version string (and exits)" << std::endl;
+	os << "    --ovrwarn  print a message for each overridden parameter" << std::endl;
+	os << "    --dumppar  dump parameters; optional argument specifies which ones:" << std::endl;
+	os << "         --dumppar dcirlf for Default,Config,Ini,Rif,cmd Line,Final" << std::endl;
+	os << std::endl;
+	os << "Supported file options:" << std::endl;
+	os << "¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯" << std::endl;
 	_Help_Helper(os,opt_argname_conf,"config");
 	os << "      Default built-in config file: " << 
-		(conf_builtin_default ? conf_builtin_default : "(none)") << endl;
+		(conf_builtin_default ? conf_builtin_default : "(none)") << std::endl;
 	_Help_Helper(os,opt_argname_ini,"initialisation");
-	os << "      Files without leading option are considered as initialisation files." << endl;
+	os << "      Files without leading option are considered as initialisation files." << std::endl;
 	_Help_Helper(os,opt_argname_rif,"render information");
-	os << endl;
-	os << "  File format:   parameter = value   with one parameter per line." << endl;
-	os << "    You may insert spaces/tabs anywhere if it makes sense." << endl;
-	os << "    The assignment (`=\') is optional. Comments are introduced by `#\' or `;\'." << endl;
-	os << "    `\\\' at line end concatenates it with the next one (no space inserted)." << endl;
-	os << "    `#\' makes the rest of the line a comment; don\'t use in combination" << endl;
-	os << "    with multi-line parameters." << endl;
-	os << "    include = path   includes specified file at the current position." << endl;
-	os << endl;
+	os << std::endl;
+	os << "  File format:   parameter = value   with one parameter per line." << std::endl;
+	os << "    You may insert spaces/tabs anywhere if it makes sense." << std::endl;
+	os << "    The assignment (`=\') is optional. Comments are introduced by `#\' or `;\'." << std::endl;
+	os << "    `\\\' at line end concatenates it with the next one (no space inserted)." << std::endl;
+	os << "    `#\' makes the rest of the line a comment; don\'t use in combination" << std::endl;
+	os << "    with multi-line parameters." << std::endl;
+	os << "    include = path   includes specified file at the current position." << std::endl;
+	os << std::endl;
 }
 
 
@@ -192,7 +192,7 @@ bool Animation_Parameters::Parse_Command_Line(Command_Line *cmd)
 						goto breakboth;
 					}
 					cmd->used[i]=-1;
-					Error() << ": Required path missing" << endl;
+					Error() << ": Required path missing" << std::endl;
 					goto breakboth;
 				}
 			}
@@ -236,14 +236,14 @@ bool Animation_Parameters::Parse_Command_Line(Command_Line *cmd)
 			{
 				cmd->used[i]=strlen(cmd->argv[i]);
 				cmd->quitafter=true;
-				Print_Version(cerr);
+				Print_Version(std::cerr);
 			}
 			else if(!strcmp(opt,"help"))
 			{
 				cmd->used[i]=strlen(cmd->argv[i]);
 				cmd->quitafter=true;
-				anitmt::Print_Help(cout);   // on file options...
-				cmd_pars.Print_Help(cout);  // on parameters
+				anitmt::Print_Help(std::cout);   // on file options...
+				cmd_pars.Print_Help(std::cout);  // on parameters
 			}
 			else if(!strcmp(opt,"ovrwarn"))
 			{
@@ -301,8 +301,8 @@ bool Animation_Parameters::Parse_Command_Line(Command_Line *cmd)
 					{  ++errors;  }
 				}
 				else
-				{  cerr << "Warning: Reading no config file as " << 
-					conf_env_var << "is set to \"\"." << endl;  }
+				{  std::cerr << "Warning: Reading no config file as " << 
+					conf_env_var << "is set to \"\"." << std::endl;  }
 				must_read_default=0;
 				break;
 			}
@@ -358,20 +358,20 @@ bool Animation_Parameters::Parse_Command_Line(Command_Line *cmd)
 	for(int i=0; i<n_o_pars; i++)
 		if(strchr(dump_parameters,pars[i].type_short))
 		{
-			cout << "DUMP: " << pars[i].type << " parameters:" << endl;
-			pars[i].ap->Print_Parameters(cerr,"  ");
-			cout << endl;
+			std::cout << "DUMP: " << pars[i].type << " parameters:" << std::endl;
+			pars[i].ap->Print_Parameters(std::cerr,"  ");
+			std::cout << std::endl;
 		}
 	
 	// Command line argument processing done. 
-	if(!cmd->Check_Unused(cerr))
+	if(!cmd->Check_Unused(std::cerr))
 		return(false);
 	if(errors)
 		return(false);
 	
 	// Now... we must merge all the xx_pars into *this...
 	// First, the easy part... 
-	if(Simple_Override(pars,n_o_pars,cerr,override_warnings))  // copying to *this 
+	if(Simple_Override(pars,n_o_pars,std::cerr,override_warnings))  // copying to *this 
 	{
 		// Returned >0 -> Some parameter is not set. 
 		++errors;
@@ -380,7 +380,7 @@ bool Animation_Parameters::Parse_Command_Line(Command_Line *cmd)
 	// ... then the hard part: those parameters which have to 
 	// get solved (as they depend on others). 
 	// Dealing with: start/endtime, start/endframe, duration, frames, fps 
-	if(Solve_TimeFrame_Net(pars,n_o_pars,cerr,
+	if(Solve_TimeFrame_Net(pars,n_o_pars,std::cerr,
 		par_bool[PID::warnings].is_set ? par_bool[PID::warnings].val : true))
 	{
 		++errors;
@@ -388,9 +388,9 @@ bool Animation_Parameters::Parse_Command_Line(Command_Line *cmd)
 	
 	if(strchr(dump_parameters,'f'))
 	{
-		cout << "DUMP: FINAL parameters:" << endl;
-		Print_Parameters(cerr,"  ");
-		cout << endl;
+		std::cout << "DUMP: FINAL parameters:" << std::endl;
+		Print_Parameters(std::cerr,"  ");
+		std::cout << std::endl;
 	}
 	
 	if(!errors)  // check necessary to ensure that all parameters are set. 
@@ -466,7 +466,7 @@ void Animation_Parameters::Read_Command_Line(Command_Line *cmd)
 // For every unused arg, an error is written to os. 
 // Return value: true  -> no unused args (okay, go on)
 //               false -> at least one unused arg (error; exit)
-bool Command_Line::Check_Unused(ostream &os)
+bool Command_Line::Check_Unused(std::ostream &os)
 {
 	static const int max=5;   // report max. 5 illegal args
 	int nunused1=0;
@@ -482,17 +482,17 @@ bool Command_Line::Check_Unused(ostream &os)
 			if(nunused2<max)
 			{
 				if(!u)
-				{  os << "Error: Illegal argument \"" << argv[i] << "\"." << endl;  }
+				{  os << "Error: Illegal argument \"" << argv[i] << "\"." << std::endl;  }
 				else
 				{  os << "Error: Argument \"" << argv[i] << "\" contains " 
 					<< (l-u) << " illegal option" << ((l-u>1) ? "s." : ".") 
-					<< endl;  }
+					<< std::endl;  }
 			}
 			++nunused2;
 		}
 	}
 	if(nunused2>max)
-	{  os << (nunused2-max) << " further illegal arguments follow." << endl;  }
+	{  os << (nunused2-max) << " further illegal arguments follow." << std::endl;  }
 	if(nunused1 || nunused2)
 		return(false);
 	if(quitafter)

@@ -37,11 +37,11 @@
  */
 
 
-#ifndef __anitmt_params_hpp__
-#define __anitmt_params_hpp__
+#ifndef _anitmt_params_HPP_
+#define _anitmt_params_HPP_
 
 #include <string>
-//#include <fstream>
+#include <iostream>
 #include <stdio.h>
 
 #include "strlist.hpp"
@@ -69,7 +69,7 @@ struct Command_Line
 	// For every unused arg, an error is written to os. 
 	// Return value: true  -> no unused args (okay, go on)
 	//               false -> at least one unused arg (error; exit)
-	bool Check_Unused(ostream &os=cerr);
+	bool Check_Unused(std::ostream &os=std::cerr);
 };
 
 
@@ -149,7 +149,7 @@ class String_Value_Converter
 		bool comments_in_line;
 		
 		// For errors, warnings: 
-		ostream *errstream;
+		std::ostream *errstream;
 		bool cmd_mode;  // command line mode or file mode?
 		// for cmd line mode AND file mode: 
 		std::string optname;  // --width, --height, ...
@@ -158,16 +158,16 @@ class String_Value_Converter
 		int linecnt,linecnt2;
 		
 		// Print error/warning prefix: 
-		ostream &_Prefix(int type);
+		std::ostream &_Prefix(int type);
 		bool Value_Omitted();
 		
 		inline int is_trim(char c);
 		bool trim_str(char *str,char *dest);
 		bool simple_find_comment(char *str);
 	protected:
-		ostream &Error()    {  return(_Prefix(1));  }
-		ostream &Warning()  {  return(_Prefix(0));  }
-		ostream &EStream()  {  return(*errstream);  }
+		std::ostream &Error()    {  return(_Prefix(1));  }
+		std::ostream &Warning()  {  return(_Prefix(0));  }
+		std::ostream &EStream()  {  return(*errstream);  }
 		
 		std::string &Get_Filename()  {  return(filename);  }
 		std::string &Get_Option()    {  return(optname);  }
@@ -185,8 +185,8 @@ class String_Value_Converter
 		void Set_Cmd_Mode()   {  cmd_mode=true;   comments_in_line=false;  }
 		void Set_File_Mode()  {  cmd_mode=false;  comments_in_line=true;   }
 		
-		// Where to write errors (default: cerr)
-		void Set_Stream(ostream &os)  {  errstream=&os;  }
+		// Where to write errors (default: std::cerr)
+		void Set_Stream(std::ostream &os)  {  errstream=&os;  }
 		
 		// For command line mode: set currently parsed cmd option
 		void Set_Option(const char *opt)  {  optname.assign(opt);  }
@@ -211,11 +211,11 @@ class String_Value_Converter
 		
 		// Special output functions: Enclosing strings in "", escaping `"' as 
 		// well as `\' and writing bool as on/off. 
-		static ostream &Print_Value(ostream &os,bool &val);
-		static ostream &Print_Value(ostream &os,int &val);
-		static ostream &Print_Value(ostream &os,double &val);
-		static ostream &Print_Value(ostream &os,const std::string &val);
-		static ostream &Print_Value(ostream &os,const stringlist &val);
+		static std::ostream &Print_Value(std::ostream &os,bool &val);
+		static std::ostream &Print_Value(std::ostream &os,int &val);
+		static std::ostream &Print_Value(std::ostream &os,double &val);
+		static std::ostream &Print_Value(std::ostream &os,const std::string &val);
+		static std::ostream &Print_Value(std::ostream &os,const stringlist &val);
 };
 
 
@@ -238,8 +238,8 @@ class Animation_Parameters : String_Value_Converter
 		template<class T> void Do_Set_Defaults(bool keepold);
 		template<class T> void Do_Copy_From(Animation_Parameters &,bool);
 		template<class T> int  Do_Parse_Setting(char *,char *);
-		template<class T> void Do_Print_Parameters(ostream &,const char *,bool);
-		template<class T> void Do_Print_Help(ostream &os);
+		template<class T> void Do_Print_Parameters(std::ostream &,const char *,bool);
+		template<class T> void Do_Print_Help(std::ostream &os);
 		
 		int Parse_Check_Argtype(bool*,char *nextarg,
 			Parameter_Description<bool> *desc,AParameter<bool> *par);
@@ -267,12 +267,12 @@ class Animation_Parameters : String_Value_Converter
 			Animation_Parameters *ap;
 		};
 		int Simple_Override(Override_Pars *array,int npars,
-			ostream &os=cerr,bool verbose_warnings=false);
+			std::ostream &os=std::cerr,bool verbose_warnings=false);
 		template<class T> int Do_Simple_Override(Override_Pars *op,
-			int nop,ostream &os,bool verbose_warnings,bool listtype=false);
+			int nop,std::ostream &os,bool verbose_warnings,bool listtype=false);
 		
 		int Solve_TimeFrame_Net(Override_Pars *array,int npars,
-			ostream &os,bool warnings);
+			std::ostream &os,bool warnings);
 		void Solve_TimeFrame_Done(/*ugly*/void *tmp);
 		
 		int Parameter_Checks();  // check fps!=0 etc. 
@@ -331,11 +331,11 @@ class Animation_Parameters : String_Value_Converter
 		// Print the parameters to stream os. 
 		// Not set parameters are printed only if print_unset is true. 
 		// indent is written at the beginning of every line (if non-NULL). 
-		void Print_Parameters(ostream &os,const char *indent=NULL,
+		void Print_Parameters(std::ostream &os,const char *indent=NULL,
 			bool print_unset=false);
 		
 		// Print output of the cmd option --help.
-		void Print_Help(ostream &os=cerr);
+		void Print_Help(std::ostream &os=std::cerr);
 		
 		/********* METHODS TO QUERY PARAMETERS *********/
 		
@@ -373,4 +373,4 @@ extern const char *Arg_Prefix(const char *arg);
 
 }  /* end of namespace anitmt */
 
-#endif   /* __anitmt_pars_hpp__ */
+#endif   /* _anitmt_pars_HPP_ */

@@ -101,7 +101,7 @@ bool String_Value_Converter::simple_find_comment(char *str)
 
 
 // type: 0 -> warning; 1 -> error 
-ostream &String_Value_Converter::_Prefix(int type)
+std::ostream &String_Value_Converter::_Prefix(int type)
 {
 	if(cmd_mode)
 	{
@@ -125,7 +125,7 @@ ostream &String_Value_Converter::_Prefix(int type)
 String_Value_Converter::String_Value_Converter()
 {
 	comments_in_line=true;
-	errstream=&cerr;
+	errstream=&std::cerr;
 	linecnt=linecnt2=-1;
 }
 
@@ -138,7 +138,7 @@ String_Value_Converter::~String_Value_Converter()
 
 bool String_Value_Converter::Value_Omitted()
 {
-	Error() << ": Required value omitted." << endl;
+	Error() << ": Required value omitted." << std::endl;
 	return(false);
 }
 
@@ -169,7 +169,7 @@ bool String_Value_Converter::Str_To_Value(char *str,bool &val,bool silent=false)
 	
 	if(!silent)
 	{  Error() << " parsing \"" << str << "\" as bool: "
-			"invalid argument" << endl;  }
+			"invalid argument" << std::endl;  }
 	return(false);
 }
 
@@ -190,11 +190,11 @@ bool String_Value_Converter::Str_To_Value(char *str,int &val,bool silent=false)
 		{
 			Error() << " parsing \"" << tmp << "\" as integer: ";
 			if(endptr<=tmp+2)
-			{  EStream() << "invalid argument" << endl;  }
+			{  EStream() << "invalid argument" << std::endl;  }
 			else
 			{
 				// In this case we could try and use an expression parser. 
-				EStream() << "garbage at argument end" << endl;
+				EStream() << "garbage at argument end" << std::endl;
 			}
 		}
 		return(false);
@@ -203,7 +203,7 @@ bool String_Value_Converter::Str_To_Value(char *str,int &val,bool silent=false)
 	if(!silent && (errno==ERANGE || v<long(INT_MIN) || v>long(INT_MAX)))
 	{
 		Warning() << ": Argument \"" << tmp << 
-			"\" is out of integer range." << endl;
+			"\" is out of integer range." << std::endl;
 		//return(false);  well... go on
 	}
 	
@@ -226,11 +226,11 @@ bool String_Value_Converter::Str_To_Value(char *str,double &val)
 	{
 		Error() << " parsing \"" << tmp << "\" as double: ";
 		if(endptr<=tmp+2)
-		{  EStream() << "invalid argument" << endl;  }
+		{  EStream() << "invalid argument" << std::endl;  }
 		else
 		{
 			// In this case we could try and use an expression parser. 
-			EStream() << "garbage at argument end" << endl;
+			EStream() << "garbage at argument end" << std::endl;
 		}
 		return(false);
 	}
@@ -238,7 +238,7 @@ bool String_Value_Converter::Str_To_Value(char *str,double &val)
 	if(errno==ERANGE)
 	{
 		Warning() << ": Argument \"" << tmp << 
-			"\" is out of double range." << endl;
+			"\" is out of double range." << std::endl;
 		// return(false);  better go on...
 	}
 	
@@ -286,7 +286,7 @@ bool String_Value_Converter::Str_To_Value(char *str,std::string &val)
 		if(*dest)
 		{
 			*dest='\0';
-			Warning() << ": Unterminated string" << endl;
+			Warning() << ": Unterminated string" << std::endl;
 		}
 		else if(src[1])
 		{
@@ -297,7 +297,7 @@ bool String_Value_Converter::Str_To_Value(char *str,std::string &val)
 				if(comments_in_line && *src=='#')  break;
 				if(!is_trim(*src))
 				{
-					Error() << ": Garbage at end of string" << endl;
+					Error() << ": Garbage at end of string" << std::endl;
 					return(false);
 				}
 			}
@@ -310,7 +310,7 @@ bool String_Value_Converter::Str_To_Value(char *str,std::string &val)
 			// This is an error. If the user wants to explicitly specify 
 			// an empty string, he may pass "" as str. 
 			Error() << ": Required value omitted "
-				"(use \"\" to specify an empty string)" << endl;
+				"(use \"\" to specify an empty string)" << std::endl;
 			return(false);
 		}
 	}
@@ -359,7 +359,7 @@ bool String_Value_Converter::Str_To_Value(char *str,stringlist &val)
 						goto breakfor;  // next string
 					case '\0':
 						Error() << ": Unexpected end of stringlist: "
-							"unterminated string" << endl;
+							"unterminated string" << std::endl;
 						// Restore original string list. 
 						val=original;
 						return(false);
@@ -394,20 +394,20 @@ bool String_Value_Converter::Str_To_Value(char *str,stringlist &val)
 // for snprintf(): 
 #include <stdio.h>
 
-ostream &String_Value_Converter::Print_Value(ostream &os,bool &val)
+std::ostream &String_Value_Converter::Print_Value(std::ostream &os,bool &val)
 {
 	static const char *onstr="on",*offstr="off";
 	os << (val ? onstr : offstr);
 	return(os);
 }
 
-ostream &String_Value_Converter::Print_Value(ostream &os,int &val)
+std::ostream &String_Value_Converter::Print_Value(std::ostream &os,int &val)
 {
 	os << val;
 	return(os);
 }
 
-ostream &String_Value_Converter::Print_Value(ostream &os,double &val)
+std::ostream &String_Value_Converter::Print_Value(std::ostream &os,double &val)
 {
 	char tmp[64];
 	// This is great as it writes normal values as you expect it 
@@ -418,7 +418,7 @@ ostream &String_Value_Converter::Print_Value(ostream &os,double &val)
 	return(os);
 }
 
-ostream &String_Value_Converter::Print_Value(ostream &os,const std::string &val)
+std::ostream &String_Value_Converter::Print_Value(std::ostream &os,const std::string &val)
 {
 	os << "\"";
 	int end=val.length();
@@ -432,7 +432,7 @@ ostream &String_Value_Converter::Print_Value(ostream &os,const std::string &val)
 	return(os);
 }
 
-ostream &String_Value_Converter::Print_Value(ostream &os,const stringlist &val)
+std::ostream &String_Value_Converter::Print_Value(std::ostream &os,const stringlist &val)
 {
 	if(!val.empty())
 	{

@@ -19,11 +19,12 @@
  *
  */
 
-#ifndef __stringlist_hpp__
-#define __stringlist_hpp__
+#ifndef _anitmt_stringlist_HPP_
+#define _anitmt_stringlist_HPP_ 1
 
 #include <string>
 #include <list>
+#include <ostream>
 
 namespace anitmt
 {
@@ -52,11 +53,11 @@ class stringlist : public std::list<std::string>
 		void add(const char *str)  {  add(std::string(str));  }
 		
 		// To write the string list to a stream: 
-		friend ostream& operator<<(ostream& os,const stringlist &sl);
+		friend std::ostream& operator<<(std::ostream& os,const stringlist &sl);
 };
 
-extern ostream& operator<<(ostream& os,const stringlist &sl);
+extern std::ostream& operator<<(std::ostream& os,const stringlist &sl);
 
 }  /* end of namespace anitmt */
 
-#endif  /* __stringlist_hpp__ */
+#endif  /* _anitmt_stringlist_HPP_ */

@@ -108,7 +108,7 @@ namespace
 	{
 		if(a.is_set && b.is_set)
 		{
-			if(fabs(a.val-b.val)<values::epsilon)
+			if(fabs(a.val-b.val)<vect::epsilon)
 			{  return(true);  }
 		}
 		return(false);
@@ -117,7 +117,7 @@ namespace
 	{
 		if(a.is_set && b.is_set)
 		{
-			if(fabs(a.val-b.val)>=values::epsilon)
+			if(fabs(a.val-b.val)>=vect::epsilon)
 			{  return(true);  }
 		}
 		return(false);  // special; keep that
@@ -271,7 +271,7 @@ namespace
 				if(first)  first=false;
 				else  os << ", ";
 				os << nap[i]->name;
-				if(fabs(nap[i]->val)<values::epsilon)
+				if(fabs(nap[i]->val)<vect::epsilon)
 				{  os << "=0";  }
 				else if(verbose>1)
 				{  os << "=" << nap[i]->val;  }

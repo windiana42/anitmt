@@ -80,7 +80,7 @@ int Animation_Parameters::Read_One_Line(FILE *is,char *buf,size_t len)
 		if(avail<2)   // one char and `\0'
 		{
 			Error() << ": Multi-line parameter too long (>" << len << 
-				" bytes)" << endl;
+				" bytes)" << std::endl;
 			return(-1);
 		}
 		errno=0;
@@ -93,16 +93,16 @@ int Animation_Parameters::Read_One_Line(FILE *is,char *buf,size_t len)
 			int errv=errno;
 			Error() << ": Read error: ";
 			if(errv)
-			{  EStream() << strerror(errv) << endl;  }
+			{  EStream() << strerror(errv) << std::endl;  }
 			else
-			{  EStream() << "Hey, did you pass a binary file??" << endl;  }
+			{  EStream() << "Hey, did you pass a binary file??" << std::endl;  }
 			return(-2);
 		}
 		if(sl>=avail-1 && store[sl-1]!='\n')  // failsafe
 		{
 			Error() << ": " << 
 				(nlines ? "Multi-line parameter" : "Line") << 
-				"too long (>" << len << " bytes)" << endl;
+				"too long (>" << len << " bytes)" << std::endl;
 			return(-1);
 		}
 		++nlines;
@@ -184,7 +184,7 @@ int Animation_Parameters::Do_Read_In(FILE *is)
 			// Get path: 
 			if(!parse_val)
 			{
-				Error() << ": Required path omitted" << endl;
+				Error() << ": Required path omitted" << std::endl;
 				++errors;
 			}
 			else
@@ -205,13 +205,13 @@ int Animation_Parameters::Do_Read_In(FILE *is)
 		else switch(Parse_Setting(start,parse_val))
 		{
 			case 0:  /* identifier not found; must output error */
-				Error() << ": Illegal identifier \"" << start << "\"." << endl;
+				Error() << ": Illegal identifier \"" << start << "\"." << std::endl;
 				++errors;
 				break;
 			case 1:  /* used identifier but not value */
 				if(parse_val)   // ...but the user specified a value
 				{
-					Error() << ": Illegal value \"" << parse_val << "\"." << endl;
+					Error() << ": Illegal value \"" << parse_val << "\"." << std::endl;
 					++errors;
 				}
 				break;
@@ -229,8 +229,8 @@ int Animation_Parameters::Read_In(FILE *is)
 	if(include_depth>=max_include_depth)
 	{
 		Error() << ": Max file include depth (" << max_include_depth << 
-			") reached." << endl;
-		Error() << ": (Are you sure you did not build a closed loop?)" << endl;
+			") reached." << std::endl;
+		Error() << ": (Are you sure you did not build a closed loop?)" << std::endl;
 		return(1);
 	}
 	
@@ -257,7 +257,7 @@ int Animation_Parameters::Read_File(const char *path)
 	{
 		int errv=errno;
 		Error() << ": Failed to open file \"" << path << "\": " << 
-			strerror(errv) << endl;
+			strerror(errv) << std::endl;
 		Set_File(save_filename);
 		return(1);
 	}

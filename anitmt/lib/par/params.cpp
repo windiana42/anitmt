@@ -47,6 +47,7 @@
 //    This is thought to check fps!=0, etc. 
 
 #include "params.hpp"
+#include <math.h>
 
 namespace anitmt
 {
@@ -198,7 +199,7 @@ int Animation_Parameters::Parameter_Checks()
 	
 	if(verbose()<0)
 	{
-		cerr << "Warning: verbose=" << verbose() << 
+		std::cerr << "Warning: verbose=" << verbose() << 
 			". You think that\'s funny?" << std::endl;
 		par_int[PID::verbose]=0;
 	}
@@ -206,31 +207,31 @@ int Animation_Parameters::Parameter_Checks()
 	if(warnings())
 	{
 		if(startframe()<0 || starttime()<0)
-		{  cerr << "Warning: startframe=" << startframe() << 
+		{  std::cerr << "Warning: startframe=" << startframe() << 
 			", starttime=" << starttime() << std::endl;  }
 		else if(endframe()<0 || endtime()<0)
-		{  cerr << "Warning: endframe=" << endframe() << 
+		{  std::cerr << "Warning: endframe=" << endframe() << 
 			", endtime=" << endtime() << std::endl;  }
 		if(startframe() >= endframe())
-		{  cerr << "Warning: startframe (" << startframe() << 
+		{  std::cerr << "Warning: startframe (" << startframe() << 
 			") >= endframe (" << endframe() << ")" << std::endl;  }
 		else if(starttime() >= endtime())
-		{  cerr << "Warning: starttime (" << starttime() << 
+		{  std::cerr << "Warning: starttime (" << starttime() << 
 			") >= endtime (" << endtime() << ")" << std::endl;  }
 	}
 	
 	if(width()<=0 || height()<=0)
 	{
-		cerr << "Error: width=" << width() << ", height=" << height() << 
+		std::cerr << "Error: width=" << width() << ", height=" << height() << 
 			"; Sure you know what you\'re doing?" << std::endl;
 		++errors;
 	}
 	
 	if(fabs(fps())<0.000001)
-	{  cerr << "Error: fps=0" << std::endl;  ++errors;  }
+	{  std::cerr << "Error: fps=0" << std::endl;  ++errors;  }
 	else if(fps()<0.0 && warnings())
 	{
-		cerr << "Warning: fps=" << fps() << 
+		std::cerr << "Warning: fps=" << fps() << 
 			" < 0 (Expect funny results)" << std::endl;
 	}
 	
@@ -240,7 +241,7 @@ int Animation_Parameters::Parameter_Checks()
 		size_t ad_len=strlen(ad);
 		if(!ad_len)
 		{
-			cerr << "Warning: ani_dir=\"\"; assuming \".\"" << endl;
+			std::cerr << "Warning: ani_dir=\"\"; assuming \".\"" << std::endl;
 			par_string[PID::ani_dir].val.assign("./");
 		}
 		else if(ad[ad_len-1]!='/')
@@ -286,7 +287,7 @@ template<class T> void Animation_Parameters::Do_Set_Defaults(bool keepold)
 // See Copy_From() for a description. 
 // NOTE that os may be NULL. 
 template<class T> void Animation_Parameters::Do_Copy_From(
-	Animation_Parameters &ap,bool keepold /*,ostream *os <-- warning stream*/)
+	Animation_Parameters &ap,bool keepold /*,std::ostream *os <-- warning stream*/)
 {
 	T *dummy;  // Pointer prevents an object from being constructed. 
 	AParameter<T> *dest=List_By_Type(dummy);
@@ -303,7 +304,7 @@ template<class T> void Animation_Parameters::Do_Copy_From(
 			{
 				// Warn user. 
 				#warning need better error reporting; 
-				(*os) << "Warning: value gets overriden." << endl;
+				(*os) << "Warning: value gets overriden." << std::endl;
 			}
 			#endif
 			dest->val=src->val;
@@ -315,9 +316,9 @@ template<class T> void Animation_Parameters::Do_Copy_From(
 
 static void _Internal_Argtype_Error(int argtype,const char *name)
 {
-	cerr << "Internal error: wrong argtype " << argtype << 
-		" for parameter " << name << endl <<
-		"Please change parameter description in pars.cpp." << endl;
+	std::cerr << "Internal error: wrong argtype " << argtype << 
+		" for parameter " << name << std::endl <<
+		"Please change parameter description in pars.cpp." << std::endl;
 	abort();
 }
 
@@ -357,7 +358,7 @@ inline int Animation_Parameters::Parse_Check_Argtype(bool*,char *nextarg,
 		if(par->is_set)
 		{
 			Warning() << ": Parameter set more than once (previous value: " << 
-				par->val << " new value: " << newval << ")" << endl;
+				par->val << " new value: " << newval << ")" << std::endl;
 		}
 		
 		par->is_set=true;
@@ -475,13 +476,13 @@ template<class T> int Animation_Parameters::Do_Parse_Setting(
 		case  0:  return(1);   // success; nextarg unused
 		case  2:  return(2);   // success; nextarg was used
 		case -2:  // arg needed but missing
-			Error() << ": Required argument missing" << endl;
+			Error() << ": Required argument missing" << std::endl;
 			return(-1);  // is OK here 
 		case -1:  // nextarg parsed and parsing failed
 			return(-1);
 		case  1:  break;  // go on parsing
 		default:  // actually never happens...
-			cerr << "Internal error: pars.cpp:" << __LINE__ << endl;
+			std::cerr << "Internal error: pars.cpp:" << __LINE__ << std::endl;
 			abort();
 	}
 	
@@ -491,7 +492,7 @@ template<class T> int Animation_Parameters::Do_Parse_Setting(
 		return(-1);
 	
 	if(par->is_set)
-	{	Warning() << ": Parameter set more than once." << endl;  }
+	{	Warning() << ": Parameter set more than once." << std::endl;  }
 	par->val=tmpval;
 	par->is_set=1;
 	
@@ -500,7 +501,7 @@ template<class T> int Animation_Parameters::Do_Parse_Setting(
 
 
 template<class T> void Animation_Parameters::Do_Print_Parameters(
-	ostream &os,const char *indent,bool print_unset)
+	std::ostream &os,const char *indent,bool print_unset)
 {
 	T *dummy;  // Pointer prevents an object from being constructed. 
 	Parameter_Description<T> *desc=Desc_By_Type(dummy);
@@ -515,10 +516,10 @@ template<class T> void Animation_Parameters::Do_Print_Parameters(
 			if(par->is_set)
 			{
 				String_Value_Converter::Print_Value(os,par->val);
-				os << endl;
+				os << std::endl;
 			}
 			else
-			{  os << "[unset]" << endl;  }
+			{  os << "[unset]" << std::endl;  }
 		}
 	}
 }
@@ -527,7 +528,7 @@ template<class T> void Animation_Parameters::Do_Print_Parameters(
 // See Simple_Override(). 
 // listtype: true for stringlist
 template<class T> int Animation_Parameters::Do_Simple_Override(
-	Override_Pars *startop,int nop,ostream &os,bool warnings,
+	Override_Pars *startop,int nop,std::ostream &os,bool warnings,
 	bool listtype)
 {
 	int nunset=0;
@@ -562,7 +563,7 @@ template<class T> int Animation_Parameters::Do_Simple_Override(
 		{
 			// parameter not set. 
 			os << "Error: Parameter " << desc->names[0] << 
-				" not set." << endl;
+				" not set." << std::endl;
 			++nunset;
 		}
 		else if(lastpar && warnings)  // parameter overridden (at least once)
@@ -570,7 +571,7 @@ template<class T> int Animation_Parameters::Do_Simple_Override(
 			os << "Parameter \"" << desc->names[0] << "\""
 				" first set in " << firstpar->type << 
 				" gets overridden by settin in " << lastpar->type << 
-				"." << endl;
+				"." << std::endl;
 		}
 	}
 	return(nunset);
@@ -585,7 +586,7 @@ const char *Arg_Prefix(const char *arg)
 }
 
 
-template<class T> void Animation_Parameters::Do_Print_Help(ostream &os)
+template<class T> void Animation_Parameters::Do_Print_Help(std::ostream &os)
 {
 	T *dummy;  // Pointer prevents an object from being constructed. 
 	Parameter_Description<T> *desc=Desc_By_Type(dummy);
@@ -602,11 +603,11 @@ template<class T> void Animation_Parameters::Do_Print_Help(ostream &os)
 		{
 			os << "  (";
 			String_Value_Converter::Print_Value(os,desc->defaultval.val);
-			os << ")" << endl;
+			os << ")" << std::endl;
 		}
 		else
-		{  os /*<< "  (unset)"*/ << endl;  }
-		os << "        " << desc->desctxt << endl;
+		{  os /*<< "  (unset)"*/ << std::endl;  }
+		os << "        " << desc->desctxt << std::endl;
 	}
 }
 
@@ -652,7 +653,7 @@ void Animation_Parameters::Copy_From(const Animation_Parameters &_ap,bool keepol
 // Return value: see Do_Parse_Setting(). 
 int Animation_Parameters::Parse_Setting(char *arg,char *nextarg)
 {
-	//cerr << "parsing: <" << arg << "> <" << nextarg << ">" << endl;
+	//std::cerr << "parsing: <" << arg << "> <" << nextarg << ">" << std::endl;
 	
 	int r;
 	r=Do_Parse_Setting<bool>(arg,nextarg);         if(r)  return(r);
@@ -667,7 +668,7 @@ int Animation_Parameters::Parse_Setting(char *arg,char *nextarg)
 // Print the parameters to stream os. 
 // Not set parameters are printed only if print_unset is true. 
 // indent is written at the beginning of every line (if non-NULL). 
-void Animation_Parameters::Print_Parameters(ostream &os,
+void Animation_Parameters::Print_Parameters(std::ostream &os,
 	const char *indent=NULL,bool print_unset=false)
 {
 	Do_Print_Parameters<bool>(os,indent,print_unset);
@@ -686,7 +687,7 @@ void Animation_Parameters::Print_Parameters(ostream &os,
 // Return values:  0 -> all went file. 
 //                >0 -> some values are unset. 
 int Animation_Parameters::Simple_Override(Override_Pars *op,int nop,
-	ostream &os,bool vw)
+	std::ostream &os,bool vw)
 {
 	int rv=0;
 	rv+=Do_Simple_Override<bool>(op,nop,os,vw);
@@ -699,39 +700,39 @@ int Animation_Parameters::Simple_Override(Override_Pars *op,int nop,
 
 
 // Print output of the cmd option --help. 
-void Animation_Parameters::Print_Help(ostream &os)
+void Animation_Parameters::Print_Help(std::ostream &os)
 {
-	os << "Supported animation parameters:" << endl;
-	os << "¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯" << endl;
-	os << "Switches (parameters of type bool)" << endl;
-	os << "  Possible values: yes,on,true,1 / no,off,false,0" << endl;
+	os << "Supported animation parameters:" << std::endl;
+	os << "¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯" << std::endl;
+	os << "Switches (parameters of type bool)" << std::endl;
+	os << "  Possible values: yes,on,true,1 / no,off,false,0" << std::endl;
 	Do_Print_Help<bool>(os);
-	os << endl;
-	os << "Parameters of integer type" << endl;
+	os << std::endl;
+	os << "Parameters of integer type" << std::endl;
 	os << "  Specification: C style: prefix `0x\'/`0\' "
-		"for hexadecimal/octal values" << endl;
+		"for hexadecimal/octal values" << std::endl;
 	Do_Print_Help<int>(os);
-	os << endl;
-	os << "Parameters of floating point type" << endl;
+	os << std::endl;
+	os << "Parameters of floating point type" << std::endl;
 	Do_Print_Help<double>(os);
-	os << endl;
-	os << "Parameters of string type" << endl;
-	os << "  Specification: Two possibilities:" << endl;
-	os << "    1. If string does not start with `\"\' after trimming, it is" << endl;
-	os << "       read in as encountered after trimming." << endl;
+	os << std::endl;
+	os << "Parameters of string type" << std::endl;
+	os << "  Specification: Two possibilities:" << std::endl;
+	os << "    1. If string does not start with `\"\' after trimming, it is" << std::endl;
+	os << "       read in as encountered after trimming." << std::endl;
 	os << "    2. If string starts with `\"\' after trimming, the text "
-		"between the" << endl;
+		"between the" << std::endl;
 	os << "       first and the second `\"\' is read in. `\\\"\' and `\\\\\' "
-		"are replaced by " << endl;
+		"are replaced by " << std::endl;
 	os << "       `\"\' and `\\\' respectively, all other escapes stay "
-		"unchanged." << endl;
+		"unchanged." << std::endl;
 	Do_Print_Help<std::string>(os);
-	os << endl;
-	os << "Parameters of string list type" << endl;
+	os << std::endl;
+	os << "Parameters of string list type" << std::endl;
 	os << "  Specification: A stringlist is a set of strings separated by "
-		"whitespace." << endl;
+		"whitespace." << std::endl;
 	Do_Print_Help<stringlist>(os);
-	os << endl;
+	os << std::endl;
 }
 
 
