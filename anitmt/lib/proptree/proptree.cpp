@@ -185,7 +185,7 @@ namespace proptree
 
   // find node according to referencing string
   Prop_Tree_Node *Prop_Tree_Node::get_referenced_node( std::string ref,
-						       char separator='.' )
+						       char separator )
   {
     std::string whole_ref = ref;
     Prop_Tree_Node *cur = this;
@@ -260,7 +260,7 @@ namespace proptree
 
   // find node according to referencing string
   Property *Prop_Tree_Node::get_referenced_property( std::string ref,
-						     char separator='.' )
+						     char separator )
   {
     std::string whole_ref = ref;
     // reduce ref by last part and save it as the name of the property
