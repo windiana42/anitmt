@@ -52,7 +52,8 @@ int FDCopyPump_FD2FD::_ReadInData(int fd,FDCopyIO_FD *cpio,HTime *fdtime)
 {
 	assert(fd==fcb->FDfd(cpio->pollid));   // otherwise great internal error
 	
-	if(!fifo.BufFree())
+	size_t want_max=fifo.BufFree();
+	if(!want_max)
 	{
 		#if TESTING
 		fprintf(stderr,"OOPS?!?!: FD2FD pump: 0 bytes free in fifo\n");
@@ -62,7 +63,8 @@ int FDCopyPump_FD2FD::_ReadInData(int fd,FDCopyIO_FD *cpio,HTime *fdtime)
 		return(0);   
 	}
 	
-	size_t want_max=cpio->max_iolen;
+	if(cpio->max_iolen && want_max>cpio->max_iolen)
+	{  want_max=cpio->max_iolen;  }
 	int reached_limit=0;
 	if(limit && cpio->transferred+copylen_t(want_max)>=limit)  // >= REALLY!
 	{
@@ -72,6 +74,8 @@ int FDCopyPump_FD2FD::_ReadInData(int fd,FDCopyIO_FD *cpio,HTime *fdtime)
 	}
 	
 	ssize_t rd=fifo.ReadFD(fd,want_max);
+	//fprintf(stderr,"READ: reachedlimit=%d; transf=%d; want=%d; limit=%d; rd=%d\n",
+	//	reached_limit,int(cpio->transferred),int(want_max),int(limit),rd);
 	if(rd<0)
 	{
 		if(errno==EINTR || errno==EWOULDBLOCK)
@@ -117,7 +121,7 @@ int FDCopyPump_FD2FD::_WriteOutData(int fd,FDCopyIO_FD *cpio,HTime *fdtime)
 		return(0);   
 	}
 	
-	size_t want_max=cpio->max_iolen;
+	size_t want_max=cpio->max_iolen;  // 0 -> unlimited
 	
 	ssize_t wr=fifo.WriteFD(fd,want_max);
 	if(wr<0)
@@ -579,8 +583,16 @@ void FDCopyPump_FD2FD::_Cleanup(int go_dead)
 	
 	// This has to be done BFORE informing the client: 
 	// FIRST; Reset the events. 
-	if(src)   IChangeEvents(src->pollid,0,IGetControlledEvents(src->pollid));
-	if(dest)  IChangeEvents(dest->pollid,0,IGetControlledEvents(dest->pollid));
+	if(src)
+	{
+		short ev=IGetControlledEvents(src->pollid);
+		if(ev)  IChangeEvents(src->pollid,0,ev);
+	}
+	if(dest)
+	{
+		short ev=IGetControlledEvents(dest->pollid);
+		if(ev)  IChangeEvents(dest->pollid,0,ev);
+	}
 	curr_reading=0;
 	curr_writing=0;
 	
@@ -631,7 +643,7 @@ int FDCopyPump_FD2FD::SetIO(FDCopyIO *nsrc,FDCopyIO *ndest)
 	if(nsrc && ndest)
 	{
 		if(nsrc->Type()!=FDCopyIO::CPT_FD || 
-		   ndest->Type()==FDCopyIO::CPT_FD )
+		   ndest->Type()!=FDCopyIO::CPT_FD )
 		{  goto delret;  }
 		
 		if(!((FDCopyIO_FD*)nsrc)->pollid ||

@@ -98,9 +98,11 @@ class HTime
 		double GetD(TimeSpec sp) const
 			{  return((sp<_tslast) ? (double(_LLConv(&tv))/conv_factD[sp]) : (-1.0));  }
 		
-		// This should not be used: 
+		// This should not be used if avoidable: 
 		void SetTimeval(timeval *stv)
 			{  tv=*stv;  _Normalize(&tv);  }
+		void SetTimeT(time_t st)
+			{  tv.tv_sec=st;  tv.tv_usec=0;  }
 		
 		// Arithmetics: (val may be <0) [Do not call if IsInvalid().]
 		HTime &Add(long val,TimeSpec sp=msec);
