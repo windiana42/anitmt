@@ -36,7 +36,8 @@ typedef vect::Matrix<4,4> Matrix;
 typedef vect::String String;
 
 
-/*class Valtype
+//#warning Valtype needed?  ##### FIXME
+class Valtype
 {
 	public:
 		enum Types { scalar, vector, matrix, string, flag };
@@ -45,7 +46,7 @@ typedef vect::String String;
 	public:
 		Valtype(Types t) : type(t) {}
 		Types get_type() const {  return(type);  }
-};*/
+};
 
 }  // namespace end 
 

@@ -22,8 +22,7 @@
 #ifndef _Inc_IO_ConvToAscii_H_
 #define _Inc_IO_ConvToAscii_H_ 1
 
-// Or we could include "val.hpp" instead...
-namespace values { class Vector; }
+#include <val/val.hpp>
 
 namespace output_io
 {

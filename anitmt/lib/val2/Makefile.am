@@ -5,7 +5,7 @@ noinst_LIBRARIES = libval.a
 libval_a_SOURCES = internals.hpp \
 	imatrix.cpp imatrix.hpp \
 	ivector.cpp ivector.hpp \
-	flag.hpp \
+	flag.hpp flag.cpp \
 	scalar.hpp \
 	vector.cpp vector.hpp \
 	matrix.cpp matrix.hpp \
