@@ -22,9 +22,9 @@ namespace anitmt {
 }
 
 #include "val.hpp"
-#include "property.hpp"
-#include "proptree.hpp"
+#include "operand.hpp"
 #include "caller.hpp"
+#include "proptree.hpp"
 
 namespace anitmt{
 
@@ -65,7 +65,7 @@ namespace anitmt{
     virtual void do_it() = 0;
   protected:
     friend class Action_Caller_Inserter;
-    void insert_Caller_at_Property( Property *prop );
+    void insert_Caller_at_Operand( Basic_Operand &op );
   public:
     void invoke();		// deletes callers and runs do_it()
     
@@ -81,13 +81,15 @@ namespace anitmt{
   class Action_Caller_Inserter : public Solve_Problem_Handler {
     Priority_Action *priority_action;
   public:
-    // a property collision occured!
+    // a operand collision occured!
     // (throws exceptions)
-    virtual void property_collision_occured( std::list<Property*> bad_props );
+    virtual void operand_collision_occured( std::list< Basic_Operand* > 
+					    bad_props );
 
-    // property signals to reject value 
+    // operand signals to reject value 
     // usage may be enforced by returning false
-    virtual bool may_property_reject_val( std::list<Property*> bad_props );
+    virtual bool may_operand_reject_val( std::list< Basic_Operand* > 
+					 bad_props );
 
     Action_Caller_Inserter( Priority_Action *action );
   };
@@ -100,46 +102,46 @@ namespace anitmt{
   class Default_Value : public Priority_Action {
     Action_Caller_Inserter action_caller_inserter;    
 
-    Type_Property<T> *prop;
+    Operand<T> &op;
     T val;
   public:
     virtual void do_it();
 
     Default_Value( Priority_System *sys, Priority_System::level_type level,
-		   Type_Property<T> *p, T v );
+		   Operand<T> &o, T v );
     virtual ~Default_Value();
   };
 
   template<class T>
   inline void establish_Default_Value( Priority_System *sys, 
 				       Priority_System::level_type level,
-				       Type_Property<T> *p, T v ){
+				       Operand<T> &p, T v ){
     new Default_Value<T>( sys, level, p, v );
   }
 
-  // specialization for assigning double value to values::Scalar property
+  // specialization for assigning double value to values::Scalar operand
   inline void establish_Default_Value( Priority_System *sys, 
 				       Priority_System::level_type level,
-				       Type_Property<values::Scalar> *p, 
+				       Operand<values::Scalar> &p, 
 				       double v ){
     new Default_Value<values::Scalar>( sys, level, p, values::Scalar(v) );
   }
 
   //***************************************************************************
-  // Push_Connection<T>: establish push connection from one property to another
+  // Push_Connection<T>: establish push connection from one operand to another
   //***************************************************************************
 
   template<class T>
   class Push_Connection : public Priority_Action {
     Action_Caller_Inserter action_caller_inserter;    
 
-    Type_Property<T> *source;
-    Type_Property<T> *destination;
+    Operand<T> &source;
+    Operand<T> &destination;
   public:
     virtual void do_it();
 
     Push_Connection( Priority_System *sys, Priority_System::level_type level,
-		     Type_Property<T> *src, Type_Property<T> *dest );
+		     Operand<T> &src, Operand<T> &dest );
     virtual ~Push_Connection();
   };
 
@@ -147,20 +149,24 @@ namespace anitmt{
   template<class T>
   inline void establish_Push_Connection( Priority_System *sys, 
 					 Priority_System::level_type level,
-					 Type_Property<T> *src, 
-					 Type_Property<T> *dest ) {
+					 Operand<T> &src, 
+					 Operand<T> &dest ) {
     new Push_Connection<T>( sys, level, src, dest );
   }
 
-  // establishes push connection to property of foreign tree node
-  // ( returnvalue false means: unknown property )
+  // establishes push connection to operand of foreign tree node
+  // ( returnvalue false means: unknown operand )
   template<class T>
   bool establish_Push_Connection( Priority_System *sys, 
 				  Priority_System::level_type level,
-				  Type_Property<T> *src, 
+				  Operand<T> &src, 
 				  Prop_Tree_Node   *dest_node,
 				  std::string dest_prop );
 
+  //***************
+  // test function
+  //***************
+  int action_system_test();
 }
 
 // force template generation of all used types

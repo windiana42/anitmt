@@ -105,9 +105,9 @@ namespace anitmt{
 
   Obj_Move_Straight::Obj_Move_Straight( std::string name, Animation *ani ) 
     : Prop_Tree_Node( type_name, name, ani ) {
-    new Accel_Solver( &s, &t, &a, &v0, &ve );
-    new Diff_Solver( &t, &t0, &te );
-    new Diff_Solver( &t_f, &t0_f, &te_f );
+    establish_accel_solver( s, t, a, v0, ve );
+    establish_sum_solver( te, t, t0 );
+    establish_sum_solver( te_f, t_f, t0_f );
     
     add_property( "startpos", &s0 );
     add_property( "startpos", &s0 );

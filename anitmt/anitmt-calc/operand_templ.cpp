@@ -17,76 +17,70 @@
 
 #include "operand.hpp"
 
-namespace anitmt{
+#include <algorithm>
 
+namespace anitmt
+{
   //************
   // Exceptions:
   //************
   
-  //***************************************************************
+  //**************************************************************************
   // Operand: base class for operand values of a certain type
-  //***************************************************************
-  
+  //**************************************************************************
+  // most implementations are in operand_inline.cpp
+
   template<class T>
   User_Problem_Handler Operand<T>::default_handler;
 
   template<class T>
-  bool Operand<T>::test_set_value( T res, Solve_Run_Info const *info ){
-    // was value already solved in test run?
-    if( is_solved_in_try( info ) )
-      {
-	if( res == value )	// test ok, when same value
-	  {
-	    return true;
-	  }
-	else
-	  {
-	    std::list<Property*> bad_props;
-	    // !!! should add Operand and not property to bad_probs...
-	    info->problem_handler->property_collision_occured( bad_props );
-	  }
-      }
-    
-    value = res; 
-    last_test_run_id = info->get_test_run_id(); 
-    if( reporter ) 
-      return report_test_value( res, info );
-
-    return true;
+  void Operand<T>::add_listener( Operand_Listener *listener ) 
+  {
+    listeners.push_back( listener );
   }
 
   template<class T>
-  void Operand<T>::init_reporter( Value_Reporter *reporter ) {
-    this->reporter = reporter;
+  void Operand<T>::rm_listener( Operand_Listener *listener ) 
+  {
+    listeners_type::iterator i = find( listeners.begin(), listeners.end(), 
+				       listener );
+    assert( i != listeners.end() );
+    listeners.erase( i );
+
+    if( listeners.empty() && delete_without_listener )
+      delete this;		// !!! No further commands !!!
   }
 
   template<class T>
-  Operand<T>::Operand() : solved(false), reporter(0) {}
+  Operand<T>::Operand() 
+    : solved(false), last_test_run_id(-1), delete_without_listener(false) {}
 
-  //**************************************************************************
-  // Store_Operand_to_Property: reports the value of an operand to a property
-  //**************************************************************************
-  
   template<class T>
-  bool Store_Operand_to_Property<T>::is_this_ok
-  ( T const &value, Solve_Run_Info const *info ) {
-
-    return property->is_this_ok( value, this, info );
+  Operand<T>::~Operand() 
+  {
+    listeners_type::iterator i;    
+    for( i = listeners.begin(); i != listeners.end(); i++ )
+    {
+      (*i)->disconnect( this );
+    }
   }
 
   template<class T>
-  void Store_Operand_to_Property<T>::use_it() {
-    property_use_it( property );
+  Operand<T>& Operand<T>::operator=( Operand<T> &src ) throw(EX)
+  {
+    new Store_Operand_to_Operand<T>( src, *this );
+    return *this;
   }
 
-  template<class T>
-  Store_Operand_to_Property<T>::Store_Operand_to_Property
-  ( Operand<T> &op, Type_Property<T> *prop ) : property(prop) {
-    // Solver initialization
-    add_Property( prop );
+  //***********
+  // operators
 
-    // Operand initialization
-    op.init_reporter( this );
+  template<class T>
+  std::ostream &operator <<( std::ostream &os, const Operand<T> &op )
+  {
+    if( !op.is_solved() ) return os << "???";
+
+    return os << op.get_value();
   }
 
   //*****************************************
@@ -95,179 +89,44 @@ namespace anitmt{
 
   template<class T>
   Constant<T>::Constant( T val )
-    : Operand<T>() {
+  {
+    delete_without_listener = true; // delete me if last listener disconnects
+
     set_value( val );
   }
 
-  //***************************************************************
-  // Basic_Operator_for_1_param: two parameter Operator
-  //***************************************************************
-
-  // for operand to deliver result
-  template<class T_Result, class T_Operand>
-  void Basic_Operator_for_1_param<T_Result,T_Operand>
-  ::use_it() {
-    use_value();
+  //**************************************************************************
+  // Store_Operand_to_Property: reports the value of an operand to a property
+  //**************************************************************************
+  
+  template<class T>
+  bool Store_Operand_to_Operand<T>::is_result_ok
+  ( const void *ID, const Solve_Run_Info *info ) throw(EX)
+  {
+    return destination.test_set_value( source.get_value(info), info );
   }
 
-  template<class T_Result, class T_Operand>
-  bool Basic_Operator_for_1_param<T_Result,T_Operand>
-  ::is_this_ok( T_Operand const &value, Solve_Run_Info const *info ) {
-    if( !is_operand_ok( value ) ) return false;
-
-    return test_set_value( calc_result( value ), info );
+  template<class T>
+  void Store_Operand_to_Operand<T>::use_result 
+  ( const void *ID, const Solve_Run_Info *info ) throw(EX)
+  {
+    destination.use_test_value( info );
   }
 
-  template<class T_Result, class T_Operand>
-  void Basic_Operator_for_1_param<T_Result,T_Operand>::init() {
-
-    if( operand.is_solved() ) 
-      {
-	set_value( calc_result( operand.get_value() ) ); 
-				// could throw exception 
-      }
+  template<class T>
+  void Store_Operand_to_Operand<T>::disconnect( const void *ID ) 
+  {
+    delete this;		// !!! no further commands !!!
   }
 
-  template<class T_Result, class T_Operand>
-  Basic_Operator_for_1_param<T_Result,T_Operand>::Basic_Operator_for_1_param
-  ( Operand<T_Operand> &op ) : operand( op ) {
-
-    operand.init_reporter( this );
+  template<class T>
+  Store_Operand_to_Operand<T>::Store_Operand_to_Operand
+  ( Operand<T> &src, Operand<T> &dest ) 
+    : source(src), destination(dest) 
+  {
+    // register to source Operand 
+    src.add_listener( this );
   }
-
-  //***************************************************************
-  // Basic_Operator_for_2_params: two parameter Operator
-  //***************************************************************
-
-  // for operand to deliver result
-  template<class T_Result, class T_Op1, class T_Op2>
-  void Basic_Operator_for_2_params<T_Result,T_Op1,T_Op2>
-  ::Operand_1_Interface::use_it() {
-    if( host->just_solved )
-      host->use_value();
-  }
-
-  template<class T_Result, class T_Op1, class T_Op2>
-  bool Basic_Operator_for_2_params<T_Result,T_Op1,T_Op2>
-  ::Operand_1_Interface::is_this_ok( T_Op1 const &value, 
-				     Solve_Run_Info const *info ) {
-    if( !host->is_operand1_ok( value ) ) return false;
-
-    // are both operands solved now?
-    if( host->operand2.is_solved_in_try( info ) )
-      {
-	if( !host->are_operands_ok( value, host->operand2.get_value() ) ) 
-	  return false;
-	
-	host->just_solved = true;
-	return host->test_set_value
-	  ( host->calc_result( value, host->operand2.get_value() ), info );
-      }
-    
-    host->just_solved = false;
-    return true;
-  }
-
-
-  // for operand to deliver result
-  template<class T_Result, class T_Op1, class T_Op2>
-  void Basic_Operator_for_2_params<T_Result,T_Op1,T_Op2>
-  ::Operand_2_Interface::use_it( ) {
-    if( host->just_solved )
-      host->use_value();
-  }
-
-  template<class T_Result, class T_Op1, class T_Op2>
-  bool Basic_Operator_for_2_params<T_Result,T_Op1,T_Op2>
-  ::Operand_2_Interface::is_this_ok( T_Op2 const &value, 
-				     Solve_Run_Info const *info ) {
-    if( !host->is_operand2_ok( value ) ) return false;
-
-    // are both operands solved now?
-    if( host->operand1.is_solved_in_try( info ) )
-      {
-	if( !host->are_operands_ok( host->operand1.get_value(), value ) ) 
-	  return false;
-
-	host->just_solved = true;
-	return host->test_set_value
-	  ( host->calc_result( host->operand1.get_value(), value ), info );
-      }
-
-    host->just_solved = false;
-    return true;
-  }
-
-  template<class T_Result, class T_Op1, class T_Op2>
-  void Basic_Operator_for_2_params<T_Result,T_Op1,T_Op2>
-  ::init() { 
-    
-    if( operand1.is_solved() && operand2.is_solved() ) 
-      {
-	set_value( calc_result(operand1.get_value(), operand2.get_value()) ); 
-				// could throw exception !!!
-      }
-  }
-
-  //***********************
-  // Constructor/Destructor
-
-  template<class T_Result, class T_Op1, class T_Op2>
-  Basic_Operator_for_2_params<T_Result,T_Op1,T_Op2>
-  ::Basic_Operator_for_2_params( Operand<T_Op1> &op1, 
-				 Operand<T_Op2> &op2 ) 
-    : operand1( op1 ), operand2( op2 ) { 
-    
-    interface1 = new Operand_1_Interface(this);
-    interface2 = new Operand_2_Interface(this);
-
-    operand1.init_reporter( interface1 );
-    operand2.init_reporter( interface2 );
-  }
-  template<class T_Result, class T_Op1, class T_Op2>
-  Basic_Operator_for_2_params<T_Result,T_Op1,T_Op2>
-  ::~Basic_Operator_for_2_params() {
-    delete interface1;
-    delete interface2;
-  } 
-
-  //**********************************************
-  // Not_Operator: operator for inverting operand
-  //**********************************************
-
-  template<class T_Result, class T_Operand>
-  T_Result Not_Operator<T_Result,T_Operand>::calc_result( T_Operand const
-							  &value ) {
-    return !value;
-  }
-
-  template<class T_Result, class T_Operand>
-  Not_Operator<T_Result,T_Operand>::Not_Operator
-  ( Operand<T_Operand> &operand1 ) 
-    : Basic_Operator_for_1_param<T_Result, T_Operand>( operand1 ){
-
-    init();
-  }
-
-  //**********************************************************************
-  // Add_Operator: operator for adding 2 operands of different types
-  //**********************************************************************
-
-  // may throw exception!
-  template<class T_Result, class T_Op1, class T_Op2>
-  T_Result Add_Operator<T_Result,T_Op1,T_Op2>
-  ::calc_result( T_Op1 const &value1, T_Op2 const &value2 ) {
-    return value1 + value2;
-  }
-
-  template<class T_Result, class T_Op1, class T_Op2>
-  Add_Operator<T_Result,T_Op1,T_Op2>::Add_Operator
-  ( Operand<T_Op1> &operand1, Operand<T_Op2> &operand2 ) 
-    : Basic_Operator_for_2_params<T_Result,T_Op1,T_Op2>( operand1,
-							 operand2 ) {
-    init();
-  }
-
 }
 
 #endif

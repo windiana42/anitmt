@@ -20,29 +20,34 @@ namespace anitmt{
 }
 
 #include "val.hpp"
-#include "property.hpp"
+#include "operand.hpp"
 #include "solver.hpp"
 #include "priority.hpp"
 
 namespace anitmt{
 
   //************************************************************************
-  // Action_Caller: class that inserts an action when an essential property
+  // Action_Caller: class that inserts an action when an essential operand
   //                is solved
   //************************************************************************
 
-  class Action_Caller : public Solver {
+  class Action_Caller : public Operand_Listener {
+    Basic_Operand *trigger;
     Priority_Action *priority_action;
 
-    // Properties call that if they were solved
-    virtual void do_when_prop_was_solved( Property *ID );
-    // calculates results of a solved Property (ID) and returns wheather
-    // the solution is ok
-    virtual bool check_prop_solution_and_results
-    ( Property *ID, Solve_Run_Info const *info );
+    // has to check the result of the operand with ID as pointer to operand
+    virtual bool is_result_ok( const void *ID, 
+			       const Solve_Run_Info *info ) throw(EX);
+    // tells to use the result calculated by is_result_ok()
+    virtual void use_result( const void *ID, const Solve_Run_Info *info )
+      throw(EX);
+
+    // disconnect operand
+    virtual void disconnect( const void *ID );
 
   public:
-    Action_Caller( Property *cause, Priority_Action *act );
+    Action_Caller( Basic_Operand &op, Priority_Action *act );
+    ~Action_Caller();
   };
 }
 #endif

@@ -130,6 +130,11 @@ namespace anitmt{
   public:
     virtual Prop_Tree_Node *create( std::string name, Animation *ani );
   };
+
+  //***************
+  // test function
+  //***************
+  int property_tree_test();
 }
 
 // force template generation of all used types

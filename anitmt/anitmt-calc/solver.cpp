@@ -17,392 +17,970 @@
 
 #include "solver.hpp"
 
+#include "operator.hpp"
+
 namespace anitmt{
-  //****************************************
-  // Solver: Base Class for Property Solvers
-  //****************************************
-  Solver::Solver() : n_props_available(0), try_id(-1) {}
-  Solver::~Solver() {
-    properties_type::iterator i;
-    for( i = properties.begin(); i != properties.end(); i++ )
-      {
-	i->first->disconnect_Solver( this );
-      }
+  //***************************************************
+  // Product_Solver: solves a = b * c in any direction
+  //***************************************************
+
+  Product_Solver::T_A Product_Solver::calc_a( const T_B &b, const T_C &c )
+  {
+    return b * c;
+  }
+  Product_Solver::T_A Product_Solver::calc_b( const T_A &a, const T_C &c )
+  {
+    assert( c != 0 );
+    return a / c;
+  }
+  Product_Solver::T_A Product_Solver::calc_c( const T_A &a, const T_B &b )
+  {
+    assert( b != 0 );
+    return a / b;
   }
 
-  // Properties call that if they are distroyed
-  void Solver::disconnect_Property( Property *prop ) 
-    throw( EX_Property_Not_Connected ){
-
-    // search property 
-    properties_type::iterator i;
-    for( i = properties.begin(); i != properties.end(); i++ )
-      if( i->first == prop ) 
-	break;
-
-    if( i == properties.end() ) 
-      throw EX_Property_Not_Connected();
-
-    properties.erase( i );
-
-    if( properties.empty() ) // is the last property disconnecting?
+  bool Product_Solver::is_a_ok( const T_A &a, const T_B &b, const T_C &c, 
+				bool avail_b, bool avail_c )
+  {
+    if( a != 0 )
+    {
+      if( avail_b ) if( b == 0 ) return false;
+      if( avail_c ) if( c == 0 ) return false;
+    }
+    else // a == 0
+    {
+      if( avail_b && avail_c ) if( b != 0 && c != 0 ) return false;
+    }
+    return true;
+  }
+  bool Product_Solver::is_b_ok( const T_A &a, const T_B &b, const T_C &c, 
+				bool avail_a, bool avail_c )
+  {
+    if( avail_a )
+    {
+      if( a != 0 )
       {
-	delete this;		// destroy myself
+	if( b == 0 ) return false;
       }
+      else // a == 0
+      {
+	if( avail_c ) if( c != 0 && b != 0 ) return false;
+      }
+    }
+    return true;
+  }
+  bool Product_Solver::is_c_ok( const T_A &a, const T_B &b, const T_C &c, 
+				bool avail_a, bool avail_b )
+  {
+    if( avail_a )
+    {
+      if( a != 0 )
+      {
+	if( c == 0 ) return false;
+      }
+      else // a == 0
+      {
+	if( avail_b ) if( b != 0 && c != 0 ) return false;
+      }
+    }
+    return true;
   }
 
-  void Solver::prop_was_solved( Property *caller ){
-    n_props_available++;
-    
-    bool are_all_props_solved = true; // test if all props are solved
+  bool Product_Solver::is_b_calcable( const T_A &, const T_C &c )
+  { 
+    return c != 0; 
+  }
+  bool Product_Solver::is_c_calcable( const T_A &, const T_B &b )
+  { 
+    return b != 0; 
+  }
+  
+  bool Product_Solver::is_a_calcable_from_b( const T_B &b )
+  {
+    return b == 0;
+  }
+  bool Product_Solver::is_a_calcable_from_c( const T_C &c )
+  {
+    return c == 0;
+  }
+  
+  Product_Solver::T_A Product_Solver::calc_a_from_b( const T_B &b )
+  {
+    assert( b == 0 );
+    return 0;
+  }
+  Product_Solver::T_A Product_Solver::calc_a_from_c( const T_C &c )
+  {
+    assert( c == 0 );
+    return 0;
+  }
 
-    do_when_prop_was_solved( caller );
+  Product_Solver::Product_Solver
+  ( Operand<T_A> &a, Operand<T_A> &b, Operand<T_A> &c )
+  : Basic_Solver_for_3_Operands<T_A,T_B,T_C>( a, b, c ) {}
 
-    // tell the properties that were calculated in the try before that they
-    // may use the result as definitive solution
-    properties_type::iterator i;
-    for( i = properties.begin(); i != properties.end(); i++ )
+
+  //*********************************************************
+  // Accel_Solver: Solver for a constantly accelerated system
+  //*********************************************************
+
+  void establish_accel_solver( Operand<values::Scalar> &s, 
+			       Operand<values::Scalar> &t, 
+			       Operand<values::Scalar> &a, 
+			       Operand<values::Scalar> &v0,
+			       Operand<values::Scalar> &ve )
+  {
+    s = 0.5 * a * t*t + v0 * t;
+    ve = v0 + a * t;
+  }
+
+
+  //***************************************************************************
+  // property/solver test 
+  //***************************************************************************
+
+  int solver_test()
+  {
+    int errors = 0;
+
+    cout << endl;
+    cout << "--------------" << endl;
+    cout << "Solver Test..." << endl;
+    cout << "--------------" << endl;
+
+    {
+      //**********************************************************************
+      cout << " Testing Sum Solver... (a = b + c) [12 = 5 + 7]" << endl;
       {
-	
-	// was property just solved and it isn't the caller
-	if( (i->second == prop_just_solved) && (caller != i->first) ) 
-	  {
-	    i->second = prop_solved;
-	    i->first->use_it( this );
-	  }
+	cout << "  solve for a: ";
+	Operand<values::Scalar> a,b,c ; 
+	establish_sum_solver( a, b, c );
+	if(!b.set_value( 5 ) )
+	{
+	  cerr << "Error: could not set b!!! Anyway  a="; 
+	  errors++;
+	}
+	if( a.is_solved() )
+	{
+	  cerr << "Error: a solved without knowing c!!! a="; 
+	  errors++;
+	}
+	if(!c.set_value( 7 ) )
+	{
+	  cerr << "Error: could not set c!!! Anyway  a="; 
+	  errors++;
+	}
+	if( !a.is_solved() )
+	{
+	  cerr << "Error: a unsolved!!!" << endl; 
+	  errors++;
+	}
 	else
-	  // check if all props are solved
-	  if( i->second != prop_solved )
-	    are_all_props_solved = false;
+	{
+	  cout << a;
+	  if( a.get_value() == 12 )
+	    cout << " OK" << endl;
+	  else
+	  {
+	    cout << " False!!!" << endl;
+	    errors++;
+	  }
+	}
       }
-
-    if( are_all_props_solved ) 
       {
-#ifdef __DEBUG__
-	cout << "warning: untested \"delete this\" of solver!" << endl;
-#endif
-	delete this;		// dangerous for iterators???
+	cout << "  solve for b: ";
+	Operand<values::Scalar> a,b,c ; 
+	establish_sum_solver( a, b, c );
+	if(!a.set_value( 12 ) )
+	{
+	  cerr << "Error: could not set a!!! Anyway  b="; 
+	  errors++;
+	}
+	if( b.is_solved() )
+	{
+	  cerr << "Error: b solved without knowing c!!! b="; 
+	  errors++;
+	}
+	if(!c.set_value( 7 ) )
+	{
+	  cerr << "Error: could not set c!!! Anyway  b="; 
+	  errors++;
+	}
+	if( !b.is_solved() )
+	{
+	  cerr << "Error: b unsolved!!!" << endl; 
+	  errors++;
+	}
+	else
+	{
+	  cout << b;
+	  if( b.get_value() == 5 )
+	    cout << " OK" << endl;
+	  else
+	  {
+	    cout << " False!!!" << endl;
+	    errors++;
+	  }
+	}
       }
-    // !!! no more use of object member variables !!!
-  }
-
-  // Properties call that if they want to validate their results
-  // (uses virtual function check_prop_solution)
-  bool Solver::is_prop_solution_ok
-  ( Property *caller, Solve_Run_Info const *info ) {
-    if( !info->is_id_valid( try_id ) )	// is this the first call in try
       {
-	// reset the check flags that indicate which properties were solved
-	properties_type::iterator i;
-	for( i = properties.begin(); i != properties.end(); i++ )
-	  i->second = prop_not_solved;
-
-	try_id = info->get_test_run_id();
+	cout << "  solve for c: ";
+	Operand<values::Scalar> a,b,c ; 
+	establish_sum_solver( a, b, c );
+	if(!a.set_value( 12 ) )
+	{
+	  cerr << "Error: could not set a!!! Anyway  c="; 
+	  errors++;
+	}
+	if( c.is_solved() )
+	{
+	  cerr << "Error: c solved without knowing b!!! c="; 
+	  errors++;
+	}
+	if(!b.set_value( 5 ) )
+	{
+	  cerr << "Error: could not set b!!! Anyway  c="; 
+	  errors++;
+	}
+	if( !c.is_solved() )
+	{
+	  cerr << "Error: c unsolved!!!" << endl; 
+	  errors++;
+	}
+	else
+	{
+	  cout << c;
+	  if( c.get_value() == 7 )
+	    cout << " OK" << endl;
+	  else
+	  {
+	    cout << " False!!!" << endl;
+	    errors++;
+	  }
+	}
       }
+      //**********************************************************************
+      cout << " Testing Product Solver... (a = b * c) [35 = 5 * 7]" << endl;
+      {
+	cout << "  solve for a: ";
+	Operand<values::Scalar> a,b,c ; 
+	establish_product_solver( a, b, c );
+	if(!b.set_value( 5 ) )
+	{
+	  cerr << "Error: could not set b!!! Anyway  a="; 
+	  errors++;
+	}
+	if( a.is_solved() )
+	{
+	  cerr << "Error: a solved without knowing c!!! a="; 
+	  errors++;
+	}
+	if(!c.set_value( 7 ) )
+	{
+	  cerr << "Error: could not set c!!! Anyway  a="; 
+	  errors++;
+	}
+	if( !a.is_solved() )
+	{
+	  cerr << "Error: a unsolved!!!" << endl; 
+	  errors++;
+	}
+	else
+	{
+	  cout << a;
+	  if( a.get_value() == 35 )
+	    cout << " OK" << endl;
+	  else
+	  {
+	    cout << " False!!!" << endl;
+	    errors++;
+	  }
+	}
+      }
+      {
+	cout << "  solve for b: ";
+	Operand<values::Scalar> a,b,c ; 
+	establish_product_solver( a, b, c );
+	if(!a.set_value( 35 ) )
+	{
+	  cerr << "Error: could not set a!!! Anyway  b="; 
+	  errors++;
+	}
+	if( b.is_solved() )
+	{
+	  cerr << "Error: b solved without knowing c!!! b="; 
+	  errors++;
+	}
+	if(!c.set_value( 7 ) )
+	{
+	  cerr << "Error: could not set c!!! Anyway  b="; 
+	  errors++;
+	}
+	if( !b.is_solved() )
+	{
+	  cerr << "Error: b unsolved!!!" << endl; 
+	  errors++;
+	}
+	else
+	{
+	  cout << b;
+	  if( b.get_value() == 5 )
+	    cout << " OK" << endl;
+	  else
+	  {
+	    cout << " False!!!" << endl;
+	    errors++;
+	  }
+	}
+      }
+      {
+	cout << "  solve for c: ";
+	Operand<values::Scalar> a,b,c ; 
+	establish_product_solver( a, b, c );
+	if(!a.set_value( 35 ) )
+	{
+	  cerr << "Error: could not set a!!! Anyway  c="; 
+	  errors++;
+	}
+	if( c.is_solved() )
+	{
+	  cerr << "Error: c solved without knowing b!!! c="; 
+	  errors++;
+	}
+	if(!b.set_value( 5 ) )
+	{
+	  cerr << "Error: could not set b!!! Anyway  c="; 
+	  errors++;
+	}
+	if( !c.is_solved() )
+	{
+	  cerr << "Error: c unsolved!!!" << endl; 
+	  errors++;
+	}
+	else
+	{
+	  cout << c;
+	  if( c.get_value() == 7 )
+	    cout << " OK" << endl;
+	  else
+	  {
+	    cout << " False!!!" << endl;
+	    errors++;
+	  }
+	}
+      }
+      //**********************************************************************
+      cout << " Testing Product Solver... (a = b * c) [0 = 0 * 7]" 
+	   << endl;
+      {
+	cout << "  solve for a: ";
+	Operand<values::Scalar> a,b,c ; 
+	establish_product_solver( a, b, c );
+	if(!b.set_value( 0 ) )
+	{
+	  cerr << "Error: could not set b!!! Anyway  a="; 
+	  errors++;
+	}
+	if( a.is_solved() )
+	{
+	  cout << a;
+	  if( a.get_value() == 0 )
+	    cout << " OK" << endl;
+	  else
+	  {
+	    cout << " False!!!" << endl;
+	    errors++;
+	  }
+	}
+	else
+	{
+	  cerr << "Error: b=0 is not enough!!! Anyway  a="; 
+	  errors++;
 
+	  if(!c.set_value( 7 ) )
+	  {
+	    cerr << "Error: could not set c!!! Anyway  a="; 
+	    errors++;
+	  }
+	  if(!a.is_solved() )
+	  {
+	    cerr << "Error: a unsolved!!!" << endl; 
+	    errors++;
+	  }
+	  else
+	  {
+	    cout << a;
+	    if( a.get_value() == 0 )
+	      cout << " OK" << endl;
+	    else
+	    {
+	      cout << " False!!!" << endl;
+	      errors++;
+	    }
+	  }
+	}
+      }
+      {
+	cout << "  solve for b: ";
+	Operand<values::Scalar> a,b,c ; 
+	establish_product_solver( a, b, c );
+	if(!c.set_value( 7 ) )
+	{
+	  cerr << "Error: could not set c!!! Anyway  b="; 
+	  errors++;
+	}
+	if( b.is_solved() )
+	{
+	  cerr << "Error: b solved without knowing c!!! b="; 
+	  errors++;
+	}
+	if(!a.set_value( 0 ) )
+	{
+	  cerr << "Error: could not set a!!! Anyway  b="; 
+	  errors++;
+	}
+	if( !b.is_solved() )
+	{
+	  cerr << "Error: b unsolved!!!" << endl; 
+	  errors++;
+	}
+	else
+	{
+	  cout << b;
+	  if( b.get_value() == 0 )
+	    cout << " OK" << endl;
+	  else
+	  {
+	    cout << " False!!!" << endl;
+	    errors++;
+	  }
+	}
+      }
+      {
+	cout << "  solve for c: ";
+	Operand<values::Scalar> a,b,c ; 
+	establish_product_solver( a, b, c );
+	if(!b.set_value( 0 ) )
+	{
+	  cerr << "Error: could not set b!!! Anyway  c="; 
+	  errors++;
+	}
+	if( c.is_solved() )
+	{
+	  cerr << "Error: c solved without knowing b!!! c="; 
+	  errors++;
+	}
+	if(!a.set_value( 0 ) )
+	{
+	  cerr << "Error: could not set a!!! Anyway  c="; 
+	  errors++;
+	}
+	if( !c.is_solved() )
+	{
+	  cout << "cannot be solved: OK" << endl; 
+	}
+	else
+	{
+	  cerr << "Error: c unsolvable!!! c="; 
+	  errors++;
+
+	  cout << c;
+	  if( c.get_value() == 7 )
+	    cout << " OK, Hä??? ;)" << endl;
+	  else
+	  {
+	    cout << " False!!!" << endl;
+	    errors++;
+	  }
+	}
+      }
+      //**********************************************************************
+      cout << " Testing Product Solver... (a = b * c) [35 = 5 * 7] {reversed}" 
+	   << endl;
+      {
+	cout << "  solve for a: ";
+	Operand<values::Scalar> a,b,c ; 
+	establish_product_solver( a, b, c );
+	if(!c.set_value( 7 ) )
+	{
+	  cerr << "Error: could not set c!!! Anyway  a="; 
+	  errors++;
+	}
+	if( a.is_solved() )
+	{
+	  cerr << "Error: a solved without knowing c!!! a="; 
+	  errors++;
+	}
+	if(!b.set_value( 5 ) )
+	{
+	  cerr << "Error: could not set b!!! Anyway  a="; 
+	  errors++;
+	}
+	if( !a.is_solved() )
+	{
+	  cerr << "Error: a unsolved!!!" << endl; 
+	  errors++;
+	}
+	else
+	{
+	  cout << a;
+	  if( a.get_value() == 35 )
+	    cout << " OK" << endl;
+	  else
+	  {
+	    cout << " False!!!" << endl;
+	    errors++;
+	  }
+	}
+      }
+      {
+	cout << "  solve for b: ";
+	Operand<values::Scalar> a,b,c ; 
+	establish_product_solver( a, b, c );
+	if(!c.set_value( 7 ) )
+	{
+	  cerr << "Error: could not set c!!! Anyway  b="; 
+	  errors++;
+	}
+	if( b.is_solved() )
+	{
+	  cerr << "Error: b solved without knowing c!!! b="; 
+	  errors++;
+	}
+	if(!a.set_value( 35 ) )
+	{
+	  cerr << "Error: could not set a!!! Anyway  b="; 
+	  errors++;
+	}
+	if( !b.is_solved() )
+	{
+	  cerr << "Error: b unsolved!!!" << endl; 
+	  errors++;
+	}
+	else
+	{
+	  cout << b;
+	  if( b.get_value() == 5 )
+	    cout << " OK" << endl;
+	  else
+	  {
+	    cout << " False!!!" << endl;
+	    errors++;
+	  }
+	}
+      }
+      {
+	cout << "  solve for c: ";
+	Operand<values::Scalar> a,b,c ; 
+	establish_product_solver( a, b, c );
+	if(!b.set_value( 5 ) )
+	{
+	  cerr << "Error: could not set b!!! Anyway  c="; 
+	  errors++;
+	}
+	if( c.is_solved() )
+	{
+	  cerr << "Error: c solved without knowing b!!! c="; 
+	  errors++;
+	}
+	if(!a.set_value( 35 ) )
+	{
+	  cerr << "Error: could not set a!!! Anyway  c="; 
+	  errors++;
+	}
+	if(!c.is_solved() )
+	{
+	  cerr << "Error: c unsolved!!!" << endl; 
+	  errors++;
+	}
+	else
+	{
+	  cout << c;
+	  if( c.get_value() == 7 )
+	    cout << " OK" << endl;
+	  else
+	  {
+	    cout << " False!!!" << endl;
+	    errors++;
+	  }
+	}
+      }
+      //**********************************************************************
+      cout << " Testing Product Solver... (a = b * c) [0 = 0 * 7] {reversed}" 
+	   << endl;
+      {
+	cout << "  solve for a: ";
+	Operand<values::Scalar> a,b,c ; 
+	establish_product_solver( a, b, c );
+	if(!c.set_value( 7 ) )
+	{
+	  cerr << "Error: could not set c!!! Anyway  a="; 
+	  errors++;
+	}
+	if( a.is_solved() )
+	{
+	  cerr << "Error: a solved without knowing b!!! c="; 
+	  errors++;
+	}
+	if(!b.set_value( 0 ) )
+	{
+	  cerr << "Error: could not set b!!! Anyway  a="; 
+	  errors++;
+	}
+	if(!a.is_solved() )
+	{
+	  cerr << "Error: a unsolved!!!" << endl; 
+	  errors++;
+	}
+	else
+	{
+	  cout << a;
+	  if( a.get_value() == 0 )
+	    cout << " OK" << endl;
+	  else
+	  {
+	    cout << " False!!!" << endl;
+	    errors++;
+	  }
+	}
+      }
+      {
+	cout << "  solve for b: ";
+	Operand<values::Scalar> a,b,c ; 
+	establish_product_solver( a, b, c );
+	if(!c.set_value( 7 ) )
+	{
+	  cerr << "Error: could not set c!!! Anyway  b="; 
+	  errors++;
+	}
+	if( b.is_solved() )
+	{
+	  cerr << "Error: b solved without knowing c!!! b="; 
+	  errors++;
+	}
+	if(!a.set_value( 0 ) )
+	{
+	  cerr << "Error: could not set a!!! Anyway  b="; 
+	  errors++;
+	}
+	if( !b.is_solved() )
+	{
+	  cerr << "Error: b unsolved!!!" << endl; 
+	  errors++;
+	}
+	else
+	{
+	  cout << b;
+	  if( b.get_value() == 0 )
+	    cout << " OK" << endl;
+	  else
+	  {
+	    cout << " False!!!" << endl;
+	    errors++;
+	  }
+	}
+      }
+      {
+	cout << "  solve for c: ";
+	Operand<values::Scalar> a,b,c ; 
+	establish_product_solver( a, b, c );
+	if(!b.set_value( 0 ) )
+	{
+	  cerr << "Error: could not set b!!! Anyway  c="; 
+	  errors++;
+	}
+	if( c.is_solved() )
+	{
+	  cerr << "Error: c solved without knowing b!!! c="; 
+	  errors++;
+	}
+	if(!a.set_value( 0 ) )
+	{
+	  cerr << "Error: could not set a!!! Anyway  c="; 
+	  errors++;
+	}
+	if( !c.is_solved() )
+	{
+	  cout << "cannot be solved: OK" << endl; 
+	}
+	else
+	{
+	  cerr << "Error: c unsolvable!!! c="; 
+	  errors++;
+
+	  cout << c;
+	  if( c.get_value() == 7 )
+	    cout << " OK, Hä??? ;)" << endl;
+	  else
+	  {
+	    cout << " False!!!" << endl;
+	    errors++;
+	  }
+	}
+      }
+      //**********************************************************************
+      cout << " Testing combined Solver... (a = (b+c) * d) [77 = (5+6) * 7]" 
+	   << endl;
+      {
+	cout << "  inserting... ";
+	Operand<values::Scalar> a,b,c,d,sum ; 
+	establish_sum_solver( sum, b, c );     // sum = b + c
+	establish_product_solver( a, sum, d ); // a = sum * d
+	if(!c.set_value( 6 ) )
+	{
+	  cerr << "Error: could not set c!!!,"; 
+	  errors++;
+	}
+	else
+	{
+	  cout << "c=6,";
+	}
+	if(!d.set_value( 7 ) )
+	{
+	  cerr << "Error: could not set d!!!,"; 
+	  errors++;
+	}
+	else
+	{
+	  cout << "d=7,";
+	}
+	if( a.is_solved() )
+	{
+	  cerr << "Error: a solved too early!!!,"; 
+	  errors++;
+	}
+
+	if(!b.set_value( 5 ) )
+	{
+	  cerr << "Error: could not set b!!! "; 
+	  errors++;
+	}
+	else
+	{
+	  cout << "b=5 ";
+	}
+
+	if(!a.is_solved() )
+	{
+	  cerr << "Error: a unsolved!!!" << endl; 
+	  errors++;
+	}
+	else
+	{
+	  cout << "-> a=" << a;
+	  if( a.get_value() == 77 )
+	    cout << " OK" << endl;
+	  else
+	  {
+	    cout << " False!!!" << endl;
+	    errors++;
+	  }
+	}
+      }
+      {
+	cout << "  inserting... ";
+	Operand<values::Scalar> a,b,c,d,sum ; 
+	establish_sum_solver( sum, b, c );     // sum = b + c
+	establish_product_solver( a, sum, d ); // a = sum * d
+	if(!d.set_value( 7 ) )
+	{
+	  cerr << "Error: could not set d!!!,"; 
+	  errors++;
+	}
+	else
+	{
+	  cout << "d=7,";
+	}
+	if(!c.set_value( 6 ) )
+	{
+	  cerr << "Error: could not set c!!!,"; 
+	  errors++;
+	}
+	else
+	{
+	  cout << "c=6,";
+	}
+	if( b.is_solved() )
+	{
+	  cerr << "Error: b solved too early!!!,"; 
+	  errors++;
+	}
+
+	if(!a.set_value( 77 ) )
+	{
+	  cerr << "Error: could not set a!!! "; 
+	  errors++;
+	}
+	else
+	{
+	  cout << "a=77 ";
+	}
+
+	if(!b.is_solved() )
+	{
+	  cerr << "Error: b unsolved!!!" << endl; 
+	  errors++;
+	}
+	else
+	{
+	  cout << "-> b=" << b;
+	  if( b.get_value() == 5 )
+	    cout << " OK" << endl;
+	  else
+	  {
+	    cout << " False!!!" << endl;
+	    errors++;
+	  }
+	}
+      }
+      {
+	cout << "  inserting... ";
+	Operand<values::Scalar> a,b,c,d,sum ; 
+	establish_sum_solver( sum, b, c );     // sum = b + c
+	establish_product_solver( a, sum, d ); // a = sum * d
+	if(!a.set_value( 77 ) )
+	{
+	  cerr << "Error: could not set a!!! "; 
+	  errors++;
+	}
+	else
+	{
+	  cout << "a=77 ";
+	}
+	if(!d.set_value( 7 ) )
+	{
+	  cerr << "Error: could not set d!!!,"; 
+	  errors++;
+	}
+	else
+	{
+	  cout << "d=7,";
+	}
+	if( c.is_solved() )
+	{
+	  cerr << "Error: c solved too early!!!,"; 
+	  errors++;
+	}
+
+	if(!b.set_value( 5 ) )
+	{
+	  cerr << "Error: could not set b!!!,"; 
+	  errors++;
+	}
+	else
+	{
+	  cout << "b=5,";
+	}
+
+	if(!c.is_solved() )
+	{
+	  cerr << "Error: c unsolved!!!" << endl; 
+	  errors++;
+	}
+	else
+	{
+	  cout << "-> c=" << c;
+	  if( c.get_value() == 6 )
+	    cout << " OK" << endl;
+	  else
+	  {
+	    cout << " False!!!" << endl;
+	    errors++;
+	  }
+	}
+      }
+      {
+	cout << "  inserting... ";
+	Operand<values::Scalar> a,b,c,d,sum ; 
+	establish_sum_solver( sum, b, c );     // sum = b + c
+	establish_product_solver( a, sum, d ); // a = sum * d
+	if(!c.set_value( 6 ) )
+	{
+	  cerr << "Error: could not set c!!!,"; 
+	  errors++;
+	}
+	else
+	{
+	  cout << "c=6,";
+	}
+	if(!a.set_value( 77 ) )
+	{
+	  cerr << "Error: could not set a!!! "; 
+	  errors++;
+	}
+	else
+	{
+	  cout << "a=77 ";
+	}
+	if( d.is_solved() )
+	{
+	  cerr << "Error: d solved too early!!!,"; 
+	  errors++;
+	}
+
+	if(!b.set_value( 5 ) )
+	{
+	  cerr << "Error: could not set b!!!,"; 
+	  errors++;
+	}
+	else
+	{
+	  cout << "b=5,";
+	}
+
+	if(!d.is_solved() )
+	{
+	  cerr << "Error: d unsolved!!!" << endl; 
+	  errors++;
+	}
+	else
+	{
+	  cout << "-> d=" << d;
+	  if( d.get_value() == 7 )
+	    cout << " OK" << endl;
+	  else
+	  {
+	    cout << " False!!!" << endl;
+	    errors++;
+	  }
+	}
+      }
+    }
+    //**********************************************************************
+    //**********************************************************************
+    {
+      Operand<values::Scalar> s0; // start stretch
+      Operand<values::Scalar> se; // end stretch
+      Operand<values::Scalar> s ; // differance stretch
+      Operand<values::Scalar> t ; // duration
+      Operand<values::Scalar> a ; // acceleration
+      Operand<values::Scalar> v0; // startspeed
+      Operand<values::Scalar> ve; // endspeed
+
+      establish_accel_solver( s, t, a, v0, ve );
+      establish_sum_solver( se, s, s0 );
+
+      cout << "s0=" << s0 << " s=" << s << " se=" << se << " t=" <<  t 
+	   << " a=" << a << " v0=" << v0 << " ve=" << ve << endl;
     
-    return check_prop_solution_and_results( caller, info );
+      cout << "startstretch ok?" << s0.set_value(0) << endl; 
+
+      cout << "s0=" << s0 << " s=" << s << " se=" << se << " t=" <<  t 
+	   << " a=" << a << " v0=" << v0 << " ve=" << ve << endl;
+
+      cout << "startspeed 2 m/s ok?" << v0.set_value(2) << endl; 
+      cout << "s0=" << s0 << " s=" << s << " se=" << se << " t=" <<  t 
+	   << " a=" << a << " v0=" << v0 << " ve=" << ve << endl;
+
+      cout << "acceleration 1 m/s^2 ok?" << a.set_value(1) << endl;
+      cout << "s0=" << s0 << " s=" << s << " se=" << se << " t=" <<  t 
+	   << " a=" << a << " v0=" << v0 << " ve=" << ve << endl;
+
+      cout << "duration 2 ok?" << t.set_value(2) << endl; 
+      cout << "s0=" << s0 << " s=" << s << " se=" << se << " t=" <<  t 
+	   << " a=" << a << " v0=" << v0 << " ve=" << ve << endl;
+    }
+    return errors;
   }
 
-  void Solver::add_Property( Property *prop ) {
-    properties[ prop ] = prop_not_solved; 
-    prop->add_Solver( this );
-  }
-
-  void Solver::property_use_it( Property *prop ) { 
-    prop->use_it( this ); 
-  }
-
-  //*****************************************************************
-  // Accel_Solver: Property Solver for constantly accelerated systems
-  //*****************************************************************
-  
-  Accel_Solver::Accel_Solver( Scalar_Property *_d, Scalar_Property *_t, 
-			      Scalar_Property *_a, 
-			      Scalar_Property *_v0, Scalar_Property *_ve ) 
-    : d(*_d), t(*_t), a(*_a), v0(*_v0), ve(*_ve){
-    add_Property( _d );
-    add_Property( _t );
-    add_Property( _a );
-    add_Property( _v0 );
-    add_Property( _ve );
-  }
-  
-  // Properties call that if they want to validate their results
-  // !!! may be self recursive
-  bool Accel_Solver::check_prop_solution_and_results
-  ( Property *caller, Solve_Run_Info const *info ){
-
-    // duration solved in this try now ?
-    if( caller == &t )
-      {
-	assert( t.is_solved_in_try( info ) );	
-
-	// stretch known ?
-	if( v0.is_solved_in_try( info ) )
-	  {
-	    // acceleration known ?
-	    if( a.is_solved_in_try( info ) )
-	      {
-		values::Scalar res_ve = v0 + a * t;
-		values::Scalar res_d  = v0*t + 0.5*a*t*t;
-
-		// verify result for endspeed
-		if( !ve.is_this_ok( res_ve, this, info ) )
-		  return false; 
-
-		// verify result for difference
-		if( !d.is_this_ok( res_d, this, info ) )
-		  return false; 
-
-		properties[ &ve ] = prop_just_solved; // endspeed solved
-		properties[ &d ] = prop_just_solved; // stretch solved
-	      }	    
-	    //...
-	  }	    
-	//...
-      }
-
-    //...
-
-    return true;
-  }
-
-  //**********************************************************
-  // Diff_Solver: Solver for a start, end and difference value
-  //**********************************************************
-  
-  Diff_Solver::Diff_Solver( Scalar_Property *_d, Scalar_Property *_s, 
-			      Scalar_Property *_e ) 
-    : d(*_d), s(*_s), e(*_e){
-    add_Property( _d );
-    add_Property( _s );
-    add_Property( _e );
-  }
-  
-  // Properties call that if they want to validate their results
-  // !!! may be self recursive
-  bool Diff_Solver::check_prop_solution_and_results
-  ( Property *caller, Solve_Run_Info const *info ){
-
-    // difference solved in this try now ?
-    if( caller == &d )
-      {
-	assert( d.is_solved_in_try( info ) );	
-
-	// start value known ?
-	if( s.is_solved_in_try( info ) )
-	  {
-	    // can calculate end value now:
-	    values::Scalar res_e = s + d;
-
-	    // verify result for end value
-	    if( !e.is_this_ok( res_e, this, info ) )
-	      return false; 
-
-	    properties[ &e ] = prop_just_solved; // end value solved
-	  }	    
-
-	// end value known ?
-	if( e.is_solved_in_try( info ) )
-	  {
-	    // can calculate start value now:
-	    values::Scalar res_s = e - d;
-
-	    // verify result for end value
-	    if( !s.is_this_ok( res_s, this, info ) )
-	      return false; 
-
-	    properties[ &s ] = prop_just_solved; // end value solved
-	  }	    
-      }
-
-    // start value solved in this try now ?
-    if( caller == &s )
-      {
-	assert( s.is_solved_in_try( info ) );	
-
-	// difference value known ?
-	if( d.is_solved_in_try( info ) )
-	  {
-	    // can calculate end value now:
-	    values::Scalar res_e = s + d;
-
-	    // verify result for end value
-	    if( !e.is_this_ok( res_e, this, info ) )
-	      return false; 
-
-	    properties[ &e ] = prop_just_solved; // end value solved
-	  }	    
-
-	// end value known ?
-	if( e.is_solved_in_try( info ) )
-	  {
-	    // can calculate difference now:
-	    values::Scalar res_d = e - s;
-
-	    // verify result for difference
-	    if( !d.is_this_ok( res_d, this, info ) )
-	      return false; 
-
-	    properties[ &d ] = prop_just_solved; // difference solved
-	  }	    
-      }
-
-    // end value solved in this try now ?
-    if( caller == &e )
-      {
-	assert( e.is_solved_in_try( info ) );	
-
-	// difference value known ?
-	if( d.is_solved_in_try( info ) )
-	  {
-	    // can calculate start value now:
-	    values::Scalar res_s = e - d;
-
-	    // verify result for start value
-	    if( !s.is_this_ok( res_s, this, info ) )
-	      return false; 
-
-	    properties[ &s ] = prop_just_solved; // start value solved
-	  }	    
-
-	// start value known ?
-	if( s.is_solved_in_try( info ) )
-	  {
-	    // can calculate difference now:
-	    values::Scalar res_d = e - s;
-
-	    // verify result for start value
-	    if( !d.is_this_ok( res_d, this, info ) )
-	      return false; 
-
-	    properties[ &d ] = prop_just_solved; // start value solved
-	  }	    
-      }
-
-    return true;
-  }
-  
-
-  //*******************************************************************
-  // Relation_Solver: solver for a relation and the according to values
-  //*******************************************************************
-  
-  Relation_Solver::Relation_Solver( Scalar_Property *_q, Scalar_Property *_n, 
-			      Scalar_Property *_d ) 
-    : q(*_q), n(*_n), d(*_d){
-    add_Property( _q );
-    add_Property( _n );
-    add_Property( _d );
-  }
-  
-  // Properties call that if they want to validate their results
-  // !!! may be self recursive
-  bool Relation_Solver::check_prop_solution_and_results
-  ( Property *caller, Solve_Run_Info const *info ){
-
-    // relation solved in this try now ?
-    if( caller == &q )
-      {
-	assert( q.is_solved_in_try( info ) );	
-
-	// assure quotient doesn't equal zero
-	if( q == 0 ) 
-	  return false;		// avoid division by zero
-
-	// numerator known ?
-	if( n.is_solved_in_try( info ) )
-	  {
-	    // can calculate denominator
-	    values::Scalar res_d = n / q;
-
-	    // verify result for denominator
-	    if( !d.is_this_ok( res_d, this, info ) )
-	      return false; 
-
-	    properties[ &d ] = prop_just_solved; // denominator
-	  }	    
-
-	// denominator known ?
-	if( d.is_solved_in_try( info ) )
-	  {
-	    // can calculate numerator now:
-	    values::Scalar res_n = q * d;
-
-	    // verify result for numerator
-	    if( !n.is_this_ok( res_n, this, info ) )
-	      return false; 
-
-	    properties[ &n ] = prop_just_solved; // numerator solved
-	  }	    
-      }
-
-    // numerator solved in this try now ?
-    if( caller == &n )
-      {
-	assert( n.is_solved_in_try( info ) );	
-
-	// quotient known ?
-	if( q.is_solved_in_try( info ) )
-	  {
-	    // can calculate denominator now:
-	    values::Scalar res_d = n / q;
-
-	    // verify result for denominator
-	    if( !d.is_this_ok( res_d, this, info ) )
-	      return false; 
-
-	    properties[ &d ] = prop_just_solved; // denominator solved
-	  }	    
-
-	// denominator known ?
-	if( d.is_solved_in_try( info ) )
-	  {
-	    // can calculate quotient now:
-	    values::Scalar res_q = n / d;
-
-	    // verify result for quotient
-	    if( !q.is_this_ok( res_q, this, info ) )
-	      return false; 
-
-	    properties[ &q ] = prop_just_solved; // quotient solved
-	  }	    
-      }
-
-    // denominator solved in this try now ?
-    if( caller == &d )
-      {
-	assert( d.is_solved_in_try( info ) );	
-
-	// quotient value known ?
-	if( q.is_solved_in_try( info ) )
-	  {
-	    // can calculate numerator now:
-	    values::Scalar res_n = q * d;
-
-	    // verify result for numerator
-	    if( !n.is_this_ok( res_n, this, info ) )
-	      return false; 
-
-	    properties[ &n ] = prop_just_solved; // numerator solved
-	  }	    
-
-	// numerator known ?
-	if( n.is_solved_in_try( info ) )
-	  {
-	    // can calculate quotient now:
-	    values::Scalar res_q = n / d;
-
-	    // verify result for numerator
-	    if( !q.is_this_ok( res_q, this, info ) )
-	      return false; 
-
-	    properties[ &q ] = prop_just_solved; // numerator solved
-	  }	    
-      }
-
-    return true;
-  }
-  
-}
+}  

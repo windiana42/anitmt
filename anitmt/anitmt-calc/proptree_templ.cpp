@@ -50,17 +50,16 @@ namespace anitmt{
     throw( EX_property_unknown, EX_property_type_rejected, 
 	   EX_property_rejected ) {
     
-    if( get_property( name ) != 0 )
+    Property *property = get_property( name );
+    if( property != 0 )
       {
-	Type_Property<T> *p = 
-	    dynamic_cast< Type_Property<T>* >( properties[ name ] );
+	Type_Property<T> *p = dynamic_cast< Type_Property<T>* >( property );
 	
-	if( !p )
-	  throw EX_property_type_rejected();
+	if( !p ) throw EX_property_type_rejected();
 	
 	bool accepted;
 	try{
-	  accepted = p->set_if_ok( val );
+	  accepted = p->set_value( val );
 	}
 	catch( EX ){
 	  throw EX_property_rejected();

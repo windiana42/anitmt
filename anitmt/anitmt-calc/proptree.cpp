@@ -14,6 +14,10 @@
 
 #include "proptree.hpp"
 
+#include "nodes.hpp"
+#include "animation.hpp"
+#include "save_filled.hpp"
+
 namespace anitmt{
 
   //************************************************************
@@ -215,6 +219,63 @@ namespace anitmt{
       type(t), name(n), ani(a) {}
 
   Prop_Tree_Node::~Prop_Tree_Node() {}
+
+  //***************************************************************************
+  // tree create test
+  //***************************************************************************
+
+  int property_tree_test()
+  {
+    int errors = 0;
+
+    cout << endl;
+    cout << "-----------------" << endl;
+    cout << "Tree Node Test..." << endl;
+    cout << "-----------------" << endl;
+
+    cout << " Node name initialization..." << endl;
+    anitmt::make_all_nodes_available();
+    
+    cout << " Building data hierarchy..." << endl;
+    cout << "  ani dummy_name" << endl;
+    Animation *ani = new Animation("dummy_name");
+    cout << "    scene testscene" << endl;
+    Prop_Tree_Node *tscene = ani->add_child( "scene", "testscene" );
+    cout << "      scalar testval" << endl;
+    Prop_Tree_Node *tscalar = tscene ->add_child( "scalar", "testval" );
+    cout << "        linear testlinear1" << endl;
+    Prop_Tree_Node *tlinear1 = tscalar->add_child( "linear", "testlinear1" );
+    cout << "        linear testlinear2" << endl;
+    Prop_Tree_Node *tlinear2 = tscalar->add_child( "linear", "testlinear2" );
+    
+    cout << " Setting values..." << endl;
+    cout << "  scene.filename = \"test.scene\"" << endl;
+    tscene->set_property( "filename", values::String("test.scene") );
+    
+    cout << "  testlinear1.starttime  = 0" << endl;
+    tlinear1->set_property( "starttime",  values::Scalar(0) );
+    cout << "  testlinear1.endtime    = 3" << endl;
+    tlinear1->set_property( "endtime",    values::Scalar(3) );
+    cout << "  testlinear1.endvalue   = 2" << endl;
+    tlinear1->set_property( "endvalue",   values::Scalar(2) );
+    cout << "  testlinear1.difference = 1" << endl;
+    tlinear1->set_property( "difference", values::Scalar(1) );
+    cout << "  testlinear2.endtime    = 10" << endl;
+    tlinear2->set_property( "endtime",    values::Scalar(10) );
+    cout << "  testlinear2.endvalue   = 1" << endl;
+    tlinear2->set_property( "endvalue",   values::Scalar(1) );
+    
+    cout << " Save pre results..." << endl;
+    save_filled( "test_pre.out", ani );
+
+    cout << " Run actions..." << endl;
+    ani->pri_sys.invoke_all_Actions(); // invoke actions
+
+    cout << " Save final results..." << endl;
+    save_filled( "test.out", ani );
+
+    return errors;
+  }
 
 }
 

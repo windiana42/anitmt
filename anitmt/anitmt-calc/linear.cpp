@@ -31,11 +31,11 @@ namespace anitmt{
 
     //*********
     // Solvers
-    
-    new Diff_Solver( &d, &v0, &ve );
-    new Diff_Solver( &t, &t0, &te );
-    new Diff_Solver( &t_f, &t0_f, &te_f );
-    new Relation_Solver( &s, &d, &t );
+
+    establish_sum_solver( ve, d, v0 ); // ve = d + v0
+    establish_sum_solver( te, t, t0 );
+    establish_sum_solver( te_f, t_f, t0_f );
+    establish_product_solver( d, s, t ); // d = s * t 
     //new Relation_Solver( ?FPS?, &t_f, &t );
     //new Relation_Solver( ?FPS?, &t0_f, &t0 );
     //new Relation_Solver( ?FPS?, &te_f, &te );
@@ -58,7 +58,7 @@ namespace anitmt{
     // Default Values
 
     // Default value 0 for slope on level 10 
-    establish_Default_Value( &ani->pri_sys, 50, &s, 0 );
+    establish_Default_Value( &ani->pri_sys, 50, s, 0 );
 
     /*
     // only first element
@@ -84,7 +84,7 @@ namespace anitmt{
     */
     
     // Default value 0 for differance on level 30 
-    establish_Default_Value( &ani->pri_sys, 70, &d, 0 );
+    establish_Default_Value( &ani->pri_sys, 70, d, 0 );
   }
 
   //********
@@ -96,10 +96,10 @@ namespace anitmt{
 
     // push endtime to next starttime on level 1
     establish_Push_Connection( &ani->pri_sys, 
-			       1, &te, next_node, "starttime" );
+			       1, te, next_node, "starttime" );
     // push endvalue to next startvalue on level 3
     establish_Push_Connection( &ani->pri_sys, 
-			       3, &ve, next_node, "startvalue" );
+			       3, ve, next_node, "startvalue" );
   }
 
   void Scal_Linear::init_prev( Return<values::Scalar> *prev ) {
@@ -107,10 +107,10 @@ namespace anitmt{
 
     // push starttime to previous endtime on level 2
     establish_Push_Connection( &ani->pri_sys, 
-			       2, &t0, prev_node, "endtime" );
+			       2, t0, prev_node, "endtime" );
     // push startvalue to previous endvalue on level 4
     establish_Push_Connection( &ani->pri_sys, 
-			       4, &v0, prev_node, "endvalue" );
+			       4, v0, prev_node, "endvalue" );
   }
     
   values::Scalar Scal_Linear::get_return_value( values::Scalar t,

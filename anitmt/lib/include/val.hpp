@@ -33,7 +33,7 @@ namespace values
   inline double sqr(double x)  {  return(x*x);  }
   
   class Valtype{
-  protected:
+  public:
     enum Types { scalar, vector, matrix, string, flag };
   private:
     Types type;

@@ -31,6 +31,7 @@ void ParserTest() {
 		ADLParser p(cin, cout, true);
 		Animation *ani=new Animation("dummy_name");
 		p.ParseTree(ani);
+		ani->pri_sys.invoke_all_Actions();
 		cerr << "Using \"save_filled\" to save values...\n";
 		save_filled("adltest.out", ani);
 	}

@@ -1,5 +1,5 @@
 /*****************************************************************************/
-/**   This file offers solver for properties          			    **/
+/**   This file offers solver for operands          			    **/
 /*****************************************************************************/
 /**									    **/
 /** Author: Martin Trautmann						    **/
@@ -15,79 +15,161 @@
 #ifndef __AniTMT_Solver__
 #define __AniTMT_Solver__
 
-#include <list>
-#include <map>
+#include "val.hpp"
+#include "error.hpp"
+#include "operand.hpp"
 
 namespace anitmt{
-  class Solver;
+  // Methods
+  template< class T_A, class T_B, class T_C >
+  void establish_sum_solver( Operand<T_A> &a, Operand<T_A> &b, 
+			     Operand<T_A> &c );
+  template< class T_A, class T_B, class T_C >
+  void establish_product_solver( Operand<T_A> &a, Operand<T_A> &b, 
+				 Operand<T_A> &c );
+  void establish_accel_solver( Operand<values::Scalar> &d, 
+			       Operand<values::Scalar> &t, 
+			       Operand<values::Scalar> &a, 
+			       Operand<values::Scalar> &v0, 
+			       Operand<values::Scalar> &ve );
 }
 
-#include "val.hpp"
-#include "property.hpp"
-
 namespace anitmt{
 
-  //*************
-  // Exceptions: 
-  //*************
+  //*************************************************************************
+  // Basic_Solver_for_3_Operands: base class for solvers that can solve each
+  //                              of the three operands from the other two
+  //*************************************************************************
 
-  class EX_Property_Not_Connected {};
+  template< class T_A, class T_B, class T_C >
+  class Basic_Solver_for_3_Operands : public Operand_Listener
+  {
+    Operand<T_A> &a;
+    Operand<T_B> &b;
+    Operand<T_C> &c;
 
-  //************************************************
-  // Solver: general solver for dependent properties
-  //************************************************
+    bool just_solving;           // is set while testing result of solved value
+    bool just_solved_a, just_solved_b, just_solved_c;
 
-  class Solver{
-    //** virtual Methods implemented by derived objects
+    //**********************************
+    // Virtual Operand_Listener methods
 
-    // is called when property was solved
-    virtual void do_when_prop_was_solved( Property *ID ) {}
-    // calculates results of a solved Property (ID) and returns wheather
-    // the solution is ok
-    virtual bool check_prop_solution_and_results
-    ( Property *ID, Solve_Run_Info const *info ) = 0;
+    // has to check the result of the operand with ID as pointer to operand
+    bool is_result_ok( const void *ID, const Solve_Run_Info *info ) throw(EX);
+    // tells to use the result calculated by is_result_ok()
+    void use_result( const void *ID, const Solve_Run_Info *info ) throw(EX);
+    // disconnect operand
+    void disconnect( const void *ID );
 
-    //** Variables **
+    //*************************************
+    // Virtual methods for concrete solvers
 
-    friend class Property;
-    template<class T> friend class Type_Property;
+    virtual T_A calc_a( const T_B &b, const T_C &c ) = 0;
+    virtual T_B calc_b( const T_A &a, const T_C &c ) = 0;
+    virtual T_C calc_c( const T_A &a, const T_B &b ) = 0;
 
-    //** Methods **
+    virtual bool is_a_ok( const T_A &a, const T_B &b, const T_C &c, 
+			  bool avail_b, bool avail_c ) { return true; }
+    virtual bool is_b_ok( const T_A &a, const T_B &b, const T_C &c, 
+			  bool avail_a, bool avail_c ) { return true; }
+    virtual bool is_c_ok( const T_A &a, const T_B &b, const T_C &c, 
+			  bool avail_a, bool avail_b ) { return true; }
 
-    // Properties call that if they are distroyed
-    void disconnect_Property( Property *prop )
-      throw( EX_Property_Not_Connected );
-    // Properties call that if they were solved
-    // (uses virtual function do_when_prop_was_solved)
-    void prop_was_solved( Property *ID );
-    // Properties call that if they want to validate their results
-    // (uses virtual function check_prop_solution)
-    bool is_prop_solution_ok
-    ( Property *ID, Solve_Run_Info const *info );
+    virtual bool is_a_calcable( const T_B &, const T_C & ) { return true; }
+    virtual bool is_b_calcable( const T_A &, const T_C & ) { return true; }
+    virtual bool is_c_calcable( const T_A &, const T_B & ) { return true; }
 
-  protected:
-    int n_props_available;
-    long try_id;		// id to identify a solution try
+    virtual bool is_b_calcable_from_a( const T_A &/*a*/ ) { return false; }
+    virtual bool is_c_calcable_from_a( const T_A &/*a*/ ) { return false; }
+    virtual bool is_a_calcable_from_b( const T_B &/*b*/ ) { return false; }
+    virtual bool is_c_calcable_from_b( const T_B &/*b*/ ) { return false; }
+    virtual bool is_a_calcable_from_c( const T_C &/*c*/ ) { return false; }
+    virtual bool is_b_calcable_from_c( const T_C &/*c*/ ) { return false; }
 
-    enum prop_status{ prop_not_solved, prop_just_solved, prop_solved };
-    // associates properties with their status
-    typedef std::map< Property*, prop_status > properties_type;
-    properties_type properties;	// all properties and if they are solved
-
-    // add property connection
-    void add_Property( Property *prop );
-
-    inline void property_use_it( Property *prop );
+    virtual T_A calc_a_from_b( const T_B &/*b*/ ) { assert(0); }
+    virtual T_A calc_a_from_c( const T_C &/*c*/ ) { assert(0); }
+    virtual T_A calc_b_from_a( const T_A &/*a*/ ) { assert(0); }
+    virtual T_A calc_b_from_c( const T_C &/*c*/ ) { assert(0); }
+    virtual T_A calc_c_from_a( const T_A &/*a*/ ) { assert(0); }
+    virtual T_A calc_c_from_b( const T_B &/*b*/ ) { assert(0); }
   public:
-    Solver();
-    virtual ~Solver();
+    Basic_Solver_for_3_Operands( Operand<T_A> &a, Operand<T_B> &b,
+				 Operand<T_C> &c );
+    };
+
+  //************************************************
+  // Sum_Solver: solves a = b + c in any direction
+  //************************************************
+
+  template< class T_A, class T_B, class T_C >
+  class Sum_Solver : public Basic_Solver_for_3_Operands<T_A,T_B,T_C>
+  {
+    virtual T_A calc_a( const T_B &b, const T_C &c );
+    virtual T_B calc_b( const T_A &a, const T_C &c );
+    virtual T_C calc_c( const T_A &a, const T_B &b );
+  public:
+    // Sum  solver a = b + c
+    // Diff solver c = a - b
+    Sum_Solver( Operand<T_A> &a, Operand<T_B> &b, Operand<T_C> &c );
   };
+
+  // a = b + c
+  template< class T_A, class T_B, class T_C >
+  void establish_sum_solver( Operand<T_A> &a, Operand<T_B> &b, 
+			     Operand<T_C> &c )
+  {
+    new Sum_Solver<T_A,T_B,T_C>( a, b, c );
+  }
+
+  //***************************************************
+  // Product_Solver: solves a = b * c in any direction
+  //***************************************************
+
+  class Product_Solver : public Basic_Solver_for_3_Operands
+  <values::Scalar, values::Scalar, values::Scalar>
+  {
+    typedef values::Scalar T_A;
+    typedef values::Scalar T_B;
+    typedef values::Scalar T_C;
+
+    virtual T_A calc_a( const T_B &b, const T_C &c );
+    virtual T_B calc_b( const T_A &a, const T_C &c );
+    virtual T_C calc_c( const T_A &a, const T_B &b );
+
+    virtual bool is_a_ok( const T_A &a, const T_B &b, const T_C &c, 
+			  bool avail_b, bool avail_c );
+    virtual bool is_b_ok( const T_A &a, const T_B &b, const T_C &c, 
+			  bool avail_a, bool avail_c );
+    virtual bool is_c_ok( const T_A &a, const T_B &b, const T_C &c, 
+			  bool avail_a, bool avail_b );
+
+    virtual bool is_b_calcable( const T_A &, const T_C & );
+    virtual bool is_c_calcable( const T_A &, const T_B & );
+
+    virtual bool is_a_calcable_from_b( const T_B &b );
+    virtual bool is_a_calcable_from_c( const T_C &c );
+
+    virtual T_A calc_a_from_b( const T_B &/*b*/ );
+    virtual T_A calc_a_from_c( const T_C &/*c*/ );
+  public:
+    // Product  solver a = b * c
+    // Relation solver c = a / b
+    Product_Solver( Operand<T_A> &a, Operand<T_B> &b, Operand<T_C> &c );
+  };
+
+  // a = b * c
+  template< class T_A, class T_B, class T_C >
+  void establish_product_solver( Operand<T_A> &a, Operand<T_B> &b, 
+				 Operand<T_C> &c )
+  {
+    new Product_Solver( a, b, c );
+  }
 
   //*********************************************************
   // Accel_Solver: Solver for a constantly accelerated system
   //*********************************************************
-
-  class Accel_Solver : public Solver{
+  /*
+    class Accel_Solver : public Solver{
     Scalar_Property &d;		// differance
     Scalar_Property &t;		// duration
     Scalar_Property &a;		// acceleration
@@ -103,39 +185,21 @@ namespace anitmt{
     Accel_Solver( Scalar_Property *d, Scalar_Property *t, Scalar_Property *a,
 		  Scalar_Property *v0, Scalar_Property *ve );
   };
+  */
+  void establish_accel_solver( Operand<values::Scalar> &s, 
+			       Operand<values::Scalar> &t, 
+			       Operand<values::Scalar> &a, 
+			       Operand<values::Scalar> &v0, 
+			       Operand<values::Scalar> &ve );
 
-  //**********************************************************
-  // Diff_Solver: Solver for a start, end and differance value
-  //**********************************************************
-
-  class Diff_Solver : public Solver{
-    Scalar_Property &d;		// differance
-    Scalar_Property &s;		// start
-    Scalar_Property &e;		// end
-    bool s_d, s_s, s_e;		// indicates wheater a property was solved
-				// while checking a solution
-  public:
-    // Properties call that if they want to validate their results
-    virtual bool check_prop_solution_and_results
-    ( Property *ID, Solve_Run_Info const *info );
-
-    Diff_Solver( Scalar_Property *d, Scalar_Property *s, Scalar_Property *e );
-  };
-
-  // Solver for a start, end and relationerance value
-  class Relation_Solver : public Solver{
-    Scalar_Property &q;		// quotient
-    Scalar_Property &n;		// numerator
-    Scalar_Property &d;		// denominator
-    bool s_q, s_n, s_d;		// indicates wheater a property was solved
-				// while checking a solution
-  public:
-    // Properties call that if they want to validate their results
-    virtual bool check_prop_solution_and_results
-    ( Property *ID, Solve_Run_Info const *info );
-
-    Relation_Solver( Scalar_Property *q, Scalar_Property *n, 
-		     Scalar_Property *d );
-  };
+  //***************
+  // test function
+  //***************
+  int solver_test();
 }
+
+// include implementation to make sure that all specializations of the
+// templates are compiled 
+#include "solver_templ.cpp"
+
 #endif

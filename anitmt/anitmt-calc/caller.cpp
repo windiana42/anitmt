@@ -21,8 +21,24 @@ namespace anitmt{
   //                is solved
   //************************************************************************
 
-  // Properties call that if they were solved
-  void Action_Caller::do_when_prop_was_solved( Property *ID ) {
+  // has to check the result of the operand with ID as pointer to operand
+  bool Action_Caller::is_result_ok( const void *ID, 
+				    const Solve_Run_Info *info ) 
+    throw(EX)
+  {
+#ifdef __DEBUG__
+    std::cout << "action caller was asked for a solution!" << std::endl;
+#endif
+    assert( ID == trigger );
+
+    return true;		// always ok!
+  }
+
+  // tells to use the result calculated by is_result_ok()
+  void Action_Caller::use_result( const void *ID, const Solve_Run_Info * )
+    throw(EX)
+  {
+    assert( ID == trigger );
 #ifdef __DEBUG__
     std::cout << "place Action!" << std::endl;
 #endif
@@ -30,23 +46,31 @@ namespace anitmt{
     //!!! no more function calls here !!! (may be deleted by place_Action)
   }
 
-  // Properties call that if they want to validate their results
-  bool Action_Caller::check_prop_solution_and_results( Property*, 
-						       Solve_Run_Info const*) {
+  // disconnect operand
+  void Action_Caller::disconnect( const void *ID ) 
+  {
+    assert( ID == trigger );
     
-#ifdef __DEBUG__
-    std::cout << "action caller was asked for a solution!" << std::endl;
-#endif
-
-    return true;		// always ok!
+    trigger = 0;
+    delete this;
+    //!!! no more function calls here !!! 
   }
 
-  // Construtor
-  Action_Caller::Action_Caller( Property *cause, Priority_Action *act )
-    : priority_action( act ) {
+  //**********************
+  // Construtor/Destructor
+
+  Action_Caller::Action_Caller( Basic_Operand &op, Priority_Action *act )
+    : trigger(&op), priority_action( act ) 
+  {
 #ifdef __DEBUG__
     std::cout << "Action Caller created!" << std::endl;
 #endif
-    add_Property( cause );
+    trigger->add_listener( this );
+  }
+  
+  Action_Caller::~Action_Caller()
+  {
+    if( trigger )
+      trigger->rm_listener( this );
   }
 }

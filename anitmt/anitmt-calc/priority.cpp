@@ -14,7 +14,8 @@
 
 #include "priority.hpp"
 
-namespace anitmt{
+namespace anitmt
+{
   //***************************************************************
   // Priority_System: class that handels a complete priority system
   //***************************************************************
@@ -71,8 +72,8 @@ namespace anitmt{
     priority_system->add_Action( priority_level, this );
   }
 
-  // insert Action Caller as solver of Property
-  void Priority_Action::insert_Caller_at_Property( Property *prop ) {
+  // insert Action Caller as solver of Operand
+  void Priority_Action::insert_Caller_at_Operand( Basic_Operand &prop ) {
     callers.push_back( new Action_Caller( prop, this ) );
   }
 
@@ -101,22 +102,23 @@ namespace anitmt{
   // Action_Caller_Inserter: inserts action callers in case of Problem
   //*******************************************************************
 
-  // a property collision occured!
+  // a operand collision occured!
   // (throws exceptions)
-  void Action_Caller_Inserter::property_collision_occured
-  ( std::list<Property*> ) {
+  void Action_Caller_Inserter::operand_collision_occured
+  ( std::list< Basic_Operand* > ) 
+  {
     // ignore problem
   }
   
-  // property signals to reject value 
+  // operand signals to reject value 
   // usage may be enforced by returning false
-  bool Action_Caller_Inserter::may_property_reject_val
-  ( std::list<Property*> bad_props ) {
+  bool Action_Caller_Inserter::may_operand_reject_val
+  ( std::list< Basic_Operand* > bad_props ) {
 
-    std::list< Property* >::iterator i;
+    std::list< Basic_Operand* >::iterator i;
     for( i = bad_props.begin(); i != bad_props.end(); i++ )
       {
-	priority_action->insert_Caller_at_Property( *i );
+	priority_action->insert_Caller_at_Operand( **i );
       }
 
     return true;
@@ -128,5 +130,55 @@ namespace anitmt{
 
   Action_Caller_Inserter::Action_Caller_Inserter( Priority_Action *action ) 
     : priority_action( action ) {}
+
+  //***************************************************************************
+  // Action System test 
+  //***************************************************************************
+
+  int action_system_test()
+  {
+    int errors = 0;
+
+    cout << endl;
+    cout << "-------------------------------" << endl;
+    cout << "Priority Action System Test..." << endl;
+    cout << "-------------------------------" << endl;
+
+    Operand<values::Scalar> s0; // start stretch
+    Operand<values::Scalar> se; // end stretch
+    Operand<values::Scalar> s ; // differance stretch
+    Operand<values::Scalar> t ; // duration
+    Operand<values::Scalar> a ; // acceleration
+    Operand<values::Scalar> v0; // startspeed
+    Operand<values::Scalar> ve; // endspeed
+
+    cout << " beginning" << endl;
+    cout << "  s0="<< s0 << " se=" << se << " s=" << s << " t=" <<  t << " a=" << a << " v0=" << v0 << " ve=" << ve << endl;
+
+    establish_accel_solver( s, t, a, v0, ve );
+    establish_sum_solver( se, s, s0 );
+
+    Priority_System sys;
+    
+    cout << " Actions:" << endl;
+    cout << "  Level  5:  a= 0.5" << endl;
+    cout << "  Level  7:  t=  s0" << endl;
+    cout << "  Level 10: s0=   1" << endl;
+    establish_Default_Value( &sys,  5, a, values::Scalar(0.5) );
+    establish_Default_Value( &sys, 10, s0, values::Scalar(1) );
+    establish_Push_Connection( &sys, 7, s0, t ); // push just for fun
+
+    cout << " unset status" << endl;
+    cout << "  s0="<< s0 << " se=" << se << " s=" << s << " t=" <<  t << " a=" << a << " v0=" << v0 << " ve=" << ve << endl;
+    v0.set_value( 0 );
+    cout << " after v0=0" << endl;
+    cout << "  s0="<< s0 << " se=" << se << " s=" << s << " t=" <<  t << " a=" << a << " v0=" << v0 << " ve=" << ve << endl;
+    sys.invoke_all_Actions();
+    cout << " after result of actions" << endl;
+    cout << "  s0="<< s0 << " se=" << se << " s=" << s << " t=" <<  t << " a=" << a << " v0=" << v0 << " ve=" << ve << endl;
+
+    return errors;
+  }
+
 }
 

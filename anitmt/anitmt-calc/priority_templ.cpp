@@ -32,15 +32,17 @@ namespace anitmt{
     std::cout << "try default!" << std::endl;
 #endif
 
-    if( !prop->is_solved() )
+    if( !op.is_solved() )
       {
-	if( prop->set_if_ok( val, &action_caller_inserter ) )// if set succeeds
+	// if set succeeds
+	if( op.set_value( val, &action_caller_inserter ) )
 	  {
 #ifdef __DEBUG__
 	    std::cout << "default value " << val << " set!" << std::endl;
 #endif	    
 	    delete this;
 	  } 
+	// else action caller is already moved by action_caller_inserter
       }
     else
       {
@@ -57,9 +59,9 @@ namespace anitmt{
   template<class T>
   Default_Value<T>::Default_Value( Priority_System *sys, 
 				   Priority_System::level_type level,
-				   Type_Property<T> *p, T v ) 
+				   Operand<T> &o, T v ) 
     : Priority_Action( sys, level ), action_caller_inserter( this ), 
-      prop(p), val(v) {
+      op(o), val(v) {
 
     sys->add_Action( level, this );
   }
@@ -68,7 +70,7 @@ namespace anitmt{
   Default_Value<T>::~Default_Value() {}
   
   //***************************************************************************
-  // Push_Connection<T>: establish push connection from one property to another
+  // Push_Connection<T>: establish push connection from one operand to another
   //***************************************************************************
 
   //**********
@@ -81,15 +83,15 @@ namespace anitmt{
     std::cout << "try push!" << std::endl;
 #endif
 
-    if( source->is_solved() )
+    if( source.is_solved() )
       {
-	if( !destination->is_solved() )
+	if( !destination.is_solved() )
 	  {
 #ifdef __DEBUG__
-	    std::cout << "push source:" << source->get() << std::endl;
+	    std::cout << "push source:" << source.get_value() << std::endl;
 #endif
 
-	    if( destination->set_if_ok( source->get(), 
+	    if( destination.set_value( source.get_value(), 
 					&action_caller_inserter ) ) 
 	      {
 #ifdef __DEBUG__
@@ -119,12 +121,12 @@ namespace anitmt{
   template<class T>
   Push_Connection<T>::Push_Connection( Priority_System *sys, 
 				       Priority_System::level_type level,
-				       Type_Property<T> *src, 
-				       Type_Property<T> *dest ) 
+				       Operand<T> &src, 
+				       Operand<T> &dest ) 
     : Priority_Action( sys, level ), action_caller_inserter( this ), 
       source(src), destination(dest) {
 
-    if( src->is_solved() )	// if source is already solved
+    if( src.is_solved() )	// if source is already solved
       {
 	sys->add_Action( level, this );
       }
@@ -133,7 +135,7 @@ namespace anitmt{
 #ifdef __DEBUG__
     std::cout << "insert push caller!" << std::endl;
 #endif
-	insert_Caller_at_Property( src );
+	insert_Caller_at_Operand( src );
       }
   }
 
@@ -148,7 +150,7 @@ namespace anitmt{
   template<class T>
   bool establish_Push_Connection( Priority_System *sys, 
 				  Priority_System::level_type level,
-				  Type_Property<T> *src, 
+				  Operand<T> &src, 
 				  Prop_Tree_Node   *dest_node,
 				  std::string dest_prop ) {
   
@@ -157,13 +159,13 @@ namespace anitmt{
 #ifdef __DEBUG__
     std::cout << "try to establish push" << std::endl;
 #endif
-    Type_Property<T> *dest 
-      = dynamic_cast< Type_Property<T>* >
+    Operand<T> *dest 
+      = dynamic_cast< Operand<T>* >
       ( dest_node->get_property( dest_prop ) );
 
     if( !dest ) return false;
 
-    establish_Push_Connection( sys, level, src, dest );
+    establish_Push_Connection( sys, level, src, *dest );
 
 #ifdef __DEBUG__
     std::cout << "push established on level " << level << std::endl;
