@@ -408,7 +408,7 @@ int Recursive_Input_Stream::Include_File(
 		{
 			Error_Header(error(),lineno) << 
 				"detected include recursion loop: " << 
-				lis->Path() << std::endl;
+				lis->Path();
 			return(2);
 		}
 		
@@ -418,7 +418,7 @@ int Recursive_Input_Stream::Include_File(
 		if(!is->open(/*print_error*/true))
 		{
 			Error_Header(error(),lineno) << "  failed to include the file for "
-				"the second time. Are you doing nasty things here?" << std::endl;
+				"the second time. Are you doing nasty things here?";
 			return(3);  // opening failed; error written
 		}
 		
@@ -426,7 +426,7 @@ int Recursive_Input_Stream::Include_File(
 		{  Error_Header(error(),lineno) << "warning: " << (lis->Path()) << 
 			" included for the " << (lis->use_cnt) << 
 			Num_Postfix(lis->use_cnt) << 
-			" time. Expect trouble." << std::endl;  }
+			" time. Expect trouble.";  }
 	}
 	
 	include.is=is;

@@ -44,22 +44,27 @@ public:
     }
     vindent(-1);
   }
+  Message_Stream compl_foo(Message_Stream ms)
+  {
+    ms << "<compl_foo" << " " << "inserts this text>" << message::noend;
+    return(ms);
+  }
   void complain(){
     verbose(0) << "------------------------";
     verbose(0) << "Stream test following...";
 
     error ( new Test_Position() ) << "Error Message!!!";
     warn( new Test_Position() ) << "Warning Message!!!";
-    verbose() << "Hey! I verbose this shit";
+    verbose() << "Hey! I verbose this blah";
     for( int i=1; i<=4; i++ )
-      verbose(i) << "Hey! I verbose this shit on level " << i;
+      verbose(i) << "Hey! I verbose this blah on level " << i;
     for( int i=1; i<=4; i++ )
       if( is_verbose(i) )
-	verbose(i) << "Fast Hey! I verbose this shit on level " << i;
+	verbose(i) << "Fast Hey! I verbose this blah on level " << i;
 
-    verbose(2) << "Hey! I verbose this shit on level 2";
-    verbose(3) << "Hey! I verbose this shit on level 3";
-    verbose(4) << "Hey! I verbose this shit on level 4";
+    verbose(2) << "Hey! I verbose this blah on level 2";
+    verbose(3) << "Hey! I verbose this blah on level 3";
+    verbose(4) << "Hey! I verbose this blah on level 4";
 
     verbose(0) << "...done";
     verbose(0) << "--------------------------";
@@ -133,6 +138,11 @@ public:
     file_pos.inc_line();
     verbose() << "Increased line:	      " << file_pos;
     verbose() << "...done";
+
+    verbose() << "Test recent feature...";
+    error() << " TEST ME";
+    compl_foo(error()) << " - followup" << "text";
+    verbose() << "Test completed.";
   }
   test( Message_Consultant *consultant, int level ) 
     : Message_Reporter( consultant ) 

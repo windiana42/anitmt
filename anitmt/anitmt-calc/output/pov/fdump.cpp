@@ -102,7 +102,7 @@ char *Frame_Dump::Node::_Dump_Scalar2Str(char *d,char *dend,Frame_Dump::Context 
 	bool defined=ret.first;
 	if(ctx->msgrep->verbose_level()>3)  // YES!
 	{  ctx->msgrep->verbose(4) << "scalar: " << scl->get_name() << 
-		(defined ? "" : "UNDEFINED") << std::endl;  }
+		(defined ? "" : "UNDEFINED");  }
 	
 	if(defined)
 	{  d=Double2Str(d,ret.second,ctx->ndigits);  }
@@ -142,7 +142,7 @@ char *Frame_Dump::Node::_Dump_Object2Str(char *d,char *dend,Frame_Dump::Context 
 	if(ctx->msgrep->verbose_level()>3)  // YES!
 	{  ctx->msgrep->verbose(4) << "object: " << obj->get_name() << 
 		(active ? " [active]" : "") << 
-		(defined ? "" : " [UNDEFINED]") << std::endl;  }
+		(defined ? "" : " [UNDEFINED]");  }
 	
 	if(!defined)
 	{

@@ -238,9 +238,9 @@ namespace message
     //inline operator std::ostream() { return msg_stream; }
 
     //! copy operator that disables copy source
-    inline Message_Stream &operator=( Message_Stream &ms );
+    Message_Stream &operator=( Message_Stream &ms );
     // copies itself to another Message stream and disables itself
-    inline void copy_to( Message_Stream& dest ); 
+    void copy_to( Message_Stream& dest ); 
     //! uninitialized constuction
     Message_Stream( _NoInit );
 
@@ -249,7 +249,7 @@ namespace message
 		   const Abstract_Position *pos,int position_detail,
 		   Message_Consultant *consultant,bool enabled); 
     //! copy constructor that disables copy source
-    Message_Stream(Message_Stream &src);
+    Message_Stream(const Message_Stream &src);
     ~Message_Stream();
   };
 

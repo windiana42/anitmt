@@ -141,35 +141,6 @@ namespace message
     return *this;
   }
 
-  // copy operator that disables the source message
-  inline Message_Stream &Message_Stream::operator=( Message_Stream& src ) 
-  {
-    enabled = src.enabled;
-    pos = src.pos;
-    position_detail = src.position_detail;
-    consultant = src.consultant;
-    mtype = src.mtype;
-    strcpy( message, src.message );
-    no_end = src.no_end;
-
-    src.enabled = false;
-    return *this;
-  }
-
-  // copies itself to another Message stream and disables itself
-  inline void Message_Stream::copy_to( Message_Stream& dest ) 
-  {
-    dest.enabled = enabled;
-    dest.pos = pos;
-    dest.position_detail = position_detail;
-    dest.consultant = consultant;
-    dest.mtype = mtype;
-    strcpy( dest.message, message );
-    dest.no_end = no_end;
-
-    enabled = false;
-  }
-
 
   //**************************************************************
   // Message reporting inline code: 

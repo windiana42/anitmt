@@ -58,6 +58,13 @@ namespace message
   //**************************************************************
   // Message streams
 
+  static char *msg_strcpy(char *dest,const char *src,int slen)
+  {
+     assert(slen<_Message_Buf_Size);
+     strncpy(dest,src,slen);
+     return(dest+slen);
+  }
+
   Message_Stream::Message_Stream( _NoInit ni ) 
     : enabled(false),
       msg_stream(message,_Message_Buf_Size)
@@ -74,15 +81,19 @@ namespace message
       mtype(message_type), 
       msg_stream(message,_Message_Buf_Size),no_end(false) {}
 
-  Message_Stream::Message_Stream( Message_Stream& src ) 
+  // Actually the source is non-const. But for the outside world, const 
+  // is just the right thing here.
+  Message_Stream::Message_Stream( const Message_Stream& src ) 
     : enabled(src.enabled), 
       pos(src.pos), position_detail(src.position_detail),
       consultant(src.consultant), 
       mtype(src.mtype), 
-      message(src.message), msg_stream(message,_Message_Buf_Size), 
-      no_end(src.no_end)
+      no_end(src.no_end),
+      msg_stream(msg_strcpy(message,src.message,src.msg_stream.pcount()),
+          _Message_Buf_Size-src.msg_stream.pcount())
   {
-    src.enabled = false;
+    Message_Stream *ssrc=const_cast<Message_Stream *>(&src);
+    ssrc->enabled = false;
   }
 
   Message_Stream::~Message_Stream()
@@ -90,6 +101,53 @@ namespace message
     msg_stream << '\0';		// add terminator for char[] strings
     if( enabled )
       consultant->message(mtype, pos, position_detail, message, no_end );
+  }
+
+  // copy operator that disables the source message
+  Message_Stream &Message_Stream::operator=( Message_Stream& src ) 
+  {
+    enabled = src.enabled;
+    pos = src.pos;
+    position_detail = src.position_detail;
+    consultant = src.consultant;
+    mtype = src.mtype;
+    // This is likely to do the opposite of what we want: 
+    strcpy( message, src.message );
+    #ifdef WOLFGANG
+    cerr << "message.cpp:" << __LINE__ << " Please report me as bug." << std::endl;
+    assert(0);
+    // Should be something like that:
+    //msg_stream=std::strstream(
+    //    msg_strcpy(message,src.message,src.msg_stream.pcount()),
+    //    _Message_Buf_Size-src.msg_stream.pcount());
+    #endif
+    no_end = src.no_end;
+
+    src.enabled = false;
+    return *this;
+  }
+
+  // copies itself to another Message stream and disables itself
+  void Message_Stream::copy_to( Message_Stream& dest ) 
+  {
+    dest.enabled = enabled;
+    dest.pos = pos;
+    dest.position_detail = position_detail;
+    dest.consultant = consultant;
+    dest.mtype = mtype;
+    // This is likely to do the opposite of what we want: 
+    strcpy( dest.message, message );
+    #ifdef WOLFGANG
+    cerr << "message.cpp:" << __LINE__ << " Please report me as bug." << std::endl;
+    assert(0);
+    // Should be something like that:
+    //dest.msg_stream=std::strstream(
+    //    msg_strcpy(dest.message,message,msg_stream.pcount()),
+    //    _Message_Buf_Size-msg_stream.pcount());
+    #endif
+    dest.no_end = no_end;
+
+    enabled = false;
   }
 
   //**************************************************************

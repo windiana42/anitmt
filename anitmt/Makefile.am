@@ -2,10 +2,11 @@ SUBDIRS = lib anitmt-calc anitmt-view mkavi test hlib
 EXTRA_DIST = BUILD FAQ autogen.sh
 
 # Make rules currently used by me (Wolfgang): 
+COLUMNS:=$(shell echo \"$$COLUMNS\")
 all-wolfgang: FORCE
 	$(MAKE) -C hlib opt
-	$(MAKE) -C lib CXXFLAGS="-O -Wno-non-template-friend -ftemplate-depth-33 -fmessage-length=$$COLUMNS -D__CPLUSPLUS -DTHROW_NIL=\"throw()\" -DYYDEBUG -DWOLFGANG"
-	$(MAKE) -C anitmt-calc CXXFLAGS="-O -Wno-non-template-friend -ftemplate-depth-33 -fmessage-length=$$COLUMNS -D__CPLUSPLUS -DTHROW_NIL=\"throw()\" -DYYDEBUG -DWOLFGANG"
+	$(MAKE) -C lib CXXFLAGS="-O -Wno-non-template-friend -ftemplate-depth-33 -fmessage-length=$(COLUMNS) -D__CPLUSPLUS -DTHROW_NIL=\"throw()\" -DYYDEBUG"
+	$(MAKE) -C anitmt-calc CXXFLAGS="-O -Wno-non-template-friend -ftemplate-depth-33 -fmessage-length=$(COLUMNS) -D__CPLUSPLUS -DTHROW_NIL=\"throw()\" -DYYDEBUG"
 
 FORCE:
 
