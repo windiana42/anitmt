@@ -96,7 +96,8 @@ class BasicParser :
 		void SkipCppComment();  // for "//"-comments
 		
 		//! Used to parse in a string: 
-		void ParseString(std::string *rv);
+		//! Retrns number of errors occured during string parsing. 
+		int ParseString(std::string *rv,bool append=false);
 		
 		//! Get next char (NEVER call yyinput()): 
 		int NextChar();

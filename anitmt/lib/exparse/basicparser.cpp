@@ -70,23 +70,31 @@ void BasicParser::SkipCppComment()
 }
 
 // Parse any string: 
-void BasicParser::ParseString(std::string *rv)
+int BasicParser::ParseString(std::string *rv,bool append)
 {
-	rv->assign("");
+	if(!append)
+	{  rv->assign("");  }
 	int ci;
 	char c;
 	int in_esc=0;
+	int s_errors=0;
 	#warning do it faster by using a string read buf
 	for(;;)
 	{
 		ci=NextChar();
 		if(ci==EOF)
-		{  fprintf(stderr,"String terminated by EOF\n");  
-			break;  }  // FIXME: return(EndOfFile);
+		{
+			fprintf(stderr,"String terminated by EOF\n");  
+			++s_errors;
+			break;
+		}
 		*((unsigned char*)&c)=(unsigned char)ci;
 		if(c=='\n')
-		{  fprintf(stderr,"String terminated by newline\n");
-			break;  }
+		{
+			fprintf(stderr,"String terminated by newline\n");
+			++s_errors;
+			break;
+		}
 		else if(in_esc)
 		{
 			switch(c)
@@ -117,6 +125,8 @@ void BasicParser::ParseString(std::string *rv)
 		else
 		{  rv->append(&c,1);  }
 	}
+	errors+=s_errors;
+	return(s_errors);
 }
 
 inline void BasicParser::_UpdatePos(int c,Position *p)
