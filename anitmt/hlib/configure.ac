@@ -24,7 +24,8 @@ AC_HEADER_STDC
 AC_CHECK_HEADERS([stddef.h stdlib.h string.h stdarg.h unistd.h])
 AC_CHECK_HEADERS([errno.h fcntl.h limits.h signal.h])
 AC_CHECK_HEADERS([arpa/inet.h])
-AC_CHECK_HEADERS([sys/ioctl.h sys/poll.h sys/socket.h sys/time.h sys/wait.h sys/resource.h])
+AC_CHECK_HEADERS([sys/ioctl.h sys/poll.h sys/socket.h \
+	sys/time.h sys/wait.h sys/resource.h sys/uio.h])
 AC_CHECK_HEADERS([netinet/ip_compat.h])
 
 AC_CHECK_HEADERS([gmp.h], \
@@ -49,6 +50,9 @@ AC_CHECK_TYPES([u_int8_t,u_int16_t,u_int32_t,u_int64_t,int8_t,int16_t,int32_t,in
 
 AC_CHECK_TYPES([ssize_t],,\
 	[AC_MSG_WARN([You don't have ssize_t. Using signed int. (grmbl...)])])
+
+AC_CHECK_TYPES([socklen_t],,\
+	[AC_MSG_WARN([No socklen_t. Uh...])])
 
 AC_CHECK_TYPES([siginfo_t],, \
 	[AC_MSG_WARN([Providing crippled siginfo_t replacement.])],

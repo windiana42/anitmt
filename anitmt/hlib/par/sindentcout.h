@@ -85,8 +85,8 @@ class SimpleIndentConsoleOutput
 		// a C99-compatible snprintf (glibc>=2.1) and allow for any string 
 		// length. Return value: 0 -> OK; 1 -> LMalloc() failed. 
 		void Puts(const char *str,int indent=-1);
-		int Print(const char *fmt,...);
-		int operator()(const char *str,...);
+		int Print(const char *fmt,...) __attribute__ ((__format__ (__printf__, 2, 3)));
+		int operator()(const char *str,...) __attribute__ ((__format__ (__printf__, 2, 3)));
 		
 		// Used to write special terminal escape strings which do not 
 		// change the lpos of the terminal (e.g. change color). 

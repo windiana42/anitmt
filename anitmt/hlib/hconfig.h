@@ -125,6 +125,9 @@
 typedef signed int ssize_t;
 #endif
 
+#if !defined(HAVE_SOCKLEN_T) || (defined(HAVE_SOCKLEN_T) && !HAVE_SOCKLEN_T)
+typedef int socklen_t;
+#endif
 
 #ifdef __GNUC__
 # if !defined(HAVE_INT8_T)  || (defined(HAVE_INT8_T) && !HAVE_INT8_T)

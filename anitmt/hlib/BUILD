@@ -107,13 +107,18 @@ Supported platforms include:
 * Cygwin:
    - i[3456]86
 
-NOT SUPPORTED platforms include: 
+SEMI-SUPPORTED platforms include: 
 * ppc-darwin
   alias MacOS X. 
-  To hell, FreeBSD is a good system, but why did they at Apple have to 
+  [To hell, FreeBSD is a good system, but why did they at Apple have to 
   come up with that tainted derivate? Why couldn't they leave the central 
-  syscall poll(2) in the system?!
-  [Please correct me in case I am just too stupid.]
+  syscall poll(2) in the system?!]
+  So, hlib has an emulation for poll(2) using select(2). 
+  But note that the emulation makes hlib slower and that it is not 
+  capable of emulating all aspets of poll(2). So, things MAY work but 
+  again, applications may also NOT work as expected. 
+
+NOT SUPPORTED platforms include: 
 * i[3456]86-win32
   M$ Windooze (any flavour)
   Sorry, not POSIX compliant at all. Please use Cygwin. 
@@ -131,7 +136,7 @@ Is the issue some damn undefined symbol at linking:
   gcc-3.0 does not have that problem but gcc-2.95 has if you compile without 
   "make opt-generic" or "make opt". 
 - Are all libraries present or does some compatibility lib need to be added?
-If the issue is a real compiler error. Please track it down, fix it and send 
+If the issue is a real compiler error: Please track it down, fix it and send 
 me the fix. 
 
-Contact: wwieser @ gmx . de
+Contact: wwieser AT gmx DOT de

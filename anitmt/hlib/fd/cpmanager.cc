@@ -24,7 +24,9 @@
 
 #include <string.h>
 
-#include <sys/uio.h>
+#if HAVE_SYS_UIO_H
+#  include <sys/uio.h>
+#endif
 
 
 #ifndef TESTING
