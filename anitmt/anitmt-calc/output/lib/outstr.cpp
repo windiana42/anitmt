@@ -26,6 +26,9 @@
 
 #include "outstr.hpp"
 
+#include <iostream>
+
+
 namespace output_io
 {
 
@@ -37,7 +40,7 @@ bool Output_Stream::open(bool allow_overwrite) throw()
 	off=0;
 	if(fd<0)
 	{
-		cerr << "While opening " << CPath() << " for writing: " << 
+		std::cerr << "While opening " << CPath() << " for writing: " << 
 				strerror(errno) << std::endl;
 		return(false);
 	}
@@ -53,7 +56,7 @@ void Output_Stream::close()
 	if(!IsOpen())  return;
 	if(::close(fd)<0)
 	{
-		cerr << "While closing " << CPath() << ": " << 
+		std::cerr << "While closing " << CPath() << ": " << 
 			strerror(errno) << std::endl;
 		abort();
 	}
@@ -74,7 +77,7 @@ void Output_Stream::write(const char *buf,size_t len)
 		{  wr=::write(fd,buf+done,len-done);  }
 		if(wr<=0)
 		{
-			cerr << "While writing " << CPath() << ": " << 
+			std::cerr << "While writing " << CPath() << ": " << 
 				strerror(errno) << std::endl;
 			abort();
 		}

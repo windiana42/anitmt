@@ -16,7 +16,7 @@
 %option noyywrap
 %option c++
 %option yylineno
-%option debug
+   /* %option debug */
 
 %%
 

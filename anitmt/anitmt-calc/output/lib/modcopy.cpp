@@ -29,6 +29,9 @@
 
 #include "htime.h"
 
+//#include <iostream>
+//#include <string>
+
 namespace output_io
 {
 
@@ -76,7 +79,7 @@ int Modification_Copy::_Copy_Till(Input_Stream *inf,
 		buf->len=inf->read(buf->buf,want);
 		if(buf->len<want)
 		{
-			cerr << "Unexpected EOF in " << inf->CPath() << 
+			std::cerr << "Unexpected EOF in " << inf->CPath() << 
 				" at position " << inf->Off() << std::endl;
 			return(-1);
 		}
@@ -91,7 +94,7 @@ int Modification_Copy::_Skip_Bytes(Buffered_Input_Stream *inf,size_t nbytes)
 {
 	if(inf->skip(nbytes)<nbytes)
 	{
-		cerr << "Unexpected EOF in " << inf->CPath() << 
+		std::cerr << "Unexpected EOF in " << inf->CPath() << 
 			" at position " << inf->Off() << std::endl;
 		return(1);
 	}
@@ -176,7 +179,7 @@ int Modification_Copy::_Copy_File(const std::string &output_path,CopyFile *cf)
 				break;
 			case _MC_None:  // fall through
 			default:
-				cerr << "Illegal action " << n->action << std::endl;
+				std::cerr << "Illegal action " << n->action << std::endl;
 				abort();
 		}
 		if(verbose>3)
@@ -333,7 +336,7 @@ int Modification_Copy::DoCopy(class Recursive_Input_Stream *ris,
 					break;
 				case _MC_None:  // fall through
 				default:
-					cerr << "Illegal action " << mn->action << std::endl;
+					std::cerr << "Illegal action " << mn->action << std::endl;
 					abort();
 			}
 			
@@ -498,7 +501,7 @@ void Modification_Copy::_Reset()
 }
 
 
-void Modification_Copy::Set_Verbose(int _verbose,ostream &vs)
+void Modification_Copy::Set_Verbose(int _verbose,std::ostream &vs)
 {
 	verbose=_verbose;
 	_vout=&vs;
@@ -508,7 +511,7 @@ void Modification_Copy::Set_Verbose(int _verbose,ostream &vs)
 Modification_Copy::Modification_Copy()
 {
 	verbose=0;
-	_vout=&cout;
+	_vout=&std::cout;
 	
 	cfirst=NULL;
 }
@@ -583,7 +586,7 @@ Modification_Copy::CopyFile::CopyFile()
 		} break;
 		case _MC_None:  // fall through
 		default:
-			cerr << "Illegal action " << n->action << std::endl;
+			std::cerr << "Illegal action " << n->action << std::endl;
 			abort();
 	}
 #endif

@@ -95,7 +95,7 @@ char *Frame_Dump::Node::_Dump_Scalar2Str(char *d,char *dend,Frame_Dump::Context 
 	// Check if the string fits into the buffer: 
 	// ``#declare name=1.222e333;\n''
 	if((dend-d)<(ctx->ndigits+_declare_str_len+str_len+48))
-	{  cerr << "Internal error in fdump.cpp:" << __LINE__ << std::endl;  abort();  }
+	{  std::cerr << "Internal error in fdump.cpp:" << __LINE__ << std::endl;  abort();  }
 	
 	++ctx->nscalars;
 	for(char *s=str; *s; s++)
@@ -127,7 +127,7 @@ char *Frame_Dump::Node::_Dump_Object2Str(char *d,char *dend,Frame_Dump::Context 
 	/* and the digits are limited to 64 (too much anyway) as well  */
 	/* so we will never run into trouble here.                     */
 	if((dend-d)<((64+64+32)*3+5+64+32))  /* =581 */
-	{  cerr << "Internal error in fdump.cpp:" << __LINE__ << std::endl;  abort();  }
+	{  std::cerr << "Internal error in fdump.cpp:" << __LINE__ << std::endl;  abort();  }
 	
 	++ctx->nobjects;
 	
@@ -431,12 +431,12 @@ int Frame_Dump::Write(const std::string &file,values::Scalar t,int frame)
 	}
 	if(ctx.undefined_scalars || ctx.undefined_objects)
 	{
-		cerr << "  warning: in frame " << frame << ": UNDEFINED: ";
+		std::cerr << "  warning: in frame " << frame << ": UNDEFINED: ";
 		if(ctx.undefined_scalars)
-		{  cerr << ctx.undefined_scalars << " scalars; ";  }
+		{  std::cerr << ctx.undefined_scalars << " scalars; ";  }
 		if(ctx.undefined_objects)
-		{  cerr << ctx.undefined_objects << " objects; ";  }
-		cerr << std::endl;
+		{  std::cerr << ctx.undefined_objects << " objects; ";  }
+		std::cerr << std::endl;
 	}
 	
 	return(0);
@@ -551,7 +551,7 @@ Frame_Dump::Node::Node(NType _type,void *_ptn,Dump_Flags _flags,unsigned int id)
 			str_len=strlen(str);
 			break;
 		default:
-			cerr << "Frame_Dump: Illegal type " << int(type) << "." << std::endl;
+			std::cerr << "Frame_Dump: Illegal type " << int(type) << "." << std::endl;
 			abort();
 	}
 }
@@ -565,7 +565,7 @@ Frame_Dump::Node::~Node()
 
 
 Frame_Dump::Context::Context(double _t,int _ndigits,
-	int _verbose,ostream &_vout)
+	int _verbose,std::ostream &_vout)
 {
 	t=_t;
 	ndigits=_ndigits;
@@ -599,7 +599,7 @@ void Frame_Dump::Clear(anitmt::Animation *new_ani,anitmt::Ani_Scene *new_scene)
 }
 
 
-void Frame_Dump::Set_Verbose(int _verbose,ostream &vs)
+void Frame_Dump::Set_Verbose(int _verbose,std::ostream &vs)
 {
 	verbose=_verbose;
 	_vout=&vs;
@@ -609,7 +609,7 @@ void Frame_Dump::Set_Verbose(int _verbose,ostream &vs)
 Frame_Dump::Frame_Dump(anitmt::Animation *_ani,anitmt::Ani_Scene *_scene)
 {
 	verbose=0;
-	_vout=&cout;
+	_vout=&std::cout;
 	
 	ani=_ani;
 	scene=_scene;

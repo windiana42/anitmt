@@ -26,6 +26,8 @@
 
 #include "instr.hpp"
 
+#include <iostream>
+
 namespace output_io
 {
 
@@ -38,7 +40,7 @@ bool Input_Stream::open(bool print_error) throw()
 	if(fd<0)
 	{
 		if(print_error)
-		{  cerr << "While opening " << CPath() << " for reading: " << 
+		{  std::cerr << "While opening " << CPath() << " for reading: " << 
 				strerror(errno) << std::endl;  }
 		return(false);
 	}
@@ -62,7 +64,7 @@ void Input_Stream::close()
 	if(!IsOpen())  return;
 	if(::close(fd)<0)
 	{
-		cerr << "While closing " << CPath() << ": " << 
+		std::cerr << "While closing " << CPath() << ": " << 
 			strerror(errno) << std::endl;
 		abort();
 	}
@@ -80,7 +82,7 @@ size_t Input_Stream::read(char *buf,size_t len)
 		ssize_t rd=::read(fd,buf+done,len-done);
 		if(rd<0)
 		{
-			cerr << "While reading " << CPath() << ": " << 
+			std::cerr << "While reading " << CPath() << ": " << 
 				strerror(errno) << std::endl;
 			abort();
 		}
@@ -104,7 +106,7 @@ void Input_Stream::seek(size_t _off)
 	eof_reached=false;
 	if(::lseek(fd,off,SEEK_SET)<0)
 	{
-		cerr << "While seeking in " << CPath() << " (off=" << off << "): " << 
+		std::cerr << "While seeking in " << CPath() << " (off=" << off << "): " << 
 			strerror(errno) << std::endl;
 		abort();
 	}

@@ -22,6 +22,8 @@
 
 
 #include "findstr.hpp"
+#include <string.h>
+
 
 namespace output_io
 {

@@ -23,7 +23,7 @@ static const int verb_lvl=0; //FIXME ...
 #endif
 
 anitmt::ADLParser::ADLParser(const std::string _fn,
-	istream &is,
+	std::istream &is,
 	message::Message_Consultant *c) :
 	Message_Reporter(c), fl(_fn, &is, c), fn(_fn) {}
 

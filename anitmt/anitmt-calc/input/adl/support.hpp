@@ -36,7 +36,7 @@ std::string NameOfToken(const int tok);
 class VADLFlexLexer : public ADLFlexLexer, public message::Message_Reporter {
 public:
 	VADLFlexLexer(const std::string fn,
-		      istream *is,
+		      std::istream *is,
 		      message::Message_Consultant *c);
 	//! Not a very efficient way to handle values... but it works.
 	struct {

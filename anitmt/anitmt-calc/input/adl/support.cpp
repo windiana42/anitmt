@@ -42,9 +42,9 @@ std::string NameOfToken(const int tok) {
 
 //-----------------------------------------------------------------------------
 VADLFlexLexer::VADLFlexLexer(const std::string _fn,
-			     istream *is,
+			     std::istream *is,
 			     message::Message_Consultant *c) :
-	ADLFlexLexer(is, &cerr), //FIXME
+	ADLFlexLexer(is, &std::cerr), //FIXME
 	message::Message_Reporter(c),
 	fn(_fn) {}
 

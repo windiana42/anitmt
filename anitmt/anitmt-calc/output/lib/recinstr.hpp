@@ -46,7 +46,7 @@ class Recursive_Input_Stream
 		{
 			UInput_Stream(const std::string &path) : Buffered_Input_Stream(path) 
 				{  use_cnt=1;  }
-			~UInput_Stream() { }
+			~UInput_Stream() throw() { }
 			
 			int use_cnt;   // file use counter 
 		};
@@ -199,11 +199,11 @@ class Recursive_Input_Stream
 		//   file2:17 included from
 		//   file1:48 included from
 		//   file0:2"
-		ostream &Print_Include_Hierarchy(ostream &os);
+		std::ostream &Print_Include_Hierarchy(std::ostream &os);
 		
 		// Print error header. Must be called from within 
 		// Parse_Input() or Parse_EOF(). 
-		ostream &Error_Header(ostream &os,int line,
+		std::ostream &Error_Header(std::ostream &os,int line,
 			bool force_print_hierarchy=false);
 		
 		// Abort paring; Start_Parser() will return an error. 

@@ -197,11 +197,11 @@ struct File_Parser::Sub_Parser
 	void Consumed(size_t n,int nlines=0)
 		{  fp->Consumed(n,nlines);  }
 	
-	// Write an error/warning header to cerr. 
-	ostream &Error_Header()
-		{  return(fp->Recursive_Input_Stream::Error_Header(cerr,cc->line));  }
-	ostream &Error_Header(int line)
-		{  return(fp->Recursive_Input_Stream::Error_Header(cerr,line));  }
+	// Write an error/warning header to std::cerr. 
+	std::ostream &Error_Header()
+		{  return(fp->Recursive_Input_Stream::Error_Header(std::cerr,cc->line));  }
+	std::ostream &Error_Header(int line)
+		{  return(fp->Recursive_Input_Stream::Error_Header(std::cerr,line));  }
 	
 	// Either returns "line xx" or "path/file:xx" depending if 
 	// pos referrs to the same file as *cc. 
@@ -236,7 +236,7 @@ struct File_Parser::Sub_Parser
 	Comment_Parser *Skip_Comment(Find_String::RV *rv,bool allow_insert_statements);
 	
 	int verbose()  {  return(fp->verbose);  }
-	ostream &vout()  {  return(fp->vout);  }
+	std::ostream &vout()  {  return(fp->vout);  }
 	
 	// Parser must modify cc->line and cc->src, cc->srclen 
 	// when parsing. 
@@ -530,7 +530,7 @@ size_t File_Parser::Parse_Input(const Parse_Input_Buf *ib)
 		if(refill_buffer)
 		{  ++parse_need_input;  }
 		
-		//cerr << "(" << ib->len << "," << cc.srclen << ")\n";
+		//std::cerr << "(" << ib->len << "," << cc.srclen << ")\n";
 		
 		// This may need some explanation: If we could not consume input chars 
 		// this means that there is not enough input available for Find_String 
@@ -557,7 +557,7 @@ size_t File_Parser::Parse_Input(const Parse_Input_Buf *ib)
 		prev_consumed=consumed;
 	}
 	
-	//cerr << "  CONSUMED=" << consumed << "\n";
+	//std::cerr << "  CONSUMED=" << consumed << "\n";
 	if(cc.src>ib->txt)
 	{  prev_char=*(cc.src-1);  }
 	return(consumed);
@@ -587,7 +587,7 @@ void File_Parser::Parse_EOF(const Parse_Input_Buf *ib)
 		else if(eofval==1)  break;
 		else
 		{
-			cerr << "Internal error: non-unregistered "
+			std::cerr << "Internal error: non-unregistered "
 				"subparser on hard EOF" << std::endl;
 			abort();
 		}
@@ -830,7 +830,7 @@ size_t File_Parser::Find_Tok(Find_String::RV *rv,bool with_ani_names)
 		cc.last_found_len=rv->found_len;
 		may_put_back=true;
 		if(config.dump_tokens && rv->id!=tNewline)
-		{  cerr << "  TOK[" << cc.ib->depth << "]" 
+		{  std::cerr << "  TOK[" << cc.ib->depth << "]" 
 			"(" << cc.line << ")=" << rv->found << 
 			"  only_wspace=" << cc.only_wspace << 
 			" (" << cc.with_newline << " \\n)" << 
@@ -847,7 +847,7 @@ void File_Parser::Put_Back_Tok(Find_String::RV *rv)
 	assert(may_put_back);
 	assert(rv->found);
 	size_t delta=rv->found_len;
-	//cerr << "DELTA=" << delta << "\n";
+	//std::cerr << "DELTA=" << delta << "\n";
 	cc.src-=delta;
 	cc.srclen+=delta;
 	cc.fileoff-=delta;
@@ -1098,7 +1098,7 @@ int File_Parser::_Finder_Check_Copy_Name(Prop_Tree_Node *ptn,tokID id,
 	// Check if the name is valid: 
 	if(!(*name))
 	{
-		cerr << "Error: Object or scalar without a name (ignored)." << 
+		std::cerr << "Error: Object or scalar without a name (ignored)." << 
 			std::endl;
 		return(1);
 	}
@@ -1111,7 +1111,7 @@ int File_Parser::_Finder_Check_Copy_Name(Prop_Tree_Node *ptn,tokID id,
 		}
 	if(!allowed)
 	{
-		cerr << "Error: Object or scalar name \"" << name << 
+		std::cerr << "Error: Object or scalar name \"" << name << 
 			"\" contains invalid characters (ignored)." << std::endl;
 		return(1);
 	}
@@ -1378,9 +1378,9 @@ int File_Parser::Go(Animation *ani,Ani_Scene *sc)
 	// Scene type: sc->get_scene_type()
 	// Animation_Parameters: ani->param 
 	
-	#warning MAKE COUT, CERR LINEBUFFERED. 
+	#warning MAKE COUT, std::cerr LINEBUFFERED. 
 	//int cout_line_buf_val=cout.Xx
-	//int cerr_line_buf_val=cerr.xx
+	//int std::cerr_line_buf_val=std::cerr.xx
 	
 	_Cleanup();
 	verbose=ani->param.verbose();
@@ -1393,7 +1393,7 @@ int File_Parser::Go(Animation *ani,Ani_Scene *sc)
 	values::String file=sc->get_filename();
 	if(!file)
 	{
-		cerr << "Scene \"" << sc->get_name() << "\" has no associated file." 
+		std::cerr << "Scene \"" << sc->get_name() << "\" has no associated file." 
 			<< std::endl;
 		// Don't know if this is an error. 
 		//++errors;
@@ -1459,7 +1459,7 @@ int File_Parser::Go(Animation *ani,Ani_Scene *sc)
 			#endif
 		}
 		
-		av_list.Warn_Unused(cerr);
+		av_list.Warn_Unused(std::cerr);
 		Warn_Active_Mismatch();
 		
 		// This function writes a verbose message itself: 
@@ -1470,7 +1470,7 @@ int File_Parser::Go(Animation *ani,Ani_Scene *sc)
 	//       are not part of the ones counted via errors. 
 	if(errors)
 	{
-		cerr << "Aborting work on scene \"" << sc->get_name() << 
+		std::cerr << "Aborting work on scene \"" << sc->get_name() << 
 			"\" due to errors." << std::endl;
 	}
 	else
@@ -1501,7 +1501,7 @@ int File_Parser::Go(Animation *ani,Ani_Scene *sc)
 	
 	#warning RESTORE BUFFER FLAG
 	//cout.linebuffered(cout_line_buf_val);
-	//cerr.linebuffered(cerr_line_buf_val);
+	//std::cerr.linebuffered(std::cerr_line_buf_val);
 	
 	return(errors+parse_errors);
 }
@@ -1519,13 +1519,13 @@ int File_Parser::Warn_Active_Mismatch()
 		++warnings;
 		if(!config.warn_active_mismatch)  continue;
 		if(!header_written)
-		{  cerr << "warning: more if(active) then end statements: " << 
+		{  std::cerr << "warning: more if(active) then end statements: " << 
 				av->ptn->get_name();  header_written=true;  }
 		else
-		{  cerr << ", " << av->ptn->get_name();  }
+		{  std::cerr << ", " << av->ptn->get_name();  }
 	}
 	if(header_written)
-	{  cerr << std::endl;  }
+	{  std::cerr << std::endl;  }
 	
 	header_written=false;
 	for(AValue *av=av_list.first; av; av=av->next)
@@ -1535,16 +1535,16 @@ int File_Parser::Warn_Active_Mismatch()
 		++warnings;
 		if(!config.warn_active_mismatch)  continue;
 		if(!header_written)
-		{  cerr << "warning: less if(active) then end statements: " << 
+		{  std::cerr << "warning: less if(active) then end statements: " << 
 			av->ptn->get_name();  header_written=true;  }
 		else
-		{  cerr << ", " << av->ptn->get_name();  }
+		{  std::cerr << ", " << av->ptn->get_name();  }
 	}
 	if(header_written)
-	{  cerr << std::endl;  }
+	{  std::cerr << std::endl;  }
 	
 	if(warnings && config.warn_active_mismatch)
-	{  cerr << 
+	{  std::cerr << 
 		"         use insert.<object>.actend for active end "
 		"statements; maybe you must set" << std::endl << 
 		"         ###frame_dump_object_info=1/2### to dump all object vals "
@@ -1557,7 +1557,7 @@ int File_Parser::Warn_Active_Mismatch()
 
 File_Parser::File_Parser() : 
 	Recursive_Input_Stream(),
-	vout(cout)
+	vout(std::cout)
 {
 	mcopy=NULL;
 	pp_finder=NULL;
@@ -1703,7 +1703,7 @@ void File_Parser::AValue_List::Clear()
 	last=NULL;
 }
 
-int File_Parser::AValue_List::_Warn_Unused(ostream &os,tokID type)
+int File_Parser::AValue_List::_Warn_Unused(std::ostream &os,tokID type)
 {
 	int nunused=0;
 	bool header_written=false;
@@ -1725,7 +1725,7 @@ int File_Parser::AValue_List::_Warn_Unused(ostream &os,tokID type)
 	return(nunused);
 }
 
-int File_Parser::AValue_List::Warn_Unused(ostream &os)
+int File_Parser::AValue_List::Warn_Unused(std::ostream &os)
 {
 	int nunused=0;
 	nunused+=_Warn_Unused(os,taScalar);
@@ -2038,12 +2038,12 @@ File_Parser::Toplevel_Parser::Toplevel_Parser(File_Parser *parent,tokID tok) :
 	Sub_Parser(parent,tok)
 {
 	waittok=tNone;
-	//cerr << "  ADD:  Toplevel_Parser\n";
+	//std::cerr << "  ADD:  Toplevel_Parser\n";
 }
 
 File_Parser::Toplevel_Parser::~Toplevel_Parser()
 {
-	//cerr << "  DONE: Toplevel_Parser\n";
+	//std::cerr << "  DONE: Toplevel_Parser\n";
 }
 
 /******************************************************************************/
@@ -2102,13 +2102,13 @@ File_Parser::Include_Parser::Include_Parser(File_Parser *parent,
 	inc_start_offset=0;
 	fnparser=new Filename_Parser(fp,tok);
 	fnparser->warn_no_string=2;  // error
-	//cerr << "  ADD:  Include_Parser\n";
+	//std::cerr << "  ADD:  Include_Parser\n";
 }
 
 File_Parser::Include_Parser::~Include_Parser()
 {
 	if(fnparser)  delete fnparser;
-	//cerr << "  DONE: Include_Parser\n";
+	//std::cerr << "  DONE: Include_Parser\n";
 }
 
 /******************************************************************************/
@@ -2194,13 +2194,13 @@ File_Parser::Filename_Parser::Filename_Parser(File_Parser *parent,
 	tok_name=new char[tok->found_len+1];
 	strncpy(tok_name,tok->found,tok->found_len);
 	tok_name[tok->found_len]='\0';
-	//cerr << "  ADD:  Filename_Parser\n";
+	//std::cerr << "  ADD:  Filename_Parser\n";
 }
 
 File_Parser::Filename_Parser::~Filename_Parser()
 {
 	delete[] tok_name;
-	//cerr << "  DONE: Filename_Parser\n";
+	//std::cerr << "  DONE: Filename_Parser\n";
 }
 
 /******************************************************************************/
@@ -2316,12 +2316,12 @@ File_Parser::String_Parser::String_Parser(File_Parser *parent,
 {
 	multiline_warned=0;
 	allow_multiline=fp->config.allow_multiline_strings;
-	//cerr << "  ADD:  String_Parser\n";
+	//std::cerr << "  ADD:  String_Parser\n";
 }
 
 File_Parser::String_Parser::~String_Parser()
 {
-	//cerr << "  DONE: String_Parser\n";
+	//std::cerr << "  DONE: String_Parser\n";
 }
 
 /******************************************************************************/
@@ -2508,7 +2508,7 @@ int File_Parser::Comment_Parser::_parse(int eof)
 {
 	if(!(!av || obj_name))
 	{
-		cerr << av << obj_name << std::endl;
+		std::cerr << av << obj_name << std::endl;
 		assert(!av || obj_name);   // obj_name should have been assigned 
 	}
 	
@@ -2787,12 +2787,12 @@ File_Parser::Comment_Parser::Comment_Parser(File_Parser *parent,
 	_start_only_wspace=cc->only_wspace;
 	av=NULL;
 	obj_name=NULL;
-	//cerr << "  ADD:  Comment_Parser (errors=" << errors << ")\n";
+	//std::cerr << "  ADD:  Comment_Parser (errors=" << errors << ")\n";
 }
 
 File_Parser::Comment_Parser::~Comment_Parser()
 {
-	//cerr << "  DONE: Comment_Parser (errors=" << errors << ")\n";
+	//std::cerr << "  DONE: Comment_Parser (errors=" << errors << ")\n";
 }
 
 /******************************************************************************/
@@ -3192,12 +3192,12 @@ File_Parser::Declare_Parser::Declare_Parser(File_Parser *parent,
 	nbraces=0;
 	scalar_brace_warning=false;
 	multiline_scalar_decl_warned=false;
-	//cerr << "  ADD:  Declare_Parser (errors=" << errors << ")\n";
+	//std::cerr << "  ADD:  Declare_Parser (errors=" << errors << ")\n";
 }
 
 File_Parser::Declare_Parser::~Declare_Parser()
 {
-	//cerr << "  DONE: Declare_Parser (errors=" << errors << ")\n";
+	//std::cerr << "  DONE: Declare_Parser (errors=" << errors << ")\n";
 }
 
 /******************************************************************************/
@@ -3378,12 +3378,12 @@ File_Parser::Object_Parser::Object_Parser(File_Parser *parent,AValue *_av,
 	av=_av;
 	obj_name=_obj_name;
 	assert(av->locked);  // Caller must set lock and unset lock when we're done. 
-	//cerr << "  ADD:  Object_Parser (errors=" << errors << ")\n";
+	//std::cerr << "  ADD:  Object_Parser (errors=" << errors << ")\n";
 }
 
 File_Parser::Object_Parser::~Object_Parser()
 {
-	//cerr << "  DONE: Object_Parser (errors=" << errors << ")\n";
+	//std::cerr << "  DONE: Object_Parser (errors=" << errors << ")\n";
 }
 
 /******************************************************************************/

@@ -103,14 +103,14 @@ class Modification_Copy
 		void _Reset();
 		
 		int verbose;
-		ostream *_vout;
-		ostream &vout()  {  return(*_vout);  }
+		std::ostream *_vout;
+		std::ostream &vout()  {  return(*_vout);  }
 	public:
 		Modification_Copy();
 		~Modification_Copy();
 		
 		// Set verbosity level and verbose stream: 
-		void Set_Verbose(int verbose,ostream &vout);
+		void Set_Verbose(int verbose,std::ostream &vout);
 		
 		// Add a modification entry: 
 		// path: file to which to add the modification 

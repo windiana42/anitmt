@@ -117,7 +117,7 @@ void Pov_Output::process_results() throw( EX )
 }
 
 
-Pov_Output::Pov_Output(Animation *a) : ani(a), vout(cout)
+Pov_Output::Pov_Output(Animation *a) : ani(a), vout(std::cout)
 {
 	assert(ani!=NULL);
 	parser=NULL;

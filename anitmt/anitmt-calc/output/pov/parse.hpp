@@ -335,9 +335,9 @@ class File_Parser :
 		void Consumed(size_t n,int nlines);
 		
 		std::ostream &Error_Header()
-			{  return(Recursive_Input_Stream::Error_Header(cerr,cc.line));  }
+			{  return(Recursive_Input_Stream::Error_Header(std::cerr,cc.line));  }
 		std::ostream &Error_Header(int line)
-			{  return(Recursive_Input_Stream::Error_Header(cerr,line));  }
+			{  return(Recursive_Input_Stream::Error_Header(std::cerr,line));  }
 
 		AValue_List av_list;
 		Frame_Dump *fdump;  // namespace POV
