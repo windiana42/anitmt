@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include <functionality/solver.hpp>
+#include <functionality/complex_solver.hpp>
 #include <message/message.hpp>
 
 #include "operand.hpp"
@@ -1707,14 +1708,14 @@ namespace solve {
       //**********************************************************************
       std::cout << " Multi AND Operator..." << std::endl;
       {
-	Multi_And_Operator *and = new Multi_And_Operator(msg);
+	Multi_And_Operator *and_op = new Multi_And_Operator(msg);
 	Operand<values::Scalar> a(msg), b(msg), c(msg); 
 	Operand<flag> res(msg);
-	res = and->get_result();
-	and->add_operand( is_solved( a ) );
-	and->add_operand( is_solved( b ) );
-	and->add_operand( is_solved( c ) );
-	and->finish_adding();
+	res = and_op->get_result();
+	and_op->add_operand( is_solved( a ) );
+	and_op->add_operand( is_solved( b ) );
+	and_op->add_operand( is_solved( c ) );
+	and_op->finish_adding();
 	a.set_value(1);
 	b.set_value(1);
 	if( res.is_solved() )
@@ -1746,16 +1747,16 @@ namespace solve {
 	}
       }
       {
-	Multi_And_Operator *and = new Multi_And_Operator(msg);
+	Multi_And_Operator *and_op = new Multi_And_Operator(msg);
 	Operand<values::Scalar> a(msg), b(msg), c(msg); 
 	Operand<flag> res(msg);
-	res = and->get_result();
+	res = and_op->get_result();
 	a.set_value(1);
-	and->add_operand( is_solved( a ) );
-	and->add_operand( const_op(values::Flag(true),msg) );
-	and->add_operand( is_solved( b ) );
-	and->add_operand( is_solved( c ) );
-	and->finish_adding();
+	and_op->add_operand( is_solved( a ) );
+	and_op->add_operand( const_op(values::Flag(true),msg) );
+	and_op->add_operand( is_solved( b ) );
+	and_op->add_operand( is_solved( c ) );
+	and_op->finish_adding();
 	b.set_value(1);
 	if( res.is_solved() )
 	{
@@ -1788,14 +1789,14 @@ namespace solve {
 	}
       }
       {
-	Multi_And_Operator *and = new Multi_And_Operator(msg);
+	Multi_And_Operator *and_op = new Multi_And_Operator(msg);
 	Operand<values::Scalar> a(msg); 
 	Operand<flag> res(msg);
-	res = and->get_result();
+	res = and_op->get_result();
 	a.set_value(1);
-	and->add_operand( is_solved( a ) );
-	and->add_operand( const_op(values::Flag(true),msg) );
-	and->finish_adding();
+	and_op->add_operand( is_solved( a ) );
+	and_op->add_operand( const_op(values::Flag(true),msg) );
+	and_op->finish_adding();
 	if( !res.is_solved() )
 	{
 	  std::cout << "Error: didn't solve adding only solved operands" 

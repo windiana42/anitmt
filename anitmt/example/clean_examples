@@ -1,16 +1,16 @@
-cd test/
-cd test_ani/
+cd test/ || exit -1
+cd test_ani/ || exit -1
 rm *.pov *.inc *.tga *.avi *.ttf image_file_list > /dev/null 2>&1
-cd ../../
+cd ../../ || exit -1
 
-cd myrobot/
-cd ani/
+cd myrobot/ || exit -1
+cd ani/ || exit -1
 rm *.pov *.inc *.tga *.avi *.ttf image_file_list > /dev/null 2>&1
-cd ../../
+cd ../../ || exit -1
 
-cd circles/
-cd ani/
+cd circles/ || exit -1
+cd ani/ || exit -1
 rm *.pov *.inc *.tga *.avi *.ttf image_file_list > /dev/null 2>&1
-cd ../../
+cd ../../ || exit -1
 
 exit 0

@@ -24,13 +24,13 @@ using namespace anitmt::adlparser;
 int main( int argc, char *argv[] )
 {
   message::Message_Source_Identifier main_msg_id(0);
-  message::Stream_Message_Handler handler(cerr,cout,cout);
+  message::Stream_Message_Handler handler(std::cerr,std::cout,std::cout);
   message::Message_Manager manager( &handler );
   message::Message_Consultant main_consultant( &manager, main_msg_id );
   message::Message_Reporter msg(&main_consultant);
 
   msg.verbose() << "************** Test expressions ****************";
-  message::Stream_Message_Handler test_handler(cerr,cout,cout);
+  message::Stream_Message_Handler test_handler(std::cerr,std::cout,std::cout);
   message::Message_Manager test_manager( &test_handler );
   message::Message_Consultant test_consultant( &test_manager, main_msg_id );
   message::Message_Consultant *c = &test_consultant;

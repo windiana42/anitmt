@@ -1,24 +1,18 @@
 #include <iostream>
 
-#include "proptree.hpp"
+//#include <proptree/proptree.hpp>
 
 using namespace std;
-using namespace anitmt;
+//using namespace anitmt;
 
 int test_anitmt()
 {
-  try{
-    int errors = 0;
-    errors += property_tree_test();
-    cout << "Done..." << endl;
-    if( errors )
-      cout << errors << " Errors occured" << endl;
-    return errors;
-  }
-  catch( EX e ){
-    cout << "Fatal Error: " << e.get_name() << endl;
-    return -1;
-  }
+  int errors = 0;
+  //errors += property_tree_test(); can be tested by proptree library itself
+  cout << "Done..." << endl;
+  if( errors )
+    cout << errors << " Errors occured" << endl;
+  return errors;
 }
 
 //*****************

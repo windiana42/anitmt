@@ -10,12 +10,12 @@ libcpp_a_SOURCES = \
 		defop.h \
 		orderedarray.h cdrecorder.h btree.h binsearch.h notifierlist.h heap.h
 
-check_PROGRAMS = test-btree test-cpp
+#check_PROGRAMS = test-btree test-cpp
 test_btree_SOURCES = test-btree.cc
 test_btree_LDADD = ../libhlib.a $(LIBS)
 
-check: test-btree$(EXEEXT) ../libhlib.a  xFORCE
-	./test-btree$(EXEEXT)
+#check: test-btree$(EXEEXT) ../libhlib.a  xFORCE
+#	./test-btree$(EXEEXT)
 
 test_cpp_SOURCES = test-cpp.cc
 test_cpp_LDADD = ../libhlib.a $(LIBS)

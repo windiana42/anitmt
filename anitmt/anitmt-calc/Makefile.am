@@ -1,6 +1,7 @@
-INCLUDES=		-I$(srcdir)/../lib/ -Ifunctionality \
+INCLUDES=		-I$(srcdir)/../lib/  \
 			-I$(srcdir)/functionality \
-			-I$(builddir)/functionality
+			-I$(builddir)/functionality 
+
 SUBDIRS=		funcgen functionality input output #manu_functionality
 noinst_LIBRARIES=	libanitmt.a
 bin_PROGRAMS=		anitmt-calc

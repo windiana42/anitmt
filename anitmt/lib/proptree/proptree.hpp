@@ -220,11 +220,11 @@ namespace proptree
 
     Child_Manager() : initialized(false) {}
   };
-
-  /*
+    
   // ***************
   // test function
   // ***************
+  /*
   int property_tree_test();
   */
 }

@@ -1,4 +1,8 @@
-CPPFLAGS=		-I$(top_srcdir)/lib -I$(top_srcdir)/anitmt-calc 
+CPPFLAGS=		-I$(top_srcdir)/lib \
+			-I$(top_srcdir)/anitmt-calc \
+			-I$(top_srcdir)/anitmt-calc/functionality \
+			-I$(top_builddir)/anitmt-calc \
+			-I$(top_builddir)/anitmt-calc/functionality 
 CXXFLAGS =		@CXXFLAGS@ -Wno-non-template-friend
 noinst_LIBRARIES=	libsolve.a
 libsolve_a_SOURCES= 	\
@@ -13,7 +17,11 @@ libsolve_a_SOURCES= 	\
 
 check_PROGRAMS=		test_solve
 test_solve_SOURCES=	test_solve.cpp
-test_solve_LDADD=	../message/libmessage.a \
+test_solve_LDADD=	libsolve.a \
+			../message/libmessage.a \
 			../../anitmt-calc/functionality/libfunctionality.a \
-			libsolve.a ../val/libval.a 
+			../proptree/libproptree.a \
+			../val/libval.a \
+			../utl/libutl.a \
+			libsolve.a
 EXTRA_DIST=		README

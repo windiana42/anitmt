@@ -28,8 +28,9 @@ testadlparser_LDADD=	libadlparser.a \
 			../../output/lib/liboutput.a \
 			../../output/raw/librawout.a \
 			../../output/pov/libpovout.a \
-			../../functionality/libfunctionality.a \
-			-lefence
+			../../functionality/libfunctionality.a 
+
+#			-lefence
 
 #also includes old adl/libadlparser.a for libanitmt
 
