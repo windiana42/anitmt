@@ -14,12 +14,16 @@
  * 
  */
 
+#ifndef _NS_ExParse_Lexer_HPP_
+#define _NS_ExParse_Lexer_HPP_ 1
+
 #ifndef exparse_in_flex_source
 	#undef yyFlexLexer
 	#define yyFlexLexer exparse_FlexLexer
 	#include <FlexLexer.h>
 #endif
 
+#include "basicparser.hpp"
 #include "function.hpp"
 #include "tree.hpp"
 
@@ -56,51 +60,22 @@ enum Token
 };
 
 
-struct ParserConfig
+struct ParserConfig : BasicParserConfig
 {
-	// 0 -> no nested cmts (like C); 1 -> yes & warn; 2 -> yes & dont warn
-	int allow_nested_comments;
-	// Width of tab char (defaults to 8) 
-	int tab_char_width;
-	
 	ParserConfig();
 	~ParserConfig() { }
 };
 
 //! I recommend using a typedef for this:
 //! typedef exparse::Parser ExpressionParser;
-class Parser : public exparse_FlexLexer
+class Parser : public BasicParserGlue<exparse_FlexLexer>
 {
 	private:
-		// NEVER call these two directly (use NextTok() and NextChar())
-		int yylex();  // lexer routine (written by flex) 
-		int yyinput();
-		
-		// Current position: 
-		struct Position
-		{
-			std::string file;  // MUST BE CHANGED!! (handle) 
-			int line;
-			int lpos;
-		} p,delta_p;
-		
-		inline void _UpdatePos(int c,Position *p);
-		inline void _UpdatePos(char *str,int len,Position *p);
-		inline void _AddPos(Position *p,Position *delta);
-		
-		int errors;
+		//! NEVER call yylex() and yyinput() directly; 
+		//! use NextTok() and NextChar() (from class BasicParser) 
+		//! instead. 
 		
 		ParserConfig config;
-		
-		// Get next char (NEVER call yyinput()): 
-		int NextChar();
-		// Get next token; will skip comments. 
-		Token NextTok();
-		Token currtok;   // current token
-		
-		// Simply used to discart comments from input: 
-		void _SkipCComment();
-		void _SkipCppComment();
 		
 		// Go into expression start condition and parse the 
 		// expression: 
@@ -114,7 +89,6 @@ class Parser : public exparse_FlexLexer
 		void _ParseScalar(Scalar *rv);
 		void _ParseVector(Vector *rv);
 		int  _ParseFlag(Flag *rv);
-		void _ParseString(String *rv);
 		
 		void _ResetParser();
 	public:
@@ -137,4 +111,6 @@ class Parser : public exparse_FlexLexer
 };
 
 }  // end of namespace exparse
+
+#endif  /* _NS_ExParse_Lexer_HPP_ */
 

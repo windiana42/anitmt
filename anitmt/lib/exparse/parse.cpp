@@ -74,55 +74,6 @@ static const TokenDesc tdesc[_TLast]=
 };
 
 
-void Parser::_SkipCComment()
-{
-	int ci,lastci=-256;
-	int nested=1;
-	int nestwarn = (config.allow_nested_comments==1) ? 0 : 1;
-	for(;;)
-	{
-		ci=NextChar();
-		if(ci==EOF)
-		{
-			cerr << "Comment terminated by EOF" << std::endl;
-			break;
-		}
-		if(ci=='/' && lastci=='*')
-		{
-			if(!(--nested))
-			{  break;  }
-			lastci=-256;
-		}
-		else if(config.allow_nested_comments && ci=='*' && lastci=='/')
-		{
-			if(nested==1 && !nestwarn)
-			{
-				fprintf(stderr,"Warning: nested C-style comment\n");
-				++nestwarn;
-			}
-			++nested;
-			lastci=-256;
-		}
-		else
-		{  lastci=ci;  }
-	}
-}
-
-
-void Parser::_SkipCppComment()
-{
-	int ci;
-	for(;;)
-	{
-		ci=NextChar();
-		if(ci==EOF)   // C++ -style comment can be terminated by EOF
-			break;
-		if(ci=='\n')
-			break;
-	}
-}
-
-
 // Valid flex-reported scalars only: 
 void Parser::_ParseScalar(Scalar *rv)
 {
@@ -184,56 +135,6 @@ int Parser::_ParseFlag(Flag *rv)
 	return(rtv);
 }
 
-// Parse any string: 
-void Parser::_ParseString(String *rv)
-{
-	rv->assign("");
-	int ci;
-	char c;
-	int in_esc=0;
-	#warning do it faster by using a string read buf
-	for(;;)
-	{
-		ci=NextChar();
-		if(ci==EOF)
-		{  fprintf(stderr,"String terminated by EOF\n");  
-			break;  }  // FIXME: return(EndOfFile);
-		*((unsigned char*)&c)=(unsigned char)ci;
-		if(c=='\n')
-		{  fprintf(stderr,"String terminated by newline\n");
-			break;  }
-		else if(in_esc)
-		{
-			switch(c)
-			{
-				case 'n':   c='\n';  break;
-				case 'r':   c='\r';  break;
-				case 't':   c='\t';  break;
-				case 'v':   c='\v';  break;
-				case 'a':   c='\a';  break;
-				case 'b':   c='\b';  break;
-				case 'f':   c='\f';  break;
-				case '\\':  c='\\';  break;
-				case '\"':  c='\"';  break;
-				case '\'':  c='\'';  break;
-				default:
-					fprintf(stderr,"Warning: unrecognized escape sequence "
-						"`\\%c'.\n",c);
-					rv->append("\\");
-					break;
-			}
-			rv->append(&c,1);
-			in_esc=0;
-		}
-		else if(c=='\\')
-		{  in_esc=1;  }
-		else if(c=='\"')
-		{  break;  }
-		else
-		{  rv->append(&c,1);  }
-	}
-}
-
 
 // May only be called for Tolken TVxxx
 void Parser::_ParseValue(Value *rv,Token valtok)
@@ -243,7 +144,7 @@ void Parser::_ParseValue(Value *rv,Token valtok)
 		case TVFlag:   { Flag   tmp; _ParseFlag  (&tmp); *rv=tmp; } break;
 		case TVScalar: { Scalar tmp; _ParseScalar(&tmp); *rv=tmp; } break;
 		case TVVector: { Vector tmp; _ParseVector(&tmp); *rv=tmp; } break;
-		case TVString: { String tmp; _ParseString(&tmp); *rv=tmp; } break;
+		case TVString: { String tmp;  ParseString(&tmp); *rv=tmp; } break;
 		default:  assert(0);  abort();
 	}
 }
@@ -259,107 +160,12 @@ const FunctionDesc *Parser::_ParseFunctionName()
 }
 
 
-inline void Parser::_UpdatePos(int c,Position *p)
-{
-	if(c==EOF)  return;
-	switch(c)
-	{
-		case '\t':  p->lpos = (p->lpos/config.tab_char_width+1)*config.tab_char_width;  break;
-		case '\n':  p->lpos=0;  ++p->line;  break;
-		case '\r':  break;
-		case '\f':  /* fallthrough */
-		case '\v':  ++p->line;  /* p->lpos=const. */  break;
-		default:  ++p->lpos;  break;
-	}
-}
-
-inline void Parser::_UpdatePos(char *str,int len,Position *p)
-{
-	// This function still has a potential for optimizations... 
-	for(unsigned char *c=(unsigned char*)str,*cend=c+len; c<cend; c++)
-	{  _UpdatePos(int(*c),p);  }
-}
-
-inline void Parser::_AddPos(Position *p,Position *delta)
-{
-	if(delta->line)
-	{
-		p->line+=delta->line;
-		p->lpos=delta->lpos;  // `=', NOT `+='
-		delta->line=0;
-	}
-	else
-	{  p->lpos+=delta->lpos;  }
-	delta->lpos=0;
-}
-
-// Always use this instead of yyinput(). 
-int Parser::NextChar()
-{
-	_AddPos(&p,&delta_p);
-	int c=exparse_FlexLexer::yyinput();
-	_UpdatePos(c,&p);
-	return(c);
-}
-
-// Make sure nobody calls it: 
-int Parser::yyinput()
-{  assert(0);  return(EOF);  }
-
-// Always use this instead of yylex(). 
-Token Parser::NextTok()
-{
-	Token tok;
-	for(;;)
-	{
-		_AddPos(&p,&delta_p);
-		tok=(Token)yylex();
-		currtok=tok;
-		switch(int(tok))
-		{
-			case TWSpace:
-				_UpdatePos(yytext,yyleng,&p);
-				break;
-			case TCComment:
-				_UpdatePos(yytext,yyleng,&p);
-				_SkipCComment();
-				break;
-			case TCppComment:
-				_UpdatePos(yytext,yyleng,&p);
-				_SkipCppComment();
-				break;
-			case TCCommentEnd:
-				_UpdatePos(yytext,yyleng,&p);
-				cerr << "Stray closing C-style comment" << std::endl;
-				++errors;
-				break;
-			case TUnknown:
-			{
-				char tmp=yytext[yyleng];
-				yytext[yyleng]='\0';
-				cerr << "Parse error near unexpected token `" << yytext << 
-					"'" << std::endl;
-				yytext[yyleng]=tmp;
-				_UpdatePos(yytext,yyleng,&p);
-				++errors;
-			}	break;
-			default:
-				assert(!delta_p.line && !delta_p.lpos);
-				_UpdatePos(yytext,yyleng,&delta_p);
-				return(tok);
-		}
-	}
-	/* UNREACHED */
-	return(tok);
-}
-
-
 void Parser::_ParseExpression(LinkedList<OperatorNode> *exp)
 {
 	Token tok;
 	for(;;)
 	{
-		tok=NextTok();
+		tok=(Token)NextTok();
 		#warning this is for testing only (must treat EOF differently) 
 		if(tok==TEOF)  break;
 		Operator *op=NULL,*op2=NULL;
@@ -411,7 +217,7 @@ void Parser::_ParseExpression(LinkedList<OperatorNode> *exp)
 				
 			#warning REMOVE ME: debugging only: 
 			if(!strcmp(yytext,"pos"))
-			{  cerr << "POS(" << p.line << "," << p.lpos << ")" << std::endl;  }
+			{  cerr << "POS(" << currpos()->line << "," << currpos()->lpos << ")" << std::endl;  }
 				
 				cerr << "Unrecognized identifier `" << yytext << "'." << std::endl;
 				yytext[yyleng]=tmp;
@@ -484,16 +290,18 @@ void Parser::_ResetParser()
 
 
 Parser::Parser() : 
+	BasicParserGlue<exparse_FlexLexer>(),
 	config()
 {
-	_ResetParser();
+	// BasicParser initialisation: 
+	SetConfig(&config);
+	tok_WSpace=TWSpace;
+	tok_CComment=TCComment;
+	tok_CppComment=TCppComment;
+	tok_CCommentEnd=TCCommentEnd;
+	tok_Unknown=TUnknown;
 	
-	p.file="";
-	p.line=1;
-	p.lpos=0;
-	delta_p.file="";
-	delta_p.line=0;
-	delta_p.lpos=0;
+	_ResetParser();
 }
 
 Parser::~Parser()
@@ -504,8 +312,6 @@ Parser::~Parser()
 
 ParserConfig::ParserConfig()
 {
-	allow_nested_comments=1;
-	tab_char_width=8;
 }
 
 }  // end of namespace exparse

@@ -7,6 +7,7 @@ libexparse_a_SOURCES=	\
 	operator.cpp operator.hpp \
 	tree.cpp tree.hpp \
 	value.cpp value.hpp \
+	basicparser.cpp basicparser.hpp \
 	lexer.cc parse.cpp lexer.hpp \
 	linkedlist.h
 # unused: mcache.cpp mcache.hpp

@@ -27,7 +27,6 @@ using namespace exparse;
 
 %pointer
 %option prefix="exparse_"
-%option yyclass="exparse::Parser"
 %option noyywrap
 %option c++
 
