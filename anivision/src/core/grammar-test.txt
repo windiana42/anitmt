@@ -1,0 +1,1758 @@
+// Still to fix: empty arrays: 
+// - { , {1,2}, {1}, {.} };
+// - int a[]={.};                 
+// - foo() const {}  <-- not yet respected ("const" ignored)
+// - You cannot use this.this or obj.this.member because the 
+//   object is not member of itself... a bit weired but lookup 
+//   behaves that way. You don't need such constructs anway. 
+// - NULL may need some more testing. 
+//   You CAN use {NULL,new obj()} but NOT {NULL,NULL}. 
+//   -> Use new array instead (because implicitly initialized 
+//      with NULL). 
+
+//***************************************************************
+// WARNING: COMMENTED OUT SOURCE CODE MAY NOT WORK. 
+//          DO NOT BELIEVE ANY COMMENTS REFERRING TO SOURCE 
+//          CODE LINES WHICH ARE COMMENTED OUT. 
+/* /* NOTE: COMMENTS MAY BE NESTED */ */
+//***************************************************************
+
+// TO BE IMPLEMENTED: 
+// - hmm... 
+
+// LOW PRIORITY: 
+// - some clever widening for vdot(), vnormalize() and the like...
+
+// PROBLEMS:
+// - calling the destructor (must be called by )
+// - operator delete
+
+// WARNING: 
+// - Conditions in wait() and trigger() should not have side effects. 
+//   Result can be "strange". 
+//   For example 
+//     int i=10; wait(until=!--i,poll=1);
+//   works effectively doing 10 yield()s but
+//     int i=10; wait(until=!i--,poll=1);
+//   will NOT work because the post increment is not executed 
+//   before wait() exits. What WILL happen is that each time 
+//   the wait conditionl is evaluated, a further "i--" statement 
+//   is added to the delayed execution list which will thus 
+//   get bigger and bigger. So, DON'T DO THAT. 
+
+// TESTME: 
+//  - What happens if we execute yield(), pwait() or wait() 
+//    from within a pwait() or wait() condition? The first time 
+//    and lateron? What about kill()...? And ADBs? function ADBs?
+
+// BUGS: 
+//  anyobj ...
+//  tijd.$pov(attach="foo!!"); in TheAni
+
+object this_is_just_data
+{
+	int dataA;
+	vector<6> dataB;
+	this_is_just_data()
+	{  dataA=17; dataB=<1,2,3,4.4,-5,dataA>;  }
+}
+
+animation A{/*just for testing*/}
+
+animation TheAni
+{
+	const int val=1;
+	
+	puts("AniTime="+strof($time)+"="+strof(::$time)+"\n");
+	
+	this_is_just_data tijd = new this_is_just_data();
+	//tijd.$pov(attach="foo!!");
+	
+	scalar tmp=sin(atan2(0.3,2))+pow(1,2.4);
+	puts(strof(tmp)+"\n");
+	
+	//new TheSet::PovTest(); --> error (OK)
+	//%tmp{};  // --> error (OK)
+	
+	// setting(t=range, toff=delta, run_ctx=str_name, save_ctx=str_name, 
+	//         skip=0/1);
+	// Currently, only the t argument is respected but the other ones 
+	// are already accepted. 
+	TheSet(t=1..4, toff=0, run_ctx="cA", save_ctx="cB", skip=0);
+	
+	//Xmain();
+	
+	//$time=1.0;
+	
+	puts("AniTime="+strof($time)+"="+strof(::$time)+"\n");
+}
+
+int obj_test_foo(TheSet::PovTest pt=NULL)
+{
+	//anyobj ptr;  // OK
+	//anyobj ptr=pt;  // OK
+	//anyobj[] arrptr;  // OK
+	return(0);
+}
+
+int obj_test_bar(/*anyobj*/TheSet::PovTest x)
+{
+	return(int(x.$pos[1]));
+	//x.is_instance_of(TheSet::PovTest);
+}
+
+//anyobj obj_test_foobar(TheSet::PovTest x)
+//{ return(x); }
+
+
+setting TheSet
+{
+	// Setting init function: 
+	TheSet()
+	{
+		puts("HERE WE ARE!! setting_time="+strof($time)+"="+
+			strof(TheSet::$time)+"; ani time="+strof(::$time)+"\n");
+		//$time=100.0;
+		//abort();
+		
+		//new BOOM(10);
+		
+		/*for(int i=0; i<6; i++)
+		{
+			int rv=clone();
+			if(rv)
+			{  puts("Parent: <"+strof(rv)+">\n");  }
+			else
+			{  yield();  puts("Child!!!\n");  break;  }
+		}*/
+		
+		//get_thread_id();  // get thread id (not yet implemented)
+		//kill(thread_id=0);  // 0 -> self; -1 -> children?! (not yet implemented)
+		
+		$pov(scan={"scene.pov","../pov-scan/scene.pov",
+			"../../../anivision/src/pov-scan/scene.pov",
+			"../anivision/src/pov-scan/scene.pov"});
+		
+		int i=1;
+		pwait(until=!--i);
+		
+		PovTest pt=new PovTest();
+		puts(">>>>>>><"+strof(pt.pintens)+"<<<<<<<<<\n");
+		
+		if(!clone())
+		{
+			// Child. 
+			for(int j=0; j<12; j++)
+			{  puts("Ugh"+strof(++i)+"\n");  }
+			//kill();
+		}
+		
+		//AppleManTest();
+		
+		wait(until=i+pt. pintens-pt. pintens==10,poll=0);
+		
+		puts("BAMM**\n");
+		
+		delay(1.5);
+		
+		puts("BAMM???\n");
+	}
+	
+	object PovTest
+	{
+		scalar povvalS;
+		int povvalI;
+		vector<3> povvalV;
+		scalar pintens;
+
+		PovTest()
+		{
+			//%scc:{};  // Make sure object PovTest has a 
+			
+			%anitmt:{
+				center = <1,1,1>;
+				move_straight s1{
+					start_time = 0;
+					end_time = 10;
+					start_pos = <1,3,3>;
+					end_pos = <3,2,3>;
+					//end_speed=1.0;
+					//acceleration = 17;
+					start_speed=0.1;
+					
+					start_up_vector = <0,1,0>;
+					end_up_vector = <0,1,0>;
+					
+					start_rot_speed_horizontal = 0; 
+					start_rot_speed_roll = 0.0;
+					start_rot_speed_vertical =  0;
+					diff_rot_speed_horizontal = 0;
+					diff_rot_speed_roll = 0;
+					diff_rot_speed_vertical = 0;
+					
+				}
+			};
+			
+			if(clone()) return;
+			
+			$pov(attach="Fighter"/*,scan="fubar.pov"*/);
+			$pov(attach="something");
+			puts("PovTest::$time="+strof($time)+"; $Time="+strof($Time)+"\n");
+			//$time=99;
+			//$Time=199;  OK, not an lvalue
+			
+			pintens=5;
+			
+			scalar stackval=0.33;
+			
+			/*%povvalS{};
+			%{
+				move {
+					pos = curve {
+						// Curve position; no time info stored here. 
+						// Possible scopes: 
+						//   fixed
+						//   lspline
+						//   cspline
+						/*pos = fixed { pos=<5,5,-6>; }*/
+						/*pos = lspline {
+							// This is much like cspline. 
+							//    pts={} or pts_t={}. 
+							//    addpts="none"|"start"|"end"|"both"
+							//    tvals="inc"|"dist"|scalar[] [Not yet supported]
+							pts_t={ <0,0,0,3>,<5,0,-6,4>,<10,5,0,5>,<5,0,6,8>,<0,0,0,12>,
+								<-5,0,-6,15>,<-10,0,0,18>,<-5,0,+6,19>,<0,0,0,20> };
+							addpts="none";
+							//tvals="dist";
+						}*/
+						pos = cspline {
+							// pts= array of 3d vectors for the control points
+							//      Internal spline t value will be in range 
+							//      0..npoints-1
+							// pts_t= array of 4d vectors for control points 
+							//      and t value (last component of each vector)
+							//      Internal spline t value will be in range 
+							//      pts_t[0].t ... pts_r[npoints-1].t
+							pts={ <0,0,0>,<5,0,-6>,<10,5,0>,<5,0,6>,<0,0,0>,
+								<-5,0,-6>,<-10,0,0>,<-5,0,+6>,<0,0,0> };
+							// Add points to the spline to achieve continuacy. 
+							// Possible values: 
+							//  "none"  -> do not add points
+							//  "start" -> add one point at the beginning
+							//  "end"   -> add one point at the end
+							//  "both"  -> add one point at beginning and 
+							//             one at the end
+							//  "periodic" -> force periodic boundary conditions
+							//   NOTE: For periodic boundary conditions, the 
+							//         last point and the first point MUST 
+							//         match. You cannot use periodic
+							//         boundary conditions when joining with 
+							//         other curves. 
+							addpts="periodic";
+							// Specify which t values to use; only valid if 
+							// pts= and not pts_t= was used. 
+							// Possible values: 
+							//  "inc"     normal constant increment, use 0,1,2,...
+							//  "dist"    use euclidic point distance
+							//  scalar[]  use specified t values; array size must 
+							//            match point array size. [Not yet supported]
+							tvals="dist";
+						}
+						
+						// Curve time spec. 
+						// dt: duration time
+						// t: time range (may be open)
+						dt=0.3;
+						t=0..;
+						
+						// Curve speed(t) or length(t) function spec: 
+						// The length function is a function which is 
+						// applied to the t value before evaluating the 
+						// spline. The speed function is similar, so you 
+						// can only specify one of the two. 
+						// If you do not specify any or are using 
+						// "none", then the "identity function is used", 
+						// i.e. nothing special happens and the spline 
+						// t values are used directly. 
+						// Possible values: 
+						//   length: 
+						//     - none{}   <-- do not forget the braces
+						//     - cspline { pts_xt = {<1,0>...} }
+						//   speed: 
+						//     - none{}   <-- do not forget the braces
+						//     - constant { [v=value] }  <-- constant speed
+						//     - cspline { pts_vt = {<1,0>...} }
+						speed = constant {
+							/*interpol="cspline";
+							interpol_npts=4; /* <-- for spline: per spline ctl pnt */ */
+						}
+					}
+					
+					// Specify front vector for movement. 
+					// Possible scopes: 
+					//    speed {}  -> use speed vector (default)
+					//    curve -> standard curve, see above
+					//             No time spec is allowed, position 
+					//             time is used. 
+					/*front=speed{}*/
+					/*front = curve {  [not yet implemented <- remember time spec issue]
+						pos = fixed { pos = <1,0,0>; }
+					}*/
+					
+					// Front/up vector flags: 
+					//   normalize -> normalize front/up vector (default)
+					//   !normalize -> do not normalize
+					//front_mode="normalize";
+					up_mode="normalize";
+					
+					// Specify up vector for movement. 
+					// Possible scopes: 
+					//    gravity {} -> based upon gravity calculations
+					up = gravity {
+						// Gravity calculation: Possibe values: 
+						//   force_up -> antiparallel to the direction of 
+						//      the gravitational force; defaults to <0,1,0> 
+						//      and should be normalized
+						//   force_center -> position of the gravitational 
+						//      center so that the force up vector is calculated 
+						//      force_up = <current pos> - force_center
+						//  [Only either force_up or force_center can be used.]
+						//  For force_center, normalisation is done automatically. 
+						force_up=<0,1,0>;
+						// Air planes change their up vector when they fly around 
+						// a curve. This factor describes the influence of the 
+						// acceleration vector on the up vector. Default: 0. 
+						accel_scale=1.0e-2;
+					}
+				}
+				
+				move {
+					/*pos =*/ curve {
+						pos = function {
+							/*pos =*/
+							<3*sin($t),3*cos($t),$t/2>;
+							//cos(177)*<1,2,3>;
+							//<stackval,$t,1>;
+							//<pintens,$t,sin(pintens)>;
+							t = 0..2*3.14152954;
+						}
+						
+						// Curve time spec. 
+						// dt: duration time
+						// t: time range (may be open)
+						dt=cos(0)*3;
+						t=0.3..;
+					}
+				}
+				
+				/* curve {
+					pos = 
+						// lenint: params for curve length integration
+						// diff: params for numerical differentiation
+						fixed { ... }
+						lspline { pts=... pts_t=<,,,t> }
+						cspline { pts=... pts_t=<,,,t> addpts=... lenint=... }
+						function { f(t) R -> R^n, interpolate = ... lenint=... diff=... }
+						curve { ... }
+						join { ... }
+						gravity { ... }
+					speed or length = 
+						constant { ... }
+						linear { ... }
+						cspline { pts_vt = <1,0>... }
+						function { f(t) R -> R }
+					t=1..3;
+					dt=2;
+				} */
+			};*/
+			
+			for(;;)
+			{
+				pintens=5+2*sin(2*3.141592654*$time/3.0*5);
+				puts("pintens="+strof(pintens)+"; $time="+strof($time)+"\n");
+				delay(0.01);
+			}
+			kill();
+		}
+	}
+
+	object me  // $me
+	{
+		//static vector $v;
+		//matrix $m;
+		foo(int arg) //$foo
+		{
+			//static scalar $s;
+			//int $i;
+			//int val=$time;
+			//foo(mode=linear);
+		}
+	}
+	
+	// Don't create such an object, it will assert-crash AniVision. 
+	object BOOM
+	{
+		BOOM itsme;
+		BOOM(int i) { itsme=this; }
+	}
+}
+
+AppleManTest()
+{
+	// Appleman test: 
+	// Current speed with all optimizations and no 
+	// allocation debugging: 22 usec/iteration (10 seconds). 
+	int totiter=0;
+	int w=80,h=60;
+	for(int y=0; y<h; y++)
+	{
+		for(int x=0; x<w; x++)
+		{
+			scalar a=(x-w/2)/scalar(w/2),b=(y-h/2)/scalar(h/2);
+			scalar xx=0.0,yy=0.0;
+			int i;
+			for(i=0; i<256 && xx*xx+yy*yy<4.0; i++)
+			{
+				scalar _x=xx*xx-yy*yy+a;
+				yy=2.0*xx*yy+b;
+				xx=_x;
+			}
+			totiter=totiter+i;
+		}
+	}
+}
+
+
+object TOBJ
+{
+	scalar s;
+	int i;
+	
+	TOBJ(scalar s)
+		{ this.s=s; i=101; puts("<"+strof(this)+">"); }
+	~TOBJ(){}
+	TOBJ getthis()
+		{  return(this);  }
+	// Can be called with this=NULL (rv=266) or this!=NULL (rv=101): 
+	int foo(int k=0)
+		{  return(k ? this ? i : 266 : this.getthis().foo(1));  }
+}
+
+int fac(int x)
+	{  return((x>1) ? x*fac(x-1) : 1);  }
+
+vfunc(){}
+
+scalar crusher()
+{
+	TheSet::PovTest pt=new TheSet::PovTest();
+	
+	puts("pt="+strof(pt)+" (before)\n");
+	pt.povvalV=<177,333,999>;
+	puts("pt="+strof(pt)+" (after)\n");
+	
+	for(int k=2; (k>0); k--)
+	{
+		for(int i=0; i<100000; ++i)
+		{
+			int gubbl=i;
+			{
+				//return(141);
+				if(i==9) break;
+			}
+			if(i>=9)
+			{  scalar arr[]; arr[33]=44; }
+		}
+		//scalar arr[]; arr[33]=44;
+	}
+	
+	vdot(<1,2,4>,<1,2,3>);
+	vnormalize(<3,4,5>);
+	
+	k=abs(-17);
+	k=int(sin(tan(3)));
+	
+	atan2(6.1,3);
+	scalar atan2=3;
+	::atan2(1,2);
+	
+	puts("Buuuuuaaaaaaahhhhh!!!!!!!!!!!\n");  // "Der Ur-Schrei" :)
+	puts(strof(177)+" "+strof({::atan2(1,2),7}));
+	
+	--k=17;  // Yes... makes little sense but valid. 
+	if(k!=17) { scalar arr[]; arr[33]=44; }
+	
+	k++=17;  // Yes... makes little sense but valid. 
+	if(k!=18) { scalar arr[]; arr[33]=44; }
+	
+	puts("--"+strof(vfunc())+"--");
+	
+	scalar kk;
+	++--++++kk++++++--=3;  // ...cool, eh?
+	if(kk!=5) { scalar arr[]; arr[33]=44; }
+	
+	vector<6> vv=<3,5,7,9,11.0,14>;
+	if(vv[3]!=9) { scalar arr[]; arr[33]=44; }
+	vv[5]=10;
+	if(vv[5]!=10) vv[100]=3;
+	vv.z-=0.5; ++vv[2]++;
+	if(vv[2]!=8.5) vv[100]=3;
+	
+	matrix<2,4> mm;  //=<<1,2,3,4>,<1,2,3,4>>;  <-- FIXME should be introduced. 
+	mm[0][0]=1.0;
+	mm[1][0]=2.0;
+	mm[0][1]=4.5;
+	{
+		vector<4> vvm=mm[1];
+		if(vvm!=<2.0,0,0,0>)  vv[99]=3;
+	}
+	if(mm[1][0]!=2.0 || mm[0][0]!=1 || mm[0][1]!=4.5 || mm[1][1])  vv[100]=3;
+	{
+		vector<4> vvm=<66,77,88,99.9>;
+		mm[0]=vvm; if(mm[0]!=vvm)  vv[101]=3;
+		vvm[2]=33;
+		mm[1]=vvm; if(mm[1]!=vvm)  vv[102]=3;
+		mm[1][3]=567; vvm[3]=567; if(mm[1]!=vvm)  vv[103]=3;
+	}
+	
+	range r=1..3;
+	if(r.a!=1 || r.b!=3)  vv[909]=3;
+	r.a+=17; r.b=11.11;
+	if(r.b!=11.11 || r.a!=18)  vv[909]=3;
+	
+	string ss="helloboy";
+	string sss=ss;
+	ss[0]="x";  if(ss!="xelloboy")  vv[911]=3;
+	ss[3]="oya";  if(ss!="xeloyaoy")  vv[912]=3;
+	ss[8]="huh";  if(ss!="xeloyaoyhuh")  vv[913]=3;
+	ss[8]="heee";  if(ss!="xeloyaoyheee")  vv[914]=3;
+	sss="abcdefghijklmnopqrstuvwxyz";
+	if(ss!="xeloyaoyheee")  vv[915]=3;
+	if(sss[3]!="d" || sss!="abcdefghijklmnopqrstuvwxyz")  vv[916]=3;
+	
+	if(sss.length!=26)  vv[917]=3;
+	if(<3,4>.length!=5)  vv[918]=3;
+	if(mm.rows!=2 || mm.cols!=4)  vv[919]=3;
+	if(vv.dim!=6)  vv[920]=3;
+	if(<5,6,9>.dim!=3)  vv[921]=3;
+	
+	if({1,2,4.4,<1,2,3>}.size!=4)  vv[922]=3;
+	
+	{{{{
+	for(int hexa=19; 199==<2,8,4.4>.length; )
+	{
+		int myval=189;
+		matrix<1,2> mm=<77,88>;
+		crusher();
+	}
+	
+	if(sss.length) int l=sss.length;
+	
+	//ss.length=4;  // (error, ok)
+	int a[];
+	if(a.size!=-1)  vv[1001]=3;
+	//a.size=3;  // (error, ok)
+	
+	;;;;;;;;;;;
+	while(0)
+	{  scalar S;  }
+	;;;;;;;;;;
+	}}}}
+	
+	new TOBJ(3);
+	// Generate runtime error (never reached): 
+	return(141);
+	scalar arr[];
+	arr[33]=44;
+}
+
+
+int Xmain()
+{
+	int foo=bar()+1;
+	
+	int SEPARATOR=100;
+	
+	fac(33);
+	
+	if(crusher()!=141)
+	{  scalar arr[]; arr[22]=33;  }
+	
+	TOBJ io=NULL;  io=NULL;
+	int i[]=NULL;  i=NULL;
+	
+	if(i==NULL){}
+	
+	for(int jk=8; jk; jk/=2) new TOBJ(1);
+	scalar kk=10;
+	kk*=2;
+	string ka="he"+"bu";
+	ka+="jojo";
+	//kk*="kk";
+	
+	{{{{1,2.0},{1,3.3,4,4}}},{{{1.0}},{{1.0,1,1,1,bar()}}}};
+	
+	// Appleman test: 
+	// Current speed with all optimizations and no 
+	// allocation debugging: 22 usec/iteration (10 seconds). 
+	/*int totiter=0;
+	int w=80,h=60;
+	for(int y=0; y<h; y++)
+	{
+		for(int x=0; x<w; x++)
+		{
+			scalar a=(x-w/2)/scalar(w/2),b=(y-h/2)/scalar(h/2);
+			scalar xx=0.0,yy=0.0;
+			int i;
+			for(i=0; i<256 && xx*xx+yy*yy<4.0; i++)
+			{
+				scalar _x=xx*xx-yy*yy+a;
+				yy=2.0*xx*yy+b;
+				xx=_x;
+			}
+			totiter=totiter+i;
+		}
+		//new TOBJ(1);
+	}*/
+	
+	int rv=(new TOBJ(53.0)).i;
+	
+	rv ? : bar();
+	
+	//vector x=1,y=x+<1+1,1,1>;
+	
+	if(dfoo()!=17)  rv=-2;
+	else if(dfoo(1)!=9)  rv=-3;
+	else if(dfoo(x=1)!=9) { rv=-4; }
+	else if(dfoo(y=2)!=11)  rv=-5;
+	else if(!nonoop())  rv=-6;
+	else if(!nonoop2())  rv=-7;
+	else
+	{
+		TOBJ tobj=new TOBJ(s=3.1415);
+		if(tobj.s!=3.1415) rv=(-1);
+		else ((rv))=(((tobj.TOBJ::foo(k=0)-rv)));
+	}
+	return(rv);
+}
+
+int bar()
+{
+	scalar dummy;
+	{
+		// NOTE!! May only initialize static var for the first time. 
+		static int ncalls=8;  // implicitly 0
+		ncalls=ncalls+1;
+		return(ncalls<10 ? bar() : ncalls);
+	}
+}
+
+int nonoop()
+{
+	TOBJ arr[]=new TOBJ[3];
+	arr[1]=new TOBJ(s=99.99);
+	return(arr[0].foo()==266 && arr[1].foo()==101);
+}
+
+int nonoop2()
+{
+	int iarrX[][][][][][][][][][]=new int[2][4][2][2][2][2][2][2][2][4];
+	int iarr[][]=new int[2][4];
+	
+	//TOBJ tmp;tmp.i=1;  // Runtime error -- OK.
+	
+	TOBJ arrX[][];
+	arrX=new TOBJ[3][];
+	arrX[1]=new TOBJ[1];
+	
+	arrX[1]=new TOBJ[4];
+	arrX[1][3]=new TOBJ(s=88.88);
+	return(!arrX[0] && arrX[1][3].foo()==266 && arrX[1][2].foo()==101);
+}
+
+int dfoo(scalar x=9,int y=8)
+{
+	scalar arr[]={1+y-y,2.2,-4,0.4,0.4},sum;
+	for(int i=0; i<5; i=i+1)
+	{  sum=sum+arr[i];  }
+	return(int(x)+y+(sum ? 100 : 0));
+}
+
+setting SA
+{
+	int sm;
+	int sfoo(int k=1){ /*obj();*/ }
+	//int clash=obj::s;   // ERROR (obj::s not yet initialized)
+	
+	object obj
+	{
+		int m;
+		static int s=1+1+1+1+sm;
+		//static scalar ss=obj2::ss;  // ERROR (obj2::s not yet initialized)
+		static scalar sss;
+		//static obj ooo=this;   // ERROR (ok)
+		int foo(){}
+		
+		obj()
+		{
+			//obj::obj();
+			//int x=this.m+this.s;  // (runtime error... ok)
+			int y=foo();
+			int y1=this.foo();
+			int y2=obj::foo();
+			int y3=this.obj::foo();
+			int y4=sfoo();
+			int y5=SA::sfoo();
+			obj o;
+			o=this;
+			o=o;
+			//this=o;   // ERROR (ok, "this" no lvalue)
+			
+			//obj __o1[]={obj};  // ERROR (ok)
+			//obj __o2=SA.obj;   // ERROR (ok)
+			//obj __o3=SA::obj;  // ERROR (ok)
+			
+			//static int s_x=int(sss);       // OK (but runtime error due to static instance creation somewhere else in here... <- OK)
+			//static int s_y=int(obj::sss);  // OK (but runtime error...)
+			//static int s_z=int(obj2::ss);  // OK (but runtime error...)
+			//static int s_xx=s_x;       // OK
+		}
+	}
+	
+	object obj2
+	{
+		static scalar ss=obj::sss;  // OK (already initialized)
+	}
+	//obj fuck=obj;    // error (OK)
+	//int fuck2=sfoo;  // error (OK)
+	
+	//int s0=obj::m;        // error!
+	//int s1=obj::foo();    // error!
+	//int S1=sfoo::k;       // error!
+	obj o;//=new obj();      // error (not in ani context)
+	//int s2=o.foo();       // subsequent runtime error (o=null)
+	//int s3=o.obj::foo();  // subsequent runtime error (o=null)
+	//int s4=o.m;           // runtime error, OK (o=null)
+	//int s41=o.s;          // OK  (but runtime error, OK) (o=null)
+	//int s42=obj::s;       // OK (static) -- but error: scope below (may not access because not yet initialized)!
+	//int s5=o.obj::m;      // runtime error (o=null)
+	
+	int s6=sm;            // OK
+	int s7=SA::sm;        // OK
+	int s8=sfoo();        // OK
+	int s9=SA::sfoo();    // OK
+	//SA sa;                // error setting static  OK
+	
+	//int s10=o.sm;         // error
+	//int s11=o.sfoo();     // error
+		
+	const int i=1+2-144/12*1;
+	const int j=!!!17 ? 8+31 : 5^3;
+	const scalar k=2.0^2^5;
+	const int ii=0 ? i : -+-+-3;
+	const int jj = 1 || i;
+	const scalar kk = k && (0 && jj);
+	const int a={7,9,11}[1];
+	const int aa={{ {11,22}, {33,44}, {55,66} }}[0][1][0];
+	const int aaa={{{{{{{{{{{1,2}}}}}}}}}}}[0][0][0][0][0][0][0][0][0][0][0];
+	int a4[][][][];
+	static const int zack=a;
+	
+	SA(){}
+}
+
+/*setting set
+{
+	int memb1;
+	int s=memb1;
+	//int s1=obj2::memb2;
+	
+	object obj2
+	{
+		int memb2;
+		int yy[];
+	}
+	object obj
+	{
+		int memb;
+		int memB;
+		obj _o;
+		static obj2 _o2;
+		
+		obj(){}
+		obj(int x=0+6,int y){
+			scalar s=x;
+			vector<4> v[]=new vector<4>[10+1-1];
+			int y=int(vector<17>(int(scalar(s))).x);
+			matrix<1,10> m0 = vector<10>(17);
+			matrix<10,1> m1 = vector<10>(17);
+			matrix<1,3> m2=matrix<1,3>(5);
+			matrix<3,1> m3=matrix<3,1>(5);
+			vector vvv=<1-3+81,77,0>-<81,77/2.0*2,1>;
+			
+			//_o._o._o=new obj();
+			//_o2.memb2=1;
+			
+			//int(s^2+1+3);
+			
+			int optme=int(s^2+1+3);
+		}
+		
+		int foo()
+		{
+			static obj2 o;
+			scalar ss=memB;
+			obj OBJ=this;
+			scalar s=this.memb^2,sss=memB*1;
+			int i=this.memb+3+4;
+			{ int i=198+1,s=i+int(s*ss); }
+/*			i=this.foo(y=2.2);
+			int y[]={3,4,5};
+			o.yy[1]=1;
+			s={1,i,3.2}[1];
+			//vector<5> v[18][]=1;
+			
+			vector<5> a=<1,2,3,4,5>+<1,2,3,4,5>*3*(::s+3);
+			
+			string r="rocket science"+"hehe";
+			string b=r+r;
+			
+			// NOTE!! The ".x" member select will currently leave a 
+			// not deleted AniIncomplete (in the "x" TNIdentifier). 
+			matrix<3,1> m=<1,2,<1>.x>;
+			vector<1> vv=<{s,m[2][1],a.x}[::s]>;
+			
+			int x[]={1+2+3,3-4,4^2,5,6,7,8,9,10};
+			
+			foo(x=foo(y=3.3));
+			
+			for(i=0;i<10; i=i+1) break;
+			while(0) return(1);
+			do{int i=0;}while(0);
+			for(int iter=0;iter<10;iter++);
+			if(++i--){}
+			
+			obj oarr[]=new obj[10];
+			scalar sarr[][][]=new scalar[10][1][];
+			
+			obj op=new set::obj(y=1);
+			obj op2=new obj();*/
+		}
+		
+		int foo(){}
+		int foo(int x){}
+		foo(int y=2){}
+		int foo(int x=1,scalar y){}
+		
+		
+		int bar(int l)
+		{
+			int k=/*set::obj::bar::*/l;  // <-- ::-stuff cannot be used 
+			
+			k=::s;
+			
+			k=set::s;
+			k=::set::s;
+			
+			obj2 oo;
+			k=oo.memb2;
+			k=oo.obj2::memb2;
+		}
+		
+	}
+	
+	/*
+	
+	{1,2,3};  // <==> new int[] + assign
+	int a[]={1,2,3};  // klar; no copy. 
+	foo(int a[]) {}  // reference
+	foo(a);   // ref
+	foo({1,2,3});  // ref
+	const int weights[]={1,2,3};
+	*/
+	
+	int memb2;
+	
+	//int foo(scalar s,int z=3){}
+}*/
+
+int s;
+
+/*@@@--> ending on last line 
+setting_A::foo ref_xxx;
+
+object object_A
+{
+	int fofofo() {}
+	
+	int bar2(int x) { int y=x; }
+	int go_for_a_walk(int x)
+		{  return((x<0 ? go_for_a_walk(-x+1) : go_for_a_walk(x-1)) + go_for_a_walk(0));  }
+}
+
+//setting_C global_setting_ptr=NULL;
+
+setting setting_A
+{
+	
+	object foo 
+	{
+		~foo() {}
+		//~foo() {}
+
+		int bar(int fail,scalar c)
+		{
+			yehaa();
+			for(int i=0; i<10; i++)
+			{
+				print("That is nice\n");
+				//print(17);
+				//callme(a=b+sin(v)/(-x^y) % 10,c);
+				//spline(points={,d,e,f,<1.3,3,4>});
+				++i++;
+				break;
+			}
+			while(/*lets_go*/(1))
+				;
+			if(fail)
+				; //go_for_a_walk(2..4);
+			else
+				{ /*dont_go();*/ ++fail;  }
+
+			//if(a) if(b) fooA1(1..); else fooA2();
+
+			scalar a=-(-(-c));
+
+			//if(a) { if(b) foo1(); } else foo2();
+		}
+		
+		yehaa(){}
+		
+		bar2()
+		{
+			;
+			{}
+
+			for(;;) {}
+			for(;!x;) {--x;}
+			range time=0..1+3;
+			scalar a[]={1.1,13e17};
+
+			return ;
+
+			foo me=this;
+
+			const int x=16+4;
+			scalar y[][]={{16.0},{1,1.1}};
+			string baj="hello";
+			setting_C::obj_C baj2;
+
+			for(int i=0; i<10; i++);
+
+			a[0]={1,2,3,4,5,6,7}[2];
+			//a={ , {1,2}, {1}, {.} };  <-- FIXME!!
+		}
+		
+		foo()
+			{  /*do_sth()*/;  }
+		
+		int bar2(int x[]={1,2,3},int z)
+		{
+			//int x=::A::BBB::jojojojx;
+			return(x[1]);
+		}
+	}
+}
+
+
+setting setting_B
+{
+	int foo2()
+		{}
+}
+
+//#include "/tmp/test2.txt"
+
+int global_static_var=2;  // evaluated when creating ani instance
+
+setting setting_C
+{
+	const int setting_static_var=2^4;  // evaluated when creating setting instance
+	
+	// member array; allocated with setting; dimension must be known 
+	// and constant (like vector<CONST>)
+	int setting_static_array[];
+	// The number of elements is counted automatically if the array 
+	// gets initialized: 
+	int setting_static_array_init[]={1,2,3,4,5};
+	int setting_static_array_init2[][]={ {8},{4},{2},{3} };
+	
+	object obj_C
+	{
+		scalar foo_member_var;  // no assignment; created with object instance
+		
+// ARRAY sTUFF IS FUBAR HERE. SUPERSEDED!!!!!!!!
+		// member array: not dynamically allocated but allocated 
+		// with object; dimension must be known and 
+		// const (like vector<CONST>)
+		int foo_member_array[];
+		// member array, dynamically allocated, initially NULL. ("pointer")
+		int foo_member_array_dyn[];
+		// 19-element array of int-"pointers". FORBIDDEN. 
+		int testarr[][];
+		// stack/object - allocated 22-entry array of 
+		// `integer array of unspec. size'; assign with 
+		//  testarr[i]=new int[what_you_like];
+		int testarr2[][];
+		// And that in 3 & 4 dim: 
+		int testarr3[][][];
+		int testarr4[][][][];   // well... it works ;)
+		
+		obj_C()
+		{
+			int auto_alloc_array[][];
+			int dyn_alloc_array[];
+			int dyn_dyn_alloc_array[][];
+			
+			for(int i=0; i<25; i++)
+			{
+				testarr3[i]=new int[180][];
+				for(int j=0; j<180; j++)
+				{
+					testarr3[i][j]=new int[2];
+					matrix<100,99> large,large2;
+				}
+			}
+		}
+		
+		~obj_C() {}
+		
+		func(int func_arg,scalar func_arg2=1.0)  // auto-gen for thread
+		{
+			vector func_var;  // automatically generated for thread
+			scopefoo();
+			scalar func_var2;  // automatically generated for thread
+		}
+		
+		//goodA(setting_C ref,setting_A::foo x) {}
+		goodB(setting_C::obj_C ref) {}
+		goodC(obj_C ref) {}
+		//badD(::obj_C ref,foo y) {}
+		goodE(::setting_C::obj_C ref) {}
+		//badF(::obj_C::setting_C ref) {}
+		//badG(obj_C::setting_C ref) {}
+		//badH(obj_C::setting_C::DNE ref) {}
+		//badI(obj_C::badF ref) {}
+		//bad(vector x,matrix<2,3> y,int clash,obj_C clash){}
+		//hmm(string foo_member_var){}
+		//hmm2(string goodA,int this){}
+		
+		int scopefoo()
+		{
+			//int i;
+			{
+				int i,j,k;
+				//int obj_C;
+				//vector scopefoo;
+				//scalar setting_B[];
+				matrix fofofo[],func_var;
+			}
+			if(1)
+			{ int k=3; }
+			for(int index=0,c=index+1; index<10; index++)
+			{  int i=index;  }
+		}
+		
+		//foo_member_var(int x) {}
+		string[] smashme(){}
+		int[][][] smashme2(int x)
+		{
+			// MUST ALWAYS USE: "new object()", NEVER "new object". 
+			obj_C oo=new obj_C();
+			int weights[]={1,2,3,4,5,6};
+			obj_C arr[] = new obj_C[32];
+			for(int i=0; i<32; i++)  arr[i]=new obj_C();  // <-- construct
+			int twodim_arr_on_heap[][] = new int[10][20];
+			;;;;;
+		}
+		
+		vector<17> delayed_type_spec(matrix<1,2> x)
+			{  vector<2> v;  {{{{{ int x; }}}}}}
+	}
+}
+
+int GLOBAL;
+
+int print(string s) {}
+int a,b,v,x,y,z;
+
+
+
+
+
+/*
+
+/* Supports nested comments. */
+setting setting_D
+{
+	const int setting_static_var=2^4;  // evaluated when creating setting instance
+	
+	// member array; allocated with setting; dimension must be known 
+	// and constant (like vector<CONST>)
+	int setting_static_array[];
+	// The number of elements is counted automatically if the array 
+	// gets initialized: 
+	int setting_static_array_init[]={1,2,3,4,5};
+	int setting_static_array_init2[][]={ {8},{4},{2},{3} };
+	
+	object obj_C
+	{
+		scalar foo_member_var;  // no assignment; created with object instance
+		
+		// member array: not dynamically allocated but allocated 
+		// with object; dimension must be known and 
+		// const (like vector<CONST>)
+		int foo_member_array[19];
+		// member array, dynamically allocated, initially NULL. ("pointer")
+		int foo_member_array_dyn[];
+		// 19-element array of int-"pointers". FORBIDDEN. 
+		int testarr[][19];
+		// stack/object - allocated 22-entry array of 
+		// `integer array of unspec. size'; assign with 
+		//  testarr[i]=new int[what_you_like];
+		int testarr2[22][];
+		// And that in 3 & 4 dim: 
+		int testarr3[25][][];
+		int testarr4[26][][18][];   // well... it works ;)
+		
+		obj_C()
+		{
+			int auto_alloc_array[171][];
+			int dyn_alloc_array[];
+			int auto_auto_alloc_array2[172][4];
+			int dyn_dyn_alloc_array[][];
+			int auto_dyn_allc_array[12][];
+			int dyn_auto_allc_array[][13];  // FORBIDDEN
+			
+			for(int i=0; i<25; i++)
+			{
+				testarr3[i]=new int[180][];
+				for(int j=0; j<180; j++)
+				{
+					testarr3[i][j]=new int[2];
+					matrix<100,99> large,large2;
+				}
+			}
+		}
+		
+		~obj_C() {}
+		
+		func(int func_arg,scalar func_arg2=1.0)  // auto-gen for thread
+		{
+			vector func_var;  // automatically generated for thread
+			scopefoo();
+			scalar func_var2;  // automatically generated for thread
+		}
+		
+		//goodA(setting_D ref,setting_A::foo x) {}
+		goodB(setting_D::obj_C ref) {}
+		goodC(obj_C ref) {}
+		//badD(::obj_C ref,foo y) {}
+		goodE(::setting_D::obj_C ref) {}
+		//badF(::obj_C::setting_D ref) {}
+		//badG(obj_C::setting_D ref) {}
+		//badH(obj_C::setting_D::DNE ref) {}
+		//badI(obj_C::badF ref) {}
+		//bad(vector x,matrix<2,3> y,int clash,obj_C clash){}
+		//hmm(string foo_member_var){}
+		//hmm2(string goodA,int this){}
+		
+		int scopefoo()
+		{
+			//int i;
+			{
+				int i,j,k;
+				//int obj_C;
+				//vector scopefoo;
+				//scalar setting_B[];
+				matrix fofofo[3],func_var;
+			}
+			if(1)
+			{ int k=3; }
+			for(int index=0,c=index+1; index<10; index++)
+			{  int i=index;  }
+		}
+		
+		//foo_member_var(int x) {}
+		string[] smashme(){}
+		int[][][] smashme2(int x)
+		{
+			// MUST ALWAYS USE: "new object()", NEVER "new object". 
+			// May not use "()" for new arrays, see below. 
+			obj_C oo=new obj_C(x);
+			int weights[]={1,2,3,4,5,6};
+			obj_C arr[] = new obj_C[32];  // <-- no constructor args; just pointers. 
+			for(int i=0; i<32; i++)  arr[i]=new obj_C(x);  // <-- construct
+			int twodim_arr_on_stack[10][20];
+			int twodim_arr_on_heap[][] = new int[10][20];
+			;;;;;
+		}
+		
+		vector<17> delayed_type_spec(matrix<1,2> x)
+			{  vector<2> v;  {{{{{ int x; }}}}}}
+	}
+}
+
+setting setting_E
+{
+	const int setting_static_var=2^4;  // evaluated when creating setting instance
+	
+	// member array; allocated with setting; dimension must be known 
+	// and constant (like vector<CONST>)
+	int setting_static_array[];
+	// The number of elements is counted automatically if the array 
+	// gets initialized: 
+	int setting_static_array_init[]={1,2,3,4,5};
+	int setting_static_array_init2[][]={ {8},{4},{2},{3} };
+	
+	object obj_C
+	{
+		scalar foo_member_var;  // no assignment; created with object instance
+		
+		// member array: not dynamically allocated but allocated 
+		// with object; dimension must be known and 
+		// const (like vector<CONST>)
+		int foo_member_array[19];
+		// member array, dynamically allocated, initially NULL. ("pointer")
+		int foo_member_array_dyn[];
+		// 19-element array of int-"pointers". FORBIDDEN. 
+		int testarr[][19];
+		// stack/object - allocated 22-entry array of 
+		// `integer array of unspec. size'; assign with 
+		//  testarr[i]=new int[what_you_like];
+		int testarr2[22][];
+		// And that in 3 & 4 dim: 
+		int testarr3[25][][];
+		int testarr4[26][][18][];   // well... it works ;)
+		
+		obj_C()
+		{
+			int auto_alloc_array[171][];
+			int dyn_alloc_array[];
+			int auto_auto_alloc_array2[172][4];
+			int dyn_dyn_alloc_array[][];
+			int auto_dyn_allc_array[12][];
+			int dyn_auto_allc_array[][13];  // FORBIDDEN
+			
+			for(int i=0; i<25; i++)
+			{
+				testarr3[i]=new int[180][];
+				for(int j=0; j<180; j++)
+				{
+					testarr3[i][j]=new int[2];
+					matrix<100,99> large,large2;
+				}
+			}
+		}
+		
+		~obj_C() {}
+		
+		func(int func_arg,scalar func_arg2=1.0)  // auto-gen for thread
+		{
+			vector func_var;  // automatically generated for thread
+			scopefoo();
+			scalar func_var2;  // automatically generated for thread
+		}
+		
+		//goodA(setting_E ref,setting_A::foo x) {}
+		goodB(setting_E::obj_C ref) {}
+		goodC(obj_C ref) {}
+		//badD(::obj_C ref,foo y) {}
+		goodE(::setting_E::obj_C ref) {}
+		//badF(::obj_C::setting_E ref) {}
+		//badG(obj_C::setting_E ref) {}
+		//badH(obj_C::setting_E::DNE ref) {}
+		//badI(obj_C::badF ref) {}
+		//bad(vector x,matrix<2,3> y,int clash,obj_C clash){}
+		//hmm(string foo_member_var){}
+		//hmm2(string goodA,int this){}
+		
+		int scopefoo()
+		{
+			//int i;
+			{
+				int i,j,k;
+				//int obj_C;
+				//vector scopefoo;
+				//scalar setting_B[];
+				matrix fofofo[3],func_var;
+			}
+			if(1)
+			{ int k=3; }
+			for(int index=0,c=index+1; index<10; index++)
+			{  int i=index;  }
+		}
+		
+		//foo_member_var(int x) {}
+		string[] smashme(){}
+		int[][][] smashme2(int x)
+		{
+			// MUST ALWAYS USE: "new object()", NEVER "new object". 
+			// May not use "()" for new arrays, see below. 
+			obj_C oo=new obj_C(x);
+			int weights[]={1,2,3,4,5,6};
+			obj_C arr[] = new obj_C[32];  // <-- no constructor args; just pointers. 
+			for(int i=0; i<32; i++)  arr[i]=new obj_C(x);  // <-- construct
+			int twodim_arr_on_stack[10][20];
+			int twodim_arr_on_heap[][] = new int[10][20];
+			;;;;;
+		}
+		
+		vector<17> delayed_type_spec(matrix<1,2> x)
+			{  vector<2> v;  {{{{{ int x; }}}}}}
+	}
+}
+
+setting setting_F
+{
+	const int setting_static_var=2^4;  // evaluated when creating setting instance
+	
+	// member array; allocated with setting; dimension must be known 
+	// and constant (like vector<CONST>)
+	int setting_static_array[];
+	// The number of elements is counted automatically if the array 
+	// gets initialized: 
+	int setting_static_array_init[]={1,2,3,4,5};
+	int setting_static_array_init2[][]={ {8},{4},{2},{3} };
+	
+	object obj_C
+	{
+		scalar foo_member_var;  // no assignment; created with object instance
+		
+		// member array: not dynamically allocated but allocated 
+		// with object; dimension must be known and 
+		// const (like vector<CONST>)
+		int foo_member_array[19];
+		// member array, dynamically allocated, initially NULL. ("pointer")
+		int foo_member_array_dyn[];
+		// 19-element array of int-"pointers". FORBIDDEN. 
+		int testarr[][19];
+		// stack/object - allocated 22-entry array of 
+		// `integer array of unspec. size'; assign with 
+		//  testarr[i]=new int[what_you_like];
+		int testarr2[22][];
+		// And that in 3 & 4 dim: 
+		int testarr3[25][][];
+		int testarr4[26][][18][];   // well... it works ;)
+		
+		obj_C()
+		{
+			int auto_alloc_array[171][];
+			int dyn_alloc_array[];
+			int auto_auto_alloc_array2[172][4];
+			int dyn_dyn_alloc_array[][];
+			int auto_dyn_allc_array[12][];
+			int dyn_auto_allc_array[][13];  // FORBIDDEN
+			
+			for(int i=0; i<25; i++)
+			{
+				testarr3[i]=new int[180][];
+				for(int j=0; j<180; j++)
+				{
+					testarr3[i][j]=new int[2];
+					matrix<100,99> large,large2;
+				}
+			}
+		}
+		
+		~obj_C() {}
+		
+		func(int func_arg,scalar func_arg2=1.0)  // auto-gen for thread
+		{
+			vector func_var;  // automatically generated for thread
+			scopefoo();
+			scalar func_var2;  // automatically generated for thread
+		}
+		
+		//goodA(setting_F ref,setting_A::foo x) {}
+		goodB(setting_F::obj_C ref) {}
+		goodC(obj_C ref) {}
+		//badD(::obj_C ref,foo y) {}
+		goodE(::setting_F::obj_C ref) {}
+		//badF(::obj_C::setting_F ref) {}
+		//badG(obj_C::setting_F ref) {}
+		//badH(obj_C::setting_F::DNE ref) {}
+		//badI(obj_C::badF ref) {}
+		//bad(vector x,matrix<2,3> y,int clash,obj_C clash){}
+		//hmm(string foo_member_var){}
+		//hmm2(string goodA,int this){}
+		
+		int scopefoo()
+		{
+			//int i;
+			{
+				int i,j,k;
+				//int obj_C;
+				//vector scopefoo;
+				//scalar setting_B[];
+				matrix fofofo[3],func_var;
+			}
+			if(1)
+			{ int k=3; }
+			for(int index=0,c=index+1; index<10; index++)
+			{  int i=index;  }
+		}
+		
+		//foo_member_var(int x) {}
+		string[] smashme(){}
+		int[][][] smashme2(int x)
+		{
+			// MUST ALWAYS USE: "new object()", NEVER "new object". 
+			// May not use "()" for new arrays, see below. 
+			obj_C oo=new obj_C(x);
+			int weights[]={1,2,3,4,5,6};
+			obj_C arr[] = new obj_C[32];  // <-- no constructor args; just pointers. 
+			for(int i=0; i<32; i++)  arr[i]=new obj_C(x);  // <-- construct
+			int twodim_arr_on_stack[10][20];
+			int twodim_arr_on_heap[][] = new int[10][20];
+			;;;;;
+		}
+		
+		vector<17> delayed_type_spec(matrix<1,2> x)
+			{  vector<2> v;  {{{{{ int x; }}}}}}
+	}
+}
+
+setting setting_G
+{
+	const int setting_static_var=2^4;  // evaluated when creating setting instance
+	
+	// member array; allocated with setting; dimension must be known 
+	// and constant (like vector<CONST>)
+	int setting_static_array[];
+	// The number of elements is counted automatically if the array 
+	// gets initialized: 
+	int setting_static_array_init[]={1,2,3,4,5};
+	int setting_static_array_init2[][]={ {8},{4},{2},{3} };
+	
+	object obj_C
+	{
+		scalar foo_member_var;  // no assignment; created with object instance
+		
+		// member array: not dynamically allocated but allocated 
+		// with object; dimension must be known and 
+		// const (like vector<CONST>)
+		int foo_member_array[19];
+		// member array, dynamically allocated, initially NULL. ("pointer")
+		int foo_member_array_dyn[];
+		// 19-element array of int-"pointers". FORBIDDEN. 
+		int testarr[][19];
+		// stack/object - allocated 22-entry array of 
+		// `integer array of unspec. size'; assign with 
+		//  testarr[i]=new int[what_you_like];
+		int testarr2[22][];
+		// And that in 3 & 4 dim: 
+		int testarr3[25][][];
+		int testarr4[26][][18][];   // well... it works ;)
+		
+		obj_C()
+		{
+			int auto_alloc_array[171][];
+			int dyn_alloc_array[];
+			int auto_auto_alloc_array2[172][4];
+			int dyn_dyn_alloc_array[][];
+			int auto_dyn_allc_array[12][];
+			int dyn_auto_allc_array[][13];  // FORBIDDEN
+			
+			for(int i=0; i<25; i++)
+			{
+				testarr3[i]=new int[180][];
+				for(int j=0; j<180; j++)
+				{
+					testarr3[i][j]=new int[2];
+					matrix<100,99> large,large2;
+				}
+			}
+		}
+		
+		~obj_C() {}
+		
+		func(int func_arg,scalar func_arg2=1.0)  // auto-gen for thread
+		{
+			vector func_var;  // automatically generated for thread
+			scopefoo();
+			scalar func_var2;  // automatically generated for thread
+		}
+		
+		//goodA(setting_G ref,setting_A::foo x) {}
+		goodB(setting_G::obj_C ref) {}
+		goodC(obj_C ref) {}
+		//badD(::obj_C ref,foo y) {}
+		goodE(::setting_G::obj_C ref) {}
+		//badF(::obj_C::setting_G ref) {}
+		//badG(obj_C::setting_G ref) {}
+		//badH(obj_C::setting_G::DNE ref) {}
+		//badI(obj_C::badF ref) {}
+		//bad(vector x,matrix<2,3> y,int clash,obj_C clash){}
+		//hmm(string foo_member_var){}
+		//hmm2(string goodA,int this){}
+		
+		int scopefoo()
+		{
+			//int i;
+			{
+				int i,j,k;
+				//int obj_C;
+				//vector scopefoo;
+				//scalar setting_B[];
+				matrix fofofo[3],func_var;
+			}
+			if(1)
+			{ int k=3; }
+			for(int index=0,c=index+1; index<10; index++)
+			{  int i=index;  }
+		}
+		
+		//foo_member_var(int x) {}
+		string[] smashme(){}
+		int[][][] smashme2(int x)
+		{
+			// MUST ALWAYS USE: "new object()", NEVER "new object". 
+			// May not use "()" for new arrays, see below. 
+			obj_C oo=new obj_C(x);
+			int weights[]={1,2,3,4,5,6};
+			obj_C arr[] = new obj_C[32];  // <-- no constructor args; just pointers. 
+			for(int i=0; i<32; i++)  arr[i]=new obj_C(x);  // <-- construct
+			int twodim_arr_on_stack[10][20];
+			int twodim_arr_on_heap[][] = new int[10][20];
+			;;;;;
+		}
+		
+		vector<17> delayed_type_spec(matrix<1,2> x)
+			{  vector<2> v;  {{{{{ int x; }}}}}}
+	}
+}
+
+setting setting_H
+{
+	const int setting_static_var=2^4;  // evaluated when creating setting instance
+	
+	// member array; allocated with setting; dimension must be known 
+	// and constant (like vector<CONST>)
+	int setting_static_array[];
+	// The number of elements is counted automatically if the array 
+	// gets initialized: 
+	int setting_static_array_init[]={1,2,3,4,5};
+	int setting_static_array_init2[][]={ {8},{4},{2},{3} };
+	
+	object obj_C
+	{
+		scalar foo_member_var;  // no assignment; created with object instance
+		
+		// member array: not dynamically allocated but allocated 
+		// with object; dimension must be known and 
+		// const (like vector<CONST>)
+		int foo_member_array[19];
+		// member array, dynamically allocated, initially NULL. ("pointer")
+		int foo_member_array_dyn[];
+		// 19-element array of int-"pointers". FORBIDDEN. 
+		int testarr[][19];
+		// stack/object - allocated 22-entry array of 
+		// `integer array of unspec. size'; assign with 
+		//  testarr[i]=new int[what_you_like];
+		int testarr2[22][];
+		// And that in 3 & 4 dim: 
+		int testarr3[25][][];
+		int testarr4[26][][18][];   // well... it works ;)
+		
+		obj_C()
+		{
+			int auto_alloc_array[171][];
+			int dyn_alloc_array[];
+			int auto_auto_alloc_array2[172][4];
+			int dyn_dyn_alloc_array[][];
+			int auto_dyn_allc_array[12][];
+			int dyn_auto_allc_array[][13];  // FORBIDDEN
+			
+			for(int i=0; i<25; i++)
+			{
+				testarr3[i]=new int[180][];
+				for(int j=0; j<180; j++)
+				{
+					testarr3[i][j]=new int[2];
+					matrix<100,99> large,large2;
+				}
+			}
+		}
+		
+		~obj_C() {}
+		
+		func(int func_arg,scalar func_arg2=1.0)  // auto-gen for thread
+		{
+			vector func_var;  // automatically generated for thread
+			scopefoo();
+			scalar func_var2;  // automatically generated for thread
+		}
+		
+		//goodA(setting_H ref,setting_A::foo x) {}
+		goodB(setting_H::obj_C ref) {}
+		goodC(obj_C ref) {}
+		//badD(::obj_C ref,foo y) {}
+		goodE(::setting_H::obj_C ref) {}
+		//badF(::obj_C::setting_H ref) {}
+		//badG(obj_C::setting_H ref) {}
+		//badH(obj_C::setting_H::DNE ref) {}
+		//badI(obj_C::badF ref) {}
+		//bad(vector x,matrix<2,3> y,int clash,obj_C clash){}
+		//hmm(string foo_member_var){}
+		//hmm2(string goodA,int this){}
+		
+		int scopefoo()
+		{
+			//int i;
+			{
+				int i,j,k;
+				//int obj_C;
+				//vector scopefoo;
+				//scalar setting_B[];
+				matrix fofofo[3],func_var;
+			}
+			if(1)
+			{ int k=3; }
+			for(int index=0,c=index+1; index<10; index++)
+			{  int i=index;  }
+		}
+		
+		//foo_member_var(int x) {}
+		string[] smashme(){}
+		int[][][] smashme2(int x)
+		{
+			// MUST ALWAYS USE: "new object()", NEVER "new object". 
+			// May not use "()" for new arrays, see below. 
+			obj_C oo=new obj_C(x);
+			int weights[]={1,2,3,4,5,6};
+			obj_C arr[] = new obj_C[32];  // <-- no constructor args; just pointers. 
+			for(int i=0; i<32; i++)  arr[i]=new obj_C(x);  // <-- construct
+			int twodim_arr_on_stack[10][20];
+			int twodim_arr_on_heap[][] = new int[10][20];
+			;;;;;
+		}
+		
+		vector<17> delayed_type_spec(matrix<1,2> x)
+			{  vector<2> v;  {{{{{ int x; }}}}}}
+	}
+}
+
+setting setting_I
+{
+	const int setting_static_var=2^4;  // evaluated when creating setting instance
+	
+	// member array; allocated with setting; dimension must be known 
+	// and constant (like vector<CONST>)
+	int setting_static_array[];
+	// The number of elements is counted automatically if the array 
+	// gets initialized: 
+	int setting_static_array_init[]={1,2,3,4,5};
+	int setting_static_array_init2[][]={ {8},{4},{2},{3} };
+	
+	object obj_C
+	{
+		scalar foo_member_var;  // no assignment; created with object instance
+		
+		// member array: not dynamically allocated but allocated 
+		// with object; dimension must be known and 
+		// const (like vector<CONST>)
+		int foo_member_array[19];
+		// member array, dynamically allocated, initially NULL. ("pointer")
+		int foo_member_array_dyn[];
+		// 19-element array of int-"pointers". FORBIDDEN. 
+		int testarr[][19];
+		// stack/object - allocated 22-entry array of 
+		// `integer array of unspec. size'; assign with 
+		//  testarr[i]=new int[what_you_like];
+		int testarr2[22][];
+		// And that in 3 & 4 dim: 
+		int testarr3[25][][];
+		int testarr4[26][][18][];   // well... it works ;)
+		
+		obj_C()
+		{
+			int auto_alloc_array[171][];
+			int dyn_alloc_array[];
+			int auto_auto_alloc_array2[172][4];
+			int dyn_dyn_alloc_array[][];
+			int auto_dyn_allc_array[12][];
+			int dyn_auto_allc_array[][13];  // FORBIDDEN
+			
+			for(int i=0; i<25; i++)
+			{
+				testarr3[i]=new int[180][];
+				for(int j=0; j<180; j++)
+				{
+					testarr3[i][j]=new int[2];
+					matrix<100,99> large,large2;
+				}
+			}
+		}
+		
+		~obj_C() {}
+		
+		func(int func_arg,scalar func_arg2=1.0)  // auto-gen for thread
+		{
+			vector func_var;  // automatically generated for thread
+			scopefoo();
+			scalar func_var2;  // automatically generated for thread
+		}
+		
+		//goodA(setting_I ref,setting_A::foo x) {}
+		goodB(setting_I::obj_C ref) {}
+		goodC(obj_C ref) {}
+		//badD(::obj_C ref,foo y) {}
+		goodE(::setting_I::obj_C ref) {}
+		//badF(::obj_C::setting_I ref) {}
+		//badG(obj_C::setting_I ref) {}
+		//badH(obj_C::setting_I::DNE ref) {}
+		//badI(obj_C::badF ref) {}
+		//bad(vector x,matrix<2,3> y,int clash,obj_C clash){}
+		//hmm(string foo_member_var){}
+		//hmm2(string goodA,int this){}
+		
+		int scopefoo()
+		{
+			//int i;
+			{
+				int i,j,k;
+				//int obj_C;
+				//vector scopefoo;
+				//scalar setting_B[];
+				matrix fofofo[3],func_var;
+			}
+			if(1)
+			{ int k=3; }
+			for(int index=0,c=index+1; index<10; index++)
+			{  int i=index;  }
+		}
+		
+		//foo_member_var(int x) {}
+		string[] smashme(){}
+		int[][][] smashme2(int x)
+		{
+			// MUST ALWAYS USE: "new object()", NEVER "new object". 
+			// May not use "()" for new arrays, see below. 
+			obj_C oo=new obj_C(x);
+			int weights[]={1,2,3,4,5,6};
+			obj_C arr[] = new obj_C[32];  // <-- no constructor args; just pointers. 
+			for(int i=0; i<32; i++)  arr[i]=new obj_C(x);  // <-- construct
+			int twodim_arr_on_stack[10][20];
+			int twodim_arr_on_heap[][] = new int[10][20];
+			;;;;;
+		}
+		
+		vector<17> delayed_type_spec(matrix<1,2> x)
+			{  vector<2> v;  {{{{{ int x; }}}}}}
+	}
+}
+*/
+
+
+*/  // <-- starting in line with "@@@" mark
