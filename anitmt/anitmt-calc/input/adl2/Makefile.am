@@ -16,7 +16,8 @@ libadlparser_a_SOURCES=	parser.yy tokens.h\
 			parsinfo.hpp parsinfo.cpp parsinfo_inline.cpp \
 			flexlexer_public.h flexlexer_global.h scanner.ll 
 
-testadlparser_SOURCES=	testadlparser.cpp expression.cpp
+testadlparser_SOURCES=	testadlparser.cpp expression.hpp expression.cpp \
+			expression_inline.cpp
 testadlparser_LDADD=	libadlparser.a \
 			../../libanitmt.a \
 			../../../lib/val/libval.a \
