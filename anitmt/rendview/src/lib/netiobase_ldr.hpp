@@ -44,7 +44,7 @@ class NetworkIOBase_LDR :
 		RespBuf recv_buf;
 		RespBuf send_buf;
 		
-		// Return value: 1 -> alloc failure 
+		// Return value: -1 -> alloc failure 
 		int _ResizeRespBuf(RespBuf *buf,size_t newlen);
 		
 		// Active commands being currently done by FDCopy in and out: 

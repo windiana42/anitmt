@@ -33,6 +33,13 @@
 #include "config.h"
 
 
+// NOTE: There are two types of assert() calls: 
+// assert():      general bug trap 
+// hack_assert(): assertion expected to fail because of incomplete 
+//                implementation
+#define hack_assert(x)  assert(x)
+
+
 class RefString;
 class HTime;
 

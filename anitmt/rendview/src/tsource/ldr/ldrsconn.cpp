@@ -380,6 +380,7 @@ void TaskSource_LDR_ServerConn::TaskManagerGotTask()
 {
 	// ##FIXME##
 	// Is it possible that _ConnClose() was called until here?
+	hack_assert(!DeletePending());   // Probably, if that fails...
 	
 	assert(tri.resp_code==TRC_Accepted && tri.ctsk && 
 	       tri.next_action==TRINA_Complete);
@@ -831,6 +832,7 @@ Error("The following should not be dumped here, right?\n");
 // Return value: 
 //   0 -> okay, next request started. 
 //   1 -> all requests done
+//  -1 -> error; call _ConnClose(). 
 int TaskSource_LDR_ServerConn::_StartSendNextFileRequest()
 {
 	assert(tri.ctsk && tri.next_action==TRINA_FileReq);
@@ -889,7 +891,7 @@ int TaskSource_LDR_ServerConn::_StartSendNextFileRequest()
 	if(tri.req_file_type==FRFT_AddRender || tri.req_file_type==FRFT_AddFilter)
 	{
 		Error("Implement check for file existance or time stamp.\n");
-		assert(0);  // ##########FIXME##
+		hack_assert(0);  // ##########FIXME##
 		// NOTE: Only request files which we need (i.e.: if the already 
 		// exist, have proper time stamp and same size, then do not 
 		// transfer them. SAME MUST BE APPLIED TO RENDER SORUCE/DEST). 
@@ -897,11 +899,11 @@ int TaskSource_LDR_ServerConn::_StartSendNextFileRequest()
 		// LDRTime current_time with each task request. 
 	}
 	
-	int fail=1;
+	int fail=0;
 	do {
 		assert(send_buf.content==Cmd_NoCommand);
 		if(_ResizeRespBuf(&send_buf,sizeof(LDRFileRequest)))
-		{  break;  }
+		{  fail=-1;  break;  }
 		
 		// Compose the packet: 
 		send_buf.content=Cmd_FileRequest;
@@ -913,23 +915,22 @@ int TaskSource_LDR_ServerConn::_StartSendNextFileRequest()
 		pack->file_idx=htons(tri.req_file_idx);
 		
 		// Okay, make ready to send it: 
-		if(_FDCopyStartSendBuf(pack))  break;
+		fail=_FDCopyStartSendBuf(pack);
+		if(fail)  break;
 		
-		#warning "output should be a bit more fancy than %d,%d."
-		Verbose(TSLLR,"LDR: Requesting file %d,%d [frame %d]\n",
-			tri.req_file_type,tri.req_file_idx,tri.ctsk->frame_no);
-		
-		fail=0;
+		Verbose(TSLLR,"LDR: Requesting %s file (%s) [frame %d]\n",
+			FileRequestFileTypeString(tri.req_file_type),
+			tri.req_tfile->BaseNamePtr(),
+			tri.ctsk->frame_no);
 	} while(0);
-	fprintf(stderr,"hack code to handle failure (2).\n");
 	if(fail)
 	{
-		// Failure. 
-		#warning HANDLE FAILURE. 
-		Error("Cannot handle failure (HACK ME!)\n");
-		assert(0);
-		// NEED also proper return code (probably -1) and must handle it 
-		//      in calling function. 
+		if(fail==-1)
+		{  _AllocFailure(tri.ctsk);  }
+		else
+		{  Error("LDR: Internal error (%d) while initiating file request [frame %d]\n",
+			fail,tri.ctsk ? tri.ctsk->frame_no : (-1));  }
+		return(-1);
 	}
 	
 	return(0);
@@ -1300,7 +1301,7 @@ int TaskSource_LDR_ServerConn::cpnotify_outpump_done(FDCopyBase::CopyInfo *cpi)
 				{
 					assert(cpi->pump==out.pump_fd && cpi->pump->Src()==out.io_fd);
 					if(CloseFD(out.io_fd->pollid)<0)
-					{  assert(0);  }  // Actually, this may not fail, right?
+					{  hack_assert(0);  }  // Actually, this may not fail, right?
 				}
 				
 				fprintf(stderr,"File upload completed.\n");
@@ -1345,7 +1346,7 @@ int TaskSource_LDR_ServerConn::cpnotify_outpump_done(FDCopyBase::CopyInfo *cpi)
 			// Note: This assertion may never fail. 
 			// If it does, then the implementation is incomplete. 
 			// (I used that during development.) 
-			Error("cpnotify_outpump_done: hack on...\n");
+			Error("cpnotify_outpump_done: Hack on... (implementation incomplete)\n");
 			assert(0);   // OKAY. 
 			
 			out.ioaction=IOA_None;
@@ -1418,6 +1419,7 @@ int TaskSource_LDR_ServerConn::cpnotify_outpump_start()
 		{
 			case 1:  _TaskRequestComplete();  break;  // no more file requests
 			case 0:  break;
+			case -1:  _ConnClose(0);  return(1);
 			default: assert(0);
 		}
 	}
@@ -1494,7 +1496,11 @@ int TaskSource_LDR_ServerConn::cpnotify_outpump_start()
 			if(rv)
 			{
 				if(rv==-1)
-				{  _AllocFailure(tdi.done_ctsk);  }
+				{
+					_AllocFailure(tdi.done_ctsk);
+					_ConnClose(0);
+					return(1);
+				}
 				else if(rv==-2)
 				{
 					int errn=errno;
@@ -1502,10 +1508,17 @@ int TaskSource_LDR_ServerConn::cpnotify_outpump_start()
 						"%s [frame %d]\n",
 						tdi.upload_file->HDPath().str(),
 						strerror(errn),tdi.done_ctsk->frame_no);
+					// Okay, so this means that we already sent the request 
+					// header but are not able to supply the actual file. 
+					// This is bad and so we quit here. 
+					// Maybe quitting seems a bit hard but there is not much 
+					// point in doing work if we cannot deliver the result. 
+					// OTOH, what about the other tasks... grmbl.. ###FIXME###
+					hack_assert(0);
+					_ConnClose(0);
+					return(1);
 				}
 				else assert(0);  // rv=-3 may not happen here 
-				Error("Cannot handle failure (HACK ME!)\n");
-				assert(0);
 			}
 			
 			out_active_cmd=Cmd_FileUpload;
@@ -1580,9 +1593,6 @@ int TaskSource_LDR_ServerConn::cpnotify_inpump(FDCopyBase::CopyInfo *cpi)
 					}
 				}
 				
-				//fprintf(stderr,"??? Implement file download\n");
-				//assert(0);
-				
 				tri.req_tfile=NULL;
 				tri.next_action=TRINA_FileReq;
 				o_start=1;
@@ -1609,7 +1619,7 @@ int TaskSource_LDR_ServerConn::cpnotify_inpump(FDCopyBase::CopyInfo *cpi)
 		default:
 			// This is an internal error. Only known packets may be accepted 
 			// in _HandleReceivedHeader(). 
-			Error("DONE -> hack on\n");
+			Error("cpnotify_inpump: Done; hack on... (Implementation incomplete)\n");
 			assert(0);
 	}
 	
@@ -1619,12 +1629,10 @@ int TaskSource_LDR_ServerConn::cpnotify_inpump(FDCopyBase::CopyInfo *cpi)
 
 int TaskSource_LDR_ServerConn::cpnotify(FDCopyBase::CopyInfo *cpi)
 {
-	Verbose(DBG,"--<cpnotify>--<scode=0x%x (final=%s; limit=%s), err_no=%d (%s), %s>--\n",
-		cpi->scode,
-		(cpi->scode & FDCopyPump::SCFinal) ? "yes" : "no",
-		(cpi->scode & FDCopyPump::SCLimit) ? "yes" : "no",
-		cpi->err_no,strerror(cpi->err_no),
-		(cpi->pump==in.pump_s || cpi->pump==in.pump_fd) ? "IN" : "OUT");
+	Verbose(DBG,"--<cpnotify>--<%s%s: %s>--\n",
+		(cpi->pump==in.pump_s || cpi->pump==in.pump_fd) ? "IN" : "OUT",
+		(cpi->pump==in.pump_s || cpi->pump==out.pump_s) ? "buf" : "fd",
+		CPNotifyStatusString(cpi));
 	/*fprintf(stderr,"transf=%ld/%ld, %ld/%ld;  len=%u/%u, %u/%u;  sock=%ld/%ld, %ld/%ld\n",
 		long(out.io_fd->transferred),long(out.pump_fd->limit),
 		long(in.io_fd->transferred),long(in.pump_fd->limit),
@@ -1647,8 +1655,10 @@ int TaskSource_LDR_ServerConn::cpnotify(FDCopyBase::CopyInfo *cpi)
 	{
 		// SCError and SCEOF; handling probably in cpnotify_inpump() 
 		// and cpnotify_outpump_done(). 
-		Error("cpi->scode=%x. HANDLE ME.\n",cpi->scode);
-		assert(0);  // ##
+		Error("%s pump: %s\n",
+			(cpi->pump==in.pump_s || cpi->pump==in.pump_fd) ? "Input" : "Output",
+			CPNotifyStatusString(cpi));
+		hack_assert(0);  // ##
 	}
 	
 	// This is only used for auth: 

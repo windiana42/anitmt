@@ -77,6 +77,22 @@ char *LDRTaskResponseString(int resp_code)
 }
 
 
+const char *FileRequestFileTypeString(int frf_type)
+{
+	switch(frf_type)
+	{
+		case FRFT_None:       return("[none]");
+		case FRFT_RenderIn:   return("render input");
+		case FRFT_RenderOut:  return("render output");
+		case FRFT_FilterOut:  return("filter output");
+		case FRFT_AddRender:  return("additional render");
+		case FRFT_AddFilter:  return("additional filter");
+		// default: fall through
+	}
+	return("???");
+}
+
+
 // Time conversion. 
 // Note that LDRTime is always in network order. 
 void LDRTime2HTime(const LDRTime *t,HTime *h)

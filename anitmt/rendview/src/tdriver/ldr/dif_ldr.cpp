@@ -885,6 +885,10 @@ void TaskDriverInterface_LDR::SuccessfullyConnected(LDRClient *client)
 	assert(client->auth_passed);
 	assert(!client->_counted_as_client);
 	
+	// Well, gonna delete the connect timeout: 
+	KillTimeout(client->_tid_connect_to);
+	client->_tid_connect_to=NULL;
+	
 	// First, adjust njobs and task queue threshs: 
 	_JobsAddClient(client,+1);
 	_WriteProcInfoUpdate();
@@ -953,6 +957,10 @@ void TaskDriverInterface_LDR::ClientDisconnected(LDRClient *client)
 	{  assert(i->d.ldrc!=client);  }
 	#endif
 	
+	// Kill the (connect) timeout (if any): 
+	KillTimeout(client->_tid_connect_to);
+	client->_tid_connect_to=NULL;
+	
 	// Finally, delete client: 
 	client->DeleteMe();
 }
@@ -998,7 +1006,7 @@ void TaskDriverInterface_LDR::UnregisterLDRClient(LDRClient *client)
 		_StartReconnectTrigger();
 	}
 	
-	// Kill the timeout (if any): 
+	// Kill the (connect) timeout (if any): 
 	KillTimeout(client->_tid_connect_to);
 	client->_tid_connect_to=NULL;
 	// Kill client pointer from ClientParams: 

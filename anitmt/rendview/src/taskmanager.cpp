@@ -1756,7 +1756,7 @@ int TaskManager::_CheckStartExchange()
 	if(!must_connect)
 	{
 		if(tasklist.done_nelem>=interface->Get_done_thresh_high() ||
-		   (!schedule_quit_after && !dont_start_more_tasks && 
+		   (!schedule_quit_after && !dont_start_more_tasks && !schedule_quit && 
 			tasklist.todo_nelem<interface->Get_todo_thresh_low()) )   // NOT <= 
 		{  must_connect=1;  }
 	}

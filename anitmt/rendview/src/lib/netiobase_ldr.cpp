@@ -283,7 +283,7 @@ int NetworkIOBase_LDR::_ResizeRespBuf(NetworkIOBase_LDR::RespBuf *buf,size_t new
 		{
 			LFree(oldval);
 			buf->alloc_len=0;
-			return(1);
+			return(-1);
 		}
 		buf->alloc_len=newlen;
 	}

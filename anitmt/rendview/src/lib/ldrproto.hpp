@@ -230,6 +230,7 @@ enum // FileRequestFileType
 	FRFT_AddRender,
 	FRFT_AddFilter
 };
+extern const char *FileRequestFileTypeString(int frf_type);
 
 struct LDRFileRequest : LDRHeader
 {

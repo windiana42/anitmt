@@ -98,6 +98,10 @@ class NetworkIOBase :
 		NetworkIOBase(int *faiulflag=NULL);
 		~NetworkIOBase();
 		
+		// Status code string using cpi->scode and cpi->err_no: 
+		// Returns static data. 
+		char *CPNotifyStatusString(const FDCopyBase::CopyInfo *cpi);
+		
 		// Sum up the size of all strings in l including terminating '\0' for 
 		// each string: 
 		static inline size_t SumUpSize(const RefStrList *l)

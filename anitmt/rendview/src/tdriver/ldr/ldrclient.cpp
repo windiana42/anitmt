@@ -731,7 +731,7 @@ int LDRClient::_Create_TaskRequest_Packet(CompleteTask *ctsk,RespBuf *dest)
 		if(r_n_files || f_n_files)
 		{
 			fprintf(stderr,"Hack code to handle LDRStoreFileInfoEntries - errors\n");
-			assert(0);
+			hack_assert(0);
 		}
 	}
 	
@@ -1295,7 +1295,7 @@ int LDRClient::cpnotify_outpump_done(FDCopyBase::CopyInfo *cpi)
 				{
 					assert(cpi->pump==out.pump_fd && cpi->pump->Src()==out.io_fd);
 					if(CloseFD(out.io_fd->pollid)<0)
-					{  assert(0);  }  // Actually, this may not fail, right?
+					{  hack_assert(0);  }  // Actually, this may not fail, right?
 				}
 				
 				fprintf(stderr,"File download completed.\n");
@@ -1312,7 +1312,7 @@ int LDRClient::cpnotify_outpump_done(FDCopyBase::CopyInfo *cpi)
 		} break;
 		default:
 		{
-			Error("cpnotify_outpump_done: hack on...\n");
+			Error("cpnotify_outpump_done: Hack on... (implementation incomplete)\n");
 			assert(0);
 			
 			out.ioaction=IOA_None;
@@ -1360,7 +1360,7 @@ int LDRClient::cpnotify_outpump_start()
 				// Failure. 
 				#warning HANDLE FAILURE. 
 				Error("Cannot handle failure (HACK ME!)\n");
-				assert(0);
+				hack_assert(0);
 			}
 		}
 		else if(!outpump_lock && tri.task_request_state==TRC_SendFileDownloadH)
@@ -1398,7 +1398,7 @@ int LDRClient::cpnotify_outpump_start()
 				// Failure. 
 				#warning HANDLE FAILURE. 
 				Error("Cannot handle failure (HACK ME!)\n");
-				assert(0);
+				hack_assert(0);
 			}
 		}
 		else if(tri.task_request_state==TRC_SendFileDownloadB)
@@ -1433,7 +1433,7 @@ int LDRClient::cpnotify_outpump_start()
 				}
 				else assert(0);  // rv=-3 may not happen here 
 				Error("Cannot handle failure (HACK ME!)\n");
-				assert(0);
+				hack_assert(0);
 			}
 			
 			out_active_cmd=Cmd_FileDownload;
@@ -1568,7 +1568,7 @@ int LDRClient::cpnotify_inpump(FDCopyBase::CopyInfo *cpi)
 		default:
 			// This is an internal error. Only known packets may be accepted 
 			// in _HandleReceivedHeader(). 
-			Error("DONE -> hack on\n");
+			Error("Done; hack on... (implementation incomplete)\n");
 			assert(0);
 	}
 	
@@ -1578,12 +1578,10 @@ int LDRClient::cpnotify_inpump(FDCopyBase::CopyInfo *cpi)
 
 int LDRClient::cpnotify(FDCopyBase::CopyInfo *cpi)
 {
-	Verbose(DBG,"--<cpnotify>--<scode=0x%x (final=%s; limit=%s), err_no=%d (%s), %s"">--\n",
-		cpi->scode,
-		(cpi->scode & FDCopyPump::SCFinal) ? "yes" : "no",
-		(cpi->scode & FDCopyPump::SCLimit) ? "yes" : "no",
-		cpi->err_no,strerror(cpi->err_no),
-		(cpi->pump==in.pump_s || cpi->pump==in.pump_fd) ? "IN" : "OUT");
+	Verbose(DBG,"--<cpnotify>--<%s%s: %s>--\n",
+		(cpi->pump==in.pump_s || cpi->pump==in.pump_fd) ? "IN" : "OUT",
+		(cpi->pump==in.pump_s || cpi->pump==out.pump_s) ? "buf" : "fd",
+		CPNotifyStatusString(cpi));
 	
 	// We are only interested in FINAL codes. 
 	if(!(cpi->scode & FDCopyPump::SCFinal))
@@ -1599,10 +1597,12 @@ int LDRClient::cpnotify(FDCopyBase::CopyInfo *cpi)
 	{
 		// SCError and SCEOF; handling probably in cpnotify_inpump() 
 		// and cpnotify_outpump_done(). 
-		Error("cpi->scode=%x. HANDLE ME.\n",cpi->scode);
+		Error("%s pump: %s\n",
+			(cpi->pump==in.pump_s || cpi->pump==in.pump_fd) ? "Input" : "Output",
+			CPNotifyStatusString(cpi));
 		// NOTE: Also handle case where EOF is reported because 
 		//       we were sending a file which is shorter than expected. 
-		assert(0);  // ##
+		hack_assert(0);  // ##
 	}
 	
 	// NOTE: next_send_cmd in no longer used if auth is done. 

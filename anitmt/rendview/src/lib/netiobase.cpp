@@ -33,6 +33,72 @@
 #endif
 
 
+char *NetworkIOBase::CPNotifyStatusString(const FDCopyBase::CopyInfo *cpi)
+{
+	static char tmp[256];   // Don't make it too small -- I use strcpy(). 
+	char *str=tmp,*end=tmp+256;
+	
+	strcpy(str,"status:");  str+=strlen(str);
+	
+	if(cpi->scode & FDCopyPump::SCFinal)
+	{  strcpy(str," Final");  str+=strlen(str);  }
+	if(cpi->scode & FDCopyPump::SCLimit)
+	{  strcpy(str," Limit");  str+=strlen(str);  }
+	if(cpi->scode & FDCopyPump::SCKilled)
+	{  strcpy(str," Killed");  str+=strlen(str);  }
+	if(cpi->scode & FDCopyPump::SCTerm)
+	{  strcpy(str," Terminated");  str+=strlen(str);  }
+	if(cpi->scode & FDCopyPump::SCTimeout)
+	{
+		snprintf(str,end-str," Timeout[%d]",cpi->err_no);
+		str+=strlen(str);
+	}
+	if(cpi->scode & FDCopyPump::SCEOI)
+	{
+		snprintf(str,end-str," InputEOF (%s%s%s)",
+			(cpi->scode & FDCopyPump::SCInHup) ? "Hup" : "",
+			(cpi->scode & FDCopyPump::SCInPipe) ? "Pipe" : "",
+			(cpi->scode & FDCopyPump::SCRead0) ? "Read" : "");
+		str+=strlen(str);
+	}
+	if(cpi->scode & FDCopyPump::SCEOO)
+	{
+		snprintf(str,end-str," OutputEOF (%s%s%s)",
+			(cpi->scode & FDCopyPump::SCOutHup) ? "Hup" : "",
+			(cpi->scode & FDCopyPump::SCOutPipe) ? "Pipe" : "",
+			(cpi->scode & FDCopyPump::SCWrite0) ? "Write" : "");
+		str+=strlen(str);
+	}
+	if(cpi->scode & FDCopyPump::SCError)
+	{
+		snprintf(str,end-str," Error (");  str+=strlen(str);
+		if(cpi->scode & (FDCopyPump::SCErrPollI | FDCopyPump::SCErrPollO))
+		{
+			snprintf(str,end-str,"Poll%s: rev=0x%x",
+				((cpi->scode & FDCopyPump::SCErrPollI) && (cpi->scode & FDCopyPump::SCErrPollO)) ? "IO" : 
+					(cpi->scode & FDCopyPump::SCErrPollI) ? "In" : "Out",
+				cpi->err_no);
+			str+=strlen(str);
+		}
+		if(cpi->scode & (FDCopyPump::SCErrRead | FDCopyPump::SCErrWrite))
+		{
+			snprintf(str,end-str,"%s: %s",
+				((cpi->scode & FDCopyPump::SCErrRead) && (cpi->scode & FDCopyPump::SCErrWrite)) ? "RW" : 
+					(cpi->scode & FDCopyPump::SCErrRead) ? "Read" : "Write",
+				strerror(cpi->err_no));
+			str+=strlen(str);
+		}
+		if(cpi->scode & FDCopyPump::SCErrCopyIO)
+		{
+			snprintf(str,end-str,"CopyIO: rv=%d",cpi->err_no);
+			str+=strlen(str);
+		}
+		snprintf(str,end-str,")");  str+=strlen(str);
+	}
+	return(tmp);
+}
+
+
 void NetworkIOBase::_DoChangeEvents_Error(int rv)
 {
 	fprintf(stderr,"OOPS: FDChangeEvents(sock=%d,%p) returned %d\n",
@@ -217,6 +283,12 @@ int NetworkIOBase::_FDCopyStartSendFile(const char *path,int64_t filelen)
 	assert(!out.io_fd->transferred);  // io params must be reset by copy facility
 	out.pump_fd->limit=filelen;
 	out.pump_fd->io_bufsize=16384;
+	// Reset thresh values: This is necessary so that they are re-calculated 
+	// again because thresh values are never larger than copy length limit. 
+    out.pump_fd->low_read_thresh=-1;
+    out.pump_fd->high_read_thresh=-1;
+    out.pump_fd->low_write_thresh=-1;
+    out.pump_fd->high_write_thresh=-1;
 	
 	assert(out.io_sock->pollid==pollid);
 	
@@ -233,6 +305,10 @@ int NetworkIOBase::_FDCopyStartSendFile(const char *path,int64_t filelen)
 	if(rv!=0)
 	{
 		fprintf(stderr,"OOPS: out pump(fd,fd)->CC_Start returned %d\n",rv);
+		fprintf(stderr,"      limit=%ld; iobs=%u; thresh=%u,%u,%u,%u\n",
+			long(out.pump_fd->limit),out.pump_fd->io_bufsize,
+			out.pump_fd->low_read_thresh,out.pump_fd->high_read_thresh,
+			out.pump_fd->low_write_thresh,out.pump_fd->high_write_thresh);
 		abort();
 	}
 	
@@ -288,6 +364,12 @@ int NetworkIOBase::_FDCopyStartRecvFile(const char *path,int64_t filelen)
 	assert(!in.io_fd->transferred);  // io params must be reset by copy facility
 	in.pump_fd->limit=filelen;
 	in.pump_fd->io_bufsize=16384;
+	// Reset thresh values: This is necessary so that they are re-calculated 
+	// again because thresh values are never larger than copy length limit. 
+    in.pump_fd->low_read_thresh=-1;
+    in.pump_fd->high_read_thresh=-1;
+    in.pump_fd->low_write_thresh=-1;
+    in.pump_fd->high_write_thresh=-1;
 	
 	assert(in.io_sock->pollid==pollid);
 	
