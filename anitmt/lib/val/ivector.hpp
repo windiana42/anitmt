@@ -53,6 +53,9 @@ template<int N> class vector
 		vector<N> &operator=(const vector<N> &v)
 			{  _vFOR(i) x[i]=v.x[i];  return(*this);  }
 		
+		// Set null-vector: 
+		void set_null()  {  _vFORP(p)  *p=0.0;  }
+		
 		// This returns the i-th row value of the vector. 
 		// For a 3d-vector, i must be in range 0...2. 
 		// _vFOR SPEED INCREASE, NO RANGE CHECK IS PER_vFORMED ON i. 

@@ -59,6 +59,9 @@ public: // work around for the template friend problem
 		Matrix(IdentMat) : x(0)  {}
 		// This generates an initialized null matrix. 
 		Matrix(NullMat) : x()  {  x.set_null(); }
+		// Neutral matrices (like null and ident)
+		Matrix(Neutral1) : x(0)  {}
+		Matrix(Neutral0) : x()  {  x.set_null(); }
 		
 		// You may (of couse) use these functions but the non-member 
 		// functions below (MrotateX(),...) are more convenient. 
@@ -74,6 +77,10 @@ public: // work around for the template friend problem
 		
 		// Assignment operator 
 		Matrix<C,R> &operator=(const Matrix<C,R> &m)  {  x=m.x;  return(*this);  }
+		Matrix<C,R> &operator=(NullMat)    {  x.set_null();   return(*this);  }
+		Matrix<C,R> &operator=(IdentMat)   {  x.set_ident();  return(*this);  }
+		Matrix<C,R> &operator=(Neutral0)  {  x.set_null();   return(*this);  }
+		Matrix<C,R> &operator=(Neutral1)  {  x.set_ident();  return(*this);  }
 		
 		~Matrix()  {}
 		
@@ -163,6 +170,12 @@ public: // work around for the template friend problem
 		
 		// Returns 1, if this matrix is the null-matrix (uses epsilon). 
 		bool is_null() const {  return(x.is_null(epsilon));  }
+		
+		// Neutral compare functions (also using epsilon): 
+		// Neutral0: compare against null matrix
+		// Neutral1: compare against identity matrix
+		// non-member: operator==/!=(const Matrix<c,r> &,Neutral[01])
+		// non-member: operator==/!=(Neutral[01],const Matrix<c,r> &)
 		
 		// These functions calculate the inverse matrix. 
 		Matrix<C,R> &invert()  {  x.invert();  return(*this);  }
@@ -264,6 +277,27 @@ template<int C,int R>inline bool operator==(const Matrix<C,R> &a,const Matrix<C,
 {  return(a.x.compare_to(b.x,epsilon));  }
 template<int C,int R>inline bool operator!=(const Matrix<C,R> &a,const Matrix<C,R> &b)
 {  return(!a.x.compare_to(b.x,epsilon));  }
+
+// Neutral compare functions (also using epsilon): 
+// Neutral0: compare against null matrix
+// Neutral1: compare against identity matrix
+template<int C,int R>inline bool operator==(const Matrix<C,R> &a,Neutral0)
+{  return(a.is_null());  }
+template<int C,int R>inline bool operator==(const Matrix<C,R> &a,Neutral1)
+{  return(a.is_ident());  }
+template<int C,int R>inline bool operator==(Neutral0,const Matrix<C,R> &a)
+{  return(a.is_null());  }
+template<int C,int R>inline bool operator==(Neutral1,const Matrix<C,R> &a)
+{  return(a.is_ident());  }
+template<int C,int R>inline bool operator!=(const Matrix<C,R> &a,Neutral0)
+{  return(!a.is_null());  }
+template<int C,int R>inline bool operator!=(const Matrix<C,R> &a,Neutral1)
+{  return(!a.is_ident());  }
+template<int C,int R>inline bool operator!=(Neutral0,const Matrix<C,R> &a)
+{  return(!a.is_null());  }
+template<int C,int R>inline bool operator!=(Neutral1,const Matrix<C,R> &a)
+{  return(!a.is_ident());  }
+
 
 template<int C,int R>inline Matrix<C,R> invert(const Matrix<C,R> &m)
 {  Matrix<C,R> r(Matrix<C,R>::noinit);  r.x.invert(m.x);  return(r);  }

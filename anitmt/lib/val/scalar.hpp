@@ -30,7 +30,14 @@ class Scalar
 		Scalar(double i) :        x(i)   {}
 		Scalar() :                x(0.0) {}
 		Scalar(const Scalar &s) : x(s.x) {}
+		Scalar(Neutral0) :        x(0.0) {}
+		Scalar(Neutral1) :        x(1.0) {}
 		~Scalar() {}
+		
+		// Assignment operators: 
+		Scalar &operator=(double v)  {  x=v;  return(*this);  }
+		Scalar &operator=(Neutral0)  {  x=0.0;  return(*this);  }
+		Scalar &operator=(Neutral1)  {  x=1.0;  return(*this);  }
 		
 		operator double() const  {  return(x);  }
 		double val() const  {  return(x);  }
@@ -47,9 +54,15 @@ class Scalar
 		friend bool operator==(int,const Scalar &);
 		friend bool operator!=(int,const Scalar &);
 		
+		// Comparing to neutral types (using epsilon): 
+		// non-member: operator==/!=(const Scalar &,Neutral[01]);
+		// non-member: operator==/!=(Neutral[01],const Scalar &);
+		
 		// Returns 1, if this scalar is 0 (exactly: if |this->x| <= epsilon )
 		bool operator!() const {  return(fabs(x)<=epsilon);  }
 		bool is_null() const {  return(fabs(x)<=epsilon);  }
+		// Compare to 1.0: 
+		bool is_one()  const {  return(fabs(x-1.0)<=epsilon);  }
 		
 		// addition/subtraction operators: 
 		Scalar &operator-=(double a)  {  x-=a;  return(*this);  }
@@ -85,6 +98,25 @@ inline bool operator==(const Scalar &a,int b)
 	{  return(fabs(a.x-double(b))<=epsilon);  }
 inline bool operator!=(const Scalar &a,int b)
 	{  return(fabs(a.x-double(b))>epsilon);  }
+
+// Comparing to neutral types (using epsilon): 
+inline bool operator==(const Scalar &a,Neutral0)
+	{  return(a.is_null());  }
+inline bool operator==(const Scalar &a,Neutral1)
+	{  return(a.is_one());  }
+inline bool operator==(Neutral0,const Scalar &a)
+	{  return(a.is_null());  }
+inline bool operator==(Neutral1,const Scalar &a)
+	{  return(a.is_one());  }
+inline bool operator!=(const Scalar &a,Neutral0)
+	{  return(!a.is_null());  }
+inline bool operator!=(const Scalar &a,Neutral1)
+	{  return(!a.is_one());  }
+inline bool operator!=(Neutral0,const Scalar &a)
+	{  return(!a.is_null());  }
+inline bool operator!=(Neutral1,const Scalar &a)
+	{  return(!a.is_one());  }
+
 
 inline Scalar abs(const Scalar &a)
 	{  return(fabs(a)); }

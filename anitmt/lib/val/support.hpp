@@ -35,6 +35,8 @@ inline double deg2rad(double x)  {  return(x*M_PI/180.0);  }
 inline double rad2deg(double x)  {  return(x*180.0/M_PI);  }
 
 // Template forward declarations: 
+class Neutral0;   // addition neutral
+class Neutral1;   // multiplication neutral
 class Flag;
 class Scalar;
 template<int N> class Vector;

@@ -28,10 +28,21 @@ class String : public std::string
 		String() : std::string() { }
 		String(std::string s) : std::string(s) { }
 		String(const String &s) : std::string(s) { }
+		String(Neutral0) : std::string() { }
+		~String() {}
 };
 
 inline bool operator!(const String &a)
 	{  return(a == std::string());  }
+
+inline bool operator==(const String &a,Neutral0)
+	{  return(a == std::string());  }
+inline bool operator!=(const String &a,Neutral0)
+	{  return(a != std::string());  }
+inline bool operator==(Neutral0,const String &a)
+	{  return(a == std::string());  }
+inline bool operator!=(Neutral0,const String &a)
+	{  return(a != std::string());  }
 
 }  // namespace end 
 

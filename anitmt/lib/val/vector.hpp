@@ -42,6 +42,7 @@ public: // work around for the template friend problem
 		Vector(const internal_vect::vector<3> &v) : x(v)  {}
 		// This generates a vector initialized to 0. 
 		Vector() : x(0)  {}
+		Vector(Neutral0) : x(0)  {}
 		// If you use these constructors with the wrong number of args you 
 		// will get a linker error. 
 		Vector(double u,double v);   // 2d only
@@ -51,6 +52,7 @@ public: // work around for the template friend problem
 		
 		// Assignment operator 
 		Vector<N> &operator=(const Vector<N> &v)  {  x=v.x;  return(*this);  }
+		Vector<N> &operator=(Neutral0)  {  x.set_null();  return(*this);  }
 		
 		~Vector()  {}
 		
@@ -110,6 +112,10 @@ public: // work around for the template friend problem
 		// Operators comparing vectors (are using epsilon): 
 		template<int n>friend bool operator==(const Vector<n> &,const Vector<n> &);
 		template<int n>friend bool operator!=(const Vector<n> &,const Vector<n> &);
+		
+		// Operators comparing to Neutral0 (addition neutral): 
+		// non-member: operator==/!=(const Vector<n> &,Neutral0);
+		// non-member: operator==/!=(Neutral0,const Vector<n> &);
 		
 		// Returns 1, if this vector is the null-vector (or if no component 
 		// is larger than epsilon). 
@@ -208,6 +214,16 @@ template<int N>inline bool operator<=(const Vector<N> &a,const Vector<N> &b)
 	{  return(abs2(a) <= abs2(b));  }
 template<int N>inline bool operator>=(const Vector<N> &a,const Vector<N> &b)
 	{  return(abs2(a) >= abs2(b));  }
+
+// Operators comparing to Neutral0 (addition neutral): 
+template<int N>inline bool operator==(const Vector<N> &a,Neutral0)
+	{  return(a.is_null());  }
+template<int N>inline bool operator==(Neutral0,const Vector<N> &a)
+	{  return(a.is_null());  }
+template<int N>inline bool operator!=(const Vector<N> &a,Neutral0)
+	{  return(!a.is_null());  }
+template<int N>inline bool operator!=(Neutral0,const Vector<N> &a)
+	{  return(!a.is_null());  }
 
 // Computes the angle between the two passed vectors; the returned 
 // value is in range 0...PI. 

@@ -15,6 +15,8 @@
 
 #include "val.hpp"
 
+#include <assert.h>
+
 using namespace values;
 using namespace std;
 
@@ -257,6 +259,51 @@ int main()
 		{  cerr << "\n*** ERROR in -matrix\n";  }
 	}
 	cerr << "done\n";
+	
+	/*********************************************/
+	
+	cerr << "Some more test (assertions on failure)...";
+	{
+		ma=Matrix::null;
+		mb=Matrix::ident;
+		assert(ma==Neutral0());
+		assert(!(ma!=Neutral0()));
+		assert(mb==Neutral1());
+		assert(!(mb!=Neutral1()));
+		assert(ma!=Neutral1());
+		assert(!(ma==Neutral1()));
+		assert(mb!=Neutral0());
+		assert(!(mb==Neutral0()));
+		ma=Neutral1();
+		assert(ma==Neutral1());
+		mc=Matrix(Neutral0());
+		mc=Matrix(Neutral1());
+		
+		va=Vector();
+		assert(va==Neutral0());
+		assert(!(va!=Neutral0()));
+		va=Neutral0();
+		va=Vector(Neutral0());
+		
+		sa=0.0;
+		sb=1.0;
+		assert(sa==Neutral0());
+		assert(!(sa!=Neutral0()));
+		assert(sb==Neutral1());
+		assert(!(sb!=Neutral1()));
+		assert(sa!=Neutral1());
+		assert(!(sa==Neutral1()));
+		assert(sb!=Neutral0());
+		assert(!(sb==Neutral0()));
+		sa=Neutral1();
+		assert(sa==Neutral1());
+		sc=Scalar(Neutral0());
+		sc=Scalar(Neutral1());
+		
+		String x=Neutral0();
+		assert(x==Neutral0());
+	}
+	cerr << " OK [" << sizeof(Neutral0) << "]" << endl;
 	
 	return(0);
 }

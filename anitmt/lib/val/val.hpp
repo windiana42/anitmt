@@ -20,6 +20,7 @@
 #ifndef _NS_values_val_HPP_
 #define _NS_values_val_HPP_ 1
 
+#include "neutral.hpp"
 #include "flag.hpp"
 #include "scalar.hpp"
 #include "vector.hpp"
@@ -29,6 +30,8 @@
 namespace values
 {
 
+typedef vect::Neutral0 Neutral0;
+typedef vect::Neutral1 Neutral1;
 typedef vect::Flag Flag;
 typedef vect::Scalar Scalar;
 typedef vect::Vector<3> Vector;
@@ -40,7 +43,7 @@ typedef vect::String String;
 class Valtype
 {
 	public:
-		enum Types { scalar, vector, matrix, string, flag };
+		enum Types { neutral0, neutral1, scalar, vector, matrix, string, flag };
 	private:
 		Types type;
 	public:
