@@ -34,7 +34,7 @@ namespace solve
     //! get real class name of the operator
     std::string get_real_name() const;
   private:
-    friend class Availible_Basic_Operators;
+    friend class Available_Basic_Operators;
     std::map< std::string, std::list<type> > functions;
     std::list< std::string > required_functions;
     std::string real_name;
