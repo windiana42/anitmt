@@ -1,0 +1,61 @@
+
+povscene OurScene {
+  filename "cone.pov";
+      
+  My_Obj {         
+    up    x;
+    front y;
+
+    move m{
+      straight s1{         
+        startpos   <-2,0,0>;
+        startdir   < 1,0,0>;
+        length     3;       
+        startspeed sqrt(2);
+
+	startup y;
+	//endup	z; 
+	up_roll 90;
+      }
+      circle s2{              
+        normal     y;       
+	radius     2;
+	angle      180;     
+
+	up_roll 0;
+      }
+      circle s3{              
+	center     <1,1,-1>;
+	angle      130;     
+	endspeed   2 * prev.endspeed;
+	
+	endup	vcross( enddir, x );                   
+      }
+      straight {}          
+    }
+  }
+  
+  Collision_Obj {
+    move {
+      circle {
+	//startspeed 0;
+	endpos OurScene.My_Obj.m.s3.endpos;
+        endtime OurScene.My_Obj.m.s3.endtime;
+        enddir y;
+        normal -z;
+        radius 3;
+        angle 90;
+      }   
+      straight{}
+    }
+  }
+
+  My_Green {
+    change {
+      linear {             
+        startvalue 0;      
+        endvalue   1;      
+      }
+    }
+  }
+}
