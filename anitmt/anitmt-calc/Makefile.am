@@ -3,7 +3,7 @@ SUBDIRS =		parser
 noinst_LIBRARIES =	libanitmt.a
 bin_PROGRAMS =		anitmt-calc
 check_PROGRAMS =	test_core
-CXXFLAGS=		@CXXFLAGS@ -Wno-non-template-friend
+CXXFLAGS =		@CXXFLAGS@ -Wno-non-template-friend
 
 test_core_SOURCES =	test_core.cpp 
 test_core_LDADD =	libanitmt.a ../lib/val/libval.a ../lib/par/libpar.a 

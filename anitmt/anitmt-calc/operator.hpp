@@ -19,11 +19,18 @@
 
 namespace anitmt 
 {
+  //********
   // classes
+
+  // operators with one operand
   template<class T_Result=values::Scalar, class T_Operand = T_Result> 
   class Not_Operator;
   template<class T_Result=values::Scalar, class T_Operand = T_Result> 
   class Negative_Operator;
+  template<class T_Result=values::Scalar, class T_Operand = T_Result> 
+  class Abs_Operator;
+
+  // operators with two operands
   template<class T_Result=values::Scalar, 
 	   class T_Op1 = T_Result, class T_Op2 = T_Op1> 
   class Add_Operator;
@@ -52,28 +59,36 @@ namespace anitmt
   class Basic_Operator_for_1_Operand 
     : public Operand_Listener 
   {
+    bool just_solved;		// did operator just solve the result
+
     //*** Operand_Listener methods ***
 
-    // has to check the result of the operand with ID as pointer to operand
+    //! has to check the result of the operand with ID as pointer to operand
     virtual bool is_result_ok( const void *ID, 
 			       const Solve_Run_Info *info ) throw(EX);
-    // tells to use the result calculated by is_result_ok()
+    //! tells to use the result calculated by is_result_ok()
     virtual void use_result( const void *ID, const Solve_Run_Info *info )
       throw(EX);
 
-    // disconnect operand
+    //! disconnect operand
     virtual void disconnect( const void *ID );
 
     //*** virtual Operator methods ***
 
+    //! is operand ok, or should it be rejected
     virtual bool is_operand_ok( const T_Operand &test_value ) { return true; }
+    //! can result be calculated? operand won't be rejected when this is false
+    virtual bool is_operand_enough( const T_Operand &test_value ) 
+    { return true; }
+    /*! has to calculate the result when both is_operand_ok and 
+      is_operand_enough  return true */
     virtual T_Result calc_result( const T_Operand &value ) = 0;
 
     Operand<T_Operand> &operand;
     Operand<T_Result> result;
 
   protected:
-    // must be called from constructors of derived classes
+    //! must be called from constructors of derived classes
     void init() throw( EX );
   public:
     inline Operand<T_Result> &get_result() { return result; }
@@ -94,34 +109,46 @@ namespace anitmt
 
     //*** Operand_Listener methods ***
 
-    // has to check the result of the operand with ID as pointer to operand
+    //! has to check the result of the operand with ID as pointer to operand
     virtual bool is_result_ok( const void *ID, 
 			       const Solve_Run_Info *info ) throw(EX);
-    // tells to use the result calculated by is_result_ok()
+    //! tells to use the result calculated by is_result_ok()
     virtual void use_result( const void *ID, const Solve_Run_Info *info )
       throw(EX);
 
-    // disconnect operand
+    //! disconnect operand
     virtual void disconnect( const void *ID );
 
     //*** virtual Operator methods ***
 
-    virtual bool is_operand1_ok( const T_Op1 &test_value ) { return true; }
-    virtual bool is_operand2_ok( const T_Op2 &test_value ) { return true; }
-    virtual bool is_operand1_enough( const T_Op1 &/*val*/ ) { return false;}
-    virtual bool is_operand2_enough( const T_Op2 &/*val*/ ) { return false;}
-    virtual bool are_operands_ok( const T_Op1 &test_value1, T_Op2 test_value2 )
-    { return true; }
+    /*! has to calculate the result when both are_operands_ok and 
+      are_operands_enough return true */
     virtual T_Result calc_result( const T_Op1 &value1, 
 				  const T_Op2 &value2 ) = 0; 
-				// may throw exception!
 
-    // calculate result only with operand1
+    //! is operand1 ok, or should it be rejected
+    virtual bool is_operand1_ok( const T_Op1 &test_value ) { return true; }
+    //! is operand2 ok, or should it be rejected
+    virtual bool is_operand2_ok( const T_Op2 &test_value ) { return true; }
+    //! can result be calculated only with operand1
+    virtual bool is_operand1_enough( const T_Op1 &/*val*/ ) { return false;}
+    //! can result be calculated only with operand2
+    virtual bool is_operand2_enough( const T_Op2 &/*val*/ ) { return false;}
+    //! are both operands ok, or should one be rejected
+    virtual bool are_operands_ok( const T_Op1 &test_value1, 
+				  const T_Op2 &test_value2 ) { return true; }
+    //! can result be calculated? operand won't be rejected when this is false
+    virtual bool are_operands_enough( const T_Op1 &test_value1, 
+				      const T_Op2 &test_value2 )
+    { return true; }
+    /*! has to calculate result only with operand1 when is_operand1_enough 
+      returns true */
     virtual T_Result calc_result_from_op1( const T_Op1 &value1 ) 
     { assert(0); }	// function doesn't need to be implemented
 
-    // calculate result only with operand1
-    virtual T_Result calc_result_from_op2( const T_Op2 &value1 ) 
+    /*! has to calculate result only with operand2 when is_operand2_enough 
+      returns true */
+    virtual T_Result calc_result_from_op2( const T_Op2 &value2 ) 
     { assert(0); }	// function doesn't need to be implemented
 
     Operand<T_Op1> &operand1;
@@ -148,6 +175,8 @@ namespace anitmt
   class Not_Operator
     : public Basic_Operator_for_1_Operand<T_Result, T_Operand> 
   {
+    /*! has to calculate the result when both is_operand_ok and 
+      is_operand_enough  return true */
     virtual T_Result calc_result( const T_Operand &value ); 
 
   public:
@@ -165,6 +194,8 @@ namespace anitmt
   class Negative_Operator
     : public Basic_Operator_for_1_Operand<T_Result, T_Operand> 
   {
+    /*! has to calculate the result when both is_operand_ok and 
+      is_operand_enough  return true */
     virtual T_Result calc_result( const T_Operand &value ); 
 
   public:
@@ -174,6 +205,46 @@ namespace anitmt
   // ! Operator with operand type as result type
   template< class T > inline Operand<T>& operator-( Operand<T> &op );
 
+  //*************************************************************************
+  // Abs_Operator: operator for calculating the absolute value of an operand 
+  //*************************************************************************
+
+  template<class T_Result, class T_Operand>
+  class Abs_Operator
+    : public Basic_Operator_for_1_Operand<T_Result, T_Operand> 
+  {
+    /*! has to calculate the result when both is_operand_ok and 
+      is_operand_enough  return true */
+    virtual T_Result calc_result( const T_Operand &value ); 
+
+  public:
+    Abs_Operator( Operand<T_Operand> &operand1 );
+  };
+
+  // ! Operator with operand type as result type
+  template< class T > inline Operand<T>& abs( Operand<T> &op );
+
+  //*************************************************************************
+  // Sqrt_Operator: operator for calculating the square root of an operand 
+  //*************************************************************************
+
+  template<class T_Result, class T_Operand>
+  class Sqrt_Operator
+    : public Basic_Operator_for_1_Operand<T_Result, T_Operand> 
+  {
+    /*! has to calculate the result when both is_operand_ok and 
+      is_operand_enough  return true */
+    virtual T_Result calc_result( const T_Operand &value ); 
+
+    //! is operand ok, or should it be rejected
+    virtual bool is_operand_ok( const T_Operand &test_value );
+  public:
+    Sqrt_Operator( Operand<T_Operand> &operand1 );
+  };
+
+  // ! Operator with operand type as result type
+  template< class T > inline Operand<T>& sqrt( Operand<T> &op );
+
   //**********************************************************************
   // Add_Operator: operator for adding 2 operands of different types
   //**********************************************************************
@@ -182,8 +253,9 @@ namespace anitmt
   class Add_Operator
     : public Basic_Operator_for_2_Operands<T_Result, T_Op1, T_Op2> 
   {
+    /*! has to calculate the result when both is_operand_ok and 
+      is_operand_enough  return true */
     virtual T_Result calc_result( const T_Op1 &value1, const T_Op2 &value2 ); 
-				// may throw exception!
 
   public:
     Add_Operator( Operand<T_Op1> &operand1, Operand<T_Op2> &operand2 );
@@ -211,8 +283,9 @@ namespace anitmt
   class Sub_Operator
     : public Basic_Operator_for_2_Operands<T_Result, T_Op1, T_Op2> 
   {
+    /*! has to calculate the result when both is_operand_ok and 
+      is_operand_enough  return true */
     virtual T_Result calc_result( const T_Op1 &value1, const T_Op2 &value2 ); 
-				// may throw exception!
 
   public:
     Sub_Operator( Operand<T_Op1> &operand1, Operand<T_Op2> &operand2 );
@@ -236,15 +309,26 @@ namespace anitmt
   // Mul_Operator: operator for multiplying 2 operands of different types
   //**********************************************************************
 
-  //!! Optimization for zero multiplikation still needed
+  // !!! Mul Operator might not work with some types !!!
 
   template<class T_Result, class T_Op1, class T_Op2>
   class Mul_Operator
     : public Basic_Operator_for_2_Operands<T_Result, T_Op1, T_Op2> 
   {
+    /*! has to calculate the result when both is_operand_ok and 
+      is_operand_enough  return true */
     virtual T_Result calc_result( const T_Op1 &value1, const T_Op2 &value2 ); 
-				// may throw exception!
 
+    //! can result be calculated only with operand1
+    virtual bool is_operand1_enough( const T_Op1 &/*val*/ );
+    //! can result be calculated only with operand2
+    virtual bool is_operand2_enough( const T_Op2 &/*val*/ );
+    /*! has to calculate result only with operand1 when is_operand1_enough 
+      returns true */
+    virtual T_Result calc_result_from_op1( const T_Op1 &value1 );
+    /*! has to calculate result only with operand2 when is_operand2_enough 
+      returns true */
+    virtual T_Result calc_result_from_op2( const T_Op2 &value2 );
   public:
     Mul_Operator( Operand<T_Op1> &operand1, Operand<T_Op2> &operand2 );
   };
@@ -267,15 +351,29 @@ namespace anitmt
   // Div_Operator: operator for dividing 2 operands of different types
   //**********************************************************************
 
-  //!!! Problems for impossible types or zero division
+  // !!! Div Operator might not work with some types !!!
 
   template<class T_Result, class T_Op1, class T_Op2>
   class Div_Operator
     : public Basic_Operator_for_2_Operands<T_Result, T_Op1, T_Op2> 
   {
+    /*! has to calculate the result when both is_operand_ok and 
+      is_operand_enough  return true */
     virtual T_Result calc_result( const T_Op1 &value1, const T_Op2 &value2 ); 
-				// may throw exception!
 
+    //! is operand2 ok, or should it be rejected
+    virtual bool is_operand2_ok( const T_Op2 &test_value );
+    //! can result be calculated only with operand1
+    virtual bool is_operand1_enough( const T_Op1 &/*val*/ ); 
+    //! are both operands ok, or should one be rejected
+    virtual bool are_operands_ok( const T_Op1 &test_value1, 
+				  const T_Op2 &test_value2 );
+    //! can result be calculated? operand won't be rejected when this is false
+    virtual bool are_operands_enough( const T_Op1 &test_value1, 
+				      const T_Op2 &test_value2 );
+    /*! has to calculate result only with operand1 when is_operand1_enough 
+      returns true */
+    virtual T_Result calc_result_from_op1( const T_Op1 &value1 );
   public:
     Div_Operator( Operand<T_Op1> &operand1, Operand<T_Op2> &operand2 );
   };

@@ -25,16 +25,23 @@ namespace anitmt
 
   //*** Operand_Listener methods ***
 
-  // has to check the result of the operand with ID as pointer to operand
+  //! has to check the result of the operand with ID as pointer to operand
+  //!!! very dangerous function !!! change only carefully !!!
   template<class T_Result, class T_Operand>
   bool Basic_Operator_for_1_Operand<T_Result,T_Operand>::is_result_ok
   ( const void *ID, const Solve_Run_Info *info ) throw(EX)
   {
     assert( ID == &operand );
-    if( !is_operand_ok( operand.get_value( info ) ) ) 
+    just_solved = false;
+
+    T_Operand op = operand.get_value( info );
+    if( !is_operand_ok( op ) ) 
       return false;
-    if( !result.test_set_value( calc_result(operand.get_value(info)), info ) )
-      return false;
+    if( is_operand_enough( op ) )
+    {
+      just_solved = result.test_set_value( calc_result(op), info );
+      return just_solved;	// return true if solving and test_set succeded
+    }
 
     return true;
   }
@@ -45,7 +52,8 @@ namespace anitmt
   ( const void *ID, const Solve_Run_Info *info ) throw(EX)
   {
     assert( ID == &operand );
-    result.use_test_value( info );
+    if( just_solved )		// if result was just solved 
+      result.use_test_value( info );
   }
 
 
@@ -87,7 +95,8 @@ namespace anitmt
 
   //*** Operand_Listener methods ***
 
-  // has to check the result of the operand with ID as pointer to operand
+  //! has to check the result of the operand with ID as pointer to operand
+  //!!! very dangerous function !!! change only carefully !!!
   template<class T_Result, class T_Op1, class T_Op2>
   bool Basic_Operator_for_2_Operands<T_Result,T_Op1,T_Op2>::is_result_ok
   ( const void *ID, const Solve_Run_Info *info ) throw(EX)
@@ -129,18 +138,19 @@ namespace anitmt
 
     if( just_solved )		// are both operands solved?
     {
-      // check operands
-      if( !are_operands_ok( operand1.get_value(info), 
-			    operand2.get_value( info ) ) ) 
-	return false;
+      just_solved = false;	// reset flag used for another purpose
 
+      T_Op1 op1 = operand1.get_value( info ); // get value1
+      T_Op2 op2 = operand2.get_value( info ); // get value2
+      // check operands
+      if( !are_operands_ok( op1, op2 ) ) 
+ 	return false;
+ 
       // calculate result and test it
-      if( !result.test_set_value( calc_result( operand1.get_value(info), 
-					       operand2.get_value(info) ), 
-				  info ) )
+      if( are_operands_enough( op1, op2 ) )
       {
-	just_solved = false;	// if failed: reset flag
-	return false;
+	just_solved = result.test_set_value( calc_result( op1, op2 ), info );
+	return just_solved;	// return true if solving and test_set succeded
       }
     }
 
@@ -156,7 +166,6 @@ namespace anitmt
     if( just_solved )		// if result was just solved 
       result.use_test_value( info ); // tell result operand to accept value
   }
-
 
   // disconnect operand
   template<class T_Result, class T_Op1, class T_Op2>
@@ -220,8 +229,8 @@ namespace anitmt
   //**********************************************
 
   template<class T_Result, class T_Operand>
-  T_Result Not_Operator<T_Result,T_Operand>::calc_result( const T_Operand
-							  &value ) 
+  T_Result Not_Operator<T_Result,T_Operand>
+  ::calc_result( const T_Operand &value ) 
   {
     return !value;
   }
@@ -239,14 +248,59 @@ namespace anitmt
   //**********************************************
 
   template<class T_Result, class T_Operand>
-  T_Result Negative_Operator<T_Result,T_Operand>::calc_result( const T_Operand
-							       &value ) 
+  T_Result Negative_Operator<T_Result,T_Operand>
+  ::calc_result( const T_Operand &value ) 
   {
     return -value;
   }
 
   template<class T_Result, class T_Operand>
   Negative_Operator<T_Result,T_Operand>::Negative_Operator
+  ( Operand<T_Operand> &operand1 ) 
+    : Basic_Operator_for_1_Operand<T_Result, T_Operand>( operand1 )
+  {
+    init();
+  }
+
+  //*************************************************************************
+  // Abs_Operator: operator for calculating the absolute value of an operand 
+  //*************************************************************************
+
+  template<class T_Result, class T_Operand>
+  T_Result Abs_Operator<T_Result,T_Operand>
+  ::calc_result( const T_Operand &value ) 
+  {
+    return abs( value );
+  }
+
+  template<class T_Result, class T_Operand>
+  Abs_Operator<T_Result,T_Operand>::Abs_Operator
+  ( Operand<T_Operand> &operand1 ) 
+    : Basic_Operator_for_1_Operand<T_Result, T_Operand>( operand1 )
+  {
+    init();
+  }
+
+  //*************************************************************************
+  // Sqrt_Operator: operator for calculating the sqare root of an operand 
+  //*************************************************************************
+
+  template<class T_Result, class T_Operand>
+  T_Result Sqrt_Operator<T_Result,T_Operand>
+  ::calc_result( const T_Operand &value ) 
+  {
+    return sqrt( value );
+  }
+
+  template<class T_Result, class T_Operand>
+  bool Sqrt_Operator<T_Result,T_Operand>
+  ::is_operand_ok( const T_Operand &value ) 
+  {
+    return value >= 0;		// value under square root must be positive
+  }
+
+  template<class T_Result, class T_Operand>
+  Sqrt_Operator<T_Result,T_Operand>::Sqrt_Operator
   ( Operand<T_Operand> &operand1 ) 
     : Basic_Operator_for_1_Operand<T_Result, T_Operand>( operand1 )
   {
@@ -279,7 +333,6 @@ namespace anitmt
   // Sub_Operator: operator for subtracting 2 operands of different types
   //**********************************************************************
 
-  // may throw exception!
   template<class T_Result, class T_Op1, class T_Op2>
   T_Result Sub_Operator<T_Result,T_Op1,T_Op2>
   ::calc_result( const T_Op1 &value1, const T_Op2 &value2 ) 
@@ -300,13 +353,43 @@ namespace anitmt
   // Mul_Operator: operator for multiplying 2 operands of different types
   //**********************************************************************
 
-  // may throw exception!
   template<class T_Result, class T_Op1, class T_Op2>
   T_Result Mul_Operator<T_Result,T_Op1,T_Op2>
   ::calc_result( const T_Op1 &value1, const T_Op2 &value2 ) 
   {
-    return value1 - value2;
+    return value1 * value2;
   }
+
+  template<class T_Result, class T_Op1, class T_Op2>
+  bool Mul_Operator<T_Result,T_Op1,T_Op2>
+  ::is_operand1_enough( const T_Op1 &value1 ) 
+  {
+    return value1 == 0;
+  }
+
+  template<class T_Result, class T_Op1, class T_Op2>
+  bool Mul_Operator<T_Result,T_Op1,T_Op2>
+  ::is_operand2_enough( const T_Op2 &value2 ) 
+  {
+    return value2 == 0;
+  }
+
+  template<class T_Result, class T_Op1, class T_Op2>
+  T_Result Mul_Operator<T_Result,T_Op1,T_Op2>
+  ::calc_result_from_op1( const T_Op1 &value1 ) 
+  {
+    assert( value1 == 0 );
+    return 0;
+  }
+
+  template<class T_Result, class T_Op1, class T_Op2>
+  T_Result Mul_Operator<T_Result,T_Op1,T_Op2>
+  ::calc_result_from_op2( const T_Op2 &value2 ) 
+  {
+    assert( value2 == 0 );
+    return 0;
+  }
+
 
   template<class T_Result, class T_Op1, class T_Op2>
   Mul_Operator<T_Result,T_Op1,T_Op2>::Mul_Operator
@@ -321,12 +404,52 @@ namespace anitmt
   // Div_Operator: operator for dividing 2 operands of different types
   //**********************************************************************
 
-  // may throw exception!
   template<class T_Result, class T_Op1, class T_Op2>
   T_Result Div_Operator<T_Result,T_Op1,T_Op2>
   ::calc_result( const T_Op1 &value1, const T_Op2 &value2 ) 
   {
-    return value1 - value2;
+    return value1 / value2;
+  }
+
+  template<class T_Result, class T_Op1, class T_Op2>
+  bool Div_Operator<T_Result,T_Op1,T_Op2>
+  ::is_operand2_ok( const T_Op2 &value2 ) 
+  {
+    return !(value2 == 0);
+  }
+
+  template<class T_Result, class T_Op1, class T_Op2>
+  bool Div_Operator<T_Result,T_Op1,T_Op2>
+  ::is_operand1_enough( const T_Op1 &value1 ) 
+  {
+    return value1 == 0;		// if numerator is zero, result is also zero
+  }
+
+  template<class T_Result, class T_Op1, class T_Op2>
+  bool Div_Operator<T_Result,T_Op1,T_Op2>
+  ::are_operands_ok( const T_Op1 &value1, const T_Op2 &value2 ) 
+  {
+    // something diff zero is infinite
+    if( !(value1 == 0) && (value2 == 0) ) return false;
+    return true;
+  }
+
+  template<class T_Result, class T_Op1, class T_Op2>
+  bool Div_Operator<T_Result,T_Op1,T_Op2>
+  ::are_operands_enough( const T_Op1 &value1, const T_Op2 &value2 ) 
+  {
+    // zero diff zero isn't rejected, but the result cannot be calculated
+    return !(value2 == 0); 
+  }
+
+  /*! has to calculate result only with operand1 when is_operand1_enough 
+    returns true */
+  template<class T_Result, class T_Op1, class T_Op2>
+  T_Result Div_Operator<T_Result,T_Op1,T_Op2>
+  ::calc_result_from_op1( const T_Op1 &value1 ) 
+  {
+    assert( value1 == 0 );
+    return 0;
   }
 
   template<class T_Result, class T_Op1, class T_Op2>

@@ -42,6 +42,28 @@ namespace anitmt
     return (new Negative_Operator<T,T>( op ))->get_result();
   }
 
+  //*************************************************************************
+  // Abs_Operator: operator for calculating the absolute value of an operand 
+  //*************************************************************************
+
+  // ! Operator with operand type as result type
+  template< class T >
+  inline Operand<T>& abs( Operand<T> &op ) 
+  {
+    return (new Abs_Operator<T,T>( op ))->get_result();
+  }
+
+  //*************************************************************************
+  // Sqrt_Operator: operator for calculating the sqare root of an operand 
+  //*************************************************************************
+
+  // ! Operator with operand type as result type
+  template< class T >
+  inline Operand<T>& sqrt( Operand<T> &op ) 
+  {
+    return (new Sqrt_Operator<T,T>( op ))->get_result();
+  }
+
   //**********************************************************************
   // Add_Operator: operator for adding 2 operands of different types
   //**********************************************************************
