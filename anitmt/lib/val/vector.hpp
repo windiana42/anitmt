@@ -49,7 +49,7 @@ template<int N=3>class Vector
 		// Assignment operator 
 		Vector<N> &operator=(const Vector<N> &v)  {  x=v.x;  return(*this);  }
 		
-		Vector~()  {}
+		~Vector()  {}
 		
 		//operator internal_vect::vector<N>() const  {  return(x);  }
 		
