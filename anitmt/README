@@ -18,7 +18,6 @@ animations.
 	WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
 	Read COPYING for details. 
 
-
 * Building anitmt
   ---------------
 	Read BUILD for detailed build instructions. 
@@ -27,6 +26,24 @@ animations.
 	If you build anitmt from CVS sources and you are new to CVS, you 
 	may want to have a look at README.CVS. 
 
+* Generate example films
+------------------------
+	You can find three example films in the example/ directory
+	They may be generated after build process as follows:
+
+	cd example/myrobot/
+	../../anitmt-calc/anitmt-calc myrobot.ini
+	cd ani/
+	../../../utils/render -w 400 -h 300
+	../../../utils/tga2avi -e 336 -f 24
+
+	This generates a film.avi file with 336 frames and 24 frames per second. 
+	The parameters of tga2avi should correspond to the options in myrobot.ini
+	Attention: not all options of myrobot.ini take effekt they should be passed 
+	  to film generation tools like render and tga2avi automatically in the future
+
+	the example/test_examples script generates small versions of the three example
+	films like described
 
 * Reporting bugs
   --------------
@@ -36,7 +53,7 @@ animations.
 * Frequently Asked Questions
   --------------------------
 	We compiled a file of frequently asked quesions about anitmt. 
-	Read FAQ in this directory. 
+	Read FAQ in this directory. (not many entries yet)
 
 
 Have fun and feel free to send us any feedback including any 

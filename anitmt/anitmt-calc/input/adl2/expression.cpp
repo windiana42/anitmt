@@ -15,12 +15,29 @@
 #include "expression.hpp"
 
 #include <functionality/solver.hpp>
+#include <utl/utl.hpp>
 #include <assert.h>
 
 namespace anitmt
 {
   namespace adlparser
   {
+    std::string type_to_string( values::Valtype::Types t )
+    {
+      switch( t )
+      {
+      case values::Valtype::flag:     return "flag";     break;
+      case values::Valtype::scalar:   return "scalar";   break;
+      case values::Valtype::vector:   return "vector";   break;
+      case values::Valtype::matrix:   return "matrix";   break;
+      case values::Valtype::string:   return "string";   break;
+      case values::Valtype::neutral0: return "neutral0"; break;
+      case values::Valtype::neutral1: return "neutral1"; break;
+      }
+      assert(false);
+      return "";
+    }
+
     Any_Type::Any_Type( message::Message_Consultant* c )
       : message::Message_Reporter(c), value(false)
     {}
@@ -103,44 +120,49 @@ namespace anitmt
     Any_Type::Any_Type( const Any_Type& val )
       : message::Message_Reporter( val.get_consultant() )
     {
-      empty();
-
       value = val.value;
       type = val.type;
       operand = val.operand;
 
-      switch( val.get_type() )
+      if( operand )
       {
-      case values::Valtype::flag:
-	u.flag = new values::Flag( *val.u.flag );
-	break;
-      case values::Valtype::scalar:
-	u.scalar = new values::Scalar( *val.u.scalar );
-	break;
-      case values::Valtype::vector:
-	u.vector = new values::Vector( *val.u.vector );
-	break;
-      case values::Valtype::matrix:
-	u.matrix = new values::Matrix( *val.u.matrix );
-	break;
-      case values::Valtype::string:
-	u.string = new values::String( *val.u.string );
-	break;
-      case values::Valtype::neutral0: assert( false );
-      case values::Valtype::neutral1: assert( false );
+	u = val.u;
+      }
+      else
+      {
+	switch( val.get_type() )
+	{
+	case values::Valtype::flag:
+	  u.flag = new values::Flag( *val.u.flag );
+	  break;
+	case values::Valtype::scalar:
+	  u.scalar = new values::Scalar( *val.u.scalar );
+	  break;
+	case values::Valtype::vector:
+	  u.vector = new values::Vector( *val.u.vector );
+	  break;
+	case values::Valtype::matrix:
+	  u.matrix = new values::Matrix( *val.u.matrix );
+	  break;
+	case values::Valtype::string:
+	  u.string = new values::String( *val.u.string );
+	  break;
+	case values::Valtype::neutral0: assert( false );
+	case values::Valtype::neutral1: assert( false );
+	}
       }
     }
 
     Any_Type::Any_Type( Any_Type& val )
       : message::Message_Reporter( val.get_consultant() )
     {
-      empty();
-
       value = val.value;
       type = val.type;
       operand = val.operand;
 
-      val.empty();		// remove original value
+      u = val.u;
+
+      val.value = false;		// remove original value
     }
 
     Any_Type &Any_Type::operator=( const Any_Type &val )
@@ -151,25 +173,32 @@ namespace anitmt
       type = val.type;
       operand = val.operand;
 
-      switch( val.get_type() )
+      if( operand )
       {
-      case values::Valtype::flag:
-	u.flag = new values::Flag( *val.u.flag );
-	break;
-      case values::Valtype::scalar:
-	u.scalar = new values::Scalar( *val.u.scalar );
-	break;
-      case values::Valtype::vector:
-	u.vector = new values::Vector( *val.u.vector );
-	break;
-      case values::Valtype::matrix:
-	u.matrix = new values::Matrix( *val.u.matrix );
-	break;
-      case values::Valtype::string:
-	u.string = new values::String( *val.u.string );
-	break;
-      case values::Valtype::neutral0: assert( false );
-      case values::Valtype::neutral1: assert( false );
+	u = val.u;
+      }
+      else
+      {
+	switch( val.get_type() )
+	{
+	case values::Valtype::flag:
+	  u.flag = new values::Flag( *val.u.flag );
+	  break;
+	case values::Valtype::scalar:
+	  u.scalar = new values::Scalar( *val.u.scalar );
+	  break;
+	case values::Valtype::vector:
+	  u.vector = new values::Vector( *val.u.vector );
+	  break;
+	case values::Valtype::matrix:
+	  u.matrix = new values::Matrix( *val.u.matrix );
+	  break;
+	case values::Valtype::string:
+	  u.string = new values::String( *val.u.string );
+	  break;
+	case values::Valtype::neutral0: assert( false );
+	case values::Valtype::neutral1: assert( false );
+	}
       }
       return *this;
     }
@@ -181,7 +210,9 @@ namespace anitmt
       type = val.type;
       operand = val.operand;
 
-      val.empty();		// remove original value
+      u = val.u;
+
+      val.value = false;		// remove original value
       return *this;
     }
 
@@ -216,8 +247,8 @@ namespace anitmt
 	  case values::Valtype::neutral0: assert( false );
 	  case values::Valtype::neutral1: assert( false );
 	  }
-	  value = false;
 	}
+	value = false;
       }
     }
 
@@ -478,6 +509,231 @@ namespace anitmt
 	os << "<no value>";
       }
       return os;
+    }
+
+    Function_Instance::Function_Instance
+    ( std::string name, std::list<values::Valtype::Types> parameter_types )
+      : name( name ), parameter_types( parameter_types )
+    {
+    }
+    
+    bool Function_Instance::is_instance( std::list<Any_Type> ops )
+    {
+      if( ops.size() != parameter_types.size() ) 
+	return false;
+
+      std::list<Any_Type>::iterator param;
+      std::list<values::Valtype::Types>::iterator param_type;
+
+      for( param = ops.begin(), param_type = parameter_types.begin();
+	   (param != ops.end()) && (param_type != parameter_types.end());
+	   ++param, ++param_type )
+      {
+	if( param->get_type() != *param_type )
+	  return false;
+      }
+      assert( (param == ops.end()) && (param_type == parameter_types.end()) );
+      return true;
+    }
+
+    Any_Type Function_Instance::call_function( std::list<Any_Type> ops,
+					       message::Message_Reporter& msg )
+    {
+      assert(false);
+      return Any_Type(msg.get_consultant());
+    }
+    
+    Function_Instance::~Function_Instance()
+    {
+    }
+
+    std::ostream &operator<<( std::ostream &os, const Function_Instance &f )
+    {
+      os << f.name << "( ";
+      bool first = true;
+      std::list<values::Valtype::Types>::const_iterator i;
+      for( i = f.parameter_types.begin(); i != f.parameter_types.end(); ++i )
+      {
+	if( first ) first = false;
+	else os << ", ";
+	os << type_to_string( *i );
+      }
+      os << " )";
+      return os;
+    }
+  
+    Function_sqrt_scalar::Function_sqrt_scalar()
+      : Function_Instance( "sqrt", 
+			   utl::assemble_list(values::Valtype::scalar) )
+    {
+    }
+    Any_Type Function_sqrt_scalar::call_function( std::list<Any_Type> ops,
+						  message::Message_Reporter
+						  &msg )
+    {
+      message::Message_Consultant *c = msg.get_consultant();
+
+      assert( ops.size() == 1 );
+      assert( ops.front().get_type() == values::Valtype::scalar );
+      Any_Type param = ops.front();
+      if( param.has_value() )
+      {
+	if( param.is_operand() )
+	{
+	  return Any_Type( sqrt( param.get_op_scalar() ), c );
+	}
+	else
+	{
+	  values::Scalar param_val = param.get_scalar();
+	  if( param_val < 0 )
+	  {
+	    msg.error() << "sqrt of negative values is not allowed";
+	  }
+	  else
+	  {
+	    return Any_Type( values::Scalar(sqrt(param_val)), c );
+	  }
+	}
+      }
+      return Any_Type( c );
+    }
+
+    Function_dot_vecvec::Function_dot_vecvec()
+      : Function_Instance( "dot", 
+			   utl::assemble_list(values::Valtype::vector,values::Valtype::vector) )
+    {
+    }
+    Any_Type Function_dot_vecvec::call_function( std::list<Any_Type> ops,
+						  message::Message_Reporter
+						  &msg )
+    {
+      message::Message_Consultant *c = msg.get_consultant();
+
+      assert( ops.size() == 2 );
+      assert( ops.front().get_type() == values::Valtype::vector );
+      assert( ops.back().get_type() == values::Valtype::vector );
+      Any_Type v1 = ops.front();
+      Any_Type v2 = ops.back();
+      if( v1.has_value() && v2.has_value() )
+      {
+	if( v1.is_operand() || v2.is_operand() )
+	{
+	  if( v1.is_operand() && v2.is_operand() )
+	    return Any_Type( v1.get_op_vector() * v2.get_op_vector(), c );
+	  else
+	  {
+	    if( v1.is_operand() )
+	      return Any_Type( v1.get_op_vector() * v2.get_vector(), c );
+	    else //if( v2.is_operand() )
+	      return Any_Type( v1.get_vector() * v2.get_op_vector(), c );
+	  }
+	}
+	else
+	{
+	  values::Vector vec1 = v1.get_vector();
+	  values::Vector vec2 = v2.get_vector();
+	  
+	  return Any_Type( vec1 * vec2, c );
+	}
+      }
+      return Any_Type( c );
+    }
+
+    Function_Instance user_instance( std::string function, 
+				     std::list<Any_Type> ops )
+    {
+      std::list<values::Valtype::Types> types;
+
+      std::list<Any_Type>::iterator i;
+      for( i = ops.begin(); i != ops.end(); ++i )
+      {
+	types.push_back( i->get_type() );
+      }
+      
+      return Function_Instance( function, types );
+    }
+
+    Any_Type Function_Handler::call_function( std::string function, 
+					      std::list<Any_Type> ops,
+					      message::Message_Reporter &msg )
+    {
+      message::Message_Consultant *c = msg.get_consultant();
+
+      std::map< std::string,std::list<Function_Instance*> >::iterator i;
+      i = instances.find( function );
+      if( i == instances.end() )
+      {
+	msg.error() << "unknown function name \"" << function << "\"";
+      }
+      else
+      {
+	std::list<Function_Instance*> &function_instances = i->second;
+
+	std::list<Function_Instance*>::iterator instance;
+	std::list<std::list<Function_Instance*>::iterator> matches;
+	std::list<std::list<Function_Instance*>::iterator>::iterator match;
+
+	for( instance  = function_instances.begin(); 
+	     instance != function_instances.end(); ++instance )
+	{
+	  if( (*instance)->is_instance( ops ) )
+	  {
+	    matches.push_back( instance );
+	  }
+	}
+	switch( matches.size() )
+	{
+	case 0: 
+	  msg.error() << "no instance for call to " 
+		      << user_instance( function, ops ) << " found";
+	  for( instance  = function_instances.begin(); 
+	       instance != function_instances.end(); ++instance )
+	  {
+	    msg.error() << "candidate is: " << **instance;
+	  }
+	  break;
+	case 1:
+	  return (*matches.front())->call_function( ops, msg );
+	default:
+	  // shouldn't occur, as we don't have type conversion yet
+	  msg.error() << "multiple instances found for call to " 
+		      << user_instance( function, ops );
+
+	  for( match = matches.begin(); match != matches.end(); 
+	       ++match )
+	  {
+	    msg.error() << "candidate is: " << ***match;
+	  }
+	  break;
+	}
+      }
+      return Any_Type( c );
+    }
+
+    Function_Handler::Function_Handler()
+    {
+      add_function_instance( "sqrt", new Function_sqrt_scalar );
+      add_function_instance( "dot", new Function_dot_vecvec );
+    }
+
+    void Function_Handler::add_function_instance( std::string name, 
+						  Function_Instance 
+						  *instance )
+    {
+      instances[name].push_back( instance );
+    }
+
+    Function_Handler::~Function_Handler()
+    {
+      std::map< std::string,std::list<Function_Instance*> >::iterator i;
+      std::list<Function_Instance*>::iterator j;
+      for( i = instances.begin(); i != instances.end(); ++i )
+      {
+	for( j = i->second.begin(); j != i->second.end(); ++ j )
+	{
+	  delete *j;
+	}
+      }
     }
 
   }

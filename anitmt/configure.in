@@ -70,15 +70,28 @@ if test "${gccvers/" *"/}" = "gcc" ; then
 fi
 unset gccvers
 
+echo CXXFLAGS = $CXXFLAGS
+echo debug_Enabled = "$debug_Enabled"
+
 # Debugging?
 yydebug_Enabled="yes"
-debug_Enabled="default"
+debug_Enabled="noopt" # default option
 AC_ARG_ENABLE(debug,AC_HELP_STRING([--enable-debug=VAL],
-	[VAL=yes: build with debugging info (slower and larger); 
-	 VAL=no: no debugging info (default); 
+	[VAL=noopt: build with debugging info and don't pass optimization flags (default); 
+	 VAL=yes: build with debugging info (slower and larger); 
+	 VAL=no: no debugging info; 
 	 VAL=fast: additionally do not pass optimization flags]),
 	[debug_Enabled="$enableval"])
-if test "$debug_Enabled" = "yes" ; then
+if test "$debug_Enabled" = "noopt" ; then
+	# don't optimize when debugging is enabled
+	CXXFLAGS=" $CXXFLAGS "
+	CXXFLAGS="${CXXFLAGS// -O? / }"
+	CXXFLAGS="${CXXFLAGS// -O / }"
+	case " $CXXFLAGS " in
+		*" -g "*) ;;
+		*) CXXFLAGS="$CXXFLAGS -g" ;;
+	esac
+elif test "$debug_Enabled" = "yes" ; then
 	case " $CXXFLAGS " in
 		*" -g "*) ;;
 		*) CXXFLAGS="$CXXFLAGS -g" ;;
@@ -86,6 +99,7 @@ if test "$debug_Enabled" = "yes" ; then
 elif test "$debug_Enabled" = "no"; then
 	CXXFLAGS=" $CXXFLAGS "
 	CXXFLAGS="${CXXFLAGS// -g / }"
+	yydebug_Enabled="no"
 elif test "$debug_Enabled" = "fast" ; then
 	CXXFLAGS=" $CXXFLAGS "
 	CXXFLAGS="${CXXFLAGS// -g / }"
@@ -93,6 +107,9 @@ elif test "$debug_Enabled" = "fast" ; then
 	CXXFLAGS="${CXXFLAGS// -O? / }"
 	yydebug_Enabled="no"
 fi
+
+echo CXXFLAGS = $CXXFLAGS
+echo debug_Enabled = "$debug_Enabled"
 
 # YYDEBUG switch
 AC_ARG_ENABLE(yydebug,AC_HELP_STRING([--enable-yydebug],

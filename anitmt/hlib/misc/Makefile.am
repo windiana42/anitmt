@@ -1,7 +1,7 @@
 #CFLAGS = @CFLAGS@ -W -Wall -D_GNU_SOURCE
 #CXXFLAGS = @CXXFLAGS@ -W -Wall -D_GNU_SOURCE
 
-EXTRA_DIST = alloctracer.cc
+#EXTRA_DIST = alloctracer.cc -- Martin: hab ich nicht auf der Platte
 
 INCLUDES = -I../include/
 noinst_LIBRARIES = libmisc.a

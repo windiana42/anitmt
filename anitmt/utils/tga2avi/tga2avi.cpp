@@ -109,7 +109,7 @@ int main(int argn,char **argv)
       printf(" Syntax:\n");
       printf("   tga2avi options \n\n");
       printf("   [-i tganames ]  name of the TGA-files that includes number of digits:\n");
-      printf("                   `%c0nd' (f%c04d.tga for f0000.tga,...)\n\n",'%','%');
+      printf("                   `%c0nd' (f%c07d.tga for f0000000.tga,...)\n\n",'%','%');
       printf("   [-f fps]        frames per second (24)\n");
       printf("   [-o outputname] filename of the AVI-file (film.avi)\n");
       printf("   [-s startframe] first frame number of the TGA set to use (0)\n");

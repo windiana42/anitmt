@@ -147,9 +147,9 @@ base_types {
     {
       <Any C++-Code using 
 
-<<<< in doubled square brackets("[[   ]]"):
-// accepts [[ ... ] ] as well, as "]]" might occur in C-Code and shouldn't be
-// a token
+// in doubled square brackets("[[   ]]"):
+//   accepts [[ ... ] ] as well, as "]]" might occur in C-Code and shouldn't be
+//   a token
 
       [[ [property.]<PropertyName> ]]
       [[ [operand.]<OperandName> ]]
@@ -180,7 +180,6 @@ base_types {
                                         // call failed
                                         // set to false to reinitalize
        did_result_fail                  // default fail_bool_var
-      >
     }
     ...
   }

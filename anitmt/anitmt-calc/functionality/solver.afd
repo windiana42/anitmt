@@ -340,10 +340,9 @@ operators
     }
     are_operands_ok( op1, op2, info )
     {
-	#warning "0/0 = 1/1 = OK; 1/0 = 0/1 = not okay?"
       return ( (op1 == functionality::neutral0()) 
-	==     (op2 == functionality::neutral0()) );	
-					// both zero or both not zero
+	||     (op2 != functionality::neutral0()) );	
+					// 0/0 and x/(not 0) ok
     }
     are_operands_enough( op1, op2 )
     {
@@ -804,7 +803,7 @@ operators
     versions
     {
       vector to_vector( neutral0 );
-      vector to_vector( neutral1 );
+      //vector to_vector( neutral1 ); ?!?
     }
   }
 
@@ -1490,7 +1489,7 @@ operators
       //string to_string( cpp_string );
       //string to_string( cpp_char_ptr );
       string to_string( neutral0 );
-      string to_string( neutral1 );
+      //string to_string( neutral1 ); ?!?
     }
   }
 }

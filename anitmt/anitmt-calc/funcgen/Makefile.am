@@ -14,7 +14,8 @@ funcgen_SOURCES=	gen_code.hpp gen_code.cpp gen_cpp.cpp gen_cpp.hpp \
 			parsinfo.hpp parsinfo.cpp parsinfo_inline.cpp \
 			stdextend.hpp stdextend.cpp \
 			base_operators.hpp base_operators.cpp \
-			funcgen.cpp funcgen.hpp params.cpp
+			params.cpp params.hpp \
+			funcgen.cpp
 
 funcgen_LDADD=		../../lib/message/libmessage.a ../../hlib/libhlib.a 
 
@@ -37,7 +38,7 @@ parser.cc tokens.h:	$(srcdir)/parser.yy
 	y.tab.h tokens.h \
 	-- $(YACC) -d
 
-params.o: params.cpp funcgen.hpp
+params.o: params.cpp params.hpp
 #$(CXX) $(INCLUDES) $(CFLAGS) -fno-rtti -c $(srcdir)/params.cpp
 	$(CXXCOMPILE) -fno-rtti -c $(srcdir)/params.cpp -o $@
 

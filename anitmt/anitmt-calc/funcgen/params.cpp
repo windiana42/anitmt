@@ -15,7 +15,7 @@
 #include <iostream>
 #include <message/message.hpp>
 
-#include "funcgen.hpp"
+#include "params.hpp"
 
 
 FuncgenParameters::FuncgenParameters(par::ParameterManager *manager) : 

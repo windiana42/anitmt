@@ -16,15 +16,50 @@
 #define __Utilities__
 
 #include <string>
+#include <list>
 #include <map>
 #include <iostream>
 
 namespace utl
 {
 
-  //*****************************************************************
+  // ************************************************************************
+  // assemble_list: generates a std::list in one expression with operator +
+  // ************************************************************************
+
+  template<class T>
+  class Assemble_List
+  {
+  public:
+    inline operator std::list<T>() { return stored_list; }
+    std::list<T> get()		   { return stored_list; }
+    inline Assemble_List &operator << ( const T &element ) 
+    { stored_list.push_back(element); return *this; }
+    Assemble_List &add( const T &element )
+    { stored_list.push_back(element); return *this; }
+  private:
+    std::list<T> stored_list;
+  };
+
+  template<class T>
+  inline Assemble_List<T> assemble_list()
+  { return Assemble_List<T>(); }
+  template<class T>
+  inline Assemble_List<T> assemble_list(const T &element)
+  { return Assemble_List<T>() << element; }
+  template<class T>
+  inline Assemble_List<T> assemble_list(const T &element1, 
+					      const T &element2)
+  { return Assemble_List<T>() << element1 << element2; }
+  template<class T>
+  inline Assemble_List<T> assemble_list(const T &element1,
+					      const T &element2,
+					      const T &element3)
+  { return Assemble_List<T>() << element1 << element2 << element2; }
+
+  // *****************************************************************
   // maped_string: may used as string but stores one string only once
-  //*****************************************************************
+  // *****************************************************************
 
   class maped_string{
     typedef int id_type;

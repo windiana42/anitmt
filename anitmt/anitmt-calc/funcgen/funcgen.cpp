@@ -17,7 +17,7 @@
 #include "afdbase.hpp"
 #include "gen_cpp.hpp"
 
-#include "funcgen.hpp"
+#include "params.hpp"
 
 namespace funcgen
 {

@@ -3,7 +3,7 @@ height=300
 jump=1
 start=auto
 end=auto 
-povray=x-povray
+povray=povray
 params=
 frames=f%07g.pov
 output=+FT
@@ -133,7 +133,7 @@ for i in $(seq -f $frames $start $jump $end); do
   fi
   echo $picture_file >> image_file_list
   echo =====================================================================
-  echo $povray +i $i +w$width +h$height +D $output $try_again $params ; 
-  $povray +i $i +w$width +h$height +D $output $try_again $params || exit -5 ; 
+  echo $povray +I$i +w$width +h$height +D $output $try_again $params ; 
+  $povray +I$i +w$width +h$height +D $output $try_again $params || exit -5 ; 
 done  
 

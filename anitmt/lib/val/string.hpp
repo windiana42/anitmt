@@ -51,7 +51,7 @@ inline bool operator!=(Neutral0,const String &a)
 
 #ifdef GCC_HACK
 inline std::ostream& operator<<(std::ostream& s,const String &m)
-	{  s << static_cast<std::string>(m);  return(s);  }
+	{  s << m.c_str();  return(s);  }
     /*
 inline std::ostrstream& operator<<(std::ostrstream& s,const String &m)
 	{  s << static_cast<std::string>(m);  return(s);  }

@@ -1,6 +1,6 @@
 INCLUDES=		-I$(srcdir)/../lib/ -Ifunctionality \
 			-I$(srcdir)/functionality
-SUBDIRS=		funcgen functionality input output
+SUBDIRS=		funcgen functionality input output #manu_functionality
 noinst_LIBRARIES=	libanitmt.a
 bin_PROGRAMS=		anitmt-calc
 check_PROGRAMS=		test_core
@@ -34,4 +34,5 @@ anitmt_calc_LDADD=	../lib/message/libmessage.a \
 			../lib/val/libval.a \
 			../lib/solve/libsolve.a \
 			../lib/proptree/libproptree.a \
-			../lib/utl/libutl.a 
+			../lib/utl/libutl.a \
+			functionality/libfunctionality.a 

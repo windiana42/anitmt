@@ -115,15 +115,17 @@ namespace message
   template<class T> 
   inline Message_Stream& Message_Stream::operator<<(const T &v)
   {
+    std::ostream &os = msg_stream;	// help implicit conversions
     if( enabled ) 
-      msg_stream << v; 
+       os << v; 
     return *this; 
   }
 
   template<class T> inline Message_Stream& Message_Stream::operator<<=(T v)
   {
+    std::ostream &os = msg_stream;	// help implicit conversions
     if( enabled ) 
-      msg_stream << v; 
+      os << v; 
     return *this; 
   }
 

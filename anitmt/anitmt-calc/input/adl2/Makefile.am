@@ -17,18 +17,19 @@ libadlparser_a_SOURCES=	parser.yy tokens.h\
 			flexlexer_public.h flexlexer_global.h scanner.ll 
 
 testadlparser_SOURCES=	testadlparser.cpp expression.cpp
-testadlparser_LDADD=	../../libanitmt.a \
+testadlparser_LDADD=	libadlparser.a \
+			../../libanitmt.a \
 			../../../lib/val/libval.a \
 			../../../lib/par/libpar.a \
 			../../../lib/utl/libutl.a \
 			../../../lib/solve/libsolve.a \
 			../../../lib/message/libmessage.a \
-			../adl/libadlparser.a \
 			../libinput.a \
 			../../output/lib/liboutput.a \
 			../../output/raw/librawout.a \
 			../../output/pov/libpovout.a \
-			libadlparser.a 
+			../../functionality/libfunctionality.a \
+			-lefence
 
 #also includes old adl/libadlparser.a for libanitmt
 

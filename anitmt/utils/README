@@ -1,2 +1,2 @@
-This is a directory containing utilities which are not needed by anitmt 
-but which you might find useful. 
+This is a directory containing utilities which are needed to render the 
+result of anitmt with povray and to generate films 

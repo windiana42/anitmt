@@ -112,7 +112,7 @@ int main(int argc, char *argv[])
   char *format = (char *) malloc( 100 );
   char *codecname = (char *) malloc( 100 );
 
-  std::string image_names = "f%04d";
+  std::string image_names = "f%07d";
   strcpy(outputname, "film.avi");
   strcpy(fpstext, "24");
   strcpy(mintext, "0");

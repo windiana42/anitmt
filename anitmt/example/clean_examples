@@ -1,16 +1,16 @@
 cd test/
 cd test_ani/
-rm *.pov *.inc *.tga *.avi image_file_list > /dev/null 2>&1
+rm *.pov *.inc *.tga *.avi *.ttf image_file_list > /dev/null 2>&1
 cd ../../
 
 cd myrobot/
 cd ani/
-rm *.pov *.inc *.tga *.avi image_file_list > /dev/null 2>&1
+rm *.pov *.inc *.tga *.avi *.ttf image_file_list > /dev/null 2>&1
 cd ../../
 
 cd circles/
 cd ani/
-rm *.pov *.inc *.tga *.avi image_file_list > /dev/null 2>&1
+rm *.pov *.inc *.tga *.avi *.ttf image_file_list > /dev/null 2>&1
 cd ../../
 
 exit 0

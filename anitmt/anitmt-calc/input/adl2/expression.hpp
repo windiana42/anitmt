@@ -92,6 +92,61 @@ namespace anitmt
     Any_Type function( std::string name, std::list<Any_Type> ops );
 
     std::ostream &operator<<( std::ostream &os, const Any_Type &val );
+
+    class Function_Instance
+    {
+    public:
+      Function_Instance( std::string name,
+			 std::list<values::Valtype::Types> parameter_types );
+ 
+      bool is_instance( std::list<Any_Type> ops );
+
+      virtual Any_Type call_function( std::list<Any_Type> ops,
+				      message::Message_Reporter& msg );
+
+      virtual ~Function_Instance();
+    private:
+      std::string name;
+      std::list<values::Valtype::Types> parameter_types;
+
+      friend std::ostream &operator<<( std::ostream &os, 
+				       const Function_Instance & );
+    };
+
+    std::ostream &operator<<( std::ostream &os, const Function_Instance & );
+
+    class Function_sqrt_scalar : public Function_Instance
+    {
+    public:
+      Function_sqrt_scalar();
+      virtual Any_Type call_function( std::list<Any_Type> ops,
+				      message::Message_Reporter& msg );
+    };
+
+    class Function_dot_vecvec : public Function_Instance
+    {
+    public:
+      Function_dot_vecvec();
+      virtual Any_Type call_function( std::list<Any_Type> ops,
+				      message::Message_Reporter& msg );
+    };
+    
+    class Function_Handler
+    {
+    public:
+      Function_Handler();
+      Any_Type call_function( std::string function, 
+			      std::list<Any_Type> ops,
+			      message::Message_Reporter& );
+
+      // instance will be deleted...
+      void add_function_instance( std::string name, 
+				  Function_Instance * );
+      ~Function_Handler();
+    private:
+      std::map< std::string,std::list<Function_Instance*> > instances;
+    };
+
   }
 }
 

@@ -102,26 +102,26 @@ namespace funcgen
 %type <string> opt_cxx_expression_list
 %type <string> cxx_expression_list
 
-%type <string> operand, property, prop_op, provider_type, base_type, variable
-%type <string> special_variable, container_name, operator, solver, solver_name
+%type <string> operand property prop_op provider_type base_type variable
+%type <string> special_variable container_name operator solver solver_name
 
-%type <string> operand_dot, property_dot, prop_op_dot
-%type <string> base_type_dot, container_name_dot
-%type <string> variable_dot, special_variable_dot
-%type <string> provider_type_dot, solver_dot
-%type <string> solver_name_dot, operator_dot
+%type <string> operand_dot property_dot prop_op_dot
+%type <string> base_type_dot container_name_dot
+%type <string> variable_dot special_variable_dot
+%type <string> provider_type_dot solver_dot
+%type <string> solver_name_dot operator_dot
 
-%type <string> operand_bracket, property_bracket, prop_op_bracket
-%type <string> base_type_bracket, container_name_bracket
-%type <string> variable_bracket, special_variable_bracket
-%type <string> provider_type_bracket, solver_bracket
-%type <string> solver_name_bracket, operator_bracket
+%type <string> operand_bracket property_bracket prop_op_bracket
+%type <string> base_type_bracket container_name_bracket
+%type <string> variable_bracket special_variable_bracket
+%type <string> provider_type_bracket solver_bracket
+%type <string> solver_name_bracket operator_bracket
 
-%type <string> operand_sq_bracket, property_sq_bracket, prop_op_sq_bracket
-%type <string> base_type_sq_bracket, container_name_sq_bracket
-%type <string> variable_sq_bracket, special_variable_sq_bracket
-%type <string> provider_type_sq_bracket, solver_sq_bracket
-%type <string> solver_name_sq_bracket, operator_sq_bracket
+%type <string> operand_sq_bracket property_sq_bracket prop_op_sq_bracket
+%type <string> base_type_sq_bracket container_name_sq_bracket
+%type <string> variable_sq_bracket special_variable_sq_bracket
+%type <string> provider_type_sq_bracket solver_sq_bracket
+%type <string> solver_name_sq_bracket operator_sq_bracket
 // ****************
 // precicion table
 // ****************

@@ -1,6 +1,7 @@
 #include <iostream>
 #include <message/message.hpp>
 #include <val/val.hpp>
+#include <utl/utl.hpp>
 
 #include "adlparser.hpp"
 #include "expression.hpp"
@@ -204,7 +205,36 @@ int main( int argc, char *argv[] )
     msg.verbose() << "ok";
     test_msg.clear_num_messages();
   }
-  
+
+  Function_Handler func_handler;
+  msg.verbose() << "sqrt(scalar):";
+  msg.verbose() << "  sqrt(4) = " << func_handler.call_function
+    ( "sqrt", utl::assemble_list(Any_Type(values::Scalar(4),c)), test_msg );
+  msg.verbose() << "sqrt(...): this should cause 4 * 2 errors:";
+  func_handler.call_function
+    ( "sqrt", utl::assemble_list(Any_Type(values::Flag(true),c)), test_msg );
+  func_handler.call_function
+    ( "sqrt", utl::assemble_list(Any_Type(values::Vector(1,2,3),c)),test_msg );
+  func_handler.call_function
+    ( "sqrt", utl::assemble_list(Any_Type(values::Matrix(),c)), test_msg );
+  func_handler.call_function
+    ( "sqrt", utl::assemble_list(Any_Type(values::String("hi"),c)), test_msg );
+  if( test_msg.get_num_errors() != 8  )
+  {
+    msg.error() << "wrong number of errors in the test: " 
+		<< test_msg.get_num_errors();
+    msg.error() << "!!! Error !!!";
+  }
+  else
+  {
+    msg.verbose() << "ok";
+    test_msg.clear_num_messages();
+  }
+  msg.verbose() << "dot(vector,vector):";
+  msg.verbose() << "  dot(<1,2,3>,<3,-2,1>) = " << func_handler.call_function
+    ( "dot", utl::assemble_list(Any_Type(values::Vector(1,2,3),c),Any_Type(values::Vector(3,-2,1),c)), 
+      test_msg ) << " [=2]";
+
   /*
   msg.verbose() << "************** Test complete parser ****************";
 
