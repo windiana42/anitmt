@@ -25,7 +25,7 @@ namespace funcgen
 {
   int parse_afd( AFD_Root *afd, message::Message_Consultant *c, 
 		 std::string filename );
-#ifdef YYDEBUG
+#if(YYDEBUG)
   extern int yydebug;
 #endif
 }
@@ -73,7 +73,7 @@ int main(int argc, char *argv[], char *envp[])
   {  exit(1);  }
   
   // Okay, here we go...
-#ifdef YYDEBUG
+#if(YYDEBUG)
   funcgen::yydebug=fgpar.yydebug;
 #endif
   
