@@ -387,4 +387,6 @@ int main(int argc, char *argv[])
   delete riff;
   delete avih;
   delete movi;
+
+  return 0;
 }

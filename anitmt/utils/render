@@ -137,3 +137,4 @@ for i in $(seq -f $frames $start $jump $end); do
   $povray +I$i +w$width +h$height +D $output $try_again $params || exit -5 ; 
 done  
 
+exit 0;

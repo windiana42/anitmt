@@ -42,7 +42,7 @@ animations.
 	Attention: not all options of myrobot.ini take effekt they should be passed 
 	  to film generation tools like render and tga2avi automatically in the future
 
-	the example/test_examples script generates small versions of the three example
+	the example/make_examples script generates all the three example
 	films like described
 
 * Reporting bugs
