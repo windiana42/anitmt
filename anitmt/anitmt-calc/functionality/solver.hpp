@@ -25,6 +25,7 @@
 
 #include "base_func.hpp"
 #include "val/val.hpp"
+#include "complex_solver.hpp"
 namespace functionality
 {
   // **********************
@@ -70,7 +71,7 @@ namespace solve
     }
   private:
     virtual T_Result calc_result( const T_Operand1 & val )
-    { // user code: ./solver.afd:49:16: 
+    { // user code: ./solver.afd:50:16: 
       
       return abs(val);
     
@@ -106,7 +107,7 @@ namespace solve
     }
   private:
     virtual T_Result calc_result( const T_Operand1 & op1, const T_Operand2 & op2 )
-    { // user code: ./solver.afd:127:16: 
+    { // user code: ./solver.afd:128:16: 
       
       return op1 + op2;
     
@@ -202,32 +203,32 @@ namespace solve
     }
   private:
     virtual bool are_operands_enough( const T_Operand1 & op1, const T_Operand2 & op2 )
-    { // user code: ./solver.afd:217:24: 
+    { // user code: ./solver.afd:210:24: 
       
-      return (op2 != T_Operand2());
+      return (op2 != T_Operand2());	// denominator != 0
     
     }
     virtual bool are_operands_ok( const T_Operand1 & op1, const T_Operand2 & op2, solve::Solve_Run_Info* i )
-    { // user code: ./solver.afd:212:20: 
+    { // user code: ./solver.afd:205:20: 
       
       return (op1 == T_Operand1()) == (op2 == T_Operand2());	
 					// both zero or both not zero
     
     }
     virtual T_Result calc_result( const T_Operand1 & op1, const T_Operand2 & op2 )
-    { // user code: ./solver.afd:200:16: 
+    { // user code: ./solver.afd:201:16: 
       
       return op1 / op2;
     
     }
     virtual T_Result calc_result_from_op1( const T_Operand1 & op )
-    { // user code: ./solver.afd:208:25: 
+    { // user code: ./solver.afd:214:25: 
       
       return T_Result();		// return 0 in result Type
     
     }
     virtual bool is_operand1_enough( const T_Operand1 & op1 )
-    { // user code: ./solver.afd:204:23: 
+    { // user code: ./solver.afd:218:23: 
       
       return op1 == T_Operand1();	//!!! replace by zero type
     
@@ -341,7 +342,7 @@ namespace solve
     }
   private:
     virtual T_Result calc_result( const T_Operand1 & op1, const T_Operand2 & op2 )
-    { // user code: ./solver.afd:236:16: 
+    { // user code: ./solver.afd:237:16: 
       
       return op1 == op2;
     
@@ -455,7 +456,7 @@ namespace solve
     }
   private:
     virtual T_Result calc_result( const T_Operand1 & op1, const T_Operand2 & op2 )
-    { // user code: ./solver.afd:293:16: 
+    { // user code: ./solver.afd:294:16: 
       
       return op1 > op2;
     
@@ -569,7 +570,7 @@ namespace solve
     }
   private:
     virtual T_Result calc_result( const T_Operand1 & op1, const T_Operand2 & op2 )
-    { // user code: ./solver.afd:331:16: 
+    { // user code: ./solver.afd:332:16: 
       
       return op1 >= op2;
     
@@ -683,7 +684,7 @@ namespace solve
     }
   private:
     virtual T_Result calc_result( const T_Operand1 & op1, const T_Operand2 & op2 )
-    { // user code: ./solver.afd:274:16: 
+    { // user code: ./solver.afd:275:16: 
       
       return op1 < op2;
     
@@ -797,7 +798,7 @@ namespace solve
     }
   private:
     virtual T_Result calc_result( const T_Operand1 & op1, const T_Operand2 & op2 )
-    { // user code: ./solver.afd:312:16: 
+    { // user code: ./solver.afd:313:16: 
       
       return op1 <= op2;
     
@@ -911,31 +912,31 @@ namespace solve
     }
   private:
     virtual T_Result calc_result( const T_Operand1 & op1, const T_Operand2 & op2 )
-    { // user code: ./solver.afd:162:16: 
+    { // user code: ./solver.afd:163:16: 
       
       return op1 * op2;
     
     }
     virtual T_Result calc_result_from_op1( const T_Operand1 & op )
-    { // user code: ./solver.afd:174:25: 
+    { // user code: ./solver.afd:175:25: 
       
       return T_Result();		// return 0 in result Type
     
     }
     virtual T_Result calc_result_from_op2( const T_Operand2 & op )
-    { // user code: ./solver.afd:178:25: 
+    { // user code: ./solver.afd:179:25: 
       
       return T_Result();		// return 0 in result Type
     
     }
     virtual bool is_operand1_enough( const T_Operand1 & op )
-    { // user code: ./solver.afd:166:23: 
+    { // user code: ./solver.afd:167:23: 
       
       return !op;
     
     }
     virtual bool is_operand2_enough( const T_Operand2 & op )
-    { // user code: ./solver.afd:170:23: 
+    { // user code: ./solver.afd:171:23: 
       
       return !op;
     
@@ -1085,7 +1086,7 @@ namespace solve
     }
   private:
     virtual T_Result calc_result( const T_Operand1 & val )
-    { // user code: ./solver.afd:32:16: 
+    { // user code: ./solver.afd:33:16: 
       
       return -val;
     
@@ -1127,7 +1128,7 @@ namespace solve
     }
   private:
     virtual T_Result calc_result( const T_Operand1 & vect )
-    { // user code: ./solver.afd:112:16: 
+    { // user code: ./solver.afd:113:16: 
       
       return normalize(vect);
     
@@ -1157,7 +1158,7 @@ namespace solve
     }
   private:
     virtual T_Result calc_result( const T_Operand1 & val )
-    { // user code: ./solver.afd:13:16: 
+    { // user code: ./solver.afd:14:16: 
       
       return !val;
     
@@ -1211,7 +1212,7 @@ namespace solve
     }
   private:
     virtual T_Result calc_result( const T_Operand1 & op1, const T_Operand2 & op2 )
-    { // user code: ./solver.afd:255:16: 
+    { // user code: ./solver.afd:256:16: 
       
       return op1 != op2;
     
@@ -1325,13 +1326,13 @@ namespace solve
     }
   private:
     virtual T_Result calc_result1( const T_Operand1 & val )
-    { // user code: ./solver.afd:91:17: 
+    { // user code: ./solver.afd:92:17: 
       
       return val;
     
     }
     virtual T_Result calc_result2( const T_Operand1 & val )
-    { // user code: ./solver.afd:95:17: 
+    { // user code: ./solver.afd:96:17: 
       
       return -val;
     
@@ -1373,13 +1374,13 @@ namespace solve
     }
   private:
     virtual T_Result calc_result( const T_Operand1 & val )
-    { // user code: ./solver.afd:65:16: 
+    { // user code: ./solver.afd:66:16: 
       
       return sqrt(val);
     
     }
     virtual bool is_operand_ok( const T_Operand1 & op, solve::Solve_Run_Info* info )
-    { // user code: ./solver.afd:69:18: 
+    { // user code: ./solver.afd:70:18: 
       
       // value under square root must be positive
       if( op < 0 )
@@ -1416,7 +1417,7 @@ namespace solve
     }
   private:
     virtual T_Result calc_result( const T_Operand1 & op1, const T_Operand2 & op2 )
-    { // user code: ./solver.afd:145:16: 
+    { // user code: ./solver.afd:146:16: 
       
       return op1 - op2;
     

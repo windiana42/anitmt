@@ -304,20 +304,6 @@ namespace solve
     new Square_Solver<values::Scalar,values::Scalar>( a, b );
   }
 
-  //*********************************************************
-  // Accel_Solver: Solver for a constantly accelerated system
-  //*********************************************************
-
-  void accel_solver( Operand<values::Scalar> &s, 
-		     Operand<values::Scalar> &t, 
-		     Operand<values::Scalar> &a, 
-		     Operand<values::Scalar> &v0, 
-		     Operand<values::Scalar> &ve );
-
-  //***************
-  // test function
-  //***************
-  int solver_test();
 }
 
 // include implementation to make sure that all specializations of the

@@ -9,6 +9,8 @@
 #include "constraint.hpp"
 #include "reference.hpp"
 
+#include <functionality/solver.hpp>
+
 using namespace std;
 
 namespace solve {

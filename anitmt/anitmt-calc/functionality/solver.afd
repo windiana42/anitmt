@@ -2,6 +2,7 @@ avoid_recursion __adl_solver_declarations__;
 
 include declaration "base_func.afd";
 include header "val/val.hpp";
+include header "complex_solver.hpp";
 
 operators
 {
@@ -201,14 +202,6 @@ operators
     {
       return op1 / op2;
     }
-    is_operand1_enough(op1)
-    {
-      return op1 == T_Operand1();	//!!! replace by zero type
-    }
-    calc_result_from_op1( op )
-    {
-      return T_Result();		// return 0 in result Type
-    }
     are_operands_ok( op1, op2, i )
     {
       return (op1 == T_Operand1()) == (op2 == T_Operand2());	
@@ -216,7 +209,15 @@ operators
     }
     are_operands_enough( op1, op2 )
     {
-      return (op2 != T_Operand2());
+      return (op2 != T_Operand2());	// denominator != 0
+    }
+    calc_result_from_op1( op )
+    {
+      return T_Result();		// return 0 in result Type
+    }
+    is_operand1_enough(op1)
+    {
+      return op1 == T_Operand1();	//!!! replace by zero type
     }
     versions
     {
