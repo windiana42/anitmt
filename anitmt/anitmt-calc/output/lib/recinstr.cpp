@@ -423,7 +423,7 @@ int Recursive_Input_Stream::Include_File(
 		}
 		
 		if(warn_multiple_include)
-		{  Error_Header(warning(),lineno) << "warning: " << (lis->Path()) << 
+		{  Error_Header(warn(),lineno) << "warning: " << (lis->Path()) << 
 			" included for the " << (lis->use_cnt) << 
 			Num_Postfix(lis->use_cnt) << 
 			" time. Expect trouble.";  }

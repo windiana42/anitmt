@@ -1,4 +1,4 @@
-//#include "dummy.inc"
+#include "dummy.inc"
 #include "inc_dummy.inc"
 
 #declare testval = 5;
