@@ -1,0 +1,103 @@
+/*
+ * pov.cpp
+ * 
+ * Implementation of output routines for povray code. 
+ * 
+ * Copyright (c) 2001 by Wolfgang Wieser
+ * Bugs to wwieser@gmx.de
+ * 
+ * This is a part of the aniTMT animation project. 
+ * 
+ * This file may be distributed and/or modified under the terms of the 
+ * GNU General Public License version 2 as published by the Free Software 
+ * Foundation. 
+ * 
+ * This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
+ * WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
+ * 
+ * Revision History:
+ *   Apr 2001   started writing
+ *
+ */
+
+#include "pov.hpp"
+
+#include <assert.h>
+#include "val.hpp"
+#include "tmttype.hpp"
+#include "scene.hpp"
+#include "proptree.hpp"
+
+/*#include "parse.hpp"*/
+
+namespace anitmt
+{
+
+//! init interface (ex: check if scene file exists)
+void Pov_Output::init() throw( EX )
+{
+	
+	
+	if(verbose())
+	{  vout << "Initializted POV output." << std::endl;  }
+}
+
+
+//! check the components (verify them and copy files)
+void Pov_Output::check_components() throw( EX )
+{
+	if(verbose())
+	{  vout << "POV output: checking components..." << std::endl;  }
+	
+    const Contain<Ani_Scene>::content_type &scenes 
+      = ani->get_scenes().get_content();
+	int errors=0;
+	
+	//output_io::POV::File_Parser *parser=new output_io::POV::File_Parser();
+	
+	for(Contain<Ani_Scene>::content_type::const_iterator 
+		sc=scenes.begin(); sc!=scenes.end(); sc++)  // for all scenes
+	{
+		//errors+=parser->Go(ani,*sc);
+	}
+	
+	//delete parser;
+	
+	if(verbose())
+	{
+		vout << "POV output: checking components: " << 
+			(errors ? "FAILED" : "done") << std::endl;
+	}
+	
+	#warning errors not reported. 
+}
+
+
+//! process the resulting animation (ex: integrate it in scene description)
+void Pov_Output::process_results() throw( EX )
+{
+	if(verbose())
+	{  vout << "POV output: processing results..." << std::endl;  }
+	
+	
+	
+	if(verbose())
+	{  vout << "POV output: processing results: done" << std::endl;  }
+}
+
+
+Pov_Output::Pov_Output(Animation *ani) : 
+	Output_Interface(ani),
+	vout(cout)
+{
+	assert(ani!=NULL);
+}
+
+Pov_Output::~Pov_Output()
+{
+	
+}
+
+}  // namespace end
+
+
