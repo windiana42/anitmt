@@ -30,5 +30,6 @@ anitmt_calc_SOURCES =	input.hpp  \
 			anitmt.cpp			
 anitmt_calc_LDADD =	libanitmt.a ../lib/val/libval.a ../lib/par/libpar.a \
 			parser/libadlparser.a \
+			output/raw/librawout.a output/pov/libpovout.a \
 			output/lib/liboutput.a \
-			output/raw/librawout.a output/pov/libpovout.a 
+
