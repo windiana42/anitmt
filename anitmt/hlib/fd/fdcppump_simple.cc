@@ -84,7 +84,7 @@ int FDCopyPump_Simple::_ReadData(int fd,HTime *fdtime)
 		// If we reach here: reading done; so job is done. 
 	}
 	// rd==0 here, i.e. EOF -OR- rd>0 and end of buffer
-	return(_EndJob(CopyInfo(this,rd ? SCLimit : SCRead0,0,fdtime)));
+	return(_EndJob(CopyInfo(this,(!rd && need) ? SCRead0 : SCLimit,0,fdtime)));
 }
 
 
@@ -142,7 +142,7 @@ int FDCopyPump_Simple::_WriteData(int fd,HTime *fdtime)
 		// If we reach here: writing done; so job is done. 
 	}
 	// wr==0 here, i.e. EOF -OR- wr>0 and end of buffer
-	return(_EndJob(CopyInfo(this,wr ? SCLimit : SCWrite0,0,fdtime)));
+	return(_EndJob(CopyInfo(this,(!wr && want) ? SCWrite0 : SCLimit,0,fdtime)));
 }
 
 

@@ -348,8 +348,8 @@ void FDCopyBase::_DetachFromFD(PollID pollid)
 			h->in.pump,h->out.pump,h->in.ctrl_ev,h->out.ctrl_ev,
 			FDBase::FDfd(pollid));
 		#endif
-		h->in.pump->Control(FDCopyPump::CC_Kill);
-		h->out.pump->Control(FDCopyPump::CC_Kill);
+		if(h->in.pump)   h->in.pump->Control(FDCopyPump::CC_Kill);
+		if(h->out.pump)  h->out.pump->Control(FDCopyPump::CC_Kill);
 		// ...now cpnotify() and DoneJob() are called, then 
 		// the pumps must be NULL: 
 		// If this fails, then the used pump(s) most probably 

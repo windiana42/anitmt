@@ -690,7 +690,7 @@ class FDCopyPump_FD2FD : public FDCopyPump
 		// Return value for CC_Start: 
 		//   -3 -> somebody else is active on PollID; we may not start
 		//   -4 -> fifo buffer (io_bufsize) allocation failure
-		//   -5 -> illegal thresh values or limity<0
+		//   -5 -> illegal thresh values or limit<0
 		int VControl(ControlCommand cc);
 };
 
