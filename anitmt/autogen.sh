@@ -11,7 +11,7 @@
 
 
 # check for aclocal, autoconf and automake
-NEEDED="aclocal autoconf automake"
+NEEDED="aclocal autoconf autoheader automake"
 
 
 echo "You have:"
@@ -43,6 +43,11 @@ fi
 if test -n "$1" -o ! -f configure; then
     echo "Creating configure.";
     autoconf || exit 2;
+fi
+
+if test -n "$1" -o ! -f config.h.in; then
+    echo "Creating config.h.in.";
+    autoheader || exit 2
 fi
 
 # Make Makefile.in(s)
