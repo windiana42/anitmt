@@ -1801,7 +1801,7 @@ int FDManager::_PollFD(FDBase * /*fdb*/,FDManager::FDNode *j,
 	// updated aynway, so we just quit here and do the rest 
 	// later. 
 	if(fdlist_change_serial)
-	{  ++fdlist_change_serial;  return(0);  }
+	{  ++fdlist_change_serial;  return(1);  }
 	if(events!=0)
 	{
 		// If the fd node already has an associated fd array element 
@@ -1831,7 +1831,7 @@ int FDManager::_PollFD(FDBase * /*fdb*/,FDManager::FDNode *j,
 		// Otherwise, the fd array has to be updated. 
 		else
 		{  ++fdlist_change_serial;  }
-		return(0);
+		return(1);
 	}
 	// If we come here, events==0. 
 	// We actually changed from events!=0 to events=0. 
@@ -1840,7 +1840,7 @@ int FDManager::_PollFD(FDBase * /*fdb*/,FDManager::FDNode *j,
 	if(j->idx>=0)
 	{  ++fdlist_change_serial;  }
 	// Otherwiese there is nothing to do. 
-	return(0);
+	return(1);
 }
 
 // Never removes an entry from the list; that is only done by Unpoll(). 

@@ -328,8 +328,9 @@ void FDBase::_UnlockFDs()
 	}
 }
 
+
 // Query PollID of specified fd: 
-FDBase::PollID FDBase::FDPollID(int fd)
+FDBase::PollID FDBase::FDPollID(int fd) const
 {
 	if(fd<0)  return(NULL);
 	for(FDManager::FDNode *i=fds; i; i=i->next)
@@ -338,29 +339,6 @@ FDBase::PollID FDBase::FDPollID(int fd)
 		{  return((PollID)i);  }
 	}
 	return(NULL);
-}
-// Query FD data (only fds that this FDBase is polling for): 
-// Get custon data pointer associated with fd or NULL: 
-const void *FDBase::FDDPtr(int fd)
-{
-	if(fd<0)  return(NULL);
-	for(FDManager::FDNode *i=fds; i; i=i->next)
-	{
-		if(i->fd==fd)
-		{  return(i->dptr);  }
-	}
-	return(NULL);
-}
-// Get events mask for this fd or -1 in case of invalid fd: 
-short FDBase::FDEvents(int fd)
-{
-	if(fd<0)  return(-1);
-	for(FDManager::FDNode *i=fds; i; i=i->next)
-	{
-		if(i->fd==fd)
-		{  return(i->events);  }
-	}
-	return(-1);
 }
 
 

@@ -92,7 +92,7 @@ class FDBase
 {
 	friend class FDManager;
 	friend class FDManager::FDBList;
-	friend class FDCopyManager;
+	friend class FDCopyBase;
 	public:
 		typedef FDManager::SigInfo SigInfo;
 		typedef FDManager::FDInfo FDInfo;
@@ -147,12 +147,27 @@ class FDBase
 		inline void _DoResetTimer(FDManager::TimerNode *i);
 		void _MsecLeftChanged(FDManager::TimerNode *i,long old_msec_left);
 		
-		inline int _CloseFD(int fd)
+		inline int _UnpollFD(PollID pollid)
+			{  return(fdmanager()->UnpollFD(this,pollid));  }
+		inline int _CloseFD(int fd,PollID pollid)
 		{
-			UnpollFD(fd);  
+			_UnpollFD(pollid);
 			int rv;  do {  rv=close(fd);  }  while(rv<0 && errno==EINTR);
 			return(rv);
 		}
+		inline int _ShutdownFD(int fd,PollID pollid)
+		{
+			int rv;  do {  rv=shutdown(fd,2);  }  while(rv<0 && errno==EINTR);
+			return(_CloseFD(fd,pollid));
+		}
+		
+		// Non-Null variants: pollid MAY NOT BE NULL: 
+		inline int _FDfdNN(PollID pollid) const
+			{  return(((FDManager::FDNode*)pollid)->fd);  }
+		inline const void *_FDDPtrNN(PollID pollid) const
+			{  return(((FDManager::FDNode*)pollid)->dptr);  }
+		inline short _FDEventsNN(PollID pollid) const
+			{  return(((FDManager::FDNode*)pollid)->events);  }
 		
 		// The actual `data' fields: 
 		struct FDManager::TimerNode *timers;  // timer list 
@@ -218,7 +233,7 @@ class FDBase
 		virtual ~FDBase();
 		
 		// Use this to get the FDManager: 
-		inline FDManager *fdmanager()  {  return(FDManager::manager);  }
+		inline FDManager *fdmanager() const  {  return(FDManager::manager);  }
 		
 		/* TIMERS */
 		// Use InstallTimer() to install a new timer, 
@@ -289,14 +304,14 @@ class FDBase
 		// Query timer parameters: 
 		// Note for hackers: NEVER CHANGE THE VALUE -3. IT IS MAGIC!!!
 		// Timer interval in msec; -1 for disabled, -3 if tid==NULL. 
-		long TimerInterval(TimerID tid)
+		long TimerInterval(TimerID tid) const
 			{  return(tid ? ((FDManager::TimerNode*)tid)->msec_val : -3);  }
 		// msec until next call to timernotify() 
 		// or -1 if disabled, -3 if tid==NULL. 
-		long TimerLeft(TimerID tid)
+		long TimerLeft(TimerID tid) const
 			{  return(tid ? ((FDManager::TimerNode*)tid)->msec_left : -3);  }
 		// Get data pointer of timer (attached custom data; void *dptr). 
-		const void *TimerDPtr(TimerID tid)
+		const void *TimerDPtr(TimerID tid) const
 			{  return(tid ? ((FDManager::TimerNode*)tid)->dptr : NULL);  }
 		
 		/* FILE DESCRIPTORS */
@@ -335,6 +350,7 @@ class FDBase
 		// settings, NOT to allocate new ones. 
 		// Return value: 
 		//    1 -> OK, fd entry updated. 
+		//    0 -> nothing to be done (or just dptr updated) 
 		//   -2 -> pollid==NULL 
 		int PollFD(PollID pollid,short events=0)
 			{  return(fdmanager()->PollFD(this,pollid,events,NULL));  }
@@ -343,26 +359,29 @@ class FDBase
 		int PollFDDPtr(PollID pollid,const void *dptr)
 			{  if(!pollid)  return(-2);
 				((FDManager::FDNode*)pollid)->dptr=dptr;  return(1);  }
+		// Special version of PollFD(PollID,events): 
+		// Sets those events set in set_events and then clears those in 
+		// clear_events. 
+		// Return value: like PollFD() 
+		// (-2 -> pollid==NULL; 1 -> events updated; 0 -> OK (unchanged))
+		int FDChangeEvents(PollID pollid,short set_ev,short clear_ev)
+			{  return(fdmanager()->FDChangeEvents(this,pollid,set_ev,clear_ev));  }
 		// Return value: 
 		//    0 -> OK; 
 		//    1 -> nothing to un-poll: no such fd for *this. 
 		int UnpollFD(int fd)
-			{  return(fdmanager()->UnpollFD(this,fd));  }
+			{  return(_UnpollFD(FDPollID(fd)));  }
 		int UnpollFD(PollID &pollid)
-			{  int rv=fdmanager()->UnpollFD(this,pollid);  pollid=NULL;  return(rv);  }
+			{  int rv=_UnpollFD(pollid);  pollid=NULL;  return(rv);  }
 		// Return value: that of close(fd). 
 		int CloseFD(int fd)
-			{  return(fd<0 ? 0 : _CloseFD(fd));  }
+			{  return(fd<0 ? 0 : _CloseFD(fd,FDPollID(fd)));  }
 		int CloseFD(PollID &pollid)
-			{  int fd=FDfd(pollid);  pollid=NULL;  return(CloseFD(fd));  }
+			{  int rv=_CloseFD(FDfd(pollid),pollid);  pollid=NULL;  return(rv);  }
 		int ShutdownFD(int fd)  // shutdown & close
-		{
-			if(fd<0)  return(0);
-			int rv;  do {  rv=shutdown(fd,2);  }  while(rv<0 && errno==EINTR);
-			return(_CloseFD(fd));
-		}
+			{  return(fd<0 ? 0 : _ShutdownFD(fd,FDPollID(fd)));  }
 		int ShutdownFD(PollID &pollid)
-			{  int fd=FDfd(pollid);  pollid=NULL;  return(ShutdownFD(fd));  }
+			{  int rv=_ShutdownFD(FDfd(pollid),pollid);  pollid=NULL;  return(rv);  }
 		
 		// Get PollID associated with specified fd: 
 		// Note: one PollID corresponds to one fd. A PollID is created when 
@@ -370,19 +389,21 @@ class FDBase
 		// class gets destroyed). Internally, a PollID is just a pointer to 
 		// the apropriate FDNode, so use it with care; illegal PollIDs 
 		// (dangling pointers) can hardly be detected. 
-		PollID FDPollID(int fd);
+		PollID FDPollID(int fd) const;
 		// The other way round: get fd from PollID (or -1): 
-		int FDfd(PollID pollid)
-			{  return(pollid ? ((FDManager::FDNode*)pollid)->fd : (-1));  }
+		int FDfd(PollID pollid) const
+			{  return(pollid ? _FDfdNN(pollid) : (-1));  }
 		// Query FD data (only fds that this FDBase is polling for): 
 		// Get custon data pointer associated with fd/PollID or NULL: 
-		const void *FDDPtr(int fd);
-		const void *FDDPtr(PollID pollid)
-			{  return(pollid ? ((FDManager::FDNode*)pollid)->dptr : NULL);  }
+		const void *FDDPtr(int fd) const
+			{  return(FDDPtr(FDPollID(fd)));  }
+		const void *FDDPtr(PollID pollid) const
+			{  return(pollid ? _FDDPtrNN(pollid) : NULL);  }
 		// Get events mask for this fd/PollID or -1 in case of invalid fd: 
-		short FDEvents(int fd);
-		short FDEvents(PollID pollid)
-			{  return(pollid ? ((FDManager::FDNode*)pollid)->events : (-1));  }
+		short FDEvents(int fd) const
+			{  return(FDEvents(FDPollID(fd)));  }
+		short FDEvents(PollID pollid) const
+			{  return(pollid ? _FDEventsNN(pollid) : (-1));  }
 		
 		// Like exit() for this FDBase: *this gets 
 		// destructed and if free_me==1 also LFree()'ed. 

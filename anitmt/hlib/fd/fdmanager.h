@@ -230,6 +230,12 @@ class FDManager
 		int UnpollFD(FDBase *fdb,int fd);
 		int UnpollFD(FDBase *fdb,PollID pollid)   // faster, of course...
 			{  return(pollid ? _UnpollFD(fdb,(FDManager::FDNode*)pollid) : 1);  }
+		int FDChangeEvents(FDBase *fdb,PollID pollid,short set_ev,short clear_ev)
+		{
+			if(!pollid) return(-2);  FDManager::FDNode *j=(FDNode*)pollid;
+			short f = ((j->events | set_ev) & (~clear_ev));
+			return(f==j->events ? 0 : _PollFD(fdb,j,f,NULL));
+		}
 		
 		/* Set manager type: */
 		int SetManager(FDBase *fdb,ManagerType mtype);
