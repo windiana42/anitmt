@@ -167,7 +167,7 @@ namespace anitmt{
 
   bool Obj_Move_Straight::try_add_child( Prop_Tree_Node *node )
   {
-    return false;		// straight has no childs
+    return false;		// straight has no children
   }
 
   //! individual final init after hierarchy is set up (Has to call the 

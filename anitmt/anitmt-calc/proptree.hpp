@@ -51,7 +51,7 @@ namespace anitmt{
     typedef std::map< std::string, Property* > properties_type;
     properties_type properties;
 
-    // childs
+    // children
     virtual bool try_add_child( Prop_Tree_Node *node ) = 0;
 				
     // abstract child factory:
@@ -106,8 +106,8 @@ namespace anitmt{
 
     Prop_Tree_Node *get_child( std::string name );
 				// return child with name
-    std::list<Prop_Tree_Node*> get_all_childs();
-				// return all childs
+    std::list<Prop_Tree_Node*> get_all_children();
+				// return all children
     Prop_Tree_Node *add_child( std::string type, std::string name )
       throw( EX_child_type_unknown, EX_child_type_rejected );
 				// add child of type with name

@@ -77,7 +77,7 @@ namespace anitmt{
   template <class Return_Type>
   class Contain_Return{
     bool essential_child, unique_child;
-    int num_childs;
+    int num_children;
 
   protected:
     typedef std::list< Return<Return_Type> * > content_type;
@@ -88,7 +88,7 @@ namespace anitmt{
     bool try_add_child( Return<Return_Type> *node ) 
       throw( EX_more_than_one_child );
 
-    // returns the result according to childs that are active at time t
+    // returns the result according to children that are active at time t
     Return_Type get_return_value( values::Scalar t, 
 				  Return_Type type_ID = Return_Type() )
       throw( EX_essential_child_missing, EX_no_active_child, EX_user_error );

@@ -86,7 +86,7 @@ namespace anitmt
       return false;
     else
     {
-      if( unique_child && ( num_childs > 0 ) )
+      if( unique_child && ( num_children > 0 ) )
 	throw EX_more_than_one_child();
 
       if( !content.empty() )
@@ -108,13 +108,13 @@ namespace anitmt
     }
   }
 
-  //! returns the result according to childs that are active at time t
+  //! returns the result according to children that are active at time t
   template <class Return_Type>
   Return_Type Contain_Return<Return_Type>::get_return_value( values::Scalar t,
 							     Return_Type ) 
     throw( EX_essential_child_missing, EX_no_active_child, EX_user_error ) {
 
-    if( essential_child && ( num_childs == 0 ) )
+    if( essential_child && ( num_children == 0 ) )
       throw EX_essential_child_missing();
 
     for( content_type::iterator i = content.begin(); i != content.end(); i++ )
@@ -142,7 +142,7 @@ namespace anitmt
 
   template <class Return_Type>
   Contain_Return<Return_Type>::Contain_Return( bool essential, bool unique ) 
-    : essential_child( essential ), unique_child( unique ), num_childs(0) {}
+    : essential_child( essential ), unique_child( unique ), num_children(0) {}
 
 }
 

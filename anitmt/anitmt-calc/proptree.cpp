@@ -92,7 +92,7 @@ namespace anitmt{
     return 0;
   }
 
-  std::list<Prop_Tree_Node*> Prop_Tree_Node::get_all_childs(){
+  std::list<Prop_Tree_Node*> Prop_Tree_Node::get_all_children(){
     std::list<Prop_Tree_Node*> ret;
 
     Prop_Tree_Node *n;
