@@ -23,7 +23,8 @@
 namespace anitmt {
   static const std::string WN_INDENT_STRING = "  ";
   void save_filled( std::string filename, Animation *root );
-
+  void write_node( std::ostream &out, proptree::Prop_Tree_Node* node, 
+		     int indent );
   //****************
   // debug function
   //****************

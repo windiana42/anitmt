@@ -12,9 +12,9 @@
 /**									    **/
 /*****************************************************************************/
 
-//***********
+// ***********
 // Codeblock
-//***********
+// ***********
 
 %{
 #include <val/val.hpp>
@@ -48,16 +48,16 @@
 
 %}
 
-//*********
+// *********
 // Options
-//*********
+// *********
    
 %pure_parser		// parser may be called recursive
 //%expect 79		// expect 7 shift/reduce and 27 reduce/reduce conflicts
 
-//********
+// ********
 // Tokens
-//********
+// ********
 
 %token TOK_INVALID_ID TOK_ERROR 
 // tokens in dummy expression (without semantic)
@@ -158,14 +158,14 @@
 %token TOK_FUNC_vec_to_spherical
 %token TOK_FUNC_vec_translate
 
-//****************
+// ****************
 // precicion table
-//****************
+// ****************
 
 // special precedences for simplified cases
 %nonassoc lowest_precedence
 
-//********************
+// ********************
 // normal precedences
 // !! value to operand conversion must be last !!
 %nonassoc OP_CONVERTION 
@@ -186,9 +186,9 @@
 %nonassoc higher_precedence
 %nonassoc highest_precedence
 
-//****************
+// ****************
 // Parser Rules
-//****************
+// ****************
 %%
 tree_node_block: /* empty */
   | tree_node_block statement

@@ -17,7 +17,7 @@
 #include <fstream>
 
 namespace anitmt {
-  void write_node( std::ofstream &out, proptree::Prop_Tree_Node* node, 
+  void write_node( std::ostream &out, proptree::Prop_Tree_Node* node, 
 		   int indent ){
     int i;
     // write type and name

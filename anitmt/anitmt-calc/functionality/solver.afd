@@ -340,6 +340,7 @@ operators
     }
     are_operands_ok( op1, op2, info )
     {
+	#warning "0/0 = 1/1 = OK; 1/0 = 0/1 = not okay?"
       return ( (op1 == functionality::neutral0()) 
 	==     (op2 == functionality::neutral0()) );	
 					// both zero or both not zero

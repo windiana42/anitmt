@@ -48,7 +48,7 @@ extern char *Int2StrDec(char *d,int x);
 extern char *Double2Str(char *d,double x,int ndigits);
 
 // Converts a vector as ``<x,y,z>'' using Double2Str(). 
-char *Vector2Str(char *d,const class values::Vector &v,int ndigits);
+char *Vector2Str(char *d,const values::Vector &v,int ndigits);
 
 // Really fast: translate an integer into some number-and-digit 
 // ASCII output which is unique for each integer. 

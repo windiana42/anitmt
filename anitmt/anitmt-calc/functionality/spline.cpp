@@ -100,9 +100,9 @@ namespace functionality
   {
     double t_sq = t*t; double t_cub = t_sq * t;
     // matrix usage might be different than in some books (trasposed)
-    values::Vector<4> prod = matrix * values::Vector<4>(t_cub, t_sq, t, 1);
+    vect::Vector<4> prod = matrix * vect::Vector<4>(t_cub, t_sq, t, 1);
 
-    values::Vector<3> pos = 
+    values::Vector pos = 
       prod[0] * p1 + prod[1] * p2 + prod[2] * p3 + prod[3] * p4;
 
     return pos;

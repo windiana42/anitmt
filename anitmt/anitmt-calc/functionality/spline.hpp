@@ -43,14 +43,14 @@ namespace functionality
     //! derived concrete classes have to call init() !
   };
 
-  // class for splines which depend on a koefficient matrix
+  // class for splines which depend on a coefficient matrix
   class Matrix_Spline : public Spline
   {
   protected:
     Matrix_Spline::Matrix_Spline( std::list<values::Vector> control_points,
 				  double max_a, double max_l, double min_l, 
 				  int anz );
-    values::Matrix<4,4> matrix;
+    values::Matrix matrix;
   private:
     virtual values::Vector get_local_point_pos( double t,
 						values::Vector p0,

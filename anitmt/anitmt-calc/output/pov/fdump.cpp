@@ -172,9 +172,9 @@ char *Frame_Dump::Node::_Dump_Object2Str(char *d,char *dend,Frame_Dump::Context 
 	if(active)
 	{
 		++ctx->active_objects;
-		(int)scale_flag|=DF_Obj_AScale;
-		(int)rot_flag|=  DF_Obj_ARot;
-		(int)trans_flag|=DF_Obj_ATrans;
+		scale_flag|=(__typeof__(scale_flag))DF_Obj_AScale;
+		rot_flag|=  (__typeof__(rot_flag))DF_Obj_ARot;
+		trans_flag|=(__typeof__(trans_flag))DF_Obj_ATrans;
 	}
 	
 	if(flags & DF_Obj_Active)
@@ -467,9 +467,9 @@ void Frame_Dump::Add_Entry(const ComponentInterface &cif,
 	}
 	
 	// Tweak flags: 
-	if(flags & DF_Obj_Scale)  (int)flags|=DF_Obj_AScale;
-	if(flags & DF_Obj_Rot)    (int)flags|=DF_Obj_ARot;
-	if(flags & DF_Obj_Trans)  (int)flags|=DF_Obj_ATrans;
+	if(flags & DF_Obj_Scale)  flags|=(__typeof__(flags))DF_Obj_AScale;
+	if(flags & DF_Obj_Rot)    flags|=(__typeof__(flags))DF_Obj_ARot;
+	if(flags & DF_Obj_Trans)  flags|=(__typeof__(flags))DF_Obj_ATrans;
 	
 	Node *n=new Node(cif,flags,id);
 	(last ? last->next : first) = n;
