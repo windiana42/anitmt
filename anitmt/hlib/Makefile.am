@@ -42,15 +42,15 @@ opt-i386 opt-i486 opt-i586 opt-i686: FORCE
 	$(MAKE) \
 		CXX="$(CXX) -pipe" \
 		CC="$(CXX) -pipe" \
-		CFLAGS="$(OPTCFLAGS) $(ADDFLAGS) $(I386_OPT_FLAGS)" \
-		CXXFLAGS="$(OPTCXXFLAGS) $(ADDFLAGS) $(I386_OPT_FLAGS)" \
+		CFLAGS="$(OPTCFLAGS) $(I386_OPT_FLAGS) $(ADDFLAGS)" \
+		CXXFLAGS="$(OPTCXXFLAGS) $(I386_OPT_FLAGS) $(ADDFLAGS)" \
 		all
 check-i386 check-i486 check-i586 check-i686: FORCE
 	$(MAKE) \
 		CXX="$(CXX) -pipe" \
 		CC="$(CXX) -pipe" \
-		CFLAGS="$(OPTCFLAGS) $(ADDFLAGS) $(I386_OPT_FLAGS)" \
-		CXXFLAGS="$(OPTCXXFLAGS) $(ADDFLAGS) $(I386_OPT_FLAGS)" \
+		CFLAGS="$(OPTCFLAGS) $(I386_OPT_FLAGS) $(ADDFLAGS)" \
+		CXXFLAGS="$(OPTCXXFLAGS) $(I386_OPT_FLAGS) $(ADDFLAGS)" \
 		all check
 
 # Just the same CFLAGS/CXXFLAGS as opt-generic. 

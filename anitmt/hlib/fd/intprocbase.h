@@ -110,6 +110,10 @@ struct InternalProcessBase
 		               // (Only !=this if AlwaysNotify is set.)
 		// ** NOTE that uid_t is unsigned so that you must check 
 		//    if(uid!=uid_t(-1)) and NOT if(uid<0). 
+		
+		ProcStatus(int * /*failflag*/=NULL) : 
+			starttime(),endtime(),utime(),stime()  { }
+		~ProcStatus()  { }
 	};
 	
 	struct ProcTimeUsage
@@ -118,6 +122,10 @@ struct InternalProcessBase
 		HTime uptime;  // time since startup
 		HTime utime;   // time spent in user mode
 		HTime stime;   // time spend in system mode
+		
+		ProcTimeUsage(int * /*failflag*/=NULL) : 
+			starttime(),uptime(),utime(),stime()  { }
+		~ProcTimeUsage()  { }
 	};
 	
 	// Error return values of StartProcess(): 
@@ -215,7 +223,9 @@ struct InternalProcessBase
 		private:
 			int n,dim;
 			int *ourfd,*destfd;  // size: n
-			inline int _Find(const int *array,int n,int tofind) const;  // -1 or index
+			inline int _Find(const int *array,int n,int tofind) const  // -1 or index
+			{  for(const int *i=array,*ie=array+n; i<ie; i++)
+				{  if((*i)==tofind)  return(i-array);  }  return(-1);  }
 			ProcFDs(const ProcFDs &)  { }  // use Copy() to copy
 			void operator=(const ProcFDs &)  { }
 		public:  _CPP_OPERATORS

@@ -76,14 +76,7 @@ class TimeoutManager : private FDBase
 		inline TNode *_GetShortest();  // see timeoutbase.h
 		
 		// Put shortest to the beginning of tb_list. 
-		inline void _TBListToFront(TimeoutBase *shortest)
-		{
-			if(lock_reorder>=0)
-			{  ++lock_reorder;  return;  }
-			tb_list.dequeue(shortest);
-			tb_list.insert(shortest);
-			++sh_timeout_change;
-		}
+		inline void _TBListToFront(TimeoutBase *shortest);  // see timeoutbase.h
 		
 		// Find TimeoutBase with shortest timer and bring it to the 
 		// beginning of the tb_list: 

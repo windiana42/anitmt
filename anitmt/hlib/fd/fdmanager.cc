@@ -76,6 +76,14 @@
 class FDManager *FDManager::manager=NULL;
 
 
+#if HLIB_MUST_EMULATE_POLL
+#warning "**********************************************"
+#warning "*** USING poll(2) EMULATION (via select).  ***"
+#warning "*** APPLICATIONS MAY NOT WORK AS EXPECTED. ***"
+#warning "**********************************************"
+static int emulate_poll(struct pollfd *ufds,unsigned int nfds,long timeout);
+#endif
+
 #ifdef HLIB_CRIPPLED_SIGINFO_T
 static RETSIGTYPE _fd_sig_handler_simple(int sig)
 {
@@ -948,7 +956,11 @@ int FDManager::MainLoop()
 			{
 			//HTime t0(HTime::Curr);
 				// ACTUALLY CALL poll()...
+				#if HLIB_MUST_EMULATE_POLL
+				ret=emulate_poll(pfd-1,npfds+1,timeout);
+				#else
 				ret=poll(pfd-1,npfds+1,timeout);    // timeout=-1 also valid. 
+				#endif
 			//fprintf(stderr,">>%d (t=%d, n=%d, rv=%d, rev=%d, %d)<<    ",
 			//	t0.Elapsed(HTime::msec),timeout,npfds,ret,pfd[-1].revents,sig_pipe_bytes);
 				// Set time when poll returns so that this time can be passed 
@@ -1911,3 +1923,69 @@ int FDManager::UnpollFD(FDBase *fdb,PollID pollid)
 	
 	return(_UnpollFD(fdb,(FDManager::FDNode*)pollid));
 }
+
+
+/******************************************************************************/
+
+#if HLIB_MUST_EMULATE_POLL
+// Must emulate poll(2) using select(2). Unfortunately, return flags 
+// like POLLHUP and POLLERR cannot be emulated and POLLNVAL is not easy 
+// to emulate. 
+
+static int emulate_poll(struct pollfd *ufds,unsigned int nfds,long timeout)
+{
+	timeval tv,*tv_p;
+	if(timeout<0)
+	{  tv_p=NULL;  }
+	else
+	{
+		tv.tv_sec=timeout/1000;
+		tv.tv_usec=(timeout%1000)*1000;
+		tv_p=&tv;
+	}
+	
+	fd_set set_r,set_w,set_x;
+	FD_ZERO(&set_r);
+	FD_ZERO(&set_w);
+	FD_ZERO(&set_x);
+	
+	int max_fd=-1;
+	for(pollfd *p=ufds,*pend=&ufds[nfds]; p<pend; p++)
+	{
+		if(p->fd<0)
+		{  p->revents=POLLNVAL;  continue;  }
+		p->revents=0;
+		short int events = p->events & (POLLIN | POLLOUT | POLLPRI);
+		if(events & POLLIN)   FD_SET(p->fd,&set_r);
+		if(events & POLLOUT)  FD_SET(p->fd,&set_w);
+		if(events & POLLPRI)  FD_SET(p->fd,&set_x);
+		// always use set_x?
+		if(events && max_fd<p->fd)
+		{  max_fd=p->fd;  }
+	}
+	
+	int rv=select(max_fd+1,&set_r,&set_w,&set_x,tv_p);
+	if(!rv)  return(rv);
+	if(rv<0)
+	{
+		if(errno==EBADF)
+		{
+			// Oh no! bad file descriptor. But which one is the bad one?
+			// Don't care. Passing bad file descriptor is a bug anyway. 
+			fprintf(stderr,"FD: poll emulation: select(2) returned EBADF.\n");
+			abort();
+		}
+		return(rv);
+	}
+	
+	for(pollfd *p=ufds,*pend=&ufds[nfds]; p<pend; p++)
+	{
+		if(p->revents)  continue;
+		if(FD_ISSET(p->fd,&set_r))  p->revents|=POLLIN;
+		if(FD_ISSET(p->fd,&set_w))  p->revents|=POLLOUT;
+		if(FD_ISSET(p->fd,&set_x))  p->revents|=POLLPRI;
+	}
+	
+	return(rv);
+}
+#endif

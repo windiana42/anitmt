@@ -24,7 +24,12 @@
 
 class HTime;
 
-class FDCopyBase : LinkedListBase<FDCopyBase>
+class FDCopyBase : 
+	#if __GNUG__ < 3
+	public LinkedListBase<FDCopyBase>
+	#else
+	private LinkedListBase<FDCopyBase>
+	#endif
 {
 	friend class FDCopyManager;
 	public:

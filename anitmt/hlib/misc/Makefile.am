@@ -5,7 +5,8 @@ INCLUDES = -I../include/
 noinst_LIBRARIES = libmisc.a
 
 libmisc_a_SOURCES = \
-	checkmalloc.c limitmalloc.c \
+	hlib_id0.c hlib_id1.c \
+		checkmalloc.c limitmalloc.c \
 		installsighandler.c \
 		llongstr.c ullongstr.c \
 		memfind.c \

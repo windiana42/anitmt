@@ -41,8 +41,12 @@
  * the number of *calls* to LMalloc()/LRealloc()/LFree().  
  */ 
 #ifdef HLIB_DONT_USE_MALLOC_USABLE_SIZE
-#warning Not using malloc_usable_size; allocation debugging counting calls only
-#define malloc_usable_size(x) 1
+#  warning "*****************************************************"
+#  warning "*** No using malloc_usable_size().                ***"
+#  warning "*** Allocation limitation will not work.          ***"
+#  warning "*** Allocation debugging cannot report lost bytes ***"
+#  warning "*****************************************************"
+#  define malloc_usable_size(x) 1
 #endif
 
 
@@ -83,17 +87,19 @@ void LMallocGetUsage(struct LMallocUsage *dest)
 #endif
 
 #if AllocDebugging
-#warning AllocDebugging swicthed on!! PERFORMANCE LOSS
-static void *allocptr[AllocDebugging];
-static int nalloc=0;
-static void DebugAlloc(void *ptr);
-static void DebugRealloc(void *oldptr,void *newptr);
-static void DebugFree(void *ptr);
-#define BUGACTION  abort();
+# warning "*****************************************"
+# warning "*** Allocation debugging switched on. ***"
+# warning "*****************************************"
+  static void *allocptr[AllocDebugging];
+  static int nalloc=0;
+  static void DebugAlloc(void *ptr);
+  static void DebugRealloc(void *oldptr,void *newptr);
+  static void DebugFree(void *ptr);
+# define BUGACTION  abort();
 #else  /* !AllocDebugging */
-#define DebugAlloc(x)
-#define DebugRealloc(x,y)
-#define DebugFree(x)
+# define DebugAlloc(x)
+# define DebugRealloc(x,y)
+# define DebugFree(x)
 #endif
 
 void *LMalloc(size_t size)

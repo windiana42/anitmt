@@ -89,6 +89,13 @@ extern char *prg_name;
    */
   extern int GetTerminalSize(int fd,int *ret_row,int *ret_col);
   
+/* hlib_id?.c: */
+  /* Get version string ("hlib version xyz"): */
+  extern const char *HLIB_GetVersionString();
+  /* Get config string (version, arch, build date, poll emulation?, 
+   * size opt... */
+  extern const char *HLIB_GetConfigString();
+
 /* installsighandler.c: */
   /* Installs signal handler shandler for signal sig. 
    * Returns 0, if all went ok and -1 if sigaction() failed

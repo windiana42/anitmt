@@ -62,7 +62,7 @@ class TimeoutBase :
 		// [Always called on the stack of fdmanager's timernotify().]
 		// Return value: currently unused; use 0. 
 		// NOTE: The timeout gets automatically disabled before the call. 
-		virtual int timeoutnotify(TimeoutInfo *ti) HL_PureVirt(0)
+		virtual int timeoutnotify(TimeoutInfo *) HL_PureVirt(0)
 	public:  _CPP_OPERATORS_FF
 		TimeoutBase(int *failflag=NULL) : 
 			LinkedListBase<TimeoutBase>(), to_list(failflag), dis_list(failflag)
@@ -108,11 +108,20 @@ class TimeoutBase :
 };
 
 
-// This is here because of include order... grmbl.
+// This is here because of include order... grmbl. 
 inline TimeoutManager::TNode *TimeoutManager::_GetShortest()
 {
 	TimeoutBase *tb=tb_list.first();
 	return(tb ? tb->to_list.first() : NULL);
+}
+// This is here because gcc prior to 3.0 need that this way. (hrrm..)
+inline void TimeoutManager::_TBListToFront(TimeoutBase *shortest)
+{
+	if(lock_reorder>=0)
+	{  ++lock_reorder;  return;  }
+	tb_list.dequeue(shortest);
+	tb_list.insert(shortest);
+	++sh_timeout_change;
 }
 
 #endif  /* _HLIB_TimeoutBase_H_ */

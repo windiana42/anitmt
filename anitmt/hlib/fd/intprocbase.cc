@@ -189,6 +189,22 @@ InternalProcessBase::ProcPath::ProcPath(const char *name,const char *searchpath0
 }
 
 
+// our: 1 -> ourfd; 0 -> destfd
+// Return value: idx or -1
+#if 0  /* now in intprocbase.h because old gcc needs it there... */
+inline int InternalProcessBase::ProcFDs::_Find(
+	const int *array,int n,int tofind) const
+{
+	for(const int *i=array,*ie=array+n; i<ie; i++)
+	{
+		if((*i)==tofind)
+		{  return(i-array);  }
+	}
+	return(-1);
+}
+#endif
+
+
 int InternalProcessBase::ProcFDs::Add(int ofd,int dfd)
 {
 	if(ofd<0 || dfd<0)
@@ -215,20 +231,6 @@ int InternalProcessBase::ProcFDs::Add(int ofd,int dfd)
 	++n;
 	
 	return(0);
-}
-
-
-// our: 1 -> ourfd; 0 -> destfd
-// Return value: idx or -1
-inline int InternalProcessBase::ProcFDs::_Find(
-	const int *array,int n,int tofind) const
-{
-	for(const int *i=array,*ie=array+n; i<ie; i++)
-	{
-		if((*i)==tofind)
-		{  return(i-array);  }
-	}
-	return(-1);
 }
 
 

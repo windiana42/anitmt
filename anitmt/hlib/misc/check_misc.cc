@@ -62,6 +62,19 @@ int main()
 {
 	int failed=0;
 	
+	// Dump config: 
+	fprintf(stderr,"-------<config>-------\n"
+		"%s"
+		"----------------------\n",
+		HLIB_GetConfigString());
+	
+	// Check EAGAIN and EWOULDBLOCK: 
+	fprintf(stderr,"EAGAIN=%d; EWOULDBLOCK=%d: ",EAGAIN,EWOULDBLOCK);
+	if(EAGAIN==EWOULDBLOCK)
+	{  fprintf(stderr,"OK\n");  }
+	else
+	{  fprintf(stderr,"*** OOPS, they are different!!\n");  ++failed;  }
+	
 	// Check size types: 
 	fprintf(stderr,"sizeof(size_t)=%u; sizeof(ssize_t)=%u; sizeof(char *)=%u; ",
 		sizeof(size_t),sizeof(ssize_t),sizeof(char *));
@@ -71,6 +84,21 @@ int main()
 	{  fprintf(stderr,"***\nOOPS: size_t smaller than pointer!\n");  ++failed;  }
 	else
 	{  fprintf(stderr,"OK\n");  }
+	{
+		fprintf(stderr,"testing (un)signedness: ssize_t: ");
+		ssize_t st=ssize_t(-1);
+		if(st>0)
+		{  fprintf(stderr,"*** UNSIGNED! ");  ++failed;  }
+		else
+		{  fprintf(stderr,"OK; ");  }
+		fprintf(stderr,"size_t: ");
+		size_t t=size_t(-1);
+		if(t<1)
+		{  fprintf(stderr,"*** SIGNED (no error)\n");  }
+		else
+		{  fprintf(stderr,"OK\n");  }
+	}
+	
 	
 	// Print some other things:
 	fprintf(stderr,"sizeof(char)=%u; sizeof(short int)=%u; "
@@ -88,6 +116,30 @@ int main()
 	{  fprintf(stderr,"***ERROR\n");  ++failed;  }
 	else
 	{  fprintf(stderr,"OK\n");  }
+	
+	{
+		// Check if snprintf is working correctly: 
+		fprintf(stderr,"testing snprintf(): ");
+		char sbuf[64];
+		char nullbuf[64-10];
+		memset(sbuf,0,64);
+		memset(nullbuf,0,64-10);
+		int srv=snprintf(sbuf,10,"%d %s",-234,"this string is too long");
+		int len_ok=(srv==28);
+		int buf_fail=memcmp(sbuf+10,nullbuf,64-10);
+		if(!buf_fail && sbuf[9]!='\0')
+		{  buf_fail=10000;  }
+		int buf_ok=!buf_fail;
+		fprintf(stderr,(len_ok && buf_ok) ? "OK\n" : "***");
+		if(!len_ok)
+		{  fprintf(stderr," returns wrong length %d (expected 28);",srv);  }
+		if(buf_fail==10000)
+		{  fprintf(stderr," OOPS!! did not terminate string!!");  }
+		else if(!buf_ok)
+		{  fprintf(stderr," OOPS!! wrote beyond end of buffer!!");  }
+		if(!len_ok || !buf_ok)
+		{  fprintf(stderr,"\n");  ++failed;  }
+	}
 	
 	// LMalloc statistics: 
 	void *ptr=LMalloc(1024);

@@ -1,6 +1,8 @@
 # Process this file with autoconf to produce a configure script.
-AC_INIT
-AM_INIT_AUTOMAKE(hlib,0.9.5b)
+# If you have trouble, use the latest versions. 
+# Things work well with autoconf-2.53 and automake-1.6. 
+AC_INIT(hlib,0.9.6,[<see apropriate header file>])
+AM_INIT_AUTOMAKE
 AC_CONFIG_SRCDIR([cpp/cplusplusff.cc])
 AM_CONFIG_HEADER(hlib-config.h)
 
@@ -11,6 +13,11 @@ AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_PROG_CXX
 AC_PROG_RANLIB
+
+AC_DEFINE_UNQUOTED(HLIB_BUILD_SYSTEM,["`uname -a || echo unknown`"],\
+	[System hlib was built on])
+AC_DEFINE_UNQUOTED(HLIB_BUILD_DATE,["`date || echo unknown`"],\
+	[When hlib was built])
 
 # Checks for header files.
 AC_HEADER_STDC
@@ -47,6 +54,10 @@ AC_CHECK_TYPES([siginfo_t],, \
 	[#include <signal.h>
 	 #include <sys/signal.h>] )
 
+AC_CHECK_TYPES([struct pollfd],, \
+	[AC_MSG_WARN([Providing struct pollfd. You seem to lack poll(2)...])],
+	[#include <sys/poll.h>] )
+
 # Checks for library functions.
 AC_FUNC_ERROR_AT_LINE
 AC_PROG_GCC_TRADITIONAL
@@ -59,18 +70,23 @@ AC_FUNC_STAT
 AC_FUNC_FORK
 AC_FUNC_GETLOADAVG
 
-AC_CHECK_FUNCS([execve pipe sigaction dup2 gettimeofday poll kill strerror],,\
+AC_CHECK_FUNCS([execve pipe sigaction dup2 gettimeofday kill strerror],,\
 	[AC_MSG_ERROR([Oh no. Giving up. What crippled architecture are you using?!])])
 
 AC_CHECK_FUNCS([nice setuid setgid setsid chroot],,\
 	[AC_MSG_ERROR(Sorry, you lack some useful functions.)])
 
-AC_CHECK_FUNCS([malloc_usable_size],,
+AC_CHECK_FUNCS([malloc_usable_size],,\
 	[AC_MSG_WARN([Allocation limitation (LMalloc) will not work.])],\
 	[#include <malloc.h>])
 
-# Check if socket is in -lsocket: 
-AC_CHECK_LIB([socket],[socket])
+AC_CHECK_FUNCS([poll],,\
+	[AC_MSG_WARN([Urgs! Your crippled architecture does not have poll(2). 
+Hlib will use an emulation using select(2). Note that this emulation is 
+slower and cannot provide a poll(2)-replacement. 
+NOTE: Applications may not work as expected. 
+      Complain at your vendor for not implementing poll(2).])],\
+	[#include <sys/poll.h>])
 
 # Finnally, check if CLD_EXITED is defined, otherwise all that 
 # siginfo_t stuff is useless for ProcessManager. 
@@ -83,6 +99,9 @@ AC_TRY_COMPILE([#include <signal.h>
 	 AC_MSG_NOTICE([You are lacking CLD_EXITED. Not using it...])
 	 AC_DEFINE(HLIB_PROCMAN_USE_LESS_SIGINFO_T,,[Defined, if CLD_EXITED was not found])])
 
+# Check if socket is in -lsocket: 
+AC_CHECK_LIB([socket],[socket])
+
 # Finally write files: 
 AC_CONFIG_FILES([include/Makefile \
 	include/hlib/Makefile \
@@ -90,5 +109,6 @@ AC_CONFIG_FILES([include/Makefile \
 	fd/Makefile \
 	par/Makefile \
 	misc/Makefile \
+	crypto/Makefile \
 	Makefile])
 AC_OUTPUT

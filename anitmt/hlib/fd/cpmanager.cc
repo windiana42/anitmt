@@ -1,7 +1,7 @@
 /*
  * cpmanager.cc
  * 
- * Header containing class FDCopyManager, a class for 
+ * Implementation of class FDCopyManager, a class for 
  * copying from and to file descriptors which works in 
  * cooperation with classes derived from class FDCopyBase. 
  *
@@ -23,6 +23,8 @@
 #include <hlib/cpbase.h>
 
 #include <string.h>
+
+#include <sys/uio.h>
 
 
 #ifndef TESTING
@@ -524,25 +526,7 @@ int FDCopyManager::fdnotify(FDInfo *fdi)
 	else
 	{  assert(0);  }
 	
-	// ** First, check for error and hangup: 
-	if(fdi->revents & (POLLERR | POLLNVAL | POLLHUP))
-	{
-		CopyInfo cpi(cpn,
-			(fdi->revents & POLLHUP) ? 
-				((which_fd>0) ? SCOutHup : SCInHup) : 
-				((which_fd>0) ? SCErrPollO : SCErrPollI) );
-		if(fdi->revents & (POLLNVAL | POLLHUP))
-		{  cpi.err_no=fdi->revents;  }
-		cpi.fdtime=fdi->current;  // may be modified (FDManager copies it)
-		
-		if(which_fd>0)  // Oh, it's the output fd. Finish the request. 
-		{  _FinishRequest(cpn,&cpi);  }
-		else  // Input fd. Okay, finish input. 
-		{  _FinishInput(cpn,&cpi);  }
-		return(0);
-	}
-	
-	// ** Then, check state stuff: 
+	// ** First, check state stuff: 
 	if(cpn->cpstate & CPSStopped)
 	{
 		// If we're stopped, no events may be set: 
@@ -554,57 +538,85 @@ int FDCopyManager::fdnotify(FDInfo *fdi)
 		return(0);
 	}
 	
+	// NOTE: Data check is done before POLLERR/POLLHUP check because 
+	//       if we emulate poll(2) via select(2) we cannot even get 
+	//       them at all. Furthermore, POLLERR is quite unspecific 
+	//       but if we get the error using read(2) or write(2), 
+	//       then errno is set apropriately. We only do that if 
+	//       POLLIN/POLLOUT is set, though. 
+	
 	// ** Then, check for data: 
 	if(which_fd<0)  // input fd
 	{
-		if(!(fdi->revents & POLLIN))
+		if(fdi->revents & POLLIN)
 		{
-			#if TESTING
-			fprintf(stderr,"Oops: CP:%d: fdi->revents=%d for fd=%d (cannot read)\n",
-				__LINE__,fdi->revents,fdi->fd);
-			#endif
-			return(0);
+			// Can read data...
+			if(cpn->opmode==OM_Fd2Fd)
+			{
+				// Okay, read in data into buffer io buffer: 
+				_ReadInData_FD(cpn,fdi->current);
+
+				// Decide on new poll events: 
+				_ReDecidePollEvents_In(cpn);
+			}
+			else  // OM_Fd2Buf
+			{
+				// Okay read in data into dest buffer: 
+				_ReadInData_Buf(cpn,fdi->current);
+			}
 		}
-		
-		// Can read data...
-		if(cpn->opmode==OM_Fd2Fd)
-		{
-			// Okay, read in data into buffer io buffer: 
-			_ReadInData_FD(cpn,fdi->current);
-			
-			// Decide on new poll events: 
-			_ReDecidePollEvents_In(cpn);
-		}
-		else  // OM_Fd2Buf
-		{
-			// Okay read in data into dest buffer: 
-			_ReadInData_Buf(cpn,fdi->current);
-		}
+		#if TESTING
+		else if(!(fdi->revents & (POLLERR | POLLNVAL | POLLHUP)))
+		{  fprintf(stderr,"Oops: CP:%d: fdi->revents=%d for fd=%d (cannot read)\n",
+			__LINE__,fdi->revents,fdi->fd);  }
+		#endif
 	}
 	else if(which_fd>0)  // output fd
 	{
-		if(!(fdi->revents & POLLOUT))
+		if(fdi->revents & POLLOUT)
 		{
-			#if TESTING
-			fprintf(stderr,"Oops: CP:%d: fdi->revents=%d for fd=%d (cannot write)\n",
-				__LINE__,fdi->revents,fdi->fd);
-			#endif
-			return(0);
+			// Can write data...
+			if(cpn->opmode==OM_Fd2Fd)
+			{
+				// Okay, write out data from buffer io buffer: 
+				_WriteOutData_FD(cpn,fdi->current);
+
+				// Decide on new poll events: 
+				_ReDecidePollEvents_Out(cpn);
+			}
+			else  // OM_Buf2Fd
+			{
+				// Okay write out data from src buffer: 
+				_WriteOutData_Buf(cpn,fdi->current);
+			}
 		}
-		
-		// Can write data...
-		if(cpn->opmode==OM_Fd2Fd)
+		#if TESTING
+		else if(!(fdi->revents & (POLLERR | POLLNVAL | POLLHUP)))
+		{  fprintf(stderr,"Oops: CP:%d: fdi->revents=%d for fd=%d (cannot write)\n",
+			__LINE__,fdi->revents,fdi->fd);  }
+		#endif
+	}
+	
+	// ** Then, check for error and hangup: 
+	if(fdi->revents & (POLLERR | POLLNVAL | POLLHUP))
+	{
+		// See if we did not get error condition using read/write: 
+		// _FinishRequest() / _FinishInput() set the corresponding 
+		// PollID to NULL so we check if they were already called: 
+		if( ((which_fd<0) ? cpn->psrcid : cpn->pdestid) != NULL )
 		{
-			// Okay, write out data from buffer io buffer: 
-			_WriteOutData_FD(cpn,fdi->current);
+			CopyInfo cpi(cpn,
+				(fdi->revents & POLLHUP) ? 
+					((which_fd>0) ? SCOutHup : SCInHup) : 
+					((which_fd>0) ? SCErrPollO : SCErrPollI) );
+			if(fdi->revents & (POLLNVAL | POLLHUP))
+			{  cpi.err_no=fdi->revents;  }
+			cpi.fdtime=fdi->current;  // may be modified (FDManager copies it)
 			
-			// Decide on new poll events: 
-			_ReDecidePollEvents_Out(cpn);
-		}
-		else  // OM_Buf2Fd
-		{
-			// Okay write out data from src buffer: 
-			_WriteOutData_Buf(cpn,fdi->current);
+			if(which_fd>0)  // Oh, it's the output fd. Finish the request. 
+			{  _FinishRequest(cpn,&cpi);  }
+			else  // Input fd. Okay, finish input. 
+			{  _FinishInput(cpn,&cpi);  }
 		}
 	}
 	
