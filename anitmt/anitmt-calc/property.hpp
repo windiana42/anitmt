@@ -79,10 +79,20 @@ namespace anitmt{
 
   class Property{
     friend class Solver;
+    //********************************************************************
+    // the following functions should only be accessed by class Solver and
+    // derived classes
+
     void add_Solver( Solver *solver ); // adds a solver for this property
     void disconnect_Solver( Solver *solver )
       throw( EX_solver_is_not_connected ); // removes solver connection
+
+    long get_try_id() const;	// returns the current try id
   protected:
+    // Solver call this when the previous given value was ok
+    // ( see Type_Property::is_this_ok() )
+    void use_it( Solver *caller );
+
     typedef std::list< Solver* > solvers_type;
     solvers_type solvers;	// Solvers that might calculate this property
     bool solved;		// is the property already solved?
@@ -105,7 +115,6 @@ namespace anitmt{
     // derived classes
 
     bool is_solved_in_try() const;	// is property solved in current try
-    long get_try_id() const;	// returns the current try id
   };
 
   std::ostream &operator << ( std::ostream&, Property & );
@@ -138,8 +147,6 @@ namespace anitmt{
     // returns true if value is acceptable
     bool is_this_ok( T v, Solver *caller, 
 		     Solve_Problem_Handler *problem_handler );
-    // Solver call this when the given value was ok
-    void use_it( Solver *caller );
   };
 
   //  template<class T>

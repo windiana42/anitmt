@@ -26,7 +26,7 @@ namespace anitmt{
     properties_type::iterator i;
     for( i = properties.begin(); i != properties.end(); i++ )
       {
-	(*i)->disconnect_Solver( this );
+	i->first->disconnect_Solver( this );
       }
   }
 
@@ -34,8 +34,12 @@ namespace anitmt{
   void Solver::disconnect_Property( Property *prop ) 
     throw( EX_Property_Not_Connected ){
 
-    properties_type::iterator i = 
-      find( properties.begin(), properties.end(), prop );
+    // search property 
+    properties_type::iterator i;
+    for( i = properties.begin(); i != properties.end(); i++ )
+      if( i->first == prop ) 
+	break;
+
     if( i == properties.end() ) 
       throw EX_Property_Not_Connected();
 
@@ -47,8 +51,59 @@ namespace anitmt{
       }
   }
 
+  void Solver::prop_was_solved( Property *caller ){
+    n_props_available++;
+    
+    bool are_all_props_solved = true; // test if all props are solved
+
+    // tell the properties that were calculated in the try before that they
+    // may use the result as definitive solution
+    properties_type::iterator i;
+    for( i = properties.begin(); i != properties.end(); i++ )
+      {
+	// was property just solved and it isn't the caller
+	if( (i->second & prop_just_solved) && (caller != i->first) ) 
+	  {
+	    i->second |= prop_solved;
+	    i->first->use_it( this );
+	  }
+
+	// check if all props are solved
+	if( !(i->second & prop_solved) )
+	  are_all_props_solved = false;
+      }
+
+    if( are_all_props_solved ) 
+      {
+#ifdef __DEBUG__
+	cout << "warning: untested \"delete this\" of solver!" << endl;
+#endif
+	delete this;		// dangerous for iterators???
+      }
+    // !!! no more use of object member variables !!!
+  }
+
+  // Properties call that if they want to validate their results
+  // (uses virtual function check_prop_solution)
+  bool Solver::is_prop_solution_ok
+  ( Property *caller, Solve_Problem_Handler *problem_handler ) {
+    long cur_try_id = caller->get_try_id();
+    if( try_id != cur_try_id )	// is this the first call in try
+      {
+	// reset the check flags that indicate which properties were solved
+	properties_type::iterator i;
+	for( i = properties.begin(); i != properties.end(); i++ )
+	  i->second &= ~prop_just_solved;
+
+	try_id = cur_try_id;
+      }
+
+    
+    return check_prop_solution_and_results( caller, problem_handler );
+  }
+
   void Solver::add_Property( Property *prop ) {
-    properties.push_back( prop );
+    properties[ prop ] = prop_unsolved; 
     prop->add_Solver( this );
   }
 
@@ -67,34 +122,11 @@ namespace anitmt{
     add_Property( _ve );
   }
   
-  // Properties call that if they were solved
-  void Accel_Solver::prop_was_solved( Property *caller ){
-    n_props_available++;
-    
-    // tell the properties that were calculated in the try before that they
-    // may use the result
-    if( s_d  && (caller !=  &d) )  d.use_it( this );
-    if( s_t  && (caller !=  &t) )  t.use_it( this );
-    if( s_a  && (caller !=  &a) )  a.use_it( this );
-    if( s_v0 && (caller != &v0) ) v0.use_it( this );
-    if( s_ve && (caller != &ve) ) ve.use_it( this );
-
-    if( s_d && s_t && s_a && s_v0 && s_ve ) 
-      delete this;		
-    // !!! no more use of object member variables !!!
-  }
-  
   // Properties call that if they want to validate their results
   // !!! may be self recursive
-  bool Accel_Solver::is_prop_solution_ok( Property *caller, Solve_Problem_Handler *problem_handler ){
-    long cur_try_id = caller->get_try_id();
-    if( try_id != cur_try_id )	// is this the first call in try
-      {
-	// reset the check flags that indicate which properties were solved
-	s_d=false;s_t=false;s_a=false;s_v0=false;s_ve=false;
-      }
-    try_id = cur_try_id;
-    
+  bool Accel_Solver::check_prop_solution_and_results
+  ( Property *caller, Solve_Problem_Handler *problem_handler ){
+
     // duration solved in this try now ?
     if( caller == &t )
       {
@@ -117,8 +149,8 @@ namespace anitmt{
 		if( !d.is_this_ok( res_d, this, problem_handler ) )
 		  return false; 
 
-		s_ve = true; // endspeed solved
-		s_d = true; // stretch solved
+		properties[ &ve ] |= prop_just_solved; // endspeed solved
+		properties[ &d ] |= prop_just_solved; // stretch solved
 	      }	    
 	    //...
 	  }	    
@@ -142,32 +174,11 @@ namespace anitmt{
     add_Property( _e );
   }
   
-  // Properties call that if they were solved
-  void Diff_Solver::prop_was_solved( Property *caller ){
-    n_props_available++;
-    
-    // tell the properties that were calculated in the try before that they
-    // may use the result
-    if( s_d  && (caller !=  &d) )  d.use_it( this );
-    if( s_s  && (caller !=  &s) )  s.use_it( this );
-    if( s_e  && (caller !=  &e) )  e.use_it( this );
-
-    if( s_d && s_s && s_e ) 
-      delete this;		
-    // !!! no more use of object member variables !!!
-  }
-  
   // Properties call that if they want to validate their results
   // !!! may be self recursive
-  bool Diff_Solver::is_prop_solution_ok( Property *caller, Solve_Problem_Handler *problem_handler ){
-    long cur_try_id = caller->get_try_id();
-    if( try_id != cur_try_id )	// is this the first call in try
-      {
-	// reset the check flags that indicate which properties were solved
-	s_d=false;s_s=false;s_e=false;
-      }
-    try_id = cur_try_id;
-    
+  bool Diff_Solver::check_prop_solution_and_results
+  ( Property *caller, Solve_Problem_Handler *problem_handler ){
+
     // difference solved in this try now ?
     if( caller == &d )
       {
@@ -183,7 +194,7 @@ namespace anitmt{
 	    if( !e.is_this_ok( res_e, this, problem_handler ) )
 	      return false; 
 
-	    s_e = true; // end value solved
+	    properties[ &e ] |= prop_just_solved; // end value solved
 	  }	    
 
 	// end value known ?
@@ -196,7 +207,7 @@ namespace anitmt{
 	    if( !s.is_this_ok( res_s, this, problem_handler ) )
 	      return false; 
 
-	    s_s = true; // end value solved
+	    properties[ &s ] |= prop_just_solved; // end value solved
 	  }	    
       }
 
@@ -215,7 +226,7 @@ namespace anitmt{
 	    if( !e.is_this_ok( res_e, this, problem_handler ) )
 	      return false; 
 
-	    s_e = true; // end value solved
+	    properties[ &e ] |= prop_just_solved; // end value solved
 	  }	    
 
 	// end value known ?
@@ -228,7 +239,7 @@ namespace anitmt{
 	    if( !d.is_this_ok( res_d, this, problem_handler ) )
 	      return false; 
 
-	    s_d = true; // difference solved
+	    properties[ &d ] |= prop_just_solved; // difference solved
 	  }	    
       }
 
@@ -247,7 +258,7 @@ namespace anitmt{
 	    if( !s.is_this_ok( res_s, this, problem_handler ) )
 	      return false; 
 
-	    s_s = true; // start value solved
+	    properties[ &s ] |= prop_just_solved; // start value solved
 	  }	    
 
 	// start value known ?
@@ -260,7 +271,7 @@ namespace anitmt{
 	    if( !d.is_this_ok( res_d, this, problem_handler ) )
 	      return false; 
 
-	    s_d = true; // start value solved
+	    properties[ &d ] |= prop_just_solved; // start value solved
 	  }	    
       }
 
@@ -280,33 +291,11 @@ namespace anitmt{
     add_Property( _d );
   }
   
-  // Properties call that if they were solved
-  void Relation_Solver::prop_was_solved( Property *caller ){
-    n_props_available++;
-    
-    // tell the properties that were calculated in the try before that they
-    // may use the result
-    if( s_q  && (caller !=  &q) )  q.use_it( this );
-    if( s_n  && (caller !=  &n) )  n.use_it( this );
-    if( s_d  && (caller !=  &d) )  d.use_it( this );
-
-    if( s_q && s_n && s_d ) 
-      delete this;		
-    // !!! no more use of object member variables !!!
-  }
-  
   // Properties call that if they want to validate their results
   // !!! may be self recursive
-  bool Relation_Solver::is_prop_solution_ok( Property *caller, 
-					     Solve_Problem_Handler *problem_handler ){
-    long cur_try_id = caller->get_try_id();
-    if( try_id != cur_try_id )	// is this the first call in try
-      {
-	// reset the check flags that indicate which properties were solved
-	s_q=false;s_n=false;s_d=false;
-      }
-    try_id = cur_try_id;
-    
+  bool Relation_Solver::check_prop_solution_and_results
+  ( Property *caller, Solve_Problem_Handler *problem_handler ){
+
     // relation solved in this try now ?
     if( caller == &q )
       {
@@ -326,7 +315,7 @@ namespace anitmt{
 	    if( !d.is_this_ok( res_d, this, problem_handler ) )
 	      return false; 
 
-	    s_d = true; // denominator
+	    properties[ &d ] |= prop_just_solved; // denominator
 	  }	    
 
 	// denominator known ?
@@ -339,7 +328,7 @@ namespace anitmt{
 	    if( !n.is_this_ok( res_n, this, problem_handler ) )
 	      return false; 
 
-	    s_n = true; // numerator solved
+	    properties[ &n ] |= prop_just_solved; // numerator solved
 	  }	    
       }
 
@@ -358,7 +347,7 @@ namespace anitmt{
 	    if( !d.is_this_ok( res_d, this, problem_handler ) )
 	      return false; 
 
-	    s_d = true; // denominator solved
+	    properties[ &d ] |= prop_just_solved; // denominator solved
 	  }	    
 
 	// denominator known ?
@@ -371,7 +360,7 @@ namespace anitmt{
 	    if( !q.is_this_ok( res_q, this, problem_handler ) )
 	      return false; 
 
-	    s_q = true; // quotient solved
+	    properties[ &q ] |= prop_just_solved; // quotient solved
 	  }	    
       }
 
@@ -390,7 +379,7 @@ namespace anitmt{
 	    if( !n.is_this_ok( res_n, this, problem_handler ) )
 	      return false; 
 
-	    s_n = true; // numerator solved
+	    properties[ &n ] |= prop_just_solved; // numerator solved
 	  }	    
 
 	// numerator known ?
@@ -403,7 +392,7 @@ namespace anitmt{
 	    if( !q.is_this_ok( res_q, this, problem_handler ) )
 	      return false; 
 
-	    s_q = true; // numerator solved
+	    properties[ &q ] |= prop_just_solved; // numerator solved
 	  }	    
       }
 

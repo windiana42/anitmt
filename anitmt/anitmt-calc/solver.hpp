@@ -16,6 +16,7 @@
 #define __AniTMT_Solver__
 
 #include <list>
+#include <map>
 
 namespace anitmt{
   class Solver;
@@ -42,22 +43,29 @@ namespace anitmt{
     friend class Property;
     template<class T> friend class Type_Property;
 
-    typedef std::list< Property* > properties_type;
-    properties_type properties;
-
     //** Methods **
 
     // Properties call that if they are distroyed
     void disconnect_Property( Property *prop )
       throw( EX_Property_Not_Connected );
     // Properties call that if they were solved
-    virtual void prop_was_solved( Property *ID ) = 0;
+    void prop_was_solved( Property *ID );
     // Properties call that if they want to validate their results
-    virtual bool is_prop_solution_ok
+    // (uses virtual function check_prop_solution)
+    bool is_prop_solution_ok
+    ( Property *ID, Solve_Problem_Handler *problem_handler );
+    // calculates results of a solved Property (ID) and returns wheather
+    // the solution is ok
+    virtual bool check_prop_solution_and_results
     ( Property *ID, Solve_Problem_Handler *problem_handler ) = 0;
   protected:
     int n_props_available;
     long try_id;		// id to identify a solution try
+
+    enum prop_status{ prop_unsolved=0, prop_solved=1, prop_just_solved=2 };
+    // associates properties with their status
+    typedef std::map< Property*, prop_status > properties_type;
+    properties_type properties;	// all properties and if they are solved
 
     // add property connection
     void add_Property( Property *prop );
@@ -79,11 +87,9 @@ namespace anitmt{
     bool s_d, s_t, s_a, s_v0, s_ve; // indicates wheater a property was solved
 				    // while checking a solution
   public:
-    // Properties call that if they were solved
-    virtual void prop_was_solved( Property *ID );
     // Properties call that if they want to validate their results
-    virtual bool is_prop_solution_ok( Property *ID, 
-				      Solve_Problem_Handler *problem_handler );
+    virtual bool check_prop_solution_and_results
+    ( Property *ID, Solve_Problem_Handler *problem_handler );
 
     Accel_Solver( Scalar_Property *d, Scalar_Property *t, Scalar_Property *a,
 		  Scalar_Property *v0, Scalar_Property *ve );
@@ -100,10 +106,9 @@ namespace anitmt{
     bool s_d, s_s, s_e;		// indicates wheater a property was solved
 				// while checking a solution
   public:
-    // Properties call that if they were solved
-    virtual void prop_was_solved( Property *ID );
     // Properties call that if they want to validate their results
-    virtual bool is_prop_solution_ok( Property *ID, Solve_Problem_Handler *problem_handler );
+    virtual bool check_prop_solution_and_results
+    ( Property *ID, Solve_Problem_Handler *problem_handler );
 
     Diff_Solver( Scalar_Property *d, Scalar_Property *s, Scalar_Property *e );
   };
@@ -116,10 +121,9 @@ namespace anitmt{
     bool s_q, s_n, s_d;		// indicates wheater a property was solved
 				// while checking a solution
   public:
-    // Properties call that if they were solved
-    virtual void prop_was_solved( Property *ID );
     // Properties call that if they want to validate their results
-    virtual bool is_prop_solution_ok( Property *ID, Solve_Problem_Handler *problem_handler );
+    virtual bool check_prop_solution_and_results
+    ( Property *ID, Solve_Problem_Handler *problem_handler );
 
     Relation_Solver( Scalar_Property *q, Scalar_Property *n, 
 		     Scalar_Property *d );

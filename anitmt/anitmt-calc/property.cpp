@@ -69,6 +69,27 @@ namespace anitmt{
     solvers.erase( i );
   }
 
+  // Solver call this when the given value was ok
+  // !!! may be self recursive
+  void Property::use_it( Solver *caller ){
+    // was this property not already solved
+    if( !solved )
+      {
+	// v already got the value from the try
+	assert( try_id == cur_try_id ); // it was hopefully the same try
+	// v is accepted as solution now
+	solved = true;
+
+	// for each solver (*i)
+	for( solvers_type::iterator i=solvers.begin(); i!=solvers.end(); i++ )
+	  {
+	    if( (*i) == caller ) continue; // avoid recursion back to caller
+
+	    (*i)->prop_was_solved( this );
+	  }
+      }
+  }
+
   Property::~Property(){
     // for each solver (*i)
     for( solvers_type::iterator i = solvers.begin(); i != solvers.end(); i++ )

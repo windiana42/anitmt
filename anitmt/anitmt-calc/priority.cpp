@@ -28,7 +28,7 @@ namespace anitmt{
     // get the first action in there
     priority_level_list_type::iterator j = list.begin();
     // execute it
-    (*j)->do_it();
+    (*j)->invoke();
     // remove it
     list.erase(j);
     // remove priority level if not needed any more
@@ -69,13 +69,6 @@ namespace anitmt{
   // place Action for invokation
   void Priority_Action::place_Action() {
     priority_system->add_Action( priority_level, this );
-
-    // remove callers
-    callers_type::iterator i;
-    for( i = callers.begin(); i != callers.end(); i++ )
-      /*delete *i*/;
-
-    callers.clear();
   }
 
   // insert Action Caller as solver of Property
@@ -83,6 +76,17 @@ namespace anitmt{
     callers.push_back( new Action_Caller( prop, this ) );
   }
 
+  // deletes callers and runs do_it()
+  void Priority_Action::invoke() {
+    // remove callers
+    callers_type::iterator i;
+    for( i = callers.begin(); i != callers.end(); i++ )
+      delete *i;
+    callers.clear();
+    
+    // do the action
+    do_it();
+  }
 
   //**************************
   // constructors / destructor

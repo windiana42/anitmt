@@ -37,8 +37,8 @@ namespace anitmt{
     // Properties call that if they were solved
     virtual void prop_was_solved( Property *ID );
     // Properties call that if they want to validate their results
-    virtual bool is_prop_solution_ok( Property *ID, 
-				      Solve_Problem_Handler *problem_handler );
+    virtual bool check_prop_solution_and_results
+    ( Property *ID, Solve_Problem_Handler *problem_handler );
 
   public:
     Action_Caller( Property *cause, Priority_Action *act );

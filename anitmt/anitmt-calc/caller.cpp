@@ -26,8 +26,9 @@ namespace anitmt{
     priority_action->place_Action();
     //!!! no more function calls here !!! (may be deleted by place_Action)
   }
+
   // Properties call that if they want to validate their results
-  bool Action_Caller::is_prop_solution_ok( Property*, 
+  bool Action_Caller::check_prop_solution_and_results( Property*, 
 					   Solve_Problem_Handler* ) {
 
     return true;		// always ok!

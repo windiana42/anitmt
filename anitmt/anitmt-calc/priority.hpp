@@ -61,11 +61,12 @@ namespace anitmt{
 
     friend class Action_Caller;
     void place_Action();
+    virtual void do_it() = 0;
   protected:
     friend class Action_Caller_Inserter;
     void insert_Caller_at_Property( Property *prop );
   public:
-    virtual void do_it() = 0;
+    void invoke();		// deletes callers and runs do_it()
     
     virtual ~Priority_Action();
 
