@@ -26,7 +26,6 @@ namespace anitmt {
 #include "return.hpp"
 
 namespace anitmt{
-
   //******************************************************************
   // Ani_Scalar: Animatable Scalar node 
   //******************************************************************
@@ -52,6 +51,23 @@ namespace anitmt{
       throw( EX_user_error );
   };
   
+  //**********************************************************
+  // Scalar_Interface: reduced access interface to Ani_Scalar
+  //**********************************************************
+
+  //! reduced access interface to Ani_Scalar
+  class Scalar_Interface {
+    Ani_Scalar *scalar;
+  public:
+    //! get scalar state at time t
+    inline Scalar_State get_scalar_state( values::Scalar t )
+    { 
+      return scalar->get_return_value( t ).second; 
+    }
+
+    Scalar_Interface( Ani_Scalar *obj ) : scalar(obj) {}
+  };
+
 
 }
 #endif

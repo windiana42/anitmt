@@ -27,6 +27,38 @@ namespace anitmt{
     return type_name;
   }
 
+  std::map<values::String,Object_Interface> Ani_Scene::get_objects()
+  {
+    std::map<values::String,Object_Interface> ret;
+
+    const Contain< Ani_Object >::content_type &all_objects = 
+      objects.get_content();
+    Contain< Ani_Object >::content_type::const_iterator object;
+    
+    for( object = all_objects.begin(); object != all_objects.end(); ++object )
+      {
+	ret[ (*object)->get_name() ] = object;
+      }
+
+    return ret;
+  }
+
+  std::map< values::String, Scalar_Interface > Ani_Scene::get_scalars();
+  {
+    std::map<values::String,Scalar_Interface> ret;
+
+    const Contain<Ani_Scalar>::content_type &all_scalars = 
+      scalars.get_content();
+    Contain<Ani_Scalar>::content_type::const_iterator scalar;
+    
+    for( scalar = all_scalars.begin(); scalar != all_scalars.end(); ++scalar )
+      {
+	ret[ (*scalar)->get_name() ] = scalar;
+      }
+
+    return ret;
+  }
+
   Ani_Scene::Ani_Scene( std::string name, Animation *ani ) 
     : Prop_Tree_Node( type_name, name, ani ),
       scalars(false,false), objects(false,false) {

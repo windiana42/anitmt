@@ -56,6 +56,23 @@ namespace anitmt{
       throw( EX_user_error );
   };
   
+  //**********************************************************
+  // Object_Interface: reduced access interface to Ani_Object
+  //**********************************************************
+
+  //! reduced access interface to Ani_Object
+  class Object_Interface {
+    Ani_Object *object;
+  public:
+    //! get object state at time t
+    inline Object_State get_object_state( values::Scalar t )
+    { 
+      return object->get_return_value( t ).second; 
+    }
+
+    Object_Interface( Ani_Object *obj ) : object(obj) {}
+  };
+
 
 }
 #endif

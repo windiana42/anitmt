@@ -54,7 +54,11 @@ namespace anitmt
 
     inline values::String get_filename()  {  return(filename());  }
     inline values::String get_scene_type()  {  return(scene_type());  }
- 
+
+    std::map< values::String, Object_Interface > get_all_objects();
+    std::map< values::String, Scalar_Interface > get_all_scalars();
+
+    // these functions should be used only of really nessessary
     inline const Contain< Ani_Scalar >& get_scalars() 
     { return scalars; }
     inline const Contain< Ani_Object >& get_objects() 
