@@ -45,52 +45,49 @@ static int MAIN(int argc,char **argv,char **envp)
 	// First, seed the random generator: 
 	_SeedRandom();
 	
+	FDManager *fdman=NULL;
+	TimeoutManager *timeoutman=NULL;
+	FDCopyManager *cpman=NULL;
+	ProcessManager *procman=NULL;
+	par::ParameterManager *parman=NULL;
+	ComponentDataBase *cdb=NULL;
+	TaskManager *taskman=NULL;
+	
 	// Okay, then... Here we go...
-	Verbose(BasicInit,"Setting up managers: [FD] ");
-	FDManager *fdman=NEW<FDManager>();
-	if(!fdman)
-	{
-		Error(fti,"FD manager");
-		return(1);
-	}
-	
-	Verbose(BasicInit,"[timeout] ");
-	TimeoutManager *timeoutman=NEW<TimeoutManager>();
-	if(!timeoutman)
-	{
-		Error(fti,"timeout manager");
-		return(1);
-	}
-	
-	Verbose(BasicInit,"[CP] ");
-	FDCopyManager *cpman=NEW<FDCopyManager>();
-	if(!cpman)
-	{
-		Error(fti,"copy manager");
-		return(1);
-	}
-	
-	Verbose(BasicInit,"[process] ");
-	ProcessManager *procman=NEW1<ProcessManager>(envp);
-	if(!procman)
-	{
-		Error(fti,"process manager");
-		return(1);
-	}
-	// FIXME?
-	procman->TermKillDelay(1000);
-	
-	Verbose(BasicInit,"[parameter] ");
-	par::ParameterManager *parman=NEW<par::ParameterManager>();
-	if(!parman)
-	{
-		Error(fti,"parameter manager");
-		return(1);
-	}
-	parman->SetVersionInfo(
-		VERSION,      // version string
-		NULL,         // package name
-		"rendview");  // program name
+	int fail=1;
+	do {
+		Verbose(BasicInit,"Setting up managers: [FD] ");
+		
+		fdman=NEW<FDManager>();
+		if(!fdman)
+		{  Error(fti,"FD manager");  break;  }
+		
+		Verbose(BasicInit,"[timeout] ");
+		timeoutman=NEW<TimeoutManager>();
+		if(!timeoutman)
+		{  Error(fti,"timeout manager");  break;  }
+		
+		Verbose(BasicInit,"[CP] ");
+		cpman=NEW<FDCopyManager>();
+		if(!cpman)
+		{  Error(fti,"copy manager");  break;  }
+		
+		Verbose(BasicInit,"[process] ");
+		procman=NEW1<ProcessManager>(envp);
+		if(!procman)
+		{  Error(fti,"process manager");  break;  }
+		// FIXME?
+		procman->TermKillDelay(1000);
+		
+		Verbose(BasicInit,"[parameter] ");
+		parman=NEW<par::ParameterManager>();
+		if(!parman)
+		{  Error(fti,"parameter manager");  break;  }
+		
+		parman->SetVersionInfo(
+			VERSION,      // version string
+			NULL,         // package name
+			"rendview");  // program name
 	parman->SetLicenseInfo(
 		// --lincense--
 		"RendView may be distributed under the terms of the GNU General "
@@ -126,36 +123,35 @@ static int MAIN(int argc,char **argv,char **envp)
 		"\n\n** JUST DO NOT TRY TO DO ANYTHING WITH FILTERS & LDR NOW**");
 		// ...as well as only rendering changed frames or resuming operation
 		// ...and later create a film of them...
-	
-	Verbose(BasicInit,"[CDB] ");
-	ComponentDataBase *cdb=NEW1<ComponentDataBase>(parman);
-	if(!cdb)
-	{
-		Error(fti,"component data base");
-		return(1);
+		
+		Verbose(BasicInit,"[CDB] ");
+		cdb=NEW1<ComponentDataBase>(parman);
+		if(!cdb)
+		{  Error(fti,"component data base");  break;  }
+		
+		Verbose(BasicInit,"[Task] ");
+		taskman=NEW1<TaskManager>(cdb);
+		if(!taskman)
+		{  Error(fti,"task manager");  break;  }
+		
+		Verbose(BasicInit,"OK\n");
+		fail=0;
 	}
+	while(0);
 	
-	Verbose(BasicInit,"[Task] ");
-	TaskManager *taskman=NEW1<TaskManager>(cdb);
-	if(!cdb)
-	{
-		Error(fti,"task manager");
-		return(1);
-	}
-	
-	
-	Verbose(BasicInit,"OK\n");
-	
-	int fail=0;
 	int will_exit=0;
-	fail+=ImageFormat::init(cdb);
-	fail+=TaskDriverFactory::init(cdb);
-	fail+=TaskSourceFactory::init_factories(cdb);
-	fail+=TaskDriverInterfaceFactory::init_factories(cdb);
+	if(!fail)
+	{
+		fail+=ImageFormat::init(cdb);
+		fail+=TaskDriverFactory::init(cdb);
+		fail+=TaskSourceFactory::init_factories(cdb);
+		fail+=TaskDriverInterfaceFactory::init_factories(cdb);
+	}
 	
 	// NOW IT IS TIME TO LOOK AT THE COMMAND LINE ARGS: 
-	par::CmdLineArgs cmdline(argc,argv,envp);
 	if(!fail) do {
+		par::CmdLineArgs cmdline(argc,argv,envp);
+		
 		par::ParameterSource_CmdLine cmd_src(parman,&fail);
 		if(fail) 
 		{

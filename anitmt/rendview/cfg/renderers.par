@@ -10,20 +10,20 @@
 # global search path for renderer binaries without absolute path: 
 searchpath = /usr/bin /usr/local/bin /usr/bin/X11
 
-#section povray3.1g
+*section povray3.1g
   driver = povray
   binpath = povray
 #  binpath = /tmp/pov_fail_wrapper.sh
   # Always pass -J to switch jitter off. 
   req_args+= -J #-display :0.0
   inc_path= /usr/lib/povray/include /home/me
-#end
+*end
 
-#section povray3.1
+*section "povray3.1"
   driver = povray
   binpath = povray31
   # Always pass -J to switch jitter off. 
   req_args+= -J 
   inc_path= /usr/lib/povray/include 
-#end
+*end
 

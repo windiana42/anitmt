@@ -330,18 +330,20 @@ int ComponentDataBase::parse(const Section *s,PAR::SPHInfo *info)
 			}
 		}
 		xname=info->nend;
-		if(!e || illegal)
+		if(illegal)
 		{
 			Error("in %s: Illegal %s name \"%.*s\".\n",
 				info->arg->origin.OriginStr().str(),DTypeString(dt),
 				e ? e-xname : 10,xname);
 			return(-1);
 		}
+		if(!e)            // No '-' in name: parse regularly (possibly 
+		{  return(1);  }  // leading to "unknown parameter" error). 
 		xnamelen=e-xname;
 	}
 	else
 	{
-		// Okay, there was a `#section xyz´ ot sth like that. 
+		// Okay, there was a `*section xyz´ ot sth like that. 
 		int illegal=0;
 		for(const char *c=info->nend; c<info->name_end; c++)
 		{
@@ -394,6 +396,54 @@ int ComponentDataBase::parse(const Section *s,PAR::SPHInfo *info)
 }
 
 
+// Appends string!
+// separate entried by sep string. 
+// Return value: 0 -> OK; -1 -> alloc failure. 
+static int _WriteStrListToStr(RefString *dest,RefStrList *list,
+	const char *sep)
+{
+	if(!list->first())
+	{
+		dest->append("[empty]");
+		return(0);
+	}
+	
+	// Calculate buffer size: 
+	size_t bsize=1;  // For the terminating '\0'. 
+	int cnt=0;
+	for(const RefStrList::Node *i=list->first(); i; i=i->next)
+	{  bsize+=i->len()+2;  ++cnt;  }  // 2 extra-chars for `"´
+	if(cnt)  --cnt;  // Last entry does not need sep string. 
+	bsize+=cnt*strlen(sep);
+	
+	// Allocate buffer: 
+	char *buf=(char*)LMalloc(bsize);
+	if(!buf) return(-1);
+	
+	// Format string: 
+	char *ptr=buf;
+	for(const RefStrList::Node *i=list->first(); i; i=i->next)
+	{
+		// Copy arg: 
+		*(ptr++)='\"';
+		for(const char *s=i->str(); *s; s++)
+		{  *(ptr++)=*s;  }
+		*(ptr++)='\"';
+		if(i->next)
+		{
+			// Copy sepeartor: 
+			for(const char *s=sep; *s; s++)
+			{  *(ptr++)=*s;  }
+		}
+	}
+	// Terminate string: 
+	*ptr='\0';
+	dest->append(buf);
+	LFree(buf);
+	return(0);
+}
+
+
 // Called for special help options: 
 int ComponentDataBase::PrintSpecialHelp(RefStrList *dest,
 	const SpecialHelpItem *shi)
@@ -403,7 +453,7 @@ int ComponentDataBase::PrintSpecialHelp(RefStrList *dest,
 		// List render / filter drivers: 
 		
 		RefString tmp;
-		tmp.sprintf(0,"List of available %s drivers:",
+		tmp.sprintf(0,"List of available %s drivers:\n",
 			DTypeString((TaskDriverType)shi->item_id));
 		dest->append(tmp);
 		
@@ -494,6 +544,84 @@ int ComponentDataBase::PrintSpecialHelp(RefStrList *dest,
 		
 		tmp.set("");
 		dest->append(tmp);
+	}
+	else if(shi->item_id==-5 || shi->item_id==-6)
+	{
+		// List render/filter information. 
+		TaskDriverType dtype=(shi->item_id==-6) ? DTFilter : DTRender;
+		InfoPerType *p=&ift[dtype];
+		
+		if(p->do_dump_info)
+		{
+			// We are called from ExplicitPrintSpecialHelp() to now 
+			// actually dump the info. 
+			RefString tmp;
+			tmp.sprintf(0,"Dumping %s information:\n",DTypeString(dtype));
+			dest->append(tmp);
+			
+			tmp.set("\r2+:Binary search path:");  dest->append(tmp);
+			tmp.set("\r6:");
+				_WriteStrListToStr(&tmp,&p->searchpath,", ");
+				dest->append(tmp);
+			
+			tmp.set("");  dest->append(tmp);
+			for(const RF_DescBase *i=p->desclist.first(); i; i=i->next)
+			{
+				tmp.sprintf(0,"\r2:Desc \"%s\":",i->name.str());  dest->append(tmp);
+				tmp.sprintf(0,"\r6:Driver:  %s",
+					i->dfactory ? i->dfactory->DriverName() : "[none]");
+					dest->append(tmp);
+				
+				assert(i->dtype==dtype);
+				switch(i->dtype)
+				{
+					case DTRender:
+					{
+						RenderDesc *rd=(RenderDesc*)i;
+						tmp.sprintf(0,"\r6:Binpath: \"%s\"",rd->binpath.str());
+							dest->append(tmp);
+						tmp.set("\r6+:ReqArgs: ");  dest->append(tmp);
+							tmp.set("\r10:");
+							_WriteStrListToStr(&tmp,&rd->required_args," ");
+							dest->append(tmp);
+						tmp.set("\r6+:IncPath: ");  dest->append(tmp);
+							tmp.set("\r10:");
+							_WriteStrListToStr(&tmp,&rd->include_path," ");
+							dest->append(tmp);
+						tmp.sprintf(0,"\r6:Resume: %s",
+							rd->can_resume_render ? "yes" : "no");
+					}  break;
+					case DTFilter:
+					{
+						FilterDesc *fd=(FilterDesc*)i;
+						tmp.sprintf(0,"\r6:Binpath: \"%s\"",fd->binpath.str());
+							dest->append(tmp);
+						tmp.set("\r6+:ReqArgs: ");  dest->append(tmp);
+							tmp.set("\r10:");
+							_WriteStrListToStr(&tmp,&fd->required_args," ");
+							dest->append(tmp);
+					}  break;
+					default:  assert(0);  // may not happen...
+				}
+				
+				// Append newline: 
+				tmp.set("");  dest->append(tmp);
+			}
+			if(!p->desclist.first())
+			{  tmp.sprintf(0,"\r2:[No %s descs]\n",DTypeString(dtype));
+				dest->append(tmp);  }
+			
+			// Did it. 
+			p->do_dump_info=0;
+			p->dump_item_id=0;
+		}
+		else
+		{
+			// Remember to dump it once it is there (not yet read in 
+			// info file). 
+			p->dump_item_id=shi->item_id;
+			return(1);  // Special: do not count as special option. 
+		}
 	}
 	else assert(0);
 	
@@ -619,6 +747,22 @@ int ComponentDataBase::CheckParams()
 	
 	if(!err_failed && !warn_failed)
 	{  Verbose(0,"OK\n");  }
+	
+	// Dump params if needed: 
+	for(int _dtype=0; _dtype<_DTLast; _dtype++)
+	{
+		TaskDriverType dtype=(TaskDriverType)_dtype;
+		InfoPerType *dti=&ift[dtype];
+		if(dti->dump_item_id)
+		{
+			dti->do_dump_info=1;
+			ExplicitPrintSpecialHelp(dti->dump_item_id);
+			// Actually, this is not an error, but if we want to quit if 
+			// one of the --list-[rf]i options was passed, then this is the 
+			// easiest way: 
+			++err_failed;
+		}
+	}	
 	
 	return(err_failed ? 1 : 0);
 }
@@ -768,6 +912,20 @@ int ComponentDataBase::_RegisterParams()
 		shi.item_id=-4;
 	}  AddSpecialHelp(&shi);
 	
+	{	static const char *_list_ri_opt_str="list-ri";
+		static const char *_list_ri_dest_str="list render information";
+		shi.optname=_list_ri_opt_str;
+		shi.descr=_list_ri_dest_str;
+		shi.item_id=-5;
+	}  AddSpecialHelp(&shi);
+	
+	{	static const char *_list_fi_opt_str="list-fi";
+		static const char *_list_fi_dest_str="list filter information";
+		shi.optname=_list_fi_opt_str;
+		shi.descr=_list_fi_dest_str;
+		shi.item_id=-6;
+	}  AddSpecialHelp(&shi);
+	
 	if(add_failed)  ++failed;
 	return(failed);
 }
@@ -864,6 +1022,9 @@ ComponentDataBase::InfoPerType::InfoPerType(int *failflag) :
 	i_section=NULL;
 	_descfile_pi=NULL;
 	_i_help_dummy=NULL;
+	
+	do_dump_info=0;
+	dump_item_id=0;
 }
 
 ComponentDataBase::InfoPerType::~InfoPerType()

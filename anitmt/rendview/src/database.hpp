@@ -78,6 +78,11 @@ class ComponentDataBase :
 			ParamInfo *_descfile_pi;  // descfile param info
 			Section *_i_help_dummy;   // internal use for special help
 			
+			// --list- option
+			int do_dump_info : 1;
+			int dump_item_id: 5;  // 0 -> do not dump; waiting to be dumped
+			int : (sizeof(int)*4-6);
+			
 			_CPP_OPERATORS_FF
 			InfoPerType(int *failflag=NULL);
 			~InfoPerType();
