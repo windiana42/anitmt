@@ -296,9 +296,9 @@ namespace values
     {  Vector r(Vector::noinit);  r.x.vector_mul(a.x,b.x);   return(r);  }
 
   // Computes the square of the length of the specified vector: 
-  inline Scalar abs2(Vector v)  {  return(Scalar(v.abs2()));  }
+  inline Scalar abs2(const Vector &v)  {  return(Scalar(v.abs2()));  }
   // Computes length of vector: 
-  inline Scalar abs(Vector v)  {  return(Scalar(v.abs()));  }
+  inline Scalar abs(const Vector &v)  {  return(Scalar(v.abs()));  }
 
   // (using epsilon)
   inline bool operator==(const Vector &a,const Vector &b)
