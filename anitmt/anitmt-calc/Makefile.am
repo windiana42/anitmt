@@ -28,9 +28,7 @@ libanitmt_a_SOURCES= 	error.hpp error.cpp \
 			anitmt.hpp anitmt.cpp
 
 anitmt_calc_SOURCES=	anitmt-calc.cpp	
-anitmt_calc_LDADD=	../lib/utl/libutl.a \
-			../lib/message/libmessage.a \
-			../lib/solve/libsolve.a  \
+anitmt_calc_LDADD=	../lib/message/libmessage.a \
 			input/libinput.a \
 			input/adl2/libadlparser.a \
 			output/raw/librawout.a \
@@ -40,6 +38,9 @@ anitmt_calc_LDADD=	../lib/utl/libutl.a \
 			libanitmt.a \
 			../lib/message/libmessage.a \
 			../lib/par/libpar.a \
-			../lib/val/libval.a
+			../lib/val/libval.a \
+			../lib/solve/libsolve.a \
+			../lib/utl/libutl.a
+
 
 
