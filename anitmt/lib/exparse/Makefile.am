@@ -1,5 +1,5 @@
 INCLUDES=		-I$(srcdir)/..
-CXXFLAGS =		@CXXFLAGS@ -Wno-non-template-friend
+CXXFLAGS =		@CXXFLAGS@ -Wno-non-template-friend -DTHROW_NIL=throw\(\) -D__CPLUSPLUS
 noinst_LIBRARIES=	libexparse.a
 libexparse_a_SOURCES=	\
 	fcall.cpp fcall.hpp \
@@ -15,11 +15,16 @@ libexparse_a_SOURCES=	\
 
 check_PROGRAMS=		minicalc
 minicalc_SOURCES=	minicalc.cpp
-minicalc_LDADD=		libexparse.a ../val/libval.a ../message/libmessage.a \
-			-lstdc++ -lm
+minicalc_LDADD=		libexparse.a ../val/libval.a -lstdc++ -lm
 
-# YLWRAP  =               $(top_srcdir)/ylwrap
 
-lexer.cc: $(srcdir)/lexer.ll $(srcdir)/lexer.hpp
-	$(LEX) -s -olexer.cc $(srcdir)/lexer.ll 
+#lexer.cc: $(srcdir)/lexer.ll $(srcdir)/lexer.hpp
+#	$(LEX) -s -olexer.cc $(srcdir)/lexer.ll 
+
+YLWRAP = $(top_srcdir)/ylwrap
+
+lexer.cc: $(srcdir)/lexer.ll $(srcdir)/lexer.hpp 
+	$(SHELL) $(YLWRAP) "$(LEX)" \
+	$(srcdir)/lexer.ll lex.exparse_.cc lexer.cc \
+	-- -Pexparse_
  
