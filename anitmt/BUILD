@@ -1,3 +1,11 @@
+REQUIREMENTS
+------------
+
+when you don't have a generated parser from a tar ball you need:
+- flex++
+- bison ( version 1.28 and 1.35 are known to work. 
+          Some versions in between like 1.33 definitely do NOT work )
+
 BUILDING ANITMT
 ---------------
 

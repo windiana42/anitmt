@@ -56,6 +56,7 @@ namespace solve
     }
 
     assert( false );
+    return false;
   }
 
   //! tells to use the result calculated by is_result_ok()

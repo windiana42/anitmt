@@ -49,7 +49,7 @@
 //*********
    
 %pure_parser		// parser may be called recursive
-%expect 7		// expect 7 shift/reduce and 24 reduce/reduce conflicts
+%expect 42		// expect 7 shift/reduce and 27 reduce/reduce conflicts
 
 //********
 // Tokens
