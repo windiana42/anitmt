@@ -28,14 +28,6 @@
 #endif
 
 
-// Allocation routines to use: 
-static inline void *OFree(void *x)
-{  if(x)  free(x);  return(NULL);  }
-static inline void *OMalloc(size_t s)
-{  return(s ? malloc(s) : NULL);  }
-static inline void *OReAlloc(void *ptr,size_t s)
-{  return(realloc(ptr,s));  }
-
 #ifdef TESTING
 #warning TESTING switched on (assert() used). 
 #include <assert.h>
@@ -203,15 +195,29 @@ int ParameterManager::CheckHandleHelpOpts(ParamArg *pa,Section *top_sect)
 	
 	int special=0;
 	
-	// --version: (only accepted in highmost section)
+	// --version, --author, --license: (only accepted in highmost section)
 	if(pa->atype==ParamArg::Option && 
 	   top_sect==&topsect)
 	{
-		if(pa->namelen==7 && 
-		   pa->name[0]=='v' && 
+		if(pa->namelen==7 && pa->name[0]=='v' && 
 		   !strncmp(pa->name,"version",pa->namelen))
 		{
 			PrintVersion();
+			pa->pdone=1;
+			++special;
+		}
+		else if(pa->namelen==6 && pa->name[0]=='a' && author_str && 
+		   !strncmp(pa->name,"author",pa->namelen))
+		{
+			PrintLicense(1);
+			pa->pdone=1;
+			++special;
+		}
+		else if(pa->namelen==7 && pa->name[0]=='l' && license_str && 
+		   (!strncmp(pa->name,"license",pa->namelen) || 
+		   !strncmp(pa->name,"licence",pa->namelen)) )
+		{
+			PrintLicense(0);
 			pa->pdone=1;
 			++special;
 		}
@@ -734,6 +740,14 @@ void ParameterManager::SetVersionInfo(
 	program_name=_program_name;
 }
 
+void ParameterManager::SetLicenseInfo(
+	const char *license_output,
+	const char *author_output)
+{
+	license_str=license_output;
+	author_str=author_output;
+}
+
 
 // ret_str (may be NULL): returns till where the sections were found; 
 // if **ret_str='\0', all sections were found. 
@@ -860,6 +874,8 @@ ParameterManager::ParameterManager(int * /*failflag*/) :
 	package_name=NULL;
 	program_name=NULL;
 	add_help_text=NULL;
+	author_str=NULL;
+	license_str=NULL;
 	
 	// static global manager: 
 	//#if TESTING

@@ -241,6 +241,7 @@ int RefString::_pre_app_end(const char *str,int pre_app)
 	if(_realloc(curlen+addlen+1,0,pre_app))
 	{  return(-1);  }
 	memcpy(_str()+((pre_app<0) ? curlen : 0),str,addlen);
+	_str()[curlen+addlen]='\0';
 	return(0);
 }
 

@@ -123,11 +123,15 @@ int ParameterManager::PrintHelp(Section *top,FILE *out)
 			free(version_info);
 		}
 		
-		sico(
-			"Standard query options:\n"
-			"  --version: print version string\n"
-			"  --help:    print this help\n");
+		sico("Standard query options:\n"
+		     "  --version: print version string\n");
 		
+		if(author_str)
+		{  sico("  --author:  print author (and bug report info)\n");  }
+		if(license_str)
+		{  sico("  --license: print license\n");  }
+		
+		sico("  --help:    print this help\n");
 		if(!topsect.sub.is_empty())
 		{  sico("  --section-help: print help for specified section only\n");  }
 		
@@ -164,11 +168,31 @@ int ParameterManager::PrintHelp(Section *top,FILE *out)
 	return(0);
 }
 
+
 int ParameterManager::PrintVersion(FILE *out)
 {
 	char *version_info=_GenVersionInfo();
 	fprintf(out,"%s\n",version_info);  // will write "(null)" if NULL
 	if(version_info)  free(version_info);
+	return(0);
+}
+
+int ParameterManager::PrintLicense(int what,FILE *out)
+{
+	const char *txt=NULL;
+	switch(what)
+	{
+		case 0:  txt=license_str;  break;
+		case 1:  txt=author_str;  break;
+	}
+	if(txt)
+	{
+		SimpleIndentConsoleOutput sico;
+		sico.SetFile(out);
+		sico.Puts(txt);
+		sico.Puts("\n");
+	}
+	
 	return(0);
 }
 
@@ -285,7 +309,7 @@ char *ParameterManager::_GenVersionInfo()
 	const char *vers=version_string ? version_string : "???";
 	int len=strlen(prgn)+strlen(vers)+10+
 		(package_name ? (strlen(package_name)+3) : 0);
-	char *buf=(char*)malloc(len);
+	char *buf=(char*)malloc(len);  // NOT LMalloc()
 	snprintf(buf,len,"%s%s%s%s version %s",
 		prgn,
 		package_name ? " (" : "",

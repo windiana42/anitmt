@@ -28,13 +28,6 @@
 #define TESTING 1
 #endif
 
-// ### to be adjusted for HLIB: 
-static void *OFree(void *x)
-{  if(x)  LFree(x);  return(NULL);  }
-static void *OMalloc(size_t s)
-{  return(s ? LMalloc(s) : NULL);  }
-static void *OReAlloc(void *ptr,size_t s)
-{  return(LRealloc(ptr,s));  }
 
 #if TESTING
 #warning TESTING switched on (using assert())
@@ -52,7 +45,7 @@ int ParameterSource_File::_ReadLine(FILE *fp,int *linecnt)
 	if(!linebuf)
 	{
 		// alloc a basic line buffer; we inlarge it if it is too small. 
-		linebuf=(char*)OMalloc(256);
+		linebuf=(char*)LMalloc(256);
 		if(!linebuf)  return(-1);
 		bufsize=256;
 	}
@@ -94,7 +87,7 @@ int ParameterSource_File::_ReadLine(FILE *fp,int *linecnt)
 		
 		// Must extend line buffer. 
 		size_t newsize=bufsize*2;
-		char *newbuf=(char*)OReAlloc(linebuf,newsize);
+		char *newbuf=(char*)LRealloc(linebuf,newsize);
 		if(!newbuf)  return(-1);
 		linebuf=newbuf;
 		bufsize=newsize;
@@ -319,7 +312,7 @@ int ParameterSource_File::Parse(ParamArg *pa,Section *topsect)
 
 void ParameterSource_File::_ResetLinebuf()
 {
-	OFree(linebuf);
+	LFree(linebuf);
 	linebuf=NULL;
 	bufsize=0;
 	linelen=0;

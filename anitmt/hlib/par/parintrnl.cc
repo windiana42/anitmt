@@ -32,14 +32,6 @@
 #endif 
 
 
-// switch here between malloc/free and LMalloc/LFree. 
-
-static inline void *OMalloc(size_t x)
-{  return(malloc(x));  }
-static inline void *OFree(void *p)
-{  if(p)  free(p);  return(NULL);  }
-
-
 namespace par
 {
 
@@ -75,7 +67,7 @@ PAR::Section::Section(const char *_name,ssize_t namelen,int *failflag) :
 	if(_name)
 	{
 		if(namelen<0)  namelen=strlen(name);
-		char *tmpname=(char*)OMalloc(namelen+1);
+		char *tmpname=(char*)LMalloc(namelen+1);
 		if(!tmpname)
 		{  --failed;  }
 		else
@@ -95,7 +87,7 @@ PAR::Section::Section(const char *_name,ssize_t namelen,int *failflag) :
 
 PAR::Section::~Section()
 {
-	if(name)  name=(char*)OFree((char*)name);
+	if(name)  name=(char*)LFree((char*)name);
 	
 	#if TESTING
 	if(sub.first())

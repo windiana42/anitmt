@@ -85,7 +85,7 @@ struct ValueHandler : public PAR
 	// allocated memory which is large enough to keep the 
 	// object of the type this ValueHandler is dealing with. 
 	// In case cpsize() returns !=0, the opject referred to 
-	// by val is simply allocated via malloc, if it returns 0, 
+	// by val is simply allocated via LMalloc, if it returns 0, 
 	// the object is allocated via ValueHandler::alloc() 
 	// and thus set up correctly. 
 	// The parsing function must take care of the assignment 

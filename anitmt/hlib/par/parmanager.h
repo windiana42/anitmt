@@ -69,6 +69,8 @@ class ParameterManager : public PAR
 		const char *package_name;     // copied and initialized 
 		const char *program_name;     // to NULL. 
 		const char *add_help_text;
+		const char *author_str;
+		const char *license_str;
 		
 		// This version info must be free'd via free() (NOT LFree()). 
 		// Note that this function returns NULL on malloc() failure. 
@@ -216,6 +218,8 @@ class ParameterManager : public PAR
 		// PrintVersion writes: "<program_name> (<package>) version <version>"
 		// The package info is left away if it is NULL. 
 		virtual int PrintVersion(FILE *out=stderr);
+		// what: 0 -> license info; 1 -> author info
+		virtual int PrintLicense(int what,FILE *out=stderr);
 		// Used when a special help option is encountered. 
 		virtual int PrintSpecialHelp(ParameterConsumer *pc,
 			SpecialHelpItem *shi,FILE *out=stdout);
@@ -227,6 +231,12 @@ class ParameterManager : public PAR
 			const char *version_string,
 			const char *package_name=NULL,   // no package if NULL
 			const char *program_name=NULL);  // defaults to prg_name if NULL
+		// Set what is being written as output if --author and --license 
+		// are specified; these options are not understood if you 
+		// set the corresponding string to NULL. 
+		void SetLicenseInfo(
+			const char *license_output,
+			const char *author_output);
 		// Using this function you can add an additional help text 
 		// appended to the output of the (topsection) -help/--help 
 		// option. You usually set bug e-mail address/author/nothing 

@@ -76,7 +76,7 @@ PAR::ParamInfo *ParameterConsumer::AddParam(
 	info.valptr=valptr;
 	info.hdl=hdl;
 	info.exclusive_hdl=(flags & PExclusiveHdl) ? 1 : 0;
-	info.has_default=(flags & PNoDefault);
+	info.has_default=!(flags & PNoDefault);
 	info.spectype=PSpecType(flags & _STMask);
 	
 	ParamInfo *pi=parmanager()->AddParam(this,&info);
