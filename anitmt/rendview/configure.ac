@@ -24,9 +24,24 @@ AC_TYPE_PID_T
 AC_TYPE_SIZE_T
 
 # Checks for library functions.
-# FIXME: missing
+# Check for CPU detection using sysconf: 
 AC_CHECK_FUNCS([sysconf])
+AC_MSG_CHECKING([for _SC_NPROCESSORS_ONLN/CONF])
+  AC_TRY_COMPILE([#include <unistd.h>
+	#include <stdlib.h>],
+	[#if HAVE_SYSCONF
+	long n=sysconf(_SC_NPROCESSORS_ONLN);
+	n=sysconf(_SC_NPROCESSORS_CONF);;
+	#endif ],
+	[AC_MSG_RESULT([yes])
+	 AC_DEFINE(RENDVIEW_HAVE_SYSCONF_NPROCESSORS,1,\
+	 	[Defined, if _SC_NPROCESSORS_ONLN and ~_CONF was found])],
+	[AC_MSG_RESULT([no])
+	 AC_MSG_NOTICE([It seems you are lacking _SC_NPROCESSORS_ONLN/CONF. Please check that.])
+])
 
+
+# FIXME: more checks for lib functions missing
 
 # Check if socket is in -lsocket: 
 AC_CHECK_LIB([socket],[socket])

@@ -21,7 +21,14 @@
 #include <assert.h>
 
 
-#if HAVE_SYSCONF
+#if HAVE_SYSCONF && RENDVIEW_HAVE_SYSCONF_NPROCESSORS
+#  define USE_SYSCONF 1
+#else
+#  define USE_SYSCONF 0
+#endif
+
+
+#if USE_SYSCONF
 static int NCPUsBySysconf()
 {
 	const char *scf="Warning: sysconf(%s) failed.\n";
@@ -53,7 +60,7 @@ int GetNumberOfCPUs()
 {
 	int n=-1;
 	do {
-#if HAVE_SYSCONF
+#if USE_SYSCONF
 		n=NCPUsBySysconf();
 		if(n>0)  break;
 #endif
