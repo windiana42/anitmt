@@ -65,15 +65,17 @@ if test "$GXX" = "yes" ; then
 	fi
 	
 	# Add warning flags: 
-	CFLAGS="$CFLAGS -W -Wall -Wformat"
-	OPTCFLAGS="$OPTCFLAGS -W -Wall -Wformat"
-	CXXFLAGS="$CXXFLAGS -W -Wall -Wformat -Woverloaded-virtual"
-	OPTCXXFLAGS="$OPTCXXFLAGS -W -Wall -Wformat -Woverloaded-virtual"
+	c_warnflags="-W -Wall -Wformat -Winline"
+	cxx_warnflags="$c_warnflags -Wreorder -Woverloaded-virtual"
+	CFLAGS="$CFLAGS $c_warnflags"
+	OPTCFLAGS="$OPTCFLAGS $c_warnflags"
+	CXXFLAGS="$CXXFLAGS $cxx_warnflags"
+	OPTCXXFLAGS="$OPTCXXFLAGS $cxx_warnflags"
 	
 	AC_MSG_CHECKING([checking GNU C++ version])
 	#gccvers="$($CXX -v 2>&1 | fgrep "version")"
 	#gccvers="${gccvers/"*version "/}"
-	gccvers="$($CXX -v 2>&1 | fgrep "version" | sed -e "s/.*version //")"
+	gccvers="$($CXX -v 2>&1 | fgrep "version" | fgrep -v "onfigure" | sed -e "s/.*version //")"
 	AC_MSG_RESULT([$gccvers])
 	
 	HLIB_CXXCOMPILER_VERSION="$HLIB_CXXCOMPILER_VERSION $gccvers"
@@ -141,8 +143,15 @@ if test "$GXX" = "yes" ; then
 	AC_MSG_NOTICE([Autodetect optimization: C: $myOPTCFLAGS])
 	AC_MSG_NOTICE([Autodetect optimization: C++: $myOPTCXXFLAGS])
 	
-	test "$opt_cflags_were_set" = "n" && OPTCFLAGS="$myOPTCFLAGS"
-	test "$opt_cxxflags_were_set" = "n" && OPTCXXFLAGS="$myOPTCXXFLAGS"
+	# Note: OPTCFLAGS/OPTCXXFLAGS currently contain the warnings, even 
+	#       if not set. 
+	test "$opt_cflags_were_set" = "n" && OPTCFLAGS="$OPTCFLAGS $myOPTCFLAGS"
+	test "$opt_cxxflags_were_set" = "n" && OPTCXXFLAGS="$OPTCXXFLAGS $myOPTCXXFLAGS"
+	
+	#echo "--------------"
+	#echo "$OPTCFLAGS"
+	#echo "$OPTCXXFLAGS"
+	#echo "--------------"
 	
 	unset gcc_optflg_prefix
 	unset gccvers

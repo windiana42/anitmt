@@ -188,7 +188,7 @@ int FDCopyPump_Simple::HandleFDNotify(FDManager::FDInfo *fdi)
 		int err_no=0;
 		if(fdi->revents & POLLHUP)
 		{  scode = (fd_dir<0) ? SCInHup : SCOutHup;  }
-		else if(fdi->revents & (POLLERR | POLLNVAL))
+		else /* if(fdi->revents & (POLLERR | POLLNVAL)) */
 		{
 			scode = (fd_dir<0) ? SCErrPollI : SCErrPollO;
 			err_no=fdi->revents;
@@ -381,7 +381,6 @@ int FDCopyPump_Simple::SetIO(FDCopyIO *nsrc,FDCopyIO *ndest)
 	
 	// See if we support that: 
 	int nfd_dir=0;
-	int nbuf_dir=0;
 	int retval=-2;
 	if(nsrc && ndest)
 	{

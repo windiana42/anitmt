@@ -215,7 +215,7 @@ int FDCopyPump_FD2FD::HandleFDNotify(FDManager::FDInfo *fdi)
 		int err_no=0;
 		if(fdi->revents & POLLHUP)
 		{  scode = (dir<0) ? SCInHup : SCOutHup;  }
-		else if(fdi->revents & (POLLERR | POLLNVAL))
+		else /* if(fdi->revents & (POLLERR | POLLNVAL)) */
 		{
 			scode = (dir<0) ? SCErrPollI : SCErrPollO;
 			err_no=fdi->revents;
@@ -495,8 +495,8 @@ int FDCopyPump_FD2FD::_StartSetup()
 	   low_write_thresh>=high_write_thresh || 
 	   low_read_thresh<0 || 
 	   low_write_thresh<0 || 
-	   high_read_thresh>iobs ||
-	   high_write_thresh>iobs )
+	   high_read_thresh>ssize_t(iobs) ||
+	   high_write_thresh>ssize_t(iobs) )
 	{  return(-5);  }
 	
 	// Okay, seems that the thresholds are also okay now. 

@@ -85,7 +85,7 @@ int FDCopyBase::fdnotify(FDManager::FDInfo *fdi)
 
 // NOTE: pump = h->in_pump or h->out_pump; pump may NOT be NULL. 
 void FDCopyBase::_DoHandleFDNotify(FDManager::FDInfo *fdi,
-	FDDataHook *h,FDCopyPump *pump)
+	FDDataHook * /*h*/,FDCopyPump *pump)
 {
 	if(pump->is_dead)
 	{

@@ -37,6 +37,7 @@ const char *ProcessBase::PSDetail_SyscallString(PSDetail x)
 		case PSSetUidFailed:    return("setuid");
 		case PSFunctionFailed:  return("[function]");
 		case PSUnknownError:    return("[unknown]");
+		default:;  // against warning
 	}
 	return("???");
 }
@@ -114,6 +115,7 @@ int ProcessBase::ProcessStatusString(const ProcStatus *ps,char *buf,size_t len)
 						ps->estatus,
 						ps->detail==PSDumped ? " (core dumped)" : "");
 					break;
+				default:;  // against warning
 			}
 			break;
 		case PSStopCont:

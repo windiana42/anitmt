@@ -465,12 +465,12 @@ class FDCopyPump :
 		//   0 -> OK
 		//  -1 -> job done (error)
 		//   1 -> job done (regularly)
-		virtual int HandleFDNotify(FDManager::FDInfo *fdi) HL_PureVirt(-1);
+		virtual int HandleFDNotify(FDManager::FDInfo * /*fdi*/) HL_PureVirt(-1);
 		
 		// NOTE: NEVER CALL DIRECTLY. ALWAYS USE FDCopyPump::Control(). 
 		// This is the virtual function implementing the control command 
 		// in the derived classes. 
-		virtual int VControl(ControlCommand cc)  {  return(-1);  }
+		virtual int VControl(ControlCommand /*cc*/)  {  return(-1);  }
 		
 	public:  _CPP_OPERATORS_FF
 		// Use FDCopyBase::NEW_CopyPump(); you need not create the 
@@ -506,7 +506,7 @@ class FDCopyPump :
 		//        deleted!
 		// ** Additional return values are possible according to 
 		// ** derived class. 
-		virtual int SetIO(FDCopyIO *src,FDCopyIO *dest) HL_PureVirt(-2);
+		virtual int SetIO(FDCopyIO * /*src*/,FDCopyIO * /*dest*/) HL_PureVirt(-2);
 		
 		// For available control commands see above. 
 		// Note that not all FDCopyPumps must support all commands 
