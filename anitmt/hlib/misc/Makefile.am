@@ -9,7 +9,7 @@ libmisc_a_SOURCES = \
 		installsighandler.c \
 		llongstr.c ullongstr.c \
 		memfind.c \
-		msecelapsed.c \
+		msecelapsed.c msecelapsedr.c \
 		nonblock.c tcpnodelay.c \
 		getprgname.c \
 	prototypes.h hlib.h 

@@ -3,7 +3,7 @@
  * 
  * Implementation of methods supporting class HTime. 
  * 
- * Copyright (c) 2001 by Wolfgang Wieser (wwieser@gmx.de) 
+ * Copyright (c) 2001--2002 by Wolfgang Wieser (wwieser@gmx.de) 
  * 
  * This file may be distributed and/or modified under the terms of the 
  * GNU General Public License version 2 as published by the Free Software 
@@ -21,8 +21,11 @@
 #include <hlib/htime.h>
 
 
+// Used constants: 
 const long long HTime::conv_fact[HTime::_tslast]=
 { 1LL, 1000LL, 1000000LL, 60000000LL, 3600000000LL, 86400000000LL };
+const long long HTime::round_delta[HTime::_tslast]=
+{ 0LL,  500LL,  500000LL, 30000000LL, 1800000000LL, 43200000000LL };
 const double HTime::conv_factD[HTime::_tslast]=
 { 1.0, 1000.0, 1000000.0, 60000000.0, 3600000000.0, 86400000000.0 };
 
@@ -77,15 +80,16 @@ HTime &HTime::Sub(long val,TimeSpec sp)
 }
 
 
-void HTime::_Delta(const HTime *endtime,long long *delta) const
+long long HTime::_Delta(const HTime *endtime) const
 {
-	timeval tmp,*end;
+	timeval tmp;
+	const timeval *end;
 	if(endtime)
-	{  end=(timeval*)(&endtime->tv);  }
+	{  end=&endtime->tv;  }
 	else
-	{  end=&tmp;  gettimeofday(end,NULL);  }
-	*delta = 
+	{  gettimeofday(&tmp,NULL);  end=&tmp;  }
+	return(
 		(((long long)end->tv_sec)*1000000LL+((long long)end->tv_usec)) - 
-		(((long long)tv.tv_sec)*1000000LL+((long long)tv.tv_usec));
+		(((long long)tv.tv_sec)*1000000LL+((long long)tv.tv_usec)) );
 }
 

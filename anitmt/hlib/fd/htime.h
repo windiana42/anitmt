@@ -4,7 +4,7 @@
  * Header containing class HTime, a general time class 
  * (timeval replacement) 
  * 
- * Copyright (c) 2001 by Wolfgang Wieser (wwieser@gmx.de) 
+ * Copyright (c) 2001--2002 by Wolfgang Wieser (wwieser@gmx.de) 
  * 
  * This file may be distributed and/or modified under the terms of the 
  * GNU General Public License version 2 as published by the Free Software 
@@ -32,12 +32,17 @@ class HTime
 	private:
 		timeval tv;
 		static const long long conv_fact[];
+		static const long long round_delta[];
 		static const double conv_factD[];
 		
 		void _SetVal(long val,TimeSpec sp,timeval *tv);
-		void _Delta(const HTime *endtime,long long *delta) const;
-		void _LLConv(const timeval *tv,long long *rv) const
-			{  *rv=((long long)tv->tv_sec)*1000000LL+((long long)tv->tv_usec);  }
+		long long _Delta(const HTime *endtime) const;
+		inline long long _LLConv(const timeval *tv) const
+			{  return(((long long)tv->tv_sec)*1000000LL+((long long)tv->tv_usec));  }
+		static inline long long _RoundAdd(long long x,TimeSpec sp)
+			{  return(x + (x<0LL ? (-round_delta[sp]) : round_delta[sp]));  }
+		static inline long _RoundAddMs(long x)
+			{  return((x<0L) ? (x-500L) : (x+500L));  }
 	public:  _CPP_OPERATORS
 		HTime()  { }
 		HTime(_CurrentTime)  {  SetCurr();  }
@@ -59,8 +64,15 @@ class HTime
 		// Get stored time. This is only useful if HTime stores some 
 		// elapsed time (e.g. consumed system time) and not a real 
 		// date. 
-		long   Get (TimeSpec sp) const;
-		double GetD(TimeSpec sp) const;
+		// Get() -> get integer value; result truncated at division
+		// GetR() -> get integer value; result rounded at division
+		// GetD() -> get floating point value 
+		long   Get (TimeSpec sp) const
+			{  return((sp<_tslast) ? long(_LLConv(&tv)/conv_fact[sp]) : (-1L));  }
+		long   GetR(TimeSpec sp) const
+			{  return((sp<_tslast) ? long(_RoundAdd(_LLConv(&tv),sp)/conv_fact[sp]) : (-1L));  }
+		double GetD(TimeSpec sp) const
+			{  return((sp<_tslast) ? (double(_LLConv(&tv))/conv_factD[sp]) : (-1.0));  }
 		
 		// This should not be used: 
 		void SetTimeval(timeval *stv)
@@ -71,63 +83,54 @@ class HTime
 		HTime &Sub(long val,TimeSpec sp=msec);
 		
 		// To compare time values: 
-		int operator==(const HTime &h) const
+		inline int operator==(const HTime &h) const
 			{  return(tv.tv_sec==h.tv.tv_sec && tv.tv_usec==h.tv.tv_usec);  }
-		int operator!=(const HTime &h) const
+		inline int operator!=(const HTime &h) const
 			{  return(tv.tv_sec!=h.tv.tv_sec || tv.tv_usec!=h.tv.tv_usec);  }
-		int operator>(const HTime &h) const
+		inline int operator>(const HTime &h) const
 			{  return(tv.tv_sec>h.tv.tv_sec || 
 			         (tv.tv_sec==h.tv.tv_sec && tv.tv_usec>h.tv.tv_usec));  }
-		int operator<(const HTime &h) const
+		inline int operator<(const HTime &h) const
 			{  return(tv.tv_sec<h.tv.tv_sec || 
 			         (tv.tv_sec==h.tv.tv_sec && tv.tv_usec<h.tv.tv_usec));  }
-		int operator>=(const HTime &h) const
+		inline int operator>=(const HTime &h) const
 			{  return(tv.tv_sec>h.tv.tv_sec || 
 			         (tv.tv_sec==h.tv.tv_sec && tv.tv_usec>=h.tv.tv_usec));  }
-		int operator<=(const HTime &h) const
+		inline int operator<=(const HTime &h) const
 			{  return(tv.tv_sec<h.tv.tv_sec || 
 			         (tv.tv_sec==h.tv.tv_sec && tv.tv_usec<=h.tv.tv_usec));  }
+		// True if time value is 0, otherwise false: [not needed]
+		//inline bool operator!() const
+		//	{  return(!tv.tv_sec && !tv.tv_usec);  }
 		
 		// Time differences: 
 		// starttime: *this; endtime: NULL=current 
 		// BEWARE OF OVERFLOWS. 
-		long   Elapsed (TimeSpec sp,const HTime *endtime=NULL) const;
-		double ElapsedD(TimeSpec sp,const HTime *endtime=NULL) const;
-		// Faster: 
+		// Note: Elapsed()  -> result truncated at division
+		//       ElapsedR() -> result rounded at division
+		//       ElapsedD() -> floating point division
+		long   Elapsed (TimeSpec sp,const HTime *endtime=NULL) const
+			{  return((sp<_tslast) ? long(_Delta(endtime)/conv_fact[sp]) : (-1L));  }
+		long   ElapsedR(TimeSpec sp,const HTime *endtime=NULL) const
+			{  return((sp<_tslast) ? long(_RoundAdd(_Delta(endtime),sp)/conv_fact[sp]) : (-1L));  }
+		double ElapsedD(TimeSpec sp,const HTime *endtime=NULL) const
+			{  return((sp<_tslast) ? (double(_Delta(endtime))/conv_factD[sp]) : (-1.0));  }
+		// Faster for milliseconds: 
+		// MsecElapsed()  -> result truncated at division
+		// MsecElapsedR() -> result rounded at division
+		// NEVER supply NULL as argument endtime here! 
+		// There are versions which take no argument for 
+		//   endtime = current time
+		long MsecElapsed(const HTime *endtime) const  // endtime is NON-NULL
+			{  return((endtime->tv.tv_sec  - tv.tv_sec )*1000L + 
+			          (endtime->tv.tv_usec - tv.tv_usec)/1000L );  }
+		long MsecElapsedR(const HTime *endtime) const  // endtime is NON-NULL
+			{  return( (endtime->tv.tv_sec  - tv.tv_sec )*1000L + 
+			_RoundAddMs(endtime->tv.tv_usec - tv.tv_usec)/1000L );  }
 		long MsecElapsed() const
 			{  return(msec_elapsed(&tv,NULL));  }
-		long MsecElapsed(const HTime *endtime) const  // endtime is NON-NULL
-			{  return(msec_elapsed(&tv,&endtime->tv));  }
+		long MsecElapsedR() const
+			{  return(msec_elapsed_r(&tv,NULL));  }
 };
-
-
-inline long HTime::Get(TimeSpec sp) const
-{
-	if(sp>=_tslast)  return(-1L);
-	long long tmp;  _LLConv(&tv,&tmp);
-	return(long((tmp)/conv_fact[sp]));
-}
-
-inline double HTime::GetD(TimeSpec sp) const
-{
-	if(sp>=_tslast)  return(-1.0);
-	long long tmp;  _LLConv(&tv,&tmp);
-	return(double(tmp)/conv_factD[sp]);
-}
-
-
-inline long HTime::Elapsed(TimeSpec sp,const HTime *endtime) const
-{
-	if(sp>=_tslast)  return(-1L);
-	long long tmp;  _Delta(endtime,&tmp);
-	return(long((tmp)/conv_fact[sp]));
-}
-
-inline double HTime::ElapsedD(TimeSpec sp,const HTime *endtime) const
-{
-	if(sp>=_tslast)  return(-1.0);
-	long long tmp;  _Delta(endtime,&tmp);
-	return(double(tmp)/conv_factD[sp]);
-}
 
 #endif  /* _HLIB_HTime_H_ */

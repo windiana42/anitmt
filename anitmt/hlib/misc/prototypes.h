@@ -3,7 +3,7 @@
  *
  * Prototypes of all (non-member) functions of this directory. 
  *
- * Copyright (c) 1999-2001 by Wolfgang Wieser (wwieser@gmx.de) 
+ * Copyright (c) 1999-2002 by Wolfgang Wieser (wwieser@gmx.de) 
  * 
  * This file may be distributed and/or modified under the terms of the 
  * GNU General Public License version 2 as published by the Free Software 
@@ -73,10 +73,18 @@ extern char *prg_name;
   extern char *memfind(const char *buf,const char *tofind,size_t len);
 
 /* msecelapsed.c: */
-  /* calc the time between *old and *current in msec. 
-   * current may be NULL (then it is queried from the system). 
+  /* Calc the time between *old and *current in msec. 
+   * Current may be NULL (then it is queried from the system). 
+   * Result truncated after division (see also msec_elapsed_r()). 
    */
   extern long msec_elapsed(const struct timeval *old,const struct timeval *current);
+
+/* msecelapsedr.c: */
+  /* Calc the time between *old and *current in msec. 
+   * Current may be NULL (then it is queried from the system). 
+   * Result rounded at division (see also msec_elapsed()). 
+   */
+  extern long msec_elapsed_r(const struct timeval *old,const struct timeval *current);
 
 /* llongstr.c, ullongstr.c: */
   /* Convert the passed argument to a string. The statically allocated 
