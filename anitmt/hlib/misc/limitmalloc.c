@@ -15,6 +15,7 @@
  * 
  */
 
+#define HLIB_IN_HLIB 1
 #include <hlib/lmalloc.h>
 
 #if !defined(HLIB_DONT_USE_MALLOC_USABLE_SIZE)

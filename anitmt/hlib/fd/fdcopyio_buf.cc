@@ -14,6 +14,7 @@
  * 
  */
 
+#define HLIB_IN_HLIB 1
 #include <hlib/fdcopybase.h>
 
 #ifndef TESTING

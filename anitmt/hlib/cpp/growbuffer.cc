@@ -14,6 +14,7 @@
  * 
  */
 
+#define HLIB_IN_HLIB 1
 #include "growbuffer.h"
 
 // NOTE: len is not changed by this function 

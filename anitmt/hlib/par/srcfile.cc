@@ -15,6 +15,7 @@
  * 
  */
 
+#define HLIB_IN_HLIB 1
 #include "srcfile.h"
 
 #include <string.h>
@@ -30,7 +31,7 @@
 #warning TESTING switched on (using assert())
 #include <assert.h>
 #else
-#define assert(x)
+#define assert(x) do{}while(0)
 #endif
 
 

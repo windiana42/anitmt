@@ -14,6 +14,7 @@
  * 
  */
 
+#define HLIB_IN_HLIB 1
 #include <hlib/prototypes.h>
 
 #include <string.h>
@@ -32,7 +33,7 @@
 #warning TESTING switched on (assert() used). 
 #include <assert.h>
 #else
-#define assert(x)
+#define assert(x) do{}while(0)
 #endif
 
 

@@ -16,6 +16,7 @@
  * 
  */
 
+#define HLIB_IN_HLIB 1
 #include "sindentcout.h"
 #include <string.h>
 
@@ -28,7 +29,7 @@
 #warning TESTING switched on (uses assert())
 #include <assert.h>
 #else
-#define assert(x) 
+#define assert(x) do{}while(0)
 #endif
 
 namespace par

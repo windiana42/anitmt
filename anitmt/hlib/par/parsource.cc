@@ -14,6 +14,7 @@
  * 
  */
 
+#define HLIB_IN_HLIB 1
 #include "parsource.h"
 
 #ifndef TESTING
@@ -24,7 +25,7 @@
 #warning TESTING switched on. 
 #include <assert.h>
 #else
-#define assert(x)
+#define assert(x) do{}while(0)
 #endif
 
 namespace par

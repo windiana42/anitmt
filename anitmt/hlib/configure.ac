@@ -303,4 +303,33 @@ AC_CONFIG_FILES([include/Makefile \
 	misc/Makefile \
 	crypto/Makefile \
 	Makefile])
+
+AC_CONFIG_COMMANDS([final],
+	[ if test -f hlib-config.h ; then
+	cat >> hlib-config.h <<EOF
+
+/* This is used so that other applications using hlib will not 
+ * get into trouble. */
+#ifndef HLIB_IN_HLIB
+#  undef PACKAGE
+#  undef PACKAGE_BUGREPORT
+#  undef PACKAGE_NAME
+#  undef PACKAGE_STRING
+#  undef PACKAGE_TARNAME
+#  undef PACKAGE_VERSION
+#  undef VERSION
+/* Pass -DCHECK_HLIB_IN_HLIB using CFLAGS/CXXFLAGS or ADDFLAGS to see 
+ * if HLIB_IN_HLIB is defined in every src files. */
+#  ifdef CHECK_HLIB_IN_HLIB
+#    error CHECK_HLIB_IN_HLIB not defined.
+#  endif
+#endif
+EOF
+	fi ])
+
+# Finally do it: 
 AC_OUTPUT
+
+# AutoHeader stuff to append: 
+# AH_BOTTOM([#include xyz])
+

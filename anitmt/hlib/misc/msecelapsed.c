@@ -12,6 +12,7 @@
  * 
  */
 
+#define HLIB_IN_HLIB 1
 #include <hlib/prototypes.h>
 
 #if TIME_WITH_SYS_TIME

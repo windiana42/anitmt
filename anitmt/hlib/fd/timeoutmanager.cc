@@ -16,6 +16,7 @@
  * 
  */
 
+#define HLIB_IN_HLIB 1
 #include "fdmanager.h"
 #include "fdbase.h"
 #include "timeoutmanager.h"
@@ -35,7 +36,7 @@
 #  warning TESTING switched on (using assert())
 #  include <assert.h>
 #else
-#  define assert(x)
+#  define assert(x)  do{}while(0)
 #  undef TESTING_CHECK
 #  define TESTING_CHECK 0
 #endif

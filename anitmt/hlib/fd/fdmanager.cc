@@ -16,6 +16,9 @@
  * 
  */
 
+#define HLIB_IN_HLIB 1
+#include <hlib/prototypes.h>  /* MUST BE FIRST */
+
 #define DEBUG 0
 
 //------------------------------------------------------------------------------
@@ -30,7 +33,6 @@
 
 #warning Does FDManager::SigInfo need _CPP_OPERATORS?
 
-#include <hlib/prototypes.h>  /* MUST BE FIRST */
 
 #include <string.h>
 

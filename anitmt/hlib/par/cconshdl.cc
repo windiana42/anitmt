@@ -15,6 +15,7 @@
  * 
  */
 
+#define HLIB_IN_HLIB 1
 #include "parmanager.h"
 #include "parconsumer.h"
 

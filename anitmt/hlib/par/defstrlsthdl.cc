@@ -14,6 +14,7 @@
  * 
  */
 
+#define HLIB_IN_HLIB 1
 #include "valuehandler.h"
 #include "cmdline.h"
 #include <hlib/refstrlist.h>
@@ -33,7 +34,7 @@
 #warning TESTING switched on. TESTING using assert()
 #include <assert.h>
 #else
-#define assert(x) 
+#define assert(x) do{}while(0)
 #endif
 
 

@@ -12,7 +12,7 @@
  * 
  */
 
-
+#define HLIB_IN_HLIB 1
 #include <hlib/prototypes.h>
 
 #if HAVE_TERMIOS_H

@@ -23,6 +23,7 @@
 // HOWEVER, currently those features in ProcMisc which need root perms 
 //       are NOT tested. 
 
+#define HLIB_IN_HLIB 1
 #include <hlib/prototypes.h>
 
 #include "htime.h"

@@ -15,6 +15,7 @@
  * 
  */
 
+#define HLIB_IN_HLIB 1
 #include "parsource.h"
 
 namespace par

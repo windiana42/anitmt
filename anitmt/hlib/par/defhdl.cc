@@ -15,6 +15,7 @@
  * 
  */
 
+#define HLIB_IN_HLIB 1
 #include "valuehandler.h"
 #include "cmdline.h"
 

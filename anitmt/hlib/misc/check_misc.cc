@@ -20,6 +20,7 @@
 //       one of the make check calls) with option -cfg: 
 //     bash# ./misc/check_misc -cfg
 
+#define HLIB_IN_HLIB 1
 #include "prototypes.h"
 
 #include <assert.h>

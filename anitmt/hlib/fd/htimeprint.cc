@@ -14,6 +14,7 @@
  * 
  */
 
+#define HLIB_IN_HLIB 1
 #include <hlib/htime.h>
 
 static const char *_is_invalid_str="[invalid time]";

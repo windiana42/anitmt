@@ -12,6 +12,7 @@
  * 
  */
 
+#define HLIB_IN_HLIB 1
 #include <hlib/prototypes.h>
 
 #include <fcntl.h>

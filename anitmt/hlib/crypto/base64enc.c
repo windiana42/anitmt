@@ -14,6 +14,7 @@
  *
  */
 
+#define HLIB_IN_HLIB 1
 #include "base64.h"
 
 /* Maps the values in range 0...63 to base64 chars. */
