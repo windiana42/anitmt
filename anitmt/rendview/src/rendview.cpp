@@ -74,6 +74,16 @@ int RendViewEnvVars::ParseAddArgs(par::ParameterSource_CmdLine *cmd_src)
 	int rv=0;
 	for(const RefStrList::Node *i=addargs.first(); i; i=i->next)
 	{
+		// Check for special optput options (-color/-no-color/-verbose=...):
+		int toskip=CheckParseOutputParam(
+			i->str(),i->next ? i->next->str() : NULL,&rv,-cnt-1);
+		if(rv)  break;
+		if(toskip)
+		{
+			if(toskip>1)  i=i->next;
+			continue;
+		}
+		
 		int fflag=0;
 		par::ParamArg tmp(i->str(),-cnt-1,&fflag);
 		if(fflag)
@@ -159,9 +169,26 @@ static par::ParameterManager *SetUpParManager()
 		"Bug report instructions: See http://anitmt.sf.net/rendview/");
 	
 	parman->AdditionalHelpText(
+		"-color/-no-color: colored output is automatically switched off for "
+		"    non-ttys but it can manually be forced off/on using these options\n"
+		"-verbose={+-}CHAN{+-}CHAN...: Specify verbosity level; CHAN can be:\n"
+		"    misc   misc info\n"
+		"    tdi    task driver init info (start processing/end)\n"
+		"    tdr    task driver runtime info (kill/start...)\n"
+		"    tsi    task source init info (per-frame blocks...)\n"
+		"    tsp    task source param parse/setup info (skipped xy,...)\n"
+		"    tsr0   task source runtime info level 0 (less important)\n"
+		"    tsr1   task source runtime info level 1 (more important)\n"
+		"    tslr   local task source runtime info (file re-naming...)\n"
+		"    tsllr  LDR task source runtime info\n"
+		"    dbg    debug messages\n"
+		"    dbgv   more debug messages\n"
+		"    all    all of the above flags\n\n"
+		
 		"RENDVIEWARGS/LDRCLIENTARGS/LDRSERVERARGS: Environment var to "
 		"pass arguments just as if you put them at the beginning of the "
 		"cmd line; which one is used depends on the binary name.\n\n"
+		
 		"RendView is a utility to render (and postprocess) animations.  "
 		"While the actual rendering is done by some render application "
 		"like e.g. POVRay and the real animation logic is computed by a "
@@ -179,11 +206,13 @@ static par::ParameterManager *SetUpParManager()
 		"rendview exits cleanly.  Pressing ^C three times makes "
 		"RendView abort.  SIGTERM acts like two ^C.  SIGTSTP (^Z) will "
 		"make RendView stop all tasks and then also stop; SIGCONT (fg or "
-		"bg in bash) makes them continue all again.\n"
-		"NOTE: COLORED OUTPUT is automatically switched off for non-ttys "
-		"but you can manually force it off/on using --nocolor/--color."
-		"\n\n** LDR is in experimental state **"
-		"\n\nExamples:\n"
+		"bg in bash) makes them continue all again.\n\n"
+		// ...as well as only rendering changed frames or resuming operation
+		// ...and later create a film of them...
+		
+		"** LDR is in experimental state **\n\n"
+		
+		"Examples:\n"
 		"# rendview --rdfile=/dir/to/renderers.par -l-rd=povray3.5 "
 		"-l-n=240 -l-f0=10 -l-size=320x200 -l-oformat=ppm -l-cont -l-rcont "
 		"-ld-r-quiet -ld-njobs=2\n"
@@ -194,8 +223,6 @@ static par::ParameterManager *SetUpParManager()
 		"192.168.0.2/7001/PaSsWoRd 192.168.0.3/7001/prompt\" -Ld-ctimeout=5000 "
 		"-l-rd=povray3.1g -l-n=245 -l-r-args=\"-display 192.168.0.1:0.0\" "
 		"-l-size=320x240 -l-r-files=\"scene.pov colors.inc\" -l-cont\n");
-		// ...as well as only rendering changed frames or resuming operation
-		// ...and later create a film of them...
 	
 	if(rv_oparams.enable_color_stdout)
 	{
@@ -214,7 +241,11 @@ static int MAIN(int argc,char **argv,char **envp)
 {
 	// Before we do anything, set these up: 
 	// This also checks if we may have color output: 
-	InitRVOutputParams(argc,argv,envp);
+	// Then, checks verbose option: 
+	// This is the earliest opportunity for that. We'll also check 
+	// the verbose settings in the environment once it was read in. 
+	int fail=InitRVOutputParams(argc,argv,envp);
+	if(fail)  fail=1;  // Force fail to be +1 in case of failure. 
 	
 	par::ParameterManager *parman=NULL;
 	FDManager *fdman=NULL;
@@ -228,12 +259,14 @@ static int MAIN(int argc,char **argv,char **envp)
 	par::CmdLineArgs *cmdline=NULL;
 	
 	// First action: Set up the parameter system...
-	Verbose(BasicInit,"Parameter system:");
-	int fail=0;
-	do {
+	if(!fail) do {
+		Verbose(BasicInit,"Parameter system:");
 		parman=SetUpParManager();
 		if(!parman)
-		{  Error(fti,"parameter manager");  fail=1;  break;  }
+		{
+			Error(fti,"parameter manager");
+			fail=1;  break;
+		}
 		Verbose(BasicInit," [manager]");
 		
 		Verbose(BasicInit," [environ");
@@ -410,7 +443,7 @@ static int MAIN(int argc,char **argv,char **envp)
 	Verbose(BasicInit,"Cleanup:");
     if(taskfileman) { Verbose(BasicInit," [file]");       delete taskfileman;  }
     if(taskman)     { Verbose(BasicInit," [task]");       delete taskman;  }
-    if(cdb)         { Verbose(BasicInit," [CDB]");        delete cdb;  }
+    if(cdb)         { Verbose(BasicInit," [CDB");         delete cdb;  Verbose(BasicInit,"]");  }
     if(procman)     { Verbose(BasicInit," [process]");    delete procman;  }
     if(timeoutman)  { Verbose(BasicInit," [timeout]");    delete timeoutman;  }
     if(fdman)       { Verbose(BasicInit," [FD]");         delete fdman;  }

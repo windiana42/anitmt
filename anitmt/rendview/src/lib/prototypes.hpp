@@ -89,14 +89,26 @@ enum
 	VERBOSE_DBG =       0x01000000,   // DEBUG verbose
 	VERBOSE_BasicInit = 0x01000000,   // basic init at startup (managers, ...) (=DEBUG, now)
 	VERBOSE_DBGV =      0x03000000,   // DEBUG very verbose (implies ~_DBG)
-	VERBOSE_0 =         0x10000000    // <-- TO BE DELETED. 
+	VERBOSE_0 =         0x10000000,   // <-- TO BE DELETED. 
+	_VERBOSE_ALL =      0x7fffffff    // all flags (actually, "more than all")
 };
 
 
 // Global output params: 
 extern  RVOutputParams rv_oparams;
 // Set them up: 
-extern void InitRVOutputParams(int &argc,char **argv,char **envp);
+extern int InitRVOutputParams(int &argc,char **argv,char **envp);
+// *errors: error counter
+// Return value: 
+//  0 -> no output param
+//  1 -> arg0 was used
+//  2 -> arg0 and arg1 were used
+extern int CheckParseOutputParam(const char *arg0,const char *arg1,
+	int *errors,int argidx_for_error);
+// Used to parse verbose option spec: 
+// Global rv_oparams get modified. 
+// Return value: 0 -> OK; 1 -> error 
+extern int ParseVerbosSpec(const char *str,const char *err_prefix);
 
 extern int Error(const char *fmt,...)    __attribute__ ((__format__ (__printf__, 1, 2)));
 extern int Warning(const char *fmt,...)  __attribute__ ((__format__ (__printf__, 1, 2)));
