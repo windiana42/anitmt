@@ -80,8 +80,8 @@ int NetworkIOBase_LDR::LDRGetTaskExecutionStatus(
 
 
 // dir: +1 -> output; -1 -> input; 0 -> both
-// Returns NULL if not available. 
-TaskFile *NetworkIOBase_LDR::GetTaskFileByEntryDesc(int dir,
+// Returns NULL ref if not available. 
+TaskFile NetworkIOBase_LDR::GetTaskFileByEntryDesc(int dir,
 	CompleteTask *ctsk,u_int16_t file_type,u_int16_t file_idx)
 {
 	switch(file_type)
@@ -97,35 +97,43 @@ TaskFile *NetworkIOBase_LDR::GetTaskFileByEntryDesc(int dir,
 			if(dir>=0 && ctsk->ft)  return(ctsk->ft->outfile);
 			break;
 		case FRFT_AddRender:
-			if(dir<=0 && int(file_idx)<ctsk->radd.nfiles)
-				return(ctsk->radd.file[file_idx]);
-			break;
 		case FRFT_AddFilter:
-			if(dir<=0 && int(file_idx)<ctsk->fadd.nfiles)
-				return(ctsk->fadd.file[file_idx]);
-			break;
+		{
+			if(dir>0)  break;
+			CompleteTask::AddFiles *af=
+				(file_type==FRFT_AddRender) ? &ctsk->radd : &ctsk->fadd;
+			int cnt=0;
+			for(int i=0; i<af->nfiles; i++)
+			{
+				if(af->tfile[i].GetSkipFlag())  continue;
+				if(cnt==int(file_idx))
+				{  return(af->tfile[i]);  }
+				++cnt;
+			}
+		}  break;
 		default:  assert(0);
 	}
-	return(NULL);
+	TaskFile nullref;
+	return(nullref);
 }
 
 
-// Return value: 
-//   0 -> OK
-//  -2 -> stat failed
-int NetworkIOBase_LDR::LDRStoreFileInfoEntry(LDR::LDRFileInfoEntry *dest,
-	const TaskFile *tf)
+void NetworkIOBase_LDR::LDRStoreFileInfoEntry(LDR::LDRFileInfoEntry *dest,
+	TaskFile tf)
 {
+	assert(!tf.GetSkipFlag());
+	
 	// Name length without trailing '\0': 
-	size_t namelen=tf->BaseNameLength();
+	size_t namelen=strlen(tf.BaseNamePtr());
 	assert(namelen<0xffff && namelen>0);  // Name MUST be set (>=1 char). 
 	// If this assert fails due to namelen being 0, add a check somewhere 
 	// else (near the position where you read in the evil input). 
 	
 	HTime mtime;
-	int64_t size=tf->FileLengthMTime(&mtime);
-	if(size<0)
-	{  return(-2);  }
+	int64_t size=tf.GetFixedState(&mtime);
+	// If this assert fails, either SetFixedState() was not 
+	// called or it was called but invalid size was stored. 
+	assert(size>=0);
 	
 	// Note that *dest may not be aligned, so I use a temporary. 
 	LDRFileInfoEntry tmp;
@@ -134,34 +142,31 @@ int NetworkIOBase_LDR::LDRStoreFileInfoEntry(LDR::LDRFileInfoEntry *dest,
 	HTime2LDRTime(&mtime,&tmp.mtime);
 	memcpy(dest,&tmp,sizeof(tmp));
 	// Copy file name without trailing '\0'. 
-	// tf->BaseNamePtr()!=NULL due to assert above. 
-	memcpy(dest->name,tf->BaseNamePtr(),namelen);
-	
-	return(0);
+	// tf.BaseNamePtr()!=NULL due to assert above. 
+	memcpy(dest->name,tf.BaseNamePtr(),namelen);
 }
 
 
-// Return value: 
-//  0    -> OK
-//  else -> see LDRStoreFileInfoEntry() 
-int NetworkIOBase_LDR::LDRStoreFileInfoEntries(char *destbuf,char *bufend,
-	const CompleteTask::AddFiles *ctf,int *err_elem)
+// Returns updated dest buffer. 
+char *NetworkIOBase_LDR::LDRStoreFileInfoEntries(char *destbuf,char *bufend,
+	const CompleteTask::AddFiles *ctf)
 {
 	for(int i=0; i<ctf->nfiles; i++)
 	{
-		const TaskFile *tf=ctf->file[i];
+		const TaskFile *tf=&(ctf->tfile[i]);
+		if(tf->GetSkipFlag())  continue;
 		char *nextbuf=destbuf+LDRFileInfoEntrySize(tf);
 		assert(nextbuf<=bufend);  // buffer MUST be large enough (use LDRSumFileInfoSize())
-		int rv=LDRStoreFileInfoEntry((LDRFileInfoEntry*)destbuf,tf);
-		if(rv)
-		{  *err_elem=i; return(rv);  }
+		LDRStoreFileInfoEntry((LDRFileInfoEntry*)destbuf,*tf);
 		destbuf=nextbuf;
 	}
-	return(0);
+	return(destbuf);
 }
 
 
-// Return value: 
+// prep_path: path to prepend before file (base) name
+// iotype: file IOType (IOTRenderInput or IOTFilterInput)
+// Return value in retval: 
 //   >0 -> size of this LDRFileInfoEntry
 //   -1 -> alloc failure
 //   -2 -> illegal file name length entry (0 or too long)
@@ -169,11 +174,14 @@ int NetworkIOBase_LDR::LDRStoreFileInfoEntries(char *destbuf,char *bufend,
 //         like '\0' and '/')
 //   -4 -> illegal file size entry
 //   -5 -> buflen < sizeof(LDR::LDRFileInfoEntry)
-ssize_t NetworkIOBase_LDR::LDRGetFileInfoEntry(TaskFile *tf,
-	LDR::LDRFileInfoEntry *_src,size_t buflen)
+//   -6 -> TaskFile::SetFixedState() failed
+TaskFile NetworkIOBase_LDR::LDRGetFileInfoEntry(ssize_t *retval,
+	LDR::LDRFileInfoEntry *_src,size_t buflen,
+	RefString *prep_path,TaskFile::IOType iotype)
 {
+	TaskFile tf;
 	if(buflen<sizeof(LDR::LDRFileInfoEntry))
-	{  return(-5);  }
+	{  *retval=-5;  return(tf);  }
 	
 	// Note that *src may not be aligned, so I use a temporary. 
 	LDR::LDRFileInfoEntry src;
@@ -181,46 +189,58 @@ ssize_t NetworkIOBase_LDR::LDRGetFileInfoEntry(TaskFile *tf,
 	size_t namelen=ntohs(src.name_slen);
 	
 	if(!namelen || namelen+sizeof(LDR::LDRFileInfoEntry)>buflen)
-	{  return(-2);  }
+	{  *retval=-2;  return(tf);  }
 	
 	int64_t size=ntohll(src.size);
 	if(size<0)
-	{  return(-4);  }
+	{  *retval=-4;  return(tf);  }
 	
 	for(const char *s=(char*)_src->name,*e=s+namelen; s<e; s++)
 	{
 		if(*s=='\0' || *s=='/')
-		{  return(-3);  }
+		{  *retval=-3;  return(tf);  }
 	}
 	
 	// Copy name: 
 	RefString name;
-	if(name.set0((char*)_src->name,namelen))
-	{  return(-1);  }
+	if(name.sprintf(0,"%s%s%.*s",
+		prep_path->str() ? prep_path->str() : "",
+		(!prep_path->str() || prep_path->str()[0]=='\0' || 
+		  prep_path->str()[prep_path->len()-1]=='/') ? "" : "/",
+		namelen,(char*)_src->name))
+	{  *retval=-1;  return(tf);  }
 	
 	HTime mtime;
 	LDRTime2HTime(&src.mtime,&mtime);
+Error("Add server time correction...\n");
 	
-	fprintf(stderr,"Implement me.\n");
-	// Missing: 
-	// Store information of the passed packet in some way. 
+	// Store information of the passed packet. 
 	// Must make sure that we temporarily use the passed size 
 	// instead of the size obtained via stat() [because the file 
 	// does not yet exist] etc. 
-	// > name  [Add HD path!!]
-	// > mtime
-	// > size
-	assert(0);
 	
-	return(namelen+sizeof(LDR::LDRFileInfoEntry));
+	tf=TaskFile::GetTaskFile(name,TaskFile::FTAdd,iotype,TaskFile::FCLDR);
+	if(!tf)
+	{  *retval=-1;  return(tf);  }
+	if(tf.SetFixedState(size,&mtime,/*downloading=*/1))
+	{  *retval=-6;  return(tf);  }
+	
+	*retval=namelen+sizeof(LDR::LDRFileInfoEntry);
+	return(tf);
 }
 
 
-size_t NetworkIOBase_LDR::LDRSumFileInfoSize(const CompleteTask::AddFiles *caf)
+size_t NetworkIOBase_LDR::LDRSumFileInfoSize(const CompleteTask::AddFiles *caf,
+	int *counter)
 {
 	size_t sum=0;
 	for(int i=0; i<caf->nfiles; i++)
-	{  sum+=LDRFileInfoEntrySize(caf->file[i]);  }
+	{
+		TaskFile *tf=&(caf->tfile[i]);
+		if(tf->GetSkipFlag())  continue;
+		sum+=LDRFileInfoEntrySize(tf);
+		++(*counter);
+	}
 	return(sum);
 }
 

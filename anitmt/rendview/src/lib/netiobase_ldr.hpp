@@ -78,31 +78,32 @@ class NetworkIOBase_LDR :
 		
 		// Calculate the size of an LDRFileInfoEntry for the passed TaskFile. 
 		static inline size_t LDRFileInfoEntrySize(const TaskFile *af)
-			{  return(af ? (sizeof(LDR::LDRFileInfoEntry)+af->BaseNameLength()) : 0);  }
+			{  return(af ? (sizeof(LDR::LDRFileInfoEntry)+strlen(af->BaseNamePtr())) : 0);  }
 		// Sum up the size of nelem LDRFileInfoEntries for files in *caf. 
-		static size_t LDRSumFileInfoSize(const CompleteTask::AddFiles *caf);
+		// Only sums up files with skip_flag not set. 
+		static size_t LDRSumFileInfoSize(const CompleteTask::AddFiles *caf,
+			int *counter);
 		
-		// Return value: 0 -> OK; DOCUMENT ME!
-		static int LDRStoreFileInfoEntry(LDR::LDRFileInfoEntry *dest,
-			const TaskFile *af);
-		// Return value: 
-		//  0 -> OK
-		// else -> see LDRStoreFileInfoEntry(); in this case, err_elem returns 
-		//         the index of the entry which caused the error. 
-		static int LDRStoreFileInfoEntries(char *destbuf,char *bufend,
-			const CompleteTask::AddFiles *caf,int *err_elem);
+		// These use TaskFile::GetFixedState(), so make sure to SetFixedState(). 
+		// Files with skip_flag are skipped. 
+		static void LDRStoreFileInfoEntry(LDR::LDRFileInfoEntry *dest,TaskFile af);
+		static char *LDRStoreFileInfoEntries(char *destbuf,char *bufend,
+			const CompleteTask::AddFiles *caf);
 		
 		// The opposite of LDRStoreFileInfoEntry(); 
+		// prep_path: path to prepend before file (base) name
+		// iotype: file IOType (IOTRenderInput or IOTFilterInput)
 		// buflen: size of input buffer (passed in *src) 
-		// Return value: 
+		// Return value in *retval: 
 		//  <0  -> error (see netiobase_ldr.cpp)
 		//  >=0 -> size of this LDR::LDRFileInfoEntry (offset to next one)
-		static ssize_t LDRGetFileInfoEntry(TaskFile *af,
-			LDR::LDRFileInfoEntry *src,size_t buflen);
+		static TaskFile LDRGetFileInfoEntry(ssize_t *retval,
+			LDR::LDRFileInfoEntry *src,size_t buflen,
+			RefString *prep_path,TaskFile::IOType iotype);
 		
 		// dir: +1 -> output; -1 -> input; 0 -> both
 		// Returns NULL if not available. 
-		static TaskFile *GetTaskFileByEntryDesc(int dir,
+		static TaskFile GetTaskFileByEntryDesc(int dir,
 			CompleteTask *ctsk,u_int16_t file_type,u_int16_t file_idx);
 		
 		// Get / Store TaskExecutionStatus. 

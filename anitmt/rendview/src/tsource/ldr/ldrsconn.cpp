@@ -435,7 +435,7 @@ int TaskSource_LDR_ServerConn::_ParseTaskRequest(RespBuf *buf)
 	tri.next_action=TRINA_FileReq;
 	tri.req_file_type=FRFT_None;
 	tri.req_file_idx=0;
-	tri.req_tfile=NULL;
+	tri.req_tfile=TaskFile();
 	
 	if(cpnotify_outpump_start()==1)  // -> send file request
 	{  return(3);  }
@@ -453,26 +453,22 @@ int TaskSource_LDR_ServerConn::_ParseTaskRequest(RespBuf *buf)
 // Updated buf pointer returned in *buf. 
 int TaskSource_LDR_ServerConn::_GetFileInfoEntries(TaskFile::IOType iotype,
 	CompleteTask::AddFiles *dest,char **buf,char *bufend,int nent,
-	CompleteTask *ctsk_for_msg)
+	CompleteTask *ctsk_for_msg,RefString *prepend_path)
 {
-	assert(!dest->nfiles && !dest->file);  // appending currently not supported
-	                                       // (will currently not happen)
-	dest->file=(TaskFile**)LMalloc(nent*sizeof(TaskFile*));
-	if(nent && !dest->file)  return(-1);
+	assert(!dest->nfiles && !dest->tfile);  // appending currently not supported
+	                                        // (will currently not happen)
+	dest->tfile=NEWarray<TaskFile>(nent);
+	if(nent && !dest->tfile)  return(-1);
 	dest->nfiles=nent;
-	// Zero the pointers: 
-	for(TaskFile **i=dest->file,**iend=i+nent; i<iend; *(i++)=NULL);
 	
 	char *src=*buf;
 	int retval=0;
 	for(int i=0; i<nent; i++)
 	{
-		TaskFile *tf=NEW2<TaskFile>(TaskFile::FTAdd,iotype);
-		if(!tf)
-		{  retval=-1;  goto retfail;  }
-		dest->file[i]=tf;
-		
-		ssize_t rv=LDRGetFileInfoEntry(tf,(LDRFileInfoEntry*)src,bufend-src);
+		ssize_t rv;
+		dest->tfile[i]=LDRGetFileInfoEntry(&rv,
+			(LDRFileInfoEntry*)src,bufend-src,
+			prepend_path,iotype);
 		assert(rv!=-5);  // -5 -> buf too small
 		if(rv>=0)
 		{
@@ -496,10 +492,7 @@ int TaskSource_LDR_ServerConn::_GetFileInfoEntries(TaskFile::IOType iotype,
 	return(0);
 	
 retfail:;
-	for(TaskFile **i=dest->file,**iend=i+nent; i<iend; i++)
-	{  DELETE(*i);  }
-	LFree(dest->file);
-	dest->file=NULL;
+	dest->tfile=DELarray(dest->tfile);
 	dest->nfiles=0;
 	return(retval);
 }
@@ -682,6 +675,16 @@ int TaskSource_LDR_ServerConn::_ParseTaskRequest_Intrnl(
 		rt->oformat=r_oformat;
 		rt->timeout=_timeout_ntoh(pack->r_timeout);
 		rt->resume=0;
+		
+		u_int16_t r_flags=ntohs(pack->r_flags);
+		if((r_flags & TRRF_Unfinished) && rdesc->can_resume_render)
+		{  rt->resume=1;  }
+		// Currently, the only flag we know is the TRRF_Unfinished: 
+		if((r_flags & ~TRRF_Unfinished)!=0)
+		{
+			Error("%s%d] with illegal flags 0x%x.\n",_rtr,frame_no,r_flags);
+			delete ctsk;  return(2);
+		}
 	}
 	if(fdesc)
 	{
@@ -709,7 +712,7 @@ int TaskSource_LDR_ServerConn::_ParseTaskRequest_Intrnl(
 			return(1);
 		}
 		rv=_GetFileInfoEntries(TaskFile::IOTRenderInput,&ctsk->radd,
-			&add_files_ptr,end_ptr,r_n_files,ctsk);
+			&add_files_ptr,end_ptr,r_n_files,ctsk,&P()->radd_path);
 		if(rv==-1 || rv==-2)
 		{
 			delete ctsk;
@@ -732,7 +735,7 @@ int TaskSource_LDR_ServerConn::_ParseTaskRequest_Intrnl(
 			return(1);
 		}
 		rv=_GetFileInfoEntries(TaskFile::IOTFilterInput,&ctsk->fadd,
-			&add_files_ptr,end_ptr,f_n_files,ctsk);
+			&add_files_ptr,end_ptr,f_n_files,ctsk,&P()->fadd_path);
 		if(rv==-1 || rv==-2)
 		{
 			delete ctsk;
@@ -743,49 +746,14 @@ int TaskSource_LDR_ServerConn::_ParseTaskRequest_Intrnl(
 	}
 	
 	// Assign input and output files. 
-	int _afail=1;
-	do {
-	#warning these are just quick hacks... 
-		if(ctsk->rt)
-		{
-			RenderTask *rt=(RenderTask*)ctsk->rt;
-			if(rt->wdir.set("."))  break;
-			RefString infile,outfile;
-			if(infile.sprintf(0,"f-%08x-%07d.a",ctsk->task_id,ctsk->frame_no))  break;
-			if(outfile.sprintf(0,"f-%08x-%07d.b",ctsk->task_id,ctsk->frame_no))  break;
-			rt->infile=NEW2<TaskFile>(TaskFile::FTFrame,
-				TaskFile::IOTRenderInput);
-			rt->outfile=NEW2<TaskFile>(TaskFile::FTImage,
-				TaskFile::IOTRenderOutput);
-			if(!rt->infile || !rt->outfile)  break;
-			rt->infile->SetHDPath(infile);
-			rt->outfile->SetHDPath(outfile);
-		}
-		if(ctsk->ft)
-		{
-			FilterTask *ft=(FilterTask*)ctsk->ft;
-			if(ft->wdir.set("."))  break;
-			RefString infile,outfile;
-			if(infile.sprintf(0,"f-%08x-%07d.b",ctsk->task_id,ctsk->frame_no))  break;
-			if(outfile.sprintf(0,"f-%08x-%07d.c",ctsk->task_id,ctsk->frame_no))  break;
-			ft->infile=NEW2<TaskFile>(TaskFile::FTImage,
-				TaskFile::IOTFilterInput);
-			ft->outfile=NEW2<TaskFile>(TaskFile::FTImage,
-				TaskFile::IOTFilterOutput);
-			if(!ft->infile || !ft->outfile)  break;
-			ft->infile->SetHDPath(infile);
-			ft->outfile->SetHDPath(outfile);
-		}
-		// infile,outfile,wdir (rt and ft)
-		// additional files (see above)
-		_afail=0;
-	} while(0);
-	if(_afail)
+	int sv=_TaskRequest_SetUpTaskFiles(ctsk);
+	if(sv==-1)
 	{
 		_AllocFailure(ctsk,/*fail=*/-1);
 		delete ctsk;
 		return(-1);
 	}
+	else assert(sv==0);
 	
 	#if 1
 	// Okay, dump to the user: 
@@ -795,14 +763,16 @@ Error("The following should not be dumped here, right?\n");
 		ctsk->frame_no,ctsk->task_id);
 	if(ctsk->rt)
 	{
-		fprintf(stderr,"  Render: %s (%ux%u; timeout=%ld; oformat=%s)\n",
+		fprintf(stderr,"  Render: %s (%ux%u; timeout=%ld; oformat=%s)%s\n",
 			ctsk->rt->rdesc->name.str(),
 			ctsk->rt->width,ctsk->rt->height,ctsk->rt->timeout,
-			  ctsk->rt->oformat->name);
+			  ctsk->rt->oformat->name,
+			ctsk->rt->resume ? " [resume]" : "");
 		fprintf(stderr,"    Args:");
 		for(const RefStrList::Node *i=ctsk->rt->add_args.first(); i; i=i->next)
 		{  fprintf(stderr," %s",i->str());  }
 		fprintf(stderr,"\n");
+		fprintf(stderr,"    Add files: %d\n",ctsk->radd.nfiles);
 	}
 	else
 	{  fprintf(stderr,"  Render: [none]\n");  }
@@ -815,6 +785,7 @@ Error("The following should not be dumped here, right?\n");
 		for(const RefStrList::Node *i=ctsk->ft->add_args.first(); i; i=i->next)
 		{  fprintf(stderr," %s",i->str());  }
 		fprintf(stderr,"\n");
+		fprintf(stderr,"    Add files: %d\n",ctsk->fadd.nfiles);
 	}
 	else
 	{  fprintf(stderr,"  Filter: [none]\n");  }
@@ -829,12 +800,65 @@ Error("The following should not be dumped here, right?\n");
 }
 
 
+// Used by _ParseTaskRequest_Intrnl(): Set up TaskFile stuff. 
+int TaskSource_LDR_ServerConn::_TaskRequest_SetUpTaskFiles(CompleteTask *ctsk)
+{
+	// Set up: 
+	// infile,outfile,wdir (rt and ft)
+	
+	#warning "thes are quick hacks; must be able to set rdir/fdir"
+	if(ctsk->rt)
+	{
+		RenderTask *rt=(RenderTask*)ctsk->rt;
+		if(rt->wdir.set("."))  return(-1);
+		RefString infile,outfile;
+		if(infile.sprintf(0,"f-%08x-%07d.a",ctsk->task_id,ctsk->frame_no))  return(-1);
+		if(outfile.sprintf(0,"f-%08x-%07d.b",ctsk->task_id,ctsk->frame_no))  return(-1);
+		rt->infile=TaskFile::GetTaskFile(infile,
+			TaskFile::FTFrame,TaskFile::IOTRenderInput,TaskFile::FCLDR);
+		rt->outfile=TaskFile::GetTaskFile(outfile,
+			TaskFile::FTImage,TaskFile::IOTRenderOutput,TaskFile::FCLDR);
+		if(!rt->infile || !rt->outfile)  return(-1);
+		if(rt->resume)
+		{  rt->outfile.SetIncomplete(1);  }
+		rt->infile.SetDelSpec(P()->rin_delspec);
+		rt->outfile.SetDelSpec(P()->rout_delspec);
+	}
+	if(ctsk->ft)
+	{
+		FilterTask *ft=(FilterTask*)ctsk->ft;
+		if(ft->wdir.set("."))  return(-1);
+		RefString infile,outfile;
+		if(infile.sprintf(0,"f-%08x-%07d.b",ctsk->task_id,ctsk->frame_no))  return(-1);
+		if(outfile.sprintf(0,"f-%08x-%07d.c",ctsk->task_id,ctsk->frame_no))  return(-1);
+		ft->infile=TaskFile::GetTaskFile(infile,
+			TaskFile::FTImage,TaskFile::IOTFilterInput,TaskFile::FCLDR);
+		ft->outfile=TaskFile::GetTaskFile(outfile,
+			TaskFile::FTImage,TaskFile::IOTFilterOutput,TaskFile::FCLDR);
+		if(!ft->infile || !ft->outfile)  return(-1);
+		ft->infile.SetDelSpec(P()->fin_delspec);
+		ft->outfile.SetDelSpec(P()->fout_delspec);
+	}
+	
+	// Got to set delete spec for additional files: 
+	int end=ctsk->radd.nfiles;
+	for(int i=0; i<end; i++)
+	{  ctsk->radd.tfile[i].SetDelSpec(P()->radd_delspec);  }
+	end=ctsk->fadd.nfiles;
+	for(int i=0; i<end; i++)
+	{  ctsk->fadd.tfile[i].SetDelSpec(P()->fadd_delspec);  }
+	
+	return(0);
+}
+
+
 // Return value: 
 //   0 -> okay, next request started. 
 //   1 -> all requests done
 //  -1 -> error; call _ConnClose(). 
 int TaskSource_LDR_ServerConn::_StartSendNextFileRequest()
 {
+	retry:;
 	assert(tri.ctsk && tri.next_action==TRINA_FileReq);
 	
 	// See which file we request next. 
@@ -850,7 +874,8 @@ int TaskSource_LDR_ServerConn::_StartSendNextFileRequest()
 			//if( (tri.ctsk->rt && P()->transfer.render_dest && !tri.ctsk->ft) || 
 			//    (tri.ctsk->ft && P()->transfer.render_dest && !tri.ctsk->rt) )
 			//{  tri.req_file_type=FRFT_RenderOut;  tri.req_file_idx=0;  break;  }
-			if(tri.ctsk->ft && P()->transfer.render_dest && !tri.ctsk->rt)
+			if((tri.ctsk->ft && P()->transfer.render_dest && !tri.ctsk->rt) || 
+			   (tri.ctsk->rt && tri.ctsk->rt->resume) )
 			{  tri.req_file_type=FRFT_RenderOut;  tri.req_file_idx=0;  break;  }
 		case FRFT_RenderOut:
 			//if(tri.ctsk->ft && P()->transfer.filter_dest)
@@ -880,23 +905,42 @@ int TaskSource_LDR_ServerConn::_StartSendNextFileRequest()
 	}
 	
 	// Get the file we're requesting: 
-	TaskFile *tfile=GetTaskFileByEntryDesc(/*dir=*/-1,tri.ctsk,
-		tri.req_file_type,tri.req_file_idx);
+	TaskFile tfile=GetTaskFileByEntryDesc(
+		/*dir=*/(tri.req_file_type==FRFT_RenderOut && 
+		        tri.ctsk->rt && tri.ctsk->rt->resume) ? (+1) : (-1),
+		tri.ctsk,tri.req_file_type,tri.req_file_idx);
 	// NOTE: We may not request a file which is unknown to our CompleteTask. 
 	// If this assert fails, then the chosen req_file_type,req_file_idx is 
 	// illegal because unknown. 
-	assert(tfile);
+	assert(!!tfile);
 	tri.req_tfile=tfile;
 	
 	if(tri.req_file_type==FRFT_AddRender || tri.req_file_type==FRFT_AddFilter)
 	{
-		Error("Implement check for file existance or time stamp.\n");
-		hack_assert(0);  // ##########FIXME##
-		// NOTE: Only request files which we need (i.e.: if the already 
+		// Only request files which we need (i.e.: if they already 
 		// exist, have proper time stamp and same size, then do not 
-		// transfer them. SAME MUST BE APPLIED TO RENDER SORUCE/DEST). 
-		// For proper time stamp testing, the server should send 
-		// LDRTime current_time with each task request. 
+		// transfer them). 
+		// So, see if the file exists: 
+		do {
+			HTime local_mtime;
+			errno=0;
+			int64_t local_size=tfile.FileLength(&local_mtime,/*aware_of_fixed_state=*/1);
+			if(local_size<0 && errno==ENOENT) break;  // we need the file
+			HTime remote_mtime;
+			int64_t remote_size=tfile.GetFixedState(&remote_mtime);
+			assert(remote_size>=0);  // Must have called SetFixedState(). 
+			if(local_size!=remote_size) break;  // need the file
+			local_mtime.Add(P()->timestamp_thresh,HTime::msec);
+			if(remote_mtime>=local_mtime) break;
+			// Seems we do not need the file. 
+			Verbose(TSLLR,"LDR: NOT requesting %s file %s [frame %d]\n",
+				FileRequestFileTypeString(tri.req_file_type),
+				tri.req_tfile.BaseNamePtr(),
+				tri.ctsk->frame_no);
+			int rv=tfile.ClearFixedState();
+			assert(!rv);  // must have been in fixed state
+			goto retry;
+		} while(0);
 	}
 	
 	int fail=0;
@@ -920,7 +964,7 @@ int TaskSource_LDR_ServerConn::_StartSendNextFileRequest()
 		
 		Verbose(TSLLR,"LDR: Requesting %s file (%s) [frame %d]\n",
 			FileRequestFileTypeString(tri.req_file_type),
-			tri.req_tfile->BaseNamePtr(),
+			tri.req_tfile.BaseNamePtr(),
 			tri.ctsk->frame_no);
 	} while(0);
 	if(fail)
@@ -969,7 +1013,7 @@ int TaskSource_LDR_ServerConn::_SendNextFileUploadHdr()
 				}
 			// final fallthrough:
 				tdi.upload_file_type=FRFT_None;
-				tdi.upload_file=NULL;
+				tdi.upload_file=TaskFile();
 		}
 		
 		// See if we actually want/can upload tdi.upload_file_type: 
@@ -981,11 +1025,11 @@ int TaskSource_LDR_ServerConn::_SendNextFileUploadHdr()
 		
 		// If this assert fails, there is a tdi.done_ctsk->rt/fd which 
 		// has an output file of NULL. This is now allowed. 
-		assert(tdi.upload_file);
+		assert(!!tdi.upload_file);
 		
 		// Get the file size. If we cannot, we output a warning and 
 		// go on to the next file. 
-		tdi.upload_file_size=tdi.upload_file->FileLength();
+		tdi.upload_file_size=tdi.upload_file.FileLength();
 		if(tdi.upload_file_size<0)
 		{
 			const char *err_str=(tdi.upload_file_size==-2 ? 
@@ -994,10 +1038,10 @@ int TaskSource_LDR_ServerConn::_SendNextFileUploadHdr()
 				"LDR: Trying to stat output file \"%s\": %s [frame %d]\n";
 			if(tts->tes.status==TTR_Success || tts->tes.status==TTR_JobTerm)
 			{  Warning(_err_fmt,
-				tdi.upload_file->HDPath().str(),err_str,tdi.done_ctsk->frame_no);  }
+				tdi.upload_file.HDPath().str(),err_str,tdi.done_ctsk->frame_no);  }
 			else
 			{  Verbose(TSLLR,_err_fmt,
-				tdi.upload_file->HDPath().str(),err_str,tdi.done_ctsk->frame_no);  }
+				tdi.upload_file.HDPath().str(),err_str,tdi.done_ctsk->frame_no);  }
 			continue;  // next file
 		}
 		
@@ -1099,9 +1143,9 @@ int TaskSource_LDR_ServerConn::_ParseFileDownload(RespBuf *buf)
 	}
 	// Okay, then let's start to receive the file. 
 	fprintf(stderr,"Starting to download file (%s; %lld bytes)\n",
-		tri.req_tfile->HDPath().str(),fsize);
+		tri.req_tfile.HDPath().str(),fsize);
 	
-	const char *path=tri.req_tfile->HDPath().str();
+	const char *path=tri.req_tfile.HDPath().str();
 	int rv=_FDCopyStartRecvFile(path,fsize);
 	if(rv)
 	{
@@ -1268,7 +1312,7 @@ int TaskSource_LDR_ServerConn::cpnotify_outpump_done(FDCopyBase::CopyInfo *cpi)
 			// Now, send files (or maybe final task state). 
 			tdi.next_action=TDINA_FileSendH;  // The rest is decided when sending. 
 			tdi.upload_file_type=FRFT_None;
-			tdi.upload_file=NULL;
+			tdi.upload_file=TaskFile();
 			
 			out.ioaction=IOA_None;
 			out_active_cmd=Cmd_NoCommand;
@@ -1305,7 +1349,7 @@ int TaskSource_LDR_ServerConn::cpnotify_outpump_done(FDCopyBase::CopyInfo *cpi)
 				fprintf(stderr,"File upload completed.\n");
 				// Go on senting file header (or final state info). 
 				tdi.next_action=TDINA_FileSendH;
-				tdi.upload_file=NULL;
+				tdi.upload_file=TaskFile();
 				
 				outpump_lock=IOPL_Unlocked;
 			}
@@ -1325,7 +1369,7 @@ int TaskSource_LDR_ServerConn::cpnotify_outpump_done(FDCopyBase::CopyInfo *cpi)
 			// Reset state: 
 			tdi.done_ctsk=NULL;   // We do NOT free it. 
 			tdi.next_action=TDINA_None;
-			tdi.upload_file=NULL;  // be sure
+			tdi.upload_file=TaskFile();  // be sure
 			
 			// Tell TaskManager the good news: 
 			// (Note: TaskReportedDone() will start 1 schedule timer 
@@ -1481,10 +1525,10 @@ int TaskSource_LDR_ServerConn::cpnotify_outpump_start()
 			
 			// If this assert fails, then we're in trouble. 
 			// The stuff should have been set earlier. 
-			assert(tdi.upload_file && tdi.upload_file_size>=0);
+			assert(!!tdi.upload_file && tdi.upload_file_size>=0);
 			
 			assert(out_active_cmd==Cmd_NoCommand);
-			int rv=_FDCopyStartSendFile(tdi.upload_file->HDPath().str(),
+			int rv=_FDCopyStartSendFile(tdi.upload_file.HDPath().str(),
 				tdi.upload_file_size);
 			static int warned=0;
 			if(!warned)
@@ -1502,7 +1546,7 @@ int TaskSource_LDR_ServerConn::cpnotify_outpump_start()
 					int errn=errno;
 					Error("LDR: Failed to open output file \"%s\" for upload: "
 						"%s [frame %d]\n",
-						tdi.upload_file->HDPath().str(),
+						tdi.upload_file.HDPath().str(),
 						strerror(errn),tdi.done_ctsk->frame_no);
 					// Okay, so this means that we already sent the request 
 					// header but are not able to supply the actual file. 
@@ -1584,12 +1628,18 @@ int TaskSource_LDR_ServerConn::cpnotify_inpump(FDCopyBase::CopyInfo *cpi)
 					{
 						int errn=errno;
 						Error("LDR: While closing \"%s\": %s\n",
-							tri.req_tfile->HDPath().str(),strerror(errn));
+							tri.req_tfile.HDPath().str(),strerror(errn));
 						_ConnClose(0);  return(1);
 					}
 				}
 				
-				tri.req_tfile=NULL;
+				// File downloading done. 
+				if(tri.req_tfile.GetFType()==TaskFile::FTAdd)
+				{
+					int rv=tri.req_tfile.ClearFixedState();
+					assert(!rv);  // must have been in fixed state
+				}
+				tri.req_tfile=TaskFile();
 				tri.next_action=TRINA_FileReq;
 				o_start=1;
 			}
@@ -1774,6 +1824,8 @@ TaskSource_LDR_ServerConn::TaskSource_LDR_ServerConn(TaskSource_LDR *_back,
 	int *failflag) : 
 	LinkedListBase<TaskSource_LDR_ServerConn>(),
 	NetworkIOBase_LDR(failflag),
+	tri(failflag),
+	tdi(failflag),
 	addr(failflag)
 {
 	int failed=0;
@@ -1791,12 +1843,10 @@ TaskSource_LDR_ServerConn::TaskSource_LDR_ServerConn(TaskSource_LDR *_back,
 	tri.ctsk=NULL;
 	tri.task_id=0;
 	tri.resp_code=-1;
-	tri.req_tfile=NULL;
 	
 	tdi.done_ctsk=NULL;
 	tdi.next_action=TDINA_None;
 	tdi.upload_file_type=FRFT_None;
-	tdi.upload_file=NULL;
 	
 	memset(expect_chresp,0,LDRChallengeLength);
 	

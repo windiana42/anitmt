@@ -739,6 +739,53 @@ void TaskSourceFactory_Local::_FillIn_SetFlags(PerFrameTaskInfo *fi)
 }
 
 
+static inline const char *_BaseNamePtr(const char *str)
+{
+	const char *ptr=strrchr(str,'/');
+	return(ptr ? (ptr+1) : str);
+}
+
+int TaskSourceFactory_Local::_FixupAdditionalFileSpec(RefStrList *add_files,
+	PerFrameTaskInfo *fi,TaskDriverType dtype)
+{
+	// Delete null-entries: 
+	for(const RefStrList::Node *_i=add_files->first(); _i; )
+	{
+		const RefStrList::Node *i=_i;
+		_i=_i->next;
+		
+		if(!i->str() || !i->len())
+		{  delete add_files->dequeue((RefStrList::Node*)i);  }
+	}
+
+	// See if an additional file is mentioned twice. 
+	for(const RefStrList::Node *i=add_files->first(); i; i=i->next)
+	{
+		const char *in=_BaseNamePtr(i->str());
+		int warn=0;
+		for(const RefStrList::Node *_j=i->next; _j; )
+		{
+			const RefStrList::Node *j=_j;
+			_j=_j->next;
+			
+			const char *jn=_BaseNamePtr(j->str());
+			if(strcmp(in,jn))  continue;
+			++warn;
+			delete add_files->dequeue((RefStrList::Node*)j);
+		}
+		if(warn)
+		{
+			Warning("Local: %s: %d additional %s files with "
+				"basename \"%s\". Keeping only \"%s\".\n",
+				_FrameInfoLocationString(fi),warn+1,DTypeString(dtype),
+				in,i->str());
+		}
+	}
+	
+	return(0);
+}
+
+
 int TaskSourceFactory_Local::_FixupPerFrameBlock(PerFrameTaskInfo *fi)
 {
 	if(fi->rdesc && fi->render_resume_flag && !fi->rdesc->can_resume_render)
@@ -752,6 +799,10 @@ int TaskSourceFactory_Local::_FixupPerFrameBlock(PerFrameTaskInfo *fi)
 	
 	if(fi->rtimeout<-1)  {  fi->rtimeout=-1;  }
 	if(fi->ftimeout<-1)  {  fi->ftimeout=-1;  }
+	
+	int errors=0;
+	errors+=_FixupAdditionalFileSpec(&fi->radd_files,fi,DTRender);
+	errors+=_FixupAdditionalFileSpec(&fi->fadd_files,fi,DTFilter);
 	
 	return(0);
 }
@@ -1500,10 +1551,10 @@ int TaskSourceFactory_Local::_RegisterFrameInfoParams(PerFrameTaskInfo *fi,
 		"render/filter driver)",fi ? &fi->ii->oformat_string : NULL,flags);
 	AddParam("renderer|rd","renderer to use (render DESC name)",
 		fi ? &fi->ii->rdesc_string : NULL,flags);
-	AddParam("rargs","additional args to be passed to the renderer",
+	AddParam("r-args","additional args to be passed to the renderer",
 		fi ? &fi->radd_args : NULL,flags);
-	//AddParam("rfiles","additional files needed by the rendering process",
-	//	fi ? &fi->radd_files : NULL,flags);
+	AddParam("r-files","additional files needed by the rendering process",
+		fi ? &fi->radd_files : NULL,flags);
 	ParamInfo *tmp=AddParam("rcont",
 		"resume cont; This switch enables/disables render continue "
 		"feature: If enabled, interrupted files are named *-unfinished "
@@ -1515,30 +1566,30 @@ int TaskSourceFactory_Local::_RegisterFrameInfoParams(PerFrameTaskInfo *fi,
 		fi ? &fi->render_resume_flag : NULL,PNoDefault | flags);
 	if(fi)  fi->ii->render_resume_pi=tmp;
 	
-	AddParam("rdir","chdir to this directory before calling renderer",
+	AddParam("r-dir","chdir to this directory before calling renderer",
 		fi ? &fi->rdir : NULL,flags);
-	AddParam("rifpattern","render input file pattern (e.g. f%07d.pov; "
+	AddParam("r-ifpattern","render input file pattern (e.g. f%07d.pov; "
 		"can use %d,%x,%X) (relative to rdir)",
 		fi ? &fi->rinfpattern : NULL,flags);
-	AddParam("rofpattern","render output file pattern (e.g. f%07d; "
+	AddParam("r-ofpattern","render output file pattern (e.g. f%07d; "
 		"can use %d,%x,%X); extension added according to output "
 		"format (relative to rdir)",
 		fi ? &fi->routfpattern : NULL,flags);
-	AddParam("rtimeout","render job time limit (seconds; -1 for none)",
+	AddParam("r-timeout","render job time limit (seconds; -1 for none)",
 		fi ? &fi->rtimeout : NULL,flags);
 	
 	AddParam("filter|fd","filter to use (filter DESC name)",
 		fi ? &fi->ii->fdesc_string : NULL,flags);
-	AddParam("fargs","additional args to be passed to the filter",
+	AddParam("f-args","additional args to be passed to the filter",
 		fi ? &fi->fadd_args : NULL,flags);
-	//AddParam("ffiles","additional files needed by the filtering process",
-	//	fi ? &fi->fadd_files : NULL,flags);
-	AddParam("fdir","chdir to this directory before calling filter",
+	AddParam("f-files","additional files needed by the filtering process",
+		fi ? &fi->fadd_files : NULL,flags);
+	AddParam("f-dir","chdir to this directory before calling filter",
 		fi ? &fi->fdir : NULL,flags);
-	AddParam("fofpattern","filter output file pattern (e.g. f%07d-f.png; "
+	AddParam("f-ofpattern","filter output file pattern (e.g. f%07d-f.png; "
 		"can use %d,%x,%X) (relative to fdir)",
 		fi ? &fi->foutfpattern : NULL,flags);
-	AddParam("ftimeout","filter job time limit (seconds; -1 for none)",
+	AddParam("f-timeout","filter job time limit (seconds; -1 for none)",
 		fi ? &fi->ftimeout : NULL,flags);
 	
 	if(add_failed)

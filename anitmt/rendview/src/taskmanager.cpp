@@ -238,6 +238,8 @@ void TaskManager::HandleSuccessfulJob(CompleteTask *ctsk)
 }
 
 
+// This is to be called when a task has really failed, NOT if you 
+// want to re-try or do the second half of the work. 
 // running_jobs: number of still running jobs; ONLY FOR emergency error handling. 
 void TaskManager::HandleFailedTask(CompleteTask *ctsk,int running_jobs)
 {
@@ -1198,6 +1200,11 @@ void TaskManager::_DoQuit(int status)
 		doquit=1;
 	}
 	
+	// Now, it's time to quickly tidy up the files: 
+	int rv=TaskFileManager::DoTidyUp(
+		doquit ? TaskFile::DelExit : TaskFile::DelCycle);
+	assert(!rv);   // Currently, rv can only be 0. 
+	
 	if(doquit)
 	{  VerboseSpecial("Now exiting with status=%s (%d)",
 		status ? "failure" : "success",status);  }
@@ -2084,9 +2091,9 @@ void TaskManager::_PrintDoneInfo(CompleteTask *ctsk)
 		Verbose(TDR,"  Render task: %s (%s driver)\n",
 			ctsk->rt->rdesc->name.str(),ctsk->rt->rdesc->dfactory->DriverName());
 		Verbose(TDR,"    Input file:  hd path: %s\n",
-			ctsk->rt->infile ? ctsk->rt->infile->HDPath().str() : NULL);
+			!!ctsk->rt->infile ? ctsk->rt->infile.HDPath().str() : NULL);
 		Verbose(TDR,"    Output file: hd path: %s; size %dx%d; format: %s (%d bpc)\n",
-			ctsk->rt->outfile ? ctsk->rt->outfile->HDPath().str() : NULL,
+			!!ctsk->rt->outfile ? ctsk->rt->outfile.HDPath().str() : NULL,
 			ctsk->rt->width,ctsk->rt->height,
 			ctsk->rt->oformat ? ctsk->rt->oformat->name : NULL,
 			ctsk->rt->oformat ? ctsk->rt->oformat->bits_p_rgb : 0);
@@ -2103,9 +2110,9 @@ void TaskManager::_PrintDoneInfo(CompleteTask *ctsk)
 		Verbose(TDR,"  Filter task: %s (%s driver)\n",
 			ctsk->ft->fdesc->name.str(),ctsk->ft->fdesc->dfactory->DriverName());
 		Verbose(TDR,"    Input file:  hd path: %s\n",
-			ctsk->ft->infile ? ctsk->ft->infile->HDPath().str() : NULL);
+			!!ctsk->ft->infile ? ctsk->ft->infile.HDPath().str() : NULL);
 		Verbose(TDR,"    Output file: hd path: %s\n",
-			ctsk->ft->outfile ? ctsk->ft->outfile->HDPath().str() : NULL);
+			!!ctsk->ft->outfile ? ctsk->ft->outfile.HDPath().str() : NULL);
 		#warning more info?
 		_DoPrintTaskExecuted(ctsk->ftp,ctsk->ft,ctsk->ft->fdesc->binpath.str(),
 			IsAFilteredTask(ctsk) || IsPartlyFilteredTask(ctsk));

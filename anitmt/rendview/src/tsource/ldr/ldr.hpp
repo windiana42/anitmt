@@ -100,7 +100,10 @@ struct TaskSource_LDR_ServerConn :
 			// Of file request currently active...
 			u_int16_t req_file_type;
 			u_int16_t req_file_idx;
-			TaskFile *req_tfile;
+			TaskFile req_tfile;
+			
+			TaskRequestInfo(int *failflag) : req_tfile(failflag) {}
+			~TaskRequestInfo() {}
 		} tri;  // task request info
 		
 		int _StartSendNextFileRequest();
@@ -123,7 +126,10 @@ struct TaskSource_LDR_ServerConn :
 			// This is the size we told the client in the header; 
 			// this must be the copy limit. 
 			int64_t upload_file_size;
-			TaskFile *upload_file;
+			TaskFile upload_file;
+			
+			TaskDoneInfo(int *failflag) : upload_file(failflag) {}
+			~TaskDoneInfo() {}
 		} tdi;  // task done info
 		
 		int _SendNextFileUploadHdr();
@@ -139,8 +145,9 @@ struct TaskSource_LDR_ServerConn :
 		int _ParseTaskRequest(RespBuf *buf);
 		int _GetFileInfoEntries(TaskFile::IOType iotype,
 			CompleteTask::AddFiles *dest,char **buf,char *bufend,int nent,
-			CompleteTask *ctsk_for_error);
+			CompleteTask *ctsk_for_error,RefString *prepend_path);
 		int _ParseTaskRequest_Intrnl(RespBuf *buf,TaskRequestInfo *tri);
+		int _TaskRequest_SetUpTaskFiles(CompleteTask *ctsk);
 		
 		int _AuthSConnFDNotify(FDInfo *fdi);
 		

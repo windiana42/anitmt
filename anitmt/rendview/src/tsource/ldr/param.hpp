@@ -18,6 +18,7 @@
 #define _RNDV_TSOURCE_LDRPARS_HPP_ 1
 
 #include <lib/myaddrinfo.hpp>
+#include <tsource/taskfile.hpp>
 
 class ComponentDataBase;
 class ImageFormat;
@@ -68,8 +69,32 @@ class TaskSourceFactory_LDR :
 			int additional : 1;
 		} transfer;
 		
+		// Path where to store additional render and filter files. 
+		// Must have "/" at the end (or be empty). 
+		RefString radd_path;
+		RefString fadd_path;
+		
+		// Delete specs: 
+		TaskFile::DeleteSpec rin_delspec;
+		TaskFile::DeleteSpec rout_delspec;
+		TaskFile::DeleteSpec radd_delspec;
+		TaskFile::DeleteSpec fin_delspec;
+		TaskFile::DeleteSpec fout_delspec;
+		TaskFile::DeleteSpec fadd_delspec;
+		
+		// For arg processing: 
+		RefString rin_delstr,rout_delstr,radd_delstr;
+		RefString fin_delstr,fout_delstr,fadd_delstr;
+		
+		// If age difference between local and remote file is less than 
+		// timestamp_thresh msec, then assume that our file is older. 
+		long timestamp_thresh;
+		
 		// Listening socket (managed by TaskSource_LDR, of course)
 		int listen_fd;
+		
+		int _ParseDeleteSpec(RefString *str,const char *optname,
+			TaskFile::DeleteSpec *ds);
 		
 		int _RegisterParams();
 		

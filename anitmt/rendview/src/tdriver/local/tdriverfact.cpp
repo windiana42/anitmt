@@ -116,24 +116,18 @@ TaskParams::~TaskParams()
 /******************************************************************************/
 
 TaskStructBase::TaskStructBase(int *failflag) : 
+	infile(failflag),
+	outfile(failflag),
 	add_args(failflag),
 	wdir(failflag)
 {
 	dtype=DTNone;
-	
-	infile=NULL;
-	outfile=NULL;
 	
 	timeout=-1;
 }
 
 TaskStructBase::~TaskStructBase()
 {
-	if(infile)
-	{  delete infile;  infile=NULL;  }
-	if(outfile)
-	{  delete outfile;  outfile=NULL;  }
-	
 	dtype=DTNone;
 }
 

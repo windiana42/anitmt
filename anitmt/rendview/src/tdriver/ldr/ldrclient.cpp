@@ -611,8 +611,9 @@ void LDRClient::_DoSendQuit(FDBase::FDInfo *fdi)
 // Return value: 
 //   0 -> OK complete packet in resp_buf; ready to send it 
 //  -1 -> alloc failure
-int LDRClient::_Create_TaskRequest_Packet(CompleteTask *ctsk,RespBuf *dest)
+int LDRClient::_Create_TaskRequest_Packet(RespBuf *dest)
 {
+	CompleteTask *ctsk=tri.scheduled_to_send;
 	assert(dest->content==Cmd_NoCommand);
 	
 	RenderTask *rt=ctsk->rt;
@@ -649,17 +650,29 @@ int LDRClient::_Create_TaskRequest_Packet(CompleteTask *ctsk,RespBuf *dest)
 	totsize+=(f_add_args_size+f_desc_slen);
 	
 	// Count required files: 
-	#warning need code to pass the required files...
+	// NOTE: Only files with skip_flag NOT set are transferred. 
+	//       Thus, r_n_files can be smaller than ctsk->radd.nfiles. 
 	int r_n_files=0,f_n_files=0;
 	if(rt)
 	{
-		r_n_files=ctsk->radd.nfiles;
-		totsize+=LDRSumFileInfoSize(&ctsk->radd);
+		totsize+=LDRSumFileInfoSize(&ctsk->radd,&r_n_files);
+		tri.non_skipped_radd_files=r_n_files;
+		//assert(f_n_files<=ctsk->radd.nfiles);
 	}
 	if(ft)
 	{
-		f_n_files=ctsk->fadd.nfiles;
-		totsize+=LDRSumFileInfoSize(&ctsk->fadd);
+		totsize+=LDRSumFileInfoSize(&ctsk->fadd,&f_n_files);
+		tri.non_skipped_fadd_files=f_n_files;
+		//assert(f_n_files<=ctsk->fadd.nfiles);
+	}
+	
+	u_int16_t r_flags=0;
+	if(rt && (rt->resume || rt->outfile.IsIncomplete()))
+	{
+		// If resume is set, incomplete must be set and vice versa. 
+		assert(rt->resume && rt->outfile.IsIncomplete());
+		
+		r_flags|=TRRF_Unfinished;
 	}
 	
 	// Okay, these limits are meant to be never exceeded. 
@@ -696,6 +709,7 @@ int LDRClient::_Create_TaskRequest_Packet(CompleteTask *ctsk,RespBuf *dest)
 	pack->r_desc_slen=htons(r_desc_slen);
 	pack->r_add_args_size=htonl(r_add_args_size);
 	pack->r_oformat_slen=htons(r_oformat_slen);
+	pack->r_flags=htons(r_flags);
 	
 	if(ft)
 	{  pack->f_timeout = ft->timeout<0 ? 0xffffffffU : htonl(ft->timeout);  }
@@ -725,17 +739,15 @@ int LDRClient::_Create_TaskRequest_Packet(CompleteTask *ctsk,RespBuf *dest)
 	
 	{
 		char *end=dest->data+totsize;
-		int err_file;
-		LDRStoreFileInfoEntries(dptr,end,&ctsk->radd,&err_file);
-		LDRStoreFileInfoEntries(dptr,end,&ctsk->fadd,&err_file);
-		if(r_n_files || f_n_files)
-		{
-			fprintf(stderr,"Hack code to handle LDRStoreFileInfoEntries - errors\n");
-			hack_assert(0);
-		}
+		if(rt)
+		{  dptr=LDRStoreFileInfoEntries(dptr,end,&ctsk->radd);  }
+		if(ft)
+		{  dptr=LDRStoreFileInfoEntries(dptr,end,&ctsk->fadd);  }
 	}
 	
 	// Now, we must be exactly at the end of the buffer: 
+	// If that fails, be sure that LDRTaskRequest::data is on a 32 
+	// (or better 64) bit boundary!!
 	assert(dptr==dest->data+totsize);
 	
 	dest->content=Cmd_TaskRequest;
@@ -835,20 +847,22 @@ int LDRClient::_ParseFileRequest(RespBuf *buf)
 	{
 		case FRFT_None:  break;
 		case FRFT_RenderIn:   legal=(tri.req_file_idx==0 && ctsk->rt);  break;
-		case FRFT_RenderOut:
-			legal=(tri.req_file_idx==0 && ctsk->ft && !ctsk->rt);  break;
+		case FRFT_RenderOut:  legal=(tri.req_file_idx==0 && 
+				(ctsk->ft && !ctsk->rt) || (ctsk->rt && ctsk->rt->resume));  break;
 		case FRFT_FilterOut:  /*legal=0*/  break;
 		case FRFT_AddRender:
-			legal=(ctsk->rt && int(tri.req_file_idx)<ctsk->radd.nfiles);  break;
+			legal=(ctsk->rt && int(tri.req_file_idx)<tri.non_skipped_radd_files);  break;
 		case FRFT_AddFilter: 
-			legal=(ctsk->ft && int(tri.req_file_idx)<ctsk->fadd.nfiles);  break;
+			legal=(ctsk->ft && int(tri.req_file_idx)<tri.non_skipped_fadd_files);  break;
 	}
 	// Okay, get the file: 
-	TaskFile *tfile=NULL;
+	TaskFile tfile;
 	if(legal)
 	{
-		tfile=GetTaskFileByEntryDesc(/*dir=*/-1,tri.scheduled_to_send,
-			tri.req_file_type,tri.req_file_idx);
+		tfile=GetTaskFileByEntryDesc(
+			/*dir=*/(tri.req_file_type==FRFT_RenderOut && 
+			        ctsk->rt && ctsk->rt->resume) ? (+1) : (-1),
+			tri.scheduled_to_send,tri.req_file_type,tri.req_file_idx);
 		if(!tfile)  legal=0;
 	}
 	if(!legal)
@@ -862,17 +876,25 @@ int LDRClient::_ParseFileRequest(RespBuf *buf)
 	}
 	
 	tri.req_tfile=tfile;
-	tri.req_file_size=tfile->FileLength();
-	if(tri.req_file_size<0)
+	if(tri.req_file_type==FRFT_AddRender || tri.req_file_type==FRFT_AddFilter)
 	{
-		int errn=errno;
-		Error("Client %s: Trying to stat requested file \"%s\": %s [frame %d]\n",
-			_ClientName().str(),tfile->HDPath().str(),
-			tri.req_file_size==-2 ? "no hd path" : strerror(errn),
-			tri.scheduled_to_send->frame_no);
-		return(-1);
+		tri.req_file_size=tfile.GetFixedState(NULL);
+		// Otherwise skip flag has to be set: 
+		assert(tri.req_file_size>=0);
 	}
-	
+	else
+	{
+		tri.req_file_size=tfile.FileLength();
+		if(tri.req_file_size<0)
+		{
+			int errn=errno;
+			Error("Client %s: Trying to stat requested file \"%s\": %s [frame %d]\n",
+				_ClientName().str(),tfile.HDPath().str(),
+				tri.req_file_size==-2 ? "no hd path" : strerror(errn),
+				tri.scheduled_to_send->frame_no);
+			return(-1);
+		}
+	}
 	
 	tri.task_request_state=TRC_SendFileDownloadH;
 	// cpnotify_outpump_start() will be called. 
@@ -899,8 +921,10 @@ int LDRClient::_ParseTaskResponse(RespBuf *buf)
 	// Reset state: 
 	CompleteTask *ctsk=tri.scheduled_to_send;
 	tri.scheduled_to_send=NULL;
+	tri.non_skipped_radd_files=0;
+	tri.non_skipped_fadd_files=0;
 	tri.task_request_state=TRC_None;
-	tri.req_tfile=NULL;
+	tri.req_tfile=TaskFile();
 	
 	// Okay, parse task response: 
 	int rv=ntohs(fresp->resp_code);
@@ -993,7 +1017,7 @@ int LDRClient::_ParseTaskDone(RespBuf *buf)
 	// We wait for file upload / final task state packet now. 
 	tdi.done_ctsk=ctsk;
 	tdi.task_done_state=TDC_WaitForResp;
-	tdi.recv_file=NULL;  // be sure
+	tdi.recv_file=TaskFile();  // be sure
 	
 	// Okay, dump some info. 
 	// NOTE that we may NOT use TaskManager::Completely_Partly_Not_Processed(ctsk) 
@@ -1056,9 +1080,9 @@ int LDRClient::_ParseFileUpload(RespBuf *buf)
 	}
 	// Okay, then let's start to receive the file. 
 	fprintf(stderr,"Starting to receive file (%s; %lld bytes)\n",
-		tdi.recv_file->HDPath().str(),fsize);
+		tdi.recv_file.HDPath().str(),fsize);
 	
-	const char *path=tdi.recv_file->HDPath().str();
+	const char *path=tdi.recv_file.HDPath().str();
 	int rv=_FDCopyStartRecvFile(path,fsize);
 	if(rv)
 	{
@@ -1074,7 +1098,7 @@ int LDRClient::_ParseFileUpload(RespBuf *buf)
 	
 	in_active_cmd=Cmd_FileUpload;
 	tdi.task_done_state=TDC_UploadBody;
-	assert(tdi.recv_file);  // Was set above. MAY NOT fail. 
+	assert(!!tdi.recv_file);  // Was set above. MAY NOT fail. 
 	
 	return(0);
 }	
@@ -1298,7 +1322,7 @@ int LDRClient::cpnotify_outpump_done(FDCopyBase::CopyInfo *cpi)
 				
 				fprintf(stderr,"File download completed.\n");
 				tri.task_request_state=TRC_WaitForResponse;
-				tri.req_tfile=NULL;
+				tri.req_tfile=TaskFile();
 				
 				outpump_lock=IOPL_Unlocked;
 			}
@@ -1342,10 +1366,19 @@ int LDRClient::cpnotify_outpump_start()
 		// Okay; we shall send this task or one of the needed files. 
 		if(!outpump_lock && tri.task_request_state==TRC_SendTaskRequest)
 		{
+			// Immediately before sending the main task data, 
+			// check the additional files. 
+			if(tri.scheduled_to_send->rt)
+			{  _InspectAndFixAddFiles(&tri.scheduled_to_send->radd,
+				tri.scheduled_to_send);  }
+			if(tri.scheduled_to_send->ft)
+			{  _InspectAndFixAddFiles(&tri.scheduled_to_send->fadd,
+				tri.scheduled_to_send);  }
+			
 			// Okay, we have to send the main task data. 
 			int fail=1;
 			do {
-				if(_Create_TaskRequest_Packet(tri.scheduled_to_send,&send_buf))  break;
+				if(_Create_TaskRequest_Packet(&send_buf))  break;
 				// Okay, make ready to send it: 
 				if(_FDCopyStartSendBuf((LDRHeader*)(send_buf.data)))  break;
 				fail=0;
@@ -1407,10 +1440,10 @@ int LDRClient::cpnotify_outpump_start()
 			
 			// If this assert fails, then we're in trouble. 
 			// The stuff should have been set earlier. 
-			assert(tri.req_tfile);
+			assert(!!tri.req_tfile);
 			
 			assert(out_active_cmd==Cmd_NoCommand);
-			int rv=_FDCopyStartSendFile(tri.req_tfile->HDPath().str(),
+			int rv=_FDCopyStartSendFile(tri.req_tfile.HDPath().str(),
 				tri.req_file_size);
 			static int warned=0;
 			if(!warned)
@@ -1424,7 +1457,7 @@ int LDRClient::cpnotify_outpump_start()
 					int errn=errno;
 					Error("Client %s: Failed to open requested file \"%s\": "
 						"%s [frame %d]\n",
-						_ClientName().str(),tri.req_tfile->HDPath().str(),
+						_ClientName().str(),tri.req_tfile.HDPath().str(),
 						strerror(errn),tri.scheduled_to_send->frame_no);
 				}
 				else assert(0);  // rv=-3 may not happen here 
@@ -1527,12 +1560,12 @@ int LDRClient::cpnotify_inpump(FDCopyBase::CopyInfo *cpi)
 						int errn=errno;
 						Error("Client %s: While closing \"%s\": %s\n",
 							_ClientName().str(),
-							tri.req_tfile->HDPath().str(),strerror(errn));
+							tri.req_tfile.HDPath().str(),strerror(errn));
 						_KickMe(0);  return(1);
 					}
 				}
 				
-				tdi.recv_file=NULL;
+				tdi.recv_file=TaskFile();
 				tdi.task_done_state=TDC_WaitForResp;
 				o_start=1;
 			}
@@ -1629,6 +1662,37 @@ int LDRClient::cpnotify(FDCopyBase::CopyInfo *cpi)
 }
 
 
+// Inspect all additional files and call SetFixedState() or SetSkipFlag(1). 
+// (skip flag is reset before). 
+void LDRClient::_InspectAndFixAddFiles(CompleteTask::AddFiles *af,
+	CompleteTask *ctsk_for_msg)
+{
+	for(int i=0; i<af->nfiles; i++)
+	{
+		TaskFile *tf=&(af->tfile[i]);
+		tf->ClearFixedState();
+		HTime mtime;
+		// Get real file length and set fixed state below. 
+		int64_t size=tf->FileLength(&mtime);
+		if(size<0)
+		{
+			int errn=errno;
+			Warning("Stat'ing add. %s file \"%s\" [frame %d]: %s (skipping)\n",
+				TaskFile::IOTypeString(tf->GetIOType()),tf->HDPath().str(),
+				ctsk_for_msg->frame_no,strerror(errn));
+			tf->SetSkipFlag(1);
+		}
+		else
+		{
+			tf->SetSkipFlag(0);
+			int rv=tf->SetFixedState(size,&mtime,/*downloading=*/0);
+			assert(rv==0);
+		}
+	}
+}
+
+
+
 // Do not set do_send_quit=1 unless we're actually in correct state and 
 // disconnect without error (or minor error). Any major error / protocol 
 // violation must use do_send_quit=0. 
@@ -1672,7 +1736,9 @@ RefString LDRClient::_ClientName()
 LDRClient::LDRClient(TaskDriverInterface_LDR *_tdif,
 	int *failflag) : 
 	LinkedListBase<LDRClient>(),
-	NetworkIOBase_LDR(failflag)
+	NetworkIOBase_LDR(failflag),
+	tri(failflag),
+	tdi(failflag)
 {
 	int failed=0;
 	
@@ -1692,12 +1758,12 @@ LDRClient::LDRClient(TaskDriverInterface_LDR *_tdif,
 	outpump_lock=IOPL_Unlocked;
 	
 	tri.scheduled_to_send=NULL;
+	tri.non_skipped_radd_files=0;
+	tri.non_skipped_radd_files=0;
 	tri.task_request_state=TRC_None;
-	tri.req_tfile=NULL;
 	
 	tdi.done_ctsk=NULL;
 	tdi.task_done_state=TDC_None;
-	tdi.recv_file=NULL;
 	
 	c_jobs=0;
 	assigned_jobs=0;

@@ -36,9 +36,10 @@ int CheckExistFile(RefString *f,int want_read,int want_write)
 	int af=0;
 	if(want_read)  af|=R_OK;
 	if(want_write)  af|=W_OK;
-	if(!access(f->str(),af))
-	{  return(1);  }
-	return(0);
+	errno=0;
+	int rv=!access(f->str(),af);
+	Verbose(DBGV,"Accessing %s (%d): %s\n",f->str(),af,strerror(errno));
+	return(rv);
 }
 
 
@@ -47,14 +48,20 @@ int CheckExistFile(RefString *f,int want_read,int want_write)
 int64_t GetFileLength(const char *path,HTime *mtime)
 {
 	struct stat st;
+	Verbose(DBGV,"Stating %s: ",path);
 	if(::stat(path,&st)<0)
 	{
+		Verbose(DBGV,"failed: %s\n",strerror(errno));
 		if(mtime)
 		{  mtime->SetInvalid();  }
 		return(-1);
 	}
 	if(mtime)
 	{  mtime->SetTimeT(st.st_mtime);  }
+	Verbose(DBGV,"size=%lld%s%s\n",
+		(long long)(st.st_size),
+		mtime ? ", mtime=" : "",
+		mtime ? mtime->PrintTime() : "");
 	return(st.st_size);
 }
 
@@ -73,7 +80,10 @@ int FirstFileIsNewer(RefString *a,RefString *b,const char *error_prefix)
 	if(stat(sfile,&a_st))  goto error;
 	sfile=b->str();
 	if(stat(sfile,&b_st))  goto error;
-	return((a_st.st_mtime>b_st.st_mtime) ? 1 : 0);
+	{ int rv=((a_st.st_mtime>b_st.st_mtime) ? 1 : 0);
+	Verbose(DBGV,"Stating: %s is %s than %s.\n",
+		a->str(),rv ? "newer" : "older",b->str());
+	return(rv); }
 error:;
 	// ...or should this be a warning?
 	Error("%sstat() failed on \"%s\": %s\n",error_prefix,
@@ -89,7 +99,10 @@ error:;
 int DeleteFile(RefString *path,int may_not_exist,const char *error_prefix)
 {
 	if(!path->str())  return(-1);
-	if(!unlink(path->str()))  return(0);
+	errno=0;
+	int rv=unlink(path->str());
+	Verbose(DBGV,"Deleting file \"%s\": %s\n",path->str(),strerror(errno));
+	if(!rv)  return(0);
 	if(errno==ENOENT && may_not_exist)  return(1);
 	Error("%sFailed to unlink \"%s\": %s\n",error_prefix,
 		path->str(),strerror(errno));
@@ -103,7 +116,11 @@ int RenameFile(RefString *old_name,RefString *new_name,
 	int may_not_exist,const char *error_prefix)
 {
 	if(!old_name->str() || !new_name->str())  return(-1);
-	if(!rename(old_name->str(),new_name->str()))  return(0);
+	errno=0;
+	int rv=rename(old_name->str(),new_name->str());
+	Verbose(DBGV,"Renaming file \"%s\" -> \"%s\": %s\n",
+		old_name->str(),new_name->str(),strerror(errno));
+	if(!rv)  return(0);
 	if(errno==ENOENT && may_not_exist)  return(1);
 	Error("%sFailed to rename \"%s\" -> \"%s\": %s\n",error_prefix,
 		old_name->str(),new_name->str(),strerror(errno));
@@ -122,6 +139,7 @@ int OpenIOFile(RefString *file,int dir)
 	if(!file || !file->str())
 	{  return(-1);  }
 	
+	errno=0;
 	int fd=-1;
 	if(dir<0)  // Open for input: 
 	{  fd=open(file->str(),O_RDONLY);  }
@@ -130,6 +148,8 @@ int OpenIOFile(RefString *file,int dir)
 	else
 	{  return(-1);  }
 	
+	Verbose(DBGV,"Opening %s for %s: %s\n",
+		file->str(),dir<0 ? "reading" : "writing",strerror(errno));
 	return(fd<0 ? (-2) : fd);
 }
 

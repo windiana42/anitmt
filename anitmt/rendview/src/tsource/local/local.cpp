@@ -55,16 +55,6 @@ static void _DeleteFile(RefString path,int may_not_exist,const char *desc)
 	{  Verbose(TSLR,"Local: Deleted %s: %s\n",desc,path.str());  }
 }
 
-// Return val: <0 -> error; 0 -> okay; 1 -> ENOENT && may_not_exist
-static int _RenameFile(RefString old_name,RefString new_name,int may_not_exist)
-{
-	int rv=RenameFile(&old_name,&new_name,may_not_exist,"Local: ");
-	if(!rv)
-	{  Verbose(TSLR,"Local: Renamed unfinished frame: %s -> %s\n",
-			old_name.str(),new_name.str());  }
-	return(rv);
-}
-
 
 static int _UnfinishedName(RefString *f)
 {
@@ -161,10 +151,12 @@ int TaskSource_Local::_FillInJobFiles(TaskDriverType dtype,FrameToProcessInfo *f
 	// Okay, now some logic: 
 	char unf_action='\0';  // rename, delete, <nothing>
 	char frame_action='\0'; // skip, render/filter, continue
+	int outf_exists=-1;  // -1 -> unknown; 0 -> no; 1 -> yes
 	if(p->cont_flag)
 	{
 		// Check if finished frame exists: 
 		int o_exists=CheckExistFile(&outf,1);
+		outf_exists=(o_exists ? 1 : 0);
 		
 		if(dtype==DTRender)
 		{
@@ -195,7 +187,11 @@ int TaskSource_Local::_FillInJobFiles(TaskDriverType dtype,FrameToProcessInfo *f
 			}
 		}
 		else
-		{  fprintf(stderr,"*** hack unfinished file support for filter ***\n");  }
+		{
+			// This will probably never happen. 
+			fprintf(stderr,"*** hack unfinished file support for filter ***\n");
+			hack_assert(0);
+		}
 		
 		// This is the same for cont with and without render resume: 
 		if(frame_action=='\0')
@@ -224,8 +220,14 @@ assert(dtype!=DTFilter || (frame_action!='c' && unf_action=='\0'));
 	if(unf_action=='r')  // rename
 	{
 		unf_action='\0';
-		int rv=_RenameFile(unf_tmp,outf,0);
-		if(rv)  // failed? - then (try to) delete it: 
+		int rv=RenameFile(&unf_tmp,&outf,0,"Local: ");
+		if(!rv)
+		{
+			Verbose(TSLR,"Local: Renamed unfinished frame: %s -> %s\n",
+				unf_tmp.str(),outf.str());
+			outf_exists=1;
+		}
+		else  // failed? - then (try to) delete it: 
 		{  unf_action='d';  }
 	}
 	if(unf_action=='d')
@@ -234,6 +236,11 @@ assert(dtype!=DTFilter || (frame_action!='c' && unf_action=='\0'));
 		unf_action='\0';
 	}
 	assert(unf_action=='\0');
+	
+	// Okay, if we do not continue or skip, then we have to delete the 
+	// destination file first. 
+	if(frame_action=='r' && outf_exists!=0)  // not 's' or 'c'
+	{  _DeleteFile(outf.str(),(outf_exists==-1),"job output file");  }
 	
 	int retval=1;   // Will never be returned (due to assert(0) in else branch). 
 	
@@ -367,6 +374,31 @@ int TaskSource_Local::_GetNextFTPI_FillInFiles(FrameToProcessInfo *ftpi)
 }
 
 
+// Return value: 0 -> OK; -1 -> alloc failure; -2 -> GetTaskFile() failed. 
+int TaskSource_Local::_SetUpAddTaskFiles(CompleteTask::AddFiles *af,
+	const RefStrList *flist,TaskFile::IOType iotype)
+{
+	assert(!af->tfile);
+	af->nfiles=flist->count();
+	if(!af->nfiles)  return(0);
+	af->tfile=NEWarray<TaskFile>(af->nfiles);
+	if(!af->tfile)  return(-1);
+	int i=0;
+	for(const RefStrList::Node *n=flist->first(); n; n=n->next,i++)
+	{
+		af->tfile[i]=TaskFile::GetTaskFile(n->str(),
+			TaskFile::FTAdd,iotype,TaskFile::FCLocal);
+		if(!af->tfile[i])
+		{
+			af->tfile=DELarray(af->tfile);
+			af->nfiles=0;
+			return(-2);
+		}
+	}
+	return(0);
+}
+
+
 void TaskSource_Local::_ProcessGetTask(TSNotifyInfo *ni)
 {
 	int fflag=0;
@@ -407,19 +439,26 @@ void TaskSource_Local::_ProcessGetTask(TSNotifyInfo *ni)
 			rt->oformat=fi->oformat;
 			rt->timeout=fi->rtimeout;
 			
-			rt->infile=NEW2<TaskFile>(TaskFile::FTFrame,TaskFile::IOTRenderInput);
+			rt->infile=TaskFile::GetTaskFile(ftpi.r_infile,
+				TaskFile::FTFrame,TaskFile::IOTRenderInput,TaskFile::FCLocal);
 			if(!rt->infile)  break;
-			rt->infile->SetHDPath(ftpi.r_infile);
 			
-			rt->outfile=NEW2<TaskFile>(TaskFile::FTImage,TaskFile::IOTRenderOutput);
+			rt->outfile=TaskFile::GetTaskFile(ftpi.r_outfile,
+				TaskFile::FTImage,TaskFile::IOTRenderOutput,TaskFile::FCLocal);
 			if(!rt->outfile)  break;
-			rt->outfile->SetHDPath(ftpi.r_outfile);
+			// This is correct, because ftpi.r_resume_flag is not set if 
+			// the file does not exist. 
+			if(ftpi.r_resume_flag)
+			{  rt->outfile.SetIncomplete(1);  }
 			
 			if(rt->add_args.append(&fi->radd_args))  break;
 			
 			rt->wdir=fi->rdir;
 			
 			rt->resume=ftpi.r_resume_flag;
+			
+			if(_SetUpAddTaskFiles(&ctsk->radd,&fi->radd_files,
+				TaskFile::IOTRenderInput))  break;
 		}
 		
 		if(ftpi.tobe_filtered)
@@ -432,17 +471,20 @@ void TaskSource_Local::_ProcessGetTask(TSNotifyInfo *ni)
 			assert(fi->fdesc);   // Otherwise tobe_filtered may not be set
 			ft->timeout=fi->ftimeout;
 			
-			ft->infile=NEW2<TaskFile>(TaskFile::FTImage,TaskFile::IOTFilterInput);
+			ft->infile=TaskFile::GetTaskFile(ftpi.f_infile,
+				TaskFile::FTImage,TaskFile::IOTFilterInput,TaskFile::FCLocal);
 			if(!ft->infile)  break;
-			ft->infile->SetHDPath(ftpi.f_infile);
 			
-			ft->outfile=NEW2<TaskFile>(TaskFile::FTImage,TaskFile::IOTFilterOutput);
+			ft->outfile=TaskFile::GetTaskFile(ftpi.f_outfile,
+				TaskFile::FTImage,TaskFile::IOTFilterOutput,TaskFile::FCLocal);
 			if(!ft->outfile)  break;
-			ft->outfile->SetHDPath(ftpi.f_outfile);
 			
 			if(ft->add_args.append(&fi->fadd_args))  break;
 			
 			ft->wdir=fi->fdir;
+			
+			if(_SetUpAddTaskFiles(&ctsk->fadd,&fi->fadd_files,
+				TaskFile::IOTFilterInput))  break;
 		}
 		
 		ni->ctsk=ctsk;
@@ -478,7 +520,7 @@ void TaskSource_Local::_ProcessDoneTask(TSNotifyInfo *ni)
 		// Render task was not successful. 
 		// File must get special treatment: 
 		// Delete or rename it if dest file is there: 
-		if(done_task->rt->outfile)
+		if(!!done_task->rt->outfile)
 		{
 			int remove=1;  // YES!
 			// We always delete it unless user interrupt or timeout 
@@ -489,16 +531,15 @@ void TaskSource_Local::_ProcessDoneTask(TSNotifyInfo *ni)
 			{
 				if(fi->render_resume_flag)
 				{
-					int fail=0;
-					RefString tmp(&fail);
-					if(!fail)  tmp=done_task->rt->outfile->HDPath();
-					if(!fail)  fail=_UnfinishedName(&tmp);
-					if(!fail)  fail=(_RenameFile(done_task->rt->outfile->HDPath(),tmp,1)<0);
+					RefString tmp(done_task->rt->outfile.HDPath());
+					int fail=_UnfinishedName(&tmp);
+					if(!fail)  fail=(done_task->rt->outfile.SetIncompleteRename(
+								&tmp,/*may_not_exist*/1,"Local: ")<0);
 					if(!fail)  remove=0;
 				}
 			}
 			if(remove)
-			{  _DeleteFile(done_task->rt->outfile->HDPath(),1,
+			{  _DeleteFile(done_task->rt->outfile.HDPath(),1,
 				"output file of failed render task");  }
 		}
 	}
@@ -507,9 +548,9 @@ void TaskSource_Local::_ProcessDoneTask(TSNotifyInfo *ni)
 	{
 		// Filter task was not successful. 
 		// Delete it if dest file is there: 
-		if(done_task->ft->outfile)
+		if(!!done_task->ft->outfile)
 		{
-			_DeleteFile(done_task->ft->outfile->HDPath(),1,
+			_DeleteFile(done_task->ft->outfile.HDPath(),1,
 				"output file of failed filter task");
 		}
 	}

@@ -25,6 +25,7 @@
 #include <lib/ldrproto.hpp>
 
 
+
 using namespace LDR;
 
 #define UnsetNegMagic  (-29659)
@@ -79,9 +80,23 @@ RefString TaskSourceFactory_LDR::ServerNetString(
 }
 
 
+// If "", unset; append "/" if needed. 
+static void _PathFixupAppendSlash(RefString *s)
+{
+	if(!s->len())
+	{  s->set(NULL);  return;  }
+	if(s->str()[s->len()-1]!='/')
+	{  _CheckAlloc(s->append("/"));  }
+}
+
+
 int TaskSourceFactory_LDR::FinalInit()
 {
 	int failed=0;
+	
+	// Okay, do most checks before asking the user for the password...
+	_PathFixupAppendSlash(&radd_path);
+	_PathFixupAppendSlash(&fadd_path);
 	
 	LDRGetPassIfNeeded(&password,"Enter client password: ",NULL);
 	if(!password.str())
@@ -141,6 +156,16 @@ int TaskSourceFactory_LDR::FinalInit()
 			transfer.render_dest ? "yes" : "no",
 			transfer.filter_dest ? "yes" : "no ",
 			transfer.additional  ? "yes" : "no");
+		Verbose(TSI,"  Deleting temp files:\n"
+			"           | Input           | Output          | Additional\n"
+			"    Render | %-15s | %-15s | %-15s\n"
+			"    Filter | %-15s | %-15s | %-15s\n",
+			TaskFile::DeleteSpecString(rin_delspec),
+			TaskFile::DeleteSpecString(rout_delspec),
+			TaskFile::DeleteSpecString(radd_delspec),
+			TaskFile::DeleteSpecString(fin_delspec),
+			TaskFile::DeleteSpecString(fout_delspec),
+			TaskFile::DeleteSpecString(fadd_delspec));
 	}
 	
 	return(failed ? 1 : 0);
@@ -320,7 +345,50 @@ int TaskSourceFactory_LDR::CheckParams()
 	}
 	server_net_str.deref();
 	
+	// Delete specs: 
+	failed+=_ParseDeleteSpec(&rin_delstr,"r-delin",&rin_delspec);
+	failed+=_ParseDeleteSpec(&rout_delstr,"r-delout",&rout_delspec);
+	failed+=_ParseDeleteSpec(&radd_delstr,"r-deladd",&radd_delspec);
+	failed+=_ParseDeleteSpec(&fin_delstr,"f-delin",&fin_delspec);
+	failed+=_ParseDeleteSpec(&fout_delstr,"f-delout",&fout_delspec);
+	failed+=_ParseDeleteSpec(&fadd_delstr,"f-deladd",&fadd_delspec);
+	
+	// NOTE: Additional files which are to be deleted "when frame done" 
+	//       are only deleted if they are no longer used by any task we 
+	//       are doing and are goind to do concerning the current 
+	//       task queue. 
+	//  (More exactly: they are destroyed when the InternalTaskFile record 
+	//   gets destroyed and that is the case when there are no more refs 
+	//   to the file in question.)
+	
 	return(failed ? 1 : 0);
+}
+
+
+int TaskSourceFactory_LDR::_ParseDeleteSpec(RefString *str,const char *optname,
+	TaskFile::DeleteSpec *ds)
+{
+	const char *val=str->str();
+	if(!val)  return(0);  /// keep default
+	size_t vallen=strlen(val);
+	if(vallen<=5 && !strncmp(val,"frame",vallen))  
+	{  *ds=TaskFile::DelFrame;  }
+	else if(vallen<=5 && !strncmp(val,"cycle",vallen))  
+	{  *ds=TaskFile::DelCycle;  }
+	else if(vallen<=4 && !strncmp(val,"exit",vallen))  
+	{  *ds=TaskFile::DelExit;  }
+	else if(vallen<=5 && !strncmp(val,"never",vallen))  
+	{  *ds=TaskFile::DontDel;  }
+	else
+	{
+		Error("Illegal value for %s (possible values: "
+			"frame,cycle,exit,never).\n",optname);
+		return(1);
+	}
+		
+	// String no longer needed: 
+	str->deref();
+	return(0);
 }
 
 
@@ -333,6 +401,14 @@ int TaskSourceFactory_LDR::_RegisterParams()
 	AddParam("port","inet port to listen for connections from LDR server",
 		&listen_port);
 	
+	AddParam("password","password required by the server to be allowed "
+		"to connect to this client; leave away or \"none\" to disable; "
+		"\"prompt\" to prompt for one",&password);
+	
+	AddParam("servernet","space separated list of hosts or networks/hosts with "
+		"netmasks (e.g. 192.168.1.0/24 or myhost/24) to allow as servers",
+		&server_net_str);
+	
 	AddParam("transfer","specify which files shall/shall not be tranferred "
 		"from the server to THIS client (files not being transferred are "
 		"assumed to be found on the hd becuase e.g. it is an NFS volume); "
@@ -343,13 +419,26 @@ int TaskSourceFactory_LDR::_RegisterParams()
 		"concatenation using postfix `+' (transfer) and `-' (do not transfer); "
 		"e.g. \"a+rs-rd-fd-\"; (default: \"all+\")",&transfer_spec_str);
 	
-	AddParam("password","password required by the server to be allowed "
-		"to connect to this client; leave away or \"none\" to disable; "
-		"\"prompt\" to prompt for one",&password);
+	AddParam("r-delin",
+		"when to delete render input files; possible values:\n"
+		"  \"f(rame)\" -> when frame was processed  |  \"e(xit)\"  -> on exit\n"
+		"  \"c(ycle)\" -> when work cycle is done   |  \"n(ever)\" -> never",
+		&rin_delstr);
+	AddParam("r-delout",
+		"when to delete render output files (see r-delin)",&rout_delstr);
+	AddParam("r-deladd",
+		"when to delete additional render files (see r-delin)",&radd_delstr);
+	AddParam("f-delin",
+		"when to delete render input files; possible values:",&fin_delstr);
+	AddParam("f-delout",
+		"when to delete render output files (see r-delin)",&fout_delstr);
+	AddParam("f-deladd",
+		"when to delete additional render files (see r-delin)",&fadd_delstr);
 	
-	AddParam("servernet","space separated list of hosts or networks/hosts with "
-		"netmasks (e.g. 192.168.1.0/24 or myhost/24) to allow as servers",
-		&server_net_str);
+	AddParam("r-adddir","where to put additional files for renderer",
+		&radd_path);
+	AddParam("f-adddir","where to put additional files for filter",
+		&fadd_path);
 	
 	return(add_failed ? (-1) : 0);
 }
@@ -377,7 +466,11 @@ TaskSourceFactory_LDR::TaskSourceFactory_LDR(
 	password(failflag),
 	server_net_str(failflag),
 	server_net_list(failflag),
-	transfer_spec_str(failflag)
+	transfer_spec_str(failflag),
+	radd_path(failflag),
+	fadd_path(failflag),
+	rin_delstr(failflag),rout_delstr(failflag),radd_delstr(failflag),
+	fin_delstr(failflag),fout_delstr(failflag),fadd_delstr(failflag)
 {
 	listen_fd=-1;
 	
@@ -387,6 +480,15 @@ TaskSourceFactory_LDR::TaskSourceFactory_LDR(
 	transfer.render_dest=1;
 	transfer.filter_dest=1;
 	transfer.additional=1;
+	
+	timestamp_thresh=1001;  // msec
+	
+	rin_delspec= TaskFile::DelFrame;
+	rout_delspec=TaskFile::DelFrame;
+	radd_delspec=TaskFile::DelExit;
+	fin_delspec= TaskFile::DelFrame;
+	fout_delspec=TaskFile::DelFrame;
+	fadd_delspec=TaskFile::DelExit;
 	
 	int failed=0;
 	

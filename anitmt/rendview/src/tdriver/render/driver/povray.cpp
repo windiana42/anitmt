@@ -108,12 +108,12 @@ int POVRayDriver::Execute(
 	   rt->width<1 || rt->height<1 )
 	{  return(SPSi_IllegalParams);  }
 	
-	RefString infile=rt->infile->HDPath();
-	RefString outfile=rt->outfile->HDPath();
+	RefString infile=rt->infile.HDPath();
+	RefString outfile=rt->outfile.HDPath();
 	
 	if(!infile.str() || !outfile.str() || 
-	   rt->infile->GetIOType()!=TaskFile::IOTRenderInput || 
-	   rt->outfile->GetIOType()!=TaskFile::IOTRenderOutput )
+	   rt->infile.GetIOType()!=TaskFile::IOTRenderInput || 
+	   rt->outfile.GetIOType()!=TaskFile::IOTRenderOutput )
 	{  return(SPSi_IllegalParams);  }
 	
 	if(rt->rdesc->dfactory!=f)   // inapropriate driver (factory)

@@ -18,6 +18,9 @@
 #ifndef _RNDV_TDRIVER_LOCALDRIVER_HPP_
 #define _RNDV_TDRIVER_LOCALDRIVER_HPP_ 1
 
+#include <tsource/taskfile.hpp>
+
+
 enum TaskTerminationReason
 {
 	TTR_Unset=-1,  // not yet filled in
@@ -116,8 +119,8 @@ struct TaskStructBase
 	TaskDriverType dtype;
 	
 	// NOTE!! infile and outfile are DELETED by ~TaskStructBase(). 
-	TaskFile *infile;      // primary input file 
-	TaskFile *outfile;     // primary output file
+	TaskFile infile;       // primary input file 
+	TaskFile outfile;      // primary output file
 	RefStrList add_args;   // additional cmd line args
 	RefString wdir;        // directory to chdir into before 
 	                       // starting the renderer/filter

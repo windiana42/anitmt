@@ -50,6 +50,7 @@ static int MAIN(int argc,char **argv,char **envp)
 	par::ParameterManager *parman=NULL;
 	ComponentDataBase *cdb=NULL;
 	TaskManager *taskman=NULL;
+	TaskFileManager *taskfileman=NULL;
 	
 	// Okay, then... Here we go...
 	int fail=1;
@@ -114,17 +115,17 @@ static int MAIN(int argc,char **argv,char **envp)
 		"bg in bash) makes them continue all again.\n"
 		"NOTE: COLORED OUTPUT is automatically switched off for non-ttys "
 		"but you can manually force it off/on using --nocolor/--color."
-		"\n\n** LDR is in experimental state (required files are not yet transferred) **"
+		"\n\n** LDR is in experimental state **"
 		"\n\nExamples:\n"
 		"# rendview --rdfile=/dir/to/renderers.par -l-rd=povray3.5 "
-		"-l-n=240 -l-f0=10 -l-size=320x200 -l-oformat=ppm -l-cont "
+		"-l-n=240 -l-f0=10 -l-size=320x200 -l-oformat=ppm -l-cont -l-rcont "
 		"-ld-r-quiet\n"
 		"# rendview -opmode=ldrclient --rdfile=... -L-port=7001 "
 		"-L-servernet=192.168.0.0/8 -ld-njobs=2 -ld-r-quiet -ld-r-nice=15\n"
 		"# rendview -opmode=ldrserver --rdfile=... -Ld-clients=\"localhost/7001 "
 		"192.168.0.2/7001 192.168.0.3/7001\" -Ld-ctimeout=5000 "
-		"-l-rd=povray3.1g -l-n=245 -l-rargs=\"-display 192.168.0.1:0.0\" "
-		"-l-size=320x240 -l-cont\n");
+		"-l-rd=povray3.1g -l-n=245 -l-r-args=\"-display 192.168.0.1:0.0\" "
+		"-l-size=320x240 -l-r-files=\"scene.pov colors.inc\" -l-cont\n");
 		// ...as well as only rendering changed frames or resuming operation
 		// ...and later create a film of them...
 	if(rv_oparams.enable_color_stdout)
@@ -144,6 +145,11 @@ static int MAIN(int argc,char **argv,char **envp)
 		taskman=NEW1<TaskManager>(cdb);
 		if(!taskman)
 		{  Error(fti,"task manager");  break;  }
+		
+		Verbose(BasicInit,"[File] ");
+		taskfileman=NEW<TaskFileManager>();
+		if(!taskfileman)
+		{  Error(fti,"file manager");  break;  }
 		
 		Verbose(BasicInit,"OK\n");
 		fail=0;
@@ -227,7 +233,8 @@ static int MAIN(int argc,char **argv,char **envp)
 	
 	// Cleanup: 
 	Verbose(BasicInit,"Cleanup:");
-    if(taskman)     Verbose(BasicInit," [Task");        delete taskman;
+    if(taskfileman) Verbose(BasicInit," [File");        delete taskfileman;
+    if(taskman)     Verbose(BasicInit,"] [Task");       delete taskman;
     if(cdb)         Verbose(BasicInit,"] [CDB");        delete cdb;
     if(parman)      Verbose(BasicInit,"] [parameter");  delete parman;
     if(procman)     Verbose(BasicInit,"] [process");    delete procman;

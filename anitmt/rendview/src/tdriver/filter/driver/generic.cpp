@@ -55,8 +55,8 @@ int GenericFilterDriver::ProcessError(ProcessErrorInfo *pei)
 			pei->pinfo->pid==SPSi_OpenInFailed ? 
 				"input" : "output",
 			pei->pinfo->pid==SPSi_OpenInFailed ? 
-				pei->pinfo->tsb->infile->HDPath().str() : 
-				pei->pinfo->tsb->outfile->HDPath().str() );
+				pei->pinfo->tsb->infile.HDPath().str() : 
+				pei->pinfo->tsb->outfile.HDPath().str() );
 		Error("GFD:   Reason: %s\n",strerror(pei->errno_val));
 		
 		return(0);
@@ -114,12 +114,12 @@ int GenericFilterDriver::Execute(const FilterTask *ft,const FilterTaskParams *ft
 	   !ft->infile || !ft->outfile )
 	{  return(SPSi_IllegalParams);  }
 	
-	RefString infile=ft->infile->HDPath();
-	RefString outfile=ft->outfile->HDPath();
+	RefString infile=ft->infile.HDPath();
+	RefString outfile=ft->outfile.HDPath();
 	
 	if(!infile.str() || !outfile.str() || 
-	   ft->infile->GetIOType()!=TaskFile::IOTFilterInput || 
-	   ft->outfile->GetIOType()!=TaskFile::IOTFilterOutput )
+	   ft->infile.GetIOType()!=TaskFile::IOTFilterInput || 
+	   ft->outfile.GetIOType()!=TaskFile::IOTFilterOutput )
 	{  return(SPSi_IllegalParams);  }
 	
 	if(ft->fdesc->dfactory!=f)   // inapropriate driver (factory)

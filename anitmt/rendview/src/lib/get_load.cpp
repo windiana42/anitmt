@@ -24,6 +24,7 @@
 int GetLoadValue()
 {
 	int lv=GetLoadAverage();
+	Verbose(DBGV,"Current load average: %f\n",double(lv)/100.0);
 	if(lv>=0)  return(lv);
 	
 	static int warned=0;

@@ -162,6 +162,11 @@ struct LDRFileInfoEntry
 	uchar name[0];   // Actual file name entry without '\0'. 
 };
 
+enum //TaskRequestFlags
+{
+	TRRF_Unfinished=0x0001    // output is unfinished (-> request output)
+};
+
 // ALL PASSED STRINGS ARE NOT '\0' - TERMINATED. 
 
 struct LDRTaskRequest : LDRHeader
@@ -177,15 +182,18 @@ struct LDRTaskRequest : LDRHeader
 	u_int32_t r_timeout;   // render timeout (seconds; 0xffffffff to disable)
 	u_int32_t r_add_args_size;  // size of additional args (each \0-terminated)
 	u_int16_t r_oformat_slen;   // length of oformat string
+	u_int16_t r_flags;       // flags, see above, TaskRequestFlags
 	
 	// Filter task: 
-	u_int16_t f_desc_slen;    // length of fdesc string (0 -> no filter task)
 	u_int32_t f_timeout;   // render timeout (seconds; 0xffffffff to disable)
 	u_int32_t f_add_args_size;  // size of additional args (each \0-terminated)
+	u_int16_t f_desc_slen;    // length of fdesc string (0 -> no filter task)
 	
 	u_int16_t r_n_files;    // number of LDRFileInfoEntries (only required 
 			// additional files in rdir; NOT render/filter input/output) 
 	u_int16_t f_n_files;    // dito for fdir 
+	
+	u_int16_t _padding2;  // <---- be sure we're on a 32bit boundary here. 
 	
 	uchar data[0];  // More data following: [ORDER: easiest parsable for client]
 	// uchar rdesc[r_desc_slen]

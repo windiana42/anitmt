@@ -102,24 +102,22 @@ CompleteTask::CompleteTask(int * failflag) :
 	assert(!d.any());
 	rt=NULL;   ft=NULL;
 	rtp=NULL;  ftp=NULL;
-	radd.nfiles=0;   fadd.nfiles=0;
-	radd.file=NULL;  fadd.file=NULL;
+	radd.nfiles=0;    fadd.nfiles=0;
+	radd.tfile=NULL;  fadd.tfile=NULL;
 }
 
 CompleteTask::~CompleteTask()
 {
-	Verbose(DBGV,"~CompleteTask[%d]...",frame_no);
-	
 	assert(!d.any());
 	DELETE(rt);
 	DELETE(ft);
 	DELETE(rtp);
 	DELETE(ftp);
 	assert(rt==NULL);  // can be removed 
-	LFree(radd.file);  radd.file=NULL;
-	LFree(fadd.file);  fadd.file=NULL;
+	radd.tfile=DELarray(radd.tfile);
+	fadd.tfile=DELarray(fadd.tfile);
 	
-	Verbose(DBGV,"done\n");
+	Verbose(DBGV,"~CompleteTask[%d]",frame_no);
 }
 
 

@@ -69,12 +69,15 @@ class LDRClient :
 			TRC_SendFileDownloadH,  // header
 			TRC_SendFileDownloadB   // body
 		};
-		struct
+		struct _TRI
 		{
 			// Task scheduled to be sent to the client or NULL. 
 			// This is set until the task is completely sent (including 
 			// all the files). 
 			CompleteTask *scheduled_to_send;
+			// This is CompleteTask::{r,f}add.nfiles without skipped ones. 
+			int non_skipped_radd_files;
+			int non_skipped_fadd_files;
 			// Stores what has to be done next for task *scheduled_to_send; 
 			// Send file or main task struct, etc. 
 			TaskRequestState task_request_state;
@@ -84,7 +87,10 @@ class LDRClient :
 			// This is the size we told the client in the header; 
 			// this must be the copy limit. 
 			int64_t req_file_size;
-			TaskFile *req_tfile;
+			TaskFile req_tfile;
+			
+			_TRI(int *failflag) : req_tfile(failflag) { }
+			~_TRI() {}
 		} tri;  // task request info
 		
 		enum TaskDoneState
@@ -93,7 +99,7 @@ class LDRClient :
 			TDC_WaitForResp,  // wait for file header or final task status
 			TDC_UploadBody    // file body will be / is currently uploaded
 		};
-		struct
+		struct _TDI
 		{
 			CompleteTask *done_ctsk;
 			TaskDoneState task_done_state;
@@ -102,7 +108,10 @@ class LDRClient :
 			TaskExecutionStatus save_rtes;
 			TaskExecutionStatus save_ftes;
 			// File getting uploaded: 
-			TaskFile *recv_file;
+			TaskFile recv_file;
+			
+			_TDI(int *failflag) : recv_file(failflag) { }
+			~_TDI() {}
 		} tdi;  // task done info
 		
 		// Client data: 
@@ -116,7 +125,7 @@ class LDRClient :
 		
 		// These store packets in RespBuf *dest: 
 		int _StoreChallengeResponse(LDR::LDRChallengeRequest *d,RespBuf *dest);
-		int _Create_TaskRequest_Packet(CompleteTask *ctsk,RespBuf *dest);
+		int _Create_TaskRequest_Packet(RespBuf *dest);
 		
 		// Accept and return LDRHeader in HOST order. 
 		int     _AtomicSendData(LDR::LDRHeader *d);
@@ -137,6 +146,8 @@ class LDRClient :
 		int _ParseTaskDone(RespBuf *buf);
 		int _ParseFileUpload(RespBuf *buf);
 		int _ParseDoneComplete(RespBuf *buf);
+		
+		void _InspectAndFixAddFiles(CompleteTask::AddFiles *af,CompleteTask *ctsk_for_msg);
 		
 		// Called on every error which results in a client disconnect. 
 		void _KickMe(int do_send_quit=0);

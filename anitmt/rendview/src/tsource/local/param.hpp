@@ -156,6 +156,8 @@ class TaskSourceFactory_Local :
 		
 		void _FillIn_SetFlags(PerFrameTaskInfo *fi);
 		inline void _InsertPFIAtCorrectPos(PerFrameTaskInfo *fi);
+		int _FixupAdditionalFileSpec(RefStrList *add_files,
+			PerFrameTaskInfo *fi,TaskDriverType dtype);
 		int _FixupPerFrameBlock(PerFrameTaskInfo *fi);
 		int _DeleteNeverUsedPerFrameBlocks();
 		// first_frame_no and nframes are NOT compared. 

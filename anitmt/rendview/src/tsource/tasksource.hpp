@@ -74,11 +74,11 @@ struct CompleteTask : LinkedListBase<CompleteTask>
 	FilterTaskParams *ftp;   // or NULL
 	
 	// Additional files needed to render/filter the frame. 
-	// Arrays allocated via LMalloc() and LFree()'d by ~CompleteTask(). 
+	// Arrays allocated via NEWarray<>() and DELarray()'d by ~CompleteTask(). 
 	struct AddFiles
 	{
 		int nfiles;
-		TaskFile **file;  // pointer array [nfiles]
+		TaskFile *tfile;  // array [nfiles]
 	} radd,fadd;
 	
 	// Render and filter task execution status: 

@@ -64,7 +64,6 @@ struct RVOutputParams
 
 enum
 {
-	VERBOSE_BasicInit = 0x01000001,   // basic init at startup (managers, ...)
 	VERBOSE_MiscInfo =  0x00000002,   // misc info like number of CPUs. 
 	VERBOSE_TDI =       0x00000004,   // TaskDriver init info (start processing/end)
 	VERBOSE_TDR =       0x00000008,   // TaskDriver runtime info (kill/start...)
@@ -75,8 +74,9 @@ enum
 	VERBOSE_TSLR =      0x00000100,   // local task source runtime info (file re-naming...)
 	VERBOSE_TSLLR =     0x00000200,   // LDR task source runtime info
 	VERBOSE_DBG =       0x01000000,   // DEBUG verbose
+	VERBOSE_BasicInit = 0x01000000,   // basic init at startup (managers, ...) (=DEBUG, now)
 	VERBOSE_DBGV =      0x03000000,   // DEBUG very verbose (implies ~_DBG)
-	VERBOSE_0 =         0x10000000
+	VERBOSE_0 =         0x10000000    // <-- TO BE DELETED. 
 };
 
 

@@ -76,6 +76,10 @@ class TaskSource_Local :
 		int _GetNextFTPI_FillInFiles(FrameToProcessInfo *ftpi);
 		int _GetNextFrameToProcess(FrameToProcessInfo *ftpi);
 		
+		// Return value: 0 -> OK; -1 -> alloc failure; -2 -> GetTaskFile() failed. 
+		int TaskSource_Local::_SetUpAddTaskFiles(CompleteTask::AddFiles *af,
+			const RefStrList *flist,TaskFile::IOType iotype);
+		
 		// Update/start rtid timer: 
 		inline void _StartRTimer();
 		inline void _StopRTimer()
