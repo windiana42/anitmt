@@ -88,13 +88,13 @@ node scalar extends scalar_base provides scalar_vsa {
 
   first scalar_vsa {
     actions {
-      default(100, starttime, 0 );
+      default(100, start_time, 0 );
     }
   }
   // just an example
   first {
     actions {
-      default(102, startvalue, 0 );
+      default(102, start_value, 0 );
     }
   }
   
@@ -103,13 +103,13 @@ node scalar extends scalar_base provides scalar_vsa {
       requires child.scalar_vsa.value (time) 
     { 		 time t2;		   // test
                  t2 = t;                   // test2
-      return [child.scalar_vsa.value (time t2)];
+      [return_res child.scalar_vsa.value (time t2)];
     } 
     resulting slope( time t ) requires child.scalar_vsa.slope (time) {
-      return [child.scalar_vsa.slope (time t)];
+      [return_res child.scalar_vsa.slope (time t)];
     }
     resulting acceleration( time t ) requires child.scalar_vsa.acceleration (time) {
-      return [child.scalar_vsa.acceleration (time t)];
+      [return_res child.scalar_vsa.acceleration (time t)];
     }
   }
 }
@@ -130,19 +130,19 @@ node change extends scalar_subfunction provides scalar_vsa {
   
   first scalar_vsa {
     actions {
-      default(100, starttime, 0 );
+      default(100, start_time, 0 );
     }
   }
 
   provide scalar_vsa {
     resulting value( time t ) requires child.scalar_vsa.value (time) {
-      return [child.scalar_vsa.value (time t)];
+      [return_res child.scalar_vsa.value (time t)];
     }
     resulting slope( time t ) requires child.scalar_vsa.slope (time) {
-      return [child.scalar_vsa.slope (time t)];
+      [return_res child.scalar_vsa.slope (time t)];
     }
     resulting acceleration( time t ) requires child.scalar_vsa.acceleration (time) {
-      return [child.scalar_vsa.acceleration (time t)];
+      [return_res child.scalar_vsa.acceleration (time t)];
     }
   }
 }
@@ -160,21 +160,35 @@ node change extends scalar_subfunction provides scalar_vsa {
 node constant extends scalar_subfunction provides scalar_vsa {
 //  ...
 
+  properties{
+    scalar value;
+  }
+
+  common {
+    solvers {
+      equal_solver( value, start_value );
+      equal_solver( value, end_value );
+    }
+  }
+
   first scalar_vsa {
     actions {
-      default(100, starttime, 0 );
+      default(100, start_time, 0 );
     }
   }
   
   provide scalar_vsa {
-    resulting value( time t ) requires value {
-      return [value];
+    resulting value( time t ) requires value
+    {
+      [return_prop value];
     }
-    resulting slope( time t ) requires slope {
-      return [slope];
+    resulting slope( time t ) 
+    {
+      [return 0];
     }
-    resulting acceleration( time t ) requires acceleration {
-      return [acceleration];
+    resulting acceleration( time t ) 
+    {
+      [return 0];
     }
   }
 }

@@ -127,6 +127,9 @@ start_param	{ tok_pos(); return TAFD_start_param; }
 end_param	{ tok_pos(); return TAFD_end_param; }
 true		{ tok_pos(); return TAFD_true; }
 false		{ tok_pos(); return TAFD_false; }
+return_res	{ tok_pos(); return TAFD_return_res; }
+return_prop	{ tok_pos(); return TAFD_return_prop; }
+return		{ tok_pos(); return TAFD_return; }
 
 {id}	  { tok_pos(); yylval->string = yytext; return TAFD_IDENTIFIER; }
 

@@ -33,8 +33,8 @@ namespace anitmt{
       t_f( "frames", this ),
       t0_f( "startframe", this ),
       te_f( "endframe", this ),
-      s0( "startslope", this )
-      se( "endslope", this )
+      s0( "startslope", this ),
+      se( "endslope", this ),
       a( "acceleration", this )
   {
 
@@ -48,7 +48,7 @@ namespace anitmt{
     solve::sum_solver( te, t, t0 );
     //solve::sum_solver( te_f, t_f, t0_f );
 
-    solve::accel_solver( d, t, a, s0, s2 ); // s = 0.5*a*t*t; v=a*t
+    solve::accel_solver( d, t, a, s0, se ); // s = 0.5*a*t*t; v=a*t
 
     solve::product_solver( t_f,  t,  fps ); // t_f = t * fps 
     solve::product_solver( t0_f, t0, fps ); // t0_f = t0 * fps 
@@ -73,8 +73,12 @@ namespace anitmt{
     //*****************
     // Default Values
 
+    // Default value 0 for acceleration on level 130 
+    solve::establish_Default_Value( &ani->pri_sys, 130, a, 0 );
+
     // Default value 0 for slope on level 150 
-    solve::establish_Default_Value( &ani->pri_sys, 150, s, 0 );
+    solve::establish_Default_Value( &ani->pri_sys, 150, s0, 0 );
+    solve::establish_Default_Value( &ani->pri_sys, 151, se, 0 );
 
     // Default value 0 for differance on level 170 
     solve::establish_Default_Value( &ani->pri_sys, 170, d, 0 );

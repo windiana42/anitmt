@@ -505,6 +505,8 @@ namespace funcgen
 	provided->current_result_code =
 	  &provided->results[res_type];
 	provided->current_result_code->defined = true;
+	provided->current_result_code->return_type = ret_type;
+	provided->current_result_code->parameter_type = par_type;
 	provided->current_result_code->parameter = par_name;
       }
       else
@@ -582,6 +584,41 @@ namespace funcgen
     }
   }
 
+  void write_code(void *info, double scalar )
+  {
+    afd_info *I=static_cast<afd_info*>(info);
+    //message::Message_Reporter &msg = I->msg;
+    Tree_Node_Type *node = I->afd->current_node;
+    assert(node != 0);
+    Provided_Results *provided = node->current_provided_results;
+    if( provided )
+    {
+      Result_Code *res_code = provided->current_result_code;
+
+      if( res_code )		// in valid result code?
+      {
+	res_code->code += std::string("") + scalar + " ";
+      }
+    }    
+  }
+  void write_code(void *info, std::string id )
+  {
+    afd_info *I=static_cast<afd_info*>(info);
+    //message::Message_Reporter &msg = I->msg;
+    Tree_Node_Type *node = I->afd->current_node;
+    assert(node != 0);
+    Provided_Results *provided = node->current_provided_results;
+    if( provided )
+    {
+      Result_Code *res_code = provided->current_result_code;
+
+      if( res_code )		// in valid result code?
+      {
+	res_code->code += id + " " ;
+      }
+    }    
+  }
+
   void res_ref_property( void *info, std::string prop )
   {
     afd_info *I=static_cast<afd_info*>(info);
@@ -649,6 +686,119 @@ namespace funcgen
 						       parameter );
       }
     }    
+  }
+
+  void res_ref_start_return_res( void *info )
+  {
+    afd_info *I=static_cast<afd_info*>(info);
+    //message::Message_Reporter &msg = I->msg;
+    Code_Translator *translator = I->afd->translator;
+    Tree_Node_Type *node = I->afd->current_node;
+    assert(node != 0);
+    Provided_Results *provided = node->current_provided_results;
+    if( provided )
+    {
+      Result_Code *res_code = provided->current_result_code;
+
+      if( res_code )		// in valid result code?
+      {
+	res_code->code += translator->start_return_res
+	  (res_code->return_type);
+      }
+    }
+  }
+  void res_ref_finish_return_res( void *info )
+  {
+    afd_info *I=static_cast<afd_info*>(info);
+    //message::Message_Reporter &msg = I->msg;
+    Code_Translator *translator = I->afd->translator;
+    Tree_Node_Type *node = I->afd->current_node;
+    assert(node != 0);
+    Provided_Results *provided = node->current_provided_results;
+    if( provided )
+    {
+      Result_Code *res_code = provided->current_result_code;
+
+      if( res_code )		// in valid result code?
+      {
+	res_code->code += translator->finish_return_res
+	  (res_code->return_type);
+      }
+    }
+  }
+  void res_ref_start_return_prop( void *info )
+  {
+    afd_info *I=static_cast<afd_info*>(info);
+    //message::Message_Reporter &msg = I->msg;
+    Code_Translator *translator = I->afd->translator;
+    Tree_Node_Type *node = I->afd->current_node;
+    assert(node != 0);
+    Provided_Results *provided = node->current_provided_results;
+    if( provided )
+    {
+      Result_Code *res_code = provided->current_result_code;
+
+      if( res_code )		// in valid result code?
+      {
+	res_code->code += translator->start_return_prop
+	  (res_code->return_type);
+      }
+    }
+  }
+  void res_ref_finish_return_prop( void *info )
+  {
+    afd_info *I=static_cast<afd_info*>(info);
+    //message::Message_Reporter &msg = I->msg;
+    Code_Translator *translator = I->afd->translator;
+    Tree_Node_Type *node = I->afd->current_node;
+    assert(node != 0);
+    Provided_Results *provided = node->current_provided_results;
+    if( provided )
+    {
+      Result_Code *res_code = provided->current_result_code;
+
+      if( res_code )		// in valid result code?
+      {
+	res_code->code += translator->finish_return_prop
+	  (res_code->return_type);
+      }
+    }
+  }
+  void res_ref_start_return( void *info )
+  {
+    afd_info *I=static_cast<afd_info*>(info);
+    //message::Message_Reporter &msg = I->msg;
+    Code_Translator *translator = I->afd->translator;
+    Tree_Node_Type *node = I->afd->current_node;
+    assert(node != 0);
+    Provided_Results *provided = node->current_provided_results;
+    if( provided )
+    {
+      Result_Code *res_code = provided->current_result_code;
+
+      if( res_code )		// in valid result code?
+      {
+	res_code->code += translator->start_return(res_code->return_type);
+      }
+    }
+  }
+  void res_ref_finish_return( void *info )
+  {
+    afd_info *I=static_cast<afd_info*>(info);
+    //message::Message_Reporter &msg = I->msg;
+    Code_Translator *translator = I->afd->translator;
+    Tree_Node_Type *node = I->afd->current_node;
+    assert(node != 0);
+    Provided_Results *provided = node->current_provided_results;
+    if( provided )
+    {
+      Result_Code *res_code = provided->current_result_code;
+
+      if( res_code )		// in valid result code?
+      {
+	res_code->code += translator->finish_return(res_code->return_type);
+      }
+    }
   }
 
   Expression *bool_expr( Expression *exp1, 

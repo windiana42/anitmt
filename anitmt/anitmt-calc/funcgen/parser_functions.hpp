@@ -147,6 +147,8 @@ namespace funcgen
 				     const std::string &ret="", 
 				     const std::string &par="" );
 
+  void write_code( void *info, double scalar );
+  void write_code( void *info, std::string id );
   void res_ref_property( void *info, std::string prop );
   void res_ref_child( void *info, std::string provider, 
 		      std::string result_type, std::string parameter_type, 
@@ -154,6 +156,12 @@ namespace funcgen
   void res_ref_this( void *info, std::string provider, 
 		     std::string result_type, std::string parameter_type, 
 		     std::string parameter );
+  void res_ref_start_return_res( void *info );
+  void res_ref_finish_return_res( void *info );
+  void res_ref_start_return_prop( void *info );
+  void res_ref_finish_return_prop( void *info );
+  void res_ref_start_return( void *info );
+  void res_ref_finish_return( void *info );
 
   Expression *bool_expr( Expression *exp1, 
 			 const std::string &op, 

@@ -206,6 +206,8 @@ namespace funcgen
   {
   public:
     bool defined;		// is this code already defined
+    std::string return_type;	// return type of this code
+    std::string parameter_type;	// parameter_type type of this code
     std::string parameter;	// parameter name
     std::list<std::string> required_properties; 
     std::list< std::pair<std::string,Result_Type> > required_children; 

@@ -90,6 +90,31 @@ namespace funcgen
     return prefix_res_fun + provider_type + '_' + ret_type + '_' + par_type 
       + "( " + par + " )";
   }
+  std::string Cpp_Code_Translator::start_return_res( std::string )
+  {
+    return "return(";
+  }
+  std::string Cpp_Code_Translator::finish_return_res( std::string )
+  {
+    return ")";
+  }
+  std::string Cpp_Code_Translator::start_return_prop( std::string return_type )
+  {
+    return "return std::pair<bool," + base_type(return_type) + ">(true,";
+  }
+  std::string Cpp_Code_Translator::finish_return_prop( std::string )
+  {
+    return ")";
+  }
+  std::string Cpp_Code_Translator::start_return( std::string return_type )
+  {
+    return "return std::pair<bool," + base_type(return_type) + ">(true,";
+  }
+  std::string Cpp_Code_Translator::finish_return( std::string )
+  {
+    return ")";
+  }
+
   std::string Cpp_Code_Translator::start_param
   ( std::string provider_type, std::string ret_type, std::string par_type )
   {
@@ -325,7 +350,8 @@ namespace funcgen
       for( j  = provider_type.result_types.begin(); 
 	   j != provider_type.result_types.end(); ++j )
       {
-	*decl << "    virtual " << translator.base_type(j->return_type) << " "
+	*decl << "    virtual std::pair<bool," 
+	      << translator.base_type(j->return_type) << "> "
 	      << translator.result_function_decl( provides, j->return_type, 
 						  j->parameter_type )
 	      << " = 0;" << std::endl;
@@ -467,12 +493,10 @@ namespace funcgen
 					j->parameter_type) << "() )" 
 		<< std::endl
 		<< "        {" << std::endl
-		<< "          return std::pair<bool," 
-		<< translator.base_type(j->return_type) << ">(true," 
-		<< "(*i)->" 
+		<< "          return (*i)->" 
 		<< translator.result_function_call( provides, j->return_type, 
 						    j->parameter_type,"_par_" )
-		<< "); " << std::endl
+		<< "; " << std::endl
 		<< "        }" << std::endl
 		<< "        else // must be undefined range" << std::endl
 		<< "        {" << std::endl
@@ -795,11 +819,11 @@ namespace funcgen
 	      << "    {" << std::endl
 	      << "      (*" << translator.container_name( k->provider_type )
 	      << ".elements_begin())->" 
-	      << translator.first_init( k->provider_type ) << "();" 
+	      << translator.first_init( k->provider_type ) << ";" 
 	      << std::endl
 	      << "      (*(--" << translator.container_name( k->provider_type )
  	      << ".elements_end()))->" 
-	      << translator.last_init( k->provider_type ) << "();" 
+	      << translator.last_init( k->provider_type ) << ";" 
 	      << std::endl
 	      << "    }" << std::endl;
       }
@@ -909,7 +933,7 @@ namespace funcgen
 	    {
 	      const std::string &prop = *p;
 	      *impl << (first?first=false,"":" || ")
-		    << "!" << translator.prop_op(prop) << ".is_solve()";
+		    << "!" << translator.prop_op(prop) << ".is_solved()";
 	    }
 	    *impl << " )" << std::endl
 		  << "    {" << std::endl
@@ -1044,8 +1068,8 @@ namespace funcgen
       {
         *impl << "," << std::endl
 	      << "      " << translator.container_name( k->provider_type )
-	      << "(" << (k->max1?"true":"false") << "," 
-	      << (k->min1?"true":"false") << ")"
+	      << "(" << (k->max1?"true":"false") << ", " 
+	      << (k->min1?"true":"false") << ", get_consultant() )"
 	      << " // " << (k->max1?"max1 ":"") << (k->min1?"min1":"");
       }
       *impl << std::endl
@@ -1055,7 +1079,7 @@ namespace funcgen
       for( j=node.properties.begin(); j!=node.properties.end(); ++j )
       {
 	*impl << "    add_property( \""
-	      << translator.prop_op(j->first) << "\", "
+	      << translator.prop_op(j->first) << "\", &"
 	      << translator.prop_op(j->first)
 	      << " );" << std::endl;
       }

@@ -56,6 +56,7 @@ namespace funcgen
 %token TAFD_requires TAFD_this TAFD_prev TAFD_next TAFD_first TAFD_last 
 %token TAFD_parent TAFD_child TAFD_first_child TAFD_last_child 
 %token TAFD_start_param TAFD_end_param TAFD_true TAFD_false
+%token TAFD_return_res TAFD_return_prop TAFD_return
 // lexer error
 %token TAFD_ERROR 
 // multi character operators
@@ -372,12 +373,37 @@ code_statements: /*optional*/
 ;
 code_statement:
     TAFD_CODE
-  | '[' result_reference ']' 	{ /*insert here*/ continue_code_mode(info); }
-  | '[' TAFD_SCALAR ']' 	{ continue_code_mode(info); }
+  | '[' result_reference ']' 	{ continue_code_mode(info); }
+  | '[' TAFD_SCALAR ']' 	{ write_code(info,"[");
+				  write_code(info,$2);
+				  write_code(info,"]");
+				  continue_code_mode(info); }
+  | '[' TAFD_return_res		{ res_ref_start_return_res(info); }
+      result_function_reference ']' 	
+				{ res_ref_finish_return_res(info);
+				  continue_code_mode(info); }
+  | '[' TAFD_return_prop	{ res_ref_start_return_prop(info); }
+      result_property_reference ']' 	
+				{ res_ref_finish_return_prop(info);
+				  continue_code_mode(info); }
+  | '[' TAFD_return		{ res_ref_start_return(info); }
+      TAFD_IDENTIFIER ']'	{ write_code(info,$4);
+				  res_ref_finish_return(info);
+				  continue_code_mode(info); }
+  | '[' TAFD_return		{ res_ref_start_return(info); }
+      TAFD_SCALAR ']'		{ write_code(info,$4);
+				  res_ref_finish_return(info);
+				  continue_code_mode(info); }
   | '[' error ']' 		{ continue_code_mode(info); }
 ;
 result_reference:
+    result_property_reference
+  | result_function_reference
+;
+result_property_reference:
     TAFD_IDENTIFIER		{ res_ref_property(info,$1); }
+;
+result_function_reference:
   | TAFD_child '.' TAFD_IDENTIFIER '.' TAFD_IDENTIFIER '('
     TAFD_IDENTIFIER TAFD_IDENTIFIER ')'
 				{ res_ref_child(info,$3,$5,$7,$8); }

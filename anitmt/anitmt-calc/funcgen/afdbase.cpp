@@ -575,7 +575,8 @@ namespace funcgen
   void Property_Reference::add( std::string add_code )
   {
     if(!first)
-      code += '.';		// add concat point when more then one elements
+      code += "->";		// add concat point when more then one elements
+#warning should be told by translator object
     else
       first = false;
 

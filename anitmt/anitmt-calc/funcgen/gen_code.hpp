@@ -69,6 +69,13 @@ namespace funcgen
 					      std::string ret_type,
 					      std::string par_type,
 					      std::string par ) = 0;
+    virtual std::string start_return_res( std::string return_type ) = 0;
+    virtual std::string finish_return_res( std::string return_type ) = 0;
+    virtual std::string start_return_prop( std::string return_type ) = 0;
+    virtual std::string finish_return_prop( std::string return_type ) = 0;
+    virtual std::string start_return( std::string return_type ) = 0;
+    virtual std::string finish_return( std::string return_type ) = 0;
+
     virtual std::string start_param( std::string provider_type,
 				     std::string ret_type,
 				     std::string par_type ) = 0;
