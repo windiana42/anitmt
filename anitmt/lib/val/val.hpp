@@ -1,15 +1,21 @@
-/*****************************************************************************/
-/**   This file offers datatypes designed for AniTMT                        **/
-/*****************************************************************************/
-/**                                                                         **/
-/** Authors: Wolfgang Wieser   (wwieser@gmx.de)                             **/
-/**          Martin Trautmann  (martintrautmann@gmx.de)                     **/
-/**                                                                         **/
-/** Report bugs and suggestions to wwieser@gmx.de .                         **/
-/**                                                                         **/
-/** License: GPL - free and without any warranty - read COPYING             **/
-/**                                                                         **/
-/*****************************************************************************/
+/*
+ * iloperator.hpp
+ * 
+ * This file offers basic data classes 
+ * (Flag, Scalar, Vector, Matrix, String). 
+ * 
+ * Copyright (c) 2001 by Wolfgang Wieser   (wwieser@gmx.de) 
+ *                   and Martin Trautmann  (martintrautmann@gmx.de)
+ * Report bugs and suggestions to wwieser@gmx.de .
+ * 
+ * This file may be distributed and/or modified under the terms of the 
+ * GNU General Public License version 2 as published by the Free Software 
+ * Foundation. 
+ * 
+ * This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
+ * WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
+ * 
+ */
 
 #ifndef __values_h__
 #define __values_h__
@@ -32,7 +38,10 @@ namespace values
   // Inline function which computes x*x; often useful if you want to 
   // calculate the square of some non-trivial expression. 
   inline double sqr(double x)  {  return(x*x);  }
-  
+
+  inline double deg2rad(double x)  {  return(x*M_PI/180.0);  }
+  inline double rad2deg(double x)  {  return(x*180.0/M_PI);  }
+
   class Valtype{
   public:
     enum Types { scalar, vector, matrix, string, flag };
@@ -56,7 +65,7 @@ namespace values
     Flag() : Valtype(Valtype::flag) {}
 
     operator bool() const  {  return(x);  }
-
+    bool val() const  {  return(x);  }
   };
 
 
@@ -72,6 +81,7 @@ namespace values
     Scalar(const Scalar &s) : Valtype(Valtype::scalar),x(s.x) {}
 
     operator double() const  {  return(x);  }
+    double val() const  {  return(x);  }
 
     // Operators comparing scalars (using epsilon): 
     friend bool operator==(const Scalar &,const Scalar &);
@@ -80,6 +90,11 @@ namespace values
     friend bool operator!=(const Scalar &,double);
     friend bool operator==(double,const Scalar &);
     friend bool operator!=(double,const Scalar &);
+
+    bool operator==(double a) const  {  return(fabs(a-x)<=epsilon);  }
+    bool operator!=(double a) const  {  return(fabs(a-x)>epsilon);  }
+    bool operator==(const Scalar &a) const  {  return(fabs(a.x-x)<=epsilon);  }
+    bool operator!=(const Scalar &a) const  {  return(fabs(a.x-x)>epsilon);  }
 
     // Returns 1, if this scalar is 0 (exactly: if |this->x| <= epsilon )
     bool operator!() const {  return(fabs(x)<=epsilon);  }
