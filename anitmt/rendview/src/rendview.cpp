@@ -120,7 +120,7 @@ static int MAIN(int argc,char **argv,char **envp)
 		"bg in bash) makes them continue all again.\n"
 		"NOTE: COLORED OUTPUT is automatically switched off for non-ttys "
 		"but you can manually force it off/on using --nocolor/--color."
-		"\n\n** JUST DO NOT TRY TO DO ANYTHING WITH FILTERS & LDR NOW**");
+		"\n\n** JUST DO NOT TRY TO DO ANYTHING WITH LDR NOW**");
 		// ...as well as only rendering changed frames or resuming operation
 		// ...and later create a film of them...
 		
