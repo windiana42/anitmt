@@ -39,7 +39,7 @@ unset gccvers
 
 # Checks for libraries.
 # FIXME: Replace `main' with a function in `-lefence':
-AC_CHECK_LIB([efence], [main])
+#AC_CHECK_LIB([efence], [main])
 # FIXME: Replace `main' with a function in `-lm':
 #AC_CHECK_LIB([m], [main])
 # FIXME: Replace `main' with a function in `-lstdc':
