@@ -192,13 +192,22 @@ int TaskSource_LDR::fdnotify(FDInfo *fdi)
 			return(0);
 		}
 		
-		if(p->server_net)
+		// Check if this address is allowed: 
+		TaskSourceFactory_LDR::ServerNet *acc_sn=NULL;
+		if(!p->server_net_list.is_empty())
 		{
-			for(int i=0; i<p->n_server_nets; i++)
+			for(TaskSourceFactory_LDR::ServerNet *sn=p->server_net_list.first(); 
+				sn; sn=sn->next)
 			{
-				// Check server net. [must also dump it at startup]
-				assert(0);
+				// Check server net. 
+				if(addr.IsInNet(sn->adr,sn->mask))
+				{  acc_sn=sn;  goto adr_okay;  }
 			}
+			Error("LDR: Rejecting connection from %s (not in server "
+				"net list)\n",addr.GetAddress().str());
+			shutdown(as,2);  close(as);
+			return(0);
+			adr_okay:;
 		}
 		
 		// Okay, we may receive a connection. 
@@ -215,6 +224,9 @@ int TaskSource_LDR::fdnotify(FDInfo *fdi)
 		// Okay, accepted a connection: 
 		Verbose(TSLLR,"LDR: Accepted connection from %s.\n",
 			sc->addr.GetAddress().str());
+		if(acc_sn)
+		{  Verbose(TSLLR,"LDR:   Address matched server net: %s\n",
+			p->ServerNetString(acc_sn).str());  }
 		sconn.append(sc);
 		return(0);
 	}

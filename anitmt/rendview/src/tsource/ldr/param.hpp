@@ -17,6 +17,8 @@
 #ifndef _RNDV_TSOURCE_LDRPARS_HPP_
 #define _RNDV_TSOURCE_LDRPARS_HPP_ 1
 
+#include <lib/myaddrinfo.hpp>
+
 class ComponentDataBase;
 class ImageFormat;
 class RenderDesc;
@@ -39,12 +41,22 @@ class TaskSourceFactory_LDR :
 		
 		// Allowed server address/netmask, comma or space-separated list. 
 		RefString server_net_str;
-		int n_server_nets;
-		struct ServerNet
+		struct ServerNet : LinkedListBase<ServerNet>
 		{
-			u_int32_t adr;
+			RefString name;  // As specified (symbolic or numerical) 
+			MyAddrInfo adr;
 			u_int32_t mask;
-		} *server_net;
+			
+			_CPP_OPERATORS_FF
+			ServerNet(int *failflag=NULL) : LinkedListBase<ServerNet>(), 
+				name(failflag), adr(failflag)
+				{  mask=0xffffffffU;  }
+			~ServerNet() {}
+		};
+		LinkedList<ServerNet> server_net_list;
+		
+		// Return string representation of server net: 
+		RefString ServerNetString(TaskSourceFactory_LDR::ServerNet *sn);
 		
 		// Param spec string for the flags below. 
 		RefString transfer_spec_str;

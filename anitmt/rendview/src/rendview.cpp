@@ -109,7 +109,7 @@ static int MAIN(int argc,char **argv,char **envp)
 		"exit; pressing ^C twice will kill all jobs. In either way "
 		"rendview exits cleanly. Pressing ^C three times makes "
 		"RendView abort. SIGTERM acts like two ^C. SIGTSTP (^Z) will "
-		"make RendView stop all tasks and then als stop; SIGCONT (fg or "
+		"make RendView stop all tasks and then also stop; SIGCONT (fg or "
 		"bg in bash) makes them continue all again.\n"
 		"NOTE: COLORED OUTPUT is automatically switched off for non-ttys "
 		"but you can manually force it off/on using --nocolor/--color."

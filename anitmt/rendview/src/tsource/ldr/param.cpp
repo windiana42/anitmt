@@ -37,17 +37,45 @@ const char *TaskSourceFactory_LDR::TaskSourceDesc() const
 }
 
 
-/*static void _CheckAlloc(int x)
+static void _CheckAlloc(int x)
 {
 	if(x)
 	{  Error("Allocation failure.\n");  abort();  }
-}*/
+}
 
 
 // Create a LDR TaskSource (TaskSource_LDR): 
 TaskSource *TaskSourceFactory_LDR::Create()
 {
 	return(NEW1<TaskSource_LDR>(this));
+}
+
+
+// Return string representation of server net: 
+RefString TaskSourceFactory_LDR::ServerNetString(
+	TaskSourceFactory_LDR::ServerNet *sn)
+{
+	char bits_tmp[32];
+	if(sn->mask==0xffffffffU)
+	{  strcpy(bits_tmp,"[single]");  }
+	else
+	{
+		// I simply count bits here. 
+		int mbits=0;
+		u_int32_t tmp=sn->mask;
+		while(tmp)
+		{
+			if(tmp&1)  ++mbits;
+			tmp>>=1;
+		}
+		snprintf(bits_tmp,32,"[mask: %d]",mbits);
+	}
+	RefString tmp;
+	tmp.sprintf(0,"%s (%s) %s",
+		sn->name.str(),
+		sn->adr.GetAddress(/*with_port=*/0).str(),
+		bits_tmp);
+	return(tmp);
 }
 
 
@@ -98,11 +126,15 @@ int TaskSourceFactory_LDR::FinalInit()
 	
 	if(!failed)
 	{
-		Verbose(TSP,"LDR task source: Listening on port %d (procotol version %d)\n",
+		Verbose(TSI,"LDR task source: Listening on port %d (procotol version %d)\n",
 			listen_port,LDRProtocolVersion);
-		Verbose(TSP,"  Server authentification (password): %s\n",
+		Verbose(TSI,"  Server authentification (password): %s\n",
 			password.str() ? "enabled" : "disabled");
-		Verbose(TSP,"  Transferring files:\n"
+		Verbose(TSI,"  Allowed server nets:%s\n",
+			server_net_list.is_empty() ? " [all]" : "");
+		for(ServerNet *sn=server_net_list.first(); sn; sn=sn->next)
+		{  Verbose(TSI,"    %s\n",ServerNetString(sn).str());  }
+		Verbose(TSI,"  Transferring files:\n"
 			"    Render source: %s     Render dest: %s\n"
 			"    Filter dest:   %s     Additional:  %s\n",
 			transfer.render_src  ? "yes" : "no ",
@@ -183,38 +215,107 @@ int TaskSourceFactory_LDR::CheckParams()
 	
 	if(server_net_str.str() && *server_net_str.str())
 	{
-		const char *str=(char*)server_net_str.str();
-		int nsn=0;   // -1 -> error
+		// Parse in server net spec: 
+		#warning EXTEND THIS TO IPV6. 
+		const char *str=server_net_str.str();
 		for(;;)
 		{
 			// Skip whitespace: 
 			while(isspace(*str))  ++str;
 			if(!(*str))  break;
-			++nsn;
-			// Skip server name/net: 
-			while(*str && !isspace(*str))  ++str;
-		}
-		if(!nsn)
-		{  Warning("Ignoring empty -servernet spec.\n");  }
-		else
-		{
-			server_net=(ServerNet*)LMalloc(nsn*sizeof(ServerNet));
-			if(!server_net)
-			{  Error("Alloc failure (ldr/param, %u)\n",nsn*sizeof(ServerNet));
-				++failed;  }
-			n_server_nets=nsn;
-			str=(char*)server_net_str.str();
-			for(nsn=0; nsn<n_server_nets; nsn++,str++)
+			// Okay, read in host name/IP: 
+			const char *host=str;
+			while(*str && *str!='/' && !isspace(*str))  ++str;
+			// Alloc node: 
+			ServerNet *sn=NEW<ServerNet>();
+			_CheckAlloc(!sn);
+			server_net_list.append(sn);
+			// Copy serer name: 
+			_CheckAlloc(sn->name.set0(host,str-host));;
+			// Parse in mask (if any): 
+			// mask=0xffffffffU here from the constructor. 
+			if(*str=='/')
 			{
-				while(isspace(*str))  ++str;
-				assert(*str);
-				const char *host=str;
-				while(*str && *str!='/' && !isspace(*str))  ++str;
-				char *hostend=(char*)str;
-				// Parse host: 
-// ACHTUNG!!! number of bits spec!!
-				fprintf(stderr,"<<%.*s>>\n",hostend-host,host);
+				char *ptr=(char*)(str+1);
+				long na = isdigit(*ptr) ? strtol(ptr,&ptr,10) : (-1);
+				if(ptr<=str || na<0 || na>32)
+				{
+					if(na==-1)
+					{  while(*ptr && !isspace(*ptr))  ++ptr;  }
+					Error("Illegal server net spec \"%.*s\".\n",
+						ptr-host,host);
+					++failed;
+				}
+				else if(*ptr && !isspace(*ptr))
+				{
+					// Skip garbage: 
+					while(*ptr && !isspace(*ptr))  ++ptr;
+					// And report error (it's secutity issue here, so 
+					// I expect that this is specified correctly. 
+					Error("Garbage at end of server net spec \"%.*s\".\n",
+						ptr-host,host);
+					++failed;
+				}
+				else
+				{
+					// Set the first na bits in sn->mask (net order): 
+					
+					// Yes, this damn stuff is necessary because x<<32 will not 
+					// alter x at all. 
+					if(na==32)  sn->mask=0xffffffffU;
+					else if(na==0)  sn->mask=0U;
+					else
+					{  sn->mask=htonl(
+						u_int32_t(0xffffffffU) << u_int32_t(32-na));  }
+				}
+				str=ptr;
 			}
+		}
+		
+		// Resolve the hosts: 
+		if(!server_net_list.is_empty())
+		{
+			Verbose(TSP,"Looking up server networks...\n");
+			for(ServerNet *sn=server_net_list.first(); sn; sn=sn->next)
+			{
+				int rv=sn->adr.SetAddressError(sn->name.str(),/*port=*/0);
+				if(rv)
+				{  ++failed;  continue;  }
+			}
+		}
+		
+		// Check for duplicate entries: 
+		for(ServerNet *_sn=server_net_list.first(); _sn; )
+		{
+			ServerNet *sn=_sn;  _sn=_sn->next;
+			int dup=0;
+			for(ServerNet *_i=sn->next; _i; )
+			{
+				ServerNet *i=_i;  _i=_i->next;
+				// We could be more sophisticated here and detect if 
+				// two server net specs overlap... 
+				if(!(i->adr==sn->adr) || i->mask!=sn->mask)  continue;
+				delete server_net_list.dequeue(i);
+				++dup;
+			}
+			if(dup)
+			{  Warning("Removed duplicate server net entry %s (%s)\n",
+				sn->name.str(),sn->adr.GetAddress(/*with_port=*/0).str());  }
+		}
+		
+		// Do simple sanity check if net address & ~mask is 0: 
+		for(ServerNet *sn=server_net_list.first(); sn; sn=sn->next)
+		{
+			// To explain this warning: 
+			// Say you have the 24-bit subnet 192.168.1.0/24. 
+			// If you specify 192.168.1.0/24 as server net, then all is 
+			//   okay. 
+			// If you specify the host 192.168.1.17/24, then his is the 
+			//   same as when spefifying the net (...1.0) but you get this 
+			//   warning. 
+			if(sn->adr.CheckNetBitsZero(sn->mask))
+			{  Warning("Server net entry %s looks like host, using net.\n",
+				ServerNetString(sn).str());  }
 		}
 	}
 	server_net_str.deref();
@@ -246,9 +347,9 @@ int TaskSourceFactory_LDR::_RegisterParams()
 		"to connect to this client; leave away or \"none\" to disable; "
 		"\"prompt\" to prompt for one ",&password);
 	
-//	AddParam("servernet","space separated list of hosts or hosts with "
-//		"netmasks (e.g. 192.168.1.1/24) to allow as servers.",
-//		&server_net_str);
+	AddParam("servernet","space separated list of hosts or hosts with "
+		"netmasks (e.g. 192.168.1.1/24) to allow as servers.",
+		&server_net_str);
 	
 	return(add_failed ? (-1) : 0);
 }
@@ -275,6 +376,7 @@ TaskSourceFactory_LDR::TaskSourceFactory_LDR(
 	TaskSourceFactory("LDR",cdb,failflag),
 	password(failflag),
 	server_net_str(failflag),
+	server_net_list(failflag),
 	transfer_spec_str(failflag)
 {
 	listen_fd=-1;
@@ -285,9 +387,6 @@ TaskSourceFactory_LDR::TaskSourceFactory_LDR(
 	transfer.render_dest=1;
 	transfer.filter_dest=1;
 	transfer.additional=1;
-	
-	n_server_nets=0;
-	server_net=NULL;
 	
 	int failed=0;
 	
@@ -310,8 +409,8 @@ TaskSourceFactory_LDR::~TaskSourceFactory_LDR()
 		listen_fd=-1;
 	}
 	
-	n_server_nets=0;
-	server_net=(ServerNet*)LFree(server_net);
+	while(!server_net_list.is_empty())
+	{  delete server_net_list.popfirst();  }
 	
 	password.zero();
 }

@@ -121,14 +121,9 @@ int TaskDriverInterfaceFactory_LDR::FinalInit()
 		do {
 			// Resolve the name: 
 			const char *name=cp->name.str();
-			int rv=cp->addr.SetAddress(name,port);
-			if(rv==-1)
-			{  Error("Failed to resolve host \"%s\": %s\n",
-				name,hstrerror(h_errno));  ++failed;  break;  }
-			else if(rv==-2)
-			{  Error("gethostbyname() did not return AF_INET for \"%s\".\n",
-				name);  ++failed;  break;  }
-			else assert(!rv);
+			int rv=cp->addr.SetAddressError(name,port);
+			if(rv)  // Error already reported by SetAddressError(). 
+			{  ++failed;  break;  }
 			
 			// Read in password if needed: 
 			{

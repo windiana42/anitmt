@@ -51,6 +51,17 @@ int MyAddrInfo::SetAddress(const char *host,int port)
 	return(0);
 }
 
+int MyAddrInfo::SetAddressError(const char *host,int port)
+{
+	int rv=SetAddress(host,port);
+	if(rv==-1)
+	{  Error("Failed to resolve host \"%s\": %s\n",host,hstrerror(h_errno));  }
+	else if(rv==-2)
+	{  Error("gethostbyname() did not return AF_INET for \"%s\".\n",host);  }
+	else assert(!rv);
+	return(rv);
+}
+
 
 RefString MyAddrInfo::GetAddress(int with_port)
 {
@@ -63,6 +74,28 @@ RefString MyAddrInfo::GetAddress(int with_port)
 	else
 	{  s.set(inet_ntoa(a.sin_addr));  }
 	return(s);
+}
+
+
+int MyAddrInfo::IsInNet(MyAddrInfo &net_adr,u_int32_t netmask)
+{
+	// When using IPv4 and IPv6, we should probably return 0 if 
+	// a.sin_family!=net_adr.sin_family. 
+	assert(a.sin_family==AF_INET && net_adr.a.sin_family==AF_INET);
+	
+	u_int32_t thisaddr=a.sin_addr.s_addr;
+	u_int32_t netaddr=net_adr.a.sin_addr.s_addr;
+	
+	return((thisaddr & netmask) == (netaddr & netmask));
+}
+
+int MyAddrInfo::CheckNetBitsZero(u_int32_t mask)
+{
+	assert(a.sin_family==AF_INET);
+	
+	u_int32_t thisaddr=a.sin_addr.s_addr;
+	fprintf(stderr,"<<0x%08x 0x%08x>>\n",thisaddr,mask);
+	return((thisaddr & ~mask) ? 1 : 0);
 }
 
 

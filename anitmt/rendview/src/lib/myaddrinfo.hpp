@@ -27,7 +27,6 @@
 #include <netinet/in.h>
 
 
-
 // Used as client/server internet address: 
 class MyAddrInfo
 {
@@ -72,6 +71,9 @@ class MyAddrInfo
 		//  -1 -> gethostbyname() failed (see h_errno)
 		//  -2 -> not AF_INET
 		int SetAddress(const char *host,int port);
+		// Like SetAddress() but also report error if error happened. 
+		// Return value: see above. 
+		int SetAddressError(const char *host,int port);
 		
 		// *** Print Address ***
 		// Get address string: with_port: include port name?
@@ -80,6 +82,12 @@ class MyAddrInfo
 		// Get port number in host order (or -1): 
 		int GetPort()
 			{  return(a.sin_family==AF_INET ? int(ntohs(a.sin_port)) : (-1));  }
+		
+		// This currently only works for IPv4: 
+		int IsInNet(MyAddrInfo &net_adr,u_int32_t netmask);
+		// Checks if all bits where mask is 0 are 0 in this.a, too. 
+		// If so, the test succeeds and returns 0, else 1. ONLY IPv4. 
+		int CheckNetBitsZero(u_int32_t mask);
 		
 		// *** Actions: ***
 		// Create a TCP socket (using socket(2)) with specified 
