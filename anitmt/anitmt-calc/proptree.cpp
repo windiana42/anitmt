@@ -92,8 +92,8 @@ namespace anitmt{
   //! if name is an empty string a default name is created
   Prop_Tree_Node *Prop_Tree_Node::add_child( std::string type, 
 					     std::string name ) 
-    throw( EX_child_type_unknown, EX_child_type_rejected ) {
-
+    throw() 
+  {
     if( name == "" )
     {
       // create default name
@@ -104,8 +104,7 @@ namespace anitmt{
     // if type not found
     if( i == child_factory.end() )
     {
-      #warning !!! should be replaced by new message system !!!
-      std::cerr << "unknown child type \"" << type << "\"" << std::endl;
+      //err = AC_child_type_unknown; // return error type
       return 0;
     }
 
@@ -129,11 +128,7 @@ namespace anitmt{
     }
 
     if( !try_add_child( node ) )
-    {
-      std::cerr << "child type \"" << type << "\" not allowed here" 
-		<< std::endl;
       return 0;
-    }
 
     return node;
   }
@@ -276,16 +271,18 @@ namespace anitmt{
   }
 
   // adds a factory object for class generation
-  void Prop_Tree_Node::add_child_factory( std::string type_name, 
+  char Prop_Tree_Node::add_child_factory( std::string type_name, 
 					  Child_Factory* fac )
-    throw( EX_child_type_already_defined ) {
+    throw() 
+  {
 
     child_factory_type::iterator i = child_factory.find( type_name );
     // if type not found
     if( i != child_factory.end() )
-      throw EX_child_type_already_defined();
+      return -1;
     
     child_factory[ type_name ] = fac;
+    return 0;
   }
 
   //! function that is called after hierarchy was set up for each node
@@ -305,8 +302,9 @@ namespace anitmt{
   // constructors / destructor
 
   Prop_Tree_Node::Prop_Tree_Node( std::string t, std::string n, Animation *a ) 
-    : parent(0), prev(0), next(0), first_child(0), last_child(0),
-    type(t), name(n), ani(a) {}
+    : message::Message_Reporter( a->msg.get_consultant() ),
+      parent(0), prev(0), next(0), first_child(0), last_child(0),
+      type(t), name(n), ani(a) {}
 
   Prop_Tree_Node::~Prop_Tree_Node() {}
 

@@ -21,20 +21,19 @@ namespace solve{
   //********************************************************
   
   // a operand collision occured!
-  // (may throw exceptions!!!)
-  void User_Problem_Handler::operand_collision_occured
-  ( std::list< Basic_Operand* > bad_ops )
-    throw(EX)
+  // ret false: ignore error
+  bool User_Problem_Handler::operand_collision_occured
+  ( std::list< Basic_Operand* > bad_ops, Solve_Run_Info *info, 
+    message::Message_Reporter *msg )
   {
-    throw EX_property_collision();
+    return true;
   }
 
   // Operand signals to reject value 
   // usage may be enforced by returning false
-  // (may throw exceptions!!!)
   bool User_Problem_Handler::may_operand_reject_val
-  ( std::list< Basic_Operand* > bad_ops )
-    throw(EX)
+  ( std::list< Basic_Operand* > bad_ops, Solve_Run_Info *info, 
+    message::Message_Reporter *msg )
   {
     return false;
   }  
@@ -44,6 +43,20 @@ namespace solve{
   //**************************************************************
 
   Solve_Run_Info::id_type Solve_Run_Info::current_default_test_run_id = 1;
+
+  Solve_Run_Info::Solve_Run_Info( Solve_Problem_Handler *handler, 
+				  int id )
+    : problem_handler( handler ), trial_run( false ), test_run_id( id ) 
+  {
+    add_test_run_id( id );
+  }
+
+  Solve_Run_Info::Solve_Run_Info( Solve_Problem_Handler *handler )
+    : problem_handler( handler ), trial_run( false ), test_run_id( -2 )
+  {
+    new_test_run_id();
+  }
+
 }
 
 

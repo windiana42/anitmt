@@ -28,18 +28,6 @@ namespace anitmt{
   // Type_Property: container for property values of a certain type
   //***************************************************************
 
-  // implicite convertion to contained type
-  /* shouldn't be implemented (see property.hpp)
-  template<class T>
-  Type_Property<T>::operator T() const throw( EX_property_not_solved )
-  { 
-    if( !is_solved() )
-      throw EX_property_not_solved();
-
-    return get_value(); 
-  }
-  */
-
   template<class T>
   std::ostream &Type_Property<T>::write2stream( std::ostream& os ) {
     if( !is_solved() )
@@ -53,13 +41,30 @@ namespace anitmt{
   //  return s.write2stream( os );
   //}
 
+  template<class T>
+  void Type_Property<T>::caused_error()
+  {
+    error() << "property " << get_name() << " caused the error";
+  }
+  template<class T>
+  void Type_Property<T>::involved_in_error( T val )
+  {
+    error() << "setting property " << get_name() << " to " << val 
+	    << " was involved in the error";
+  }
+
   //*************
   // constructor
+
+  // return message consultant before implementation of Prop_Tree_Node is known
+  message::Message_Consultant *get_consultant_early( Prop_Tree_Node *node );
 
   template<class T>
   Type_Property<T>::Type_Property( std::string name, Prop_Tree_Node *node, 
 				   values::Valtype::Types type )
-    : Property( name, node, type ) {}
+    : Property( name, node, type ), 
+      solve::Operand<T>(get_consultant_early(node))
+  {}
 
   /*
   // force compilation of Specializations:

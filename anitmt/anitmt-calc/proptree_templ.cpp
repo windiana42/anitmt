@@ -17,8 +17,8 @@
 
 #include "proptree.hpp"
 
-namespace anitmt{
-
+namespace anitmt
+{
   //************************************************************
   // Prop_Tree_Node: provides tree structure for property groups
   //************************************************************
@@ -26,32 +26,26 @@ namespace anitmt{
   //*******************
   // template functions
   
-  // set property
+  // set property (return value false: set failed)
   template< class T >  
-  void Prop_Tree_Node::set_property( std::string name, T val ) 
-    throw( EX_property_unknown, EX_property_type_rejected, 
-	   EX_property_rejected ) {
-    
+  Prop_Tree_Node::setp_error Prop_Tree_Node::set_property( std::string name, 
+							   T val ) 
+    throw() 
+  {
     Property *property = get_property( name );
     if( property != 0 )
       {
 	Type_Property<T> *p = dynamic_cast< Type_Property<T>* >( property );
-	
-	if( !p ) throw EX_property_type_rejected();
-	
-	bool accepted;
-	try{
-	  accepted = p->set_value( val );
-	}
-	catch( EX ){
-	  throw EX_property_rejected();
-	}
 
-	if( !accepted )
-	  throw EX_property_rejected();
+	if( !p ) return SP_wrong_property_type;
+	
+ 	if( !p->set_value( val ) )
+	  return SP_value_rejected;
       }
     else
-      throw EX_property_unknown();
+      return SP_property_unknown;
+
+    return SP_no_err;
   }
 
   //**************************************************************************

@@ -53,7 +53,7 @@ namespace solve
 
   //! connects another operand as a solution source
   template<class T>
-  Operand<T>& Operand<T>::operator=( Operand<T> &src ) throw(EX)
+  Operand<T>& Operand<T>::operator=( Operand<T> &src ) throw()
   {
     new Store_Operand_to_Operand<T>( src, *this );
     return *this;
@@ -64,15 +64,20 @@ namespace solve
 
   //! connects another operand as a solution source
   template<class T>
-  Operand<T>::Operand<T>( Operand<T> &src ) throw(EX)
-    : solved(false), last_test_run_id(-1), delete_without_listener(false)
+  Operand<T>::Operand<T>( Operand<T> &src ) throw()
+    : message::Message_Reporter(src.get_consultant()),
+      solved(false), last_test_run_id(-1), delete_without_listener(false)
+      
   {
     new Store_Operand_to_Operand<T>( src, *this );
   }
 
   template<class T>
-  Operand<T>::Operand() 
-    : solved(false), last_test_run_id(-1), delete_without_listener(false) {}
+  Operand<T>::Operand( message::Message_Consultant *msg_consultant ) 
+    : message::Message_Reporter(msg_consultant),
+      solved(false), last_test_run_id(-1), delete_without_listener(false)      
+  {
+  }
 
   template<class T>
   Operand<T>::~Operand() 
@@ -100,7 +105,8 @@ namespace solve
   //*****************************************
 
   template<class T>
-  Constant<T>::Constant( T val )
+  Constant<T>::Constant( T val, message::Message_Consultant *msg_consultant )
+    : Operand<T>(msg_consultant)
   {
     delete_without_listener = true; // delete me if last listener disconnects
 
@@ -113,7 +119,7 @@ namespace solve
   
   template<class T>
   bool Store_Operand_to_Operand<T>::is_result_ok
-  ( const void *ID, Solve_Run_Info *info ) throw(EX)
+  ( const void *ID, Solve_Run_Info *info ) throw()
   {
     assert( ID == &source );
     return destination.test_set_value( source.get_value(info), info );
@@ -121,7 +127,7 @@ namespace solve
 
   template<class T>
   void Store_Operand_to_Operand<T>::use_result 
-  ( const void *ID, Solve_Run_Info *info ) throw(EX)
+  ( const void *ID, Solve_Run_Info *info ) throw()
   {
     assert( ID == &source );
     destination.use_test_value( info );
@@ -135,7 +141,7 @@ namespace solve
 
   template<class T>
   Store_Operand_to_Operand<T>::Store_Operand_to_Operand
-  ( Operand<T> &src, Operand<T> &dest ) throw( EX )
+  ( Operand<T> &src, Operand<T> &dest ) throw()
     : source(src), destination(dest) 
   {
     // register to source Operand 
@@ -144,7 +150,6 @@ namespace solve
     if( src.is_solved() )
     {
       dest.set_value( src.get_value() );
-				// could throw exception !
     }
   }
 }

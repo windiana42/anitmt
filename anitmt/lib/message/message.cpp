@@ -18,7 +18,7 @@
 
 namespace message
 {
-  const Null_Position *GLOB::no_position = new Null_Position;
+  Null_Position *GLOB::no_position = new Null_Position;
 
   //**************************************************************
   // Constructors of central message classes

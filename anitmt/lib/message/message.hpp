@@ -40,7 +40,7 @@ namespace message
   class GLOB {
   public:
     //! Global object for undefined positions
-    static const Null_Position *no_position;
+    static Null_Position *no_position;
   };
 
   enum Message_Type
@@ -79,6 +79,8 @@ namespace message
     inline void inc_column( int n );
     inline void inc_column();
     inline void tab_inc_column();
+
+    inline File_Position *duplicate();
 
     //! Create a file position
     /*!\param fn - file name
@@ -241,19 +243,19 @@ namespace message
   //! functions. 
   class Message_Reporter {
     Message_Consultant *consultant;
+    Abstract_Position *default_position;
   public:
     inline bool is_warning();
     inline bool is_verbose(int verbose_level);
 
-    inline Message_Stream error   ( const Abstract_Position *pos
-				    =GLOB::no_position, 
+    inline Message_Consultant *get_consultant() const;
+
+    inline Message_Stream error   ( const Abstract_Position *pos = 0,
 				    int position_detail=2 );
-    inline Message_Stream warn    ( const Abstract_Position *pos 
-				    =GLOB::no_position, 
+    inline Message_Stream warn    ( const Abstract_Position *pos = 0, 
 				    int position_detail=2 );
     inline Message_Stream verbose ( int min_verbose_level = 1,
-				    const Abstract_Position *pos 
-				    =GLOB::no_position, 
+				    const Abstract_Position *pos = 0, 
 				    int position_detail = 2 );
 
     //! Functions to change the verbose indent level of this 
@@ -265,6 +267,9 @@ namespace message
     //! Set the indention size of a special value; normally used to 
     //! reset it to 0. 
     inline void vindent_set(int vindent=0);
+
+    //! set the default position for messages
+    inline void set_msg_default_position( Abstract_Position *pos );
 
     Message_Reporter( Message_Consultant *consultant );
     ~Message_Reporter();

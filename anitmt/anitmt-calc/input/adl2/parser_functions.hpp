@@ -15,6 +15,8 @@
 #ifndef __AniTMT_parser_functions__
 #define __AniTMT_parser_functions__
 
+#include <message/message.hpp>
+
 #include "adlparser.hpp"
 
 namespace anitmt
@@ -47,6 +49,16 @@ namespace anitmt
     //******************************
     // functions used by the parser
     //******************************
+
+    inline message::Message_Reporter &msg( void *info )
+    {return static_cast<adlparser_info*>(info)->msg;}
+
+    inline message::Message_Consultant *msg_consultant( void *info )
+    {return static_cast<adlparser_info*>(info)->msg.get_consultant();}
+
+    inline void set_pos( Property *prop, void *info )
+    {prop->set_position( static_cast<adlparser_info*>(info)->
+			 file_pos.duplicate() );}
 
     // creates new tree node and makes it the current one
     void change_current_child( void *vptr_info, std::string type, 

@@ -61,13 +61,13 @@ namespace anitmt{
 
     std::pair<bool,Position>  get_return_value
     ( values::Scalar t, Position &m = Return<Position>::type_id ) 
-      throw( EX_user_error );
+      throw();
     std::pair<bool,Direction> get_return_value
     ( values::Scalar t, Direction &m = Return<Direction>::type_id ) 
-      throw( EX_user_error );
+      throw();
     std::pair<bool,Up_Vector> get_return_value
     ( values::Scalar t, Up_Vector &m = Return<Up_Vector>::type_id ) 
-      throw( EX_user_error );
+      throw();
   };
   
 
@@ -110,13 +110,13 @@ namespace anitmt{
     
     std::pair<bool,Position> get_return_value
     ( values::Scalar t, Position& = Return<Position>::type_id )
-      throw( EX_user_error );
+      throw();
     std::pair<bool,Direction> get_return_value
     ( values::Scalar t, Direction& = Return<Direction>::type_id )
-      throw( EX_user_error );
+      throw();
     std::pair<bool,Up_Vector> get_return_value
     ( values::Scalar t, Up_Vector& = Return<Up_Vector>::type_id )
-      throw( EX_user_error );
+      throw();
 
     bool try_add_child( Prop_Tree_Node *node );
   };

@@ -86,14 +86,18 @@ namespace solve{
     Priority_Action *priority_action;
   public:
     // a operand collision occured!
-    // (throws exceptions)
-    virtual void operand_collision_occured( std::list< Basic_Operand* > 
-					    bad_ops ) throw(EX);
+    // ret false: ignore error
+    virtual bool operand_collision_occured( std::list< Basic_Operand* > 
+					    bad_ops,
+					    Solve_Run_Info *info, 
+					    message::Message_Reporter *msg );
 
     // operand signals to reject value 
-    // usage may be enforced by returning false
+    // ret false: enforce usage
     virtual bool may_operand_reject_val( std::list< Basic_Operand* > 
-					 bad_ops ) throw(EX);
+					 bad_ops,
+					 Solve_Run_Info *info, 
+					 message::Message_Reporter *msg );
 
     Action_Caller_Inserter( Priority_Action *action );
   };

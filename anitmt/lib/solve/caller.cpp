@@ -24,7 +24,7 @@ namespace solve{
   // has to check the result of the operand with ID as pointer to operand
   bool Action_Caller::is_result_ok( const void *ID, 
 				    Solve_Run_Info *info ) 
-    throw(EX)
+    throw()
   {
 #ifdef __DEBUG__
     std::cout << "action caller was asked for a solution!" << std::endl;
@@ -36,7 +36,7 @@ namespace solve{
 
   // tells to use the result calculated by is_result_ok()
   void Action_Caller::use_result( const void *ID, Solve_Run_Info * )
-    throw(EX)
+    throw()
   {
     assert( ID == trigger );
 #ifdef __DEBUG__

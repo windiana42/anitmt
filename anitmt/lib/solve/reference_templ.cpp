@@ -29,32 +29,39 @@ namespace solve
   //! has to check the result of the operand with ID as pointer to operand
   template<class T_Operand>
   bool Explicite_Reference<T_Operand>::is_result_ok
-  ( const void *ID, Solve_Run_Info *info ) throw(EX)
+  ( const void *ID, Solve_Run_Info *info ) throw()
   {
     if( ID == &destination )
     {
-      std::list<Basic_Operand*> bad_ops;
-      bad_ops.push_back( &destination );
-
-      if( info->problem_handler->may_operand_reject_val( bad_ops ) )
-	return false;		// don't accept forein values
-      else // am I not allowed to reject...
-	return true;
+      if( !source.is_solved_in_try(info) )
+      {
+	std::list<Basic_Operand*> bad_ops;
+	bad_ops.push_back( &destination );
+	
+	if( info->problem_handler->may_operand_reject_val( bad_ops,info,
+							   &source ) )
+	  return false;		// don't accept forein values
+	else // am I not allowed to reject...
+	  return true;
+      }
+      else
+	// slightly inefficiant
+	return source.get_value(info) == destination.get_value(info);
     }
 
     if( ID == &source )
     {
       assert( source.is_solved_in_try( info ) );
-      return destination.test_set_value( source() );
+      return destination.test_set_value( source.get_value(info), info );
     }
 
-    return false;
+    assert( false );
   }
 
   //! tells to use the result calculated by is_result_ok()
   template<class T_Operand>
   void Explicite_Reference<T_Operand>::use_result
-  ( const void *ID, Solve_Run_Info *info ) throw(EX)
+  ( const void *ID, Solve_Run_Info *info ) throw()
   {
     if( ID == &source )
     {
@@ -85,7 +92,15 @@ namespace solve
   template<class T_Operand>
   Explicite_Reference<T_Operand>::Explicite_Reference
   ( Operand<T_Operand> &dest, Operand<T_Operand> &src )
-    : source(src), destination(dest) {}
+    : source(src), destination(dest) 
+  {
+    src.add_listener(this);
+    dest.add_listener(this);
+
+    // if src is already solved
+    if( src.is_solved() ) 
+      dest.set_value( src.get_value() );
+  }
 
   //*** creator function ***
 

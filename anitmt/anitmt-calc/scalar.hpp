@@ -49,7 +49,7 @@ namespace anitmt
 
     Optional_Return_Type get_return_value
     ( values::Scalar t, Scalar_State &m = type_id )
-      throw( EX_user_error );
+      throw();
   };
   
   //**********************************************************

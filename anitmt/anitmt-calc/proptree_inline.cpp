@@ -27,8 +27,8 @@ namespace anitmt{
 
   inline void Prop_Tree_Node::add_property( std::string name, Property *prop )
   {
-    prop->set_name(name);
-    prop->set_node(this);
+    //prop->set_name(name);
+    //prop->set_node(this);
     properties[ name ] = prop;
   }
 

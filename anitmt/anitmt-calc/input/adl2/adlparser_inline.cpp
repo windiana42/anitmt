@@ -104,67 +104,76 @@ namespace anitmt
       }
       return *u.string;
     }
-
-    solve::Operand<values::Flag>   &Token::op_flag()
+    solve::Operand<values::Flag>   &Token::op_flag( void *vptr_info )
     {
+      adlparser_info *info = static_cast<adlparser_info*>(vptr_info);
       if( has_value() && type != TOK_OP_FLAG )
 	consumed();
 
       if( !has_value() )
       {
-	u.op_flag=new solve::Operand<values::Flag>(); 
+	u.op_flag=new solve::Operand<values::Flag>
+	  (info->msg.get_consultant());	// get's message consultant for operand
 	type=TOK_OP_FLAG;
       }
       return *u.op_flag;
     }
 
-    solve::Operand<values::Scalar> &Token::op_scalar()
+    solve::Operand<values::Scalar> &Token::op_scalar( void *vptr_info )
     {
+      adlparser_info *info = static_cast<adlparser_info*>(vptr_info);
       if( has_value() && type != TOK_OP_SCALAR )
 	consumed();
 
       if( !has_value() )
       {
-	u.op_scalar=new solve::Operand<values::Scalar>();
+	u.op_scalar=new solve::Operand<values::Scalar>
+	  (info->msg.get_consultant());	// get's message consultant for operand
 	type=TOK_OP_SCALAR;
       }
       return *u.op_scalar;
     }
 
-    solve::Operand<values::Vector> &Token::op_vector()
+    solve::Operand<values::Vector> &Token::op_vector( void *vptr_info )
     {
+      adlparser_info *info = static_cast<adlparser_info*>(vptr_info);
       if( has_value() && type != TOK_OP_VECTOR )
 	consumed();
 
       if( !has_value() )
       {
-	u.op_vector=new solve::Operand<values::Vector>();
+	u.op_vector=new solve::Operand<values::Vector>
+	  (info->msg.get_consultant());	// get's message consultant for operand
 	type=TOK_OP_VECTOR;
       }
       return *u.op_vector;
     }
 
-    solve::Operand<values::Matrix> &Token::op_matrix()
+    solve::Operand<values::Matrix> &Token::op_matrix( void *vptr_info )
     {
+      adlparser_info *info = static_cast<adlparser_info*>(vptr_info);
       if( has_value() && type != TOK_OP_MATRIX )
 	consumed();
 
       if( !has_value() )
       {
-	u.op_matrix=new solve::Operand<values::Matrix>();
+	u.op_matrix=new solve::Operand<values::Matrix>
+	  (info->msg.get_consultant());	// get's message consultant for operand
 	type=TOK_OP_MATRIX;
       }
       return *u.op_matrix;
     }
 
-    solve::Operand<values::String> &Token::op_string()
+    solve::Operand<values::String> &Token::op_string( void *vptr_info )
     {
+      adlparser_info *info = static_cast<adlparser_info*>(vptr_info);
       if( has_value() && type != TOK_OP_STRING )
 	consumed();
 
       if( !has_value() )
       {
-	u.op_string=new solve::Operand<values::String>(); 
+	u.op_string=new solve::Operand<values::String>
+	  (info->msg.get_consultant());	// get's message consultant for operand
 	type=TOK_OP_STRING;
       }
       return *u.op_string;
@@ -238,7 +247,6 @@ namespace anitmt
       assert(type==TOK_STRING  );
       return *u.string;
     }
-
     solve::Operand<values::Flag>   *Token::get_op_flag() const
     {
       assert(type==TOK_OP_FLAG  );
@@ -268,7 +276,6 @@ namespace anitmt
       assert(type==TOK_OP_STRING  );
       return u.op_string;
     }
-
     anitmt::Type_Property<values::Flag>   *Token::get_prop_flag() const
     {
       assert(type==TOK_PROP_FLAG  );

@@ -49,7 +49,7 @@ int main(int argc,char **argv,char **envp)
 
     AniTMT ani( &param_manager, &msg_handler );
     ani.process();
-    /**/
+    */
     // This is QnD, I know... but it seems that anitmt.*
     // will someday make all this code here superfluous ?! - OK
     Stream_Message_Handler msg_handler(cerr,cout,cout);

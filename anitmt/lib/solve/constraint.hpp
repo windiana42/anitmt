@@ -43,9 +43,9 @@ namespace solve{
     // Virtual Operand_Listener methods
 
     // has to check the result of the operand with ID as pointer to operand
-    bool is_result_ok( const void *ID, Solve_Run_Info *info ) throw(EX);
+    bool is_result_ok( const void *ID, Solve_Run_Info *info ) throw();
     // tells to use the result calculated by is_result_ok()
-    void use_result( const void *ID, Solve_Run_Info *info ) throw(EX);
+    void use_result( const void *ID, Solve_Run_Info *info ) throw();
     // disconnect operand
     void disconnect( const void *ID );
 

@@ -29,7 +29,11 @@ namespace anitmt
   inline void Property::set_name( std::string n ) { name = n; }
   inline void Property::set_node( Prop_Tree_Node* n ) { node = n; }	
   inline void Property::set_position( message::Abstract_Position* p ) 
-  { pos = p; }
+  { 
+    if( (pos != 0) && (pos != message::GLOB::no_position) )
+      delete pos;
+    pos = p; 
+  }
   inline void Property::set_type( values::Valtype::Types t ) { type = t; }
 
   //******************

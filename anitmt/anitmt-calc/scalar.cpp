@@ -38,7 +38,7 @@ namespace anitmt
   }
 
   Ani_Scalar::Optional_Return_Type Ani_Scalar::get_return_value
-  ( values::Scalar t, Scalar_State& ) throw( EX_user_error )
+  ( values::Scalar t, Scalar_State& ) throw()
   {
     // return the value of my child in any case
     return s.get_return_value(t);

@@ -42,16 +42,16 @@ namespace solve
     from one operand*/
   template<class T_Result, class T_Operand>
   class Basic_Operator_for_1_Operand 
-    : public Operand_Listener 
+    : public Operand_Listener, public message::Message_Reporter
   {
     //*** Operand_Listener methods ***
 
     //! has to check the result of the operand with ID as pointer to operand
     virtual bool is_result_ok( const void *ID, 
-			       Solve_Run_Info *info ) throw(EX);
+			       Solve_Run_Info *info ) throw();
     //! tells to use the result calculated by is_result_ok()
     virtual void use_result( const void *ID, Solve_Run_Info *info )
-      throw(EX);
+      throw();
 
     //! disconnect operand
     virtual void disconnect( const void *ID );
@@ -59,7 +59,8 @@ namespace solve
     //*** virtual Operator methods ***
 
     //! is operand ok, or should it be rejected
-    virtual bool is_operand_ok( const T_Operand &test_value ) { return true; }
+    virtual bool is_operand_ok( const T_Operand &test_value,
+				Solve_Run_Info* ) { return true; }
     //! can result be calculated? operand won't be rejected when this is false
     virtual bool is_operand_enough( const T_Operand &test_value ) 
     { return true; }
@@ -73,11 +74,11 @@ namespace solve
   protected:
     /*! must be called from constructors of derived classes 
       (calls virtual functions) */
-    void init() throw( EX );
+    void init() throw();
   public:
     inline Operand<T_Result> &get_result() { return result; }
 
-    Basic_Operator_for_1_Operand( Operand<T_Operand> &operand ) throw(EX);
+    Basic_Operator_for_1_Operand( Operand<T_Operand> &operand ) throw();
     virtual ~Basic_Operator_for_1_Operand() {}
   };
 
@@ -89,16 +90,16 @@ namespace solve
     from one operand*/
   template<class T_Result, class T_Operand>
   class Basic_Dual_Solution_Operator_for_1_Operand 
-    : public Operand_Listener 
+    : public Operand_Listener, public message::Message_Reporter
   {
     //*** Operand_Listener methods ***
 
     //! has to check the result of the operand with ID as pointer to operand
     virtual bool is_result_ok( const void *ID, Solve_Run_Info *info ) 
-      throw(EX);
+      throw();
     //! tells to use the result calculated by is_result_ok()
     virtual void use_result( const void *ID, Solve_Run_Info *info )
-      throw(EX);
+      throw();
 
     //! disconnect operand
     virtual void disconnect( const void *ID );
@@ -106,7 +107,8 @@ namespace solve
     //*** virtual Operator methods ***
 
     //! is operand ok, or should it be rejected
-    virtual bool is_operand_ok( const T_Operand &test_value ) { return true; }
+    virtual bool is_operand_ok( const T_Operand &test_value,
+				Solve_Run_Info* ) { return true; }
     //! can result1 be calculated? operand won't be rejected when this is false
     virtual bool is_operand_enough1( const T_Operand &test_value ) 
     { return true; }
@@ -126,12 +128,12 @@ namespace solve
   protected:
     /*! must be called from constructors of derived classes 
       (calls virtual functions) */
-    void init() throw( EX );
+    void init() throw();
   public:
     inline Operand<T_Result> &get_result() { return result; }
 
     Basic_Dual_Solution_Operator_for_1_Operand( Operand<T_Operand> &operand ) 
-      throw(EX);
+      throw();
     virtual ~Basic_Dual_Solution_Operator_for_1_Operand() {}
   };
 
@@ -143,16 +145,16 @@ namespace solve
     from two operands*/
   template<class T_Result, class T_Op1, class T_Op2>
   class Basic_Operator_for_2_Operands
-    : public Operand_Listener
+    : public Operand_Listener, public message::Message_Reporter
   {
     //*** Operand_Listener methods ***
 
     //! has to check the result of the operand with ID as pointer to operand
     virtual bool is_result_ok( const void *ID, 
-			       Solve_Run_Info *info ) throw(EX);
+			       Solve_Run_Info *info ) throw();
     //! tells to use the result calculated by is_result_ok()
     virtual void use_result( const void *ID, Solve_Run_Info *info )
-      throw(EX);
+      throw();
 
     //! disconnect operand
     virtual void disconnect( const void *ID );
@@ -165,16 +167,19 @@ namespace solve
 				  const T_Op2 &value2 ) = 0; 
 
     //! is operand1 ok, or should it be rejected
-    virtual bool is_operand1_ok( const T_Op1 &test_value ) { return true; }
+    virtual bool is_operand1_ok( const T_Op1 &test_value,
+				 Solve_Run_Info* ) { return true; }
     //! is operand2 ok, or should it be rejected
-    virtual bool is_operand2_ok( const T_Op2 &test_value ) { return true; }
+    virtual bool is_operand2_ok( const T_Op2 &test_value,
+				 Solve_Run_Info* ) { return true; }
     //! can result be calculated only with operand1
     virtual bool is_operand1_enough( const T_Op1 &/*val*/ ) { return false;}
     //! can result be calculated only with operand2
     virtual bool is_operand2_enough( const T_Op2 &/*val*/ ) { return false;}
     //! are both operands ok, or should one be rejected
     virtual bool are_operands_ok( const T_Op1 &test_value1, 
-				  const T_Op2 &test_value2 ) { return true; }
+				  const T_Op2 &test_value2,
+				  Solve_Run_Info* ) { return true; }
     //! can result be calculated? operand won't be rejected when this is false
     virtual bool are_operands_enough( const T_Op1 &test_value1, 
 				      const T_Op2 &test_value2 )
@@ -197,12 +202,12 @@ namespace solve
   protected:
     /*! must be called from constructors of derived classes 
       (calls virtual functions) */
-    void init() throw( EX );
+    void init() throw();
   public:
     inline Operand<T_Result> &get_result() { return result; }
 
     Basic_Operator_for_2_Operands( Operand<T_Op1> &operand1, 
-				   Operand<T_Op2> &operand2 ) throw(EX); 
+				   Operand<T_Op2> &operand2 ) throw(); 
     virtual ~Basic_Operator_for_2_Operands() {}
   };
 
@@ -294,7 +299,8 @@ namespace solve
     virtual T_Result calc_result( const T_Operand &value ); 
 
     //! is operand ok, or should it be rejected
-    virtual bool is_operand_ok( const T_Operand &test_value );
+    virtual bool is_operand_ok( const T_Operand &test_value,
+				Solve_Run_Info* );
   public:
     Sqrt_Operator( Operand<T_Operand> &operand1 );
   };
@@ -488,13 +494,12 @@ namespace solve
       is_operand_enough  return true */
     virtual T_Result calc_result( const T_Op1 &value1, const T_Op2 &value2 ); 
 
-    //! is operand2 ok, or should it be rejected
-    virtual bool is_operand2_ok( const T_Op2 &test_value );
     //! can result be calculated only with operand1
     virtual bool is_operand1_enough( const T_Op1 &/*val*/ ); 
     //! are both operands ok, or should one be rejected
     virtual bool are_operands_ok( const T_Op1 &test_value1, 
-				  const T_Op2 &test_value2 );
+				  const T_Op2 &test_value2,
+				  Solve_Run_Info* );
     //! can result be calculated? operand won't be rejected when this is false
     virtual bool are_operands_enough( const T_Op1 &test_value1, 
 				      const T_Op2 &test_value2 );

@@ -16,6 +16,7 @@
 #define __Solve_Operand__
 
 #include <val/val.hpp>
+#include <message/message.hpp>
 
 namespace solve 
 {
@@ -23,10 +24,10 @@ namespace solve
   class Basic_Operand;
   template<class T> class Operand;
   template<class T> class Constant;
+  class Solve_Run_Info;
 }
 
-//!!! should be replaced with:
-//#include <message/message.hpp>
+//!!! should be removed
 #include "error.hpp"
 
 #include <list>
@@ -37,6 +38,7 @@ namespace solve
   // Exceptions:
   //************
 
+  /* replaced by new message system
   class EX_property_collision : public EX 
   {
   public:
@@ -48,6 +50,7 @@ namespace solve
   public:
     EX_solver_is_not_connected() : EX( "solver is not connected" ) {}
   };
+  */
 
   //*********************************************************
   // Solve_Problem_Handler: handles problems in solve system
@@ -57,17 +60,20 @@ namespace solve
   {
   public:
     // a operand collision occured!
-    // (may throw exceptions!!!)
-    virtual void operand_collision_occured( std::list< Basic_Operand* > 
-					    bad_ops )
-      throw(EX) = 0;
+    // ret false: ignore error
+    virtual bool operand_collision_occured( std::list< Basic_Operand* > 
+					    bad_ops,
+					    Solve_Run_Info *info, 
+					    message::Message_Reporter *msg ) 
+      = 0;
 
     // Operand signals to reject value 
-    // usage may be enforced by returning false
-    // (may throw exceptions!!!)
+    // ret false: enforce usage
     virtual bool may_operand_reject_val( std::list< Basic_Operand* > 
-					 bad_ops )
-      throw(EX) = 0;
+					 bad_ops,
+					 Solve_Run_Info *info, 
+					 message::Message_Reporter *msg )
+      = 0;
   };
 
   //********************************************************
@@ -78,17 +84,18 @@ namespace solve
   {
   public:
     // a operand collision occured!
-    // (may throw exceptions!!!)
-    virtual void operand_collision_occured( std::list< Basic_Operand* > 
-					    bad_ops )
-      throw(EX);
+    // ret false: ignore error
+    virtual bool operand_collision_occured( std::list< Basic_Operand* > 
+					    bad_ops,
+					    Solve_Run_Info *info, 
+					    message::Message_Reporter *msg );
 
     // Operand signals to reject value 
-    // usage may be enforced by returning false
-    // (may throw exceptions!!!)
+    // ret false: enforce usage
     virtual bool may_operand_reject_val( std::list< Basic_Operand* > 
-					 bad_ops )
-      throw(EX);
+					 bad_ops,
+					 Solve_Run_Info *info, 
+					 message::Message_Reporter *msg );
   };
 
   //**************************************************************
@@ -98,8 +105,9 @@ namespace solve
   class Solve_Run_Info 
   {
   public:
-    Solve_Problem_Handler *problem_handler;
+    Solve_Problem_Handler *problem_handler; // handles some problems
     typedef int id_type;
+    bool trial_run;		// is it an unimportant trial run 
   private:
     static id_type current_default_test_run_id;
     
@@ -117,14 +125,11 @@ namespace solve
     inline void add_test_run_id( id_type id ); // adds a test run ID
     inline void remove_test_run_id( id_type id ); // removes a test run ID
 
-    Solve_Run_Info( Solve_Problem_Handler *handler, int id )
-      : problem_handler( handler ), test_run_id( id ) {
-      add_test_run_id( id );
-    }
-    Solve_Run_Info( Solve_Problem_Handler *handler )
-      : problem_handler( handler ) {
-      new_test_run_id();
-    }
+    inline void set_trial_run( bool trial ); 
+    inline bool is_trial_run();
+
+    Solve_Run_Info( Solve_Problem_Handler *handler, int id );
+    Solve_Run_Info( Solve_Problem_Handler *handler );
   };
 
 
@@ -137,10 +142,10 @@ namespace solve
   public:
     // has to check the result of the operand with ID as pointer to operand
     virtual bool is_result_ok( const void *ID, 
-			       Solve_Run_Info *info ) throw(EX) = 0;
+			       Solve_Run_Info *info ) throw() = 0;
     // tells to use the result calculated by is_result_ok()
     virtual void use_result( const void *ID, Solve_Run_Info *info )
-      throw(EX) = 0;
+      throw() = 0;
 
     // disconnect operand
     virtual void disconnect( const void *ID ) = 0;
@@ -162,7 +167,8 @@ namespace solve
   //**********************************************************
   // Operand: base class for operand values of a certain type
   //**********************************************************
-  template<class T> class Operand : public Basic_Operand
+  template<class T> class Operand : public Basic_Operand, 
+				    public message::Message_Reporter
   {
     static User_Problem_Handler default_handler;
   protected:
@@ -178,36 +184,41 @@ namespace solve
     listeners_type listeners; 
 
     inline void report_value( Solve_Run_Info *info ) 
-      throw(EX);
+      throw();
     inline bool test_report_value( Solve_Run_Info *info ) 
-      throw(EX);
+      throw();
   public:	
     inline bool is_solved() const;
     inline const T& get_value() const;
-    inline const T& operator()() const;	// returns value 
+    inline const T& operator()() const;	// same as get_value
     inline bool set_value( T res, 
 			   Solve_Problem_Handler *handler = &default_handler )
-      throw(EX);
+      throw();
 
     //! connects another operand as a solution source
-    Operand<T>& operator=( Operand<T> &src ) throw(EX);
+    Operand<T>& operator=( Operand<T> &src ) throw();
     //! connects another operand as a solution source
-    Operand( Operand<T> &src ) throw(EX);
-    Operand();
+    Operand( Operand<T> &src ) throw();
+    Operand( message::Message_Consultant *consultant );
     virtual ~Operand();
+
+    //**************************************************************
+    // virtual functions that may output error messages to the user
+    virtual void caused_error() {}
+    virtual void involved_in_error( T val ) {}
 
     //*************************************************
     // for functions in solve system (with correct info)
     inline bool is_solved_in_try( const Solve_Run_Info *info ) const;
     inline const T& get_value( const Solve_Run_Info *info ) const;
     inline bool test_set_value( T val, Solve_Run_Info *info )
-      throw(EX);
+      throw();
     inline bool test_set_value( T val, 
 				Solve_Problem_Handler *handler = 
 				&default_handler )
-      throw(EX);
+      throw();
     inline void use_test_value( Solve_Run_Info *info )
-      throw(EX);
+      throw();
 
     void add_listener( Operand_Listener *listener );
     void rm_listener( Operand_Listener *listener );
@@ -227,12 +238,12 @@ namespace solve
   class Constant : public Operand<T> 
   {
   public:
-    Constant( T val );
+    Constant( T val, message::Message_Consultant *msg_consultant );
   };
 
   template<class T>
-  inline Operand<T> &const_op( T val )
-  { return *(new Constant<T>(val)); }
+  inline Operand<T> &const_op( T val, message::Message_Consultant *consultant )
+  { return *(new Constant<T>(val, consultant)); }
 
   //**********************************************************************
   // Store_Operand_to_Operand: stores the value of one operand to another
@@ -249,15 +260,15 @@ namespace solve
 
     // has to check the result of the operand with ID as pointer to operand
     virtual bool is_result_ok( const void *ID, Solve_Run_Info *info ) 
-      throw(EX);
+      throw();
     // tells to use the result calculated by is_result_ok()
     virtual void use_result( const void *ID, Solve_Run_Info *info )
-      throw(EX);
+      throw();
     // disconnect operand
     virtual void disconnect( const void *ID );
 
   public:
-    Store_Operand_to_Operand( Operand<T> &src, Operand<T> &dest ) throw( EX ); 
+    Store_Operand_to_Operand( Operand<T> &src, Operand<T> &dest ) throw(); 
   };
 
 }

@@ -132,13 +132,13 @@ namespace solve
   operator+( Operand<values::Scalar> &op1, const values::Scalar &op2 ) 
   {
     return (new Add_Operator<values::Scalar,values::Scalar,values::Scalar>
-	    ( op1, const_op(op2) ))->get_result();
+	    ( op1, const_op(op2,op1.get_consultant()) ))->get_result();
   }
   inline Operand<values::Scalar>& 
   operator+( const values::Scalar &op1, Operand<values::Scalar> &op2 ) 
   {
     return (new Add_Operator<values::Scalar,values::Scalar,values::Scalar>
-	    ( const_op(op1), op2 ))->get_result();
+	    ( const_op(op1,op2.get_consultant()), op2 ))->get_result();
   }
 
   // vector + vector
@@ -152,13 +152,13 @@ namespace solve
   operator+( Operand<values::Vector> &op1, const values::Vector &op2 ) 
   {
     return (new Add_Operator<values::Vector,values::Vector,values::Vector>
-	    ( op1, const_op(op2) ))->get_result();
+	    ( op1, const_op(op2,op1.get_consultant()) ))->get_result();
   }
   inline Operand<values::Vector>& 
   operator+( const values::Vector &op1, Operand<values::Vector> &op2 ) 
   {
     return (new Add_Operator<values::Vector,values::Vector,values::Vector>
-	    ( const_op(op1), op2 ))->get_result();
+	    ( const_op(op1,op2.get_consultant()), op2 ))->get_result();
   }
 
   // string + string
@@ -172,13 +172,13 @@ namespace solve
   operator+( Operand<values::String> &op1, const values::String &op2 ) 
   {
     return (new Add_Operator<values::String,values::String,values::String>
-	    ( op1, const_op(op2) ))->get_result();
+	    ( op1, const_op(op2,op1.get_consultant()) ))->get_result();
   }
   inline Operand<values::String>& 
   operator+( const values::String &op1, Operand<values::String> &op2 ) 
   {
     return (new Add_Operator<values::String,values::String,values::String>
-	    ( const_op(op1), op2 ))->get_result();
+	    ( const_op(op1,op2.get_consultant()), op2 ))->get_result();
   }
 
   //**********************************************************************
@@ -196,13 +196,13 @@ namespace solve
   operator-( Operand<values::Scalar> &op1, const values::Scalar &op2 ) 
   {
     return (new Sub_Operator<values::Scalar,values::Scalar,values::Scalar>
-	    ( op1, const_op(op2) ))->get_result();
+	    ( op1, const_op(op2,op1.get_consultant()) ))->get_result();
   }
   inline Operand<values::Scalar>& 
   operator-( const values::Scalar &op1, Operand<values::Scalar> &op2 ) 
   {
     return (new Sub_Operator<values::Scalar,values::Scalar,values::Scalar>
-	    ( const_op(op1), op2 ))->get_result();
+	    ( const_op(op1,op2.get_consultant()), op2 ))->get_result();
   }
 
   // vector - vector
@@ -216,13 +216,13 @@ namespace solve
   operator-( Operand<values::Vector> &op1, const values::Vector &op2 ) 
   {
     return (new Sub_Operator<values::Vector,values::Vector,values::Vector>
-	    ( op1, const_op(op2) ))->get_result();
+	    ( op1, const_op(op2,op1.get_consultant()) ))->get_result();
   }
   inline Operand<values::Vector>& 
   operator-( const values::Vector &op1, Operand<values::Vector> &op2 ) 
   {
     return (new Sub_Operator<values::Vector,values::Vector,values::Vector>
-	    ( const_op(op1), op2 ))->get_result();
+	    ( const_op(op1,op2.get_consultant()), op2 ))->get_result();
   }
 
   //**********************************************************************
@@ -240,13 +240,13 @@ namespace solve
   operator*( Operand<values::Scalar> &op1, const values::Scalar &op2 ) 
   {
     return (new Mul_Operator<values::Scalar,values::Scalar,values::Scalar>
-	    ( op1, const_op(op2) ))->get_result();
+	    ( op1, const_op(op2,op1.get_consultant()) ))->get_result();
   }
   inline Operand<values::Scalar>& 
   operator*( const values::Scalar &op1, Operand<values::Scalar> &op2 ) 
   {
     return (new Mul_Operator<values::Scalar,values::Scalar,values::Scalar>
-	    ( const_op(op1), op2 ))->get_result();
+	    ( const_op(op1,op2.get_consultant()), op2 ))->get_result();
   }
 
   // scalar * vector
@@ -260,13 +260,13 @@ namespace solve
   operator*( Operand<values::Scalar> &op1, const values::Vector &op2 ) 
   {
     return (new Mul_Operator<values::Vector,values::Scalar,values::Vector>
-	    ( op1, const_op(op2) ))->get_result();
+	    ( op1, const_op(op2,op1.get_consultant()) ))->get_result();
   }
   inline Operand<values::Vector>& 
   operator*( const values::Scalar &op1, Operand<values::Vector> &op2 ) 
   {
     return (new Mul_Operator<values::Vector,values::Scalar,values::Vector>
-	    ( const_op(op1), op2 ))->get_result();
+	    ( const_op(op1,op2.get_consultant()), op2 ))->get_result();
   }
 
   // vector * scalar
@@ -280,13 +280,13 @@ namespace solve
   operator*( Operand<values::Vector> &op1, const values::Scalar &op2 ) 
   {
     return (new Mul_Operator<values::Vector,values::Vector,values::Scalar>
-	    ( op1, const_op(op2) ))->get_result();
+	    ( op1, const_op(op2,op1.get_consultant()) ))->get_result();
   }
   inline Operand<values::Vector>& 
   operator*( const values::Vector &op1, Operand<values::Scalar> &op2 ) 
   {
     return (new Mul_Operator<values::Vector,values::Vector,values::Scalar>
-	    ( const_op(op1), op2 ))->get_result();
+	    ( const_op(op1,op2.get_consultant()), op2 ))->get_result();
   }
 
   // matrix * matrix
@@ -300,13 +300,13 @@ namespace solve
   operator*( Operand<values::Matrix> &op1, const values::Matrix &op2 ) 
   {
     return (new Mul_Operator<values::Matrix,values::Matrix,values::Matrix>
-	    ( op1, const_op(op2) ))->get_result();
+	    ( op1, const_op(op2,op1.get_consultant()) ))->get_result();
   }
   inline Operand<values::Matrix>& 
   operator*( const values::Matrix &op1, Operand<values::Matrix> &op2 ) 
   {
     return (new Mul_Operator<values::Matrix,values::Matrix,values::Matrix>
-	    ( const_op(op1), op2 ))->get_result();
+	    ( const_op(op1,op2.get_consultant()), op2 ))->get_result();
   }
 
   // matrix * vector
@@ -320,13 +320,13 @@ namespace solve
   operator*( Operand<values::Matrix> &op1, const values::Vector &op2 ) 
   {
     return (new Mul_Operator<values::Vector,values::Matrix,values::Vector>
-	    ( op1, const_op(op2) ))->get_result();
+	    ( op1, const_op(op2,op1.get_consultant()) ))->get_result();
   }
   inline Operand<values::Vector>& 
   operator*( const values::Matrix &op1, Operand<values::Vector> &op2 ) 
   {
     return (new Mul_Operator<values::Vector,values::Matrix,values::Vector>
-	    ( const_op(op1), op2 ))->get_result();
+	    ( const_op(op1,op2.get_consultant()), op2 ))->get_result();
   }
 
   //**********************************************************************
@@ -344,13 +344,13 @@ namespace solve
   operator/( Operand<values::Scalar> &op1, const values::Scalar &op2 ) 
   {
     return (new Div_Operator<values::Scalar,values::Scalar,values::Scalar>
-	    ( op1, const_op(op2) ))->get_result();
+	    ( op1, const_op(op2,op1.get_consultant()) ))->get_result();
   }
   inline Operand<values::Scalar>& 
   operator/( const values::Scalar &op1, Operand<values::Scalar> &op2 ) 
   {
     return (new Div_Operator<values::Scalar,values::Scalar,values::Scalar>
-	    ( const_op(op1), op2 ))->get_result();
+	    ( const_op(op1,op2.get_consultant()), op2 ))->get_result();
   }
 
   // vector / scalar
@@ -364,13 +364,13 @@ namespace solve
   operator/( Operand<values::Vector> &op1, const values::Scalar &op2 ) 
   {
     return (new Div_Operator<values::Vector,values::Vector,values::Scalar>
-	    ( op1, const_op(op2) ))->get_result();
+	    ( op1, const_op(op2,op1.get_consultant()) ))->get_result();
   }
   inline Operand<values::Vector>& 
   operator/( const values::Vector &op1, Operand<values::Scalar> &op2 ) 
   {
     return (new Div_Operator<values::Vector,values::Vector,values::Scalar>
-	    ( const_op(op1), op2 ))->get_result();
+	    ( const_op(op1,op2.get_consultant()), op2 ))->get_result();
   }
 
   //***************************************************
@@ -384,13 +384,13 @@ namespace solve
   }
   inline Operand<bool>& operator==( Operand<bool> &op1, bool op2 ) 
   {
-    return (new Equal_Operator<bool,bool,bool>( op1, const_op(op2) ))
-      ->get_result();
+    return (new Equal_Operator<bool,bool,bool>
+	    ( op1, const_op(op2,op1.get_consultant()) ))->get_result();
   }
   inline Operand<bool>& operator==( bool op1, Operand<bool> &op2 ) 
   {
-    return (new Equal_Operator<bool,bool,bool>( const_op(op1), op2 ))
-      ->get_result();
+    return (new Equal_Operator<bool,bool,bool>
+	    ( const_op(op1,op2.get_consultant()), op2 ))->get_result();
   }
 
   // scalar == scalar
@@ -404,13 +404,13 @@ namespace solve
   operator==( Operand<values::Scalar> &op1, const values::Scalar &op2 ) 
   {
     return (new Equal_Operator<bool,values::Scalar,values::Scalar>
-	    ( op1, const_op(op2) ))->get_result();
+	    ( op1, const_op(op2,op1.get_consultant()) ))->get_result();
   }
   inline Operand<bool>&
   operator==( const values::Scalar &op1, Operand<values::Scalar> &op2 ) 
   {
     return (new Equal_Operator<bool,values::Scalar,values::Scalar>
-	    ( const_op(op1), op2 ))->get_result();
+	    ( const_op(op1,op2.get_consultant()), op2 ))->get_result();
   }
 
   // vector == vector
@@ -424,13 +424,13 @@ namespace solve
   operator==( Operand<values::Vector> &op1, const values::Vector &op2 ) 
   {
     return (new Equal_Operator<bool,values::Vector,values::Vector>
-	    ( op1, const_op(op2) ))->get_result();
+	    ( op1, const_op(op2,op1.get_consultant()) ))->get_result();
   }
   inline Operand<bool>&
   operator==( const values::Vector &op1, Operand<values::Vector> &op2 ) 
   {
     return (new Equal_Operator<bool,values::Vector,values::Vector>
-	    ( const_op(op1), op2 ))->get_result();
+	    ( const_op(op1,op2.get_consultant()), op2 ))->get_result();
   }
 
   // matrix == matrix
@@ -444,13 +444,13 @@ namespace solve
   operator==( Operand<values::Matrix> &op1, const values::Matrix &op2 ) 
   {
     return (new Equal_Operator<bool,values::Matrix,values::Matrix>
-	    ( op1, const_op(op2) ))->get_result();
+	    ( op1, const_op(op2,op1.get_consultant()) ))->get_result();
   }
   inline Operand<bool>&
   operator==( const values::Matrix &op1, Operand<values::Matrix> &op2 ) 
   {
     return (new Equal_Operator<bool,values::Matrix,values::Matrix>
-	    ( const_op(op1), op2 ))->get_result();
+	    ( const_op(op1,op2.get_consultant()), op2 ))->get_result();
   }
 
   // string == string
@@ -464,13 +464,13 @@ namespace solve
   operator==( Operand<values::String> &op1, const values::String &op2 ) 
   {
     return (new Equal_Operator<bool,values::String,values::String>
-	    ( op1, const_op(op2) ))->get_result();
+	    ( op1, const_op(op2,op1.get_consultant()) ))->get_result();
   }
   inline Operand<bool>&
   operator==( const values::String &op1, Operand<values::String> &op2 ) 
   {
     return (new Equal_Operator<bool,values::String,values::String>
-	    ( const_op(op1), op2 ))->get_result();
+	    ( const_op(op1,op2.get_consultant()), op2 ))->get_result();
   }
 
   //***************************************************
@@ -484,13 +484,13 @@ namespace solve
   }
   inline Operand<bool>& operator!=( Operand<bool> &op1, bool op2 ) 
   {
-    return (new Unequal_Operator<bool,bool,bool>( op1, const_op(op2) ))
-      ->get_result();
+    return (new Unequal_Operator<bool,bool,bool>
+	    ( op1, const_op(op2,op1.get_consultant()) ))->get_result();
   }
   inline Operand<bool>& operator!=( bool op1, Operand<bool> &op2 ) 
   {
-    return (new Unequal_Operator<bool,bool,bool>( const_op(op1), op2 ))
-      ->get_result();
+    return (new Unequal_Operator<bool,bool,bool>
+	    ( const_op(op1,op2.get_consultant()), op2 ))->get_result();
   }
 
   // scalar != scalar
@@ -504,13 +504,13 @@ namespace solve
   operator!=( Operand<values::Scalar> &op1, const values::Scalar &op2 ) 
   {
     return (new Unequal_Operator<bool,values::Scalar,values::Scalar>
-	    ( op1, const_op(op2) ))->get_result();
+	    ( op1, const_op(op2,op1.get_consultant()) ))->get_result();
   }
   inline Operand<bool>&
   operator!=( const values::Scalar &op1, Operand<values::Scalar> &op2 ) 
   {
     return (new Unequal_Operator<bool,values::Scalar,values::Scalar>
-	    ( const_op(op1), op2 ))->get_result();
+	    ( const_op(op1,op2.get_consultant()), op2 ))->get_result();
   }
 
   // vector != vector
@@ -524,13 +524,13 @@ namespace solve
   operator!=( Operand<values::Vector> &op1, const values::Vector &op2 ) 
   {
     return (new Unequal_Operator<bool,values::Vector,values::Vector>
-	    ( op1, const_op(op2) ))->get_result();
+	    ( op1, const_op(op2,op1.get_consultant()) ))->get_result();
   }
   inline Operand<bool>&
   operator!=( const values::Vector &op1, Operand<values::Vector> &op2 ) 
   {
     return (new Unequal_Operator<bool,values::Vector,values::Vector>
-	    ( const_op(op1), op2 ))->get_result();
+	    ( const_op(op1,op2.get_consultant()), op2 ))->get_result();
   }
 
   // matrix != matrix
@@ -544,13 +544,13 @@ namespace solve
   operator!=( Operand<values::Matrix> &op1, const values::Matrix &op2 ) 
   {
     return (new Unequal_Operator<bool,values::Matrix,values::Matrix>
-	    ( op1, const_op(op2) ))->get_result();
+	    ( op1, const_op(op2,op1.get_consultant()) ))->get_result();
   }
   inline Operand<bool>&
   operator!=( const values::Matrix &op1, Operand<values::Matrix> &op2 ) 
   {
     return (new Unequal_Operator<bool,values::Matrix,values::Matrix>
-	    ( const_op(op1), op2 ))->get_result();
+	    ( const_op(op1,op2.get_consultant()), op2 ))->get_result();
   }
 
   // string != string
@@ -564,13 +564,13 @@ namespace solve
   operator!=( Operand<values::String> &op1, const values::String &op2 ) 
   {
     return (new Unequal_Operator<bool,values::String,values::String>
-	    ( op1, const_op(op2) ))->get_result();
+	    ( op1, const_op(op2,op1.get_consultant()) ))->get_result();
   }
   inline Operand<bool>&
   operator!=( const values::String &op1, Operand<values::String> &op2 ) 
   {
     return (new Unequal_Operator<bool,values::String,values::String>
-	    ( const_op(op1), op2 ))->get_result();
+	    ( const_op(op1,op2.get_consultant()), op2 ))->get_result();
   }
 
   //***************************************************
@@ -588,13 +588,13 @@ namespace solve
   operator<( Operand<values::Scalar> &op1, const values::Scalar &op2 ) 
   {
     return (new Less_Operator<bool,values::Scalar,values::Scalar>
-	    ( op1, const_op(op2) ))->get_result();
+	    ( op1, const_op(op2,op1.get_consultant()) ))->get_result();
   }
   inline Operand<bool>&
   operator<( const values::Scalar &op1, Operand<values::Scalar> &op2 ) 
   {
     return (new Less_Operator<bool,values::Scalar,values::Scalar>
-	    ( const_op(op1), op2 ))->get_result();
+	    ( const_op(op1,op2.get_consultant()), op2 ))->get_result();
   }
 
   // vector < vector
@@ -608,13 +608,13 @@ namespace solve
   operator<( Operand<values::Vector> &op1, const values::Vector &op2 ) 
   {
     return (new Less_Operator<bool,values::Vector,values::Vector>
-	    ( op1, const_op(op2) ))->get_result();
+	    ( op1, const_op(op2,op1.get_consultant()) ))->get_result();
   }
   inline Operand<bool>&
   operator<( const values::Vector &op1, Operand<values::Vector> &op2 ) 
   {
     return (new Less_Operator<bool,values::Vector,values::Vector>
-	    ( const_op(op1), op2 ))->get_result();
+	    ( const_op(op1,op2.get_consultant()), op2 ))->get_result();
   }
 
   // string < string
@@ -628,13 +628,13 @@ namespace solve
   operator<( Operand<values::String> &op1, const values::String &op2 ) 
   {
     return (new Less_Operator<bool,values::String,values::String>
-	    ( op1, const_op(op2) ))->get_result();
+	    ( op1, const_op(op2,op1.get_consultant()) ))->get_result();
   }
   inline Operand<bool>&
   operator<( const values::String &op1, Operand<values::String> &op2 ) 
   {
     return (new Less_Operator<bool,values::String,values::String>
-	    ( const_op(op1), op2 ))->get_result();
+	    ( const_op(op1,op2.get_consultant()), op2 ))->get_result();
   }
 
   //***************************************************
@@ -652,13 +652,13 @@ namespace solve
   operator>( Operand<values::Scalar> &op1, const values::Scalar &op2 ) 
   {
     return (new Greater_Operator<bool,values::Scalar,values::Scalar>
-	    ( op1, const_op(op2) ))->get_result();
+	    ( op1, const_op(op2,op1.get_consultant()) ))->get_result();
   }
   inline Operand<bool>&
   operator>( const values::Scalar &op1, Operand<values::Scalar> &op2 ) 
   {
     return (new Greater_Operator<bool,values::Scalar,values::Scalar>
-	    ( const_op(op1), op2 ))->get_result();
+	    ( const_op(op1,op2.get_consultant()), op2 ))->get_result();
   }
 
   // vector > vector
@@ -672,13 +672,13 @@ namespace solve
   operator>( Operand<values::Vector> &op1, const values::Vector &op2 ) 
   {
     return (new Greater_Operator<bool,values::Vector,values::Vector>
-	    ( op1, const_op(op2) ))->get_result();
+	    ( op1, const_op(op2,op1.get_consultant()) ))->get_result();
   }
   inline Operand<bool>&
   operator>( const values::Vector &op1, Operand<values::Vector> &op2 ) 
   {
     return (new Greater_Operator<bool,values::Vector,values::Vector>
-	    ( const_op(op1), op2 ))->get_result();
+	    ( const_op(op1,op2.get_consultant()), op2 ))->get_result();
   }
 
   // string > string
@@ -692,13 +692,13 @@ namespace solve
   operator>( Operand<values::String> &op1, const values::String &op2 ) 
   {
     return (new Greater_Operator<bool,values::String,values::String>
-	    ( op1, const_op(op2) ))->get_result();
+	    ( op1, const_op(op2,op1.get_consultant()) ))->get_result();
   }
   inline Operand<bool>&
   operator>( const values::String &op1, Operand<values::String> &op2 ) 
   {
     return (new Greater_Operator<bool,values::String,values::String>
-	    ( const_op(op1), op2 ))->get_result();
+	    ( const_op(op1,op2.get_consultant()), op2 ))->get_result();
   }
 
   //******************************************************
@@ -716,13 +716,13 @@ namespace solve
   operator<=( Operand<values::Scalar> &op1, const values::Scalar &op2 ) 
   {
     return (new Not_Greater_Operator<bool,values::Scalar,values::Scalar>
-	    ( op1, const_op(op2) ))->get_result();
+	    ( op1, const_op(op2,op1.get_consultant()) ))->get_result();
   }
   inline Operand<bool>&
   operator<=( const values::Scalar &op1, Operand<values::Scalar> &op2 ) 
   {
     return (new Not_Greater_Operator<bool,values::Scalar,values::Scalar>
-	    ( const_op(op1), op2 ))->get_result();
+	    ( const_op(op1,op2.get_consultant()), op2 ))->get_result();
   }
 
   // vector <= vector
@@ -736,13 +736,13 @@ namespace solve
   operator<=( Operand<values::Vector> &op1, const values::Vector &op2 ) 
   {
     return (new Not_Greater_Operator<bool,values::Vector,values::Vector>
-	    ( op1, const_op(op2) ))->get_result();
+	    ( op1, const_op(op2,op1.get_consultant()) ))->get_result();
   }
   inline Operand<bool>&
   operator<=( const values::Vector &op1, Operand<values::Vector> &op2 ) 
   {
     return (new Not_Greater_Operator<bool,values::Vector,values::Vector>
-	    ( const_op(op1), op2 ))->get_result();
+	    ( const_op(op1,op2.get_consultant()), op2 ))->get_result();
   }
 
   // string <= string
@@ -756,13 +756,13 @@ namespace solve
   operator<=( Operand<values::String> &op1, const values::String &op2 ) 
   {
     return (new Not_Greater_Operator<bool,values::String,values::String>
-	    ( op1, const_op(op2) ))->get_result();
+	    ( op1, const_op(op2,op1.get_consultant()) ))->get_result();
   }
   inline Operand<bool>&
   operator<=( const values::String &op1, Operand<values::String> &op2 ) 
   {
     return (new Not_Greater_Operator<bool,values::String,values::String>
-	    ( const_op(op1), op2 ))->get_result();
+	    ( const_op(op1,op2.get_consultant()), op2 ))->get_result();
   }
 
   //******************************************************
@@ -780,13 +780,13 @@ namespace solve
   operator>=( Operand<values::Scalar> &op1, const values::Scalar &op2 ) 
   {
     return (new Not_Less_Operator<bool,values::Scalar,values::Scalar>
-	    ( op1, const_op(op2) ))->get_result();
+	    ( op1, const_op(op2,op1.get_consultant()) ))->get_result();
   }
   inline Operand<bool>&
   operator>=( const values::Scalar &op1, Operand<values::Scalar> &op2 ) 
   {
     return (new Not_Less_Operator<bool,values::Scalar,values::Scalar>
-	    ( const_op(op1), op2 ))->get_result();
+	    ( const_op(op1,op2.get_consultant()), op2 ))->get_result();
   }
 
   // vector >= vector
@@ -800,13 +800,13 @@ namespace solve
   operator>=( Operand<values::Vector> &op1, const values::Vector &op2 ) 
   {
     return (new Not_Less_Operator<bool,values::Vector,values::Vector>
-	    ( op1, const_op(op2) ))->get_result();
+	    ( op1, const_op(op2,op1.get_consultant()) ))->get_result();
   }
   inline Operand<bool>&
   operator>=( const values::Vector &op1, Operand<values::Vector> &op2 ) 
   {
     return (new Not_Less_Operator<bool,values::Vector,values::Vector>
-	    ( const_op(op1), op2 ))->get_result();
+	    ( const_op(op1,op2.get_consultant()), op2 ))->get_result();
   }
 
   // string >= string
@@ -820,13 +820,13 @@ namespace solve
   operator>=( Operand<values::String> &op1, const values::String &op2 ) 
   {
     return (new Not_Less_Operator<bool,values::String,values::String>
-	    ( op1, const_op(op2) ))->get_result();
+	    ( op1, const_op(op2,op1.get_consultant()) ))->get_result();
   }
   inline Operand<bool>&
   operator>=( const values::String &op1, Operand<values::String> &op2 ) 
   {
     return (new Not_Less_Operator<bool,values::String,values::String>
-	    ( const_op(op1), op2 ))->get_result();
+	    ( const_op(op1,op2.get_consultant()), op2 ))->get_result();
   }
 
 }

@@ -68,17 +68,14 @@ namespace anitmt
 
     values::Valtype::Types type;
 
-    friend class Prop_Tree_Node;
-    inline void set_name( std::string );
-    inline void set_node( Prop_Tree_Node* );
-    inline void set_position( message::Abstract_Position* );
-    inline void set_type( values::Valtype::Types );
   public:
     //***********
     // modifiers
 
-    // tells the property where it occurs in user's inputs
-    void set_input_position( message::Abstract_Position *pos );
+    inline void set_name( std::string );
+    inline void set_node( Prop_Tree_Node* );
+    inline void set_position( message::Abstract_Position* );
+    inline void set_type( values::Valtype::Types );
 
     //******************
     // access functions
@@ -119,16 +116,21 @@ namespace anitmt
     //!! shouldn't be convertable to type as baseclass Operand<> has its own 
     //!! operators !! use operator() to convert to type instead !!
     // operator T() const	  // implicite convertion to type (like get()) 
-    //   throw( EX_property_not_solved );
+    //   throw();
 
     //************************
     // usage member functions
 
     // connects another operand as a solution source
-    solve::Operand<T>& operator=( solve::Operand<T> &src ) throw(EX)
+    solve::Operand<T>& operator=( solve::Operand<T> &src ) throw()
     { return static_cast<solve::Operand<T>&>(*this) = src; }
 
     virtual std::ostream &write2stream( std::ostream& );
+
+    //**************************************************************
+    // virtual functions that may output error messages to the user
+    virtual void caused_error();
+    virtual void involved_in_error( T val );
 
     //*************
     // constructor
@@ -153,7 +155,6 @@ namespace anitmt
     // constructor
 
     Scalar_Property( std::string name, Prop_Tree_Node *node );
-    Scalar_Property();
   };
 
   //******************************************************
@@ -166,7 +167,6 @@ namespace anitmt
     // constructor
 
     Vector_Property( std::string name, Prop_Tree_Node *node );
-    Vector_Property();
   };
 
   //******************************************************
@@ -179,7 +179,6 @@ namespace anitmt
     // constructor
 
     Matrix_Property( std::string name, Prop_Tree_Node *node );
-    Matrix_Property();
   };
 
   //******************************************************
@@ -192,7 +191,6 @@ namespace anitmt
     // constructor
 
     String_Property( std::string name, Prop_Tree_Node *node );
-    String_Property();
   };
 
   //**************************************************

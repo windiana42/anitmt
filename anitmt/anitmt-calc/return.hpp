@@ -72,7 +72,7 @@ namespace anitmt{
       in at time t */
     virtual Optional_Return_Type
     get_return_value( values::Scalar t, Return_Type &type_ID = type_id )
-      throw( EX_user_error ) = 0;
+      throw() = 0;
 
     //! function that is called after hierarchy was set up for each node
     void hierarchy_final_init( Return_Type &type_ID );
@@ -98,16 +98,14 @@ namespace anitmt{
     const content_type &get_content() const { return content; }
 
     //! tries to use the node as element for this container
-    bool try_add_child( Prop_Tree_Node *node ) 
-      throw( EX_more_than_one_child );
+    bool try_add_child( Prop_Tree_Node *node ) throw();
 
     //! consists of is_active and return_value
     typedef std::pair<bool,Return_Type> Optional_Return_Type;
 
     //! returns the result according to children that are active at time t
     Optional_Return_Type get_return_value
-    ( values::Scalar t )
-      throw( EX_essential_child_missing, EX_user_error );
+    ( values::Scalar t ) throw();
 
     //! function that is called after hierarchy was set up for each node
     void hierarchy_final_init();
@@ -138,7 +136,7 @@ namespace anitmt{
 
     //! tries to use the node as element for this container
     bool try_add_child( Prop_Tree_Node *node ) 
-      throw( EX_more_than_one_child );
+      throw();
 
     //! function that is called after hierarchy was set up for each node
     void hierarchy_final_init();

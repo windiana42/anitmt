@@ -44,7 +44,7 @@ namespace anitmt
 // multi character operators
 %token TOK_IS_EQUAL TOK_NOT_EQUAL TOK_MORE_EQUAL TOK_LESS_EQUAL 
 // functions
-%token TOK_FUNC_SIN
+%token TOK_FUNC_SIN TOK_FUNC_SQRT
 // type tokens
 %token <identifier()> TOK_IDENTIFIER
 %token <flag()>   TOK_FLAG
@@ -52,11 +52,11 @@ namespace anitmt
 %token <vector()> TOK_VECTOR
 %token <matrix()> TOK_MATRIX
 %token <string()> TOK_STRING
-%token <op_flag()>   TOK_OP_FLAG
-%token <op_scalar()> TOK_OP_SCALAR
-%token <op_vector()> TOK_OP_VECTOR
-%token <op_matrix()> TOK_OP_MATRIX
-%token <op_string()> TOK_OP_STRING
+%token <op_flag(info)>   TOK_OP_FLAG
+%token <op_scalar(info)> TOK_OP_SCALAR
+%token <op_vector(info)> TOK_OP_VECTOR
+%token <op_matrix(info)> TOK_OP_MATRIX
+%token <op_string(info)> TOK_OP_STRING
 %token <prop_flag()>   TOK_PROP_FLAG
 %token <prop_scalar()> TOK_PROP_SCALAR
 %token <prop_vector()> TOK_PROP_VECTOR
@@ -68,11 +68,11 @@ namespace anitmt
 %type <vector()> vector_exp 
 %type <matrix()> matrix_exp 
 %type <string()> string_exp 
-%type <op_flag()>   op_flag_exp 
-%type <op_scalar()> op_scalar_exp 
-%type <op_vector()> op_vector_exp 
-%type <op_matrix()> op_matrix_exp 
-%type <op_string()> op_string_exp 
+%type <op_flag(info)>   op_flag_exp 
+%type <meta_op_scalar(info)> op_scalar_exp 
+%type <op_vector(info)> op_vector_exp 
+%type <op_matrix(info)> op_matrix_exp 
+%type <op_string(info)> op_string_exp 
 %type <tok()> any_flag_exp 
 %type <tok()> any_scalar_exp 
 %type <tok()> any_vector_exp 
@@ -99,11 +99,14 @@ statement: flag_statement ';'
 	
 child_declaration: TOK_IDENTIFIER '{'    { change_current_child(info,$1); } 
 		     tree_node_block '}' { change_to_parent(info); }
-	| TOK_IDENTIFIER TOK_IDENTIFIER '{' { change_current_child(info,$1,$2);} 
-	    tree_node_block '}' 	    { change_to_parent(info); }
+	| TOK_IDENTIFIER TOK_IDENTIFIER '{' 
+					 { change_current_child(info,$1,$2);} 
+	    tree_node_block '}' 	 { change_to_parent(info); }
 	;
 
-flag_statement: TOK_PROP_FLAG { resolve_references(info); } any_flag_exp 
+flag_statement: 
+  TOK_PROP_FLAG { set_pos(&$1,info); resolve_references(info); } 
+  any_flag_exp 
  { 
    if( $3.get_type() == TOK_FLAG )
    {
@@ -116,7 +119,7 @@ flag_statement: TOK_PROP_FLAG { resolve_references(info); } any_flag_exp
    else 
    {
      assert( $3.get_type() == TOK_OP_FLAG );
-     solve::explicite_reference( $1, $3.op_flag() ); // establish reference
+     solve::explicite_reference( $1, $3.op_flag(info) ); // establish reference
    }
    resolve_properties(info); // resolve properties again
  }
@@ -125,7 +128,9 @@ any_flag_exp:     flag_exp {Token res;res.flag() = $1; $$ = res;}
 		| op_flag_exp {Token res;res.set_op_flag($1); $$ = res;}
 	;
 
-scalar_statement: TOK_PROP_SCALAR { resolve_references(info); } any_scalar_exp 
+scalar_statement: 
+  TOK_PROP_SCALAR { set_pos(&$1,info); resolve_references(info); } 
+  any_scalar_exp 
  { 
    if( $3.get_type() == TOK_SCALAR )
    {
@@ -138,16 +143,19 @@ scalar_statement: TOK_PROP_SCALAR { resolve_references(info); } any_scalar_exp
    else 
    {
      assert( $3.get_type() == TOK_OP_SCALAR );
-     solve::explicite_reference( $1, $3.op_scalar() ); // establish reference
+     // establish reference
+     solve::explicite_reference( $1, $3.op_scalar(info) ); 
    }
    resolve_properties(info); // resolve properties again
  }
 	;
 any_scalar_exp:      scalar_exp {Token res;res.scalar() = $1; $$ = res;}
-		| op_scalar_exp {Token res;res.set_op_scalar($1); $$ = res;}
+		| op_scalar_exp {$<meta_op_scalar(info)>$ = $1;}
 	;
  
-vector_statement: TOK_PROP_VECTOR { resolve_references(info); } any_vector_exp 
+vector_statement: 
+  TOK_PROP_VECTOR { set_pos(&$1,info); resolve_references(info); } 
+  any_vector_exp 
  { 
    if( $3.get_type() == TOK_VECTOR )
    {
@@ -160,7 +168,8 @@ vector_statement: TOK_PROP_VECTOR { resolve_references(info); } any_vector_exp
    else 
    {
      assert( $3.get_type() == TOK_OP_VECTOR );
-     solve::explicite_reference( $1, $3.op_vector() ); // establish reference
+     // establish reference
+     solve::explicite_reference( $1, $3.op_vector(info) ); 
    }
    resolve_properties(info); // resolve properties again
  }
@@ -169,7 +178,9 @@ any_vector_exp:      vector_exp {Token res;res.vector() = $1; $$ = res;}
 		| op_vector_exp {Token res;res.set_op_vector($1); $$ = res;}
 	;
  
-matrix_statement: TOK_PROP_MATRIX { resolve_references(info); } any_matrix_exp 
+matrix_statement: 
+  TOK_PROP_MATRIX { set_pos(&$1,info); resolve_references(info); } 
+  any_matrix_exp 
  { 
    if( $3.get_type() == TOK_MATRIX )
    {
@@ -182,7 +193,8 @@ matrix_statement: TOK_PROP_MATRIX { resolve_references(info); } any_matrix_exp
    else 
    {
      assert( $3.get_type() == TOK_OP_MATRIX );
-     solve::explicite_reference( $1, $3.op_matrix() ); // establish reference
+     // establish reference
+     solve::explicite_reference( $1, $3.op_matrix(info) ); 
    }
    resolve_properties(info); // resolve properties again
  }
@@ -191,7 +203,9 @@ any_matrix_exp:      matrix_exp {Token res;res.matrix() = $1; $$ = res;}
 		| op_matrix_exp {Token res;res.set_op_matrix($1); $$ = res;}
 	;
 
-string_statement: TOK_PROP_STRING { resolve_references(info); } any_string_exp 
+string_statement: 
+  TOK_PROP_STRING { set_pos(&$1,info); resolve_references(info); } 
+  any_string_exp 
  { 
    if( $3.get_type() == TOK_STRING )
    {
@@ -204,7 +218,8 @@ string_statement: TOK_PROP_STRING { resolve_references(info); } any_string_exp
    else 
    {
      assert( $3.get_type() == TOK_OP_STRING );
-     solve::explicite_reference( $1, $3.op_string() ); // establish reference
+     // establish reference
+     solve::explicite_reference( $1, $3.op_string(info) ); 
    }
    resolve_properties(info); // resolve properties again
  }
@@ -222,7 +237,9 @@ scalar_exp: scalar_exp '+' scalar_exp {$$ = $1 + $3;}
   	  | scalar_exp '/' scalar_exp {$$ = $1 / $3;}
 	  | '-' scalar_exp %prec UMINUS {$$ = -$2;}
 	  | '+' scalar_exp %prec UMINUS {$$ = $2;}
+	  | '(' scalar_exp ')' {$$ = $2;}
 	  | TOK_FUNC_SIN '(' scalar_exp ')' {$$ = sin($3);}
+	  | TOK_FUNC_SQRT '(' scalar_exp ')' {$$ = sqrt($3);}
           | TOK_SCALAR {$$ = $1;}
 	;
 
@@ -241,13 +258,18 @@ string_exp: TOK_STRING {$$ = $1;}
 op_flag_exp: TOK_OP_FLAG {$$ = $1;}
 	;
 
-op_scalar_exp: op_scalar_exp '+' op_scalar_exp {$$ = $1 + $3;} 
-	  | op_scalar_exp '-' op_scalar_exp {$$ = $1 - $3;}
-	  | op_scalar_exp '*' op_scalar_exp {$$ = $1 * $3;}
-  	  | op_scalar_exp '/' op_scalar_exp {$$ = $1 / $3;}
-	  | '-' op_scalar_exp %prec UMINUS  {$$ = -$2;}
-	  | '+' op_scalar_exp %prec UMINUS  {$$ = $2;}
-          | scalar_exp %prec OP_CONVERTION {$$ = solve::const_op($1);}
+op_scalar_exp: op_scalar_exp '+' op_scalar_exp {$$ = $1() + $3();} 
+	  | op_scalar_exp '-' op_scalar_exp {$$ = $1() - $3();}
+	  | op_scalar_exp '*' op_scalar_exp {$$ = $1() * $3();}
+  	  | op_scalar_exp '/' op_scalar_exp {$$ = $1() / $3();}
+	  | '-' op_scalar_exp %prec UMINUS  {$$ = -$2();}
+	  | '+' op_scalar_exp %prec UMINUS  {$$ = $2();}
+	  | '(' op_scalar_exp ')' {$$ = $2();}
+	  | TOK_FUNC_SQRT '(' op_scalar_exp ')' {$$ = sqrt($3());}
+
+          | scalar_exp %prec OP_CONVERTION 
+	  {$$ = solve::const_op($1,msg_consultant(info));}
+          | TOK_PROP_SCALAR {$$ = $1;} // implicite convertion from Property
           | TOK_OP_SCALAR {$$ = $1;}
 	;
 
@@ -271,7 +293,10 @@ op_string_exp: TOK_OP_STRING {$$ = $1;}
       if( filename != "" ) info->open_file( filename );
       info->set_new_tree_node( node );
       info->id_resolver = &info->res_property;
-      return yyparse( static_cast<void*>(info) );
+
+      int ret = yyparse( static_cast<void*>(info) );
+
+      return ret;
     }
 
   } // close namespace adlparser

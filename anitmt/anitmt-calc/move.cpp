@@ -46,37 +46,57 @@ namespace anitmt{
     : Prop_Tree_Node( type_name, name, ani ),
       pos(true,false),
       dir(true,false),
-      up(true,false)
+      up(true,false),
+      c( "center", this )
   {
     add_property( "center", &c );
   }
 
   std::pair<bool, Position> Obj_Move::get_return_value( values::Scalar t, 
 							Position& ) 
-    throw( EX_user_error )
+    throw()
   {
     return pos.get_return_value( t );
   }
   std::pair<bool, Direction> Obj_Move::get_return_value( values::Scalar t, 
 							 Direction& ) 
-    throw( EX_user_error )
+    throw()
   {
     return dir.get_return_value( t );
   }
   std::pair<bool, Up_Vector> Obj_Move::get_return_value( values::Scalar t, 
 							 Up_Vector& ) 
-    throw( EX_user_error )
+    throw()
   {
     return up.get_return_value( t );
   }
-
+  /*
+  child_err Obj_Move::try_add_child( Prop_Tree_Node *node )
+  {
+    child_err err; bool success = false;
+    res = pos.try_add_child( node ); 
+    if( res == AC_unique_child_err ) return res;
+    if( res == AC_no_err ) success = true; 
+    res = dir.try_add_child( node );
+    if( res == AC_unique_child_err ) return res;
+    if( res == AC_no_err ) success = true; 
+    res = up.try_add_child ( node );
+    if( res == AC_unique_child_err ) return res;
+    if( res == AC_no_err ) success = true; 
+    
+    if( success )
+      return AC_no_err;
+    else
+      return AC_child_type_rejected;
+  }
+  */
   bool Obj_Move::try_add_child( Prop_Tree_Node *node )
   {
     bool res = false;
-    res |= pos.try_add_child( node );
+    res |= pos.try_add_child( node ); 
     res |= dir.try_add_child( node );
     res |= up.try_add_child ( node );
-    
+
     return res;
   }
 
@@ -102,16 +122,31 @@ namespace anitmt{
   }
 
   Obj_Move_Straight::Obj_Move_Straight( std::string name, Animation *ani ) 
-    : Prop_Tree_Node( type_name, name, ani )
-      
+    : Prop_Tree_Node( type_name, name, ani ),
+      s0( "startpos", this ),
+      se( "endpos", this ),
+      d0( "startdir", this ),
+      de( "enddir", this ),
+      u0( "startup", this ),
+      ue( "endup", this ),
+      s( "length", this ),
+      t( "duration", this ),
+      t0( "starttime", this ),
+      te( "endtime", this ),
+      t_f( "frames", this ),
+      t0_f( "startframe", this ),
+      te_f( "endframe", this ),
+      a( "acceleration", this ),
+      v0( "startspeed", this ),
+      ve( "endspeed", this )
   {
-    add_property( "length", &s );
     add_property( "startpos", &s0 );
     add_property( "endpos", &se );
     add_property( "startdir", &d0 );
     add_property( "enddir", &de );
     add_property( "startup", &u0 );
     add_property( "endup", &ue );
+    add_property( "length", &s );
     add_property( "duration", &t );
     add_property( "starttime", &t0 );
     add_property( "endtime", &te );
@@ -123,7 +158,7 @@ namespace anitmt{
     add_property( "endspeed", &ve );
  
     solve::Operand<values::Scalar> &fps = 
-      solve::const_op( values::Scalar(ani->param.fps()) );
+      solve::const_op( values::Scalar(ani->param.fps()), get_consultant() );
 
     solve::accel_solver( s, t, a, v0, ve );
     solve::equal_solver( d0, de );
@@ -135,7 +170,8 @@ namespace anitmt{
     solve::product_solver( te_f, te, fps ); // te_f = te * fps 
 
 
-    solve::Operand<values::Vector> sdiff; // position difference
+    // position difference
+    solve::Operand<values::Vector> sdiff(get_consultant()); 
     solve::sum_solver( se, sdiff, s0 );
     //solve::product_solver( sdiff, d0,  s ); // sdiff = d0 * s 
     //!!! d0 has to be 1 in length !!!
@@ -146,7 +182,7 @@ namespace anitmt{
   }
     
   std::pair<bool,Position> Obj_Move_Straight::get_return_value
-  ( values::Scalar global_time, Position& ) throw( EX_user_error )
+  ( values::Scalar global_time, Position& ) throw()
   {
     // if not active
     if( (global_time > te()) || (global_time < t0()) ) 
@@ -160,7 +196,7 @@ namespace anitmt{
   }
 
   std::pair<bool,Direction> Obj_Move_Straight::get_return_value
-  ( values::Scalar t, Direction& ) throw( EX_user_error )
+  ( values::Scalar t, Direction& ) throw()
   {
     // if not active
     if( (t > te()) || (t < t0()) ) 
@@ -171,7 +207,7 @@ namespace anitmt{
   }
 
   std::pair<bool,Up_Vector> Obj_Move_Straight::get_return_value
-  ( values::Scalar t, Up_Vector& ) throw( EX_user_error )
+  ( values::Scalar t, Up_Vector& ) throw()
   {
     // if not active
     if( (t > te()) || (t < t0()) ) 

@@ -77,6 +77,7 @@ qstring_err \"([^\"\n]|\\\")*
 "<="	  { inc_col(); return TOK_LESS_EQUAL; }
 
 sin	  { inc_col(); return TOK_FUNC_SIN; } /* sin() function keyword */
+sqrt	  { inc_col(); return TOK_FUNC_SQRT; } /* sqrt() function keyword */
 
 {id}	  { inc_col(); Token tok = get_identifier(yytext,info);
 	    *yylval = tok; return tok.get_type(); } /* identifiers */

@@ -64,9 +64,10 @@ namespace anitmt
 
   Ani_Scene::Ani_Scene( std::string name, Animation *ani ) 
     : Prop_Tree_Node( type_name, name, ani ),
+      filename( "filename", this ),
+      scene_type( "scene_type", this ),
       scalars(false,false), objects(false,false)
   {
-
     add_property( "filename", &filename );
     add_property( "scene_type", &scene_type );
   }

@@ -34,13 +34,14 @@ namespace anitmt
     : Prop_Tree_Node( type_name, name, ani ),
       pos(true,false),
       dir(true,false),
-      up(true,false) 
+      up(true,false),
+      c( "center", this )
   {
     add_property( "center", &c );
   }
 
   Ani_Object::Optional_Return_Type Ani_Object::get_return_value
-  ( values::Scalar t, Object_State& ) throw( EX_user_error )
+  ( values::Scalar t, Object_State& ) throw()
   {
     values::Matrix ret;
 

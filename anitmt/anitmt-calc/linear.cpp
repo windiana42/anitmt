@@ -23,14 +23,24 @@ namespace anitmt{
   const std::string Scal_Linear::type_name = "linear";
 
   Scal_Linear::Scal_Linear( std::string name, Animation *ani ) 
-    : Prop_Tree_Node( type_name, name, ani ) 
+    : Prop_Tree_Node( type_name, name, ani ),
+      v0( "startvalue", this ),
+      ve( "endvalue", this ),
+      d( "difference", this ),
+      t( "duration", this ),
+      t0( "starttime", this ),
+      te( "endtime", this ),
+      t_f( "frames", this ),
+      t0_f( "startframe", this ),
+      te_f( "endframe", this ),
+      s( "slope", this )
   {
 
     //*********
     // Solvers
 
     solve::Operand<values::Scalar> &fps = 
-      solve::const_op( values::Scalar(ani->param.fps()) );
+      solve::const_op( values::Scalar(ani->param.fps()), get_consultant() );
 
     solve::sum_solver( ve, d, v0 ); // ve = d + v0
     solve::sum_solver( te, t, t0 );
@@ -111,7 +121,7 @@ namespace anitmt{
   }
     
   Scal_Linear::Optional_Return_Type Scal_Linear::get_return_value
-  ( values::Scalar t, values::Scalar& ) throw( EX_user_error )
+  ( values::Scalar t, values::Scalar& ) throw()
   {
     // if not active
     if( (t > te()) || (t < t0()) ) 

@@ -12,6 +12,7 @@ adltest_SOURCES=	adltest.cpp
 adltest_LDADD=		libadlparser.a \
 			../../libanitmt.a \
 			../../../lib/val/libval.a \
+			../../../lib/utl/libutl.a \
 			../../../lib/par/libpar.a \
 			../../../lib/solve/libsolve.a \
 			../../../lib/message/libmessage.a -lfl

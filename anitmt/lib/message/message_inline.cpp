@@ -128,11 +128,18 @@ namespace message
   //**************************************************************
   // Message reporting inline code: 
 
+  //! set the default position for messages
+  inline void Message_Reporter::set_msg_default_position( Abstract_Position 
+							  *pos )
+  {
+    default_position = pos;
+  }
+
   inline Message_Reporter::Message_Reporter( Message_Consultant *c )
-    : consultant(c) {}
+    : consultant(c), default_position( GLOB::no_position ) {}
 
   inline Message_Reporter::~Message_Reporter()
-  {  consultant=NULL;  }
+  {  consultant=0;/*why?*/  }
 
   //**************************************************************
   // Message Interface for error reporting code
@@ -147,9 +154,15 @@ namespace message
     return consultant->is_verbose( verbose_level );
   }
 
+  inline Message_Consultant *Message_Reporter::get_consultant() const
+  {
+    return consultant;
+  }
+
   Message_Stream Message_Reporter::error( const Abstract_Position *pos, 
 					  int position_detail )
   {
+    if( pos == 0 ) pos = default_position;
     Message_Stream ret( MT_Error, pos, position_detail, 
 			consultant, true );
     return ret;
@@ -158,6 +171,7 @@ namespace message
   Message_Stream Message_Reporter::warn( const Abstract_Position *pos, 
 					 int position_detail )
   {
+    if( pos == 0 ) pos = default_position;
     Message_Stream ret( MT_Warning, pos, position_detail, 
 			consultant, consultant->is_warning() );
     return ret;
@@ -167,8 +181,9 @@ namespace message
 					     const Abstract_Position *pos, 
 					     int position_detail )
   {
+    if( pos == 0 ) pos = default_position;
     Message_Stream ret( MT_Verbose, pos, position_detail, 
-			consultant, consultant->is_verbose(min_verbose_level) );
+			consultant, consultant->is_verbose(min_verbose_level));
     return ret;
   }
 
@@ -221,6 +236,11 @@ namespace message
   inline void File_Position::tab_inc_column()
   {
     column = (((column - 1) / tab_len) + 1) * tab_len + 1;
+  }
+
+  inline File_Position *File_Position::duplicate()
+  {
+    return new File_Position( filename, line, column, tab_len );
   }
 }
 

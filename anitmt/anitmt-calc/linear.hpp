@@ -65,7 +65,7 @@ namespace anitmt{
 
     Optional_Return_Type get_return_value( values::Scalar t, 
 					   values::Scalar &s = type_id )
-      throw( EX_user_error );
+      throw();
 
     bool try_add_child( Prop_Tree_Node *node );
 

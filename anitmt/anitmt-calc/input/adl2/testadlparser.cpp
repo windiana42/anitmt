@@ -8,8 +8,16 @@
 #include <error.hpp>		// for old throw exceptions
 #include <save_filled.hpp>
 
-int main()
+int main( int argc, char *argv[] )
 {
+  std::string infile = "";
+  std::string outfile = "test_filled_adl.out";
+  if( argc > 1 ) 
+    infile = argv[1];
+
+  if( argc > 2 )
+    outfile = argv[2];
+
   anitmt::make_all_nodes_available();
 
   message::Message_Source_Identifier main_msg_id(0);
@@ -21,12 +29,13 @@ int main()
 
   anitmt::adlparser::adlparser_info info( &main_consultant );
 
-  info.msg.verbose() << "Enter ADL code:" << std::endl;
+  if( infile == "" )
+    info.msg.verbose() << "Enter ADL code:" << std::endl;
 
   try
   {
-    anitmt::adlparser::parse_adl( &ani, &info );
-    anitmt::save_filled( "test_filled_adl.out", &ani );
+    anitmt::adlparser::parse_adl( &ani, &info, infile );
+    anitmt::save_filled( outfile, &ani );
   } 
   catch( anitmt::EX e ) 
   {

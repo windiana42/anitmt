@@ -26,10 +26,11 @@ namespace anitmt{
 
 #include <val/val.hpp>
 #include <solve/priority.hpp>
+#include <message/message.hpp>
 
 #include "property.hpp"
 
-//!!! should be replaced!!!
+//!!! should be removed!!!
 #include "error.hpp"
 
 #include "animation_classes.hpp"
@@ -40,7 +41,14 @@ namespace anitmt{
   // Prop_Tree_Node: provides tree structure for property groups
   //************************************************************
 
-  class Prop_Tree_Node{
+  class Prop_Tree_Node : public message::Message_Reporter
+  {
+  public:
+    // error messages (for future use)
+    enum child_err{ AC_no_err=0, AC_unique_child_err,
+		    AC_child_type_rejected };	// for child creation
+  private:
+
     // navigation in tree
     Prop_Tree_Node *parent;	// parent node
     Prop_Tree_Node *prev;	// previous node
@@ -80,49 +88,6 @@ namespace anitmt{
     inline void add_property( std::string name, Property *prop );
 
   public:
-    //*****************
-    // known exceptions
-
-    class EX_child_type_unknown : public EX 
-    {
-    public:
-      EX_child_type_unknown() : EX( "child type unknown" ) {}
-    };
-    class EX_child_type_rejected : public EX 
-    {
-    public:
-      EX_child_type_rejected() : EX( "child type rejected" ) {}
-    };
-    class EX_child_type_already_defined : public EX 
-    {
-    public:
-      EX_child_type_already_defined() : EX( "child_type_already_defined" ) {}
-    };
-    class EX_invalid_reference : public EX 
-    {
-    public:
-      EX_invalid_reference() : EX( "invalid reference" ) {}
-    };
-    class EX_property_rejected : public EX 
-    {
-    public:
-      EX_property_rejected() : EX( "property rejected" ) {}
-    };
-    class EX_property_type_rejected : public EX 
-    {
-    public:
-      EX_property_type_rejected(/* std::string wrong_type, 
-				   std::string right_type*/ )
-	: EX( /*right_type + " expected. " + wrong_type + " found instead"*/ 
-	     "wrong property type" ) {}
-    };
-    class EX_property_unknown : public EX {
-    public:
-      EX_property_unknown( /*std::string prop_name*/ ) 
-	: EX( "unknown property" /*+ prop_name*/ ) {}
-    };
-
-
     //***********
     // functions
 
@@ -130,10 +95,11 @@ namespace anitmt{
     virtual std::string get_type();	// return type
     Property *get_property( std::string name );	
 				// return property (0 = unknown name)
+    enum setp_error{ SP_no_err=0, SP_wrong_property_type,
+		     SP_value_rejected, SP_property_unknown };
     template< class T > 
-    void set_property( std::string name, T val )
-      throw( EX_property_unknown, EX_property_type_rejected, 
-	     EX_property_rejected );
+    setp_error set_property( std::string name, T val )
+      throw();
 				// set value of a property 
     std::list<std::string> get_properties_names(); 
 				// returns all property names
@@ -143,7 +109,7 @@ namespace anitmt{
     std::list<Prop_Tree_Node*> get_all_children();
 				// return all children
     Prop_Tree_Node *add_child( std::string type, std::string name )
-      throw( EX_child_type_unknown, EX_child_type_rejected );
+      throw();
 				// add child of type with name
     virtual Prop_Tree_Node *get_referenced_node( std::string ref, 
 						 char separator='.' );
@@ -163,8 +129,8 @@ namespace anitmt{
     //************************************
     // Don't call the following functions!
 
-    static void add_child_factory( std::string name, Child_Factory* fac )
-      throw( EX_child_type_already_defined );
+    static char add_child_factory( std::string name, Child_Factory* fac )
+      throw();
 				// adds a factory object for class generation
 
     //! function that is called after hierarchy was set up for each node

@@ -83,8 +83,8 @@ namespace anitmt
 
   //! tries to use the node as element for this container
   template <class Return_Type>
-  bool Contain_Return<Return_Type>::try_add_child( Prop_Tree_Node *prop_node )
-    throw( EX_more_than_one_child ) 
+  bool Contain_Return<Return_Type>::try_add_child( Prop_Tree_Node 
+						   *prop_node ) throw() 
   {  
     Return<Return_Type> *node 
       = dynamic_cast< Return<Return_Type>* >( prop_node );
@@ -94,7 +94,10 @@ namespace anitmt
     else
     {
       if( unique_child && ( num_children > 0 ) )
-	throw EX_more_than_one_child();
+      {
+	prop_node->error() << "There is already a child of the same type";
+	return false;
+      }
 
       if( !content.empty() )
       {
@@ -120,7 +123,7 @@ namespace anitmt
   template <class Return_Type>
   Contain_Return<Return_Type>::Optional_Return_Type 
   Contain_Return<Return_Type>::get_return_value( values::Scalar t ) 
-    throw( EX_essential_child_missing, EX_user_error ) 
+    throw() 
   {
     Optional_Return_Type ret;
     for( content_type::iterator i = content.begin(); i != content.end(); i++ )
@@ -138,7 +141,10 @@ namespace anitmt
   void Contain_Return<Return_Type>::hierarchy_final_init()
   {
     if( essential_child && ( num_children == 0 ) )
-      throw EX_essential_child_missing();
+    {
+#warning replace with new error system
+      std::cerr << "essential child is missing!" << std::endl;
+    }
 
     for( content_type::iterator i = content.begin(); i != content.end(); i++ )
     {
@@ -159,7 +165,7 @@ namespace anitmt
   //! tries to use the node as element for this container
   template <class Element_Type>
   bool Contain<Element_Type>::try_add_child( Prop_Tree_Node *prop_node )
-    throw( EX_more_than_one_child ) 
+    throw() 
   {  
     Element_Type *node = dynamic_cast< Element_Type* >( prop_node );
   
@@ -168,7 +174,10 @@ namespace anitmt
     else
     {
       if( unique_child && ( num_children > 0 ) )
-	throw EX_more_than_one_child();
+      {
+	prop_node->error() << "There is already a child of the same type";
+	return false;
+      }
 
       content.push_back( node );
       num_children++;
@@ -182,7 +191,11 @@ namespace anitmt
   void Contain<Element_Type>::hierarchy_final_init()
   {
     if( essential_child && ( num_children == 0 ) )
-      throw EX_essential_child_missing();
+    {
+#warning replace with new error system
+      std::cerr << "essential child is missing!" << std::endl;
+    }
+
 
     /* content is invoked by proptree hierarchy
     for( content_type::iterator i = content.begin(); i != content.end(); i++ )

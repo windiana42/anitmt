@@ -33,7 +33,8 @@ namespace anitmt
 
       if( node == 0 )
       {
-	yyerr(vptr_info) << "couldn't add tree node";
+	yyerr(vptr_info) << "couldn't add tree node " << name << " as type " 
+			 << type << " isn't allowed here";
       }
       else
       {

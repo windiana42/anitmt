@@ -21,6 +21,7 @@
 
 #include <val/val.hpp>
 #include <solve/operand.hpp>
+#include <solve/operator.hpp>
 #include <message/message.hpp>
 
 #include "property.hpp"
@@ -76,11 +77,49 @@ namespace anitmt
       inline values::Vector &vector();
       inline values::Matrix &matrix();
       inline values::String &string();
-      inline solve::Operand<values::Flag>   &op_flag();
-      inline solve::Operand<values::Scalar> &op_scalar();
-      inline solve::Operand<values::Vector> &op_vector();
-      inline solve::Operand<values::Matrix> &op_matrix();
-      inline solve::Operand<values::String> &op_string();
+      inline solve::Operand<values::Flag>   &op_flag  ( void* info );
+      inline solve::Operand<values::Scalar> &op_scalar( void* info );
+      inline solve::Operand<values::Vector> &op_vector( void* info );
+      inline solve::Operand<values::Matrix> &op_matrix( void* info );
+      inline solve::Operand<values::String> &op_string( void* info );
+
+      // changes the operand pointer when assigned
+      template<class T>
+      class Meta_Operand {
+	Token *tok;
+	void *info;
+      public:
+	Meta_Operand<T> &operator=( const Meta_Operand<T> &mop )
+	{ 
+	  tok = mop.tok;
+	  info = mop.info;
+	  return *this;
+	}
+	Meta_Operand<T> &operator=( solve::Operand<T> &operand )
+	{ 
+	  if( tok->has_value() ) tok->consumed();
+	  tok->set_op_scalar(operand);
+	  return *this;
+	}
+	operator solve::Operand<T>()
+	{ 
+	  return tok->op_scalar(info); 
+	}
+	solve::Operand<T> &operator()()
+	{ 
+	  return tok->op_scalar(info); 
+	}
+
+	Meta_Operand( Token *t, void *i ) : tok(t), info(i) {}
+	Meta_Operand( const Meta_Operand<T> &mop ) : tok(mop.tok), 
+						     info(mop.info) {}
+      };
+
+      inline Meta_Operand<values::Scalar> meta_op_scalar( void* info )
+      { 
+	return Meta_Operand<values::Scalar>( this, info ); 
+      }
+
       inline anitmt::Type_Property<values::Flag>   &prop_flag();
       inline anitmt::Type_Property<values::Scalar> &prop_scalar();
       inline anitmt::Type_Property<values::Vector> &prop_vector();
@@ -104,7 +143,6 @@ namespace anitmt
       inline anitmt::Type_Property<values::Vector> *get_prop_vector() const;
       inline anitmt::Type_Property<values::Matrix> *get_prop_matrix() const;
       inline anitmt::Type_Property<values::String> *get_prop_string() const;
-
       // set operand without creating a new object
       inline void set_op_flag  ( solve::Operand<values::Flag> &f );
       inline void set_op_scalar( solve::Operand<values::Scalar> &f );
@@ -116,7 +154,6 @@ namespace anitmt
       inline void set_prop_vector( anitmt::Type_Property<values::Vector> &f );
       inline void set_prop_matrix( anitmt::Type_Property<values::Matrix> &f );
       inline void set_prop_string( anitmt::Type_Property<values::String> &f );
-
       // is a value stored in that token?
       inline bool has_value() const;
 

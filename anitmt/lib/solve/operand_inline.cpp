@@ -71,13 +71,22 @@ namespace solve
     assert( !valid_test_run_ids.empty() );
     test_run_id = valid_test_run_ids.front();
   }
-  
+
+  inline void Solve_Run_Info::set_trial_run( bool trial )
+  {
+    trial_run = trial;
+  }
+  inline bool Solve_Run_Info::is_trial_run()
+  {
+    return trial_run;
+  }
+
   //**********************************************************
   // Operand: base class for operand values of a certain type
   //**********************************************************
 
   template<class T>
-  void Operand<T>::report_value( Solve_Run_Info *info ) throw(EX)
+  void Operand<T>::report_value( Solve_Run_Info *info ) throw()
   {
     listeners_type::iterator i;    
     for( i = listeners.begin(); i != listeners.end(); i++ )
@@ -88,12 +97,17 @@ namespace solve
 
   template<class T>
   bool Operand<T>::test_report_value( Solve_Run_Info *info )
-    throw(EX)
+    throw()
   {
     listeners_type::iterator i;    
     for( i = listeners.begin(); i != listeners.end(); i++ )
     {
-      if( !(*i)->is_result_ok( this, info ) ) return false;
+      if( !(*i)->is_result_ok( this, info ) ) 
+      {
+	// this operand was involved in this error
+	involved_in_error( get_value(info) ); 
+	return false;
+      }
     }
     return true;
   }
@@ -132,7 +146,8 @@ namespace solve
   }
   
   template<class T>
-  bool Operand<T>::set_value( T res, Solve_Problem_Handler *handler ) throw(EX)
+  bool Operand<T>::set_value( T res, 
+			      Solve_Problem_Handler *handler ) throw()
   { 
     Solve_Run_Info info( handler );
     if( test_set_value(res,&info) ) 
@@ -146,11 +161,29 @@ namespace solve
 
   template<class T>
   bool Operand<T>::test_set_value( T val, Solve_Run_Info *info ) 
-    throw(EX)
+    throw()
   {
     if( is_solved_in_try(info) )
     {
-      return value == val;
+      if( value == val )
+      {
+	return true;
+      }
+      else
+      {
+	std::list< Basic_Operand* > bad_ops;
+	bad_ops.push_back( this );
+	if( info->problem_handler->operand_collision_occured( bad_ops, info,
+							      this ) )
+	  if( !info->is_trial_run() )
+	  {
+	    caused_error();		// this operand caused the error
+	    error() << "you gave a value which resulted in the value " << val 
+		    << " for this operand which collides with " << value;
+	  }
+
+	return false;
+      }
     }
 
     value = val;
@@ -159,15 +192,16 @@ namespace solve
   }
 
   template<class T>
-  bool Operand<T>::test_set_value( T res, Solve_Problem_Handler *handler ) 
-    throw(EX)
+  bool Operand<T>::test_set_value( T res, 
+				   Solve_Problem_Handler *handler ) 
+    throw()
   { 
-    Solve_Run_Info info( handler );
+    Solve_Run_Info info( msg_reporter, handler );
     return test_set_value(res,&info);
   }
 
   template<class T>
-  void Operand<T>::use_test_value( Solve_Run_Info *info ) throw(EX) 
+  void Operand<T>::use_test_value( Solve_Run_Info *info ) throw() 
   { 
     assert( is_solved_in_try(info) ); 
     solved = true; 

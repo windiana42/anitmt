@@ -33,7 +33,7 @@ namespace solve
   // has to check the result of the operand with ID as pointer to operand
   template< class T_A, class T_B >
   bool Basic_Solver_for_2_Operands<T_A,T_B>::is_result_ok
-  ( const void *ID, Solve_Run_Info *info ) throw(EX)
+  ( const void *ID, Solve_Run_Info *info ) throw()
   {
     T_A _a;
     T_B _b;
@@ -114,7 +114,7 @@ namespace solve
   // tells to use the result calculated by is_result_ok()
   template< class T_A, class T_B >
   void Basic_Solver_for_2_Operands<T_A,T_B>::use_result
-  ( const void *ID, Solve_Run_Info *info ) throw(EX)
+  ( const void *ID, Solve_Run_Info *info ) throw()
   {
     assert( ID==&a || ID==&b );
 
@@ -172,7 +172,7 @@ namespace solve
   // has to check the result of the operand with ID as pointer to operand
   template< class T_A, class T_B >
   bool Basic_Dual_Solution_Solver_for_2_Operands<T_A,T_B>::is_result_ok
-  ( const void *ID, Solve_Run_Info *info ) throw(EX)
+  ( const void *ID, Solve_Run_Info *info ) throw()
   {
     T_A _a;
     T_B _b;
@@ -337,7 +337,7 @@ namespace solve
   // tells to use the result calculated by is_result_ok()
   template< class T_A, class T_B >
   void Basic_Dual_Solution_Solver_for_2_Operands<T_A,T_B>::use_result
-  ( const void *ID, Solve_Run_Info *info ) throw(EX)
+  ( const void *ID, Solve_Run_Info *info ) throw()
   {
     assert( ID==&a || ID==&b );
 
@@ -396,7 +396,7 @@ namespace solve
   // has to check the result of the operand with ID as pointer to operand
   template< class T_A, class T_B, class T_C >
   bool Basic_Solver_for_3_Operands<T_A,T_B,T_C>::is_result_ok
-  ( const void *ID, Solve_Run_Info *info ) throw(EX)
+  ( const void *ID, Solve_Run_Info *info ) throw()
   {
     T_A _a;
     T_B _b;
@@ -655,7 +655,7 @@ namespace solve
   // tells to use the result calculated by is_result_ok()
   template< class T_A, class T_B, class T_C >
   void Basic_Solver_for_3_Operands<T_A,T_B,T_C>::use_result
-  ( const void *ID, Solve_Run_Info *info ) throw(EX)
+  ( const void *ID, Solve_Run_Info *info ) throw()
   {
     assert( ID==&a || ID==&b || ID==&c );
 

@@ -92,6 +92,10 @@ namespace anitmt
       consumed();
     }
 
+    //**********************************************************
+    // Identifier_Resolver: resolves indentifiers for the lexer
+    //**********************************************************
+
     Token Reference_Resolver::get_identifier( std::string s )
     {
       anitmt::Property *prop = info->get_current_tree_node()->
@@ -103,24 +107,24 @@ namespace anitmt
 	    {
 	    case values::Valtype::flag:
 	      // type_property is converted to operand as needed by parser!
-	      tok.set_op_flag  ( *dynamic_cast<Type_Property<values::Flag>*>
-				   (prop) );
+	      tok.set_prop_flag  (*dynamic_cast<Type_Property<values::Flag>*>
+				  (prop));
 	      break;
 	    case values::Valtype::scalar:
-	      tok.set_op_scalar( *dynamic_cast<Type_Property<values::Scalar>*>
-				   (prop) );
+	      tok.set_prop_scalar(*dynamic_cast<Type_Property<values::Scalar>*>
+				  (prop));
 	      break;
 	    case values::Valtype::vector:
-	      tok.set_op_vector( *dynamic_cast<Type_Property<values::Vector>*>
-				   (prop) );
+	      tok.set_prop_vector(*dynamic_cast<Type_Property<values::Vector>*>
+				  (prop) );
 	      break;
 	    case values::Valtype::matrix:
-	      tok.set_op_matrix( *dynamic_cast<Type_Property<values::Matrix>*>
-				   (prop) );
+	      tok.set_prop_matrix(*dynamic_cast<Type_Property<values::Matrix>*>
+				  (prop));
 	      break;
 	    case values::Valtype::string:
-	      tok.set_op_string( *dynamic_cast<Type_Property<values::String>*>
-				   (prop) );
+	      tok.set_prop_string(*dynamic_cast<Type_Property<values::String>*>
+				  (prop));
 	      break;
 	    }
 	}

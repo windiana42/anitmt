@@ -31,13 +31,13 @@ namespace solve
   //!!! very critical function !!! change only carefully !!!
   template<class T_Result, class T_Operand>
   bool Basic_Operator_for_1_Operand<T_Result,T_Operand>::is_result_ok
-  ( const void *ID, Solve_Run_Info *info ) throw(EX)
+  ( const void *ID, Solve_Run_Info *info ) throw()
   {
     assert( ID == &operand );
     bool just_solved = false;
 
     T_Operand op = operand.get_value( info );
-    if( !is_operand_ok( op ) ) 
+    if( !is_operand_ok( op, info ) ) 
       return false;
     if( is_operand_enough( op ) )
     {
@@ -51,7 +51,7 @@ namespace solve
   // tells to use the result calculated by is_result_ok()
   template<class T_Result, class T_Operand>
   void Basic_Operator_for_1_Operand<T_Result,T_Operand>::use_result
-  ( const void *ID, Solve_Run_Info *info ) throw(EX)
+  ( const void *ID, Solve_Run_Info *info ) throw()
   {
     assert( ID == &operand );
     if( result.is_solved_in_try( info ) ) // if result was just solved 
@@ -70,17 +70,19 @@ namespace solve
 
   template<class T_Result, class T_Operand>
   void Basic_Operator_for_1_Operand<T_Result,T_Operand>::init()
-    throw( EX )
+    throw()
   {
     if( operand.is_solved() ) 
       {
 	const T_Operand &op = operand.get_value();
 
-	if( !is_operand_ok(op) )
-	  throw EX_Initial_Operand_Not_Valid();
-	if( is_operand_enough(op) )
-  	  result.set_value( calc_result(op) ); 
-				// could throw exception !
+	User_Problem_Handler handler;
+	Solve_Run_Info info( &handler );
+	if( is_operand_ok( op, &info ) )
+	{
+	  if( is_operand_enough(op) )
+	    result.set_value( calc_result(op) ); 
+	}
       }
   }
 
@@ -89,16 +91,17 @@ namespace solve
 
   template<class T_Result, class T_Operand>
   Basic_Operator_for_1_Operand<T_Result,T_Operand>
-  ::Basic_Operator_for_1_Operand ( Operand<T_Operand> &op ) throw(EX) 
-    : operand( op ) 
+  ::Basic_Operator_for_1_Operand ( Operand<T_Operand> &op ) throw() 
+    : message::Message_Reporter( op.get_consultant() ), 
+      operand( op ), result( op.get_consultant() )
   {
     operand.add_listener( this );
     // init() cannot be called here as it calls a virtual function
   }
 
-  //***************************************************************
+  //********************************************************************
   // Basic_Dual_Solution_Operator_for_1_Operand: one parameter Operator
-  //***************************************************************
+  //********************************************************************
 
   //*** Operand_Listener methods ***
 
@@ -106,13 +109,13 @@ namespace solve
   //!!! very critical function !!! change only carefully !!!
   template<class T_Result, class T_Operand> bool 
   Basic_Dual_Solution_Operator_for_1_Operand<T_Result,T_Operand>::is_result_ok
-  ( const void *ID, Solve_Run_Info *info ) throw(EX)
+  ( const void *ID, Solve_Run_Info *info ) throw()
   {
     assert( ID == &operand );
     bool just_solved = false;
 
     const T_Operand &op = operand.get_value( info );
-    if( !is_operand_ok( op ) ) 
+    if( !is_operand_ok( op, info ) ) 
       return false;
 
     if( is_operand_enough1( op ) )
@@ -120,7 +123,9 @@ namespace solve
       // change test_id for first test run
       Solve_Run_Info::id_type test1_id = info->new_test_run_id();
       // start first test run
+      info->set_trial_run(true); // first run is trial run
       just_solved = result.test_set_value( calc_result1(op), info );
+      info->set_trial_run(false);
       if( just_solved )	
         return just_solved;	// return true if solving and test_set succeded
       else			
@@ -139,7 +144,7 @@ namespace solve
   // tells to use the result calculated by is_result_ok()
   template<class T_Result, class T_Operand> void 
   Basic_Dual_Solution_Operator_for_1_Operand<T_Result,T_Operand>::use_result
-  ( const void *ID, Solve_Run_Info *info ) throw(EX)
+  ( const void *ID, Solve_Run_Info *info ) throw()
   {
     assert( ID == &operand );
     if( result.is_solved_in_try(info) ) // if result was just solved 
@@ -158,36 +163,28 @@ namespace solve
 
   template<class T_Result, class T_Operand>
   void Basic_Dual_Solution_Operator_for_1_Operand<T_Result,T_Operand>::init()
-    throw( EX )
+    throw()
   {
     if( operand.is_solved() ) 
     {
       const T_Operand &op = operand.get_value();
 
-      if( !is_operand_ok(op) )
-	throw EX_Initial_Operand_Not_Valid();
-
-      bool use_result2 = false;
-      if( is_operand_enough1(op) )
+      User_Problem_Handler handler;
+      Solve_Run_Info info( &handler );
+      if( is_operand_ok( op, &info ) )
       {
-	try
-        {
-	  if( !result.set_value( calc_result1(op) ) ) 
-		 		// could throw exception !
-	    use_result2 = true;
-        }
-	catch( EX )
+	bool use_result2 = false;
+	if( is_operand_enough1(op) )
 	{
-	  use_result2 = true;
+	  if( !result.set_value( calc_result1(op) ) ) 
+	    use_result2 = true;
 	}
-      }
-      else
-	use_result2 = true;
+	else
+	  use_result2 = true;
 
-      if( use_result2 && is_operand_enough2(op) )
-	if( !result.set_value( calc_result2(op) ) ) 
-				// could throw exception !
-	  throw EX_Initial_Operand_Not_Valid();	  
+	if( use_result2 && is_operand_enough2(op) )
+	  result.set_value( calc_result2(op) ); 
+      }
     }
   }
 
@@ -197,8 +194,9 @@ namespace solve
   template<class T_Result, class T_Operand>
   Basic_Dual_Solution_Operator_for_1_Operand<T_Result,T_Operand>
   ::Basic_Dual_Solution_Operator_for_1_Operand ( Operand<T_Operand> &op ) 
-    throw(EX) 
-    : operand( op ) 
+    throw() 
+    : message::Message_Reporter( op.get_consultant() ), 
+      operand( op ), result( op.get_consultant() )      
   {
     operand.add_listener( this );
     // init() cannot be called here as it calls virtual functions
@@ -214,13 +212,13 @@ namespace solve
   //!!! very critical function !!! change only carefully !!!
   template<class T_Result, class T_Op1, class T_Op2>
   bool Basic_Operator_for_2_Operands<T_Result,T_Op1,T_Op2>::is_result_ok
-  ( const void *ID, Solve_Run_Info *info ) throw(EX)
+  ( const void *ID, Solve_Run_Info *info ) throw()
   {
     bool just_solved = false;	// reset flag
     if( ID == &operand1 )	// is operand1 solved?
     {
       T_Op1 op1 = operand1.get_value( info );	// get value
-      if( !is_operand1_ok(op1) ) // test value
+      if( !is_operand1_ok( op1, info ) ) // test value
 	return false;
 
       if( is_operand1_enough(op1) ) // is this operand enough to calc result
@@ -237,7 +235,7 @@ namespace solve
     {
       assert( ID == &operand2 );
       T_Op2 op2 = operand2.get_value( info ); // get value
-      if( !is_operand2_ok(op2) ) // check value
+      if( !is_operand2_ok( op2, info ) ) // check value
 	return false;
 
       if( is_operand2_enough(op2) ) // is operand2 enough to calc result
@@ -258,7 +256,7 @@ namespace solve
       T_Op1 op1 = operand1.get_value( info ); // get value1
       T_Op2 op2 = operand2.get_value( info ); // get value2
       // check operands
-      if( !are_operands_ok( op1, op2 ) ) 
+      if( !are_operands_ok( op1, op2, info ) ) 
  	return false;
  
       // calculate result and test it
@@ -275,7 +273,7 @@ namespace solve
   // tells to use the result calculated by is_result_ok()
   template<class T_Result, class T_Op1, class T_Op2>
   void Basic_Operator_for_2_Operands<T_Result,T_Op1,T_Op2>::use_result
-  ( const void *ID, Solve_Run_Info *info ) throw(EX)
+  ( const void *ID, Solve_Run_Info *info ) throw()
   {
     assert( ID == &operand1 || ID == &operand2 );
     if( result.is_solved_in_try( info ) ) // if result was just solved 
@@ -301,7 +299,7 @@ namespace solve
   }
 
   template<class T_Result, class T_Op1, class T_Op2>
-  void Basic_Operator_for_2_Operands<T_Result,T_Op1,T_Op2>::init() throw( EX )
+  void Basic_Operator_for_2_Operands<T_Result,T_Op1,T_Op2>::init() throw()
   {
     if( operand1.is_solved() )
     {
@@ -310,7 +308,6 @@ namespace solve
       if( is_operand1_enough( op1 ) )
       {
 	result.set_value( calc_result_from_op1( op1 ) ); 
-				// could throw exception !
       }
     }
  
@@ -320,7 +317,6 @@ namespace solve
       if( is_operand2_enough( op2 ) )
       {
 	result.set_value( calc_result_from_op2( op2 ) ); 
-				// could throw exception !
       }
     }
 
@@ -328,7 +324,6 @@ namespace solve
     {
       result.set_value( calc_result( operand1.get_value(), 
 				     operand2.get_value() ) ); 
-				// could throw exception !
     }
   }
 
@@ -338,8 +333,10 @@ namespace solve
   template<class T_Result, class T_Op1, class T_Op2>
   Basic_Operator_for_2_Operands<T_Result,T_Op1,T_Op2>
   ::Basic_Operator_for_2_Operands( Operand<T_Op1> &op1, 
-				   Operand<T_Op2> &op2 ) throw( EX )
-    : operand1( op1 ), operand2( op2 ) { 
+				   Operand<T_Op2> &op2 ) throw()
+    : message::Message_Reporter( op1.get_consultant() ),
+      operand1( op1 ), operand2( op2 ), result( op1.get_consultant() )      
+  { 
     
     operand1.add_listener( this );
     operand2.add_listener( this );
@@ -417,9 +414,16 @@ namespace solve
 
   template<class T_Result, class T_Operand>
   bool Sqrt_Operator<T_Result,T_Operand>
-  ::is_operand_ok( const T_Operand &value ) 
+  ::is_operand_ok( const T_Operand &value, Solve_Run_Info *info ) 
   {
-    return value >= 0;		// value under square root must be positive
+    // value under square root must be positive
+    if( value < 0 )
+    {
+      if( !info->is_trial_run() )
+	error() << "cannot calculate square root of " << value;
+      return false;
+    }
+    return true;
   }
 
   template<class T_Result, class T_Operand>
@@ -460,7 +464,6 @@ namespace solve
   // Add_Operator: operator for adding 2 operands of different types
   //**********************************************************************
 
-  // may throw exception!
   template<class T_Result, class T_Op1, class T_Op2>
   T_Result Add_Operator<T_Result,T_Op1,T_Op2>
   ::calc_result( const T_Op1 &value1, const T_Op2 &value2 ) 
@@ -561,13 +564,6 @@ namespace solve
 
   template<class T_Result, class T_Op1, class T_Op2>
   bool Div_Operator<T_Result,T_Op1,T_Op2>
-  ::is_operand2_ok( const T_Op2 &value2 ) 
-  {
-    return !(!value2);		// value2 has to be different from zero
-  }
-
-  template<class T_Result, class T_Op1, class T_Op2>
-  bool Div_Operator<T_Result,T_Op1,T_Op2>
   ::is_operand1_enough( const T_Op1 &value1 ) 
   {
     return !value1;		// if numerator is zero, result is also zero
@@ -575,10 +571,16 @@ namespace solve
 
   template<class T_Result, class T_Op1, class T_Op2>
   bool Div_Operator<T_Result,T_Op1,T_Op2>
-  ::are_operands_ok( const T_Op1 &value1, const T_Op2 &value2 ) 
+  ::are_operands_ok( const T_Op1 &value1, const T_Op2 &value2, 
+		     Solve_Run_Info *info ) 
   {
     // something diff zero is infinite
-    if( (!(!value1)) && (!value2) ) return false;
+    if( (!(!value1)) && (!value2) )
+    {
+      if( !info->is_trial_run() )
+	error() << "cannot devide " << value1 << " by zero";
+      return false;
+    }
     return true;
   }
 
@@ -613,7 +615,6 @@ namespace solve
   // Equal_Operator: operator for comparing 2 operands 
   //***************************************************
 
-  // may throw exception!
   template<class T_Result, class T_Op1, class T_Op2>
   T_Result Equal_Operator<T_Result,T_Op1,T_Op2>
   ::calc_result( const T_Op1 &value1, const T_Op2 &value2 ) 
@@ -634,7 +635,6 @@ namespace solve
   // Unequal_Operator: operator for comparing 2 operands 
   //***************************************************
 
-  // may throw exception!
   template<class T_Result, class T_Op1, class T_Op2>
   T_Result Unequal_Operator<T_Result,T_Op1,T_Op2>
   ::calc_result( const T_Op1 &value1, const T_Op2 &value2 ) 
@@ -655,7 +655,6 @@ namespace solve
   // Less_Operator: operator for comparing 2 operands 
   //***************************************************
 
-  // may throw exception!
   template<class T_Result, class T_Op1, class T_Op2>
   T_Result Less_Operator<T_Result,T_Op1,T_Op2>
   ::calc_result( const T_Op1 &value1, const T_Op2 &value2 ) 
@@ -676,7 +675,6 @@ namespace solve
   // Greater_Operator: operator for comparing 2 operands 
   //***************************************************
 
-  // may throw exception!
   template<class T_Result, class T_Op1, class T_Op2>
   T_Result Greater_Operator<T_Result,T_Op1,T_Op2>
   ::calc_result( const T_Op1 &value1, const T_Op2 &value2 ) 
@@ -697,7 +695,6 @@ namespace solve
   // Not_Greater_Operator: operator for comparing 2 operands 
   //*********************************************************
 
-  // may throw exception!
   template<class T_Result, class T_Op1, class T_Op2>
   T_Result Not_Greater_Operator<T_Result,T_Op1,T_Op2>
   ::calc_result( const T_Op1 &value1, const T_Op2 &value2 ) 
@@ -718,7 +715,6 @@ namespace solve
   // Not_Less_Operator: operator for comparing 2 operands 
   //*********************************************************
 
-  // may throw exception!
   template<class T_Result, class T_Op1, class T_Op2>
   T_Result Not_Less_Operator<T_Result,T_Op1,T_Op2>
   ::calc_result( const T_Op1 &value1, const T_Op2 &value2 ) 

@@ -36,10 +36,10 @@ namespace solve{
 
     //! has to check the result of the operand with ID as pointer to operand
     virtual bool is_result_ok( const void *ID, 
-			       Solve_Run_Info *info ) throw(EX);
+			       Solve_Run_Info *info ) throw();
     //! tells to use the result calculated by is_result_ok()
     virtual void use_result( const void *ID, Solve_Run_Info *info )
-      throw(EX);
+      throw();
 
     //! disconnect operand
     virtual void disconnect( const void *ID );
@@ -55,11 +55,6 @@ namespace solve{
   template<class T_Operand>
   inline void explicite_reference( Operand<T_Operand> &dest, 
 				   Operand<T_Operand> &src );
-
-  //***************
-  // test function
-  //***************
-  int reference_test();
 }
 
 // include implementation to make sure that all specializations of the
