@@ -9,12 +9,46 @@ AC_PROG_AWK
 AC_PROG_CXX
 AC_PROG_CC
 AC_PROG_CPP
-#AC_PROG_LEX
-AM_PROG_LEX	# replaced for automake
 AC_PROG_INSTALL
 AC_PROG_MAKE_SET
 AC_PROG_RANLIB
 AC_PROG_YACC
+#AC_PROG_LEX
+AM_PROG_LEX	# replaced for automake
+
+# Check flex version if flex is needed. 
+need_flex="n"
+for i in anitmt-calc/input/adl2/scanner anitmt-calc/funcgen/scanner ; do
+  if test -f "$srcdir/$i.ll" -a ! -f "$srcdir/$i.cc" ; then
+    need_flex="y"
+	break
+  fi
+done
+if test "$need_flex" = "y" ; then
+  if test "x$LEX" = "xflex" ; then
+    AC_MSG_CHECKING([$LEX version])
+    flexvers="$($LEX --version)"
+    flexvers="${flexvers/flex /}"
+    flexvers="${flexvers/version /}"
+    AC_MSG_RESULT([$flexvers])
+    fstatus="n"
+    case "$flexvers" in
+      [[3-9]].*)  fstatus="y" ;;
+      2.[[1-4]].*)  fstatus="n" ;;
+      2.5.[[2-9]][[0-9]])  fstatus="y" ;;
+      2.5.17|2.5.18|2.5.19)  fstatus="y" ;;
+    esac
+    if test "$fstatus" = "n" ; then
+      AC_MSG_ERROR([Your version of flex ($flexvers) is outdated.
+You need at least flex-2.5.17. Grab it at ftp://ftp.uncg.edu/people/wlestes.])
+      exit 1
+    fi
+    unset fstatus flexvers
+  else
+    AC_MSG_WARN([*** You are not using flex but "$LEX". Expect trouble. ***])
+  fi
+fi
+unset need_flex
 
 # check for gcc version less than 3.0
 dnl check gcc version:
