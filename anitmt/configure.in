@@ -167,6 +167,7 @@ AC_CONFIG_FILES([ Makefile
 	anitmt-view/Makefile
 	utils/Makefile 
 	utils/mkavi/Makefile 
+	utils/tga2avi/Makefile
 	example/Makefile
 	example/test/Makefile
 	example/test/test_ani/Makefile

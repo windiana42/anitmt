@@ -1,4 +1,4 @@
-SUBDIRS = mkavi
+SUBDIRS = mkavi tga2avi
 
 INCLUDES = -I.
 
