@@ -30,7 +30,9 @@ the installation should not be done by root.
    
    Configuring takes a while. You may pass quite a lot of options 
    to the configure script which can be viewed by calling configure 
-   with the --help flag. 
+   with the --help flag. But don't worry, normally everything works 
+   fine without supplying any options (unless you don't have some 
+   required software installed or your system is somehow non-standard.)
 
 4. Build anitmt: 
    This is done by simply calling make in the build directory. 
@@ -41,7 +43,7 @@ the installation should not be done by root.
    CFLAGS - set the gcc flags for C sources (there are currently none)
    CXXFLAGS - set the compiler flags for C++ sources. 
    Example: 
-   /home/me/source/anitmt-build# make CXXFLAGS="-O0 -g"
+   /home/me/source/anitmt-build# make CXXFLAGS="-O -g"
 
 5. Do checks: 
    You may get some internal checks done by calling `make check'. 
@@ -52,7 +54,7 @@ the installation should not be done by root.
    [!! Currently the check programs are built but not executed !!]
    
 6. Install anitmt: 
-   Installing normally has to be done by root. 
+   Installing normally has to be done by root 
    
    /home/me/source/anitmt-build# su 
    Password: 
