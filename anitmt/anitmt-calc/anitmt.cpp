@@ -44,7 +44,8 @@ int main(int argc,char **argv,char **envp)
       return -2;
 
     // !!! memory leak and invariable output format !!!
-    Output_Interface *output = new Raw_Output( &ani ); 
+    //Output_Interface *output = new Raw_Output( &ani ); 
+    Output_Interface *output = new Pov_Output( &ani );
 
     output->init();
 

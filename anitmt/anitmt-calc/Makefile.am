@@ -1,5 +1,5 @@
-INCLUDES =		-I../lib/include -Iparser -I../output
-SUBDIRS =		parser
+INCLUDES =		-I../lib/include -Iparser -I../output -Ioutput
+SUBDIRS =		parser output
 noinst_LIBRARIES =	libanitmt.a
 bin_PROGRAMS =		anitmt-calc
 check_PROGRAMS =	test_core
@@ -30,5 +30,5 @@ anitmt_calc_SOURCES =	input.hpp  \
 			anitmt.cpp			
 anitmt_calc_LDADD =	libanitmt.a ../lib/val/libval.a ../lib/par/libpar.a \
 			parser/libadlparser.a \
-			../output/liboutput.a \
-			../output/raw/librawout.a ../output/pov/libpovout.a 
+			output/lib/liboutput.a \
+			output/raw/librawout.a output/pov/libpovout.a 
