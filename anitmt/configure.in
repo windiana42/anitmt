@@ -97,7 +97,6 @@ AC_OUTPUT( Makefile
            lib/solve/Makefile
            lib/utl/Makefile
            lib/val/Makefile
-           lib/val2/Makefile
            mkavi/Makefile )
 #** created by too new autoscan
 #AC_CONFIG_FILES([Makefile
