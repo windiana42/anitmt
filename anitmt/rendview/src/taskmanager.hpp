@@ -233,6 +233,12 @@ class TaskManager :
 		// into the done queue [failed] if that happens too often. 
 		void PutBackTask(CompleteTask *ctsk);
 		
+		// Find task by TaskID. 
+		// Returns NULL in case the task is unknown. 
+		// Should check if the returned task is actually assigned to the 
+		// right client / task driver. ONLY todo LIST IS SEARCHED. 
+		CompleteTask *FindTaskByTaskID(u_int32_t task_id);
+		
 		// Get /dev/null fd. 
 		int DevNullFD()
 			{  return(dev_null_fd);  }
@@ -247,5 +253,8 @@ inline const LinkedList<CompleteTask> *TaskDriverInterface::GetTaskListTodo()
 
 inline void TaskDriverInterface::PutBackTask(CompleteTask *ctsk)
 	{  component_db()->taskmanager()->PutBackTask(ctsk);  }
+
+inline CompleteTask *TaskDriverInterface::FindTaskByTaskID(u_int32_t task_id)
+	{  return(component_db()->taskmanager()->FindTaskByTaskID(task_id));  }
 
 #endif  /* _RNDV_TASKMANAGER_HPP_ */

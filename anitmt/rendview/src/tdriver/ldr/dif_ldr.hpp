@@ -44,6 +44,8 @@ class TaskDriverInterface_LDR :
 		// Current number of clients which can be used: 
 		int nclients;
 		
+		// Counts the assigned_jobs of all clients: 
+		int RunningJobs();
 		
 		void _JobsAddClient(LDRClient *client,int mode);
 		
@@ -74,7 +76,7 @@ class TaskDriverInterface_LDR :
 		void _PrintInitConnectMsg(const char *msg);
 		
 		void _HandleFailedLaunch(CompleteTask *ctsk,int resp_code);
-		void _HandleFailedTask(CompleteTask *ctsk,LDRClient *c);
+		void _HandleTaskTermination(CompleteTask *ctsk);
 		
 		// FDBase virtuals: 
 		int fdnotify(FDInfo *fdi);
@@ -145,12 +147,18 @@ class TaskDriverInterface_LDR :
 		
 		// See dif_ldr.cpp. 
 		void TaskLaunchResult(CompleteTask *ctsk,int resp_code);
+		void TaskTerminationNotify(CompleteTask *ctsk);
 		
 		// Called when a client disconnected. 
 		void ClientDisconnected(LDRClient *client);
 		
 		// Called by LDRClient when he is done and wants to get deleted: 
 		void IAmDone(LDRClient *client);
+		
+		// See TaskDriverInterface for this. 
+		CompleteTask *FindTaskByTaskID(u_int32_t task_id)
+			{  return(TaskDriverInterface::FindTaskByTaskID(task_id));  }
+		
 };
 
 #endif  /* _RNDV_TDRIVER_DRIVERINTERFACE_LDR_HPP_ */

@@ -159,6 +159,8 @@ void TaskSource_LDR::TaskReportedDone(CompleteTask *ctsk)
 	// the task source). 
 	DELETE(current_done_task);
 	
+	// NOTE: Caller relies on the fact that we call tsnotify() via 
+	//       the schedule timer and NOT directly. 
 	_StartSchedTimer();   // -> DTSOkay
 }
 
@@ -216,6 +218,7 @@ int TaskSource_LDR::timernotify(TimerInfo *ti)
 	{
 		TSNotifyInfo ni;
 		ni.action=pending;
+		TSAction new_pending=ANone;
 		
 		switch(pending)
 		{
@@ -228,6 +231,8 @@ int TaskSource_LDR::timernotify(TimerInfo *ti)
 				ni.donestat=_ProcessDoneTask();
 				// If we return DTSOkay, current_done_task must have been deleted. 
 				assert(ni.donestat!=DTSOkay || !current_done_task);
+				if(ni.donestat==DTSWorking)
+				{  new_pending=ADoneTask;  }
 				break;
 			case ADisconnect:
 				connected=0;
@@ -239,12 +244,12 @@ int TaskSource_LDR::timernotify(TimerInfo *ti)
 			default:  assert(0);  break;
 		}
 		
-		// Reset action before calling the virtual function so that 
+		// Reset action before calling tsnotify() so that 
 		// this function can call GetTask / DoneTask. 
-		pending=ANone;
+		pending=new_pending;
 		call_tsnotify(cclient,&ni);
 	}
-	else assert(active_taketask);
+	else assert(active_taketask || recovering);
 	
 	// Okay, see if there is a special active thingy to do: 
 	// YES, we must do that even if we're recovering==2 becuase otherwise 

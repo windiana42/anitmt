@@ -883,6 +883,198 @@ int TaskSource_LDR_ServerConn::_StartSendNextFileRequest()
 }
 
 
+// Either send next file upload header and set apropriate file params in 
+// tdi or send final task state. 
+int TaskSource_LDR_ServerConn::_SendNextFileUploadHdr()
+{
+	assert(tdi.done_ctsk && tdi.next_action==TDINA_FileSendH);
+	
+	// See which is the next file we send: 
+	for(;;)
+	{
+		TaskExecutionStatus *tts=NULL;
+		
+		switch(tdi.upload_file_type)
+		{  // NOTE: Lots of fall-through logic; be careful!!
+			case FRFT_None:
+				if(tdi.done_ctsk->rt && P()->transfer.render_dest)
+				{
+					tdi.upload_file_type=FRFT_RenderOut;
+					tdi.upload_file=tdi.done_ctsk->rt->outfile;
+					tts=&tdi.done_ctsk->rtes;
+					break;
+				}
+			case FRFT_RenderOut:
+				if(tdi.done_ctsk->ft && P()->transfer.filter_dest)
+				{
+					tdi.upload_file_type=FRFT_FilterOut;
+					tdi.upload_file=tdi.done_ctsk->ft->outfile;
+					tts=&tdi.done_ctsk->ftes;
+					break;
+				}
+			// final fallthrough:
+				tdi.upload_file_type=FRFT_None;
+				tdi.upload_file=NULL;
+		}
+		
+		// See if we actually want/can upload tdi.upload_file_type: 
+		if(tdi.upload_file_type==FRFT_None)  break;
+		
+		// If the job was not launched skip to next file. 
+		if(tts->status==TTR_Unset || tts->status==TTR_ExecFailed)  continue;
+		
+		// If this assert fails, there is a tdi.done_ctsk->rt/fd which 
+		// has an output file of NULL. This is now allowed. 
+		assert(tdi.upload_file);
+		
+		// Get the file size. If we cannot, we output a warning and 
+		// go on to the next file. 
+		tdi.upload_file_size=tdi.upload_file->FileLength();
+		if(tdi.upload_file_size<0)
+		{
+			const char *err_str=(tdi.upload_file_size==-2 ? 
+				"no hd path" : strerror(errno));
+			static const char *_err_fmt=
+				"LDR: Trying to stat output file \"%s\": %s [frame %d]\n";
+			if(tts->status==TTR_Success || tts->status==TTR_JobTerm)
+			{  Warning(_err_fmt,
+				tdi.upload_file->HDPath().str(),err_str,tdi.done_ctsk->frame_no);  }
+			else
+			{  Verbose(TSLLR,_err_fmt,
+				tdi.upload_file->HDPath().str(),err_str,tdi.done_ctsk->frame_no);  }
+			continue;  // next file
+		}
+		
+		// Send the header. 
+		break;
+	}
+	
+	// Send upload header for file in tdi OR LDRDoneComplete. 
+	int fail=1;
+	do {
+		assert(send_buf.content==Cmd_NoCommand);
+		
+		LDRHeader *hdr;
+		if(tdi.upload_file_type==FRFT_None)
+		{
+			tdi.next_action=TDINA_Complete;
+			
+			if(_ResizeRespBuf(&send_buf,sizeof(LDRDoneComplete)))  break;
+			
+			send_buf.content=Cmd_DoneComplete;
+			LDRDoneComplete *pack=(LDRDoneComplete*)(send_buf.data);
+			pack->length=sizeof(LDRDoneComplete);  // host order
+			pack->command=Cmd_DoneComplete;  // host order
+			pack->task_id=htonl(tdi.done_ctsk->task_id);
+			hdr=pack;
+		}
+		else
+		{
+			if(_ResizeRespBuf(&send_buf,sizeof(LDRFileUpload)))  break;
+			
+			send_buf.content=Cmd_FileUpload;
+			LDRFileUpload *pack=(LDRFileUpload*)(send_buf.data);
+			pack->length=sizeof(LDRFileUpload);  // host order
+			pack->command=Cmd_FileUpload;  // host order
+			pack->task_id=htonl(tdi.done_ctsk->task_id);
+			pack->file_type=htons(tdi.upload_file_type);
+			pack->size=htonll(tdi.upload_file_size);
+			hdr=pack;
+		}
+		
+		// This may fail but if it fails, then it was not necessary to call it: 
+		out.pump_s->PumpReuseNow();
+		
+		// Okay, make ready to send it: 
+		if(_FDCopyStartSendBuf(hdr))  break;
+		
+		fail=0;
+	} while(0);
+	static int warned=0;
+	if(!warned)
+	{  fprintf(stderr,"hack code to handle failure. (4)\n");  ++warned;  }
+	if(fail)
+	{
+		// Failure. 
+		#warning HANDLE FAILURE. 
+		Error("Cannot handle failure (HACK ME!)\n");
+		assert(0);
+	}
+	
+	return(0);
+}
+
+
+// Retval: 0 -> OK; -1 -> Call _ConnClose();
+int TaskSource_LDR_ServerConn::_ParseFileDownload(RespBuf *buf)
+{
+	if(!tri.ctsk || tri.next_action!=TRINA_FileRecvH)
+	{
+		Error("LDR: Server sends file download header although we did "
+			"not request that.\n");
+		return(-1);
+	}
+	
+	// Read in header...
+	LDRFileDownload *pack=(LDRFileDownload*)(recv_buf.data);
+	assert(pack->command==Cmd_FileDownload);  // can be left away
+	if(pack->length!=sizeof(LDRFileDownload))
+	{
+		Error("LDR: Received illegal-sized file download header "
+			"(%u/%u bytes) [frame %d]\n",
+			pack->length,sizeof(LDRFileDownload),
+			tri.ctsk->frame_no);
+		return(-1);
+	}
+	if(ntohl(pack->task_id)!=tri.ctsk->task_id || 
+	   ntohs(pack->file_type)!=tri.req_file_type || 
+	   ntohs(pack->file_idx)!=tri.req_file_idx )
+	{
+		Error("LDR: Received non-matching download header "
+			"(%u,%d,%d / %u,%d,%d) [frame %d]",
+			ntohl(pack->task_id),
+				int(ntohs(pack->file_type)),
+				int(ntohs(pack->file_idx)),
+			tri.ctsk->task_id,
+				int(tri.req_file_type),int(tri.req_file_idx),
+			tri.ctsk->frame_no);
+		return(-1);
+	}
+	u_int64_t _fsize=ntohll(pack->size);
+	int64_t fsize=_fsize;
+	if(u_int64_t(fsize)!=_fsize || fsize<0)
+	{
+		Error("LDR: Received file download header containing "
+			"illegal file size.\n");
+		return(-1);
+	}
+	// Okay, then let's start to receive the file. 
+	// NOTE!!! What to do with files of size 0??
+	fprintf(stderr,"Starting to download file (%s; %lld bytes) "
+		"[HANDLE FILES OF SIZE 0!!]\n",
+		tri.req_tfile->HDPath().str(),fsize);
+	
+	const char *path=tri.req_tfile->HDPath().str();
+	int rv=_FDCopyStartRecvFile(path,fsize);
+	if(rv)
+	{
+		int errn=errno;
+		if(rv==-1)  _AllocFailure();
+		else if(rv==-2)
+		{  Error("LDR: Failed to start downloading requested file:\n"
+			"LDR:    While opening \"%s\": %s\n",
+			path,strerror(errn));  }
+		else assert(0);  // rv=-3 (fsize<0) checked above
+		return(-1);
+	}
+	
+	in_active_cmd=Cmd_FileDownload;
+	tri.next_action=TRINA_FileRecvB;
+	
+	return(0);
+}
+
+
 // Return value: 
 //   0 -> not handeled
 //   1 -> handeled
@@ -1020,6 +1212,80 @@ int TaskSource_LDR_ServerConn::cpnotify_outpump_done(FDCopyBase::CopyInfo *cpi)
 			out_active_cmd=Cmd_NoCommand;
 			send_buf.content=Cmd_NoCommand;
 		} break;
+		case Cmd_TaskDone:
+		{
+			// Okay, sent TaskDone. We can now go on uploading the files. 
+			fprintf(stderr,"TaskDone sent.\n");
+			
+			assert(tdi.next_action==TDINA_SendDone);
+			// Now, send files (or maybe final task state). 
+			tdi.next_action=TDINA_FileSendH;  // The rest is decided when sending. 
+			tdi.upload_file_type=FRFT_None;
+			tdi.upload_file=NULL;
+			
+			out.ioaction=IOA_None;
+			out_active_cmd=Cmd_NoCommand;
+			send_buf.content=Cmd_NoCommand;
+		} break;
+		case Cmd_FileUpload:
+		{
+			#if TESTING
+			if(!tdi.done_ctsk || 
+			   (tdi.next_action!=TDINA_FileSendH && 
+			    tdi.next_action!=TDINA_FileSendB) )
+			{  assert(0);  }
+			#endif
+			
+			if(tdi.next_action==TDINA_FileSendH)
+			{
+				// Okay, LDRFileUpload header was sent. Now, we send 
+				// the file itself. (next cpnotify_outpump_start()). 
+				tdi.next_action=TDINA_FileSendB;
+			}
+			else
+			{
+				// Okay, if we used the FD->FD pump, we must close the 
+				// input file again: 
+				if(cpi->pump->Src()->Type()==FDCopyIO::CPT_FD)
+				{
+					assert(cpi->pump==out.pump_fd && cpi->pump->Src()==out.io_fd);
+					if(CloseFD(out.io_fd->pollid)<0)
+					{  assert(0);  }  // Actually, this may not fail, right?
+				}
+				
+				fprintf(stderr,"File upload completed.\n");
+				// Go on senting file header (or final state info). 
+				tdi.next_action=TDINA_FileSendH;
+				tdi.upload_file=NULL;
+			}
+			
+			// This is needed so that cpnotify_outpump_start() won't go mad. 
+			send_buf.content=Cmd_NoCommand;
+			out.ioaction=IOA_None;
+			out_active_cmd=Cmd_NoCommand;
+		} break;
+		case Cmd_DoneComplete:
+		{
+			// Okay, we're finally through with reporting the task as done. 
+			assert(tdi.done_ctsk && tdi.next_action==TDINA_Complete);
+			
+			CompleteTask *tmp_ctsk=tdi.done_ctsk;
+			
+			// Reset state: 
+			tdi.done_ctsk=NULL;   // We do NOT free it. 
+			tdi.next_action=TDINA_None;
+			tdi.upload_file=NULL;  // be sure
+			
+			// Tell TaskManager the good news: 
+			// (Note: TaskReportedDone() will start 1 schedule timer 
+			//  so action cannot happen on the stack.)
+			back->TaskReportedDone(tmp_ctsk);
+			tmp_ctsk=NULL;  // ...was deleted by TaskReportedDone(). 
+			
+			out.ioaction=IOA_None;
+			out_active_cmd=Cmd_NoCommand;
+			send_buf.content=Cmd_NoCommand;
+		} break;
 		default:
 		{
 			// out_active_cmd==Cmd_FileDownload -> TRINA_FileReq
@@ -1102,8 +1368,85 @@ int TaskSource_LDR_ServerConn::cpnotify_outpump_start()
 	}
 	else if(tdi.done_ctsk)
 	{
-		Error("hack on (wanna start output copy request: DoneTask)\n");
-		assert(0);
+		if(tdi.next_action==TDINA_SendDone)
+		{
+			// We send the LDRTaskDone packet. 
+			int fail=1;
+			do {
+				assert(send_buf.content==Cmd_NoCommand);
+				if(_ResizeRespBuf(&send_buf,sizeof(LDRTaskDone)))
+				{  break;  }
+				
+				// Compose the packet: 
+				send_buf.content=Cmd_TaskDone;
+				LDRTaskDone *pack=(LDRTaskDone*)(send_buf.data);
+				pack->length=sizeof(LDRTaskDone);  // host order
+				pack->command=Cmd_TaskDone;  // host order
+				pack->frame_no=htonl(tdi.done_ctsk->frame_no);
+				pack->task_id=htonl(tdi.done_ctsk->task_id);
+				LDRStoreTaskExecutionStatus(&pack->rtes,&tdi.done_ctsk->rtes);
+				LDRStoreTaskExecutionStatus(&pack->ftes,&tdi.done_ctsk->ftes);
+				
+				// Okay, make ready to send it: 
+				if(_FDCopyStartSendBuf(pack))  break;
+				
+				fail=0;
+			} while(0);
+			fprintf(stderr,"hack code to handle failure (3).\n");
+			if(fail)
+			{
+				// Failure. 
+				#warning HANDLE FAILURE. 
+				Error("Cannot handle failure (HACK ME!)\n");
+				assert(0);
+			}
+		}
+		else if(tdi.next_action==TDINA_FileSendH)
+		{
+			// This either sends the next file upload header and 
+			// sets the params of the file in question in tdi. 
+			if(_SendNextFileUploadHdr())
+			{
+				Error("handle error [if it can ever happen]!!\n");
+				assert(0);
+			}
+		}
+		else if(tdi.next_action==TDINA_FileSendB)
+		{
+			// Finally, send the file body. 
+			// Be careful with files of size 0...
+			fprintf(stderr,"TEST IF FILE TRANSFER WORKS for files with size=0\n");
+			
+			// If this assert fails, then we're in trouble. 
+			// The stuff should have been set earlier. 
+			assert(tdi.upload_file && tdi.upload_file_size>=0);
+			
+			assert(out_active_cmd==Cmd_NoCommand);
+			int rv=_FDCopyStartSendFile(tdi.upload_file->HDPath().str(),
+				tdi.upload_file_size);
+			static int warned=0;
+			if(!warned)
+			{  fprintf(stderr,"hack code to handle failure. (5)\n");  ++warned;  }
+			if(rv)
+			{
+				if(rv==-1)
+				{  _AllocFailure();  }
+				else if(rv==-2)
+				{
+					int errn=errno;
+					Error("LDR: Failed to open output file \"%s\" for upload: "
+						"%s [frame %d]\n",
+						tdi.upload_file->HDPath().str(),
+						strerror(errn),tdi.done_ctsk->frame_no);
+				}
+				else assert(0);  // rv=-3 may not happen here 
+				Error("Cannot handle failure (HACK ME!)\n");
+				assert(0);
+			}
+			
+			out_active_cmd=Cmd_FileUpload;
+		}
+		else assert(0);  // illegal internal state (forgot to clear tdi.done_ctsk?)
 	}
 	// else: Nothing to do (we're waiting). 
 	
@@ -1151,66 +1494,9 @@ int TaskSource_LDR_ServerConn::cpnotify_inpump(FDCopyBase::CopyInfo *cpi)
 			in_active_cmd=Cmd_NoCommand;
 			in.ioaction=IOA_None;
 			
-			if(tri.next_action==TRINA_FileRecvH)
-			{
-				assert(cpi->pump==in.pump_s);  // can be left away
-				
-				// Read in header...
-				LDRFileDownload *pack=(LDRFileDownload*)(recv_buf.data);
-				assert(pack->command==Cmd_FileDownload);  // can be left away
-				if(pack->length!=sizeof(LDRFileDownload))
-				{
-					Error("LDR: Received illegal-sized file download header "
-						"(%u/%u bytes) [frame %d]\n",
-						pack->length,sizeof(LDRFileDownload),
-						tri.ctsk->frame_no);
-					_ConnClose(0);  return(1);
-				}
-				if(ntohl(pack->task_id)!=tri.ctsk->task_id || 
-				   ntohs(pack->file_type)!=tri.req_file_type || 
-				   ntohs(pack->file_idx)!=tri.req_file_idx )
-				{
-					Error("LDR: Received non-matching download header "
-						"(%u,%d,%d / %u,%d,%d) [frame %d]",
-						ntohl(pack->task_id),
-							int(ntohs(pack->file_type)),
-							int(ntohs(pack->file_idx)),
-						tri.ctsk->task_id,
-							int(tri.req_file_type),int(tri.req_file_idx),
-						tri.ctsk->frame_no);
-					_ConnClose(0);  return(1);
-				}
-				u_int64_t _fsize=ntohll(pack->size);
-				int64_t fsize=_fsize;
-				if(u_int64_t(fsize)!=_fsize || fsize<0)
-				{
-					Error("LDR: Received file download header containing "
-						"illegal file size.\n");
-					_ConnClose(0);  return(1);
-				}
-				// Okay, then let's start to receive the file. 
-				// NOTE!!! What to do with files of size 0??
-				fprintf(stderr,"Starting to download file (%s; %lld bytes) "
-					"[HANDLE FILES OF SIZE 0!!]\n",
-					tri.req_tfile->HDPath().str(),fsize);
-				
-				const char *path=tri.req_tfile->HDPath().str();
-				int rv=_FDCopyStartRecvFile(path,fsize);
-				if(rv)
-				{
-					if(rv==-1)  _AllocFailure();
-					else if(rv==-2)
-					{  Error("LDR: Failed to start downloading requested file:\n"
-						"LDR:    While opening \"%s\": %s\n",
-						path,strerror(errno));  }
-					else assert(0);  // rv=-3 (fsize<0) checked above
-					_ConnClose(0);  return(1);
-				}
-				
-				in_active_cmd=Cmd_FileDownload;
-				tri.next_action=TRINA_FileRecvB;
-			}
-			else if(tri.next_action==TRINA_FileRecvB)
+			int o_start=0;
+			
+			if(tri.next_action==TRINA_FileRecvB)
 			{
 				// Read in body (complete). 
 				
@@ -1232,11 +1518,23 @@ int TaskSource_LDR_ServerConn::cpnotify_inpump(FDCopyBase::CopyInfo *cpi)
 				
 				tri.req_tfile=NULL;
 				tri.next_action=TRINA_FileReq;
-				cpnotify_outpump_start();
+				o_start=1;
 			}
-			else assert(0);
+			else
+			{
+				assert(cpi->pump==in.pump_s);  // can be left away
+				
+				int rv=_ParseFileDownload(&recv_buf);
+				if(rv<0)
+				{  _ConnClose(0);  return(1);  }
+				assert(rv==0);
+				
+				// o_start=0 because we're waiting for file body. 
+			}
 			
 			recv_buf.content=Cmd_NoCommand;
+			if(o_start)
+			{  cpnotify_outpump_start();  }
 		} break;
 		default:
 			// This is an internal error. Only known packets may be accepted 
@@ -1326,6 +1624,7 @@ void TaskSource_LDR_ServerConn::TellServerDoneTask(CompleteTask *ctsk)
 	
 	// Okay, begin with it...
 	tdi.done_ctsk=ctsk;
+	tdi.next_action=TDINA_SendDone;
 	
 	cpnotify_outpump_start();
 }
@@ -1370,6 +1669,9 @@ TaskSource_LDR_ServerConn::TaskSource_LDR_ServerConn(TaskSource_LDR *_back,
 	tri.req_tfile=NULL;
 	
 	tdi.done_ctsk=NULL;
+	tdi.next_action=TDINA_None;
+	tdi.upload_file_type=FRFT_None;
+	tdi.upload_file=NULL;
 	
 	memset(expect_chresp,0,LDRChallengeLength);
 }

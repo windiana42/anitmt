@@ -45,11 +45,18 @@ typedef unsigned char uchar;
 //    -------[LDRTaskRequest]------->
 //   <-------[LDRFileRequest]-------
 //    ------[LDRFileDownload]------->
+//    ---------[...data...]--------->
 //   <------[LDRTaskResponse]-------
+
+//    --------[LDRTaskDone]--------->
+//    -------[LDRFileUpload]-------->
+//    ---------[...data...]--------->
+//    ------[LDRDoneComplete]------->
 
 enum LDRCommand
 {
 	// MAKE SURE THAT THE COMMAND NUMBERS ARE 0..._Cmd_LAST. 
+	// WHEN MODIFYING; ALSO CHECK ARRAY IN ldrproto.cpp. 
 	Cmd_NoCommand=0x0000,
 	Cmd_QuitNow,          // ONLY server -> client
 	
@@ -64,8 +71,11 @@ enum LDRCommand
 	Cmd_FileRequest,      // need files x,y,z
 	Cmd_FileDownload,     // here is file x... (server -> client)
 	
-	Cmd_TaskState,        // working, killed (?)
+	Cmd_FileUpload,       // client uploads results
+	
 	Cmd_TaskDone,         // task done
+	Cmd_DoneComplete,     // task done; all complete
+	
 	Cmd_SpecialTaskRequest,  // e.g. interrupt, stop, cont
 	
 	_Cmd_LAST   // MUST BE LAST
@@ -237,6 +247,52 @@ struct LDRFileDownload : LDRHeader
 	u_int32_t task_id;    // unique task ID
 	u_int16_t file_idx;   // for FRFT_Add{Render,Filter}
 };
+
+
+// This is the LDR analogon of struct TaskExecutionStatus. 
+struct LDR_TaskExecutionStatus
+{
+	u_int16_t ttr;  // task termination reason  0xffff for "unset"
+	u_int16_t signal;  // signal/exit code
+	u_int32_t _padding;
+	LDRTime starttime;
+	LDRTime endtime;
+	LDRTime utime;
+	LDRTime stime;
+};
+
+struct LDRTaskDone : LDRHeader
+{
+	u_int16_t _padding;
+	
+	// Identification: 
+	u_int32_t frame_no;
+	u_int32_t task_id;   // unique task ID
+	
+	LDR_TaskExecutionStatus rtes;
+	LDR_TaskExecutionStatus ftes;
+};
+
+
+struct LDRFileUpload : LDRHeader
+{
+	// NOTE: task_id is just redundancy...
+	// Actually, no pipelining is supported, so the LDRFileUpload is 
+	// always referring to the last LDRTaskDone. 
+	u_int16_t file_type;  // FRFT_*
+	u_int64_t size;       // file size
+	u_int32_t task_id;    // unique task ID
+};
+
+
+struct LDRDoneComplete : LDRHeader
+{
+	u_int16_t _padding;
+	
+	// Identification: 
+	u_int32_t task_id;   // unique task ID
+};
+
 
 
 // If passwd.str() is NULL or has zero length, default password if 

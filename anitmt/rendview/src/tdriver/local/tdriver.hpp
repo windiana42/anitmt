@@ -25,7 +25,8 @@ enum TaskTerminationReason
 	TTR_ExecFailed,  // error in StartProcess or until execve()
 	TTR_RunFail,  // job exits with non-zero code
 	TTR_ATerm,    // abnormal termination (killed / dumped)
-	TTR_JobTerm   // rendview killed the job (see signal for more info)
+	TTR_JobTerm,  // rendview killed the job (see signal for more info)
+	_TTR_Last   // <-- must be the last one
 };
 
 enum

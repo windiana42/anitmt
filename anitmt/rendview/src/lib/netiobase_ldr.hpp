@@ -17,11 +17,14 @@
 #ifndef _RNDV_LIB_NETWORKIOBASE_LDR_HPP_
 #define _RNDV_LIB_NETWORKIOBASE_LDR_HPP_
 
-#include <lib/netiobase.hpp>
+#include <lib/prototypes.hpp>
 #include <lib/ldrproto.hpp>
+#include <lib/netiobase.hpp>
 
 #include "../tsource/tasksource.hpp"
 
+
+struct TaskExecutionStatus;
 
 class NetworkIOBase_LDR : 
 	public NetworkIOBase
@@ -98,6 +101,14 @@ class NetworkIOBase_LDR :
 		// Returns NULL if not available. 
 		static TaskFile *GetTaskFileByEntryDesc(int dir,
 			CompleteTask *ctsk,u_int16_t file_type,u_int16_t file_idx);
+		
+		// Get / Store TaskExecutionStatus. 
+		static void LDRStoreTaskExecutionStatus(LDR::LDR_TaskExecutionStatus *dest,
+			TaskExecutionStatus *src);
+		// Returns 1 on failure (illegal status)
+		static int LDRGetTaskExecutionStatus(TaskExecutionStatus *dest,
+			LDR::LDR_TaskExecutionStatus *src);
+
 };
 
 #endif  /* _RNDV_LIB_NETWORKIOBASE_LDR_HPP_ */

@@ -45,6 +45,12 @@ class TaskDriverInterface
 		// See taskmanager.hpp / PutBackTask(). 
 		void PutBackTask(CompleteTask *ctsk);
 		
+		// Find task by TaskID. 
+		// Returns NULL in case the task is unknown. 
+		// Should check if the returned task is actually assigned to the 
+		// right client. 
+		CompleteTask *FindTaskByTaskID(u_int32_t task_id);
+		
 	public:  _CPP_OPERATORS_FF
 		TaskDriverInterface(ComponentDataBase *cdb,int *failflag=NULL);
 		virtual ~TaskDriverInterface();

@@ -240,6 +240,9 @@ void TaskManager::HandleFailedTask(CompleteTask *ctsk,int running_jobs)
 		ReSched();
 	}
 	
+	// This is definitely needed: 
+	_CheckStartTasks();
+	
 	_CheckStartExchange();
 	
 	// Furthermore, we should probably send back the 
@@ -281,6 +284,18 @@ void TaskManager::PutBackTask(CompleteTask *ctsk)
 	//       (the caller knows that and has removal-safe loop). 
 	
 fprintf(stderr,"TaskManager::PutBackTask(): ANYTHING TO DO HERE?\n");
+}
+
+
+CompleteTask *TaskManager::FindTaskByTaskID(u_int32_t task_id)
+{
+	#warning could speed up this loopup in some way?
+	for(CompleteTask *ctsk=tasklist_todo.first(); ctsk; ctsk=ctsk->next)
+	{
+		if(ctsk->task_id==task_id)
+		{  return(ctsk);  }
+	}
+	return(NULL);
 }
 
 
@@ -1482,7 +1497,7 @@ void TaskManager::_DisableLoadFeature()
 	{  ReSched();  }
 }
 
-
+// Special function used by _PrintDoneInfo(): 
 void TaskManager::_PrintTaskExecStatus(TaskExecutionStatus *tes)
 {
 	VerboseSpecial("      Status: %s",tes->StatusString());

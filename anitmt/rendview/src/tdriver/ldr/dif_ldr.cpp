@@ -42,6 +42,16 @@ int TaskDriverInterface_LDR::Get_njobs()
 	return(njobs);
 }
 
+
+int TaskDriverInterface_LDR::RunningJobs()
+{
+	#warning could speed up this by using a counter...
+	int cnt=0;
+	for(LDRClient *client=clientlist.first(); client; client=client->next)
+	{  cnt+=client->assigned_jobs;  }
+	return(cnt);
+}
+
 		
 int TaskDriverInterface_LDR::AreThereJobsRunning()
 {
@@ -171,7 +181,7 @@ int TaskDriverInterface_LDR::LaunchTask(CompleteTask *ctsk)
 // OOPS!!! May only return if we really started to send the task. 
 // Must put back task if this fails. -> no, TaskLaunchResult() does it. 
 fprintf(stderr,"LaunchTask: njobs=%d (client:%d), nclients=%d [debug]\n",
-	njobs,c->assigned_jobs,nclients);
+njobs,c->assigned_jobs,nclients);
 	
 	return(0);
 }
@@ -185,6 +195,8 @@ fprintf(stderr,"LaunchTask: njobs=%d (client:%d), nclients=%d [debug]\n",
 void TaskDriverInterface_LDR::TaskLaunchResult(CompleteTask *ctsk,
 	int resp_code)
 {
+	assert(ctsk && ctsk->d.any());
+	
 	if(resp_code)
 	{  _HandleFailedLaunch(ctsk,resp_code);  }
 	else
@@ -194,6 +206,19 @@ void TaskDriverInterface_LDR::TaskLaunchResult(CompleteTask *ctsk,
 		// Seems there is nothing to do now. Just wait...
 fprintf(stderr,"TaskLaunchResult(LDRTaskResponse=success)\n");
 	}
+}
+
+
+// Called when client reported task as done and all files 
+// were transferred. (Reported as done does not imply success; 
+// client may have failed completely to launch a proggy; 
+// see ctsk->rtes, ctsk->ftes for details; ctsk->status 
+// still untouched.) 
+void TaskDriverInterface_LDR::TaskTerminationNotify(CompleteTask *ctsk)
+{
+	assert(ctsk && ctsk->d.any());
+	
+	_HandleTaskTermination(ctsk);
 }
 
 
@@ -213,6 +238,9 @@ void TaskDriverInterface_LDR::_HandleFailedLaunch(CompleteTask *ctsk,
 	//       the ugly client kick in _ParseTaskResponse(). 
 	//#warning check that... ######
 	
+	// Do not forget to remove client: 
+	ctsk->d.ldrc=NULL;
+	
 	fprintf(stderr,"implement me (resp_code=%d)!\n",resp_code);
 	// Feed task into a different client (do that only XX times). oops...
 	// 1) Client error -> feed different client because this one was kicked
@@ -222,26 +250,45 @@ void TaskDriverInterface_LDR::_HandleFailedLaunch(CompleteTask *ctsk,
 }
 
 
-// Failure on client side during execution of the task. 
-// ##FIXME## MISSING. execution status transferred by client
-void TaskDriverInterface_LDR::_HandleFailedTask(CompleteTask *ctsk,LDRClient *c)
+// Failure or success on client side during execution of the task. 
+// Execution status transferred by client are stored in CompleteTask. 
+void TaskDriverInterface_LDR::_HandleTaskTermination(CompleteTask *ctsk)
 {
-	assert(c==ctsk->d.ldrc);
+	// Must set ctsk->status.
 	
-	fprintf(stderr,"implement me.\n");
-	// ## MAYBE change into _HandleTaskTermination -> failed & non-failed 
-	//    (LDRClient will fill in rtes/ftes, right?)
+	// ###FIXME### Stupid problem comes to my mind: 
+	// Say we have a render + filter task and the first client only 
+	// renders it. Then we make it a filter task. But in case the 
+	// render output was not uploaded, we will not be able to download 
+	// the file. WHAT WILL WE DO? Furthermore, we must make sure that 
+	// we do not try to re-filter re-render the frame infinitely as 
+	// all clients fail with it. 
+	// Solution for now: We mark the task as done in any case. 
+	// Nothing will be re-fed into a client then. 
 	
-	assert(0);
-	//TaskExecutionStatus ...
-	// ctsk->{rtes,ftes}=<TaskExecutionStatus transferred by client>
+	static int warned=0;
+	if(!warned)
+	{  fprintf(stderr,"Fix this quick-hack implementation...\n");  ++warned;  }
 	
-	// ON FAILURE: 
-	//component_db()->taskmanager()->HandleFailedTask(ctsk,
-	//	/*??????????????------->*/ RunningJobs());
+	int complete_success=1;
+	if(ctsk->rt && ctsk->rtes.status!=TTR_Success)  complete_success=0;
+	if(ctsk->ft && ctsk->ftes.status!=TTR_Success)  complete_success=0;
 	
-	// ON SUCCESS: 
-	//component_db()->taskmanager()->HandleSuccessfulJob(ctsk);
+	// Make sure client is no longer attached to task: 
+	ctsk->d.ldrc=NULL;
+	
+	if(complete_success)
+	{
+		ctsk->state=CompleteTask::TaskDone;
+		component_db()->taskmanager()->HandleSuccessfulJob(ctsk);
+	}
+	else
+	{
+		//ctsk->state=<untouched>
+		
+		// Note: RunningJobs() is for emergency error handling only. 
+		component_db()->taskmanager()->HandleFailedTask(ctsk,RunningJobs());
+	}
 }
 
 
@@ -690,6 +737,9 @@ void TaskDriverInterface_LDR::ClientDisconnected(LDRClient *client)
 	// "put back" the tasks so that a different client gets them. 
 	if(client->assigned_jobs)
 	{
+		Verbose(TDR,"Client %s: Putting back %d tasks:",
+			client->_ClientName().str(),client->assigned_jobs);
+		
 		// Note: The one task which might be on the fly (not completely 
 		//       transferred already has d.ldrc set properly and also 
 		//       counts for assigned_jobs. So we do not leave it out here. 
@@ -702,13 +752,16 @@ void TaskDriverInterface_LDR::ClientDisconnected(LDRClient *client)
 			
 			if(i->d.ldrc!=client)  continue;
 			
-			// Tell the TaskManager. 
 			CompleteTask *ctsk=(CompleteTask*)i;  // <-- cast away the const 
+			Verbose(TDR," [%d]",ctsk->frame_no);
+			
+			// Tell the TaskManager. 
 			ctsk->d.ldrc=NULL;
 			PutBackTask(ctsk);
 			
 			if((--client->assigned_jobs)<=0)  break;
 		}
+		Verbose(TDR,"\n");
 		// If this assert fails, there is a bug in assigned task counting: 
 		assert(client->assigned_jobs==0);
 	}

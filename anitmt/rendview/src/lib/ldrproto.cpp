@@ -48,8 +48,11 @@ static const char *_command_str[_Cmd_LAST]=
 	"file request",
 	"file download",
 	
-	"task state",
+	"file upload",
+	
 	"task done",
+	"done complete",
+	
 	"special task request"
 };
 

@@ -74,6 +74,24 @@ class LDRClient :
 			TaskFile *req_tfile;
 		} tri;  // task request info
 		
+		enum TaskDoneState
+		{
+			TDC_None=0,
+			TDC_WaitForResp,  // wait for file header or final task status
+			TDC_UploadBody    // file body will be / is currently uploaded
+		};
+		struct
+		{
+			CompleteTask *done_ctsk;
+			TaskDoneState task_done_state;
+			// These are saved until we finally store them in 
+			// CompleteTask *done_ctsk when done. 
+			TaskExecutionStatus save_rtes;
+			TaskExecutionStatus save_ftes;
+			// File getting uploaded: 
+			TaskFile *recv_file;
+		} tdi;  // task done info
+		
 		// Client data: 
 		int c_jobs;  // njobs reported by client. 
 		int assigned_jobs;  // number of jobs the client shall do 
@@ -101,6 +119,9 @@ class LDRClient :
 		int _HandleReceivedHeader(LDR::LDRHeader *hdr);
 		int _ParseFileRequest(RespBuf *buf);
 		int _ParseTaskResponse(RespBuf *buf);
+		int _ParseTaskDone(RespBuf *buf);
+		int _ParseFileUpload(RespBuf *buf);
+		int _ParseDoneComplete(RespBuf *buf);
 		
 		// Called on every error which results in a client disconnect. 
 		void _KickMe(int do_send_quit=0);

@@ -93,10 +93,28 @@ struct TaskSource_LDR_ServerConn :
 		int _StartSendNextFileRequest();
 		void _TaskRequestComplete();
 		
+		enum TDINextAction
+		{
+			TDINA_None=0,
+			TDINA_Complete,   // -> can tell TaskManager via tsnotify
+			TDINA_SendDone,   // send LDRTaskDone (before uploading files)
+			TDINA_FileSendH,  // send file header
+			TDINA_FileSendB   // send (upload) file (body)
+		};
 		struct TaskDoneInfo
 		{
 			CompleteTask *done_ctsk;
+			TDINextAction next_action;
+			// Next file to upload: 
+			u_int16_t upload_file_type;
+			// This is the size we told the client in the header; 
+			// this must be the copy limit. 
+			int64_t upload_file_size;
+			TaskFile *upload_file;
 		} tdi;  // task done info
+		
+		int _SendNextFileUploadHdr();
+		int _ParseFileDownload(RespBuf *buf);
 		
 		// Packet handling: 
 		int _SendChallengeRequest();

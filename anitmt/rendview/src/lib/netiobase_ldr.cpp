@@ -16,6 +16,8 @@
 
 #include "netiobase_ldr.hpp"
 
+#include "../tdriver/local/tdriver.hpp"
+
 #include <assert.h>
 
 
@@ -32,6 +34,49 @@ using namespace LDR;
 
 
 static const size_t max_ldr_pack_len=65536;
+
+void NetworkIOBase_LDR::LDRStoreTaskExecutionStatus(
+	LDR_TaskExecutionStatus *dest,TaskExecutionStatus *src)
+{
+	if(src->status==TTR_Unset)
+	{
+		dest->ttr=0xffffU;   // "unset"
+		dest->signal=0U;
+		dest->starttime=0;
+		dest->endtime=0;
+		dest->utime=0;
+		dest->stime=0;
+	}
+	else
+	{
+		dest->ttr=htons(src->status);
+		dest->signal=htons(src->signal);
+		HTime2LDRTime(&src->starttime,&dest->starttime);
+		HTime2LDRTime(&src->endtime,&dest->endtime);
+		HTime2LDRTime(&src->utime,&dest->utime);
+		HTime2LDRTime(&src->stime,&dest->stime);
+	}
+}
+
+// Returns 1 on failure (illegal status)
+int NetworkIOBase_LDR::LDRGetTaskExecutionStatus(
+	TaskExecutionStatus *dest,LDR_TaskExecutionStatus *src)
+{
+	dest->signal=ntohs(src->signal);
+	LDRTime2HTime(&src->starttime,&dest->starttime);
+	LDRTime2HTime(&src->endtime,&dest->endtime);
+	LDRTime2HTime(&src->utime,&dest->utime);
+	LDRTime2HTime(&src->stime,&dest->stime);
+	if(src->ttr==0xffffU)
+	{  dest->status=TTR_Unset;  }
+	else
+	{
+		dest->status=(TaskTerminationReason)ntohs(src->ttr);
+		if(dest->status>=_TTR_Last)
+		{  return(1);  }
+	}
+	return(0);
+}
 
 
 // dir: +1 -> output; -1 -> input; 0 -> both

@@ -767,6 +767,9 @@ int LDRClient::_HandleReceivedHeader(LDRHeader *hdr)
 	{
 		case Cmd_FileRequest:
 		case Cmd_TaskResponse:
+		case Cmd_TaskDone:
+		case Cmd_FileUpload:
+		case Cmd_DoneComplete:
 		{
 			// Okay, then let's get the body. 
 			assert(recv_buf.content==Cmd_NoCommand);  // Can that happen?
@@ -867,29 +870,32 @@ int LDRClient::_ParseFileRequest(RespBuf *buf)
 int LDRClient::_ParseTaskResponse(RespBuf *buf)
 {
 	assert(buf->content==Cmd_TaskResponse);
-	LDRTaskResponse *fresp=(LDRTaskResponse *)(buf->data);
+	LDRTaskResponse *fresp=(LDRTaskResponse*)(buf->data);
 	
 	if(!tri.scheduled_to_send || 
 	   tri.scheduled_to_send->task_id!=ntohl(fresp->task_id) || 
 	   tri.task_request_state!=TRC_WaitForResponse )
-	{  Error("Client %s: Unexpected task response. (Kicking it)\n",
+	{  Error("Client %s: Unexpected task response. (Kicking it.)\n",
 		_ClientName().str());  return(-1);  }
 	
 	if(fresp->length!=sizeof(LDRTaskResponse))
 	{  Error("Client %s: Illegal-sized task response (%u/%u bytes)\n",
 		_ClientName().str(),fresp->length,sizeof(LDRTaskResponse));  return(-1);  }
 	
+	// Reset state: 
+	CompleteTask *ctsk=tri.scheduled_to_send;
+	tri.scheduled_to_send=NULL;
+	tri.task_request_state=TRC_None;
+	tri.req_tfile=NULL;
+	
 	// Okay, parse task response: 
 	int rv=ntohs(fresp->resp_code);
 	Verbose(TDR,"Client %s: Received task reponse: %s [frame %d]\n",
 		_ClientName().str(),LDRTaskResponseString(rv),
-		tri.scheduled_to_send->frame_no);
+		ctsk->frame_no);
 	switch(rv)
 	{
 		case TRC_Accepted:  // Well, that's cool. 
-			tri.scheduled_to_send=NULL;
-			tri.task_request_state=TRC_None;
-			tri.req_tfile=NULL;
 			break;
 		case TRC_UnknownRender:
 		case TRC_UnknownFilter:
@@ -914,11 +920,200 @@ int LDRClient::_ParseTaskResponse(RespBuf *buf)
 	}
 	
 	// Tell task driver interface about it: 
-	tdif->TaskLaunchResult(tri.scheduled_to_send,rv);
+	tdif->TaskLaunchResult(ctsk,rv);
 	
 	// cpnotify_outpump_start() will NOT be called. 
 	return(0);
 }
+
+
+int LDRClient::_ParseTaskDone(RespBuf *buf)
+{
+	assert(buf->content==Cmd_TaskDone);
+	
+	LDRTaskDone *tdone=(LDRTaskDone*)(buf->data);
+	
+	if(tdi.done_ctsk || tdi.task_done_state!=TDC_None)
+	{  Error("Client %s: Unexpected task done notify. (Kicking it.)\n",
+		_ClientName().str());  return(-1);  }
+	
+	if(tdone->length!=sizeof(LDRTaskDone))
+	{  Error("Client %s: Illegal-sized task done notify (%u/%u bytes)\n",
+		_ClientName().str(),tdone->length,sizeof(LDRTaskDone));  return(-1);  }
+	
+	// Let's find the task the client is talking about: 
+	u_int32_t task_id=ntohl(tdone->task_id);
+	int frame_no=(int)ntohl(tdone->frame_no);
+	CompleteTask *ctsk=tdif->FindTaskByTaskID(task_id);
+	if(!ctsk || ctsk->d.ldrc!=this || ctsk->frame_no!=frame_no)
+	{
+		Error("Client %s: Received illegal task notify (task ID 0x%x).\n",
+			_ClientName().str(),task_id);
+		if(!ctsk)
+		{  Error("  Task ID 0x%x [allegedly frame %d] unknown to server.\n",
+			task_id,frame_no);  }
+		else if(ctsk->d.ldrc!=this)
+		{  Error("  Task ID 0x%x [frame %d] is%s assigned to %s.\n",
+			task_id,ctsk->frame_no,
+			ctsk->d.ldrc ? "" : "not",
+			ctsk->d.ldrc ? ctsk->d.ldrc->_ClientName().str() : "any client");  }
+		else if(ctsk->frame_no!=frame_no)
+		{  Error("  Task ID 0x%x is frame %d and not frame %d as reported.\n",
+			task_id,ctsk->frame_no,frame_no);  }
+		return(-1);
+	}
+	
+	// Okay, check & store passed information: 
+	int fail = 
+		(LDRGetTaskExecutionStatus(&tdi.save_rtes,&tdone->rtes) ? 1 : 0) | 
+		(LDRGetTaskExecutionStatus(&tdi.save_ftes,&tdone->ftes) ? 2 : 0) ;
+	if(fail)
+	{
+		Error("Client %s: Task notify (task ID 0x%x) [frame %d] contains "
+			"illegal %s job status.\n",
+			_ClientName().str(),task_id,ctsk->frame_no,
+			(fail & 1) ? "render" : "filter");
+		return(-1);
+	}
+	
+	// We wait for file upload / final task state packet now. 
+	tdi.done_ctsk=ctsk;
+	tdi.task_done_state=TDC_WaitForResp;
+	tdi.recv_file=NULL;  // be sure
+	
+	// Okay, dump some info. 
+	// NOTE that we may NOT use TaskManager::Completely_Partly_Not_Processed(ctsk) 
+	// becuase it relies on ctsk->state (ToBeRendered...TaskDone) and ctsk->{rf}tes 
+	// which is not yet set. 
+	Verbose(TDR,"Client %s reports task [frame %d] as done (************SHORT INFO ABOUT STATUS!!!!!!!!!!!!!).\n",
+		_ClientName().str(),ctsk->frame_no);
+	
+	// cpnotify_outpump_start() will NOT be called. 
+	return(0);
+}
+
+
+int LDRClient::_ParseFileUpload(RespBuf *buf)
+{
+	assert(buf->content==Cmd_FileUpload);
+	
+	LDRFileUpload *fupl=(LDRFileUpload*)(buf->data);
+	
+	if(!tdi.done_ctsk || tdi.task_done_state!=TDC_WaitForResp)
+	{  Error("Client %s: Unexpected file upload request. (Kicking it.)\n",
+		_ClientName().str());  return(-1);  }
+	
+	// Read in header...
+	if(fupl->length!=sizeof(LDRFileUpload))
+	{
+		Error("Client %s: Received illegal-sized file upload header "
+			"(%u/%u bytes) [frame %d]\n",
+			_ClientName().str(),
+			fupl->length,sizeof(LDRFileUpload),
+			tdi.done_ctsk->frame_no);
+		return(-1);
+	}
+	int valid=0;
+	do {
+		if(ntohl(fupl->task_id)!=tdi.done_ctsk->task_id)  break;
+		u_int16_t filetype=ntohs(fupl->file_type);
+		if(filetype==FRFT_RenderOut && tdi.done_ctsk->rt)
+		{  tdi.recv_file=tdi.done_ctsk->rt->outfile;  }
+		else if(filetype==FRFT_FilterOut && tdi.done_ctsk->ft)
+		{  tdi.recv_file=tdi.done_ctsk->ft->outfile;  }
+		else  break;
+		if(!tdi.recv_file)  break;
+		valid=1;
+	} while(0);
+	if(!valid)
+	{
+		Error("Client %s: Received illegal file upload header "
+			"[frame %d]",
+			_ClientName().str(),tdi.done_ctsk->frame_no);
+		return(-1);
+	}
+	u_int64_t _fsize=ntohll(fupl->size);
+	int64_t fsize=_fsize;
+	if(u_int64_t(fsize)!=_fsize || fsize<0)
+	{
+		Error("Client %s: Received file upload header containing "
+			"illegal file size.\n",_ClientName().str());
+		return(-1);
+	}
+	// Okay, then let's start to receive the file. 
+	// NOTE!!! What to do with files of size 0??
+	fprintf(stderr,"Starting to receive file (%s; %lld bytes) "
+		"[HANDLE FILES OF SIZE 0!!]\n",
+		tdi.recv_file->HDPath().str(),fsize);
+	
+	const char *path=tdi.recv_file->HDPath().str();
+	int rv=_FDCopyStartRecvFile(path,fsize);
+	if(rv)
+	{
+		int errn=errno;
+		if(rv==-1)  _AllocFailure();
+		else if(rv==-2)
+		{  Error("Client %s: Failed to start uploading/receiving requested file:\n"
+			"   While opening \"%s\": %s\n",
+			_ClientName().str(),path,strerror(errn));  }
+		else assert(0);  // rv=-3 (fsize<0) checked above
+		return(-1);
+	}
+	
+	in_active_cmd=Cmd_FileUpload;
+	tdi.task_done_state=TDC_UploadBody;
+	assert(tdi.recv_file);  // Was set above. MAY NOT fail. 
+	
+	return(0);
+}	
+
+
+int LDRClient::_ParseDoneComplete(RespBuf *buf)
+{
+	assert(buf->content==Cmd_DoneComplete);
+	
+	LDRDoneComplete *done=(LDRDoneComplete*)(buf->data);
+	
+	if(!tdi.done_ctsk || tdi.task_done_state!=TDC_WaitForResp)
+	{  Error("Client %s: Unexpected completion notify. (Kicking it.)\n",
+		_ClientName().str());  return(-1);  }
+	
+	// Read in header...
+	if(done->length!=sizeof(LDRDoneComplete))
+	{
+		Error("Client %s: Received illegal-sized completion notify header "
+			"(%u/%u bytes) [frame %d]\n",
+			_ClientName().str(),
+			done->length,sizeof(LDRDoneComplete),
+			tdi.done_ctsk->frame_no);
+		return(-1);
+	}
+	if(ntohl(done->task_id)!=tdi.done_ctsk->task_id)
+	{
+		Error("Client %s: Received illegal completion notify [frame %d]",
+			_ClientName().str(),tdi.done_ctsk->frame_no);
+		return(-1);
+	}
+	
+	assert(!tdi.recv_file);  // Must be NULL here. 
+	
+	// Okay, we're complete. Store the success info: 
+	tdi.done_ctsk->rtes=tdi.save_rtes;
+	tdi.done_ctsk->ftes=tdi.save_ftes;
+	
+	--assigned_jobs;
+	assert(assigned_jobs>=0);
+	
+	// Done. Tell interface. 
+	tdif->TaskTerminationNotify(tdi.done_ctsk);
+	
+	tdi.task_done_state=TDC_None;
+	tdi.done_ctsk=NULL;
+	
+	Warning("_ParseDoneComplete()... Everything okay?\n");
+	
+	return(0);
+}	
 
 
 // Return value: -1 -> _KickMe() called; 0 -> not handled; 1 -> handled
@@ -1265,6 +1460,79 @@ int LDRClient::cpnotify_inpump(FDCopyBase::CopyInfo *cpi)
 			recv_buf.content=Cmd_NoCommand;
 			//cpnotify_outpump_start();
 		} break;
+		case Cmd_TaskDone:
+		{
+			in_active_cmd=Cmd_NoCommand;
+			in.ioaction=IOA_None;
+			
+			int rv=_ParseTaskDone(&recv_buf);
+			if(rv<0)
+			{  _KickMe(0);  return(1);  }
+			assert(rv==0);
+			
+			recv_buf.content=Cmd_NoCommand;
+			// NO cpnotify_outpump_start() because we're waiting. 
+		} break;
+		case Cmd_FileUpload:
+		{
+			in_active_cmd=Cmd_NoCommand;
+			in.ioaction=IOA_None;
+			
+			int o_start=0;
+			
+			if(tdi.task_done_state==TDC_UploadBody)
+			{
+				assert(tdi.done_ctsk);  // Must be set if tdi.task_done_state==TDC_UploadBody. 
+				
+				// Read in body (complete). 
+				
+				// If we used the FD->FD pump, we must close the output file. 
+				if(cpi->pump->Dest()->Type()==FDCopyIO::CPT_FD)
+				{
+					assert(cpi->pump==in.pump_fd && cpi->pump->Dest()==in.io_fd);
+					if(CloseFD(in.io_fd->pollid)<0)
+					{
+						int errn=errno;
+						Error("Client %s: While closing \"%s\": %s\n",
+							_ClientName().str(),
+							tri.req_tfile->HDPath().str(),strerror(errn));
+						_KickMe(0);  return(1);
+					}
+				}
+				
+				tdi.recv_file=NULL;
+				tdi.task_done_state=TDC_WaitForResp;
+				o_start=1;
+			}
+			else
+			{
+				assert(cpi->pump==in.pump_s);  // can be left away
+				
+				int rv=_ParseFileUpload(&recv_buf);
+				if(rv<0)
+				{  _KickMe(0);  return(1);  }
+				assert(rv==0);
+				
+				// o_start=0 because we're waiting for file body. 
+			}
+			
+			recv_buf.content=Cmd_NoCommand;
+			if(o_start)
+			{  cpnotify_outpump_start();  }
+		} break;
+		case Cmd_DoneComplete:
+		{
+			in_active_cmd=Cmd_NoCommand;
+			in.ioaction=IOA_None;
+			
+			int rv=_ParseDoneComplete(&recv_buf);
+			if(rv<0)
+			{  _KickMe(0);  return(1);  }
+			assert(rv==0);
+			
+			recv_buf.content=Cmd_NoCommand;
+			cpnotify_outpump_start();   // In case someone needs it...
+		} break;
 		default:
 			// This is an internal error. Only known packets may be accepted 
 			// in _HandleReceivedHeader(). 
@@ -1306,7 +1574,7 @@ int LDRClient::cpnotify(FDCopyBase::CopyInfo *cpi)
 	{
 		cpnotify_inpump(cpi);
 		// We're always listening to the client. 
-		if(in_active_cmd==Cmd_NoCommand)
+		if(in_active_cmd==Cmd_NoCommand && pollid)
 		{  _DoPollFD(POLLIN,0);  }
 	}
 	else if(cpi->pump==out.pump_s || cpi->pump==out.pump_fd)
@@ -1384,6 +1652,10 @@ LDRClient::LDRClient(TaskDriverInterface_LDR *_tdif,
 	tri.scheduled_to_send=NULL;
 	tri.task_request_state=TRC_None;
 	tri.req_tfile=NULL;
+	
+	tdi.done_ctsk=NULL;
+	tdi.task_done_state=TDC_None;
+	tdi.recv_file=NULL;
 	
 	c_jobs=0;
 	assigned_jobs=0;

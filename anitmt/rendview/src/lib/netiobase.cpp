@@ -35,8 +35,8 @@
 
 void NetworkIOBase::_DoChangeEvents_Error(int rv)
 {
-	fprintf(stderr,"OOPS: FDChangeEvents(sock=%d) returned %d\n",
-		sock_fd,rv);
+	fprintf(stderr,"OOPS: FDChangeEvents(sock=%d,%p) returned %d\n",
+		sock_fd,pollid,rv);
 }
 
 
@@ -113,6 +113,7 @@ int NetworkIOBase::_FDCopyStartSendBuf(char *buf,size_t len)
 	int rv=out.pump_s->SetIO(out.io_buf,out.io_sock);
 	if(rv!=0 && rv!=-1)
 	{
+		// If rv=-5, you probably need FDCopyPump::PumpReuseNow(). 
 		fprintf(stderr,"OOPS: out pump->SetIO(buf,fd) returned %d\n",rv);
 		abort();
 	}
@@ -144,6 +145,7 @@ int NetworkIOBase::_FDCopyStartRecvBuf(char *buf,size_t len)
 	int rv=in.pump_s->SetIO(in.io_sock,in.io_buf);
 	if(rv!=0 && rv!=-1)
 	{
+		// If rv=-5, you probably need FDCopyPump::PumpReuseNow(). 
 		fprintf(stderr,"OOPS: in pump->SetIO(fd,buf) returned %d\n",rv);
 		abort();
 	}
@@ -212,6 +214,7 @@ int NetworkIOBase::_FDCopyStartSendFile(const char *path,int64_t filelen)
 	rv=out.pump_fd->SetIO(out.io_fd,out.io_sock);
 	if(rv!=0 && rv!=-1)
 	{
+		// If rv=-5, you probably need FDCopyPump::PumpReuseNow(). 
 		fprintf(stderr,"OOPS: out pump->SetIO(fd,fd) returned %d\n",rv);
 		abort();
 	}
@@ -279,6 +282,7 @@ int NetworkIOBase::_FDCopyStartRecvFile(const char *path,int64_t filelen)
 	rv=in.pump_fd->SetIO(in.io_sock,in.io_fd);
 	if(rv!=0 && rv!=-1)
 	{
+		// If rv=-5, you probably need FDCopyPump::PumpReuseNow(). 
 		fprintf(stderr,"OOPS: in pump->SetIO(fd,fd) returned %d\n",rv);
 		abort();
 	}
