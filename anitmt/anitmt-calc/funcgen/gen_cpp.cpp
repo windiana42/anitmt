@@ -515,12 +515,13 @@ namespace funcgen
 	*decl << "  class " << translator.serial_container( provides )
 	      << std::endl
 	      << "  {" << std::endl
-	      << "  private:" << std::endl
-	      << "    bool max1; // maximal one element" << std::endl 
-	      << "    bool min1; // minimal one element" << std::endl
+	      << "  public:" << std::endl
 	      << "    typedef std::list<" 
 	      << translator.provider_type(provides) << "*>"
 	      <<        "elements_type;" << std::endl
+	      << "  private:" << std::endl
+	      << "    bool max1; // maximal one element" << std::endl 
+	      << "    bool min1; // minimal one element" << std::endl
 	      << "    elements_type elements;" << std::endl;
 	Provider_Type::result_types_type::const_iterator j;
 	for( j  = provider_type.result_types.begin(); 
@@ -755,12 +756,13 @@ namespace funcgen
 	*decl << "  class " << translator.container( provides )
 	      << std::endl
 	      << "  {" << std::endl
-	      << "  private:" << std::endl
-	      << "    bool max1; // maximal one element" << std::endl 
-	      << "    bool min1; // minimal one element" << std::endl
+	      << "  public:" << std::endl
 	      << "    typedef std::list<" 
 	      << translator.provider_type(provides) << "*>"
 	      <<        "elements_type;" << std::endl
+	      << "  private:" << std::endl
+	      << "    bool max1; // maximal one element" << std::endl 
+	      << "    bool min1; // minimal one element" << std::endl
 	      << "    elements_type elements;" << std::endl
 	      << "    typedef std::map<std::string, "
 	      << "proptree::Basic_Node_Factory<"
@@ -1136,26 +1138,26 @@ namespace funcgen
 	    {
 	      *impl << "    // ** establish availability checks **" 
 		    << std::endl
-		    << "    solve::Multi_And_Operator *and;" << std::endl;
+		    << "    solve::Multi_And_Operator *and_op;" << std::endl;
 	      first = false;
 	    }
-	    *impl << "    and = "
+	    *impl << "    and_op = "
 		  << "new solve::Multi_And_Operator(get_consultant());"
 		  << std::endl
 		  << "    " 
 		  << translator.is_avail( provides, res_type.return_type, 
 					  res_type.parameter_type ) 
-		  << " = and->get_result();" 
+		  << " = and_op->get_result();" 
 		  << std::endl;
 	    std::list<std::string>::const_iterator req_prop;
 	    for( req_prop = res_code.required_properties.begin();
 		 req_prop != res_code.required_properties.end();
 		 ++req_prop )
 	    {
-	      *impl << "    and->add_operand( solve::is_solved( " 
+	      *impl << "    and_op->add_operand( solve::is_solved( " 
 		    << translator.prop_op( *req_prop ) << " ) );" << std::endl;
 	    }
-	    *impl << "    and->finish_adding();" << std::endl;
+	    *impl << "    and_op->finish_adding();" << std::endl;
 	    std::list< std::pair<std::string,Result_Type> >::const_iterator 
 	      req_child;
 	    for( req_child = res_code.required_children.begin();
@@ -1167,7 +1169,7 @@ namespace funcgen
 	      const std::string &parameter_type 
 		= req_child->second.parameter_type;
 
-	      *impl << "    and->add_operand( " 
+	      *impl << "    and_op->add_operand( " 
 		    << translator.container_name( child_type ) << "."
 		    << translator.is_avail( child_type, return_type, 
 					    parameter_type ) << " );" 
@@ -1184,12 +1186,12 @@ namespace funcgen
 	      const std::string &parameter_type 
 		= req_res->second.parameter_type;
 
-	      *impl << "    and->add_operand( "
+	      *impl << "    and_op->add_operand( "
 		    << translator.is_avail( provider_type, return_type, 
 					    parameter_type ) << " );" 
 		    << std::endl;
 	    }
-	    *impl << "    and->finish_adding();" << std::endl;
+	    *impl << "    and_op->finish_adding();" << std::endl;
 	  }
 	}
       }
