@@ -32,13 +32,13 @@ namespace funcgen
 
 int main(int argn, char *argc[])
 {
-  if( argn <= 3 )
+  if( argn <= 4 )
   {
     std::cout << "usage: funcgen <in_filename> <out_basename> <namespace> "
-	      << "[debug] [verbose] " << std::endl;
+	      << "<include_path> [debug] [verbose] " << std::endl;
     return -1;
   }
-  if( argn >= 5 )
+  if( argn >= 6 )
   {
     funcgen::yydebug = 1;
   }
@@ -46,19 +46,25 @@ int main(int argn, char *argc[])
   std::string in_file  = argc[1];
   std::string out_basename = argc[2];
   std::string namesp  = argc[3]; // namespace
+  std::string include_path = argc[4]; // path where included files are 
 
   message::Stream_Message_Handler msg_handler(std::cerr,std::cout,std::cout);
   message::Message_Manager manager(&msg_handler);
   message::Message_Consultant default_msg_consultant(&manager, 0);
 
-  funcgen::Cpp_Code_Generator cpp;	  // C++ Code generator
+  // code generation information
+  funcgen::code_gen_info info( namesp, out_basename, 
+			      &default_msg_consultant);
+  info.add_include_path( include_path );
+
+  funcgen::Cpp_Code_Generator cpp(&info); // C++ Code generator
   funcgen::AFD_Root afd( cpp.get_translator() ); // afd data root
   
   std::cout << "Parsing... " << in_file << "..." << std::endl;
   funcgen::parse_afd( &afd, &default_msg_consultant, in_file );
   std::cout << std::endl;
 
-  if( argn >= 6 )
+  if( argn >= 7 )
   {
     std::cout << "Result: " << std::endl;
     afd.print();			// debug print data in structure
@@ -72,9 +78,7 @@ int main(int argn, char *argc[])
   std::cout << std::endl;
 
   std::cout << "Generating Code... " << std::endl;
-  funcgen::code_gen_info info( namesp, out_basename,
-			      &default_msg_consultant);
-  cpp.generate_code( &afd, &info ); // generate C++ Code
+  cpp.generate_code( &afd ); // generate C++ Code
 
   std::cout << manager.get_num_messages( message::MT_Error )
 	    << " Errors" << std::endl;

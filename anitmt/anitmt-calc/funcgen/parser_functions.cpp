@@ -99,6 +99,7 @@ namespace funcgen
   {
     afd_info *info = static_cast<afd_info*>(infoptr);
     AFD_Root *afd = info->afd;
+    const code_gen_info *code_info = afd->translator->get_info();
     afd->don_t_create_code.push(true);
     std::string::size_type p = file.rfind('.');
     std::string base_name;
@@ -108,7 +109,34 @@ namespace funcgen
       base_name = file;
 
     afd->included_basenames.push_back(base_name);
-    info->open_file(file);
+    if( !info->open_file(file, false) )	// if unable to open
+    {
+      // try all include directories
+      std::string filename;
+      std::list<std::string>::const_iterator i;
+      for( i  = code_info->include_paths.begin();
+	   i != code_info->include_paths.end();
+	   ++i )
+      {
+	const std::string &path = *i;
+	filename = path;
+	if( path.length() )	
+	{
+	  // check whether path ends with path separator
+	  char last_ch = path[ path.length()-1 ]; // get last character
+	  if( (last_ch != '/') && (last_ch != '\\') 
+	      && (last_ch != code_info->path_separator) )
+	  {
+	    filename += code_info->path_separator;
+	  }
+	}
+	filename += file;
+
+	if( info->open_file(filename, false) ) // is file in this directory?
+	  break;
+      }
+      
+    }
   }
 
   void declare_base_type( void *info, const std::string &name, 

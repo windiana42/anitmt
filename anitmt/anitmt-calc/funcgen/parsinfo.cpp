@@ -21,7 +21,7 @@ namespace funcgen
   //**********************************************************
 
   // open file to be read by the lexer
-  bool afd_info::open_file( std::string filename )
+  bool afd_info::open_file( std::string filename, bool output_msg )
   {
     std::ifstream *is = new std::ifstream(filename.c_str());
     if( !(*is) )		// couldn't open file?

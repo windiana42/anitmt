@@ -1,4 +1,7 @@
 .deps
 Makefile
 Makefile.in 
+parser.cc
+scanner.cc
 testadlparser
+tokens.h

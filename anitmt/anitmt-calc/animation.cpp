@@ -43,6 +43,11 @@ namespace anitmt{
   { 
   }
 
+  std::string Animation::get_name()
+  {
+    return ani_root.get_name();
+  }
+
   void Animation::init()
   {
     // register animation tree nodes
@@ -140,6 +145,14 @@ namespace anitmt{
     return (*scene)->get_name();
   }
 
+  std::string Scene_Interface::get_filename()
+  {
+    proptree::String_Property *fn
+      = dynamic_cast<proptree::String_Property*>
+      ((*scene)->get_property("filename"));
+    return fn->get_value();
+  }
+
   Scalar_Component_Interface Scene_Interface::get_first_scalar()
   {
     functionality::node_scene *scene_node = 
@@ -180,7 +193,6 @@ namespace anitmt{
   Scene_Interface::Scene_Interface
   ( functionality::_container_scene_type::elements_type::iterator s )
     : scene(s) {}
-
 
   Scene_Interface Prop_Tree_Interface::get_first_scene()
   {

@@ -45,7 +45,7 @@ namespace funcgen
     ~afd_info();
 
     // open file to be read by the lexer (may be recursively)
-    bool open_file( std::string filename ); // false: couldn't open file
+    bool open_file( std::string filename, bool output_msg=true );
     bool close_file(); // false: still another file open
 
     //*************************************************

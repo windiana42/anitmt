@@ -15,8 +15,6 @@
 #ifndef __AniTMT_Animation__
 #define __AniTMT_Animation__
 
-#include "animation_classes.hpp"
-
 #include <val/val.hpp>
 
 // !!! parameter system should be changed
@@ -52,6 +50,8 @@ namespace anitmt{
     proptree::Semi_Global GLOB;
     proptree::tree_info tree_info;
     functionality::node_root ani_root;		// root node of animation
+
+    std::string get_name();
 
     void init();
     void hierarchy_final_init();
@@ -113,6 +113,7 @@ namespace anitmt{
   public:
     Scene_Interface get_next();
     std::string get_name();
+    std::string get_filename();
     Scalar_Component_Interface get_first_scalar();
     Scalar_Component_Interface get_scalar_end();
     Object_Component_Interface get_first_object();

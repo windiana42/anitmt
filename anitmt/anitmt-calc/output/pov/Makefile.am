@@ -1,5 +1,5 @@
-INCLUDES = 		-I$(srcdir)/.. -I$(srcdir)/../.. -I$(srcdir)/../lib \
-			-I$(srcdir)/../../../lib/
+INCLUDES = 		-I$(srcdir)/../ -I$(srcdir)/../../ -I../../ \
+			-I$(srcdir)/../lib/ -I$(srcdir)/../../../lib/
 noinst_LIBRARIES = 	libpovout.a
 CXXFLAGS = 		@CXXFLAGS@ -Wno-non-template-friend
 libpovout_a_SOURCES = 	pov.hpp pov.cpp \

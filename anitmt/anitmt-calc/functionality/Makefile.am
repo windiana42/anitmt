@@ -1,5 +1,5 @@
 # Makefile.am for test functionality
-INCLUDES=		-I$(top_srcdir)/lib 
+INCLUDES=		-I$(top_srcdir)/lib -I$(srcdir)
 
 noinst_LIBRARIES=	libfunctionality.a
 BUILT_SOURCES=		base_func.hpp base_func.cpp \
@@ -28,9 +28,10 @@ FUNCGEN= ../funcgen/funcgen
 # exec funcgen...
 base_func.cpp \
 base_func.hpp: $(srcdir)/base_func.afd $(FUNCGEN)
-	$(FUNCGEN) $(srcdir)/base_func.afd base_func functionality
+	$(FUNCGEN) $(srcdir)/base_func.afd base_func functionality $(srcdir)/
 
 functionality.cpp \
 functionality.hpp: $(srcdir)/functionality.afd $(FUNCGEN)
-	$(FUNCGEN) $(srcdir)/functionality.afd functionality functionality
+	$(FUNCGEN) $(srcdir)/functionality.afd functionality functionality \
+	  $(srcdir)/
 

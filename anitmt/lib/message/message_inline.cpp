@@ -135,7 +135,7 @@ namespace message
 
   inline Message_Stream& Message_Stream::operator<<(_NewLine)
   {
-    #warning Please fix me: (should be handled more cleverly)
+    /*!!! #warning Please fix me: (should be handled more cleverly) !!!*/
     if(enabled)
       msg_stream << "\n";
     return *this;

@@ -95,7 +95,7 @@ namespace funcgen
     virtual std::string last_child();
     virtual std::string get_child( int n );
 
-    Cpp_Code_Translator();
+    Cpp_Code_Translator(code_gen_info *);
   };
 
   //! generates C++ code
@@ -115,7 +115,8 @@ namespace funcgen
     void generate_nodes();
   public:
     Cpp_Code_Translator *get_translator();
-    void generate_code( AFD_Root *afd, code_gen_info *info );
+    void generate_code( AFD_Root *afd );
+    Cpp_Code_Generator( code_gen_info *info );
   };
 }
 

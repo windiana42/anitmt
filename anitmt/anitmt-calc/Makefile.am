@@ -13,7 +13,7 @@ test_core_LDADD=	libanitmt.a \
 			../lib/message/libmessage.a \
 			../lib/solve/libsolve.a 
 
-libanitmt_a_SOURCES= 	animation_classes.hpp animation.hpp animation.cpp \
+libanitmt_a_SOURCES= 	animation.hpp animation.cpp \
 			save_filled.hpp save_filled.cpp \
 			anitmt.hpp anitmt.cpp
 

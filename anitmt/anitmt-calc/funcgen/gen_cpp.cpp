@@ -223,8 +223,9 @@ namespace funcgen
     return std::string("/*!!!insert child ")/* + n*/ + "!!!*/" ;
   }
 
-  Cpp_Code_Translator::Cpp_Code_Translator()
-    : prefix_base_type(""), prefix_provider_type("_pt_"), 
+  Cpp_Code_Translator::Cpp_Code_Translator( code_gen_info *info )
+    : Code_Translator(info),
+      prefix_base_type(""), prefix_provider_type("_pt_"), 
       prefix_node_type("node_"), prefix_prop_op("_op_"),prefix_res_fun("_rf_"),
 
       prefix_is_avail("_av_"), prefix_param_range("_pr_"), 
@@ -1507,11 +1508,9 @@ namespace funcgen
     return &translator;
   }
 
-  void Cpp_Code_Generator::generate_code( AFD_Root *afd_root, 
-					  code_gen_info *I )
+  void Cpp_Code_Generator::generate_code( AFD_Root *afd_root )
   {
     afd = afd_root;
-    info = I;
     decl = new std::ofstream( (info->base_name+".hpp").c_str() );
     impl = new std::ofstream( (info->base_name+".cpp").c_str() );
     generate_header();
@@ -1519,5 +1518,10 @@ namespace funcgen
     generate_types();
     generate_nodes();
     generate_footer();
+  }
+
+  Cpp_Code_Generator::Cpp_Code_Generator( code_gen_info *i ) 
+    : info(i), translator(i) 
+  {
   }
 }
