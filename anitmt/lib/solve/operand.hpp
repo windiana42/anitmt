@@ -111,6 +111,7 @@ namespace solve
 
     inline void set_trial_run( bool trial ); 
     inline bool is_trial_run();
+    inline id_type get_inivalid_id() const; // get a definitely invalid id
 
     Solve_Run_Info( Solve_Problem_Handler *handler, int id );
     Solve_Run_Info( Solve_Problem_Handler *handler );
@@ -125,14 +126,14 @@ namespace solve
   {
   public:
     // has to check the result of the operand with ID as pointer to operand
-    virtual bool is_result_ok( const void *ID, 
+    virtual bool is_result_ok( const Basic_Operand *ID, 
 			       Solve_Run_Info *info ) throw() = 0;
     // tells to use the result calculated by is_result_ok()
-    virtual void use_result( const void *ID, Solve_Run_Info *info )
+    virtual void use_result( const Basic_Operand *ID, Solve_Run_Info *info )
       throw() = 0;
 
     // disconnect operand
-    virtual void disconnect( const void *ID ) = 0;
+    virtual void disconnect( const Basic_Operand *ID ) = 0;
     
     virtual ~Operand_Listener() {}
   };
@@ -143,6 +144,9 @@ namespace solve
   class Basic_Operand
   {
   public:    
+    virtual bool is_solved_in_try( const Solve_Run_Info *info ) const = 0;
+    virtual void use_test_value( Solve_Run_Info *info ) throw() = 0;
+
     virtual void add_listener( Operand_Listener *listener ) = 0;
     virtual void rm_listener( Operand_Listener *listener ) = 0;
     virtual ~Basic_Operand() {}
@@ -195,7 +199,7 @@ namespace solve
 
     //*************************************************
     // for functions in solve system (with correct info)
-    inline bool is_solved_in_try( const Solve_Run_Info *info ) const;
+    bool is_solved_in_try( const Solve_Run_Info *info ) const;
     inline const T& get_value( const Solve_Run_Info *info ) const;
     inline bool test_set_value( T val, Solve_Run_Info *info )
       throw();
@@ -203,7 +207,7 @@ namespace solve
 				Solve_Problem_Handler *handler = 
 				&default_handler )
       throw();
-    inline void use_test_value( Solve_Run_Info *info )
+    void use_test_value( Solve_Run_Info *info )
       throw();
 
     void add_listener( Operand_Listener *listener );
@@ -245,13 +249,13 @@ namespace solve
     //** Operand Listener Methods **
 
     // has to check the result of the operand with ID as pointer to operand
-    virtual bool is_result_ok( const void *ID, Solve_Run_Info *info ) 
+    virtual bool is_result_ok( const Basic_Operand *ID, Solve_Run_Info *info ) 
       throw();
     // tells to use the result calculated by is_result_ok()
-    virtual void use_result( const void *ID, Solve_Run_Info *info )
+    virtual void use_result( const Basic_Operand *ID, Solve_Run_Info *info )
       throw();
     // disconnect operand
-    virtual void disconnect( const void *ID );
+    virtual void disconnect( const Basic_Operand *ID );
 
   public:
     Store_Operand_to_Operand( Operand<T> &src, Operand<T> &dest ) throw(); 

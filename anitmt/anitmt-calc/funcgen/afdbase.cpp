@@ -153,16 +153,161 @@ namespace funcgen
     std::cout << "}" << std::endl;
   }
 
-  Alias::Alias( std::string a, std::string s )
-    : alias(a), src(s)
+  Property::Property( std::string n, std::string t ) : name(n), type(t)
+  {
+  }
+  Operand::Operand( std::string n, std::string t ) : name(n), type(t)
+  {
+  }
+  Variable::Variable( std::string n, std::string t ) : name(n), type(t)
   {
   }
 
-  //! print, just for debug purposes
-  void Alias::print() const
+  //**********
+  // Context
+
+  bool Context::is_property( std::string name )
   {
-    std::cout << "    " << alias << " = " << src << ";" << std::endl;
+    if( properties.find(name) != properties.end() )
+      return true;
+    if( parent ) return parent->is_property(name);
   }
+  Property *Context::get_property( std::string name )
+  {
+    std::map<std::string,Property*>::iterator i = properties.find(name);
+    if( i != properties.end() )
+      return i->second;
+
+    if( parent ) return parent->get_property(name);
+    return 0;
+  }
+
+  bool Context::is_operand( std::string name )
+  {
+    if( operands.find(name) != operands.end() )
+      return true;
+    if( parent ) return parent->is_operand(name);
+  }
+  Operand *Context::get_operand( std::string name )
+  {
+    std::map<std::string,Operand*>::iterator i = operands.find(name);
+    if( i != operands.end() )
+      return i->second;
+
+    if( parent ) return parent->get_operand(name);
+    return 0;
+  }
+
+  bool Context::is_variable( std::string name )
+  {
+    if( variables.find(name) != variables.end() )
+      return true;
+    if( parent ) return parent->is_variable(name);
+    return false;
+  }
+  Variable *Context::get_variable( std::string name )
+  {
+    std::map<std::string,Variable*>::iterator i = variables.find(name);
+    if( i != variables.end() )
+      return i->second;
+
+    if( parent ) return parent->get_variable(name);
+    return 0;
+  }
+
+  bool Context::is_base_type( std::string name )
+  {
+    if( base_types.find(name) != base_types.end() )
+      return true;
+    if( parent ) return parent->is_base_type(name);
+    return false;
+  }
+  Base_Type *Context::get_base_type( std::string name )
+  {
+    std::map<std::string,Base_Type>::iterator i = base_types.find(name);
+    if( i != base_types.end() )
+      return &(i->second);
+
+    if( parent ) return parent->get_base_type(name);
+    return 0;
+  }
+
+  bool Context::is_provider_type( std::string name )
+  {
+    if( provider_types.find(name) != provider_types.end() )
+      return true;
+    if( parent ) return parent->is_provider_type(name);
+    return false;
+  }
+  Provider_Type *Context::get_provider_type( std::string name )
+  {
+    std::map<std::string,Provider_Type>::iterator i=provider_types.find(name);
+    if( i != provider_types.end() )
+      return &(i->second);
+
+    if( parent ) return parent->get_provider_type(name);
+    return 0;
+  }
+
+  bool Context::is_operator( std::string name )
+  {
+    if( operators.find(name) != operators.end() )
+      return true;
+    if( parent ) return parent->is_operator(name);
+    return false;
+  }
+  Operator_Declaration *Context::get_operator( std::string name )
+  {
+    std::map<std::string,Operator_Declaration>::iterator i 
+      = operators.find(name);
+    if( i != operators.end() )
+      return &(i->second);
+
+    if( parent ) return parent->get_operator(name);
+    return 0;
+  }
+
+  Parameter::Parameter( std::string n, std::string t ) : name(n), type(t)
+  {
+  }
+  Solver_Function::Solver_Function( std::string s, std::string f ) 
+    : solver(s), function(f)
+  {
+  }
+  Solver_Function_Code::Solver_Function_Code( std::string n, 
+					      std::string ret ) 
+    : return_type(ret), name(n)
+  {
+  }
+
+  bool Context::is_solver( std::string name )
+  {
+    if( solvers.find(name) != solvers.end() )
+      return true;
+    if( parent ) return parent->is_solver(name);
+    return false;
+  }
+  Complex_Solver *Context::get_solver( std::string name )
+  {
+    std::map<std::string,Complex_Solver>::iterator i = solvers.find(name);
+    if( i != solvers.end() )
+      return &(i->second);
+
+    if( parent ) return parent->get_solver(name);
+    return 0;
+  }
+
+  void Context::set_parent_context( Context *parent_context )
+  {
+    parent = parent_context;
+  }
+
+  Context::Context( Context *parent_context )
+    : parent(parent_context)
+  {}
+
+  Alias::Alias( std::string a, std::string s ) : alias(a), src(s)
+  {}
 
   //! print, just for debug purposes
   void Constraint_Declaration::print() const 
@@ -218,7 +363,10 @@ namespace funcgen
 	std::cout << (first?first=false,"":" && ") << (*i);
       std::cout << " )" << std::endl << "  ";
     }
-    std::cout << "      " << solver_code << std::endl;// should include ';'
+    if( is_expression )
+      std::cout << "      " << dest_operand << " = " << expression_code << ";";
+    else
+      std::cout << "      " << solver_type << "( ... );";
   }
 
   void Solver_Code::new_solver( std::string solver )
@@ -227,27 +375,32 @@ namespace funcgen
     current_solver = solver_declarations.insert
 	(solver_declarations.end(), Solver_Declaration());
 
-    current_solver->solver_code = solver + "(";
-    first_param = true;
+    current_solver->solver_type = solver;
+    current_solver->is_expression = false;
   }
+
+  void Solver_Code::set_solver_identifier( std::string name )
+  {
+    current_solver->identifier = name;
+  }
+  
 
   void Solver_Code::add_parameter_ref( Property_Reference &ref )
   {
-    if(!first_param)
-      current_solver->solver_code += ',';
-    else
-      first_param = false;
-
-    current_solver->solver_code += ref.code;
+    current_solver->parameters.push_back( ref.code );
     current_solver->essentials.insert( current_solver->essentials.end(), 
 				       ref.essentials.begin(),
 				       ref.essentials.end() );
     ref.clear();
   }
 
+  void Solver_Code::add_const_parameter( std::string parameter )
+  {
+    current_solver->parameters.push_back( parameter );
+  }
+
   void Solver_Code::finish_solver()
   {
-    current_solver->solver_code += ");";
   }
 
   void Solver_Code::new_expression_solver( const std::string &op, 
@@ -258,9 +411,10 @@ namespace funcgen
     current_solver = solver_declarations.insert
 	(solver_declarations.end(), Solver_Declaration());
 
+    current_solver->is_expression = true;
     current_solver->essentials = exp->essentials;
-    current_solver->solver_code = 
-      translator->prop_op(op) + ".assign(" + exp->expression_code + ");";
+    current_solver->dest_operand = op;
+    current_solver->expression_code = exp->expression_code;
   }
 
   void Solver_Code::merge( const Solver_Code &sc )
@@ -529,10 +683,11 @@ namespace funcgen
     // properties
     {
       std::cout << "  properties {" << std::endl;
-      std::map<std::string,std::string>::const_iterator i;
+      std::map<std::string,Property*>::const_iterator i;
 
       for( i = properties.begin(); i != properties.end(); i++ )
-	std::cout << "    " << i->second << " " << i->first << ";" <<std::endl;
+	std::cout << "    " << i->second->type << " " << i->first << ";" 
+		  << std::endl;
 
       std::cout << "  }" << std::endl;
     }
@@ -549,10 +704,11 @@ namespace funcgen
     // operands
     {
       std::cout << "  operands {" << std::endl;
-      std::map<std::string,std::string>::const_iterator i;
+      std::map<std::string,Operand*>::const_iterator i;
 
       for( i = operands.begin(); i != operands.end(); i++ )
-	std::cout << "    " << i->second << " " << i->first << ";" <<std::endl;
+	std::cout << "    " << i->second->type << " " << i->first << ";" 
+		  << std::endl;
 
       std::cout << "  }" << std::endl;
     }
@@ -695,11 +851,25 @@ namespace funcgen
     }
   }
 
+  void AFD_Root::push_context( Context* context )
+  {
+    contexts.push( context );
+  }
+  void AFD_Root::pop_context()
+  {
+    contexts.pop();
+  }
+  Context *AFD_Root::get_context()
+  {
+    return contexts.top();
+  }
+
   AFD_Root::AFD_Root( Code_Translator *trans )
-    : translator(trans), priority_list_defined(false), 
-      write_priority_list(false), include_depth(0)
+    : translator(trans), current_code(0), priority_list_defined(false), 
+      write_priority_list(false), current_node(0), include_depth(0)
   {
     don_t_create_code.push( false );
+    push_context( this );
   }
 }
 

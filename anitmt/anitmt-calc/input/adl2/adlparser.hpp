@@ -16,10 +16,10 @@
 #ifndef __anitmt_input_adlparser__
 #define __anitmt_input_adlparser__
 
-#include <message/message.hpp>
+#include "animation.hpp"
 
 #include <input/input.hpp>
-#include "animation.hpp"
+#include <message/message.hpp>
 
 class adlparser_FlexLexer;	// declare prototype for lexer
 

@@ -144,6 +144,15 @@ return_fail	{ tok_pos(); return TAFD_return_fail; }
 return_if_fail	{ tok_pos(); return TAFD_return_if_fail; }
 operators	{ tok_pos(); return TAFD_operators; }
 versions	{ tok_pos(); return TAFD_versions; }
+declarations	{ tok_pos(); return TAFD_declarations; }
+init		{ tok_pos(); return TAFD_init; }
+events		{ tok_pos(); return TAFD_events; }
+group		{ tok_pos(); return TAFD_group; }
+condition	{ tok_pos(); return TAFD_condition; }
+test_run	{ tok_pos(); return TAFD_test_run; }
+final		{ tok_pos(); return TAFD_final; }
+reset		{ tok_pos(); return TAFD_reset; }
+
 "->"    	{ tok_pos(); return TAFD_PT_CONCAT; }
 
 {id}	  { tok_pos(); yylval->string = yytext; return TAFD_IDENTIFIER; }

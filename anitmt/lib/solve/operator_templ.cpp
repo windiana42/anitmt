@@ -31,7 +31,7 @@ namespace solve
   //!!! very critical function !!! change only carefully !!!
   template<class T_Result, class T_Operand>
   bool Basic_Operator_for_1_Operand<T_Result,T_Operand>::is_result_ok
-  ( const void *ID, Solve_Run_Info *info ) throw()
+  ( const Basic_Operand *ID, Solve_Run_Info *info ) throw()
   {
     assert( ID == &operand );
     bool just_solved = false;
@@ -51,7 +51,7 @@ namespace solve
   // tells to use the result calculated by is_result_ok()
   template<class T_Result, class T_Operand>
   void Basic_Operator_for_1_Operand<T_Result,T_Operand>::use_result
-  ( const void *ID, Solve_Run_Info *info ) throw()
+  ( const Basic_Operand *ID, Solve_Run_Info *info ) throw()
   {
     assert( ID == &operand );
     if( result.is_solved_in_try( info ) ) // if result was just solved 
@@ -62,7 +62,7 @@ namespace solve
   // disconnect operand
   template<class T_Result, class T_Operand>
   void Basic_Operator_for_1_Operand<T_Result,T_Operand>::disconnect
-  ( const void *ID )
+  ( const Basic_Operand *ID )
   {
     assert( ID == &operand );
     delete this;		// !!! no further commands !!!
@@ -122,7 +122,7 @@ namespace solve
   //!!! very critical function !!! change only carefully !!!
   template<class T_Result, class T_Operand> bool 
   Basic_Dual_Solution_Operator_for_1_Operand<T_Result,T_Operand>::is_result_ok
-  ( const void *ID, Solve_Run_Info *info ) throw()
+  ( const Basic_Operand *ID, Solve_Run_Info *info ) throw()
   {
     assert( ID == &operand );
     bool just_solved = false;
@@ -157,7 +157,7 @@ namespace solve
   // tells to use the result calculated by is_result_ok()
   template<class T_Result, class T_Operand> void 
   Basic_Dual_Solution_Operator_for_1_Operand<T_Result,T_Operand>::use_result
-  ( const void *ID, Solve_Run_Info *info ) throw()
+  ( const Basic_Operand *ID, Solve_Run_Info *info ) throw()
   {
     assert( ID == &operand );
     if( result.is_solved_in_try(info) ) // if result was just solved 
@@ -168,7 +168,7 @@ namespace solve
   // disconnect operand
   template<class T_Result, class T_Operand> void 
   Basic_Dual_Solution_Operator_for_1_Operand<T_Result,T_Operand>::disconnect
-  ( const void *ID )
+  ( const Basic_Operand *ID )
   {
     assert( ID == &operand );
     delete this;		// !!! no further commands !!!
@@ -241,7 +241,7 @@ namespace solve
   //!!! very critical function !!! change only carefully !!!
   template<class T_Result, class T_Op1, class T_Op2>
   bool Basic_Operator_for_2_Operands<T_Result,T_Op1,T_Op2>::is_result_ok
-  ( const void *ID, Solve_Run_Info *info ) throw()
+  ( const Basic_Operand *ID, Solve_Run_Info *info ) throw()
   {
     bool just_solved = false;	// reset flag
     if( ID == &operand1 )	// is operand1 solved?
@@ -302,7 +302,7 @@ namespace solve
   // tells to use the result calculated by is_result_ok()
   template<class T_Result, class T_Op1, class T_Op2>
   void Basic_Operator_for_2_Operands<T_Result,T_Op1,T_Op2>::use_result
-  ( const void *ID, Solve_Run_Info *info ) throw()
+  ( const Basic_Operand *ID, Solve_Run_Info *info ) throw()
   {
     assert( ID == &operand1 || ID == &operand2 );
     if( result.is_solved_in_try( info ) ) // if result was just solved 
@@ -312,7 +312,7 @@ namespace solve
   // disconnect operand
   template<class T_Result, class T_Op1, class T_Op2>
   void Basic_Operator_for_2_Operands<T_Result,T_Op1,T_Op2>::disconnect
-  ( const void *ID )
+  ( const Basic_Operand *ID )
   {
     if( ID == &operand1 )
     {
@@ -426,7 +426,7 @@ namespace solve
   //!!! very critical function !!! change only carefully !!!
   template<class T_Result, class T_Op1, class T_Op2, class T_Op3>
   bool Basic_Simple_Operator_for_3_Operands<T_Result,T_Op1,T_Op2,T_Op3>::is_result_ok
-  ( const void *ID, Solve_Run_Info *info ) throw()
+  ( const Basic_Operand *ID, Solve_Run_Info *info ) throw()
   {
     bool just_solved = false;	// reset flag
     if( ID == &operand1 )	// is operand1 solved?
@@ -474,7 +474,7 @@ namespace solve
   // tells to use the result calculated by is_result_ok()
   template<class T_Result, class T_Op1, class T_Op2, class T_Op3>
   void Basic_Simple_Operator_for_3_Operands<T_Result,T_Op1,T_Op2,T_Op3>::use_result
-  ( const void *ID, Solve_Run_Info *info ) throw()
+  ( const Basic_Operand *ID, Solve_Run_Info *info ) throw()
   {
     assert( ID == &operand1 || ID == &operand2 || ID == &operand3 );
     if( result.is_solved_in_try( info ) ) // if result was just solved 
@@ -484,7 +484,7 @@ namespace solve
   // disconnect operand
   template<class T_Result, class T_Op1, class T_Op2, class T_Op3>
   void Basic_Simple_Operator_for_3_Operands<T_Result,T_Op1,T_Op2,T_Op3>::disconnect
-  ( const void *ID )
+  ( const Basic_Operand *ID )
   {
     if( ID == &operand1 )
     {
@@ -603,7 +603,7 @@ namespace solve
   //!!! very critical function !!! change only carefully !!!
   template<class T_Result, class T_Op1, class T_Op2, class T_Op3, class T_Op4>
   bool Basic_Simple_Operator_for_4_Operands<T_Result,T_Op1,T_Op2,T_Op3,T_Op4>::is_result_ok
-  ( const void *ID, Solve_Run_Info *info ) throw()
+  ( const Basic_Operand *ID, Solve_Run_Info *info ) throw()
   {
     bool just_solved = false;	// reset flag
     if( ID == &operand1 )	// is operand1 solved?
@@ -660,7 +660,7 @@ namespace solve
   // tells to use the result calculated by is_result_ok()
   template<class T_Result, class T_Op1, class T_Op2, class T_Op3, class T_Op4>
   void Basic_Simple_Operator_for_4_Operands<T_Result,T_Op1,T_Op2,T_Op3,T_Op4>::use_result
-  ( const void *ID, Solve_Run_Info *info ) throw()
+  ( const Basic_Operand *ID, Solve_Run_Info *info ) throw()
   {
     assert( ID == &operand1 || ID == &operand2 || ID == &operand3 );
     if( result.is_solved_in_try( info ) ) // if result was just solved 
@@ -670,7 +670,7 @@ namespace solve
   // disconnect operand
   template<class T_Result, class T_Op1, class T_Op2, class T_Op3, class T_Op4>
   void Basic_Simple_Operator_for_4_Operands<T_Result,T_Op1,T_Op2,T_Op3,T_Op4>::disconnect
-  ( const void *ID )
+  ( const Basic_Operand *ID )
   {
     if( ID == &operand1 )
     {
@@ -835,6 +835,10 @@ namespace solve
     }
     else
     {
+      if( operands.empty() )	// are ther no operands?
+      {
+	return result.set_value( no_operands_result() );
+      }
       if( num_solved >= num )	// are all operands solved yet?
       {
 	// solve by running calc for each result
@@ -859,7 +863,7 @@ namespace solve
   // has to check the result of the operand with ID as pointer to operand
   template< class OP, class RES >
   bool Basic_Multi_Operand_Operator<OP,RES>::
-  is_result_ok( const void *ID, Solve_Run_Info *info ) throw()
+  is_result_ok( const Basic_Operand *ID, Solve_Run_Info *info ) throw()
   {
     if( ID == &result ) return true; // ignore other results
 
@@ -869,7 +873,8 @@ namespace solve
 
       // find solved operand
       typename operands_type::iterator op 
-	= operands.find( static_cast<Operand<OP>*>(const_cast<void*>(ID)) );
+	= operands.find( dynamic_cast<Operand<OP>*>
+			 ( const_cast<Basic_Operand*>(ID) ) );
       assert( (*op)->is_solved_in_try(info) );
       OP val = (*op)->get_value( info );
       if( !is_op_ok(val,result) )
@@ -892,7 +897,8 @@ namespace solve
     {
       // find solved operand
       typename operands_type::iterator op 
-	= operands.find( static_cast<Operand<OP>*>(const_cast<void*>(ID)) );
+	= operands.find( dynamic_cast<Operand<OP>*>
+			 ( const_cast<Basic_Operand*>(ID) ) );
       assert( (*op)->is_solved_in_try(info) );
       OP val = (*op)->get_value( info );
       if( !is_op_ok(val,result) ) return false;
@@ -904,7 +910,7 @@ namespace solve
   // tells to use the result calculated by is_result_ok()
   template< class OP, class RES >
   void Basic_Multi_Operand_Operator<OP,RES>::
-  use_result( const void *ID, Solve_Run_Info *info ) throw()
+  use_result( const Basic_Operand *ID, Solve_Run_Info *info ) throw()
   {
     if( !result.is_solved() )
     {
@@ -922,7 +928,8 @@ namespace solve
 
   // disconnect operand
   template< class OP, class RES >
-  void Basic_Multi_Operand_Operator<OP,RES>::disconnect( const void *ID )
+  void Basic_Multi_Operand_Operator<OP,RES>::disconnect( const 
+							 Basic_Operand *ID )
   {
     typename operands_type::iterator op;
     for( op = operands.begin(); op != operands.end(); ++op )

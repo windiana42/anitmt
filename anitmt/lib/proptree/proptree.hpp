@@ -256,11 +256,13 @@ namespace solve
   
   //!! implement!
   template<class T>
-  bool equal_solver( Operand<T> &a, proptree::Property *prop );
+  bool equal_solver( Operand<T> &a, proptree::Property *prop,
+		     message::Message_Consultant *msgc = 0 );
   
   //!! implement!
   template<class T>
-  bool equal_solver( proptree::Property *prop, Operand<T> &a );
+  bool equal_solver( proptree::Property *prop, Operand<T> &a,
+		     message::Message_Consultant *msgc = 0 );
   
 }
 // force template generation of all used types

@@ -29,7 +29,7 @@ namespace solve
   //! has to check the result of the operand with ID as pointer to operand
   template<class T_Operand>
   bool Explicite_Reference<T_Operand>::is_result_ok
-  ( const void *ID, Solve_Run_Info *info ) throw()
+  ( const Basic_Operand *ID, Solve_Run_Info *info ) throw()
   {
     if( ID == &destination )
     {
@@ -62,7 +62,7 @@ namespace solve
   //! tells to use the result calculated by is_result_ok()
   template<class T_Operand>
   void Explicite_Reference<T_Operand>::use_result
-  ( const void *ID, Solve_Run_Info *info ) throw()
+  ( const Basic_Operand *ID, Solve_Run_Info *info ) throw()
   {
     if( ID == &source )
     {
@@ -74,7 +74,7 @@ namespace solve
 
   //! disconnect operand
   template<class T_Operand>
-  void Explicite_Reference<T_Operand>::disconnect( const void *ID )
+  void Explicite_Reference<T_Operand>::disconnect( const Basic_Operand *ID )
   {
     if( ID == &source )
     {

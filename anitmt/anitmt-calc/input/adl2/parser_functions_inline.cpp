@@ -18,6 +18,9 @@
 #include "parser_functions.hpp"
 
 #include <solve/reference.hpp>
+#include <val/val.hpp>
+
+#include <string>
 
 namespace anitmt
 {

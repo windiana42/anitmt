@@ -41,6 +41,10 @@ namespace solve
   {
     return true;
   }
+  bool Multi_And_Operator::no_operands_result()
+  {
+    return true;
+  }
 
   bool Multi_And_Operator::calc( const bool &op, const bool &old_res )
   {
@@ -64,21 +68,21 @@ namespace solve
   // Virtual Operand_Listener methods
 
   // has to check the result of the operand with ID as pointer to operand
-  bool Is_Solved_Operator::is_result_ok( const void *, 
+  bool Is_Solved_Operator::is_result_ok( const Basic_Operand *, 
 					 Solve_Run_Info *info ) throw()
   {
     return result.test_set_value( true, info ); // result is always true
   }
 
   // tells to use the result calculated by is_result_ok()
-  void Is_Solved_Operator::use_result( const void *, 
+  void Is_Solved_Operator::use_result( const Basic_Operand *, 
 				       Solve_Run_Info *info ) throw()
   {
     result.use_test_value( info );
   }
 
   // disconnect operand
-  void Is_Solved_Operator::disconnect( const void * )
+  void Is_Solved_Operator::disconnect( const Basic_Operand * )
   { 
     delete this; //!!! no furthur instructions !!!
   }

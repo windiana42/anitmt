@@ -71,6 +71,7 @@ namespace funcgen
 				     std::string priority_label ) = 0;
     virtual std::string parameter_add( std::string param ) = 0;
     virtual std::string close_function() = 0;
+    virtual std::string solver_identifier( std::string name ) = 0;
     virtual std::string result_function_decl( std::string provider_type,
 					      std::string ret_type, 
 					      std::string par_type ) = 0;
@@ -119,8 +120,8 @@ namespace funcgen
     virtual std::string first_init( std::string provider_type ) = 0;
     virtual std::string last_init( std::string provider_type ) = 0;
     virtual std::string is_avail( std::string provider_type,
-				  std::string ret_type,
-				  std::string par_type) = 0;
+				  std::string ret_type="" ,
+				  std::string par_type="" ) = 0;
     virtual std::string prev() = 0;
     virtual std::string next() = 0;
     virtual std::string prev( std::string provider_type ) = 0;
@@ -134,10 +135,16 @@ namespace funcgen
     virtual std::string get_child( std::string child_type, int n ) = 0;
     virtual std::string reference_concat_string() = 0;
     virtual std::string operator_class_name( std::string name ) = 0;
+    virtual std::string solver_class_name( std::string name ) = 0;
     virtual std::string operand_from_bool( bool flag ) = 0;
     virtual std::string operand_from_scalar( double val ) = 0;
     virtual std::string operand_from_string( std::string ) = 0;
+    virtual std::string operand_from_function( std::string name, 
+					       std::string parameters ) = 0;
     Code_Translator( code_gen_info * );
+    virtual std::string function( std::string function_name,
+				  std::string parameters ) = 0;
+
     virtual ~Code_Translator(){}
   };
 

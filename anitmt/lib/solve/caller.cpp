@@ -22,7 +22,7 @@ namespace solve{
   //************************************************************************
 
   // has to check the result of the operand with ID as pointer to operand
-  bool Action_Caller::is_result_ok( const void *ID, 
+  bool Action_Caller::is_result_ok( const Basic_Operand *ID, 
 				    Solve_Run_Info *info ) 
     throw()
   {
@@ -35,7 +35,7 @@ namespace solve{
   }
 
   // tells to use the result calculated by is_result_ok()
-  void Action_Caller::use_result( const void *ID, Solve_Run_Info * )
+  void Action_Caller::use_result( const Basic_Operand *ID, Solve_Run_Info * )
     throw()
   {
     assert( ID == trigger );
@@ -51,7 +51,7 @@ namespace solve{
   }
 
   // disconnect operand
-  void Action_Caller::disconnect( const void *ID ) 
+  void Action_Caller::disconnect( const Basic_Operand *ID ) 
   {
     assert( ID == trigger );
     

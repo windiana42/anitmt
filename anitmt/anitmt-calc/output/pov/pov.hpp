@@ -24,11 +24,10 @@
 #ifndef __AniTMT_Pov_Output_Interface__
 #define __AniTMT_Pov_Output_Interface__
 
-#include <message/message.hpp>
-
 #include "../output.hpp"
 #include "fdump.hpp"
 
+#include <message/message.hpp>
 #include <list>
 
 namespace output_io { namespace POV { 

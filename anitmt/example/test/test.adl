@@ -3,7 +3,7 @@ scene testscene {
   scene_type "pov";
   scalar testval {
     if {
-      condition 1 < 2;
+      if_condition 1 < 2;
       start_time 0;
       then {
 	accelerated {

@@ -71,12 +71,17 @@ namespace solve
     assert( !valid_test_run_ids.empty() );
     test_run_id = valid_test_run_ids.front();
   }
+  //! get a definitely invalid id
+  Solve_Run_Info::id_type Solve_Run_Info::get_inivalid_id() const
+  {
+    return -1;
+  }
 
-  inline void Solve_Run_Info::set_trial_run( bool trial )
+  void Solve_Run_Info::set_trial_run( bool trial )
   {
     trial_run = trial;
   }
-  inline bool Solve_Run_Info::is_trial_run()
+  bool Solve_Run_Info::is_trial_run()
   {
     return trial_run;
   }

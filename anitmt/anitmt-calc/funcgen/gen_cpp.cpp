@@ -84,6 +84,10 @@ namespace funcgen
   {
     return ");";
   }
+  std::string Cpp_Code_Translator::solver_identifier( std::string name )
+  {
+    return prefix_solver_identifier + name;
+  }
   std::string Cpp_Code_Translator::result_function_decl
   ( std::string provider_type, std::string ret_type, std::string par_type )
   {
@@ -289,29 +293,46 @@ namespace funcgen
   {
     return prefix_operator_class_name + name;
   }
+  std::string Cpp_Code_Translator::solver_class_name( std::string name )
+  {
+    return prefix_solver_class_name + name;
+  }
   std::string Cpp_Code_Translator::operand_from_bool( bool flag )
   {
     return std::string("solve::const_op( values::Flag( ") + (flag?"true":"false") + " ), get_consultant() )";
   }
   std::string Cpp_Code_Translator::operand_from_scalar( double val )
   {
-    return std::string("solve::const_op( values::Scalar( ") + val + " ), get_consultant() )";
+    return std::string("solve::const_op( values::Scalar( ") + val + 
+      " ), get_consultant() )";
   }
   std::string Cpp_Code_Translator::operand_from_string( std::string str )
   {
-    return std::string("solve::const_op( values::String( \"") + str + "\" ), get_consultant() )";
+    return std::string("solve::const_op( values::String( \"") + str + 
+      "\" ), get_consultant() )";
+  }
+  std::string Cpp_Code_Translator::operand_from_function( std::string name, 
+							  std::string par )
+  {
+    return "solve::const_op( " + name + "( " + par + " ), get_consultant() )";
+  }
+  std::string Cpp_Code_Translator::function( std::string function_name,
+					     std::string parameters )
+  {
+    return function_name + "( " + parameters + " )";
   }
 
   Cpp_Code_Translator::Cpp_Code_Translator( code_gen_info *info )
     : Code_Translator(info), prefix_priority_label("_pl_"),
       prefix_base_type(""), prefix_provider_type("_pt_"), 
       prefix_node_type("node_"), prefix_prop_op("_op_"),prefix_res_fun("_rf_"),
-
       prefix_is_avail("_av_"), prefix_param_range("_pr_"), 
       prefix_container_type("_container_"), 
       prefix_serial_container_type("_serial_container_"), 
       prefix_container_name("_cn_"),
-      prefix_operator_class_name("_oc_")
+      prefix_solver_identifier(""), // user should access this in C++ code
+      prefix_operator_class_name("_oc_"),
+      prefix_solver_class_name("_sc_")
   {}
 
   // ****************************************
@@ -331,18 +352,18 @@ namespace funcgen
     *decl << "#ifndef __functionality_"+info->id_name+"__" << std::endl;
     *decl << "#define __functionality_"+info->id_name+"__" << std::endl;
     *decl << std::endl;
-    *decl << "#include <list>" << std::endl;
-    *decl << "#include <string>" << std::endl;
-    *decl << "#include <map>" << std::endl;
-    *decl << "#include <math.h>" << std::endl;
-    *decl << std::endl;
-    *decl << "#include <message/message.hpp>" << std::endl;
     *decl << "#include <val/val.hpp>" << std::endl;
     *decl << "#include <solve/operand.hpp>" << std::endl;
     *decl << "#include <solve/operator.hpp>" << std::endl;
     *decl << "#include <solve/solver.hpp>" << std::endl;
     *decl << "#include <proptree/property.hpp>" << std::endl;
     *decl << "#include <proptree/proptree.hpp>" << std::endl;
+    *decl << "#include <message/message.hpp>" << std::endl;
+    *decl << std::endl;
+    *decl << "#include <list>" << std::endl;
+    *decl << "#include <string>" << std::endl;
+    *decl << "#include <map>" << std::endl;
+    *decl << "#include <math.h>" << std::endl;
     *decl << std::endl;
     std::list<std::string>::const_iterator i;
     for( i  = afd->included_basenames.begin();
@@ -1039,86 +1060,142 @@ namespace funcgen
     *decl << std::endl;
   }
 
-  void write_solve_code( std::ostream *os, 
-			 const Solve_System_Code &solve_code )
+  void write_constraint_statements( std::ostream *os, 
+				    const Constraint_Code &constraint_code,
+				    Code_Translator &translator )
   {
-    // ** Constraints **
+    std::list<Constraint_Declaration>::const_iterator i;
+    for( i  = constraint_code.constraint_declarations.begin();
+	 i != constraint_code.constraint_declarations.end(); ++i )
     {
-      std::list<Constraint_Declaration>::const_iterator i;
-      for( i  = solve_code.constraints.constraint_declarations.begin();
-	   i != solve_code.constraints.constraint_declarations.end(); ++i )
+      std::list<std::string>::const_iterator j;
+      if( !i->essentials.empty() )
       {
-	std::list<std::string>::const_iterator j;
-	if( !i->essentials.empty() )
+	*os << "    if( ";
+	bool first = true;
+	for( j = i->essentials.begin(); j != i->essentials.end(); ++j )
 	{
-	  *os << "    if( ";
-	  bool first = true;
-	  for( j = i->essentials.begin(); j != i->essentials.end(); ++j )
-	  {
-	    *os << (first?first=false,"":" && ") << (*j);
-	  }
-	  *os << " )" << std::endl;
-	  *os << "    {" << std::endl;
-	  *os << "      solve::constraint( " << i->constraint_code << " );"
-	      << std::endl;
-	  *os << "    }" << std::endl;
+	  *os << (first?first=false,"":" && ") << (*j);
 	}
-	else
-	  *os << "    solve::constraint( " << i->constraint_code << " );" 
-	      << std::endl;
+	*os << " )" << std::endl;
+	*os << "    {" << std::endl;
+	*os << "      solve::constraint( " << i->constraint_code << " );"
+	    << std::endl;
+	*os << "    }" << std::endl;
       }
+      else
+	*os << "    solve::constraint( " << i->constraint_code << " );" 
+	    << std::endl;
     }
-    // ** Solvers **
+  }
+
+  void write_solver_statements( std::ostream *os, 
+				const Solver_Code &solve_code,
+				Code_Translator &translator )
+  {
+    std::list<Solver_Declaration>::const_iterator i;
+    for( i  = solve_code.solver_declarations.begin();
+	 i != solve_code.solver_declarations.end(); ++i )
     {
-      std::list<Solver_Declaration>::const_iterator i;
-      for( i  = solve_code.solvers.solver_declarations.begin();
-	   i != solve_code.solvers.solver_declarations.end(); ++i )
+      std::string indent = "    ";
+      std::list<std::string>::const_iterator j;
+      if( !i->essentials.empty() )
       {
-	std::list<std::string>::const_iterator j;
-	if( !i->essentials.empty() )
+	*os << "    if( ";
+	bool first = true;
+	for( j = i->essentials.begin(); j != i->essentials.end(); ++j )
 	{
-	  *os << "    if( ";
-	  bool first = true;
-	  for( j = i->essentials.begin(); j != i->essentials.end(); ++j )
-	  {
-	    *os << (first?first=false,"":" && ") << (*j);
-	  }
-	  *os << " )" << std::endl;
-	  *os << "    {" << std::endl;
-	  *os << "      " << i->solver_code << std::endl;
-	  *os << "    }" << std::endl;
+	  *os << (first?first=false,"":" && ") << (*j);
 	}
-	else
-	  *os << "    " << i->solver_code << std::endl;
+	*os << " )" << std::endl;
+	*os << "    {" << std::endl;
+	indent = "      ";
       }
-    }
-    // ** Actions **
-    {
-      std::list<Action_Declaration>::const_iterator i;
-      for( i  = solve_code.actions.action_declarations.begin();
-	   i != solve_code.actions.action_declarations.end(); ++i )
+      if( i->is_expression )
       {
-	std::list<std::string>::const_iterator j;
-	if( !i->essentials.empty() )
+	*os << indent << translator.prop_op(i->dest_operand) << ".assign( "
+	    << i->expression_code << " );" << std::endl;
+      }
+      else
+      {
+	*os << indent;
+	if( i->identifier != "" )
+	  *os << translator.solver_identifier(i->identifier) << " = ";
+	*os << i->solver_type << "( ";
+	std::list<std::string>::const_iterator par;
+	for( par = i->parameters.begin(); par != i->parameters.end(); ++par )
 	{
-	  *os << "    if( ";
-	  bool first = true;
-	  for( j = i->essentials.begin(); j != i->essentials.end(); ++j )
-	  {
-	    *os << (first?first=false,"":" && ") << (*j);
-	  }
-	  *os << " )" << std::endl;
-	  *os << "    {" << std::endl;
-	  *os << "      " << i->action_code << std::endl;
-	  *os << "    }" << std::endl;
+	  *os << *par << ", ";
 	}
-	else
-	  *os << "    " << i->action_code << std::endl;
+	*os << "get_consultant() );" << std::endl;
+      }
+      if( !i->essentials.empty() )
+      {
+	*os << "    }" << std::endl;
       }
     }
   }
 
-  std::string get_type_name( type t )
+  void write_action_statements( std::ostream *os, 
+				const Action_Code &actions,
+				Code_Translator &translator )
+  {
+    std::list<Action_Declaration>::const_iterator i;
+    for( i  = actions.action_declarations.begin();
+	 i != actions.action_declarations.end(); ++i )
+    {
+      std::list<std::string>::const_iterator j;
+      if( !i->essentials.empty() )
+      {
+	*os << "    if( ";
+	bool first = true;
+	for( j = i->essentials.begin(); j != i->essentials.end(); ++j )
+	{
+	  *os << (first?first=false,"":" && ") << (*j);
+	}
+	*os << " )" << std::endl;
+	*os << "    {" << std::endl;
+	*os << "      " << i->action_code << std::endl;
+	*os << "    }" << std::endl;
+      }
+      else
+	*os << "    " << i->action_code << std::endl;
+    }
+  }
+
+  void write_solve_code( std::ostream *os, 
+			 const Solve_System_Code &solsys_code,
+			 Code_Translator &translator )
+  {
+    // ** Constraints **
+    write_constraint_statements( os, solsys_code.constraints, translator );
+    // ** Solvers **
+    write_solver_statements( os, solsys_code.solvers, translator );
+    // ** Actions **
+    write_action_statements( os, solsys_code.actions, translator );
+  }
+
+  void write_solver_declarations( std::ostream *os, 
+				  const Solver_Code &solve_code,
+				  Code_Translator &translator )
+  {
+    std::list<Solver_Declaration>::const_iterator i;
+    for( i  = solve_code.solver_declarations.begin();
+	 i != solve_code.solver_declarations.end(); ++i )
+    {
+      if( !i->is_expression )
+      {
+	if( i->identifier != "" )
+	{
+	  *os << "    " << translator.solver_class_name(i->solver_type) 
+	      << " *" << translator.solver_identifier(i->identifier) << ";"
+	      << std::endl;
+	}
+      }
+    }
+  }
+
+  std::string get_type_name( op_par_type t )
   {
     switch( t )
     {
@@ -1156,9 +1233,9 @@ namespace funcgen
     *decl << std::endl;
 
     int i; bool first;
-    AFD_Root::operator_declarations_type::iterator op;
-    for( op = afd->operator_declarations.begin();
-	 op != afd->operator_declarations.end(); ++op )
+    AFD_Root::operators_type::iterator op;
+    for( op = afd->operators.begin();
+	 op != afd->operators.end(); ++op )
     {
       const std::string &op_name = op->first;
       const Operator_Declaration &op_decl = op->second;
@@ -1243,10 +1320,10 @@ namespace funcgen
 	  required_functions.erase(r); // not required any more...
 	}
 	  
-	const std::list<type> &types 
+	const std::list<op_par_type> &types 
 	  = op_decl.basic_operator->get_types( function_name );
 	assert( !types.empty() );
-	std::list<type>::const_iterator t = types.begin();
+	std::list<op_par_type>::const_iterator t = types.begin();
 	
 	*decl << "    virtual " << get_type_name( *t ) << " " << function_name
 	      << "( ";
@@ -1264,11 +1341,13 @@ namespace funcgen
 	      get_function_specification( function_name );
 	    break;
 	  }
-	  *decl << (first?first=false,"":", ") << get_type_name(*t) << " " << *param_name;
+	  *decl << (first?first=false,"":", ") << get_type_name(*t) << " " 
+		<< *param_name;
 	}
 	*decl << " )" << std::endl;
 
-	*decl << "    { // user code: ";function_code.pos->write2stream(*decl,2);
+	*decl << "    { // user code: ";
+	function_code.pos->write2stream(*decl,2);
 	*decl << std::endl;
 	for( i=0; i< function_code.start_src_column; i++ )
 	  *decl << " ";
@@ -1379,6 +1458,240 @@ namespace funcgen
     *decl << std::endl;
   }
 
+  // *******************************************
+  void Cpp_Code_Generator::generate_solvers()
+  {
+    *decl << "  // ********************" << std::endl;
+    *decl << "  // ********************" << std::endl;
+    *decl << "  // solver declartions" << std::endl;
+    *decl << "  // ********************" << std::endl;
+    *decl << "  // ********************" << std::endl;
+    *decl << std::endl;
+    //    *decl << "}" << std::endl;
+    //    *decl << "namespace solve" << std::endl;
+    //    *decl << "{" << std::endl;
+    //    *decl << std::endl;
+    *impl << "  // ********************" << std::endl;
+    *impl << "  // ********************" << std::endl;
+    *impl << "  // solver declartions" << std::endl;
+    *impl << "  // ********************" << std::endl;
+    *impl << "  // ********************" << std::endl;
+    *impl << std::endl;
+
+    bool first;
+    AFD_Root::complex_solver_type::iterator solver;
+    for( solver = afd->solvers.begin();
+	 solver != afd->solvers.end(); ++solver )
+    {
+      const std::string &solver_name = solver->first;
+      const Complex_Solver &solver_decl = solver->second;
+
+      if( solver_decl.don_t_create_code ) continue;
+
+      *decl << "  class " << translator.solver_class_name( solver_name ) << ";"
+	    << std::endl;
+    }
+
+    for( solver = afd->solvers.begin();
+	 solver != afd->solvers.end(); ++solver )
+    {
+      const std::string &solver_name = solver->first;
+      const Complex_Solver &solver_decl = solver->second;
+
+      if( solver_decl.don_t_create_code ) continue;
+
+      *decl << "  class " << translator.solver_class_name( solver_name ) 
+	    << " : public message::Message_Reporter"
+	    << std::endl;
+      *decl << "  {" << std::endl;
+      *decl << "  public:" << std::endl;
+
+      // *******************
+      // provided functions
+      std::list<Solver_Function_Code>::const_iterator func;
+      for( func = solver_decl.functions.begin();
+	   func != solver_decl.functions.end(); ++func )
+      {
+	*decl << "    " << func->return_type << " " << func->name << "( ";
+	*impl << "  " << func->return_type << " " 
+	      << translator.solver_class_name( solver_name ) << "::" 
+	      << func->name << "( ";
+	std::list<Variable>::const_iterator var;
+	first = true;
+	for( var = func->variable_list.begin(); 
+	     var != func->variable_list.end(); ++var )
+	{
+	  if( first ) first = false;
+	  else { *decl << ", "; *impl << ", "; }
+	  *decl << var->type << " " << var->name;
+	  *impl << var->type << " " << var->name;
+	}
+	*decl << " );" << std::endl;
+	*impl << " )" << std::endl;
+	*impl << "  {" << std::endl;
+	*impl << "    // *** user code following... line:" 
+	      << func->start_src_line << " ***" << std::endl;
+	// indent like in AFD source file
+	for( int cnt = 0; cnt < func->start_src_column; ++cnt )
+	  *impl << ' ';
+	*impl << func->code << std::endl;
+	*impl << "  }" << std::endl;
+
+	*decl << "  solve::Operand<bool> " 
+	      << translator.is_avail( func->name ) << ";"
+	      << std::endl;
+      }      
+      *decl << std::endl;
+
+      // ************
+      // constructor
+      *decl << "    " << translator.solver_class_name( solver_name ) 
+	    << "( ";
+      *impl << "  " << translator.solver_class_name( solver_name ) << "::"
+	    << translator.solver_class_name( solver_name ) << "( ";
+      std::list<Operand>::const_iterator par;
+      for( par = solver_decl.parameter.operand_list.begin();
+	   par != solver_decl.parameter.operand_list.end(); ++par )
+      {
+	*decl << translator.operand_type( par->type ) << "&"
+	      << par->name << ", ";
+	*impl << translator.operand_type( par->type ) << "& " 
+	      << "_" << translator.prop_op( par->name ) << ", ";
+      }
+      *decl << " message::Message_Consultant* );" << std::endl;
+      *impl << " message::Message_Consultant* consultant )" << std::endl;
+
+      *impl << "    : message::Message_Reporter(consultant)";
+      // avail variables of functions
+      for( func = solver_decl.functions.begin();
+	   func != solver_decl.functions.end(); ++func )
+      {
+	*impl << "," << std::endl;
+	*impl << "      " 
+	      << translator.is_avail( func->name ) 
+	      << "( get_consultant() )";
+      }
+      // parameter operands
+      for( par = solver_decl.parameter.operand_list.begin();
+	   par != solver_decl.parameter.operand_list.end(); ++par )
+      {
+	*impl << "," << std::endl;
+	*impl << "      " << translator.prop_op( par->name ) << "(" 
+	      << "_" << translator.prop_op(par->name) << ")";
+      }
+      // other operands
+      std::list<Operand>::const_iterator op;
+      for( op = solver_decl.operand_list.begin();
+	   op != solver_decl.operand_list.end(); ++op )
+      {
+	*impl << "," << std::endl;
+	*impl << "      " << translator.prop_op( op->name ) 
+	      << "( get_consultant() )";
+      }
+      *impl << std::endl;
+      *impl << "  {" << std::endl;
+      if( !solver_decl.functions.empty() )
+	*impl << "    solve::Multi_And_Operator *m_and;" << std::endl;
+      // avail variables of functions
+      for( func = solver_decl.functions.begin();
+	   func != solver_decl.functions.end(); ++func )
+      {
+	*impl << "    " 
+	      << "m_and = new solve::Multi_And_Operator( get_consultant() );"
+	      << std::endl;
+	*impl << "    "
+	      << translator.is_avail( func->name ) << " = "
+	      <<"m_and->get_result();" << std::endl;
+	std::list<std::string>::const_iterator i;
+	for( i = func->required_operands.begin();
+	     i != func->required_operands.end(); ++i )
+	{
+	  *impl << "    m_and->add_operand( solve::is_solved(" 
+		<< translator.prop_op( *i ) << ") );" << std::endl;
+	}
+	for( i = func->required_functions.begin();
+	     i != func->required_functions.end(); ++i )
+	{
+	  *impl << "    m_and->add_operand( " << translator.is_avail( *i ) 
+		<< " );" << std::endl;
+	}
+	std::list<Solver_Function>::const_iterator sol_func;
+	for( sol_func = func->required_solver_functions.begin();
+	     sol_func != func->required_solver_functions.end(); ++sol_func )
+	{
+	  *impl << "    m_and->add_operand( " 
+  		<< sol_func->solver << "->" 
+		<< translator.is_avail( sol_func->function ) 
+		<< " );" << std::endl;
+	}
+	*impl << "    m_and->finish_adding();" << std::endl;
+      }
+      // constraints & solvers in init blocks
+      write_constraint_statements( impl, solver_decl.init_constraint_code, 
+				     translator );
+      write_solver_statements( impl, solver_decl.init_code, translator );
+      *impl << "  }" << std::endl;
+
+      *decl << std::endl;
+      *decl << "  private:" << std::endl;
+      write_solver_declarations( decl, solver_decl.init_code, translator );
+      // *********
+      // operands
+
+      // parameter references
+      for( par = solver_decl.parameter.operand_list.begin();
+	   par != solver_decl.parameter.operand_list.end(); ++par )
+      {
+	*decl << "    " << translator.operand_type( par->type ) << "& "
+	      << translator.prop_op( par->name ) << ";" << std::endl;
+      }
+      // other operands
+      for( op = solver_decl.operand_list.begin();
+	   op != solver_decl.operand_list.end(); ++op )
+      {
+	*decl << "    " << translator.operand_type( op->type ) << " "
+	      << translator.prop_op( op->name ) << ";" << std::endl;
+      }
+      // *************
+      // declarations
+      std::list<Variable>::const_iterator var;
+      for( var = solver_decl.variable_list.begin();
+	   var != solver_decl.variable_list.end(); ++var )
+      {
+	*decl << "    " << var->type << " "
+	      << var->name << ";" << std::endl;
+      }
+      *decl << "  };" << std::endl;
+      *decl << std::endl;
+      *decl << "  " << translator.solver_class_name( solver_name ) << "* "
+	    << solver_name << "( ";
+      *impl << "  " << translator.solver_class_name( solver_name ) << "* "
+	    << solver_name << "( ";
+      for( par = solver_decl.parameter.operand_list.begin();
+	   par != solver_decl.parameter.operand_list.end(); ++par )
+      {
+	*decl << translator.operand_type( par->type ) << "&"
+	      << par->name << ", ";
+	*impl << translator.operand_type( par->type ) << "& " 
+	      << "_" << translator.prop_op( par->name ) << ", ";
+      }
+      *decl << "message::Message_Consultant * );" << std::endl;
+      *decl << std::endl;
+      *impl << "message::Message_Consultant *msgc )" << std::endl;
+      *impl << "  {" << std::endl;
+      *impl << "    return new " << translator.solver_class_name( solver_name )
+	    << "( ";
+      for( par = solver_decl.parameter.operand_list.begin();
+	   par != solver_decl.parameter.operand_list.end(); ++par )
+      {
+	*impl << "_" << translator.prop_op( par->name ) << ", ";
+      }
+      *impl << "msgc );" << std::endl;
+      *impl << "  }" << std::endl;
+    }
+  }
+
+  // ***************************************
   void Cpp_Code_Generator::generate_nodes()
   {
     *decl << "  // ***************************" << std::endl
@@ -1423,19 +1736,20 @@ namespace funcgen
 	    << "  {" << std::endl
 	    << "  protected:" << std::endl
 	    << "    // ** properties **" << std::endl;
-      std::map<std::string,std::string>::const_iterator j;
+      std::map<std::string,Property*>::const_iterator j;
       for( j=node.properties.begin(); j!=node.properties.end(); ++j )
       {
-	*decl << "    " << translator.property_type(j->second) << " "
+	*decl << "    " << translator.property_type(j->second->type) << " "
 	      << translator.prop_op(j->first) << ";" << std::endl;
       }
       *decl << std::endl;
 
+      std::map<std::string,Operand*>::const_iterator op;
       *decl << "    // ** operands **" << std::endl;
-      for( j=node.operands.begin(); j!=node.operands.end(); ++j )
+      for( op=node.operands.begin(); op!=node.operands.end(); ++op )
       {
-	*decl << "    " << translator.operand_type(j->second) << " "
-	      << translator.prop_op(j->first) << ";" << std::endl;
+	*decl << "    " << translator.operand_type(op->second->type) << " "
+	      << translator.prop_op(op->first) << ";" << std::endl;
       }
       *decl << std::endl;
 
@@ -1510,7 +1824,7 @@ namespace funcgen
       *impl << "  void " << translator.node_type( node_name )
 	    << "::common_init()" << std::endl
 	    << "  {" << std::endl;
-      write_solve_code( impl, node.common );
+      write_solve_code( impl, node.common, translator );
       if( !node.child_containers.empty() )
 	*impl << "    // ** invoke first_/last_init() for each child container"
 	      << " **" << std::endl;
@@ -1579,7 +1893,6 @@ namespace funcgen
 	      *impl << "    m_and->add_operand( solve::is_solved( " 
 		    << translator.prop_op( *req_prop ) << " ) );" << std::endl;
 	    }
-	    *impl << "    m_and->finish_adding();" << std::endl;
 	    std::list< std::pair<std::string,Result_Type> >::const_iterator 
 	      req_child;
 	    for( req_child = res_code.required_children.begin();
@@ -1638,7 +1951,7 @@ namespace funcgen
 	*impl << "  void " << translator.node_type( node_name )
 	      << "::" << function_name << std::endl
 	      << "  {" << std::endl;
-	write_solve_code( impl, solve_code );
+	write_solve_code( impl, solve_code, translator );
 	*impl << "  }" << std::endl
 	      << std::endl;
       }
@@ -1659,7 +1972,7 @@ namespace funcgen
 	*impl << "  void " << translator.node_type( node_name )
 	      << "::" << function_name << std::endl
 	      << "  {" << std::endl;
-	write_solve_code( impl, solve_code );
+	write_solve_code( impl, solve_code, translator );
 	*impl << "  }" << std::endl
 	      << std::endl;
       }
@@ -1874,10 +2187,10 @@ namespace funcgen
 	      << "( \"" << j->first << "\", this )";
       }
       // init all operands in constructor
-      for( j=node.operands.begin(); j!=node.operands.end(); ++j )
+      for( op=node.operands.begin(); op!=node.operands.end(); ++op )
       {
 	*impl << "," << std::endl
-	      << "      " << translator.prop_op(j->first) 
+	      << "      " << translator.prop_op(op->first) 
 	      << "( get_consultant() )";
       }
       // init child containers with max1/min1
@@ -1913,6 +2226,19 @@ namespace funcgen
       *impl << "  }" << std::endl
 	    << std::endl;
       
+      *decl << "  private:";
+      *decl << "    // solver identifiers in common block" << std::endl;
+      write_solver_declarations( decl, node.common.solvers, translator );
+      *decl << "    // solver identifiers in any first block" << std::endl;
+      for( m = node.first.begin(); m != node.first.end(); ++m )
+      {
+	write_solver_declarations( decl, m->second.solvers, translator );
+      }
+      *decl << "    // solver identifiers in any last block" << std::endl;
+      for( m = node.last.begin(); m != node.last.end(); ++m )
+      {
+	write_solver_declarations( decl, m->second.solvers, translator );
+      }
       *decl << "  };" << std::endl;
       *decl << std::endl;
     }
@@ -1957,6 +2283,7 @@ namespace funcgen
     generate_base_types();
     generate_types();
     generate_operators();
+    generate_solvers();
     generate_nodes();
     generate_footer();
   }

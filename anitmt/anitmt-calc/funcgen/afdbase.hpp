@@ -35,7 +35,6 @@ namespace funcgen
   class Result_Type;
   class Provider_Type;
   class Code;
-  class Operator_Declaration;
   class Alias;
   class Constraint_Code;
   class Solver_Code;
@@ -48,6 +47,9 @@ namespace funcgen
   class Bool_Expression;
   class Expression;
   class Tree_Node_Type;
+  class Operator_Declaration;
+  class Parameter_Operands;
+  class Complex_Solver;
   class AFD_Root;
 }
 
@@ -133,6 +135,91 @@ namespace funcgen
     void print( std::string ) const; // print, just for debug purposes
   };  
 
+  class Operand
+  {
+  public:
+    Operand( std::string name="", std::string type="" );
+
+    std::string name;
+    std::string type;
+  };
+
+  class Property
+  {
+  public:
+    Property( std::string name="", std::string type="" );
+
+    std::string name;
+    std::string type;
+  };
+
+  class Variable
+  {
+  public:
+    Variable( std::string name="", std::string type="" );
+
+    std::string name;
+    std::string type;
+  };
+
+  class Context
+  {
+  public:
+    Context( Context *parent = 0 );
+
+    void set_parent_context( Context *parent );
+
+    //***********
+    // properties
+    std::map<std::string,Property*> properties;	// for search
+    std::list<Property> property_list;		// for sequence
+    std::string current_property_type;
+    bool is_property( std::string name );
+    Property *get_property( std::string name );
+
+    //***********
+    // operands
+    std::map<std::string,Operand*> operands;	// for search
+    std::list<Operand> operand_list;		// for sequence
+    std::string current_operand_type;
+    bool is_operand( std::string name );
+    Operand *get_operand( std::string name );
+
+    //***********
+    // variables
+    std::map<std::string,Variable*> variables;	// for search
+    std::list<Variable> variable_list;		// for sequence
+    std::string current_variable_type;
+    bool is_variable( std::string name );
+    Variable *get_variable( std::string name );
+
+    //***********
+    // base type
+    std::map<std::string,Base_Type> base_types; 
+    bool is_base_type( std::string name );
+    Base_Type *get_base_type( std::string name );
+
+    //****************
+    // provider types
+    std::map<std::string,Provider_Type>  provider_types;
+    bool is_provider_type( std::string name );
+    Provider_Type *get_provider_type( std::string name );
+
+    //***********
+    // operators
+    std::map<std::string,Operator_Declaration> operators;
+    bool is_operator( std::string name );
+    Operator_Declaration *get_operator( std::string name );
+
+    //*******
+    // solver
+    std::map<std::string,Complex_Solver> solvers;
+    bool is_solver( std::string name );
+    Complex_Solver *get_solver( std::string name );
+  private:
+    Context *parent;
+  };
+
   class Code
   {
   public:
@@ -146,23 +233,6 @@ namespace funcgen
   public:
     message::File_Position *pos;
     std::list<std::string> parameter_names;
-  };
-
-  class Operator_Declaration
-  {
-  public:
-    bool don_t_create_code;	// ... from this operator declaration
-
-    message::File_Position *pos;
-    std::string operator_name;
-    std::string operator_base_type_name;
-    //! information object about the base operator
-    const Basic_Operator *basic_operator; 
-
-    std::map< std::string, Function_Code > function_code;     // name->code
-    std::list< std::list<std::string> > versions; // [name,ret,op1,op2,...]*
-    Function_Code *current_function; 
-    std::list<std::string> *current_version;
   };
 
   class Alias
@@ -197,21 +267,28 @@ namespace funcgen
   {
   public:
     std::list<std::string> essentials;
-    std::string solver_code;
+    bool is_expression;
+    // for normal solvers
+    std::string solver_type;
+    std::string identifier;
+    std::list<std::string> parameters;
+    // for expression trees
+    std::string dest_operand;
+    std::string expression_code;
 
     void print() const;		// print, just for debug purposes
   };
 
   class Solver_Code
   {
-    bool first_param;
+    std::list<Solver_Declaration>::iterator current_solver;
   public:
     std::list<Solver_Declaration> solver_declarations;
 
-    std::list<Solver_Declaration>::iterator current_solver;
-
     void new_solver( std::string name );
+    void set_solver_identifier( std::string name );
     void add_parameter_ref( Property_Reference &ref );
+    void add_const_parameter( std::string parameter );
     void finish_solver();
     void new_expression_solver( const std::string &op, const Expression *exp, 
 				Code_Translator *translator );
@@ -332,7 +409,7 @@ namespace funcgen
     Expression( const Property_Reference &exp );
   };
 
-  class Tree_Node_Type
+  class Tree_Node_Type : public Context
   {
   public:
     bool don_t_create_code;	// ... from this node
@@ -340,8 +417,8 @@ namespace funcgen
 
     //***********
     // properties
-    std::map<std::string,std::string> properties; // name->type
-    std::string current_property_type;
+    //Context: std::map<std::string,Property> properties;
+    //Context: std::string current_property_type;
 
     //***********
     // aliases
@@ -349,14 +426,13 @@ namespace funcgen
     
     //***********
     // operands
-    std::map<std::string,std::string> operands; // name->type
-    std::string current_operand_type;
+    //Context: std::map<std::string,Operand> operands; 
+    //Context: std::string current_operand_type;
 
     //*****************
     // solve relations
     Solve_System_Code common;
     std::map<std::string,Solve_System_Code> first, last; 
-    Solve_System_Code *current_solve_code;
     
     //**************************************
     // contained result providers (children)
@@ -368,10 +444,6 @@ namespace funcgen
     Provided_Results *current_provided_results;
     Provider_Type *current_provided_result_type;
 
-    //**********************
-    // general help classes
-    Property_Reference current_reference;
-
     void merge( const Tree_Node_Type & );
 
     Tree_Node_Type();
@@ -379,10 +451,98 @@ namespace funcgen
     void print() const;		 // print, just for debug purposes
   };
 
-  // stores all information of afd files
-  class AFD_Root
+  class Operator_Declaration
   {
   public:
+    bool don_t_create_code;	// ... from this operator declaration
+
+    message::File_Position *pos;
+    std::string operator_name;
+    std::string operator_base_type_name;
+    //! information object about the base operator
+    const Basic_Operator *basic_operator; 
+
+    std::map< std::string, Function_Code > function_code;     // name->code
+    std::list< std::list<std::string> > versions; // [name,ret,op1,op2,...]*
+    Function_Code *current_function; 
+    std::list<std::string> *current_version;
+  };
+
+  class Parameter_Operands : public Context
+  {
+  public:
+    //***********
+    // operands
+    //Context: std::map<std::string,Operand> operands; 
+    //Context: std::string current_operand_type;
+  };
+
+  class Parameter
+  {
+  public:
+    Parameter( std::string name="", std::string type="" );
+
+    std::string name;
+    std::string type;
+  };
+
+  class Solver_Function
+  {
+  public:
+    Solver_Function( std::string solver="", std::string function="" );
+
+    std::string solver;
+    std::string function;
+  };
+
+  class Solver_Function_Code : public Code, public Context
+  {
+  public:
+    std::string return_type;	// return type of this code
+    std::string name;
+    //Context: std::map<name,Variable*> variables; as parameters
+    //Context: std::list<Variable>  variable_list; as parameter list
+    std::list<std::string> required_operands; 
+    std::list<std::string> required_functions; 
+    std::list<Solver_Function> required_solver_functions; 
+
+    Solver_Function_Code( std::string name="", std::string return_type="" );
+  };
+
+  class Complex_Solver : public Context
+  {
+  public:
+    bool don_t_create_code;	// ... from this solve definition
+
+    Parameter_Operands parameter;
+
+    //***********
+    // operands
+    //Context: std::map<std::string,Operand> operands; 
+    //Context: std::string current_operand_type;
+
+    //*************
+    // declarations
+    //Context: std::map<std::string,Variable*> variables;
+    //Context: std::list< Variable > variable_list;
+
+    //*************
+    // init code
+    Constraint_Code     init_constraint_code;
+    Solver_Code		init_code;
+    
+    //*************
+    // provides
+    std::list<Solver_Function_Code> functions;
+    Solver_Function_Code *current_function_code;
+  };
+
+  // stores all information of afd files
+  class AFD_Root : public Context
+  {
+  public:
+    AFD_Root( Code_Translator *translator );
+
     std::stack<bool> don_t_create_code; // whether source shouldn't be written
     Code_Translator *translator; // translates code peaces 
 
@@ -395,7 +555,7 @@ namespace funcgen
     bool priority_list_defined;
     bool write_priority_list;
     
-    std::map<std::string, Base_Type> base_types;
+    //Context: std::map<std::string, Base_Type> base_types;
     Base_Type      *current_base_type;
     typedef 
     std::list< std::pair<std::string, Base_Type*> > base_types_list_type; 
@@ -403,24 +563,37 @@ namespace funcgen
 				// list in original sequence
 
     typedef std::map<std::string, Provider_Type> provider_types_type;
-    provider_types_type provider_types;
+    //Context: provider_types_type provider_types;
     Provider_Type  *current_type;
-
-    typedef std::map<std::string, 
-		     Operator_Declaration> operator_declarations_type;
-
-    operator_declarations_type operator_declarations;
-    Operator_Declaration *current_operator_declaration;
 
     typedef std::map<std::string, Tree_Node_Type> nodes_type;
     nodes_type nodes;
     Tree_Node_Type *current_node;
 
+    typedef std::map<std::string, 
+		     Operator_Declaration> operators_type;
+    //Context: operators_type operators;
+    Operator_Declaration *current_operator_declaration;
+
+    typedef std::map<std::string, Complex_Solver> complex_solver_type;
+    //Context: complex_solver_type solvers;
+    Complex_Solver *current_complex_solver;
+
     int include_depth;
     std::set<std::string> avoid_recursion_of;
 
-    AFD_Root( Code_Translator *translator );
     void print() const;		// print, just for debug purposes
+
+    void push_context( Context* );
+    void pop_context();
+    Context *get_context();
+
+    //**********************
+    // general help objects
+    Property_Reference current_reference;
+    Solve_System_Code *current_solve_code;
+  private:
+    std::stack<Context*> contexts;
   };
 
 }

@@ -306,7 +306,8 @@ namespace solve
   }
 
   template<class T>
-  bool equal_solver( Operand<T> &a, proptree::Property *prop )
+  bool equal_solver( Operand<T> &a, proptree::Property *prop,
+		     message::Message_Consultant *msgc )
   {
     Operand<T> *src = dynamic_cast<Operand<T>*>(prop);
   
@@ -320,7 +321,8 @@ namespace solve
     return true;
   }
   template<class T>
-  bool equal_solver( proptree::Property *prop, Operand<T> &a )
+  bool equal_solver( proptree::Property *prop, Operand<T> &a,
+		     message::Message_Consultant *msgc )
   {
     Operand<T> *src = dynamic_cast<T*>(prop);
   

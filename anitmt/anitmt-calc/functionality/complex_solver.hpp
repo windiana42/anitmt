@@ -28,7 +28,8 @@ namespace solve
 		     Operand<values::Scalar> &t, 
 		     Operand<values::Scalar> &a, 
 		     Operand<values::Scalar> &v0, 
-		     Operand<values::Scalar> &ve );
+		     Operand<values::Scalar> &ve,
+		     message::Message_Consultant *msgc );
 
 }
 

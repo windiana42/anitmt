@@ -102,9 +102,7 @@ base_types {
       ...
     }
     solvers {
-      <Solvername> ( <Propertyreference>, <Propertyreference>, ... );
-      <Solvername> ( <Propertyreference>, <Propertyreference>, ... );
-      <PropertyName> = <operand_expression>;
+      <Solvername> [ <SolverInstanceName> /*todo*/ ] ( <Propertyreference> | <constant> | <function_call>, ... );
       <PropertyName> = <operand_expression>;
       ...
     } 
@@ -142,7 +140,7 @@ base_types {
   provide <ProviderType> {
     resulting <ReturnType>( <ParameterType> <ParameterName> ) 
 // optional things are currently not implemented!
-      [ requires <Propertyname> | child.<ProviderType>[.<ReturnType>(<ParameterType>)] | this.[<ProviderType>.]<ReturnType>(<ParameterType>) , ... ] 
+      [ requires <Propertyname> | child.<ProviderType>[.<ReturnType>(<ParameterType>)] | this.[<ProviderType>.]<ReturnType>(<ParameterType>) | <SolverInstanceName>.<FunctionName>/*todo*/, ... ] 
     {
       <Any C++-Code using 
 
@@ -154,7 +152,8 @@ base_types {
 //!!! rethink about all this references...
 // default value and failvar isn't implemented yet
        child.<ProviderType>.<ReturnType>(<ParameterType> <Parameter>)[,<failboolvar>]
-       [this.][<ProviderType>.]<ReturnType>(<ParameterType> <Parameter>)
+       [this./*todo*/][<ProviderType>./*todo*/]<ReturnType>(<ParameterType> <Parameter>)
+       <SolverInstanceName>.<FunctionName>(<ParameterType> <Parameter>,...) /*todo*/
        return_prop <Propertyname>
        return <cpp_expression>
        return child.<ProviderType>.<ReturnType>(<ParameterType> <Parameter>) 
@@ -215,3 +214,121 @@ if( x_failed )
 
 
 <cpp_expression>: operators: +,-,*,/,|,&,^,==,!=,<=,>= //!!! implement more !!!
+
+// ************************************************
+// operator and solver definitions
+// ************************************************
+
+operators
+{
+  <OperatorType> <OperatorName> 
+  {
+    <FunctionName>( <ParameterName>,...)
+    {
+      <CPP code returning value>
+    }
+    versions
+    {
+      <ReturnType> <VersionName>( <ParameterType>,...);
+      <ReturnType> operator <CommonOperator>( <ParameterType>,...);
+      ...
+    }
+  }
+  /* example:
+  two_operands_operator equal
+  {
+    calc_result( op1, op2 )
+    {
+      return op1 == op2;
+    }
+    versions
+    {
+      flag equal     ( scalar, scalar );
+      flag operator==( flag, flag );
+    }
+  }
+  */
+}
+
+solvers /*todo*/
+{
+  <SolverName> ( <Type> <OperandName>, ... )
+  {
+    operands				// local operands
+    {
+      type <Type> 
+      {
+	<OperandName>;  
+	...
+      }
+      <Type> <OperandName>; 
+      ...
+    }
+    declarations
+    {
+      <C++ClassType> <ObjectName>,...;
+      ...
+    }
+    init
+    {
+      <SolverName> [ <SolverInstanceName> ]( <OperandName>, ... );
+      <OperandName> = <operand_expression>;
+//      <ObjectName>.[<SubObjectName>.]*<FunctionName>( <cpp_expression>,... ); //???
+      //				                   |
+      //				   no operands (not solved?)
+      ...
+    }
+    events
+    {
+      condition <OperandName> & <OperandName> & ... 
+      {
+	test_run 
+	{ 
+	  <C++ code> including... 
+	  return <true/false>; or 
+	  [[ test <OperandName> = <cpp_expression> ]];
+	}
+	[ final { <C++ code> } ] // useful?
+	[ reset { <C++ code> } ]
+      }
+      ...
+      group
+      {
+	condition <OperandName> & <OperandName> & ... 
+	{
+	  test_run 
+	  { 
+	    <C++ code> including... 
+	    return <true/false>; or 
+	    [[ test <OperandName> = <cpp_expression> ]];
+	  }
+	  [ final { <C++ code> } ] // useful?
+	  [ reset { <C++ code> } ]
+	}
+	...
+	// Operation is invoked by one operand being solved. 
+	// if condition is mached and it's testrun was never executed:
+	//     run testrun
+	// if condition is mached, it's testrun was already executed 
+	//   and one of the operands invoked the operation:
+	//     reset and clear all marks for executed testruns and invoke again
+	[ reset { } ]
+
+	//!! attention: group reset which is caused by a member condition 
+	//   within it's test run may cause an infinite loop !!
+      }
+
+      ...
+    }
+    provide
+    {
+      <ReturnType> <FunctionName> ( <Type> <Variable>,... ) 
+        [ requires <OperandName> | this.<FunctionName> 
+	  | <SolverInstanceName>.<FunctionName> , ... ]
+      {
+	<C++ code returning value, using <Variable>s and <ObjectName>s>
+      }
+      ...
+    }
+  }
+}

@@ -32,11 +32,11 @@ namespace solve{
     // Virtual Operand_Listener methods
 
     // has to check the result of the operand with ID as pointer to operand
-    bool is_result_ok( const void *ID, Solve_Run_Info *info ) throw();
+    bool is_result_ok( const Basic_Operand *ID, Solve_Run_Info *info ) throw();
     // tells to use the result calculated by is_result_ok()
-    void use_result( const void *ID, Solve_Run_Info *info ) throw();
+    void use_result( const Basic_Operand *ID, Solve_Run_Info *info ) throw();
     // disconnect operand
-    void disconnect( const void *ID );
+    void disconnect( const Basic_Operand *ID );
 
   public:
     Constraint_Checker( Operand<values::Flag> &op );

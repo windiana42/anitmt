@@ -23,9 +23,9 @@
 #ifndef _Inc_IO_OutStr_H_
 #define _Inc_IO_OutStr_H_ 1
 
-#include "lproto.hpp"
-
 #include <string>
+
+#include "lproto.hpp"
 
 namespace output_io
 {

@@ -15,11 +15,11 @@
 #ifndef __AniTMT_parser_functions__
 #define __AniTMT_parser_functions__
 
-#include <message/message.hpp>
-
 #include "token.hpp"
 #include "parsinfo.hpp"
 #include "adlparser.hpp"
+
+#include <message/message.hpp>
 
 namespace anitmt
 {

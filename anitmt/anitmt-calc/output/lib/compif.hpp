@@ -21,9 +21,10 @@
  *
  */
 
-
 #ifndef _Inc_IO_PovComonentIF_H_
 #define _Inc_IO_PovComonentIF_H_ 1
+
+#include <animation.hpp>
 
 namespace output_io
 {

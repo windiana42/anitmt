@@ -20,16 +20,17 @@
  *
  */
 
+#include "fdump.hpp"
+
+#include <animation.hpp>
+#include <iostream>
+#include <string>
+
 // This includes the config: 
 #include "../lib/lproto.hpp"
 
-#include <iostream>
-
-#include <animation.hpp>
-
-#include "fdump.hpp"
-#include "outstr.hpp"
-#include "convtoa.hpp"
+#include "../lib/outstr.hpp"
+#include "../lib/convtoa.hpp"
 
 
 // Bottom limit for write size (buffer will be twice as large) 

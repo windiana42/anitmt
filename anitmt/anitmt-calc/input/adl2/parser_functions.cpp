@@ -12,12 +12,12 @@
 /**									    **/
 /*****************************************************************************/
 
-#include <stack>
-
 #include "parser_functions.hpp"
 
-#include <utl/stdextend.hpp>
 #include <proptree/proptree.hpp>
+#include <utl/stdextend.hpp>
+
+#include <stack>
 
 namespace anitmt
 {

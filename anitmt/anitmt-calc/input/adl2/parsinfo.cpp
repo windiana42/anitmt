@@ -103,6 +103,8 @@ namespace anitmt
 		(*dynamic_cast<proptree::Type_Property<values::String>*>
 		 (prop));
 	      break;
+	    case values::Valtype::neutral0: assert(0);
+	    case values::Valtype::neutral1: assert(0);
 	    }
 	}
       return tok;
@@ -142,6 +144,8 @@ namespace anitmt
 		(*dynamic_cast<proptree::Type_Property<values::String>*>
 		 (prop) );
 	      break;
+	    case values::Valtype::neutral0: assert(0);
+	    case values::Valtype::neutral1: assert(0);
 	    }
 	}
       return tok;

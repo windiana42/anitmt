@@ -38,11 +38,11 @@ namespace solve
     // Virtual Operand_Listener methods
 
     // has to check the result of the operand with ID as pointer to operand
-    bool is_result_ok( const void *ID, Solve_Run_Info *info ) throw();
+    bool is_result_ok( const Basic_Operand *ID, Solve_Run_Info *info ) throw();
     // tells to use the result calculated by is_result_ok()
-    void use_result( const void *ID, Solve_Run_Info *info ) throw();
+    void use_result( const Basic_Operand *ID, Solve_Run_Info *info ) throw();
     // disconnect operand
-    void disconnect( const void *ID );
+    void disconnect( const Basic_Operand *ID );
 
     //*************************************
     // Virtual methods for concrete solvers
@@ -80,11 +80,11 @@ namespace solve
     // Virtual Operand_Listener methods
 
     // has to check the result of the operand with ID as pointer to operand
-    bool is_result_ok( const void *ID, Solve_Run_Info *info ) throw();
+    bool is_result_ok( const Basic_Operand *ID, Solve_Run_Info *info ) throw();
     // tells to use the result calculated by is_result_ok()
-    void use_result( const void *ID, Solve_Run_Info *info ) throw();
+    void use_result( const Basic_Operand *ID, Solve_Run_Info *info ) throw();
     // disconnect operand
-    void disconnect( const void *ID );
+    void disconnect( const Basic_Operand *ID );
 
     //*************************************
     // Virtual methods for concrete solvers
@@ -127,11 +127,11 @@ namespace solve
     // Virtual Operand_Listener methods
 
     // has to check the result of the operand with ID as pointer to operand
-    bool is_result_ok( const void *ID, Solve_Run_Info *info ) throw();
+    bool is_result_ok( const Basic_Operand *ID, Solve_Run_Info *info ) throw();
     // tells to use the result calculated by is_result_ok()
-    void use_result( const void *ID, Solve_Run_Info *info ) throw();
+    void use_result( const Basic_Operand *ID, Solve_Run_Info *info ) throw();
     // disconnect operand
-    void disconnect( const void *ID );
+    void disconnect( const Basic_Operand *ID );
 
     //*************************************
     // Virtual methods for concrete solvers
@@ -186,22 +186,26 @@ namespace solve
 
   // a = b 
   inline void equal_solver( Operand<values::Scalar> &a, 
-			    Operand<values::Scalar> &b )
+			    Operand<values::Scalar> &b,
+			    message::Message_Consultant *msgc=0 )
   {
     new Equal_Solver<values::Scalar,values::Scalar>( a, b );
   }
   inline void equal_solver( Operand<values::Vector> &a, 
-			    Operand<values::Vector> &b )
+			    Operand<values::Vector> &b,
+			    message::Message_Consultant *msgc=0 )
   {
     new Equal_Solver<values::Vector,values::Vector>( a, b );
   }
   inline void equal_solver( Operand<values::Matrix> &a, 
-			    Operand<values::Matrix> &b )
+			    Operand<values::Matrix> &b,
+			    message::Message_Consultant *msgc=0 )
   {
     new Equal_Solver<values::Matrix,values::Matrix>( a, b );
   }
   inline void equal_solver( Operand<values::String> &a, 
-			    Operand<values::String> &b )
+			    Operand<values::String> &b,
+			    message::Message_Consultant *msgc=0 )
   {
     new Equal_Solver<values::String,values::String>( a, b );
   }
@@ -225,14 +229,16 @@ namespace solve
   // a = b + c
   inline void sum_solver( Operand<values::Scalar> &a, 
 			  Operand<values::Scalar> &b, 
-			  Operand<values::Scalar> &c )
+			  Operand<values::Scalar> &c,
+			  message::Message_Consultant *msgc=0 )
   {
     new Sum_Solver<values::Scalar,values::Scalar,values::Scalar>( a, b, c );
   }
 
   inline void sum_solver( Operand<values::Vector> &a, 
 			  Operand<values::Vector> &b, 
-			  Operand<values::Vector> &c )
+			  Operand<values::Vector> &c,
+			  message::Message_Consultant *msgc=0 )
   {
     new Sum_Solver<values::Vector,values::Vector,values::Vector>( a, b, c );
   }
@@ -272,7 +278,8 @@ namespace solve
   // a = b * c
   inline void product_solver( Operand<values::Scalar> &a, 
 			      Operand<values::Scalar> &b, 
-			      Operand<values::Scalar> &c )
+			      Operand<values::Scalar> &c,
+			      message::Message_Consultant *msgc=0 )
   {
     new Product_Solver<values::Scalar,values::Scalar,values::Scalar>(a, b, c);
   }
@@ -299,7 +306,8 @@ namespace solve
 
   // a = b^2
   inline void square_solver( Operand<values::Scalar> &a, 
-			     Operand<values::Scalar> &b )
+			     Operand<values::Scalar> &b,
+			     message::Message_Consultant *msgc=0 )
   {
     new Square_Solver<values::Scalar,values::Scalar>( a, b );
   }

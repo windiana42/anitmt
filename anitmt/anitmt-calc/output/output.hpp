@@ -24,11 +24,11 @@ namespace anitmt
   class Output_Manager;
 }
 
-#include <param/param.hpp>
-#include <message/message.hpp>
-#include <proptree/proptree.hpp>
-
 #include "animation.hpp"
+
+#include <param/param.hpp>
+#include <proptree/proptree.hpp>
+#include <message/message.hpp>
 
 namespace anitmt
 {

@@ -15,9 +15,9 @@
 #ifndef __AniTMT_Raw_Output_Interface__
 #define __AniTMT_Raw_Output_Interface__
 
-#include <message/message.hpp>
-
 #include "../output.hpp"
+
+#include <message/message.hpp>
 
 namespace anitmt
 {

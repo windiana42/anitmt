@@ -37,7 +37,9 @@ namespace funcgen
     std::string prefix_container_type; //! prefix for container types
     std::string prefix_serial_container_type; //! prefix for serial containers
     std::string prefix_container_name; //! prefix for container names
+    std::string prefix_solver_identifier; //! prefix for solver identifiers
     std::string prefix_operator_class_name; //! prefix for operator classes
+    std::string prefix_solver_class_name; //! prefix for solver classes
   public:
     virtual std::string open_block();
     virtual std::string close_block();
@@ -50,6 +52,7 @@ namespace funcgen
 				     std::string priority_label );
     virtual std::string parameter_add( std::string param );
     virtual std::string close_function();
+    virtual std::string solver_identifier( std::string name );
     virtual std::string result_function_decl( std::string provider_type,
 					      std::string ret_type, 
 					      std::string par_type );
@@ -98,8 +101,8 @@ namespace funcgen
     virtual std::string first_init( std::string provider_type );
     virtual std::string last_init( std::string provider_type );
     virtual std::string is_avail( std::string provider_type,
-				  std::string ret_type,
-				  std::string par_type);
+				  std::string ret_type="",
+				  std::string par_type="" );
     virtual std::string prev();
     virtual std::string next();
     virtual std::string prev( std::string provider_type );
@@ -113,9 +116,14 @@ namespace funcgen
     virtual std::string get_child( std::string child_type, int n );
     virtual std::string reference_concat_string();
     virtual std::string operator_class_name( std::string name );
+    virtual std::string solver_class_name( std::string name );
     virtual std::string operand_from_bool( bool flag );
     virtual std::string operand_from_scalar( double val );
     virtual std::string operand_from_string( std::string );
+    virtual std::string operand_from_function( std::string name, 
+					       std::string parameters );
+    virtual std::string function( std::string function_name,
+				  std::string parameters );
 
     Cpp_Code_Translator(code_gen_info *);
   };
@@ -136,6 +144,7 @@ namespace funcgen
     void generate_base_types();
     void generate_types();
     void generate_operators();
+    void generate_solvers();
     void generate_nodes();
   public:
     Cpp_Code_Translator *get_translator();

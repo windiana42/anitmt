@@ -291,7 +291,7 @@ node if extends scalar_subfunction provides scalar_vsa {
   properties {
     // MM: boolean property not finished yet
     type flag {    
-      condition;
+      if_condition;
     }
   }
   
@@ -316,39 +316,39 @@ node if extends scalar_subfunction provides scalar_vsa {
     // on a low level with high priority 
     // MM: Have to be implemented 
     actions {
-      condition_push (  cond_push_start_time_from_child	, child.scalar_then_vsa.first.start_time        , start_time                                    ,   condition  );
-      condition_push (  cond_push_start_time_from_child	, child.scalar_else_vsa.first.start_time        , start_time                                    , ! condition  );
-      condition_push (  cond_push_start_time_to_child	, start_time                                    , child.scalar_then_vsa.first.start_time        ,   condition  );
-      condition_push (  cond_push_start_time_to_child	, start_time                                    , child.scalar_else_vsa.first.start_time        , ! condition  );
-      condition_push (  cond_push_end_time_from_child	, child.scalar_then_vsa.last.end_time           , end_time                                      ,   condition  );
-      condition_push (  cond_push_end_time_from_child	, child.scalar_else_vsa.last.end_time           , end_time                                      , ! condition  );
-      condition_push (  cond_push_end_time_to_child	, end_time                                      , child.scalar_then_vsa.last.end_time           ,   condition  );
-      condition_push (  cond_push_end_time_to_child	, end_time                                      , child.scalar_else_vsa.last.end_time           , ! condition  );
-      condition_push (  cond_push_start_value_from_child, child.scalar_then_vsa.first.start_value       , start_value                                   ,   condition  );
-      condition_push (  cond_push_start_value_from_child, child.scalar_else_vsa.first.start_value       , start_value                                   , ! condition  );
-      condition_push (  cond_push_start_value_to_child	, start_value                                   , child.scalar_then_vsa.first.start_value       ,   condition  );
-      condition_push (  cond_push_start_value_to_child	, start_value                                   , child.scalar_else_vsa.first.start_value       , ! condition  );
-      condition_push (  cond_push_end_value_from_child	, child.scalar_then_vsa.last.end_value          , end_value                                     ,   condition  );
-      condition_push (  cond_push_end_value_from_child	, child.scalar_else_vsa.last.end_value          , end_value                                     , ! condition  );
-      condition_push (  cond_push_end_value_to_child	, end_value                                     , child.scalar_then_vsa.last.end_value          ,   condition  );
-      condition_push (  cond_push_end_value_to_child	, end_value                                     , child.scalar_else_vsa.last.end_value          , ! condition  );
-      condition_push (  cond_push_start_slope_from_child, child.scalar_then_vsa.first.start_slope       , start_slope                                   ,   condition  );
-      condition_push (  cond_push_start_slope_from_child, child.scalar_else_vsa.first.start_slope       , start_slope                                   , ! condition  );
-      condition_push (  cond_push_start_slope_to_child	, start_slope                                   , child.scalar_then_vsa.first.start_slope       ,   condition  );
-      condition_push (  cond_push_start_slope_to_child	, start_slope                                   , child.scalar_else_vsa.first.start_slope       , ! condition  );
-      condition_push (  cond_push_end_slope_from_child	, child.scalar_then_vsa.last.end_slope          , end_slope                                     ,   condition  );
-      condition_push (  cond_push_end_slope_from_child	, child.scalar_else_vsa.last.end_slope          , end_slope                                     , ! condition  );
-      condition_push (  cond_push_end_slope_to_child	, end_slope                                     , child.scalar_then_vsa.last.end_slope          ,   condition  );
-      condition_push (  cond_push_end_slope_to_child	, end_slope                                     , child.scalar_else_vsa.last.end_slope          , ! condition  );
+      condition_push (  cond_push_start_time_from_child	, child.scalar_then_vsa.first.start_time        , start_time                                    ,   if_condition  );
+      condition_push (  cond_push_start_time_from_child	, child.scalar_else_vsa.first.start_time        , start_time                                    , ! if_condition  );
+      condition_push (  cond_push_start_time_to_child	, start_time                                    , child.scalar_then_vsa.first.start_time        ,   if_condition  );
+      condition_push (  cond_push_start_time_to_child	, start_time                                    , child.scalar_else_vsa.first.start_time        , ! if_condition  );
+      condition_push (  cond_push_end_time_from_child	, child.scalar_then_vsa.last.end_time           , end_time                                      ,   if_condition  );
+      condition_push (  cond_push_end_time_from_child	, child.scalar_else_vsa.last.end_time           , end_time                                      , ! if_condition  );
+      condition_push (  cond_push_end_time_to_child	, end_time                                      , child.scalar_then_vsa.last.end_time           ,   if_condition  );
+      condition_push (  cond_push_end_time_to_child	, end_time                                      , child.scalar_else_vsa.last.end_time           , ! if_condition  );
+      condition_push (  cond_push_start_value_from_child, child.scalar_then_vsa.first.start_value       , start_value                                   ,   if_condition  );
+      condition_push (  cond_push_start_value_from_child, child.scalar_else_vsa.first.start_value       , start_value                                   , ! if_condition  );
+      condition_push (  cond_push_start_value_to_child	, start_value                                   , child.scalar_then_vsa.first.start_value       ,   if_condition  );
+      condition_push (  cond_push_start_value_to_child	, start_value                                   , child.scalar_else_vsa.first.start_value       , ! if_condition  );
+      condition_push (  cond_push_end_value_from_child	, child.scalar_then_vsa.last.end_value          , end_value                                     ,   if_condition  );
+      condition_push (  cond_push_end_value_from_child	, child.scalar_else_vsa.last.end_value          , end_value                                     , ! if_condition  );
+      condition_push (  cond_push_end_value_to_child	, end_value                                     , child.scalar_then_vsa.last.end_value          ,   if_condition  );
+      condition_push (  cond_push_end_value_to_child	, end_value                                     , child.scalar_else_vsa.last.end_value          , ! if_condition  );
+      condition_push (  cond_push_start_slope_from_child, child.scalar_then_vsa.first.start_slope       , start_slope                                   ,   if_condition  );
+      condition_push (  cond_push_start_slope_from_child, child.scalar_else_vsa.first.start_slope       , start_slope                                   , ! if_condition  );
+      condition_push (  cond_push_start_slope_to_child	, start_slope                                   , child.scalar_then_vsa.first.start_slope       ,   if_condition  );
+      condition_push (  cond_push_start_slope_to_child	, start_slope                                   , child.scalar_else_vsa.first.start_slope       , ! if_condition  );
+      condition_push (  cond_push_end_slope_from_child	, child.scalar_then_vsa.last.end_slope          , end_slope                                     ,   if_condition  );
+      condition_push (  cond_push_end_slope_from_child	, child.scalar_else_vsa.last.end_slope          , end_slope                                     , ! if_condition  );
+      condition_push (  cond_push_end_slope_to_child	, end_slope                                     , child.scalar_then_vsa.last.end_slope          ,   if_condition  );
+      condition_push (  cond_push_end_slope_to_child	, end_slope                                     , child.scalar_else_vsa.last.end_slope          , ! if_condition  );
 /*
-      condition_push (  cond_push_start_acceleration_to_child	, child.scalar_then_vsa.first.start_acceleration, start_acceleration                            ,   condition  );
-      condition_push (  9, child.scalar_else_vsa.first.start_acceleration, start_acceleration                            , ! condition  );
-      condition_push ( 10, start_acceleration                            , child.scalar_then_vsa.first.start_acceleration,   condition  );
-      condition_push ( 10, start_acceleration                            , child.scalar_else_vsa.first.start_acceleration, ! condition  );
-      condition_push ( 11, child.scalar_then_vsa.last.end_acceleration   , end_acceleration                              ,   condition  );
-      condition_push ( 11, child.scalar_else_vsa.last.end_acceleration   , end_acceleration                              , ! condition  );
-      condition_push ( 12, end_acceleration                              , child.scalar_then_vsa.last.end_acceleration   ,   condition  );
-      condition_push ( 12, end_acceleration                              , child.scalar_else_vsa.last.end_acceleration   , ! condition  );
+      condition_push (  cond_push_start_acceleration_to_child	, child.scalar_then_vsa.first.start_acceleration, start_acceleration                            ,   if_condition  );
+      condition_push (  9, child.scalar_else_vsa.first.start_acceleration, start_acceleration                            , ! if_condition  );
+      condition_push ( 10, start_acceleration                            , child.scalar_then_vsa.first.start_acceleration,   if_condition  );
+      condition_push ( 10, start_acceleration                            , child.scalar_else_vsa.first.start_acceleration, ! if_condition  );
+      condition_push ( 11, child.scalar_then_vsa.last.end_acceleration   , end_acceleration                              ,   if_condition  );
+      condition_push ( 11, child.scalar_else_vsa.last.end_acceleration   , end_acceleration                              , ! if_condition  );
+      condition_push ( 12, end_acceleration                              , child.scalar_then_vsa.last.end_acceleration   ,   if_condition  );
+      condition_push ( 12, end_acceleration                              , child.scalar_else_vsa.last.end_acceleration   , ! if_condition  );
 */
     }
   }
@@ -359,17 +359,17 @@ node if extends scalar_subfunction provides scalar_vsa {
   provide scalar_vsa {
     resulting value ( time t ) 
     requires child.scalar_then_vsa.value ( time ), child.scalar_else_vsa.value ( time ) { 
-      scalar res = [[condition]] ? [[ child.scalar_then_vsa.value ( time t ) ]] : [[ child.scalar_else_vsa.value ( time t ) ]];
+      scalar res = [[if_condition]] ? [[ child.scalar_then_vsa.value ( time t ) ]] : [[ child.scalar_else_vsa.value ( time t ) ]];
       [[ return res]];
     } 
     resulting slope ( time t ) 
     requires child.scalar_then_vsa.slope ( time ), child.scalar_else_vsa.slope ( time ) { 
-      scalar res = [[ condition ]] ? [[child.scalar_then_vsa.slope ( time t ) ]] : [[child.scalar_else_vsa.slope ( time t ) ]];
+      scalar res = [[ if_condition ]] ? [[child.scalar_then_vsa.slope ( time t ) ]] : [[child.scalar_else_vsa.slope ( time t ) ]];
       [[ return res]];
     } 
     resulting acceleration ( time t ) 
     requires child.scalar_then_vsa.acceleration ( time ), child.scalar_else_vsa.acceleration ( time ) { 
-      scalar res = [[ condition ]] ? [[child.scalar_then_vsa.acceleration ( time t ) ]] : [[child.scalar_else_vsa.acceleration ( time t ) ]];
+      scalar res = [[ if_condition ]] ? [[child.scalar_then_vsa.acceleration ( time t ) ]] : [[child.scalar_else_vsa.acceleration ( time t ) ]];
       [[ return res]];
     } 
   }

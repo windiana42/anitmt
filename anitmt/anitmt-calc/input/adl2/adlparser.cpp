@@ -14,10 +14,10 @@
 
 #include "adlparser.hpp"
 
-#include <string>
-
 //!!! old parameter interface
 #include <par/params.hpp>
+
+#include <string>
 
 namespace anitmt
 {

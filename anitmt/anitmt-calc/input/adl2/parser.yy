@@ -17,9 +17,6 @@
 //***********
 
 %{
-#include <iostream>
-#include <string>
-
 #include <val/val.hpp>
 #include <solve/operand.hpp>
 #include <solve/operator.hpp>
@@ -33,6 +30,9 @@
 
 #include "parser_functions.hpp"	// help functions for the parser
 				// including nessessary defines 
+
+#include <iostream>
+#include <string>
 
   // open namespaces
   namespace anitmt

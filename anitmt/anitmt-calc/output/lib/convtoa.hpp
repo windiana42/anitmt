@@ -22,9 +22,9 @@
 #ifndef _Inc_IO_ConvToAscii_H_
 #define _Inc_IO_ConvToAscii_H_ 1
 
-#include "lproto.hpp"
-
 #include <val/val.hpp>
+
+#include "lproto.hpp"
 
 namespace output_io
 {

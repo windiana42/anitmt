@@ -39,14 +39,14 @@ namespace solve
     //*** Operand_Listener methods ***
 
     //! has to check the result of the operand with ID as pointer to operand
-    virtual bool is_result_ok( const void *ID, 
+    virtual bool is_result_ok( const Basic_Operand *ID, 
 			       Solve_Run_Info *info ) throw();
     //! tells to use the result calculated by is_result_ok()
-    virtual void use_result( const void *ID, Solve_Run_Info *info )
+    virtual void use_result( const Basic_Operand *ID, Solve_Run_Info *info )
       throw();
 
     //! disconnect operand
-    virtual void disconnect( const void *ID );
+    virtual void disconnect( const Basic_Operand *ID );
 
     //*** virtual Operator methods ***
 
@@ -89,14 +89,14 @@ namespace solve
     //*** Operand_Listener methods ***
 
     //! has to check the result of the operand with ID as pointer to operand
-    virtual bool is_result_ok( const void *ID, Solve_Run_Info *info ) 
+    virtual bool is_result_ok( const Basic_Operand *ID, Solve_Run_Info *info ) 
       throw();
     //! tells to use the result calculated by is_result_ok()
-    virtual void use_result( const void *ID, Solve_Run_Info *info )
+    virtual void use_result( const Basic_Operand *ID, Solve_Run_Info *info )
       throw();
 
     //! disconnect operand
-    virtual void disconnect( const void *ID );
+    virtual void disconnect( const Basic_Operand *ID );
 
     //*** virtual Operator methods ***
 
@@ -146,14 +146,14 @@ namespace solve
     //*** Operand_Listener methods ***
 
     //! has to check the result of the operand with ID as pointer to operand
-    virtual bool is_result_ok( const void *ID, 
+    virtual bool is_result_ok( const Basic_Operand *ID, 
 			       Solve_Run_Info *info ) throw();
     //! tells to use the result calculated by is_result_ok()
-    virtual void use_result( const void *ID, Solve_Run_Info *info )
+    virtual void use_result( const Basic_Operand *ID, Solve_Run_Info *info )
       throw();
 
     //! disconnect operand
-    virtual void disconnect( const void *ID );
+    virtual void disconnect( const Basic_Operand *ID );
 
     //*** virtual Operator methods ***
 
@@ -224,14 +224,14 @@ namespace solve
     //*** Operand_Listener methods ***
 
     //! has to check the result of the operand with ID as pointer to operand
-    virtual bool is_result_ok( const void *ID, 
+    virtual bool is_result_ok( const Basic_Operand *ID, 
 			       Solve_Run_Info *info ) throw();
     //! tells to use the result calculated by is_result_ok()
-    virtual void use_result( const void *ID, Solve_Run_Info *info )
+    virtual void use_result( const Basic_Operand *ID, Solve_Run_Info *info )
       throw();
 
     //! disconnect operand
-    virtual void disconnect( const void *ID );
+    virtual void disconnect( const Basic_Operand *ID );
 
     //*** virtual Operator methods ***
 
@@ -296,14 +296,14 @@ namespace solve
     //*** Operand_Listener methods ***
 
     //! has to check the result of the operand with ID as pointer to operand
-    virtual bool is_result_ok( const void *ID, 
+    virtual bool is_result_ok( const Basic_Operand *ID, 
 			       Solve_Run_Info *info ) throw();
     //! tells to use the result calculated by is_result_ok()
-    virtual void use_result( const void *ID, Solve_Run_Info *info )
+    virtual void use_result( const Basic_Operand *ID, Solve_Run_Info *info )
       throw();
 
     //! disconnect operand
-    virtual void disconnect( const void *ID );
+    virtual void disconnect( const Basic_Operand *ID );
 
     //*** virtual Operator methods ***
 
@@ -385,17 +385,19 @@ namespace solve
     // Virtual Operand_Listener methods
 
     // has to check the result of the operand with ID as pointer to operand
-    bool is_result_ok( const void *ID, Solve_Run_Info *info ) throw();
+    bool is_result_ok( const Basic_Operand *ID, Solve_Run_Info *info ) throw();
     // tells to use the result calculated by is_result_ok()
-    void use_result( const void *ID, Solve_Run_Info *info ) throw();
+    void use_result( const Basic_Operand *ID, Solve_Run_Info *info ) throw();
     // disconnect operand
-    void disconnect( const void *ID );
+    void disconnect( const Basic_Operand *ID );
 
     //***************************************
     // Virtual methods for concrete operands
 
     //! return initial result for calculation sequence
     virtual RES initial_result() = 0;
+    //! return result when no operand was added
+    virtual RES no_operands_result() = 0;
     //! returns new result for one operand and the old result (sequence calc)
     virtual RES calc( const OP &op, const RES &old_res ) = 0;
 
@@ -434,6 +436,7 @@ namespace solve
     typedef bool OP;
 
     virtual RES initial_result();	
+    virtual RES no_operands_result();
     virtual RES calc( const OP &op, const RES &old_res );
 
     virtual bool is_op_sufficient( const OP &op );
@@ -454,11 +457,11 @@ namespace solve
     // Virtual Operand_Listener methods
 
     // has to check the result of the operand with ID as pointer to operand
-    bool is_result_ok( const void *ID, Solve_Run_Info *info ) throw();
+    bool is_result_ok( const Basic_Operand *ID, Solve_Run_Info *info ) throw();
     // tells to use the result calculated by is_result_ok()
-    void use_result( const void *ID, Solve_Run_Info *info ) throw();
+    void use_result( const Basic_Operand *ID, Solve_Run_Info *info ) throw();
     // disconnect operand
-    void disconnect( const void *ID );
+    void disconnect( const Basic_Operand *ID );
 
   public:
     inline Operand<bool> &get_result() { return result; }

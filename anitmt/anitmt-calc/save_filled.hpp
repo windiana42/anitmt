@@ -15,9 +15,10 @@
 #ifndef __AniTMT_Save_Filled__
 #define __AniTMT_Save_Filled__
 
-#include <string>
 #include <proptree/proptree.hpp>
 #include "animation.hpp"
+
+#include <string>
 
 namespace anitmt {
   static const std::string WN_INDENT_STRING = "  ";

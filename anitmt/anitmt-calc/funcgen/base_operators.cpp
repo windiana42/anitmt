@@ -16,7 +16,7 @@
 
 namespace funcgen
 {
-  std::string type_to_string( type t )
+  std::string type_to_string( op_par_type t )
   {
     switch( t )
     {
@@ -45,7 +45,7 @@ namespace funcgen
   }
 
   //! get parameter types of function (first is return type)
-  const std::list<type> &Basic_Operator::get_types 
+  const std::list<op_par_type> &Basic_Operator::get_types 
   ( std::string function ) const
   {
     Basic_Operator *new_this = const_cast<Basic_Operator*>(this);
@@ -72,20 +72,21 @@ namespace funcgen
     return new_this->function_specification[function];
   }
 
-  void Basic_Operator::add_1_arg_fun( type return_type, std::string name, 
-				 type arg1 )
+  void Basic_Operator::add_1_arg_fun( op_par_type return_type, 
+				      std::string name, op_par_type arg1 )
   {
-    std::list<type> &args = functions[name];
+    std::list<op_par_type> &args = functions[name];
     args.push_back( return_type );
     args.push_back( arg1 );
     function_specification[name] 
       = type_to_string(return_type) + " " 
       + name + "( " + type_to_string(arg1) + " )";
   }
-  void Basic_Operator::add_2_arg_fun( type return_type, std::string name, 
-				 type arg1, type arg2 )
+  void Basic_Operator::add_2_arg_fun( op_par_type return_type, 
+				      std::string name, 
+				      op_par_type arg1, op_par_type arg2 )
   {
-    std::list<type> &args = functions[name];
+    std::list<op_par_type> &args = functions[name];
     args.push_back( return_type );
     args.push_back( arg1 );
     args.push_back( arg2 );
@@ -93,10 +94,11 @@ namespace funcgen
       = type_to_string(return_type) + " " + name + "( " 
       + type_to_string(arg1) + ", " + type_to_string(arg2) + " )";
   }
-  void Basic_Operator::add_3_arg_fun( type return_type, std::string name, 
-				 type arg1, type arg2, type arg3 )
+  void Basic_Operator::add_3_arg_fun( op_par_type return_type, 
+				      std::string name, op_par_type arg1, 
+				      op_par_type arg2, op_par_type arg3 )
   {
-    std::list<type> &args = functions[name];
+    std::list<op_par_type> &args = functions[name];
     args.push_back( return_type );
     args.push_back( arg1 );
     args.push_back( arg2 );
@@ -105,10 +107,12 @@ namespace funcgen
       = type_to_string(return_type) + " " + name + "( " + type_to_string(arg1)
       + ", " + type_to_string(arg2) + ", " + type_to_string(arg3) + " )";
   }
-  void Basic_Operator::add_4_arg_fun( type return_type, std::string name, 
-				 type arg1, type arg2, type arg3, type arg4 )
+  void Basic_Operator::add_4_arg_fun( op_par_type return_type, 
+				      std::string name, 
+				      op_par_type arg1, op_par_type arg2, 
+				      op_par_type arg3, op_par_type arg4 )
   {
-    std::list<type> &args = functions[name];
+    std::list<op_par_type> &args = functions[name];
     args.push_back( return_type );
     args.push_back( arg1 );
     args.push_back( arg2 );
@@ -119,10 +123,13 @@ namespace funcgen
       + ", " + type_to_string(arg2) + ", " + type_to_string(arg3) + ", " 
       + type_to_string(arg4) + " )";
   }
-  void Basic_Operator::add_5_arg_fun( type return_type, std::string name, 
-				 type arg1, type arg2, type arg3, type arg4, type arg5 )
+  void Basic_Operator::add_5_arg_fun( op_par_type return_type, 
+				      std::string name, 
+				      op_par_type arg1, op_par_type arg2, 
+				      op_par_type arg3, op_par_type arg4, 
+				      op_par_type arg5 )
   {
-    std::list<type> &args = functions[name];
+    std::list<op_par_type> &args = functions[name];
     args.push_back( return_type );
     args.push_back( arg1 );
     args.push_back( arg2 );

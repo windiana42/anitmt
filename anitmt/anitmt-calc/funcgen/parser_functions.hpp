@@ -100,20 +100,9 @@ namespace funcgen
   void add_provided_result_type( void *info, const std::string &ret, 
 				 const std::string &par );
 
-  void start_operator_declaration( void *info, const std::string &type,
-				   const std::string &name );
-  void start_operator_function_declaration( void *info, 
-					    const std::string &name );
-  void start_operator_function_code( void *info );
-  void finish_operator_function_code( void *info );
-  void add_operator_function_parameter( void *info, const std::string &name );
-  void start_operator_version( void *info, const std::string &ret_type,
-			     const std::string &name );
-  void add_operator_version_parameter( void *info, const std::string &name );
-  void finish_operator_version( void *infoptr );
-
   void start_node_declaration( void *info, bool abstract,
 			       const std::string &name );
+  void finish_node_declaration( void *infoptr );
   void node_extends( void *info, const std::string &node );
   void node_provides( void *info, const std::string &type );
 
@@ -125,10 +114,10 @@ namespace funcgen
   void node_declare_alias( void *info, const std::string &alias, 
 			   const std::string &property );
 
-  void node_start_operand_type( void *info, const std::string &type );
-  void node_declare_operand( void *info, const std::string &name ); 
-  void node_declare_operand( void *info, const std::string &type,
-			     const std::string &name );
+  void start_operand_type( void *info, const std::string &type );
+  void declare_operand( void *info, const std::string &name ); 
+  void declare_operand( void *info, const std::string &type,
+			const std::string &name );
 
   void node_start_common_declaration( void *info );
   void node_start_first_declaration( void *info, const std::string &type="" ); 
@@ -137,7 +126,14 @@ namespace funcgen
   void node_solve_constraint( void *info, const Expression *exp );
 
   void node_start_solver( void *info, const std::string &solver );
+  void node_solver_identifier( void *info, const std::string &name );  
   void node_add_solver_parameter( void *info ); // from reference
+  void node_add_solver_const_parameter( void *info, bool b ); 
+  void node_add_solver_const_parameter( void *info, double s ); 
+  void node_add_solver_const_parameter( void *info, const std::string &s );
+  void node_add_solver_const_parameter( void *info, 
+					const std::string &function,
+					const std::string &parameter); 
   void node_finish_solver( void *info ); 
   void node_solve_expression( void *info, const std::string &property,
 			      Expression *exp );
@@ -172,6 +168,40 @@ namespace funcgen
   void node_result_essential_result( void *info, const std::string &provider, 
 				     const std::string &ret="", 
 				     const std::string &par="" );
+
+  void start_operator_declaration( void *info, const std::string &type,
+				   const std::string &name );
+  void start_operator_function_declaration( void *info, 
+					    const std::string &name );
+  void start_operator_function_code( void *info );
+  void finish_operator_function_code( void *info );
+  void add_operator_function_parameter( void *info, const std::string &name );
+  void start_operator_version( void *info, const std::string &ret_type,
+			     const std::string &name );
+  void add_operator_version_parameter( void *info, const std::string &name );
+  void finish_operator_version( void *infoptr );
+
+  void start_complex_solver_parameters( void *info, const std::string &name );
+  void start_complex_solver_declaration( void *info );
+  void finish_complex_solver_declaration( void *info );
+  //...
+  void start_complex_solver_init_block( void *info );
+  void finish_complex_solver_init_block( void *info );
+  void start_complex_solver_init_constraints_block( void *info );
+  void finish_complex_solver_init_constraints_block( void *info );
+  void start_complex_solver_function( void *info, const std::string &ret_type,
+				      const std::string &name);
+  void finish_complex_solver_function( void *info );
+  void complex_solver_require_operand( void *info, const std::string &op );
+  void complex_solver_require_function( void *info, const std::string &func );
+  void complex_solver_require_solver_func( void *info, 
+					   const std::string &solver,
+					   const std::string &function );
+
+  void function_parameter( void *info, const std::string &type, 
+			   const std::string &name );
+  void start_variable_declaration( void *info, const std::string &type );
+  void variable_declaration_name( void *info, const std::string &name );
 
   void write_code( void *info, double scalar );
   void write_code( void *info, std::string id );

@@ -239,161 +239,6 @@ namespace funcgen
       afd->current_type->result_types.insert( Result_Type(ret,par) );
   }
 
-  void start_operator_declaration( void *infoptr, const std::string &type,
-				   const std::string &name )
-  {
-    afd_info *info = static_cast<afd_info*>(infoptr);
-    AFD_Root *afd = info->afd;
-    message::Message_Reporter &msg = info->msg;
-
-    if( afd->operator_declarations.find(name) != afd->operator_declarations.end() )
-    {
-      msg.error() << "operator " << name << " already defined";
-      afd->current_operator_declaration = 0;
-    }
-    else if( !available_operators.is_operator( type ) )
-    {
-      msg.error() << "invalid operator base type: " << type;
-      afd->current_operator_declaration = 0;
-    }
-    else
-    {
-      // insert new operator declaration with name
-      afd->current_operator_declaration = &afd->operator_declarations[name];
-      // initialize it
-      afd->current_operator_declaration->don_t_create_code 
-	= afd->don_t_create_code.top();
-
-      afd->current_operator_declaration->pos = info->file_pos.duplicate();
-      afd->current_operator_declaration->basic_operator 
-	= &available_operators.get_operator( type );
-      afd->current_operator_declaration->operator_name = name;
-      afd->current_operator_declaration->operator_base_type_name = type;
-    }
-  }
-  void start_operator_function_declaration( void *infoptr, 
-					    const std::string &name )
-  {
-    afd_info *info = static_cast<afd_info*>(infoptr);
-    AFD_Root *afd = info->afd;
-    message::Message_Reporter &msg = info->msg;
-
-    if( afd->current_operator_declaration )
-    {
-      if( !available_operators.get_operator( afd->current_operator_declaration
-					     ->operator_base_type_name )
-	  .is_function(name) )
-      {
-	msg.error() << "unknown function name "<< name <<" for this operator";
-	afd->current_operator_declaration->current_function = 0;
-      }
-      else if( afd->current_operator_declaration->function_code.find(name)
-	       != afd->current_operator_declaration->function_code.end() )
-      {
-	msg.error() << "function "<< name <<" already defined";
-	afd->current_operator_declaration->current_function = 0;
-      }
-      else
-      {
-	afd->current_operator_declaration->current_function = 
-	  &afd->current_operator_declaration->function_code[name];
-	afd->current_operator_declaration->current_function->pos 
-	  = info->file_pos.duplicate();
-      }
-    }
-  }
-  void start_operator_function_code( void *infoptr )
-  {
-    afd_info *info = static_cast<afd_info*>(infoptr);
-    AFD_Root *afd = info->afd;
-    //message::Message_Reporter &msg = info->msg;
-
-    if( afd->current_operator_declaration )
-    {
-      if( afd->current_operator_declaration->current_function )
-      {
-	afd->current_code 
-	  = afd->current_operator_declaration->current_function;
-      }
-    }
-  }
-  void finish_operator_function_code( void *infoptr )
-  {	       
-    /* everything is done by copy_code_line() */
-  }
-  void add_operator_function_parameter( void *infoptr, 
-					const std::string &name )
-  {
-    afd_info *info = static_cast<afd_info*>(infoptr);
-    AFD_Root *afd = info->afd;
-    //message::Message_Reporter &msg = info->msg;
-
-    if( afd->current_operator_declaration )
-    {
-      if( afd->current_operator_declaration->current_function )
-      {
-	afd->current_operator_declaration->current_function->parameter_names
-	  .push_back( name );
-      }
-    }
-  }
-  void start_operator_version( void *infoptr, const std::string &ret_type,
-			     const std::string &name )
-  {
-    afd_info *info = static_cast<afd_info*>(infoptr);
-    AFD_Root *afd = info->afd;
-    //message::Message_Reporter &msg = info->msg;
-
-    if( afd->current_operator_declaration )
-    {
-      afd->current_operator_declaration->versions
-	.push_back(std::list<std::string>());
-      afd->current_operator_declaration->current_version =
-	&(afd->current_operator_declaration->versions.back());
-
-      afd->current_operator_declaration->current_version
-	->push_back( name );
-      afd->current_operator_declaration->current_version
-	->push_back( ret_type );
-    }
-  }
-  void add_operator_version_parameter( void *infoptr, const std::string &name )
-  {
-    afd_info *info = static_cast<afd_info*>(infoptr);
-    AFD_Root *afd = info->afd;
-    //message::Message_Reporter &msg = info->msg;
-
-    if( afd->current_operator_declaration )
-    {
-      if( afd->current_operator_declaration->current_version )
-      {
-	afd->current_operator_declaration->current_version->push_back( name );
-      }
-    }
-  }
-  void finish_operator_version( void *infoptr )
-  {
-    afd_info *info = static_cast<afd_info*>(infoptr);
-    AFD_Root *afd = info->afd;
-    message::Message_Reporter &msg = info->msg;
-
-    if( afd->current_operator_declaration )
-    {
-      if( afd->current_operator_declaration->current_version )
-      {
-	int num_operands = afd->current_operator_declaration
-	  ->basic_operator->get_num_operands();
-	if( int(afd->current_operator_declaration->current_version->size())
-	    != num_operands + 2 )
-	{
-	  msg.error() << "wrong number of operand type parameters, " 
-		      << num_operands << " expected";
-	  msg.error(afd->current_operator_declaration->pos) << "see here";
-	}
-      }
-    }
-  }
-
   void start_node_declaration( void *infoptr, bool abstract,
 			       const std::string &name )
   {
@@ -401,10 +246,19 @@ namespace funcgen
     AFD_Root *afd = info->afd;
     afd->current_node = &afd->nodes[name]; 
     afd->current_node->pos = info->file_pos.duplicate();
+    afd->current_node->set_parent_context(afd);
+    afd->push_context(afd->current_node);
     if( abstract )		// dont create abstract nodes
       afd->current_node->don_t_create_code = true;
     else
       afd->current_node->don_t_create_code = afd->don_t_create_code.top();
+  }
+  void finish_node_declaration( void *infoptr )
+  {
+    afd_info *info = static_cast<afd_info*>(infoptr);
+    AFD_Root *afd = info->afd;
+
+    afd->pop_context();
   }
   void node_extends( void *infoptr, const std::string &node )
   {
@@ -437,14 +291,12 @@ namespace funcgen
     assert(afd->current_node != 0);
     
     // check if provider type exists
-    std::map<std::string,Provider_Type>::iterator i;
-    i = afd->provider_types.find(type);
-    if( i == afd->provider_types.end() )
+    if( !afd->get_context()->is_provider_type(type) )
       info->msg.error() 
 	<< "provided type \"" << type << "\" doesn't exist";
     else
     {
-      Provider_Type &provider_type = i->second;
+      Provider_Type &provider_type = afd->provider_types[type];
       // insert provided type
       Provided_Results &provided_res 
 	= afd->current_node->provided_results[type];
@@ -464,31 +316,53 @@ namespace funcgen
   void node_start_property_type( void *info, const std::string &type )
   {
     message::Message_Reporter &msg = static_cast<afd_info*>(info)->msg;
-    Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;
-    assert(node != 0);
-
-    node->current_property_type = type;
+    Context *context = static_cast<afd_info*>(info)->afd->get_context();
+    if( context )
+      context->current_property_type = type;
 
     // ?!? allow only known property types ?!?
     if( ( type != "flag" ) && ( type != "scalar" ) && ( type != "vector" ) &&
 	( type != "matrix" ) && ( type != "string" ) )
     {
       msg.error() << "property type \"" << type << "\" isn't allowed";
-      node->current_property_type = "<invalid_type>";
+      context->current_property_type = "<invalid_type>";
     }
   }
   void node_declare_property( void *info, const std::string &name )
   {
-    Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;
-    assert(node != 0);
-    node->properties[name] = node->current_property_type;
+    message::Message_Reporter &msg = static_cast<afd_info*>(info)->msg;
+    Context *context = static_cast<afd_info*>(info)->afd->get_context();
+    if( context )
+    {
+      if( !context->is_property(name) )
+      {
+	Property prop(name,context->current_property_type);
+	context->property_list.push_back( prop );
+	context->properties[name] = &context->property_list.back();
+      }
+      else
+      {
+	msg.error() << "property \"" << name << " already defined";
+      }
+    }
   }
   void node_declare_property( void *info, const std::string &type,
 			      const std::string &name )
   {
-    Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;
-    assert(node != 0);
-    node->properties[name] = type;
+    message::Message_Reporter &msg = static_cast<afd_info*>(info)->msg;
+    Context *context = static_cast<afd_info*>(info)->afd->get_context();
+    if( context )
+    {
+      if( context->is_property(name) )
+      {
+	context->property_list.push_back( Property(name,type) );
+	context->properties[name] = &context->property_list.back();
+      }
+      else
+      {
+	msg.error() << "property \"" << name << " already defined";
+      }
+    }
   }
 
   void node_declare_alias( void *info, const std::string &alias, 
@@ -499,38 +373,59 @@ namespace funcgen
     node->aliases.push_back(Alias(alias,property));
   }
 
-  void node_start_operand_type( void *info, const std::string &type )
+  void start_operand_type( void *info, const std::string &type )
   {
-    //message::Message_Reporter &msg = static_cast<afd_info*>(info)->msg;
-    Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;
-    assert(node != 0);
-
-    node->current_operand_type = type;
+    Context *context = static_cast<afd_info*>(info)->afd->get_context();
+    if( context )
+      context->current_operand_type = type;
   }
-  void node_declare_operand( void *info, const std::string &name )
+  void declare_operand( void *info, const std::string &name )
   {
-    Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;
-    assert(node != 0);
-    node->operands[name] = node->current_operand_type;
+    message::Message_Reporter &msg = static_cast<afd_info*>(info)->msg;
+    Context *context = static_cast<afd_info*>(info)->afd->get_context();
+    if( context )
+    {
+      if( !context->is_operand(name) )
+      {
+	Operand op(name,context->current_operand_type);
+	context->operand_list.push_back( op );
+	context->operands[name] = &context->operand_list.back();
+      }
+      else
+      {
+	msg.error() << "operand \"" << name << " already defined";
+      }
+    }
   } 
-  void node_declare_operand( void *info, const std::string &type, 
-			     const std::string &name )
+  void declare_operand( void *info, const std::string &type, 
+			const std::string &name )
   {
-    Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;
-    assert(node != 0);
-    node->operands[name] = type;
+    message::Message_Reporter &msg = static_cast<afd_info*>(info)->msg;
+    Context *context = static_cast<afd_info*>(info)->afd->get_context();
+    if( context )
+    {
+      if( !context->is_operand(name) )
+      {
+	context->operand_list.push_back( Operand(name,type) );
+	context->operands[name] = &context->operand_list.back();
+      }
+      else
+      {
+	msg.error() << "operand \"" << name << " already defined";
+      }
+    }
   } 
 
   void node_start_common_declaration( void *info )
   {
-    Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;
-    assert(node != 0);
-    node->current_solve_code = &node->common;
+    AFD_Root *afd = static_cast<afd_info*>(info)->afd;
+    afd->current_solve_code = &afd->current_node->common;
   }
   void node_start_first_declaration( void *info, const std::string &type )
   {
     message::Message_Reporter &msg = static_cast<afd_info*>(info)->msg;
-    Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;    
+    AFD_Root *afd = static_cast<afd_info*>(info)->afd;
+    Tree_Node_Type *node = afd->current_node;    
     assert(node != 0);
     if( type != "" )
     {
@@ -541,19 +436,20 @@ namespace funcgen
 	msg.error() 
 	  << "type \"" << type << "\" is not provided by this node type";
 	msg.verbose(1,node->pos) << "> see here";
-	node->current_solve_code = 0;
+	afd->current_solve_code = 0;
       }
       else
 	// enter declaration in map and set the current pointer
-	node->current_solve_code = &node->first[type];
+	afd->current_solve_code = &node->first[type];
     }
     else
       // enter declaration in map and set the current pointer
-      node->current_solve_code = &node->first[type];
+      afd->current_solve_code = &node->first[type];
   } 
   void node_start_last_declaration( void *info, const std::string &type )
   {
     message::Message_Reporter &msg = static_cast<afd_info*>(info)->msg;
+    AFD_Root *afd = static_cast<afd_info*>(info)->afd;
     Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;    
     assert(node != 0);
     if( type != "" )
@@ -565,25 +461,24 @@ namespace funcgen
 	msg.error() 
 	  << "type \"" << type << "\" is not provided by this node type";
 	msg.verbose(1,node->pos) << "> see here";
-	node->current_solve_code = 0;
+	afd->current_solve_code = 0;
       }
       else
 	// enter declaration in map and set the current pointer
-	node->current_solve_code = &node->last[type];
+	afd->current_solve_code = &node->last[type];
     }
     else
       // enter declaration in map and set the current pointer
-      node->current_solve_code = &node->last[type];
+      afd->current_solve_code = &node->last[type];
     
     // enter declaration in map and set the current pointer
-    node->current_solve_code = &node->last[type]; 
+    afd->current_solve_code = &node->last[type]; 
   } 
 
   void node_solve_constraint( void *info, const Expression *exp  )
   {
-    Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;    
-    assert(node != 0);
-    Solve_System_Code *solve_code = node->current_solve_code;    
+    AFD_Root *afd = static_cast<afd_info*>(info)->afd;
+    Solve_System_Code *solve_code = afd->current_solve_code;    
 
     if( solve_code )
     {
@@ -594,31 +489,86 @@ namespace funcgen
 
   void node_start_solver( void *info, const std::string &solver )
   {
-    Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;    
-    assert(node != 0);
-    Solve_System_Code *solve_code = node->current_solve_code;    
+    AFD_Root *afd = static_cast<afd_info*>(info)->afd;
+    Solve_System_Code *solve_code = afd->current_solve_code;    
 
     if( solve_code )
     {
       solve_code->solvers.new_solver(solver);
     }
   }
-  void node_add_solver_parameter( void *info )
+  void node_solver_identifier( void *info, const std::string &name )
   {
-    Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;
-    assert(node != 0);
-    Solve_System_Code *solve_code = node->current_solve_code;    
+    AFD_Root *afd = static_cast<afd_info*>(info)->afd;
+    Solve_System_Code *solve_code = afd->current_solve_code;    
 
     if( solve_code )
     {
-      solve_code->solvers.add_parameter_ref(node->current_reference);
+      solve_code->solvers.set_solver_identifier( name );
+    }
+  }
+
+  void node_add_solver_parameter( void *info )
+  {
+    AFD_Root *afd = static_cast<afd_info*>(info)->afd;
+    Solve_System_Code *solve_code = afd->current_solve_code;    
+
+    if( solve_code )
+    {
+      solve_code->solvers.add_parameter_ref(afd->current_reference);
     }
   } // from reference
+  void node_add_solver_const_parameter( void *info, bool b )
+  {
+    AFD_Root *afd = static_cast<afd_info*>(info)->afd;
+    Solve_System_Code *solve_code = afd->current_solve_code;    
+
+    if( solve_code )
+    {
+      solve_code->solvers.add_const_parameter
+	( afd->translator->operand_from_bool(b) );
+    }
+  }
+  void node_add_solver_const_parameter( void *info, double s )
+  {
+    AFD_Root *afd = static_cast<afd_info*>(info)->afd;
+    Solve_System_Code *solve_code = afd->current_solve_code;    
+
+    if( solve_code )
+    {
+      solve_code->solvers.add_const_parameter
+	( afd->translator->operand_from_scalar(s) );
+    }
+  }
+  void node_add_solver_const_parameter( void *info, const std::string &s )
+  {
+    AFD_Root *afd = static_cast<afd_info*>(info)->afd;
+    Solve_System_Code *solve_code = afd->current_solve_code;    
+
+    if( solve_code )
+    {
+      solve_code->solvers.add_const_parameter
+	( afd->translator->operand_from_string(s) );
+    }
+  }
+  void node_add_solver_const_parameter( void *info, 
+					const std::string &function_name,
+					const std::string &parameters )
+  {
+    AFD_Root *afd = static_cast<afd_info*>(info)->afd;
+    Solve_System_Code *solve_code = afd->current_solve_code;    
+
+    if( solve_code )
+    {
+      solve_code->solvers.add_const_parameter
+	( afd->translator->operand_from_function( function_name, 
+						  parameters ) );
+    }
+  }
   void node_finish_solver( void *info )
   {
-    Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;
-    assert(node != 0);
-    Solve_System_Code *solve_code = node->current_solve_code;    
+    AFD_Root *afd = static_cast<afd_info*>(info)->afd;
+    Solve_System_Code *solve_code = afd->current_solve_code;    
 
     if( solve_code )
     {
@@ -630,9 +580,7 @@ namespace funcgen
   {
     afd_info *I=static_cast<afd_info*>(info);
     Code_Translator *translator = I->afd->translator;
-    Tree_Node_Type *node = I->afd->current_node;
-    assert(node != 0);
-    Solve_System_Code *solve_code = node->current_solve_code;    
+    Solve_System_Code *solve_code = I->afd->current_solve_code;    
 
     if( solve_code )
     {
@@ -648,9 +596,7 @@ namespace funcgen
     message::Message_Reporter &msg = I->msg;
     AFD_Root *afd = I->afd;
     Code_Translator *translator = afd->translator;
-    Tree_Node_Type *node = afd->current_node;
-    assert(node != 0);
-    Solve_System_Code *solve_code = node->current_solve_code;    
+    Solve_System_Code *solve_code = afd->current_solve_code;    
 
     if( solve_code )
     {
@@ -666,13 +612,11 @@ namespace funcgen
   {
     afd_info *I=static_cast<afd_info*>(info);
     Code_Translator *translator = I->afd->translator;
-    Tree_Node_Type *node = I->afd->current_node;
-    assert(node != 0);
-    Solve_System_Code *solve_code = node->current_solve_code;    
+    Solve_System_Code *solve_code = I->afd->current_solve_code;    
 
     if( solve_code )
     {
-      solve_code->actions.add_parameter_ref(node->current_reference,
+      solve_code->actions.add_parameter_ref(I->afd->current_reference,
 					    translator);
     }
   }
@@ -680,9 +624,7 @@ namespace funcgen
   {
     afd_info *I=static_cast<afd_info*>(info);
     Code_Translator *translator = I->afd->translator;
-    Tree_Node_Type *node = I->afd->current_node;
-    assert(node != 0);
-    Solve_System_Code *solve_code = node->current_solve_code;    
+    Solve_System_Code *solve_code = I->afd->current_solve_code;    
 
     if( solve_code )
     {
@@ -693,9 +635,7 @@ namespace funcgen
   {
     afd_info *I=static_cast<afd_info*>(info);
     Code_Translator *translator = I->afd->translator;
-    Tree_Node_Type *node = I->afd->current_node;
-    assert(node != 0);
-    Solve_System_Code *solve_code = node->current_solve_code;    
+    Solve_System_Code *solve_code = I->afd->current_solve_code;    
 
     if( solve_code )
     {
@@ -707,9 +647,7 @@ namespace funcgen
   {
     afd_info *I=static_cast<afd_info*>(info);
     Code_Translator *translator = I->afd->translator;
-    Tree_Node_Type *node = I->afd->current_node;
-    assert(node != 0);
-    Solve_System_Code *solve_code = node->current_solve_code;    
+    Solve_System_Code *solve_code = I->afd->current_solve_code;    
 
     if( solve_code )
     {
@@ -725,15 +663,13 @@ namespace funcgen
     Tree_Node_Type *node = afd->current_node;
     if( node )
     {
-      AFD_Root::provider_types_type::iterator i = 
-	afd->provider_types.find(type);
-      if( i == afd->provider_types.end() )
+      if( !afd->get_context()->is_provider_type(type) )
       {
 	msg.error() << "provider type " << type << " doesn't exist";
       }
       else
       {
-	Provider_Type &provider_type = i->second;
+	Provider_Type &provider_type = afd->provider_types[type];
 	node->child_containers.insert( Child_Container(max1,min1,type,
 						       provider_type.serial) );
       }
@@ -869,6 +805,387 @@ namespace funcgen
 	// insert required child result function
 	res_code->required_results.push_back
 	  (std::pair<std::string,Result_Type>(provider,Result_Type(ret,par)));
+      }
+    }
+  }
+
+  void start_operator_declaration( void *infoptr, const std::string &type,
+				   const std::string &name )
+  {
+    afd_info *info = static_cast<afd_info*>(infoptr);
+    AFD_Root *afd = info->afd;
+    message::Message_Reporter &msg = info->msg;
+
+    if( afd->get_context()->is_operator(name) )
+    {
+      msg.error() << "operator " << name << " already defined";
+      afd->current_operator_declaration = 0;
+    }
+    else if( !available_operators.is_operator( type ) )
+    {
+      msg.error() << "invalid operator base type: " << type;
+      afd->current_operator_declaration = 0;
+    }
+    else
+    {
+      // insert new operator declaration with name
+      afd->current_operator_declaration = &afd->operators[name];
+      // initialize it
+      afd->current_operator_declaration->don_t_create_code 
+	= afd->don_t_create_code.top();
+
+      afd->current_operator_declaration->pos = info->file_pos.duplicate();
+      afd->current_operator_declaration->basic_operator 
+	= &available_operators.get_operator( type );
+      afd->current_operator_declaration->operator_name = name;
+      afd->current_operator_declaration->operator_base_type_name = type;
+    }
+  }
+  void start_operator_function_declaration( void *infoptr, 
+					    const std::string &name )
+  {
+    afd_info *info = static_cast<afd_info*>(infoptr);
+    AFD_Root *afd = info->afd;
+    message::Message_Reporter &msg = info->msg;
+
+    if( afd->current_operator_declaration )
+    {
+      if( !available_operators.get_operator( afd->current_operator_declaration
+					     ->operator_base_type_name )
+	  .is_function(name) )
+      {
+	msg.error() << "unknown function name "<< name <<" for this operator";
+	afd->current_operator_declaration->current_function = 0;
+      }
+      else if( afd->current_operator_declaration->function_code.find(name)
+	       != afd->current_operator_declaration->function_code.end() )
+      {
+	msg.error() << "function "<< name <<" already defined";
+	afd->current_operator_declaration->current_function = 0;
+      }
+      else
+      {
+	afd->current_operator_declaration->current_function = 
+	  &afd->current_operator_declaration->function_code[name];
+	afd->current_operator_declaration->current_function->pos 
+	  = info->file_pos.duplicate();
+      }
+    }
+  }
+  void start_operator_function_code( void *infoptr )
+  {
+    afd_info *info = static_cast<afd_info*>(infoptr);
+    AFD_Root *afd = info->afd;
+    //message::Message_Reporter &msg = info->msg;
+
+    if( afd->current_operator_declaration )
+    {
+      if( afd->current_operator_declaration->current_function )
+      {
+	afd->current_code 
+	  = afd->current_operator_declaration->current_function;
+      }
+    }
+  }
+  void finish_operator_function_code( void *infoptr )
+  {	       
+    /* everything is done by copy_code_line() */
+    afd_info *info = static_cast<afd_info*>(infoptr);
+    AFD_Root *afd = info->afd;
+
+    afd->current_code = 0;
+  }
+  void add_operator_function_parameter( void *infoptr, 
+					const std::string &name )
+  {
+    afd_info *info = static_cast<afd_info*>(infoptr);
+    AFD_Root *afd = info->afd;
+    //message::Message_Reporter &msg = info->msg;
+
+    if( afd->current_operator_declaration )
+    {
+      if( afd->current_operator_declaration->current_function )
+      {
+	afd->current_operator_declaration->current_function->parameter_names
+	  .push_back( name );
+      }
+    }
+  }
+  void start_operator_version( void *infoptr, const std::string &ret_type,
+			     const std::string &name )
+  {
+    afd_info *info = static_cast<afd_info*>(infoptr);
+    AFD_Root *afd = info->afd;
+    //message::Message_Reporter &msg = info->msg;
+
+    if( afd->current_operator_declaration )
+    {
+      afd->current_operator_declaration->versions
+	.push_back(std::list<std::string>());
+      afd->current_operator_declaration->current_version =
+	&(afd->current_operator_declaration->versions.back());
+
+      afd->current_operator_declaration->current_version
+	->push_back( name );
+      afd->current_operator_declaration->current_version
+	->push_back( ret_type );
+    }
+  }
+  void add_operator_version_parameter( void *infoptr, const std::string &name )
+  {
+    afd_info *info = static_cast<afd_info*>(infoptr);
+    AFD_Root *afd = info->afd;
+    //message::Message_Reporter &msg = info->msg;
+
+    if( afd->current_operator_declaration )
+    {
+      if( afd->current_operator_declaration->current_version )
+      {
+	afd->current_operator_declaration->current_version->push_back( name );
+      }
+    }
+  }
+  void finish_operator_version( void *infoptr )
+  {
+    afd_info *info = static_cast<afd_info*>(infoptr);
+    AFD_Root *afd = info->afd;
+    message::Message_Reporter &msg = info->msg;
+
+    if( afd->current_operator_declaration )
+    {
+      if( afd->current_operator_declaration->current_version )
+      {
+	int num_operands = afd->current_operator_declaration
+	  ->basic_operator->get_num_operands();
+	if( int(afd->current_operator_declaration->current_version->size())
+	    != num_operands + 2 )
+	{
+	  msg.error() << "wrong number of operand type parameters, " 
+		      << num_operands << " expected";
+	  msg.error(afd->current_operator_declaration->pos) << "see here";
+	}
+      }
+    }
+  }
+
+  void start_complex_solver_parameters( void *info, const std::string &name )
+  {
+    afd_info *I=static_cast<afd_info*>(info);
+    message::Message_Reporter &msg = I->msg;
+    AFD_Root *afd = I->afd;
+
+    if( !afd->get_context()->is_solver(name) )
+    {
+      // create new solver
+      afd->current_complex_solver = &afd->solvers[name];
+      afd->current_complex_solver->don_t_create_code 
+	= afd->don_t_create_code.top();
+      // relink kontext of parameter operands to afd root
+      afd->current_complex_solver->parameter.set_parent_context(afd);
+      // choose parameter operands as current context
+      afd->push_context( &afd->current_complex_solver->parameter );
+    }
+    else
+    {
+      msg.error() << "solver \"" << name << "\" already defined";
+      afd->current_complex_solver = 0;
+      afd->push_context( 0 );
+    }
+  }
+  void start_complex_solver_declaration( void *info )
+  {
+    afd_info *I=static_cast<afd_info*>(info);
+    //message::Message_Reporter &msg = I->msg;
+    AFD_Root *afd = I->afd;
+
+    if( afd->current_complex_solver )
+    {
+      afd->pop_context();
+      // relink kontext of solver with it's parameter operands
+      afd->current_complex_solver->set_parent_context
+	( &afd->current_complex_solver->parameter );
+      // choose solver as current context
+      afd->push_context( afd->current_complex_solver );
+    }
+  }
+  void finish_complex_solver_declaration( void *info )
+  {
+    afd_info *I=static_cast<afd_info*>(info);
+    AFD_Root *afd = I->afd;
+    if( afd->current_complex_solver )
+    {
+      afd->current_complex_solver = 0;
+    }
+    afd->pop_context();		// context was changed in any case
+  }
+
+  //...
+  void start_complex_solver_init_block( void *info )
+  {
+    AFD_Root *afd = static_cast<afd_info*>(info)->afd;
+    if( afd->current_complex_solver )
+      afd->current_solve_code = new Solve_System_Code;
+    else
+      afd->current_solve_code = 0;
+  }
+  void finish_complex_solver_init_block( void *info )
+  {
+    AFD_Root *afd = static_cast<afd_info*>(info)->afd;
+    if( afd->current_solve_code && afd->current_complex_solver )
+    {
+      // copy solver code
+      afd->current_complex_solver->init_code.merge
+	( afd->current_solve_code->solvers );
+    }
+    if( afd->current_solve_code )
+    {
+      delete afd->current_solve_code;
+      afd->current_solve_code = 0;
+    }
+  }
+  void start_complex_solver_init_constraints_block( void *info )
+  {
+    AFD_Root *afd = static_cast<afd_info*>(info)->afd;
+    if( afd->current_complex_solver )
+      afd->current_solve_code = new Solve_System_Code;
+    else
+      afd->current_solve_code = 0;
+  }
+  void finish_complex_solver_init_constraints_block( void *info )
+  {
+    AFD_Root *afd = static_cast<afd_info*>(info)->afd;
+    if( afd->current_solve_code && afd->current_complex_solver )
+    {
+      // copy solver code
+      afd->current_complex_solver->init_constraint_code.merge
+	( afd->current_solve_code->constraints );
+    }
+    if( afd->current_solve_code )
+    {
+      delete afd->current_solve_code;
+      afd->current_solve_code = 0;
+    }
+  }
+  void start_complex_solver_function( void *info, const std::string &ret_type,
+				      const std::string &name )
+  {
+    afd_info *I=static_cast<afd_info*>(info);
+    //message::Message_Reporter &msg = I->msg;
+    AFD_Root *afd = I->afd;
+    Complex_Solver *solver = afd->current_complex_solver;
+
+    if( solver )
+    {
+      solver->functions.push_back( Solver_Function_Code( name, ret_type ) );
+      solver->current_function_code 
+	= &solver->functions.back();
+      solver->current_function_code->set_parent_context( solver );
+      afd->push_context( solver->current_function_code );
+      afd->current_code = solver->current_function_code;
+    }
+  }
+  void finish_complex_solver_function( void *info )
+  {
+    afd_info *I=static_cast<afd_info*>(info);
+    //message::Message_Reporter &msg = I->msg;
+    AFD_Root *afd = I->afd;
+    Complex_Solver *solver = afd->current_complex_solver;
+
+    if( solver )
+    {
+      afd->pop_context();
+    }
+    afd->current_code = 0;
+  }
+  void complex_solver_require_operand( void *info, const std::string &op )
+  {
+    afd_info *I=static_cast<afd_info*>(info);
+    //message::Message_Reporter &msg = I->msg;
+    AFD_Root *afd = I->afd;
+    Complex_Solver *solver = afd->current_complex_solver;
+
+    if( solver )
+    {
+      solver->current_function_code->required_operands.push_back(op);
+    }
+  }
+  void complex_solver_require_function( void *info, const std::string &func )
+  {
+    afd_info *I=static_cast<afd_info*>(info);
+    //message::Message_Reporter &msg = I->msg;
+    AFD_Root *afd = I->afd;
+    Complex_Solver *solver = afd->current_complex_solver;
+
+    if( solver )
+    {
+      solver->current_function_code->required_functions.push_back(func);
+    }
+  }
+  void complex_solver_require_solver_func( void *info, 
+					   const std::string &solver_id,
+					   const std::string &function )
+  {
+    afd_info *I=static_cast<afd_info*>(info);
+    //message::Message_Reporter &msg = I->msg;
+    AFD_Root *afd = I->afd;
+    Complex_Solver *solver = afd->current_complex_solver;
+
+    if( solver )
+    {
+      solver->current_function_code->
+	required_solver_functions.push_back
+	( Solver_Function(solver_id,function) );
+    }
+  }
+
+  void function_parameter( void *info, const std::string &type, 
+			       const std::string &name )
+  {
+    afd_info *I=static_cast<afd_info*>(info);
+    message::Message_Reporter &msg = I->msg;
+    AFD_Root *afd = I->afd;
+    Context *context = afd->get_context();
+    if( context )
+    {
+      if( !context->is_variable(name) )
+      {
+	// insert variable in list and map
+	context->variable_list.push_back( Variable( name, type ) );
+	context->variables[name] = &context->variable_list.back();
+      }
+      else
+      {
+	msg.error() << "variable \"" << name << "\" already defined";
+      }
+    }
+  }
+  void start_variable_declaration( void *info, const std::string &type )
+  {
+    AFD_Root *afd = static_cast<afd_info*>(info)->afd;
+    Context *context = afd->get_context();
+    if( context )
+    {
+      context->current_variable_type = type;
+    }
+  }
+  void variable_declaration_name( void *info, const std::string &name )
+  {
+    afd_info *I=static_cast<afd_info*>(info);
+    message::Message_Reporter &msg = I->msg;
+    AFD_Root *afd = I->afd;
+    Context *context = afd->get_context();
+    if( context )
+    {
+      if( !context->is_variable(name) )
+      {
+	Variable var( name, context->current_variable_type );
+	// insert variable in list and map at once
+	context->variable_list.push_back( var );
+	context->variables[name] = &context->variable_list.back();
+      }
+      else
+      {
+	msg.error() << "variable \"" << name << "\" already defined";
       }
     }
   }
@@ -1222,10 +1539,9 @@ namespace funcgen
   }
   Expression *expr_from_ref( void *info )
   {
-    Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;
-    assert( node != 0 );
-    Expression *res = new Expression( node->current_reference );
-    node->current_reference.clear();
+    AFD_Root *afd = static_cast<afd_info*>(info)->afd;
+    Expression *res = new Expression( afd->current_reference );
+    afd->current_reference.clear();
     return res;
   }
   Expression *expr_bool( void *info, bool flag )
@@ -1319,35 +1635,29 @@ namespace funcgen
     //message::Message_Reporter &msg = static_cast<afd_info*>(info)->msg;
     afd_info *I=static_cast<afd_info*>(info);
     Code_Translator *translator = I->afd->translator;
-    Tree_Node_Type *node = I->afd->current_node;
-    assert( node != 0 );
     
-    node->current_reference.add_unchecked( translator->prop_op(name), 
-					   "<unused>" );
+    I->afd->current_reference.add_unchecked( translator->prop_op(name), 
+					     "<unused>" );
   }
   void ref_node_prop( void *info, const std::string &prop)
   {
     //message::Message_Reporter &msg = static_cast<afd_info*>(info)->msg;
     afd_info *I=static_cast<afd_info*>(info);
     Code_Translator *translator = I->afd->translator;
-    Tree_Node_Type *node = I->afd->current_node;
-    assert( node != 0 );
 
-    node->current_reference.add( translator->node_prop(prop),
-				 translator->reference_concat_string() );
+    I->afd->current_reference.add( translator->node_prop(prop),
+				   translator->reference_concat_string() );
   }
   void ref_start_param( void *info )
   {
     //message::Message_Reporter &msg = static_cast<afd_info*>(info)->msg;
     afd_info *I=static_cast<afd_info*>(info);
     Code_Translator *translator = I->afd->translator;
-    Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;
-    assert( node != 0 );
 
-    node->current_reference.add_unchecked
-      ( translator->start_param( node->current_reference.provider_type,
-			       node->current_reference.ret_type,
-			       node->current_reference.par_type ), 
+    I->afd->current_reference.add_unchecked
+      ( translator->start_param( I->afd->current_reference.provider_type,
+				 I->afd->current_reference.ret_type,
+				 I->afd->current_reference.par_type ), 
 	"<unused>" );
   }
   void ref_end_param( void *info )
@@ -1355,13 +1665,11 @@ namespace funcgen
     //message::Message_Reporter &msg = static_cast<afd_info*>(info)->msg;
     afd_info *I=static_cast<afd_info*>(info);
     Code_Translator *translator = I->afd->translator;
-    Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;
-    assert( node != 0 );
 
-    node->current_reference.add_unchecked
-      ( translator->end_param( node->current_reference.provider_type,
-			       node->current_reference.ret_type,
-			       node->current_reference.par_type ), 
+    I->afd->current_reference.add_unchecked
+      ( translator->end_param( I->afd->current_reference.provider_type,
+			       I->afd->current_reference.ret_type,
+			       I->afd->current_reference.par_type ), 
 	"<unused>" );
   }
   void ref_provider_type( void *info, const std::string &provider_type, 
@@ -1369,12 +1677,11 @@ namespace funcgen
 			  const std::string &par_type )
   {
     //message::Message_Reporter &msg = static_cast<afd_info*>(info)->msg;
-    Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;
-    assert( node != 0 );
+    AFD_Root *afd = static_cast<afd_info*>(info)->afd;
 
-    node->current_reference.provider_type = provider_type;
-    node->current_reference.ret_type = ret_type;
-    node->current_reference.par_type = par_type;
+    afd->current_reference.provider_type = provider_type;
+    afd->current_reference.ret_type = ret_type;
+    afd->current_reference.par_type = par_type;
   }
 
   void ref_node_local_prev( void *info, std::string provider_type )
@@ -1382,32 +1689,26 @@ namespace funcgen
     //message::Message_Reporter &msg = static_cast<afd_info*>(info)->msg;
     afd_info *I=static_cast<afd_info*>(info);
     Code_Translator *translator = I->afd->translator;
-    Tree_Node_Type *node = I->afd->current_node;
-    assert( node != 0 );
 
-    node->current_reference.add( translator->prev( provider_type ),
-				 translator->reference_concat_string() );
+    I->afd->current_reference.add( translator->prev( provider_type ),
+				   translator->reference_concat_string() );
   }
   void ref_node_local_next( void *info, std::string provider_type )
   {
     //message::Message_Reporter &msg = static_cast<afd_info*>(info)->msg;
     afd_info *I=static_cast<afd_info*>(info);
     Code_Translator *translator = I->afd->translator;
-    Tree_Node_Type *node = I->afd->current_node;
-    assert( node != 0 );
 
-    node->current_reference.add( translator->next( provider_type ),
-				 translator->reference_concat_string() );
+    I->afd->current_reference.add( translator->next( provider_type ),
+				   translator->reference_concat_string() );
   }
   void ref_node_local_child_first( void *info, const std::string &type )
   {
     //message::Message_Reporter &msg = static_cast<afd_info*>(info)->msg;
     afd_info *I=static_cast<afd_info*>(info);
     Code_Translator *translator = I->afd->translator;
-    Tree_Node_Type *node = I->afd->current_node;
-    assert( node != 0 );
 
-    node->current_reference.add( translator->first_child(type),
+    I->afd->current_reference.add( translator->first_child(type),
 				 translator->reference_concat_string() );
   }
   void ref_node_local_child_last( void *info, const std::string &type )
@@ -1415,10 +1716,8 @@ namespace funcgen
     //message::Message_Reporter &msg = static_cast<afd_info*>(info)->msg;
     afd_info *I=static_cast<afd_info*>(info);
     Code_Translator *translator = I->afd->translator;
-    Tree_Node_Type *node = I->afd->current_node;
-    assert( node != 0 );
 
-    node->current_reference.add( translator->last_child(type),
+    I->afd->current_reference.add( translator->last_child(type),
 				 translator->reference_concat_string() );
   }
   void ref_node_local_child( void *info, const std::string &type, double n )
@@ -1426,10 +1725,8 @@ namespace funcgen
     //message::Message_Reporter &msg = static_cast<afd_info*>(info)->msg;
     afd_info *I=static_cast<afd_info*>(info);
     Code_Translator *translator = I->afd->translator;
-    Tree_Node_Type *node = I->afd->current_node;
-    assert( node != 0 );
 
-    node->current_reference.add( translator->get_child(type, int(n)),
+    I->afd->current_reference.add( translator->get_child(type, int(n)),
 				 translator->reference_concat_string() );
   }
   void ref_node_prev( void *info )
@@ -1437,10 +1734,8 @@ namespace funcgen
     //message::Message_Reporter &msg = static_cast<afd_info*>(info)->msg;
     afd_info *I=static_cast<afd_info*>(info);
     Code_Translator *translator = I->afd->translator;
-    Tree_Node_Type *node = I->afd->current_node;
-    assert( node != 0 );
 
-    node->current_reference.add( translator->prev(),
+    I->afd->current_reference.add( translator->prev(),
 				 translator->reference_concat_string() );
   }
   void ref_node_next( void *info )
@@ -1448,10 +1743,8 @@ namespace funcgen
     //message::Message_Reporter &msg = static_cast<afd_info*>(info)->msg;
     afd_info *I=static_cast<afd_info*>(info);
     Code_Translator *translator = I->afd->translator;
-    Tree_Node_Type *node = I->afd->current_node;
-    assert( node != 0 );
 
-    node->current_reference.add( translator->next(),
+    I->afd->current_reference.add( translator->next(),
 				 translator->reference_concat_string() );
   }
   void ref_node_parent( void *info )
@@ -1459,10 +1752,8 @@ namespace funcgen
     //message::Message_Reporter &msg = static_cast<afd_info*>(info)->msg;
     afd_info *I=static_cast<afd_info*>(info);
     Code_Translator *translator = I->afd->translator;
-    Tree_Node_Type *node = I->afd->current_node;
-    assert( node != 0 );
 
-    node->current_reference.add( translator->parent(),
+    I->afd->current_reference.add( translator->parent(),
 				 translator->reference_concat_string() );
   }
   void ref_node_first_child( void *info )
@@ -1470,10 +1761,8 @@ namespace funcgen
     //message::Message_Reporter &msg = static_cast<afd_info*>(info)->msg;
     afd_info *I=static_cast<afd_info*>(info);
     Code_Translator *translator = I->afd->translator;
-    Tree_Node_Type *node = I->afd->current_node;
-    assert( node != 0 );
 
-    node->current_reference.add( translator->first_child(),
+    I->afd->current_reference.add( translator->first_child(),
 				 translator->reference_concat_string() );
   }
   void ref_node_last_child( void *info )
@@ -1481,10 +1770,8 @@ namespace funcgen
     //message::Message_Reporter &msg = static_cast<afd_info*>(info)->msg;
     afd_info *I=static_cast<afd_info*>(info);
     Code_Translator *translator = I->afd->translator;
-    Tree_Node_Type *node = I->afd->current_node;
-    assert( node != 0 );
 
-    node->current_reference.add( translator->last_child(),
+    I->afd->current_reference.add( translator->last_child(),
 				 translator->reference_concat_string() );
   }
   void ref_node_child( void *info, double n )
@@ -1492,10 +1779,8 @@ namespace funcgen
     //message::Message_Reporter &msg = static_cast<afd_info*>(info)->msg;
     afd_info *I=static_cast<afd_info*>(info);
     Code_Translator *translator = I->afd->translator;
-    Tree_Node_Type *node = I->afd->current_node;
-    assert( node != 0 );
 
-    node->current_reference.add( translator->get_child(int(n)),
+    I->afd->current_reference.add( translator->get_child(int(n)),
 				 translator->reference_concat_string() );
   }
 

@@ -23,7 +23,7 @@ namespace solve
 
   // has to check the result of the operand with ID as pointer to operand
   bool Constraint_Checker::is_result_ok
-  ( const void *ID, Solve_Run_Info *info ) throw()
+  ( const Basic_Operand *ID, Solve_Run_Info *info ) throw()
   {
     assert( ID == &check );
     assert( check.is_solved_in_try(info) );
@@ -32,10 +32,10 @@ namespace solve
 
   // tells to use the result calculated by is_result_ok()
   void Constraint_Checker::use_result
-  ( const void *ID, Solve_Run_Info *info ) throw() {}
+  ( const Basic_Operand *ID, Solve_Run_Info *info ) throw() {}
 
   // disconnect operand
-  void Constraint_Checker::disconnect( const void *ID )
+  void Constraint_Checker::disconnect( const Basic_Operand *ID )
   {
     assert( ID == &check );
     delete this;

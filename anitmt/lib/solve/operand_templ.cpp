@@ -131,7 +131,7 @@ namespace solve
   
   template<class T>
   bool Store_Operand_to_Operand<T>::is_result_ok
-  ( const void *ID, Solve_Run_Info *info ) throw()
+  ( const Basic_Operand *ID, Solve_Run_Info *info ) throw()
   {
     assert( ID == &source );
     return destination.test_set_value( source.get_value(info), info );
@@ -139,7 +139,7 @@ namespace solve
 
   template<class T>
   void Store_Operand_to_Operand<T>::use_result 
-  ( const void *ID, Solve_Run_Info *info ) throw()
+  ( const Basic_Operand *ID, Solve_Run_Info *info ) throw()
   {
     assert( ID == &source );
     if( destination.is_solved_in_try( info ) )
@@ -147,7 +147,7 @@ namespace solve
   }
 
   template<class T>
-  void Store_Operand_to_Operand<T>::disconnect( const void *ID ) 
+  void Store_Operand_to_Operand<T>::disconnect( const Basic_Operand *ID ) 
   {
     delete this;		// !!! no further commands !!!
   }
