@@ -19,12 +19,13 @@ int main( int argc, char *argv[] )
   std::string outfile1 = "test_filled_adl.out";
   std::string outfile2 = "final_test_filled_adl.out";
 
-  if( argc > 1 ) 
+  if( (argc > 1) && (argv[1][0] != '-') ) 
     infile = argv[1];
   else
   {
     std::cout << "Usage:" << std::endl;
-    std::cout << "  testadlparser <infile>" << std::endl;
+    std::cout << "  testadlparser <infile> [<outfile1> [<outfile2> [-d]]]" 
+	      << std::endl;
     return 0;
   }
 
@@ -32,10 +33,10 @@ int main( int argc, char *argv[] )
     outfile1 = argv[2];
 
   if( argc > 3 )
-    outfile2 = argv[2];
+    outfile2 = argv[3];
 
   if( argc > 4 )
-    if( !strcmp(argv[3],"-d") )
+    if( !strcmp(argv[4],"-d") )
       anitmt::adlparser::yydebug = 1; // output debugging information
 
   anitmt::make_all_nodes_available();

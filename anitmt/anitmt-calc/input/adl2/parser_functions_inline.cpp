@@ -95,6 +95,13 @@ namespace anitmt
     // functions used by the parser
     //******************************
 
+    //! sets the position of a Property in the adl source
+    inline void initialize_lexer( void *vptr_info )
+    {
+      adlparser_info *info = static_cast<adlparser_info*>(vptr_info);
+      info->lexer->goto_initial_state();
+    }
+
     // property declaration
     inline void prop_declaration_start( Property &prop, void *vptr_info )
     {

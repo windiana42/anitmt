@@ -66,6 +66,9 @@ namespace anitmt
     inline message::Message_Consultant *msg_consultant( void *info )
     {return static_cast<adlparser_info*>(info)->msg.get_consultant();}
 
+    //! sets the position of a Property in the adl source
+    inline void initialize_lexer( void *info );
+
     //! opens [new] child in hierarchy and makes it the current tree node
     void change_current_child( void *vptr_info, std::string type, 
 			       std::string name="" );

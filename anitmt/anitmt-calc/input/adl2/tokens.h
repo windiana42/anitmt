@@ -24,10 +24,12 @@
 #define	TOK_PROP_VECTOR	280
 #define	TOK_PROP_MATRIX	281
 #define	TOK_PROP_STRING	282
-#define	UMINUS	283
-#define	OP_CONVERTION	284
-#define	left_associated	285
-#define	right_associated	286
-#define	lower_precedence	287
-#define	higher_precedence	288
+#define	lowest_precedence	283
+#define	UMINUS	284
+#define	OP_CONVERTION	285
+#define	left_associated	286
+#define	right_associated	287
+#define	lower_precedence	288
+#define	higher_precedence	289
+#define	highest_precedence	290
 

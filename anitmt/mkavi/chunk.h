@@ -110,7 +110,7 @@ class chunk {
 	chunk *peer, *child, *prev, *parent;
 	char *name;
 	chunkstream *cs;
-	off_t sizepos;
+	/*off_t*/long sizepos;
 
 	// WRITE() may call this when it is done writing the current chunk
 	// if it doesn't it is called when WRITE returns

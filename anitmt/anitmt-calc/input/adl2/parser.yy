@@ -102,6 +102,11 @@
 // precicion table
 //****************
 
+// special precedences for simplified cases
+%nonassoc lowest_precedence
+
+//********************
+// normal precedences
 %left '+' '-'
 %left '*' '/'
 //%right '^'
@@ -116,6 +121,7 @@
 
 %nonassoc lower_precedence
 %nonassoc higher_precedence
+%nonassoc highest_precedence
 
 //****************
 // Parser Rules
@@ -128,18 +134,14 @@ tree_node_block: /* empty */
     
 statement: 
     child_declaration
-  | flag_statement expect_semicolon
-  | scalar_statement expect_semicolon	 
-  | vector_statement expect_semicolon
-  | matrix_statement expect_semicolon
-  | string_statement expect_semicolon
-  | error ';'			{ yyerrok; /* error recovery */ }
+  | flag_statement ';'
+  | scalar_statement ';'
+  | vector_statement ';'
+  | matrix_statement ';'
+  | string_statement ';'
+  | error ';' %prec lowest_precedence { yyerrok; /* error recovery */ }
 ;
 
-expect_semicolon:
-    ';'
-  | error	{ yyerr(info,2) << "semicolon expected"; yyerrok; }
-  
 child_declaration: 
     TOK_IDENTIFIER '{'			{ change_current_child(info,$1); } 
       tree_node_block '}'		{ change_to_parent(info); }
@@ -154,7 +156,7 @@ flag_statement:
 any_flag_exp:      
     flag_exp		{ $<flag()>$ = $1; }
   | op_flag_exp		{ $<meta_op_flag(info)>$ = $1(); }
-  | dummy_exp		{ $$; }
+  | receive_dummy_exp	{ $$; }
 ;
 
 scalar_statement: 
@@ -164,7 +166,7 @@ scalar_statement:
 any_scalar_exp:      
     scalar_exp		{ $<scalar()>$ = $1; }
   | op_scalar_exp	{ $<meta_op_scalar(info)>$ = $1(); }
-  | dummy_exp		{ $$; }
+  | receive_dummy_exp	{ $$; }
 ;
  
 vector_statement: 
@@ -174,7 +176,7 @@ vector_statement:
 any_vector_exp:      
     vector_exp		{ $<vector()>$ = $1; }
   | op_vector_exp	{ $<meta_op_vector(info)>$ = $1(); }
-  | dummy_exp		{ $$; }
+  | receive_dummy_exp	{ $$; }
 ;
  
 matrix_statement: 
@@ -184,7 +186,7 @@ matrix_statement:
 any_matrix_exp:      
     matrix_exp		{ $<matrix()>$ = $1; }
   | op_matrix_exp	{ $<meta_op_matrix(info)>$ = $1(); }
-  | dummy_exp		{ $$; }
+  | receive_dummy_exp	{ $$; }
 ;
  
 string_statement: 
@@ -194,7 +196,7 @@ string_statement:
 any_string_exp:      
     string_exp		{ $<string()>$ = $1; }
   | op_string_exp	{ $<meta_op_string(info)>$ = $1(); }
-  | dummy_exp		{ $$; }
+  | receive_dummy_exp	{ $$; }
 ;
  
 
@@ -279,14 +281,28 @@ op_string_exp:
   | TOK_OP_STRING				{$$ = $1;}
 ;
 
+receive_dummy_exp:
+    dummy_exp
+  | dummy_exp error   { yyerr(info,2) << "operator or ';' expected"; 
+			initialize_lexer(info); yyerrok; }
+  | dummy_exp dummy_operator dummy_operator 
+		      { yyerr(info,2)<< "operand expected instead of operator";
+ 			initialize_lexer(info); yyerrok; }
+  | error %prec lowest_precedence 
+		      { yyerr(info,2) << "operand expected"; 
+			initialize_lexer(info); yyerrok; }
+;
 dummy_exp:
-    dummy_exp TOK_DUMMY_OPERATOR dummy_exp %prec left_associated
+    dummy_exp dummy_operator dummy_exp %prec left_associated
   | TOK_DUMMY_OPERAND '(' dummy_exp ')'
   | '(' dummy_exp ')'
+  | '-' TOK_DUMMY_OPERAND %prec highest_precedence
+  | '+' TOK_DUMMY_OPERAND %prec highest_precedence
   | TOK_DUMMY_OPERAND
-  | error 		{ yyerr(info,2) << "operator expected"; yyerrok; }
 ;
-
+dummy_operator:
+    TOK_DUMMY_OPERATOR
+  | '+' | '-' | '*' | '/'
 %%
     int parse_adl( Prop_Tree_Node *node, message::Message_Consultant *c, 
 		   std::string filename, pass_type pass )

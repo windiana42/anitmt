@@ -58,7 +58,7 @@ scal	({integer}|{float})
 qstring (\"([^\"\n]|\\\")*\")
 qstring_err (\"([^\"\n]|\\\")*)
 
-operator ([\+\-\*\/]|"=="|"!="|"<="|">=")
+operator ("=="|"!="|"<="|">=")
 operand  ({scal}|{qstring}|{id})
 %%
 %{
@@ -169,6 +169,10 @@ inline message::Message_Stream llverbose( adlparser_info *info,
   return msg;
 }
 
+void yyFlexLexer::goto_initial_state() 
+{
+  BEGIN INITIAL;
+}
 void yyFlexLexer::dummy_statement_follows() 
 {
   BEGIN DUMMY_STATEMENT;
