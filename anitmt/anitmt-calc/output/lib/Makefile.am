@@ -1,8 +1,9 @@
-INCLUDES = 		-I$(srcdir)/.. -I$(srcdir)/../.. \
+INCLUDES = 		-I$(srcdir)/.. -I$(srcdir)/../.. -I../../ \
 			-I$(srcdir)/../../../lib/ 
 noinst_LIBRARIES = 	liboutput.a
 CXXFLAGS = 		@CXXFLAGS@ -Wno-non-template-friend
-liboutput_a_SOURCES = 	binstr.cpp binstr.hpp \
+liboutput_a_SOURCES = 	compif.hpp compif.cpp \
+			binstr.cpp binstr.hpp \
 			boutstr.cpp boutstr.hpp \
 			convtoa.cpp convtoa.hpp \
 			instr.cpp instr.hpp \

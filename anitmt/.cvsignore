@@ -11,3 +11,4 @@ config.h
 stamp-h.in
 stamp-h
 config.h.in
+autom4te.cache

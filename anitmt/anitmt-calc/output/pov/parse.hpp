@@ -32,8 +32,6 @@
 
 #include <animation.hpp>
 
-#include "compif.hpp"
-
 namespace output_io
 {
 namespace POV
@@ -216,7 +214,9 @@ class File_Parser :
 			AValue(const AValue &av);
 			~AValue();
 			
-			inline tokID type()
+			// These return the same thing, just the one is used by POV, 
+			// the other by ComponentInterface: 
+			inline ComponentInterface::IFType type()
 				{  return(cif.GetType());  }
 		};
 		
@@ -260,7 +260,8 @@ class File_Parser :
 			
 			AValue_List()  {  first=last=NULL;  }
 			~AValue_List()  {  Clear();  }
-			private: int _Warn_Unused(message::Message_Stream os,tokID type);
+			private: int _Warn_Unused(message::Message_Stream os,
+				ComponentInterface::IFType type);
 		};
 		
 		Modification_Copy *mcopy;

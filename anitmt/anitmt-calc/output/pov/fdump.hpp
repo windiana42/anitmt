@@ -27,7 +27,8 @@
 
 #include <val/val.hpp>
 
-#include "compif.hpp"
+#include "../lib/compif.hpp"
+#include "tokid.hpp"
 
 
 namespace output_io

@@ -97,21 +97,25 @@ struct _SearchTok
 };
 
 
-static char *Ani_Type_Name(tokID id)
+static char *Ani_Type_Name(ComponentInterface::IFType id)
 {
-	switch(int(id))
+	switch(id)
 	{
-		case taScalar:  return("scalar");
-		case taObject:  return("object");
+		case ComponentInterface::IFScalar:  return("scalar");
+		case ComponentInterface::IFObject:  return("object");
 	}
 	return("???");
 }
-static char *Ani_Type_Name_Spc(tokID id)
+static char *Ani_Type_Name(tokID id)
 {
-	switch(int(id))
+	return(Ani_Type_Name(toIFType(id)));
+}
+static char *Ani_Type_Name_Spc(ComponentInterface::IFType id)
+{
+	switch(id)
 	{
-		case taScalar:  return("scalar ");
-		case taObject:  return("object ");
+		case ComponentInterface::IFScalar:  return("scalar ");
+		case ComponentInterface::IFObject:  return("object ");
 	}
 	return("");   // OK
 }
@@ -381,7 +385,7 @@ class File_Parser::Declare_Parser : public Sub_Parser
 		tokID waittok;
 		struct 
 		{
-			tokID id;  // taScalar or taObject
+			ComponentInterface::IFType id;  // IFScalar or IFObject
 			const char *name;   // object/scalar name
 			AValue *av;  // <- rv->hook 
 		} expect;
@@ -395,7 +399,7 @@ class File_Parser::Declare_Parser : public Sub_Parser
 		int nbraces;
 		bool scalar_brace_warning;
 		bool multiline_scalar_decl_warned;
-		char *_dectype_of(tokID id);
+		char *_dectype_of(ComponentInterface::IFType id);
 		std::string _startline_str();
 	protected:
 		int parse(int eof);
@@ -941,7 +945,7 @@ bool File_Parser::Process_AValue(AValue *av)
 	bool retval=true;
 	
 	assert(av->locked);  // be sure the Sub_Parsers do proper locking 
-	if(av->type()==taScalar)
+	if(av->type()==ComponentInterface::IFScalar)
 	{
 		// Be sure the values are set properly: 
 		assert(!av->dec_start.unset());
@@ -971,7 +975,7 @@ bool File_Parser::Process_AValue(AValue *av)
 		
 		++av->need_active;
 	}
-	else if(av->type()==taObject)
+	else if(av->type()==ComponentInterface::IFObject)
 	{
 		assert(!av->dec_start.unset());
 		assert(!av->dec_end.unset());
@@ -1120,7 +1124,7 @@ int File_Parser::_Finder_Check_Copy_Name(const ComponentInterface &cif,
 	av.cif=cif;
 	av.serial=*counter;
 	AValue *avp=av_list.Add(av);
-	av_finder->Copy_String(name,cif.GetType(),avp);
+	av_finder->Copy_String(name,toTokID(cif.GetType()),avp);
 	++(*counter);
 	
 	return(0);
@@ -1284,9 +1288,9 @@ int File_Parser::Setup_Frame_Dump(Frame_Dump *fdump)
 	{
 		bool dump_it=false;
 		int dflags=0;
-		switch(av->cif.GetType())
+		switch(av->type())
 		{
-			case taScalar:
+			case ComponentInterface::IFScalar:
 			{
 				dump_it=(config.frame_dump_all_scalars || av->need_active);
 				
@@ -1297,7 +1301,7 @@ int File_Parser::Setup_Frame_Dump(Frame_Dump *fdump)
 				{  verbose(4) << "Scalar \"" << av->cif.get_name() << "\": dump=" << 
 					(dump_it ? "yes" : "no");  }
 			} break;
-			case taObject:
+			case ComponentInterface::IFObject:
 			{
 				if(config.frame_dump_object_info>2)  // all info
 				{  dflags = Frame_Dump::DF_Obj_Mat | Frame_Dump::DF_Obj_Active;  }
@@ -1481,7 +1485,7 @@ int File_Parser::Warn_Active_Mismatch()
 	bool header_written=false;
 	for(AValue *av=av_list.first; av; av=av->next)
 	{
-		if(av->type()==taScalar)  continue;
+		if(av->type()==ComponentInterface::IFScalar)  continue;
 		if(av->curr_active<=0) continue;
 		++warnings;
 		if(!config.warn_active_mismatch)  continue;
@@ -1497,7 +1501,7 @@ int File_Parser::Warn_Active_Mismatch()
 	header_written=false;
 	for(AValue *av=av_list.first; av; av=av->next)
 	{
-		if(av->type()==taScalar)  continue;
+		if(av->type()==ComponentInterface::IFScalar)  continue;
 		if(av->curr_active>=0) continue;
 		++warnings;
 		if(!config.warn_active_mismatch)  continue;
@@ -1696,7 +1700,8 @@ void File_Parser::AValue_List::Clear()
 	last=NULL;
 }
 
-int File_Parser::AValue_List::_Warn_Unused(message::Message_Stream os,tokID type)
+int File_Parser::AValue_List::_Warn_Unused(message::Message_Stream os,
+	ComponentInterface::IFType type)
 {
 	int nunused=0;
 	bool header_written=false;
@@ -1723,8 +1728,8 @@ int File_Parser::AValue_List::_Warn_Unused(message::Message_Stream os,tokID type
 int File_Parser::AValue_List::Warn_Unused(message::Message_Stream os)
 {
 	int nunused=0;
-	nunused+=_Warn_Unused(os,taScalar);
-	nunused+=_Warn_Unused(os,taObject);
+	nunused+=_Warn_Unused(os,ComponentInterface::IFScalar);
+	nunused+=_Warn_Unused(os,ComponentInterface::IFObject);
 	if(!nunused)  // <- Make sure no empty "warning:" line appears. 
 	{  os << message::killmsg;  }
 	return(nunused);
@@ -2784,7 +2789,7 @@ File_Parser::Comment_Parser::~Comment_Parser()
 
 /******************************************************************************/
 
-char *File_Parser::Declare_Parser::_dectype_of(tokID id)
+char *File_Parser::Declare_Parser::_dectype_of(ComponentInterface::IFType id)
 {
 	char *rv=Ani_Type_Name_Spc(id);
 	if(*rv=='?')  return("");  // OK.
@@ -2800,7 +2805,7 @@ int File_Parser::Declare_Parser::parse(int eof)
 {
 	if(eof)
 	{
-		if(eof==2 || expect.id==taScalar || 
+		if(eof==2 || expect.id==ComponentInterface::IFScalar || 
 			fp->config.warn_object_eof_boundary>1)
 		{
 			// Under some circumstance, this content may be written twice...
@@ -2849,7 +2854,8 @@ int File_Parser::Declare_Parser::parse(int eof)
 			Comment_Parser *cp=Skip_Comment(&rv,/*allow insert statements*/true);
 			if(cp)  // there is a comment coming 
 			{
-				if((state==sDeclare && expect.id!=tNone) || state==sAssign)
+				if((state==sDeclare && expect.id!=ComponentInterface::IFNone) || 
+				    state==sAssign)
 				{
 					cp->interprete_obj=1;  // flags only 
 					cp->Set_Object(expect.av,expect.name);
@@ -2865,11 +2871,11 @@ int File_Parser::Declare_Parser::parse(int eof)
 			{
 				if(!cc->only_wspace)
 				{  Warning_Header() << "warning: in " << 
-					_dectype_of(tokID(rv.id)) << "declaration: "
+					_dectype_of(toIFType(tokID(rv.id))) << "declaration: "
 					"garbage before identifier `" << rv.found << "\'.";  }
-				if(expect.id==tNone)
+				if(expect.id==ComponentInterface::IFNone)
 				{
-					expect.id=tokID(rv.id);
+					expect.id=toIFType(tokID(rv.id));
 					expect.av=(AValue*)(rv.hook);
 					expect.name=rv.found;  // OKAY! (allocated by Find_String)
 					if(expect.av->locked)
@@ -2908,7 +2914,7 @@ int File_Parser::Declare_Parser::parse(int eof)
 				}
 				else
 				{  Error_Header() << "woops: encountered " << 
-					_dectype_of(tokID(rv.id)) << "name `" << rv.found << 
+					_dectype_of(toIFType(tokID(rv.id))) << "name `" << rv.found << 
 					"\' after " << _dectype_of(expect.id) << "name `" << 
 					expect.name << "\' in same declaration" << _startline_str() << 
 					".";
@@ -2916,7 +2922,7 @@ int File_Parser::Declare_Parser::parse(int eof)
 			}
 			else if(rv.id==tAssign)
 			{
-				if(expect.id==tNone)
+				if(expect.id==ComponentInterface::IFNone)
 				{
 					// We did not encounter a name after the declaration & 
 					// before the assignment `=' either because there was 
@@ -2930,13 +2936,13 @@ int File_Parser::Declare_Parser::parse(int eof)
 			else if(rv.id==tSemicolon)
 			{
 				// Empty declaration?!
-				if(expect.id!=tNone)
+				if(expect.id!=ComponentInterface::IFNone)
 				{  Warning_Header() << "warning: " << _dectype_of(expect.id) << 
 					"declaration of `" << expect.name << "\'" << 
 					_startline_str() << " is without assignment.";  }
-				if(expect.id==taScalar)
+				if(expect.id==ComponentInterface::IFScalar)
 				{  goto scalar_decl_end;  /* ugly goto. */  }
-				else if(expect.id==taObject)
+				else if(expect.id==ComponentInterface::IFObject)
 				{
 					Warning_Header() << "warning: empty declaration of " << 
 						Ani_Type_Name(expect.id) << " `" << expect.name << 
@@ -2982,7 +2988,7 @@ int File_Parser::Declare_Parser::parse(int eof)
 				Put_Back_Tok(&rv);
 				done=true;
 			}
-			if(expect.id==taScalar)
+			if(expect.id==ComponentInterface::IFScalar)
 			{
 				if(rv.id==tSemicolon)
 				{
@@ -3051,7 +3057,7 @@ int File_Parser::Declare_Parser::parse(int eof)
 					return(0);
 				}
 			}
-			else if(expect.id==taObject)
+			else if(expect.id==ComponentInterface::IFObject)
 			{
 				if(rv.id==tSemicolon)
 				{
@@ -3086,7 +3092,7 @@ int File_Parser::Declare_Parser::parse(int eof)
 		
 		if(fp->config.multiline_scalar_decl && 
 		   !multiline_scalar_decl_warned && 
-		   expect.id==taScalar && 
+		   expect.id==ComponentInterface::IFScalar && 
 		   cc->line!=dec_start.line)
 		{
 			bool err = (fp->config.multiline_scalar_decl>1);
@@ -3105,7 +3111,7 @@ int File_Parser::Declare_Parser::parse(int eof)
 	
 	if(state==sValueEnd && done)
 	{
-		assert(expect.id!=tNone);
+		assert(expect.id!=ComponentInterface::IFNone);
 		assert(expect.av);
 		
 		// Tell Modification_Copy: 
@@ -3165,7 +3171,7 @@ File_Parser::Declare_Parser::Declare_Parser(File_Parser *parent,
 	Sub_Parser(parent,tok)
 {
 	waittok=tNone;
-	expect.id=tNone;
+	expect.id=ComponentInterface::IFNone;
 	expect.name=NULL;
 	expect.av=NULL;
 	state=sDeclare;

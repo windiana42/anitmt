@@ -18,19 +18,10 @@
 #ifndef _RNDV_FILTER_FILTER_HPP_
 #define _RNDV_FILTER_FILTER_HPP_ 1
 
-struct FilterDesc : LinkedListBase<FilterDesc>
+struct FilterDesc : RF_DescBase
 {
-	RefString name;     // e.g. ``invert''
 	RefString binpath;  // path to binary 
 	RefStrList required_args;   // required args to pass to the filter
-	TaskDriverFactory *dfactory;    // driver factory for the filter
-		// There may be several descriptions pointing to one 
-		// driver (e.g. there is a generic filter driver which is 
-		// capable of driving lots of filters). 
-	
-	// This is only used by parameter / argument system and contains a NULL 
-	// ref after initialisation. 
-	RefString _drivername;
 	
 	_CPP_OPERATORS_FF
 	FilterDesc(int *failflag=NULL);

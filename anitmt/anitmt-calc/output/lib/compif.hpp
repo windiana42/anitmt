@@ -17,6 +17,7 @@
  * 
  * Revision History:
  *   Feb 2002   started writing
+ *   Mar 2002   moved from pov/ to lib/ ; ITFype now independent type
  *
  */
 
@@ -24,12 +25,7 @@
 #ifndef _Inc_IO_PovComonentIF_H_
 #define _Inc_IO_PovComonentIF_H_ 1
 
-// need enum tokID: 
-#include "tokid.hpp"
-
 namespace output_io
-{
-namespace POV
 {
 
 // This class holds one of the 
@@ -37,13 +33,30 @@ namespace POV
 class ComponentInterface
 {
 	public:
-		/*enum IFType
+		#if 1
+		enum IFType
 		{
-			IFT_None=0,
-			IFT_Scalar,
-			IFT_Object
-		};*/
-		typedef tokID IFType;
+			IFNone=0,
+			IFScalar,
+			IFObject
+		};
+		#else
+		// Used to let the compiler check for problems with 
+		// transition from tokID to IFType. 
+		static const int IFNone;   //=(175876535);
+		static const int IFScalar; //=(216684673);
+		static const int IFObject; //=(352489745);
+		class IFType
+		{
+			int x;
+			public:
+			IFType()  {  x=-19876438;  }
+			IFType(int v)  {  x=v;  }
+			bool operator==(const IFType &b) const  {  return(x==b.x);  }
+			bool operator!=(const IFType &b) const  {  return(x!=b.x);  }
+			//operator int() {  return(x);  }
+		};
+		#endif
 	private:
 		IFType type;
 		void *cif;
@@ -51,7 +64,7 @@ class ComponentInterface
 		void _Assign(const void *src_cif,IFType src_type);
 	public:
 		ComponentInterface()
-			{  type=tNone;  cif=NULL;  }
+			{  type=IFNone;  cif=NULL;  }
 		ComponentInterface(const ComponentInterface &);
 		ComponentInterface(const anitmt::Scalar_Component_Interface &);
 		ComponentInterface(const anitmt::Object_Component_Interface &);
@@ -67,15 +80,14 @@ class ComponentInterface
 			{  return(type);  }
 		
 		anitmt::Scalar_Component_Interface *CVScalar() const
-			{  return((type==taScalar) ? (anitmt::Scalar_Component_Interface*)cif : NULL);  }
+			{  return((type==IFScalar) ? (anitmt::Scalar_Component_Interface*)cif : NULL);  }
 		anitmt::Object_Component_Interface *CVObject() const
-			{  return((type==taObject) ? (anitmt::Object_Component_Interface*)cif : NULL);  }
+			{  return((type==IFObject) ? (anitmt::Object_Component_Interface*)cif : NULL);  }
 		
 		// Call functions that *_Component_Interface provide: 
 		std::string get_name() const;
 };
 
-}  // namespace end 
 }  // namespace end 
 
 #endif  /* _Inc_IO_PovComonentIF_H_ */

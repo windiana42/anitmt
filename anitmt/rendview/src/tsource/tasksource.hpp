@@ -25,8 +25,25 @@
 
 // CompleteTask is the class holding all information about a task. 
 // CompleteTask is allocated by GetTask() and destroyed by DoneTask(). 
-struct CompleteTask
+// Between GetTask() and DoneTask(), the list is held by TaskManager. 
+// All the other time, a TaskSource MAY have it in a list. 
+struct CompleteTask : LinkedListBase<CompleteTask>
 {
+	// This is set up to TaskDone by the constructor and is returned 
+	// with this state by GetTask. TasmManager sets the apropriate state 
+	// when getting the task. 
+	enum State
+	{
+		TaskDone=0,
+		ToBeRendered,
+		ToBeFiltered
+	} state;
+	
+	// If this CompleteTask is currently processed, td is a pointer to 
+	//    the TaskDriver which is currently processing the task. 
+	// If the CompleteTask currently is NOT processed, this is NULL. 
+	TaskDriver *td;
+	
 	// Allocated for CompleteTask and freed by destructor ~CompleteTask(). 
 	RenderTask *rt;   // or NULL 
 	FilterTask *ft;   // or NULL
@@ -43,7 +60,7 @@ class TaskSourceConsumer;
 
 struct TaskSource_NAMESPACE
 {
-	enum Action
+	enum TSAction
 	{
 		ANone=0,        // should never happen
 		AConnect,
@@ -65,7 +82,8 @@ struct TaskSource_NAMESPACE
 		GTSWorking,
 		GTSGotTask,
 		GTSAllocFailed,
-		GTSNoMoreTasks
+		GTSNoMoreTasks,
+		GTSEnoughTasks,   // task source thinks that we have enough tasks
 	};
 	enum DoneTaskStat
 	{
@@ -92,7 +110,7 @@ struct TaskSource_NAMESPACE
 	
 	struct TSNotifyInfo
 	{
-		Action action;          // why this was called 
+		TSAction action;          // why this was called 
 		
 		// Depending on action, check one of these: 
 		ConnectStat connstat;
@@ -101,7 +119,7 @@ struct TaskSource_NAMESPACE
 		DisconnectStat disconnstat;
 		
 		// Further data fields: 
-		CompleteTask *ctask;    // only for TSGetTask
+		CompleteTask *ctsk;    // only for TSGetTask
 		
 		// What failed: 
 		ErrCommand cmd;
@@ -110,7 +128,7 @@ struct TaskSource_NAMESPACE
 		_CPP_OPERATORS_FF
 		// Currently this cannot fail and NEW<> is not used: 
 		TSNotifyInfo(/*int *failflag=NULL*/);
-		~TSNotifyInfo()  {  ctask=NULL;  }
+		~TSNotifyInfo()  {  ctsk=NULL;  }
 	};
 };
 
@@ -150,6 +168,10 @@ class TaskSource : public TaskSource_NAMESPACE
 		int GetTask(TaskSourceConsumer *);
 		int DoneTask(TaskSourceConsumer *,CompleteTask *ct);
 		int Disconnect(TaskSourceConsumer *);
+		
+		// Does it make sense to re-try if the Connect() call fails? 
+		// (Returns delay in msec or 0 if you should not re-try.)
+		virtual long ConnectRetryMakesSense() HL_PureVirt(-1);
 };
 
 
@@ -160,11 +182,23 @@ class TaskSourceConsumer : public TaskSource_NAMESPACE
 	private:
 		// Pointer to the (associated) TaskSource: 
 		TaskSource *tsource;
+		
+		// Used by TSWriteError(): 
+		void _TSWriteError_Connect(const TSNotifyInfo *ni);
+		void _TSWriteError_GetTask(const TSNotifyInfo *ni);
+		void _TSWriteError_DoneTask(const TSNotifyInfo *ni);
+		void _TSWriteError_Disconnect(const TSNotifyInfo *ni);
+		void _WriteErrCmd(const TSNotifyInfo *ni);
 	protected: 
 		// This is the function called by the TaskSource notifying you 
 		// of the status of some TS* call. 
 		// Return value: currently unused, use 0. 
 		virtual int tsnotify(TSNotifyInfo *) HL_PureVirt(0)
+		
+		// Write error according to TSNotifyInfo. 
+		// If TSNotifyInfo contains success code, only verbose output 
+		// is done. 
+		void TSWriteError(const TSNotifyInfo *);
 	public:  _CPP_OPERATORS_FF
 		TaskSourceConsumer(int * /*failflag*/=NULL)
 			{  tsource=NULL;  }
@@ -174,6 +208,11 @@ class TaskSourceConsumer : public TaskSource_NAMESPACE
 		// Specify the TaskSource to use: 
 		void UseTaskSource(TaskSource *ts)
 			{  tsource=ts;  }
+		
+		// Get TaskSource pointer... (you should notmally not need 
+		// that but you may i.e. to see if the TaskSource is set). 
+		TaskSource *tasksource()
+			{  return(tsource);  }
 		
 		#warning need function to be able to interrupt task source action. 
 		// int Cancel() / Stop() / ...?
@@ -192,7 +231,7 @@ class TaskSourceConsumer : public TaskSource_NAMESPACE
 		// Common return values: 
 		//  0 -> okay, wait for tsnotify(). 
 		//  1 -> working (another request is pending, wait for this 
-		//       tsnotify() first. 
+		//       tsnotify() first). 
 		//  2 -> not connected. 
 		
 		// Conect to the task source. Do this before calling TSGetTask() 
@@ -217,6 +256,11 @@ class TaskSourceConsumer : public TaskSource_NAMESPACE
 		// Disconnect. 
 		int TSDisconnect()
 			{  return(tsource->Disconnect(this));  }
+		
+		// Does it make sense to re-try if the Connect() call fails? 
+		// (Returns delay in msec or 0 if you should not re-try.) 
+		long TSConnectRetryMakesSense()
+			{  return(tsource->ConnectRetryMakesSense());  }
 };
 
 #endif  /* _RNDV_TASKSOURCE_HPP_ */

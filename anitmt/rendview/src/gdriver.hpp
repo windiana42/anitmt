@@ -46,7 +46,7 @@ struct TaskParams
 	
 	_CPP_OPERATORS_FF
 	TaskParams(int *failflag=NULL);
-	~TaskParams();
+	virtual ~TaskParams();
 	
 	private:  // don't copy: 
 		TaskParams(const TaskParams &) {}
@@ -68,7 +68,7 @@ struct TaskStructBase
 	
 	_CPP_OPERATORS_FF
 	TaskStructBase(int *failflag=NULL);
-	~TaskStructBase();
+	virtual ~TaskStructBase();
 };
 
 
@@ -143,7 +143,7 @@ class TaskDriver :
 			const TaskParams *tp;
 			
 			// Where the TaskStructBase comes from: 
-			CompleteTask *ct;
+			CompleteTask *ctsk;
 			
 			_CPP_OPERATORS_FF
 			PInfo(int *failflag=NULL);

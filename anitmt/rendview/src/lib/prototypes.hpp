@@ -22,4 +22,7 @@ void Error(const char *fmt,...);
 void Warning(const char *fmt,...);
 void Verbose(const char *fmt,...);
 
+// Returns number of CPUs; assumes one CPU is detection fails. 
+int GetNumberOfCPUs();
+
 #endif  /* _RNDV_LIB_PROTOTYPES_HPP_ */

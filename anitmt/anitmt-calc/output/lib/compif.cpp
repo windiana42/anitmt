@@ -17,7 +17,8 @@
  * 
  * Revision History:
  *   Feb 2002   started writing
- *
+ *   Mar 2002   moved from pov/ to lib/ ; ITFype now independent type
+ * 
  */
 
 
@@ -26,8 +27,6 @@
 
 namespace output_io
 {
-namespace POV
-{
 
 using namespace anitmt;
 
@@ -35,11 +34,11 @@ std::string ComponentInterface::get_name() const
 {
 	switch(type)
 	{
-		case tNone:
+		case IFNone:
 			return(std::string(""));
-		case taScalar:
+		case IFScalar:
 			return(((Scalar_Component_Interface*)cif)->get_name());
-		case taObject:
+		case IFObject:
 			return(((Object_Component_Interface*)cif)->get_name());
 	}
 	assert(0);
@@ -48,16 +47,16 @@ std::string ComponentInterface::get_name() const
 
 void ComponentInterface::_Assign(const void *src_cif,IFType src_type)
 {
-	assert(type==tNone);
+	assert(type==IFNone);
 	type=src_type;
 	switch(type)
 	{
-		case tNone:  break;
-		case taScalar:
+		case IFNone:  break;
+		case IFScalar:
 			cif = new Scalar_Component_Interface(
 				*(Scalar_Component_Interface*)src_cif);
 			break;
-		case taObject:
+		case IFObject:
 			cif = new Object_Component_Interface(
 				*(Object_Component_Interface*)src_cif);
 			break;
@@ -69,41 +68,40 @@ void ComponentInterface::Clear()
 {
 	switch(type)
 	{
-		case tNone:  assert(!cif);  break;
-		case taScalar:
+		case IFNone:  assert(!cif);  break;
+		case IFScalar:
 			if(cif)
 			{  delete ((Scalar_Component_Interface*)cif);  }
 			break;
-		case taObject:
+		case IFObject:
 			if(cif)
 			{  delete ((Object_Component_Interface*)cif);  }
 			break;
 	}
 	cif=NULL;
-	type=tNone;
+	type=IFNone;
 }
 
 
 ComponentInterface::ComponentInterface(const ComponentInterface &src)
 {
-	type=tNone;
+	type=IFNone;
 	cif=NULL;
 	_Assign(src.cif,src.type);
 }
 
 ComponentInterface::ComponentInterface(const Scalar_Component_Interface &src)
 {
-	type=tNone;
+	type=IFNone;
 	cif=NULL;
-	_Assign(&src,taScalar);
+	_Assign(&src,IFScalar);
 }
 
 ComponentInterface::ComponentInterface(const Object_Component_Interface &src)
 {
-	type=tNone;
+	type=IFNone;
 	cif=NULL;
-	_Assign(&src,taObject);
+	_Assign(&src,IFObject);
 }
 
-}  // namespace end 
-}  // namespace end   cif=NULL;cif=NULL;
+}  // namespace end

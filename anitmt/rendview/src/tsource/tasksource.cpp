@@ -76,14 +76,18 @@ TaskSource::~TaskSource()
 
 /******************************************************************************/
 
-CompleteTask::CompleteTask(int * /*failflag*/)
+CompleteTask::CompleteTask(int * /*failflag*/) : 
+	LinkedListBase<CompleteTask>()
 {
+	state=TaskDone;  // okay. 
+	td=NULL;
 	rt=NULL;
 	ft=NULL;
 }
 
 CompleteTask::~CompleteTask()
 {
+	assert(!td);
 	if(rt)
 	{  delete rt;  rt=NULL;  }
 	if(ft)
@@ -102,7 +106,7 @@ TaskSource::TSNotifyInfo::TSNotifyInfo(/*int *failflag*/)
 	donestat=DTSNone;
 	disconnstat=DSNone;
 	
-	ctask=NULL;
+	ctsk=NULL;
 	
 	cmd=EC_none;
 	cmd_errno=0;

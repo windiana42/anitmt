@@ -137,6 +137,11 @@ pid_t ProcessManager::StartProcess(ProcessBase *pb,
 	const ProcFDs &_pfds,
 	const ProcEnv &env)
 {
+	fprintf(stderr,"ABOUT TO START:");
+	for(int ii=0; args.args[ii]; ii++)
+	{  fprintf(stderr," `%s´",args.args[ii]);  }
+	fprintf(stderr,"<<<\n");
+	
 	if(!pb)  return(0);
 	
 	if(limitproc>=0 && nproc>=limitproc)
@@ -406,6 +411,10 @@ pid_t ProcessManager::StartProcess(ProcessBase *pb,
 		}
 		
 		// Finally execute the program: 
+		fprintf(stderr,"STARTING:");
+		for(int ii=0; args.args[ii]; ii++)
+		{  fprintf(stderr," `%s´",args.args[ii]);  }
+		fprintf(stderr,"\n");
 		int rv;
 		do
 		{  rv=execve(binpath, args.args, env.env);  }

@@ -19,20 +19,11 @@
 #define _RNDV_RENDER_RENDER_HPP_ 1
 
 // Linked list hold by RenderDataBase. 
-struct RenderDesc : LinkedListBase<RenderDesc>
+struct RenderDesc : RF_DescBase
 {
-	RefString name;     // e.g. povray-3.1g
 	RefString binpath;  // path to binary 
 	RefStrList required_args;   // required args to pass to the renderer 
 	RefStrList include_path;    // [implicit] include path for the renderer 
-	TaskDriverFactory *dfactory;    // driver factory for the renderer 
-		// There may be several descriptions pointing to one 
-		// driver (e.g. there is a povray driver and a desc for 
-		// povray-3.0, povray-3.1 and povray-3.1g). 
-	
-	// This is only used by parameter / argument system and contains a NULL 
-	// ref after initialisation. 
-	RefString _drivername;
 	
 	_CPP_OPERATORS_FF
 	RenderDesc(int *failflag=NULL);

@@ -1,7 +1,36 @@
 LLB = LinkedListBase<>
 
+ +-------------------------+     +-------------------------------------+
+ |   ==TaskStructBase==    |     |           ==TaskParams==            |
+ | TaskDriverType dtype;   |     | TaskDriverType dtype;               |
+ | TaskFile *infile;       |     | RefStrList add_args;                |
+ | TaskFile *outfile;      |     | int niceval;                        |
+ | RefStrList add_args;    |     | long timeout;                       |
+ |                         |     | RefString crdir;                    |
+ |                         |     | RefString wdir;                     |
+ |                         |     |                                     |
+ |#########################|     |#####################################|
+ | RenderTask | FilterTask |     | RenderTaskParams | FilterTaskParams |
+ +------------+------------+     +------------------+------------------+
 
-TaskDriverType  { DTNone, DTRender, DTFilter };
+                ,--TaskManager (between GetTask() / DoneTask()
+                V
+ +-------------------------------+
+ |             LLB               |
+ +-------------------------------+
+ |       ==CompleteTask==        |    CompleteTask is created by the task 
+ | State { TaskDone,ToBeRendered |    source on call to GetTask() and destroyed
+ |                ToBeFiltered } |    by it when calling DoneTask(). 
+ | RenderTask *rt;   // or NULL  |
+ | FilterTask *ft;   // or NULL  |
+ |                               |
+ +-------------------------------+
+
+MISSING: TaskFile
+
+---------------------------------<TASK DRIVER>---------------------------------
+
+TaskDriverType  { DTNone=-1, DTRender=0, DTFilter=1, _DTLast=2 };
 
     ,--TaskManager
     V
@@ -35,19 +64,77 @@ TaskDriverType  { DTNone, DTRender, DTFilter };
  +-----------------------------+
 
 
+---------------------------------<TASK SOURCE>---------------------------------
+
+ +-----------------------------------+
+ |          ==TaskSource==           |    One TaskSource exists at a time. 
+ | TaskSourceConsumer *;             |    Normally it exists as long as the 
+ |                                   |    program runs. 
+ |###################################|
+ | TaskSource_Local | TaskSource_NRP |
+ | <ptr to factory> | -dito-         |
+ +-----------------------------------+
+
+ +------------------------------+
+ |    ==TaskSourceConsumer==    |    Base class for classes using TaskSource. 
+ +------------------------------+    Only useful if there is only ine class 
+ | TaskSource *;                |    using one TaskSource. This class is 
+ |                              |    TaskManager. 
+ +------------------------------+
+
+     ,--ComponentDataBase
+     V
+ +-------------------------------+
+ |  LLB  | ParameterConsumer_OVL |
+ +-------------------------------+
+ |     ==TaskSourceFactory==     |    Contains all static parameters of the 
+ |                               |    task source; can be set via cmd line. 
+ |###############################|    [One factory per source.]
+ | TaskSourceFactory_Local | ... |    {Con,De}structor: like TaskDriverFactory
+ +-------------------------------+
+
+
+-----------------------------<COMPONENT DATA BASE>-----------------------------
+
+                  ,--ComponentDataBase
+                  V
+ +---------------------------------+
+ |               LLB               |
+ +---------------------------------+
+ |         ==RF_DescBase==         |
+ | TaskDriverType dtype;           |
+ | RefString name;                 |
+ | TaskDriverFactory *dfactory;    |
+ |                                 |
+ |#################################|
+ | ==RenderDesc== | ==FilterDesc== |
+ | binpath;       | binpath;       |
+ | required_args; | required_args; |
+ | include_path;  |                |
+ |                |                |
+ +----------------+----------------+
+
  +--------------------------------+
  |      ==ComponentDataBase==     |    One component data base exists; 
- | LIST<RenderDesc>;              |    functions to loop up component by name.
- | LIST<FilterDesc>;              |    Registration of components on program 
+ | ARRAY/LIST<RD_DescBase>;       |    functions to loop up component by name.
+ | ARRAY/LIST<TaskDriverFactory>; |    Registration of components on program 
  | LIST<ImageFormat>;             |    start. 
- | ARRAY/LIST<TaskDriverFactory>; |
+ | LIST<TaskSourceFactory>;       |
+ | TaskManager *;                 |
+ |                                |
  |                                |
  +--------------------------------+
 
 
- +-------------------------+     +-------------------------------------+
- |     TaskStructBase      |     |             TaskParams              |
- |#########################|     |#####################################|
- | RenderTask | FilterTask |     | RenderTaskParams | FilterTaskParams |
- +------------+------------+     +------------------+------------------+
+--------------------------------<TASK MANAGER>---------------------------------
+
+ +-------------------------------------------+
+ | FDBase | ProcessBase | TaskSourceConsumer |
+ +-------------------------------------------+
+ |              ==TaskManager==              |
+ | LIST<TaskDriver> joblist;                 | 
+ | LIST<CompleteTask> tasklist;              |
+ | job limits / etc.                         |
+ |                                           |
+ +-------------------------------------------+
 

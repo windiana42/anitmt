@@ -59,7 +59,34 @@ enum tokID
 	// anitmt tokens
 	taObject,
 	taScalar   // adjust need_delim() if you add identifiers here 
+	
 };
+
+inline ComponentInterface::IFType toIFType(tokID x)
+{
+	switch(x)
+	{
+		case tNone:     return(ComponentInterface::IFNone);
+		case taScalar:  return(ComponentInterface::IFScalar);
+		case taObject:  return(ComponentInterface::IFObject);
+	}
+	assert(0);
+	return(ComponentInterface::IFNone);
+}
+
+inline tokID toTokID(ComponentInterface::IFType x)
+{
+	switch(x)
+	{
+		case ComponentInterface::IFNone:    return(tNone);
+		case ComponentInterface::IFScalar:  return(taScalar);
+		case ComponentInterface::IFObject:  return(taObject);
+	}
+	assert(0);
+	return(tNone);
+}
+
+
 
 }}  // namespace end 
 

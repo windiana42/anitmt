@@ -19,19 +19,17 @@
 
 
 RenderDesc::RenderDesc(int *failflag=NULL) :
-	name(failflag),
+	RF_DescBase(failflag),
 	binpath(failflag),
 	required_args(failflag),
-	include_path(failflag),
-	
-	_drivername(failflag)
+	include_path(failflag)
 {
-	dfactory=NULL;
+	dtype=DTRender;
 }
 
 RenderDesc::~RenderDesc()
 {
-	dfactory=NULL;  // be sure
+	dtype=DTNone;
 }
 
 

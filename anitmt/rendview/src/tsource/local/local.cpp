@@ -38,12 +38,12 @@ void TaskSource_Local::_ProcessGetTask(TSNotifyInfo *ni)
 	if(next_frame_no>=p->nframes)
 	{   ni->getstat=GTSNoMoreTasks;  return;  }
 	
-	CompleteTask *ctask=NEW<CompleteTask>();
-	if(!ctask)
+	CompleteTask *ctsk=NEW<CompleteTask>();
+	if(!ctsk)
 	{  ni->getstat=GTSAllocFailed;  return;  }
 	
 	RenderTask *rt=NEW<RenderTask>();
-	ctask->rt=rt;
+	ctsk->rt=rt;
 	
 	rt->rdesc=component_db->FindRenderDescByName("povray3.1g");
 	rt->width=320;
@@ -66,7 +66,7 @@ static ImageFormat oformat;
 	rt->outfile=NEW2<TaskFile>(TaskFile::FTImage,TaskFile::IOTRenderOutput);
 	rt->outfile->SetHDPath(outtmp);
 	
-	ni->ctask=ctask;
+	ni->ctsk=ctsk;
 	ni->getstat=GTSGotTask;
 	
 	++next_frame_no;
@@ -177,6 +177,14 @@ int TaskSource_Local::srcDisconnect(TaskSourceConsumer *cons)
 	pending=ADisconnect;
 	cclient=cons;
 	_Start0msecTimer();
+	return(0);
+}
+
+
+long TaskSource_Local::ConnectRetryMakesSense()
+{
+	// No, it makes absolutely no sense to re-try to connect to 
+	// this task source. If it failed, it failed definitely. 
 	return(0);
 }
 

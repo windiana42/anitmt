@@ -3,12 +3,12 @@
 #ifndef _LIB_TASKMANAGEMENT_H_
 #define _LIB_TASKMANAGEMENT_H_ 1
 
-// Our misc stuff: 
-#include "prototypes.hpp"
-
 // Basic hlib stuff: 
 #include <hlib/prototypes.h>
 #include <hlib/refstring.h>
+
+// Our misc stuff: 
+#include "prototypes.hpp"
 
 // Process management & related: 
 #include <stdio.h>

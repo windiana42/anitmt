@@ -34,7 +34,7 @@ class TaskSource_Local :
 		TimerID rtid;
 		
 		// What we're currently doing: 
-		Action pending;
+		TSAction pending;
 		
 		// Are we connected? This is just a dummy to ensure 
 		// correct behavior of the other classes...
@@ -60,6 +60,8 @@ class TaskSource_Local :
 		int srcGetTask(TaskSourceConsumer *);
 		int srcDoneTask(TaskSourceConsumer *,CompleteTask *ct);
 		int srcDisconnect(TaskSourceConsumer *);
+		
+		long ConnectRetryMakesSense();
 	public: _CPP_OPERATORS_FF
 		TaskSource_Local(TaskSourceFactory_Local *,int *failflag=NULL);
 		~TaskSource_Local();

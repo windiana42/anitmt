@@ -130,7 +130,7 @@ TaskDriver::PInfo::PInfo(int *failflag) :
 	tsb=NULL;
 	tp=NULL;
 	
-	ct=NULL;
+	ctsk=NULL;
 }
 
 TaskDriver::PInfo::~PInfo()
@@ -138,5 +138,5 @@ TaskDriver::PInfo::~PInfo()
 	// be sure...
 	tsb=NULL;
 	tp=NULL;
-	ct=NULL;
+	ctsk=NULL;
 }

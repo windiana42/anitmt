@@ -8,3 +8,4 @@ configure
 .deps
 config.h.in
 stamp-h.in
+autom4te.cache

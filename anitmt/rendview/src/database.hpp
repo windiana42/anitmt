@@ -28,8 +28,31 @@
 
 
 class ImageFormat;
-class RenderDesc;
-class FilterDesc;
+struct RenderDesc;
+struct FilterDesc;
+
+// Base class for RenderDesc and FilterDesc: 
+struct RF_DescBase : LinkedListBase<RF_DescBase>
+{
+	TaskDriverType dtype;
+	
+	// Description name (for render desc, e.g. povray-3.1g): 
+	RefString name;
+	
+	// driver factory for the renderer 
+	// There may be several descriptions pointing to one 
+	// driver (e.g. there is a povray driver and a desc for 
+	// povray-3.0, povray-3.1 and povray-3.1g). 
+	TaskDriverFactory *dfactory;
+	
+	// This is only used by parameter / argument system and contains a NULL 
+	// ref after initialisation. 
+	RefString _drivername;
+	
+	_CPP_OPERATORS_FF
+	RF_DescBase(int *failflag=NULL);
+	virtual ~RF_DescBase();
+};
 
 
 class ComponentDataBase : 
@@ -40,36 +63,42 @@ class ComponentDataBase :
 		// Pointer to the task manager (be careful: initially NULL). 
 		TaskManager *taskman;
 		
-		LinkedList<TaskDriverFactory> *drivers;  // array: [_DTLast]
+		struct InfoPerType
+		{
+			LinkedList<TaskDriverFactory> drivers;
+			LinkedList<RF_DescBase> desclist;
+			RefStrList searchpath;
+			
+			// Parameter stuff: 
+			Section *i_section;  // render/filter desc section
+			RefString descfile;  // render/filter desc file arg
+			ParamInfo *_descfile_pi;  // descfile param info
+			Section *_i_help_dummy;   // internal use for special help
+			
+			_CPP_OPERATORS_FF
+			InfoPerType(int *failflag=NULL);
+			~InfoPerType();
+		} *ift;   // array: [_DTLast]
 		
+		// List of available task source factories: 
 		LinkedList<TaskSourceFactory> tsources;
 		
-		LinkedList<RenderDesc> rdesclist;
-		LinkedList<FilterDesc> fdesclist;
+		// List of known image formats: 
 		LinkedList<ImageFormat> iflist;
-		
-		RefStrList *searchpath;  // render/filter search path
-		
-		// Parameter stuff: 
-		Section *ri_section,*fi_section;  // render/filter desc section
-		RefString rdescfile,fdescfile;
-		ParamInfo *_rdescfile_pi,*_fdescfile_pi;
-		
-		Section *_ri_help_dummy,*_fi_help_dummy;
 		
 		// Return driver factory with specified type & name 
 		// or NULL (exact match). 
 		TaskDriverFactory *_FindDriverFactoryByName(
 			const char *name,TaskDriverType dtype);
+		const RF_DescBase *_FindDescByName(
+			const char *name,TaskDriverType _dtype);
 		TaskSourceFactory *_FindSourceFactoryByName(const char *name);
 		
-		int _RegisterParams();
-		int _RegisterRenderDescParams(RenderDesc *rd);
-		int _RegisterFilterDescParams(FilterDesc *fd);
+		int _RegisterParams(TaskDriverType dtype);
+		int _RegisterDescParams(TaskDriverType dtype,RF_DescBase *d);
+		void _RegisterRenderDescParams(RenderDesc *rd);
+		void _RegisterFilterDescParams(FilterDesc *fd);
 		
-		// Used by ReadInDescFiles(): 
-		int _ReadInRenderDescFile(par::ParameterSource_File *file_src);
-		int _ReadInFilterDescFile(par::ParameterSource_File *file_src);
 	protected:
 		// Called for special help options: 
 		int PrintSpecialHelp(RefStrList *dest,const SpecialHelpItem *shi);
@@ -100,17 +129,20 @@ class ComponentDataBase :
 		TaskDriverFactory *FindDriverFactoryByName(const char *name,TaskDriverType _dtype)
 			{  return(_FindDriverFactoryByName(name,_dtype));  }
 		
+		// Get render / filter description: 
+		const RenderDesc *FindRenderDescByName(const char *name)
+			{  return((RenderDesc*)_FindDescByName(name,DTRender));  }
+		const FilterDesc *FindFilterDescByName(const char *name)
+			{  return((FilterDesc*)_FindDescByName(name,DTFilter));  }
+		
 		// Return task source factory with specified name or NULL: 
 		TaskSourceFactory *FindSourceFactoryByName(const char *name)
 			{  return(_FindSourceFactoryByName(name));  }
 		
-		const RenderDesc *FindRenderDescByName(const char *name);
-		const FilterDesc *FindFilterDescByName(const char *name);
-		
 		// Used by task drivers to get binary search path (one per 
 		// task driver type). 
 		const RefStrList *GetBinSearchPath(TaskDriverType dtype)
-			{  return((dtype<0 || dtype>=_DTLast) ? NULL : &(searchpath[dtype]));  }
+			{  return((dtype<0 || dtype>=_DTLast) ? NULL : &(ift[dtype].searchpath));  }
 		
 		// Used by RenderDriver/FilterDriver to (un)register at the 
 		// database. 

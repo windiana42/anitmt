@@ -19,17 +19,16 @@
 
 
 FilterDesc::FilterDesc(int *failflag=NULL) :
-	name(failflag),
+	RF_DescBase(failflag),
 	binpath(failflag),
-	required_args(failflag),
-	_drivername(failflag)
+	required_args(failflag)
 {
-	dfactory=NULL;
+	dtype=DTFilter;
 }
 
 FilterDesc::~FilterDesc()
 {
-	
+	dtype=DTNone;
 }
 
 

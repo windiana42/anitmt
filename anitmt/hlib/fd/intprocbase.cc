@@ -130,10 +130,11 @@ InternalProcessBase::ProcArgs::ProcArgs(const RefStrList *arglist)
 	
 	// Count them...
 	int n=1;
-	for(const RefStrList::Node *i=arglist->first(); i; i=i->next,++n)
+	for(const RefStrList::Node *i=arglist->first(); i; i=i->next)
 	{
 		if(i->stype()!=0)  // must be '\0'-terminated string
 		{  freearray=3;  return;  }   // StartProcess will detect that. 
+		++n;
 	}
 	const char **xargs=(const char **)LMalloc(n*sizeof(char *));
 	if(!xargs)
@@ -141,7 +142,7 @@ InternalProcessBase::ProcArgs::ProcArgs(const RefStrList *arglist)
 	
 	// ...and assign the pointers. 
 	n=0;
-	for(const RefStrList::Node *i=arglist->first(); i; i=i->next,++n)
+	for(const RefStrList::Node *i=arglist->first(); i; i=i->next)
 	{  xargs[n++]=i->str();  }
 	xargs[n]=NULL;  // important
 	

@@ -250,8 +250,10 @@ inline char *Frame_Dump::Node::write(char *dest,char *dend,Context *ctx)
 {
 	switch(cif.GetType())
 	{
-		case taScalar:  return(_Dump_Scalar2Str(dest,dend,ctx));
-		case taObject:  return(_Dump_Object2Str(dest,dend,ctx));
+		case ComponentInterface::IFScalar:
+			return(_Dump_Scalar2Str(dest,dend,ctx));
+		case ComponentInterface::IFObject:
+			return(_Dump_Object2Str(dest,dend,ctx));
 	}
 	assert(0);   // actually never happens...
 	return(dest);
@@ -456,7 +458,7 @@ int Frame_Dump::Write(const std::string &file,values::Scalar t,int frame)
 void Frame_Dump::Add_Entry(const ComponentInterface &cif,
 	Dump_Flags flags,unsigned int id)
 {
-	if(cif.GetType()==taScalar)
+	if(cif.GetType()==ComponentInterface::IFScalar)
 	{
 		size_t len=cif.get_name().length();
 		if(len>longest_identifier_len)
@@ -531,11 +533,11 @@ Frame_Dump::Node::Node(const ComponentInterface &_cif,Dump_Flags _flags,unsigned
 	
 	switch(cif.GetType())
 	{
-		case taScalar:
+		case ComponentInterface::IFScalar:
 			str=_Alloc_Scalar_Str(cif.CVScalar());
 			str_len=strlen(str);
 			break;
-		case taObject:
+		case ComponentInterface::IFObject:
 			str=_Alloc_Object_Str(cif.CVObject(),id);
 			str_len=strlen(str);
 			break;
