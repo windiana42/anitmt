@@ -75,7 +75,9 @@ FDCopyManager::CopyRequest::CopyRequest(int * /*failflag*/)
 	srcbuf=destbuf=NULL;
 	len=0;
 	
-	timeout=-1;
+	req_timeout=-1;
+	read_timeout=-1;
+	write_timeout=-1;
 	
 	dptr=NULL;
 	progress_mask=PAQuery;

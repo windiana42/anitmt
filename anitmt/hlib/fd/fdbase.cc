@@ -16,6 +16,7 @@
  * 
  */
 
+
 #include <stdio.h>   /* for ``NULL'' */
 #include <stdlib.h>
 #include <unistd.h>
@@ -60,6 +61,14 @@ void FDBase::DeleteTimerNode(FDManager::TimerNode *n)
 #if TESTING>1
 fprintf(stderr,"DeleteTimer: %ld, %ld\n",n->msec_val,n->msec_left);
 #endif
+	
+	if(n==sh_timer)
+	{
+		sh_timer=NULL;
+		sh_timer_dirty=1;
+		fdmanager()->TimeoutChange();
+	}
+	
 	if(timerlock>=0)
 	{
 		// we may not really delete, just mark for later deletion
@@ -68,6 +77,7 @@ fprintf(stderr,"DeleteTimer: %ld, %ld\n",n->msec_val,n->msec_left);
 		++timerlock;
 		return;
 	}
+	
 	if(n==timers)
 	{
 		timers=timers->next;
@@ -107,6 +117,12 @@ int FDBase::ClearTimers()
 //fprintf(stderr,">");
 		++ndel;
 	}
+	sh_timer_dirty=0;
+	if(sh_timer)
+	{
+		sh_timer=NULL;
+		fdmanager()->TimeoutChange();
+	}
 	return(ndel);
 }
 
@@ -123,6 +139,39 @@ void FDBase::_UnlockTimers()
 		if(n->msec_val==-9999L)
 		{  DeleteTimerNode(n);  }
 	}
+}
+
+
+// Go through list and find shortest enabled timer: 
+struct FDManager::TimerNode *FDBase::_GetShortestTimer()
+{
+	// Clear dirty flag: 
+	sh_timer_dirty=0;
+	
+	// Find first enabled timer:
+	for(FDManager::TimerNode *i=timers; i; i=i->next)
+	{
+		if(i->msec_val<0)  continue;  // disabled or -9999 -> to be deleted
+		sh_timer=i;
+		goto found;
+	}
+	// No timer at all: 
+	sh_timer=NULL;
+	return(sh_timer);
+	found:;
+	
+	// Go through rest of list and look for shorter timers: 
+	long sh_msec=sh_timer->msec_left;
+	for(FDManager::TimerNode *i=sh_timer; i; i=i->next)
+	{
+		if(i->msec_val<0)  continue;  // disabled or -9999 -> to be deleted
+		if(i->msec_left>=sh_msec)  continue;
+		sh_timer=i;
+		sh_msec=sh_timer->msec_left;
+		if(!sh_msec)  break;   // 0 msec timer
+	}
+	
+	return(sh_timer);
 }
 
 
@@ -278,6 +327,8 @@ FDBase::FDBase(int *failflag=NULL)
 	ismanager=0;
 	timerlock=-1;
 	fdslock=-1;
+	sh_timer=NULL;
+	sh_timer_dirty=0;
 	
 	int retval=0;
 	if(fdmanager()->Register(this))
@@ -311,12 +362,12 @@ FDBase::~FDBase()
 	fdslock=-1;
 	
 //fprintf(stderr,"2.....");
-	int ntimers=ClearTimers();
+	ClearTimers();
 //fprintf(stderr,"3.....");
 	int npollfds=0;  // with events!=0
 	int nfds=_ClearFDs(/*close_them=*/ 1,&npollfds);
 //fprintf(stderr,"4.....");
-	fdmanager()->DestructionDone(this,ntimers,nfds,npollfds);
+	fdmanager()->DestructionDone(this,nfds,npollfds);
 //fprintf(stderr,"E\n");
 }
 

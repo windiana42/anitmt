@@ -64,6 +64,7 @@ class FDManager
 			int fd;   // file descriptor
 			short events;  // what to poll for 
 			short revents;  // what poll returned 
+			HTime *current;  // may be modified in fdnotify()
 			const void *dptr;  // custom data pointer associated with fd (or NULL)
 		};
 		struct SigInfo
@@ -122,8 +123,12 @@ class FDManager
 		SigNode *_AllocSigNode();        // "Alloc" signode
 		void _FreeSigNode(SigNode *sn);  // "Free" signode
 		
-		int timerlist_change_serial;  // incremented when timerlist gets changed. 
+		int timeout_change;  // incremented when timeout (is likely to) change
 		long last_timeout;
+	public:
+		inline void TimeoutChange()   // used by FDBase. 
+			{  ++timeout_change;  }
+	private:
 		
 		void AlignTimer(TimerNode *n,int align);
 		long __GetTimeout();
@@ -146,7 +151,7 @@ class FDManager
 		                     // or -1 -> do not write to pipe. 
 		inline void _ClearSigPipe();
 		
-		inline void _DeliverFDNotify();
+		inline void _DeliverFDNotify(const HTime *fdtime);
 		
 		// Internally: unpoll FD node (dequeue & free). 
 		inline int _UnpollFD(FDBase *fdb,FDManager::FDNode *fdn);
@@ -185,7 +190,7 @@ class FDManager
 		
 		// Called by FDBase to keep counters up to date. 
 		// NEVER CALL DIRECTLY. 
-		void DestructionDone(FDBase *,int ntimers,int nfds,int npollfds);
+		void DestructionDone(FDBase *,int nfds,int npollfds);
 		
 		// Gets called if a signal is caught. 
 		void CaughtSignal(siginfo_t *info);

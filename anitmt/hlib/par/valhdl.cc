@@ -1,4 +1,4 @@
-#include "parintrnl.h"
+#include "valhdl.h"
 #include <string.h>
 
 namespace par  {

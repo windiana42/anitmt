@@ -68,8 +68,10 @@ class FDCopyManager : FDBase
 			copylen_t len;   // How many bytes to copy max; 0 -> unlimited
 			
 			//*** Time restrictions: ***
-			long timeout;  // Timeout for the complete request in msec; 
-			               // -1 -> no timeout
+			// Set timeout to -1 for `no timeout'. 
+			long req_timeout;    // timeout for the complete request in msec
+			long read_timeout;   // read timeout (time since last POLLIN) 
+			long write_timeout;  // write timeout
 			
 			//*** Convenience: ***
 			// costom data pointer to attach data to the CopyRequest: 
@@ -141,7 +143,7 @@ class FDCopyManager : FDBase
 			SCNone=   0x00,   // (mainly internal use; may never happen)
 			SCFinal=  0x01,   // IMPORTANT: last time cpnotify() called 
 			SCLimit=  0x02,   // copy limit reached 
-			SCTimeout=0x04,   // CopyRequest::timeout passed
+			SCTimeout=0x04,   // some CopyRequest::*timeout passed (see errno)
 			SCKilled= 0x08,   // 
 			// See below for combined flags of these: 
 			SCInHup=  0x0100,   // hangup on input fd (POLLHUP)
@@ -184,17 +186,20 @@ class FDCopyManager : FDBase
 			StatusCode scode;
 			
 			// Check this if(scode & SCError) for errors: 
-			// In case of no error errno is 0. 
+			// In case of no error err_no is 0. 
 			// Note: 
-			// - In case of SCInPipe / SCOutPipe errno=EPIPE. 
-			// - In case of SCErrPollI/O, errno is poll's revents 
+			// - In case of SCInPipe / SCOutPipe err_no=EPIPE. 
+			// - In case of SCErrPollI/O, err_no is poll's revents 
 			//   which may have POLLERR and POLLNVAL set. 
-			int errno;           // errno value 
+			// - In case of SCTimeout it is the timeout which 
+			//   elapsed: 
+			#warning <hack me>
+			int err_no;          // errno value 
 			
 			_CPP_OPERATORS_FF
 			CopyInfo(
-				StatusCode scode,
 				const MCopyNode *cpn,
+				StatusCode scode,
 				int *failflag=NULL);
 			~CopyInfo()  {  req=NULL;  }
 		};
@@ -283,10 +288,13 @@ class FDCopyManager : FDBase
 		// List of all FDCopyBase classes: 
 		LinkedList<FDCopyBase> clients;
 		
+		void _ReadError(MCopyNode *cpn,HTime *fdtime);
+		
 		int _SavePollEvents(MCopyNode *cpn);
 		int _RestorePollEvents(MCopyNode *cpn,int only_input_ev=0);
 		
 		void _KillRequest(MCopyNode *cpn);
+		void _FinishInput(MCopyNode *cpn,CopyInfo *cpi);
 		void _FinishRequest(MCopyNode *cpn,CopyInfo *cpi);
 		
 		void _FillProgressInfoStruct(ProgressInfo *pgi,MCopyNode *cpn,

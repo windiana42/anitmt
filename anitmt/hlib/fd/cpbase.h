@@ -94,7 +94,7 @@ class FDCopyBase : LinkedListBase<FDCopyBase>
 		// CCKill -> kill request (cpnotify() [SCKilled] gets called)
 		// CCStop -> stop request; must be started again using CCCont
 		// CCCont -> start a stopped request
-		//           Note that the timeout timer (if any) is not affected 
+		//           Note that the timeout timer(s) (if any) is not affected 
 		//           by CCStop/CCCont. If you stop a request it can time 
 		//           out just as a running one. 
 		// Return value: 
@@ -106,7 +106,7 @@ class FDCopyBase : LinkedListBase<FDCopyBase>
 			{  return(cpmanager()->CopyControl(cpid,cc));  }
 		
 		// Add CopyControl(CopyID, etc..) to
-		// - change timeout
+		// - change timeouts
 		// - change len (for fd2fd)
 		// - ...
 		

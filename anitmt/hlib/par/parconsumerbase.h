@@ -3,7 +3,7 @@
 
 #include <stddef.h>
 
-#include "parintrnl.h"
+#include "valhdl.h"
 
 namespace par
 {

@@ -113,7 +113,25 @@ inline void FDBase::AddTimerNode(FDManager::TimerNode *n)
 	if(timers)
 	{  timers->prev=n;  }
 	timers=n;
+	
+	// Keep sh_timer up to date: 
+	// This does not have to be done here as the calling function will 
+	// call fdb->_MsecLeftChanged() after AddTimerNode() [and possibly 
+	// AlignTimer()]. 
+	// NOTE: InstallTimer() depends on that we do NOT check sh_timer here. 
+	/*if(!sh_timer_dirty)
+	{
+		if(!sh_timer || sh_timer->msec_left>n->msec_left)
+		{  sh_timer=n;  fdmanager()->TimeoutChange();  }
+	}*/
 }
+
+inline void FDBase::_DoResetTimer(FDManager::TimerNode *i)
+{
+	i->msec_left=i->msec_val;  // reset timer
+	sh_timer_dirty=1;
+	fdmanager()->TimeoutChange();
+}			
 
 inline void FDBase::AddFDNode(FDManager::FDNode *n)
 {
@@ -121,6 +139,48 @@ inline void FDBase::AddFDNode(FDManager::FDNode *n)
 	if(fds)
 	{  fds->prev=n;  }
 	fds=n;
+}
+
+// Be careful: old_msec_left may be -1 (after AddTimer). 
+void FDBase::_MsecLeftChanged(
+	FDManager::TimerNode *i,long old_msec_left)
+{
+	if(sh_timer_dirty)  return;
+	if(i==sh_timer)
+	{
+		#if TESTING
+		if(old_msec_left<0)
+		{  fprintf(stderr,"FD:%d: OOPS! BUG! old_msec_left=%ld while i==sh_timer=%p\n",
+			__LINE__,old_msec_left,sh_timer);  abort();  }
+		#endif
+		if(i->msec_left>old_msec_left)
+		{  sh_timer_dirty=1;  fdmanager()->TimeoutChange();  }
+		return;
+	}
+	if(!sh_timer || sh_timer->msec_left>i->msec_left)
+	{  sh_timer=i;  fdmanager()->TimeoutChange();  }
+	
+	#if TESTING_CHECK
+	// Check if sh_timer really is the shortest timer node: 
+	// If we reach here, sh_timer_dirty=0. 
+	if((!sh_timer && timers) || (sh_timer && !timers))
+	{
+		fprintf(stderr,"FD:%d: OOPS: BUG! sh_timer=%p, timers=%p\n",
+			__LINE__,sh_timer,timers);
+		abort();
+	}
+	// If we reach here, sh_timer!=NULL. 
+	for(FDManager::TimerNode *ii=timers; ii; ii=ii->next)
+	{
+		if(ii->msec_left<sh_timer->msec_left)
+		{
+			fprintf(stderr,"FD:%d: OOPS: BUG! sh_timer->msec_left=%ld, "
+				"i->msec_left=%ld; old=%ld (msec_val=%ld)\n",__LINE__,
+				sh_timer->msec_left,i->msec_left,old_msec_left,i->msec_val);
+			abort();
+		}
+	}
+	#endif
 }
 
 /************************ FDManager *************************/
@@ -362,12 +422,8 @@ void FDManager::Unregister(FDBase *fdb,int flag)
 	// Set the delete flag: 
 	i->fdb->deleted=flag;
 	
-	// We need not check if the timers/fds change; that's done by 
-	// DestructionDone(). 
-	//if(i->fdb->timers)
-	//{  ++timerlist_change_serial;  }
-	//if(i->fdb->fds)
-	//{  ++fdlist_change_serial;  }
+	// DestructionDone() checks if the FDs change; timer change gets 
+	// reported by FDBase via TimeoutChange(). 
 	
 	if(flag==1)
 	{  i->fdb=NULL;  }  // May not access any more. 
@@ -376,10 +432,11 @@ void FDManager::Unregister(FDBase *fdb,int flag)
 
 // Called by FDBase to keep counters up to date. 
 // NEVER CALL DIRECTLY. 
-void FDManager::DestructionDone(FDBase *,int ntimers,int nfds,int npollfds)
+void FDManager::DestructionDone(FDBase *,int nfds,int npollfds)
 {
-	if(ntimers)
-	{  ++timerlist_change_serial;  }
+	// This is no longer needed as ~FDBase calls TimeoutChange() if needed. 
+	//if(ntimers)
+	//{  ++timerlist_change_serial;  }
 	if(nfds)
 	{
 		fd_nnodes-=nfds;
@@ -715,7 +772,7 @@ void FDManager::_DeliverSignal(SigNode *sn)
 
 
 // inline as called only from one pos. 
-inline void FDManager::_DeliverFDNotify()
+inline void FDManager::_DeliverFDNotify(const HTime *fdtime)
 {
 	// Make sure to deal with arrived signals: 
 	_DeliverPendingSignals();  // inline check (does _TidyUp())
@@ -728,6 +785,7 @@ inline void FDManager::_DeliverFDNotify()
 	if(iterator_next)
 	{  fprintf(stderr,"OOPS: BUG!! iterator_next!=NULL (B)\n");  abort();  }
 	#endif
+	HTime fdtime_cp;
 	for(FDBNode *fb=fdblist.first; fb; fb=iterator_next)
 	{
 		iterator_next=fb->next;
@@ -776,11 +834,13 @@ inline void FDManager::_DeliverFDNotify()
 				
 				// already checked: we will not send fdnotify() 
 				// on FDBases which will get deleted. 
+				fdtime_cp=*fdtime;
 				FDInfo fdi;
 				fdi.pollid=(PollID)p;
 				fdi.fd=p->fd;
 				fdi.events=p->events;
 				fdi.revents=p->revents;
+				fdi.current=&fdtime_cp;  // (copy)
 				fdi.dptr=i->dptr;
 				// (virtual function call)
 				fdb->fdnotify(&fdi);
@@ -844,14 +904,15 @@ inline void FDManager::_DeliverTimers(long elapsed,HTime *currtv)
 		{
 			if(i->msec_val<0L)  continue;  // disabled/deleted timer 
 			
+			// This will not change the FDBase::sh_timer: 
 			i->msec_left-=elapsed;
 			if(i->msec_left<=0L)
 			{
 				// Make sure we can buffer signals: 
 				_EnsureFreeSigNodes();
 				
-				i->msec_left=i->msec_val;  // reset timer
-				++timerlist_change_serial;  // important due to timer reset 
+				fdb->_DoResetTimer(i);  // reset timer
+				// _DoResetTimer() will increment timeout_change. 
 				_currv=*currtv;  // implicit copy
 				tinfo.tid=(TimerID)i;
 				tinfo.current=&_currv;
@@ -874,7 +935,7 @@ int FDManager::MainLoop()
 	for(;;)
 	{
 		long timeout0=_GetTimeout();
-		timerlist_change_serial=0;
+		timeout_change=0;
 		HTime starttv,currtv;
 		
 		// Check file descriptors: 
@@ -931,6 +992,10 @@ int FDManager::MainLoop()
 				ret=poll(pfd-1,npfds+1,timeout);    // timeout=-1 also valid. 
 			//fprintf(stderr,">>%d (t=%d, n=%d, rv=%d, rev=%d, %d)<<    ",
 			//	t0.Elapsed(HTime::msec),timeout,npfds,ret,pfd[-1].revents,sig_pipe_bytes);
+				// Set time when poll returns so that this time can be passed 
+				// to the calls to fdnotify(). 
+				if(ret>0)
+				{  currtv.SetCurr();  }
 				
 				int spb=sig_pipe_bytes;
 				// Tell signal catcher not to write to pipe when signals are 
@@ -966,12 +1031,12 @@ int FDManager::MainLoop()
 				}
 			}
 			else if(ret>0)
-			{  _DeliverFDNotify();  }  // calls _DeliverPendingSignals() 
+			{  _DeliverFDNotify(&currtv);  }  // calls _DeliverPendingSignals() 
 			
 			_DeliverPendingSignals();  // inline check 
 			
 			if(!timeout || !ret || 
-			   timerlist_change_serial || 
+			   timeout_change || 
 			   fdlist_change_serial )
 			{  break;  }
 			
@@ -1000,11 +1065,11 @@ int FDManager::MainLoop()
 				// NOTE: * last_timeout-=elapsed; above (!!)
 				//       * last_timeout=-1 is ``infinity'' which is 
 				//         35 minutes in case of usleep() [no fds] 
-				if(last_timeout<-1 && !timerlist_change_serial)
+				if(last_timeout<-1 && !timeout_change)
 				{
 					fprintf(stderr,"BUG: last_timeout<-1 (%ld) but no "
 						"timer elapsed\n",last_timeout);  
-					++timerlist_change_serial;
+					++timeout_change;
 				}
 				#endif
 			}
@@ -1033,7 +1098,7 @@ FDManager::FDManager(int *failflag=NULL) :
 {
 	int failed=0;
 	
-	timerlist_change_serial=1;  // yes...
+	timeout_change=1;  // yes...
 	fdlist_change_serial=0;
 	
 	iterator_next=NULL;
@@ -1358,7 +1423,7 @@ void FDManager::AlignTimer(FDManager::TimerNode *n,int align)
 		for(FDManager::TimerNode *i=fdb->timers; i; i=i->next)
 		{
 			if(i!=n && i->msec_val>0 && 
-			   (i->msec_left<=n->msec_val || !a2short) )
+			   (!a2short || i->msec_left<=n->msec_val) )
 			{
 				if(!(i->msec_val % n->msec_val))  // n->msec_val <= i->msec_val
 				{
@@ -1457,7 +1522,7 @@ FDManager::TimerID FDManager::InstallTimer(FDBase *fdb,long msec,int align,const
 	{  return(NULL);  }
 	fdb->AddTimerNode(n);  // (at beginning)
 	AlignTimer(n,align);
-	++timerlist_change_serial;
+	fdb->_MsecLeftChanged(n,-1);  // ...will increment timeout_change if needed
 	
 	return((TimerID)n);
 }
@@ -1481,10 +1546,11 @@ int FDManager::UpdateTimer(FDBase *fdb,TimerID tid,long msec,int align)
 	
 	FDManager::TimerNode *i=(FDManager::TimerNode *)tid;
 	// just re-set and update timer:
+	long old_msec_left=i->msec_left;
 	i->msec_val=msec;
 	i->msec_left=msec;
 	AlignTimer(i,align);
-	++timerlist_change_serial;
+	fdb->_MsecLeftChanged(i,old_msec_left);  // ...will increment timeout_change if needed
 	
 	return(0);
 }
@@ -1509,9 +1575,10 @@ int FDManager::ResetTimer(FDBase *fdb,TimerID tid,int align)
 	FDManager::TimerNode *i=(FDManager::TimerNode *)tid;
 	if(i->msec_val<=0)
 	{  return(1);  }
+	long old_msec_left=i->msec_left;
 	i->msec_left=i->msec_val;
 	AlignTimer(i,align);
-	++timerlist_change_serial;
+	fdb->_MsecLeftChanged(i,old_msec_left);  // ...will increment timeout_change if needed
 	
 	return(0);
 }
@@ -1534,8 +1601,7 @@ int FDManager::KillTimer(FDBase *fdb,TimerID tid)
 	#endif
 	
 	FDManager::TimerNode *nd=(FDManager::TimerNode *)tid;
-	fdb->DeleteTimerNode(nd);
-	++timerlist_change_serial;
+	fdb->DeleteTimerNode(nd);  // ...will increment timeout_change if needed
 	
 	return(0);
 }
@@ -1544,13 +1610,58 @@ int FDManager::KillTimer(FDBase *fdb,TimerID tid)
 void FDManager::KillAllTimers(FDBase *fdb)
 {
 	if(fdb->ClearTimers())  // (returns number of deleted timers) 
-	{  ++timerlist_change_serial;  }
+	{
+		// FDBase calls TimeoutChange() if needed, so the next line is no 
+		// longer needed. 
+		//++timerlist_change_serial;
+	}
 }
 
 
 long FDManager::__GetTimeout()
 {
 	long msec=-1;
+	
+	for(FDBNode *fb=fdblist.first; fb; fb=fb->next)
+	{
+		#if TESTING
+		if(!fb->fdb || fb->fdb->deleted)
+		{
+			fprintf(stderr,"BUG!! fdb=%p, deleted=%d in FDBase list (%d)\n",
+				fb->fdb,fb->fdb->deleted,__LINE__);
+			continue;
+		}
+		#endif
+		
+		// Get timer with smallest msec_left value from FDBase fb: 
+		TimerNode *sh=fb->fdb->ShortestTimer();
+		if(!sh)  continue;   // fb has no timers
+		
+		#if TESTING
+		// This means that the ``shortest timer'' is actually disabled or 
+		// getting deleted which may not happen here. 
+		if(sh->msec_val<0)
+		{  fprintf(stderr,"FD: BUG!! _GetTimeout(): sh->msec_val=%ld <0\n",
+			sh->msec_val);  }
+		#endif
+		
+		if(msec>0 && msec<sh->msec_left)  continue;
+		
+		msec=sh->msec_left;
+		#if TESTING
+		if(sh->msec_left<0)
+		{
+			fprintf(stderr,"BUG: _GetTimeout(): msec_left=%ld "
+				"< 0",sh->msec_left);
+			msec=0;
+		}
+		#endif
+		
+		if(!msec)  break;   // 0 msec timer
+	}
+	
+	#if 0
+	----ORIGINAL ALGORITHM----
 	
 	// FIXME: can I speed up that? 	
 	// One way would be to sort the timer list (first the enabled ones, 
@@ -1588,26 +1699,44 @@ long FDManager::__GetTimeout()
 			}
 		}
 	}
-	
 	doret:;
+	#endif
+	
 	return(msec);
 }
 
 // Returns -1 if no timers 
 inline long FDManager::_GetTimeout()
 {
-	if(timerlist_change_serial)  // timerlist_change_serial set to 0 in main loop 
+	if(timeout_change)  // timeout_change set to 0 in main loop 
 	{  last_timeout=__GetTimeout();  }
+	
 	#if TESTING_CHECK
-	else
+	if(!timeout_change)
 	{
 		long nto=__GetTimeout();
 		if(last_timeout!=nto)
 		{  fprintf(stderr,"BUG!! in timer code: timeout changed "
-			"(%ld -> %ld) but change_serial=0\n",last_timeout,nto);  }
+			"(%ld -> %ld) but timeout_change=0\n",last_timeout,nto);  }
 		last_timeout=nto;
 	}
-	#endif
+	
+	// Check if the timeout returned by __GetTimeout() is really the 
+	// correct one: 
+	for(FDBNode *fb=fdblist.first; fb; fb=fb->next)
+	{
+		if(!fb->fdb || fb->fdb->deleted)  continue;
+		for(FDManager::TimerNode *i=fb->fdb->timers; i; i=i->next)
+		{
+			if(i->msec_val<0L)  continue;  /* disabled timer */
+			if(i->msec_left<last_timeout)
+			{  fprintf(stderr,"FD: BUG!! in timer code: "
+				"__GetTimeout() returns %ld msec timer but %ld is shorter.\n",
+				last_timeout,i->msec_left);  }
+		}
+	}
+	#endif  /* TESTING_CHECK */
+	
 	return(last_timeout);
 }
 

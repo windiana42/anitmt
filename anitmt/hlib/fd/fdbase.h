@@ -106,7 +106,7 @@ class FDBase
 		inline void AddTimerNode(FDManager::TimerNode *n); 
 		inline void AddFDNode(FDManager::FDNode *n);
 		
-		// Dequeue and frees (if not locked): 
+		// Dequeue and free (if not locked): 
 		void DeleteTimerNode(FDManager::TimerNode *n);
 		void DeleteFDNode(FDManager::FDNode *n);
 		
@@ -128,8 +128,23 @@ class FDBase
 		void UnlockFDs()
 			{  if(fdslock>0) _UnlockFDs(); else fdslock=-1;  }
 		
+		// Get shortest timer (or rechecks the list if needed): 
+		// NULL -> no timer enabled 
+		struct FDManager::TimerNode *ShortestTimer()
+			{  return(sh_timer_dirty ? _GetShortestTimer() : sh_timer);  }
+		// Internally used: 
+		struct FDManager::TimerNode *_GetShortestTimer();
+		
+		// Important to call these to keep sh_timer up to date: 
+		inline void _DoResetTimer(FDManager::TimerNode *i);
+		void _MsecLeftChanged(FDManager::TimerNode *i,long old_msec_left);
+		
+		// The actual `data' fields: 
 		struct FDManager::TimerNode *timers;  // timer list 
 		struct FDManager::FDNode *fds;        // poll list
+		// Never access sh_timer directly, use ShortestTimer()
+		struct FDManager::TimerNode *sh_timer;  // shortest timer or NULL
+		int sh_timer_dirty;   // sh_timer NULL but has to be re-checked
 	protected:
 		// Returns a value >0 if DeleteMe() was called. 
 		int DeletePending()  const  {  return(deleted);  }
@@ -159,6 +174,8 @@ class FDBase
 		// - events,revents: see poll(2) (POLLIN,POLLOUT,...)
 		// - dptr: custom data pointer associated with the fd (if set 
 		//         using PollFD()) 
+		// - current: semi-current time;it's the time the last call to 
+		//         poll() returned; use it for timeouts. 
 		// NOTE: This function may add/change/delete timers and FDs 
 		//       (using PollFD()). It MUST NOT delete other 
 		//       FDBase classes which may receive a fdnotify(). 

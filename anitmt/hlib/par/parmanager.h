@@ -1,7 +1,7 @@
 #ifndef _INC_PAR_ParManager_H_
 #define _INC_PAR_ParManager_H_ 1
 
-#include "parintrnl.h"
+#include "valhdl.h"
 #include <string.h>
 #include <stdio.h>
 

@@ -29,6 +29,8 @@
 
 #include <hlib/fdmanager.h>
 #include <hlib/fdbase.h>
+#include <hlib/cpmanager.h>
+#include <hlib/cpbase.h>
 
 #ifndef TESTING
 #define TESTING 1
@@ -44,14 +46,14 @@
 #endif
 
 
-#error Check poll()'s return value on SIGPIPE / EPIPE? - POLLERR??
+#error Check poll()s return value on SIGPIPE / EPIPE? - POLLERR??
 
 
 // Static global manager: 
-static FDCopyManager *FDCopyManager::manager=NULL;
+FDCopyManager *FDCopyManager::manager=NULL;
 
 // Set defaults: 
-static size_t FDCopyManager::default_iobufsize=16384;
+size_t FDCopyManager::default_iobufsize=16384;
 
 
 // If it is an EINTR or an EWOULDBLOCK error, do nothing. 
@@ -79,7 +81,7 @@ void FDCopyManager::_ReadError(MCopyNode *cpn,HTime *fdtime)
 	
 	// Okay, read returns an error. Finish input: 
 	CopyInfo cpi(cpn,(errn==EPIPE) ? SCInPipe : SCErrRead);
-	cpi.errno=errn;
+	cpi.err_no=errn;
 	cpi.fdtime=fdtime;  // may be modified (FDManager copies it)
 	_FinishInput(cpn,&cpi);  // Does FinishRequest() if OM_Fd2Buf. 
 }
@@ -108,7 +110,7 @@ void FDCopyManager::_WriteError(MCopyNode *cpn,HTime *fdtime)
 	
 	// Okay, write returns an error. That is fatal...
 	CopyInfo cpi(cpn,(errn==EPIPE) ? SCOutPipe : SCErrWrite);
-	cpi.errno=errn;
+	cpi.err_no=errn;
 	cpi.fdtime=fdtime;  // may be modified (FDManager copies it)
 	_FinishRequest(cpn,&cpi);
 }
@@ -118,7 +120,7 @@ void FDCopyManager::_WriteError(MCopyNode *cpn,HTime *fdtime)
 void FDCopyManager::_ReadInData_Buf(MCopyNode *cpn,HTime *fdtime)
 {
 	assert(cpn->opmode==OM_Fd2Buf);
-	assert(!(cpm->cpstate & CPSFlusing));  // may not happen with OM_Fd2Buf
+	assert(!(cpn->cpstate & CPSFlusing));  // may not happen with OM_Fd2Buf
 	
 	// Read data from fd and write to buffer. Easy case. 
 	size_t need=cpn->bufend-cpn->bufheadW;
@@ -530,7 +532,7 @@ int FDCopyManager::fdnotify(FDInfo *fdi)
 				((which_fd>0) ? SCOutHup : SCInHup) : 
 				((which_fd>0) ? SCErrPollO : SCErrPollI) );
 		if(fdi->revents & (POLLNVAL | POLLHUP))
-		{  cpi.errno=fdi->revents;  }
+		{  cpi.err_no=fdi->revents;  }
 		cpi.fdtime=fdi->current;  // may be modified (FDManager copies it)
 		
 		if(which_fd>0)  // Oh, it's the output fd. Finish the request. 
@@ -1078,5 +1080,5 @@ FDCopyManager::CopyInfo::CopyInfo(
 	fdtime=NULL;
 	
 	scode=_scode;
-	errno=0;
+	err_no=0;
 }

@@ -1,4 +1,4 @@
-#include "parintrnl.h"
+#include "valuehandler.h"
 #include "cmdline.h"
 
 #include <errno.h>
@@ -8,8 +8,8 @@
 #include <stdlib.h>
 
 
-namespace par  {
-namespace internal  {
+namespace par
+{
 
 static inline int is_trim(char c)
 {
@@ -29,55 +29,11 @@ static inline bool _ValueInNextArg(ParamArg *arg)
 }
 
 
-// These are inline because they get inserted only once. 
-static inline PAR::ParParseState _templ_str2val(int *val,
-	const char *arg,char **endptr)
+static inline void _val2str_ensure_len(char **dest,size_t *len,size_t minlen)
 {
-	errno=0;
-	*val=strtol(arg,endptr,/*base=*/0);
-	if(errno==ERANGE || *val<long(INT_MIN) || *val>long(INT_MAX))
-	{  return(PAR::PPSValOORange);  }
-	return(PAR::PPSSuccess);
-}
-
-static inline PAR::ParParseState _templ_str2val(unsigned int *val,
-	const char *arg,char **endptr)
-{
-	errno=0;
-	*val=strtoul(arg,endptr,/*base=*/0);
-	if(errno==ERANGE || *val>ulong(UINT_MAX))
-	{  return(PAR::PPSValOORange);  }
-	return(PAR::PPSSuccess);
-}
-
-static inline PAR::ParParseState _templ_str2val(long *val,
-	const char *arg,char **endptr)
-{
-	errno=0;
-	*val=strtol(arg,endptr,/*base=*/0);
-	if(errno==ERANGE)
-	{  return(PAR::PPSValOORange);  }
-	return(PAR::PPSSuccess);
-}
-
-static inline PAR::ParParseState _templ_str2val(unsigned long *val,
-	const char *arg,char **endptr)
-{
-	errno=0;
-	*val=strtoul(arg,endptr,/*base=*/0);
-	if(errno==ERANGE)
-	{  return(PAR::PPSValOORange);  }
-	return(PAR::PPSSuccess);
-}
-
-static inline PAR::ParParseState _templ_str2val(double *val,
-	const char *arg,char **endptr)
-{
-	errno=0;
-	*val=strtod(arg,endptr);
-	if(errno==ERANGE)
-	{  return(PAR::PPSValOORange);  }
-	return(PAR::PPSSuccess);
+	if((*len)>=minlen)  return;
+	*dest=ValueHandler::stralloc(minlen);
+	*len=minlen;
 }
 
 
@@ -109,7 +65,6 @@ static PAR::ParParseState _check_trim_val(const char **a,ParamArg *arg)
 	return(PAR::PPSSuccess);
 }
 
-
 // NON-inline!!
 static PAR::ParParseState _check_arg_end(PAR::ParParseState rv,
 	const char *endptr,ParamArg *arg)
@@ -130,13 +85,102 @@ static PAR::ParParseState _check_arg_end(PAR::ParParseState rv,
 }
 
 
-template<class T> static inline PAR::ParParseState _simple_parse(
-	PAR::ParamInfo *pi,T *valptr,ParamArg *arg);
+// These are inline because they get inserted only once. 
+static inline PAR::ParParseState templ_str2val(int *val,
+	const char *arg,char **endptr)
+{
+	errno=0;
+	*val=strtol(arg,endptr,/*base=*/0);
+	if(errno==ERANGE || *val<long(INT_MIN) || *val>long(INT_MAX))
+	{  return(PAR::PPSValOORange);  }
+	return(PAR::PPSSuccess);
+}
 
-// Specialisation of the function above for type bool (used 
-// for switch args): 
-static inline PAR::ParParseState _simple_parse(
-	PAR::ParamInfo *,bool *valptr,ParamArg *arg)
+static inline PAR::ParParseState templ_str2val(unsigned int *val,
+	const char *arg,char **endptr)
+{
+	errno=0;
+	*val=strtoul(arg,endptr,/*base=*/0);
+	if(errno==ERANGE || *val>ulong(UINT_MAX))
+	{  return(PAR::PPSValOORange);  }
+	return(PAR::PPSSuccess);
+}
+
+static inline PAR::ParParseState templ_str2val(long *val,
+	const char *arg,char **endptr)
+{
+	errno=0;
+	*val=strtol(arg,endptr,/*base=*/0);
+	if(errno==ERANGE)
+	{  return(PAR::PPSValOORange);  }
+	return(PAR::PPSSuccess);
+}
+
+static inline PAR::ParParseState templ_str2val(unsigned long *val,
+	const char *arg,char **endptr)
+{
+	errno=0;
+	*val=strtoul(arg,endptr,/*base=*/0);
+	if(errno==ERANGE)
+	{  return(PAR::PPSValOORange);  }
+	return(PAR::PPSSuccess);
+}
+
+static inline PAR::ParParseState templ_str2val(double *val,
+	const char *arg,char **endptr)
+{
+	errno=0;
+	*val=strtod(arg,endptr);
+	if(errno==ERANGE)
+	{  return(PAR::PPSValOORange);  }
+	return(PAR::PPSSuccess);
+}
+
+
+namespace internal
+{
+
+char *templ_val2str(long val,char *dest,size_t len)
+{
+	_val2str_ensure_len(&dest,&len,(sizeof(val)*5+1)/2 + 2);
+	if(dest)
+	{  snprintf(dest,len,"%ld",val);  }
+	return(dest);
+}
+
+char *templ_val2str(int val,char *dest,size_t len)
+{  return(templ_val2str(long(val),dest,len));  }
+
+char *templ_val2str(unsigned long val,char *dest,size_t len)
+{
+	_val2str_ensure_len(&dest,&len,(sizeof(val)*5+1)/2 + 1);
+	if(dest)
+	{  snprintf(dest,len,"%lu",val);  }
+	return(dest);
+}
+
+char *templ_val2str(unsigned int val,char *dest,size_t len)
+{  return(templ_val2str((unsigned long)(val),dest,len));  }
+
+char *templ_val2str(double val,char *dest,size_t len)
+{
+	_val2str_ensure_len(&dest,&len,24);
+	if(dest)
+	{  snprintf(dest,len,"%g",val);  }
+	return(dest);
+}
+
+char *templ_val2str(bool val,char *dest,size_t len)
+{
+	_val2str_ensure_len(&dest,&len,4);  // 4 bytes: "yes\0"
+	if(dest)
+	{  strcpy(dest,val ? "yes" : "no");  }
+	return(dest);
+}
+
+
+// Specialisation of the function above for type bool (used for switch args): 
+PAR::ParParseState simple_parse(PAR::ParamInfo *,bool *valptr,ParamArg *arg)
 {
 	int val=-1;
 	PAR::ParParseState rv=PAR::PPSSuccess;
@@ -193,8 +237,8 @@ static inline PAR::ParParseState _simple_parse(
 	return(rv);
 }
 
-// This is inline because it gets used called once per type: 
-template<class T> static inline PAR::ParParseState _simple_parse(
+// This is inline because it gets called once per type: 
+template<class T> PAR::ParParseState simple_parse(
 	PAR::ParamInfo *,T *valptr,ParamArg *arg)
 {
 	const char *a;
@@ -203,7 +247,7 @@ template<class T> static inline PAR::ParParseState _simple_parse(
 	
 	T val;
 	char *endptr;
-	rv=_templ_str2val(&val,a,&endptr);
+	rv=templ_str2val(&val,a,&endptr);
 	if(endptr==a)  rv=PAR::PPSIllegalArg;
 	if(rv>0)  return(rv);   // error
 	
@@ -219,107 +263,7 @@ template<class T> static inline PAR::ParParseState _simple_parse(
 	return(rv);
 }
 
-// NOT inline: 
-static void _val2str_ensure_len(char **dest,size_t *len,size_t minlen)
-{
-	if((*len)>=minlen)  return;
-	*dest=ValueHandler::stralloc(minlen);
-	*len=minlen;
-}
-
-// These are inline because they get inserted only once. 
-static inline char *_templ_val2str(long val,char *dest,size_t len)
-{
-	_val2str_ensure_len(&dest,&len,(sizeof(val)*5+1)/2 + 2);
-	if(dest)
-	{  snprintf(dest,len,"%ld",val);  }
-	return(dest);
-}
-static inline char *_templ_val2str(int val,char *dest,size_t len)
-{  return(_templ_val2str(long(val),dest,len));  }
-static inline char *_templ_val2str(unsigned long val,char *dest,size_t len)
-{
-	_val2str_ensure_len(&dest,&len,(sizeof(val)*5+1)/2 + 1);
-	if(dest)
-	{  snprintf(dest,len,"%lu",val);  }
-	return(dest);
-}
-static inline char *_templ_val2str(unsigned int val,char *dest,size_t len)
-{  return(_templ_val2str((unsigned long)(val),dest,len));  }
-static inline char *_templ_val2str(double val,
-	char *dest,size_t len)
-{
-	_val2str_ensure_len(&dest,&len,24);
-	if(dest)
-	{  snprintf(dest,len,"%g",val);  }
-	return(dest);
-}
-static inline char *_templ_val2str(bool val,
-	char *dest,size_t len)
-{
-	_val2str_ensure_len(&dest,&len,4);  // 4 bytes: "yes\0"
-	if(dest)
-	{  strcpy(dest,val ? "yes" : "no");  }
-	return(dest);
-}
-
-
-// This is inline because it gets used called once per type: 
-template<class T> static inline char *_simple_print(
-	PAR::ParamInfo *,T *valptr,char *dest,size_t len)
-{
-	T val=(*valptr);
-	return(_templ_val2str(val,dest,len));
-}
-
-// This is inline because it gets used called once per type: 
-static inline char *_option_print(
-	PAR::ParamInfo *,int val,char *dest,size_t len)
-{
-	_val2str_ensure_len(&dest,&len,24);  // " times specified\0" -> 17 bytes
-	if(dest)
-	{
-		static const char *spec="specified";
-		switch(val)
-		{
-			case 0:  snprintf(dest,len,"not %s",spec);  break;
-			case 1:  snprintf(dest,len,"%s once",spec);  break;
-			default:  snprintf(dest,len,"%d times %s",val,spec);  break;
-		}
-	}
-	return(dest);
-}
-
-
-template<class T>struct SimpleValueHandler : ValueHandler
-{
-	inline SimpleValueHandler() : ValueHandler()  { }
-	inline ~SimpleValueHandler()  { }
-	
-	size_t cpsize()            // May be copied via memcpy(); does not 
-	{  return(sizeof(T));  }   // need construction or destruction. 
-	
-	ParParseState parse(ParamInfo *pi,void *val,ParamArg *arg)
-	{  return(_simple_parse(pi,(T*)val,arg));  }
-	
-	char *print(ParamInfo *pi,void *val,char *dest,size_t len)
-	{  return(_simple_print(pi,(T*)val,dest,len));  }
-};
-
-struct OptionValueHandler : ValueHandler
-{
-	inline OptionValueHandler() : ValueHandler()  { }
-	inline ~OptionValueHandler()  { }
-	
-	size_t cpsize()             // May be copied via memcpy(); does not 
-	{  return(sizeof(int));  }  // need construction or destruction. 
-	
-	ParParseState parse(ParamInfo *,void * /*val*/,ParamArg *pa)
-	{  return(pa->assmode ? PPSIllegalAssMode : PPSSuccess);  }
-	
-	char *print(ParamInfo *pi,void *val,char *dest,size_t len)
-	{  return(_option_print(pi,*(int*)val,dest,len));  }
-};
+}  // end of namespace internal 
 
 
 // Make them available: 
@@ -341,5 +285,23 @@ ValueHandler *switch_handler=&static_switch_handler;
 static OptionValueHandler static_option_handler;
 ValueHandler *option_handler=&static_option_handler;
 
-}  // end of namespace internal 
+
+char *OptionValueHandler::print(PAR::ParamInfo *,void *_val,char *dest,size_t len)
+{
+	int val=*(int*)_val;
+	_val2str_ensure_len(&dest,&len,24);  // " times specified\0" -> 17 bytes
+	if(dest)
+	{
+		static const char *spec="specified";
+		switch(val)
+		{
+			case 0:  snprintf(dest,len,"not %s",spec);  break;
+			case 1:  snprintf(dest,len,"%s once",spec);  break;
+			default:  snprintf(dest,len,"%d times %s",val,spec);  break;
+		}
+	}
+	return(dest);
+}
+
+
 }  // namespace end 
