@@ -254,7 +254,7 @@ int ParameterManager::CheckHandleHelpOpts(ParamArg *pa,Section *top_sect)
 		{
 			for(SpecialHelpItem *shi=pc->shelp.first(); shi; shi=shi->next)
 			{
-				if(*shi->optname!=*pa->name)  continue;
+				if(!pa->name || *shi->optname!=*pa->name)  continue;
 				size_t optlen=strlen(shi->optname);
 				if(optlen!=pa->namelen)  continue;
 				if(strncmp(shi->optname,pa->name,pa->namelen))  continue;

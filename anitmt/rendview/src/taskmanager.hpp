@@ -143,7 +143,7 @@ class TaskManager :
 		
 		void _PrintTaskExecStatus(TaskExecutionStatus *tes);
 		void _DoPrintTaskExecuted(TaskParams *tsb,const char *binpath,
-			bool not_processed);
+			bool was_processed);
 		void _PrintDoneInfo(CompleteTask *ctsk);
 		
 		// Initialisation of parameter stuff: 
@@ -165,6 +165,8 @@ class TaskManager :
 		
 		static bool IsARenderedTask(const CompleteTask *ctsk);
 		static bool IsAFilteredTask(const CompleteTask *ctsk);
+		static bool IsPartlyRenderedTask(const CompleteTask *ctsk);
+		static bool IsPartlyFilteredTask(const CompleteTask *ctsk);
 		
 		// ******** INTERFACE TO TaskDriverInterface ********
 		

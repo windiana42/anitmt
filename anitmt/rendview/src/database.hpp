@@ -20,7 +20,7 @@
 // Include all the code needed: 
 #include <lib/taskmanagement.h>
 
-// Generic TaskDriver stuff: 
+// Generic (local) TaskDriver stuff: 
 #include "tdriver/local/tdriver.hpp"
 
 // TaskSourceFactory: 

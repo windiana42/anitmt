@@ -151,7 +151,7 @@ int TaskDriverInterface_Local::_DoLaunchTask(CompleteTask *ctsk,TaskDriver **td)
 	// Because now, the task counts as `running' (as we've performed 
 	// the fork()). 
 	(*td)->pinfo.ctsk=ctsk;
-	ctsk->td=*td;
+	ctsk->d.td=*td;
 	
 	return(0);
 }
@@ -178,17 +178,17 @@ void TaskDriverInterface_Local::IAmDone(TaskDriver *td)
 		// the task driver. 
 		// In this case, simply delete it again. 
 		// (We may NOT decrease running_jobs as this job was not RUNING.) 
-		// (Also, ctsk->td is NULL here.)
-		assert(ctsk->td==NULL);  // YES!!
+		// (Also, ctsk->d.td is NULL here.)
+		assert(ctsk->d.td==NULL);  // YES!!
 		td->DeleteMe();  // will unregister
 		return;
 	}
 	
 	// See if data is consistent: 
-	assert(ctsk->td==td);
+	assert(ctsk->d.td==td);
 	
 	// Okay, the job is done, so the CompleteTask is no longer processed: 
-	ctsk->td=NULL;
+	ctsk->d.td=NULL;
 	// Dealt with it: 
 	td->pinfo.ctsk=NULL;
 	td->DeleteMe();  // will unregister
@@ -377,7 +377,7 @@ CompleteTask *TaskDriverInterface_Local::GetTaskToStart(
 	for(CompleteTask *i=tasklist_todo->first(); i; i=i->next)
 	{
 		assert(i->state!=CompleteTask::TaskDone);
-		if(i->td)  continue;  // task is currently processed 
+		if(i->d.td)  continue;  // task is currently processed 
 		// See if we can start a job for task *i: 
 		if( (i->state==CompleteTask::ToBeRendered && may_start[DTRender]) ||
 			(i->state==CompleteTask::ToBeFiltered && may_start[DTFilter]) )

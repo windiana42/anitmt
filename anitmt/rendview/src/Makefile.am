@@ -17,6 +17,7 @@ rendview_LDADD = \
 	tdriver/filter/libtdfilter.a \
 	tdriver/render/libtdrender.a \
 	tdriver/local/libtdif_local.a \
+	tdriver/ldr/libdif_ldr.a \
 	tdriver/libtdriver.a \
 	tsource/libtsource.a \
 	tsource/local/libtsource_local.a \

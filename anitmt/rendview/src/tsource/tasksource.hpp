@@ -43,9 +43,16 @@ struct CompleteTask : LinkedListBase<CompleteTask>
 	static const char *StateString(State s);
 	
 	// If this CompleteTask is currently processed, td is a pointer to 
-	//    the TaskDriver which is currently processing the task. 
-	// If the CompleteTask currently is NOT processed, this is NULL. 
-	TaskDriver *td;
+	//    the TaskDriver/LDRClient which is currently processing the task. 
+	// If the CompleteTask currently is NOT processed, all of them 
+	//    are NULL and any() returns false. 
+	struct
+	{
+		TaskDriver *td;
+		LDRClient *ldrc;
+		inline bool any()  const
+			{  return(td || ldrc);  }
+	} d;
 	
 	// Frame number (only used for user output). 
 	int frame_no;

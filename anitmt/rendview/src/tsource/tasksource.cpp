@@ -96,14 +96,16 @@ CompleteTask::CompleteTask(int * failflag) :
 {
 	state=TaskDone;  // okay. 
 	frame_no=-1;
-	td=NULL;
+	d.td=NULL;
+	d.ldrc=NULL;
+	assert(!d.any());
 	rt=NULL;   ft=NULL;
 	ftp=NULL;  ftp=NULL;
 }
 
 CompleteTask::~CompleteTask()
 {
-	assert(!td);
+	assert(!d.any());
 	if(rt)   {  delete rt;   rt=NULL;   }
 	if(ft)   {  delete ft;   ft=NULL;   }
 	if(rtp)  {  delete rtp;  rtp=NULL;  }

@@ -20,7 +20,7 @@
 #include "tdfactory.hpp"
 
 #include "local/dif_param.hpp"
-//#include "ldr/dif_param.hpp"
+#include "ldr/dif_param.hpp"
 
 
 // Called on program start to set up the TaskDriverInterfaceFactory 
@@ -35,8 +35,7 @@ int TaskDriverInterfaceFactory::init_factories(ComponentDataBase *cdb)
 	
 	// List the init function of all task sources here. 
 	failed+=TaskDriverInterfaceFactory_Local::init(cdb);
-//failed+=TaskDriverInterfaceFactory_LDR::init(cdb);
-	Error("[***MISSING***] ");
+	failed+=TaskDriverInterfaceFactory_LDR::init(cdb);
 	
 	Verbose(failed ? "FAILED\n" : "OK\n");
 	

@@ -1,7 +1,8 @@
 /*
- * dif_local.hpp
+ * dif_ldr.hpp
  * 
- * Task driver interface for task manager. 
+ * Local distributed rendering (LDR) server task driver interface 
+ * for task manager. 
  * 
  * Copyright (c) 2001 -- 2002 by Wolfgang Wieser (wwieser@gmx.de) 
  * 
@@ -15,45 +16,45 @@
  */
 
 
-#ifndef _RNDV_TDRIVER_DRIVERINTERFACE_LOCAL_HPP_
-#define _RNDV_TDRIVER_DRIVERINTERFACE_LOCAL_HPP_ 1
+#ifndef _RNDV_TDRIVER_DRIVERINTERFACE_LDR_HPP_
+#define _RNDV_TDRIVER_DRIVERINTERFACE_LDR_HPP_ 1
 
 #include "../driverif.hpp"
 
-class TaskDriverInterfaceFactory_Local;
+#include <hlib/cpmanager.h>
+#include <hlib/cpbase.h>
 
+class TaskDriverInterfaceFactory_LDR;
 
-class TaskDriverInterface_Local : 
+class LDRClient : LinkedListBase<LDRClient>
+{
+	public:  _CPP_OPERATORS_FF
+		LDRClient(int *failflag) {}
+		~LDRClient() {}
+};
+
+class TaskDriverInterface_LDR : 
 	public TaskDriverInterface,
-	private ProcessBase
+	private FDBase,
+	private FDCopyBase
 {
 	private:
-		TaskDriverInterfaceFactory_Local *p;
+		TaskDriverInterfaceFactory_LDR *p;
 		
-		// Note: all existing TaskDrivers are in this queue: 
-		LinkedList<TaskDriver> joblist;
+		// Note: all existing LDRClient classes are in this queue: 
+		LinkedList<LDRClient> clientlist;
 		
-		// Number of running jobs: 
-		int running_jobs[_DTLast];
+		// Current (max) number of jobs: 
+		int njobs;
 		
-		
-		// May also be called with td=NULL in case DealWithNewTask() fails. 
-		void _HandleFailedJob(CompleteTask *ctsk,TaskDriver *td);
-		
-		int _DoLaunchTask(CompleteTask *ctsk,TaskDriver **td);
-		int _DoDealWithNewTask(CompleteTask *ctsk);
-		
-		// Get number of running jobs: 
-		int RunningJobs()
-		{   int nrunning=0;
-			for(int i=0; i<_DTLast; i++)  nrunning+=running_jobs[i];
-			return(nrunning);  }
+		// Current number of clients which can be used: 
+		int nclients;
 		
 		void _WriteStartProcInfo(const char *msg);
 		void _WriteEndProcInfo();
 	public:  _CPP_OPERATORS_FF
-		TaskDriverInterface_Local(TaskDriverInterfaceFactory_Local *f,int *failflag=NULL);
-		~TaskDriverInterface_Local();
+		TaskDriverInterface_LDR(TaskDriverInterfaceFactory_LDR *f,int *failflag=NULL);
+		~TaskDriverInterface_LDR();
 		
 		ComponentDataBase *component_db()
 			{  return(TaskDriverInterface::component_db());  }
@@ -66,8 +67,7 @@ class TaskDriverInterface_Local :
 		void WriteProcessingInfo(int when,const char *msg);
 		
 		// Isn't that self-explaining? 
-		int AreThereJobsRunning()
-			{  return(!joblist.is_empty());  }
+		int AreThereJobsRunning();
 		
 		// Called for every new task obtained from TaskSource: 
 		int DealWithNewTask(CompleteTask *ctsk);
@@ -89,17 +89,15 @@ class TaskDriverInterface_Local :
 		// Returns number of killed jobs. 
 		int TermAllJobs(int reason);
 		
-		/************* INTERFACE TO TaskDriver *************/
+		/************* INTERFACE TO LDRClient *************/
 		
-		// These are called by the constructor/destructor of TaskDriver: 
+		// These are called by the constructor/destructor of LDRClient: 
 		// Return value: 0 -> OK; !=0 -> failed
-		int RegisterTaskDriver(TaskDriver *td);
-		void UnregisterTaskDriver(TaskDriver *td);
+		int RegisterLDRClient(LDRClient *client);
+		void UnregisterLDRClient(LDRClient *client);
 		
-		// Called by TaskDriver when ever estat/esdetail changed. 
-		void StateChanged(TaskDriver *td);
-		// Called by TaskDriver when he is done and wants to get deleted: 
-		void IAmDone(TaskDriver *td);
+		// Called by LDRClient when he is done and wants to get deleted: 
+		void IAmDone(LDRClient *client);
 };
 
-#endif  /* _RNDV_TDRIVER_DRIVERINTERFACE_LOCAL_HPP_ */
+#endif  /* _RNDV_TDRIVER_DRIVERINTERFACE_LDR_HPP_ */

@@ -17,6 +17,7 @@
 #include "local.hpp"
 
 #include "../taskfile.hpp"
+#include "../../taskmanager.hpp"
 
 #include <assert.h>
 
@@ -426,9 +427,7 @@ void TaskSource_Local::_ProcessDoneTask(TSNotifyInfo *ni)
 			// was the reason for failure. 
 			// And only if render_resume_flag (-rcont) is active. 
 			if(fi->render_resume_flag && 
-			   done_task->rtes.status==TTR_JobTerm && 
-			   (done_task->rtes.signal==JK_UserInterrupt || 
-			    done_task->rtes.signal==JK_Timeout) )
+			   TaskManager::IsPartlyRenderedTask(done_task) )
 			{
 				if(fi->render_resume_flag)
 				{

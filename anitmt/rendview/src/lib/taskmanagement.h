@@ -23,9 +23,13 @@
 class TaskManager;
 class TaskSource;
 class TaskDriverInterface;
+class TaskDriverFactory;
 
 class TaskFile;
 class CompleteTask;
+
+class TaskDriver;
+class LDRClient;
 
 enum TaskDriverType
 {

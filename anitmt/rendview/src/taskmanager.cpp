@@ -48,10 +48,11 @@
 // by us: 
 inline bool TaskManager::_ProcessedTask(const CompleteTask *ctsk)
 {
-	return(ctsk->td || 
+	return(ctsk->d.any() || 
 	   (ctsk->state==CompleteTask::TaskDone) ||
 	   (ctsk->state==CompleteTask::ToBeFiltered && ctsk->rt) );
 }
+
 
 // True, if we rendered the task: 
 bool TaskManager::IsARenderedTask(const CompleteTask *ctsk)
@@ -60,8 +61,8 @@ bool TaskManager::IsARenderedTask(const CompleteTask *ctsk)
 	if(ctsk->state==CompleteTask::TaskDone || 
 	   ctsk->state==CompleteTask::ToBeFiltered )
 	{  return(true);  }
-	if(ctsk->state==CompleteTask::ToBeRendered && ctsk->td)
-	{  if(ctsk->td->GetFactory()->DType()==DTRender)  return(true);  }
+	if(ctsk->state==CompleteTask::ToBeRendered && ctsk->d.td)
+	{  if(ctsk->d.td->GetFactory()->DType()==DTRender)  return(true);  }
 	return(false);
 }
 
@@ -70,8 +71,27 @@ bool TaskManager::IsAFilteredTask(const CompleteTask *ctsk)
 	if(!ctsk->ft)  return(false);
 	if(ctsk->state==CompleteTask::TaskDone)
 	{  return(true);  }
-	if(ctsk->state==CompleteTask::ToBeFiltered && ctsk->td)
-	{  if(ctsk->td->GetFactory()->DType()==DTFilter)  return(true);  }
+	if(ctsk->state==CompleteTask::ToBeFiltered && ctsk->d.td)
+	{  if(ctsk->d.td->GetFactory()->DType()==DTFilter)  return(true);  }
+	return(false);
+}
+
+bool TaskManager::IsPartlyRenderedTask(const CompleteTask *ctsk)
+{
+	//if(ctsk->td && ctsk->td->GetFactory()->DType()==DTRender)  return(true);
+	assert(!ctsk->d.any());
+	if(ctsk->rtes.status==TTR_JobTerm && 
+	   (ctsk->rtes.signal==JK_UserInterrupt || ctsk->rtes.signal==JK_Timeout) )
+	{  return(true);  }
+	return(false);
+}
+bool TaskManager::IsPartlyFilteredTask(const CompleteTask *ctsk)
+{
+	//if(ctsk->td && ctsk->td->GetFactory()->DType()==DTFilter)  return(true);
+	assert(!ctsk->d.any());
+	if(ctsk->ftes.status==TTR_JobTerm && 
+	   (ctsk->ftes.signal==JK_UserInterrupt || ctsk->ftes.signal==JK_Timeout) )
+	{  return(true);  }
 	return(false);
 }
 
@@ -945,7 +965,7 @@ bool TaskManager::_TS_CanDo_DoneTask(CompleteTask **special_done)
 		for(CompleteTask *i=tasklist_todo.first(); i; i=i->next)
 		{
 			assert(i->state!=CompleteTask::TaskDone);
-			if( (dont_start_more_tasks && !i->td) || 
+			if( (dont_start_more_tasks && !i->d.any()) || 
 			    (schedule_quit && !_ProcessedTask(i) ) )
 			{
 				if(special_done)  *special_done=i;
@@ -1031,7 +1051,7 @@ void TaskManager::_TS_GetOrDoneTask()
 				ctsk=special_done;
 				// We may not dequeue and call TaskDone() if the task 
 				// is currently processed. This should not happen, though. 
-				assert(!ctsk->td);
+				assert(!ctsk->d.any());
 				// However, the task could be scheduled for start: 
 				if(scheduled_for_start==ctsk)
 				{  _KillScheduledForStart();  }
@@ -1137,9 +1157,9 @@ void TaskManager::_PrintTaskExecStatus(TaskExecutionStatus *tes)
 
 // Special function used by _PrintDoneInfo(): 
 void TaskManager::_DoPrintTaskExecuted(TaskParams *tp,const char *binpath,
-	bool not_processed)
+	bool was_processed)
 {
-	if(not_processed)
+	if(!was_processed)
 	{  VerboseSpecial("    Executed: [not processed]");  return;  }
 	char tmpA[32];
 	char tmpB[32];
@@ -1158,10 +1178,18 @@ void TaskManager::_DoPrintTaskExecuted(TaskParams *tp,const char *binpath,
 
 void TaskManager::_PrintDoneInfo(CompleteTask *ctsk)
 {
+	int how_processed;  // 0 -> not; 1 -> partly; 2 -> completely
+	if(ctsk->state==CompleteTask::TaskDone)  how_processed=2;
+	else if(_ProcessedTask(ctsk) ||         // e.g. rendered but but not filtered
+	        IsPartlyRenderedTask(ctsk) ||
+	        IsPartlyFilteredTask(ctsk) )    // interrupt
+	{  how_processed=1;  }
+	else  how_processed=0;
+	
+	static const char *hp_msg[3]={"not","partly","completely"};
+	
 	VerboseSpecial("Reporting task [frame %d] as done (%s processed).",
-		ctsk->frame_no,
-		(ctsk->state==CompleteTask::TaskDone) ? "completely" : 
-			(_ProcessedTask(ctsk) ? "partly" : "not"));
+		ctsk->frame_no,hp_msg[how_processed]);
 	Verbose("  Task state: %s\n",CompleteTask::StateString(ctsk->state));
 	
 	if(ctsk->rt)
@@ -1175,7 +1203,7 @@ void TaskManager::_PrintDoneInfo(CompleteTask *ctsk)
 			ctsk->rt->width,ctsk->rt->height,
 			ctsk->rt->oformat ? ctsk->rt->oformat->name : NULL);
 		_DoPrintTaskExecuted(ctsk->rtp,ctsk->rt->rdesc->binpath.str(),
-			!IsARenderedTask(ctsk));
+			IsARenderedTask(ctsk) || IsPartlyRenderedTask(ctsk));
 		_PrintTaskExecStatus(&ctsk->rtes);
 	}
 	else
@@ -1184,10 +1212,10 @@ void TaskManager::_PrintDoneInfo(CompleteTask *ctsk)
 	if(ctsk->ft)
 	{
 		Verbose("  Filter task: %s (%s driver)\n",NULL,NULL);
-		Verbose("** Filter task info not yet supported. [FIXME!] **\n");
+		Error("** Filter task info not yet supported. [FIXME!] **\n");
 		
 		_DoPrintTaskExecuted(ctsk->ftp,ctsk->ft->fdesc->binpath.str(),
-			!IsAFilteredTask(ctsk));
+			IsAFilteredTask(ctsk) || IsPartlyFilteredTask(ctsk));
 		_PrintTaskExecStatus(&ctsk->ftes);
 	}
 	else
