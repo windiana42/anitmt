@@ -37,7 +37,7 @@ YLWRAP  = 		$(top_srcdir)/ylwrap
 # suffixes.
 $(srcdir)/scanner.cc:	$(srcdir)/scanner.ll $(srcdir)/tokens.h 
 	$(SHELL) $(YLWRAP) "$(LEX)" \
-	$(srcdir)/scanner.ll $(srcdir)/lex.adlparser_.cc $(srcdir)/scanner.cc 
+	$(srcdir)/scanner.ll lex.adlparser_.cc scanner.cc 
 
 #-- Parser
 $(srcdir)/parser.cc $(srcdir)/tokens.h:	$(srcdir)/parser.yy 
