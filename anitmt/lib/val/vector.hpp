@@ -92,7 +92,8 @@ template<int N>inline Scalar vec_angle(const Vector<N> &a,const Vector<N> &b)
 	{  return(internal_vect::angle(a.x,b.x));  }
 
 template<int N>inline Vector<N> vec_normalize(const Vector<N> &v)
-	{  Vector<N> r(Vector<N>::noinit);  r.x.normalize(v.x);  return(r);  }
+	{  if(v.is_null())  {  Vector<N> null;  return(null);  }
+		Vector<N> r(Vector<N>::noinit);  r.x.normalize(v.x);  return(r);  }
 
 // Non-member translation functions: 
 template<int N>inline Vector<N> vec_translate(const Vector<N> &v,double delta,int xyz)
@@ -224,7 +225,8 @@ public: // work around for the template friend problem
 		double abs2()  const  {  return(x.abs2());  }
 		
 		// Stretches vector to length 1: 
-		Vector<N> &normalize()  {  x.normalize();  return(*this);  }
+		Vector<N> &normalize()
+			{  if(is_null()) x.set_null(); else x.normalize();  return(*this);  }
 		template<int n>friend Vector<n> vec_normalize(const Vector<n> &v);
 		
 		// Computes the angle between the two passed vectors; the returned 
