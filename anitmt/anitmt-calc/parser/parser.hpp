@@ -42,6 +42,7 @@ namespace anitmt {
 		values::Vector ParseVector() throw (EXParser);
 		values::String ParseString() throw ();
 
+		void ExpectToken(const int tok);
 		void ConsumeToken(const int tok);
 		
 		void ParseProperty(Prop_Tree_Node *pt);

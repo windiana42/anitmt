@@ -25,7 +25,7 @@ anitmt::ADLParser::ADLParser(istream &is,
 			     bool d) : fl(&is, &logs), dmode(d) {}
 
 Scalar anitmt::ADLParser::ParseScalar() throw () {
-	if (fl.tok() != NUMBER) throw EXParser("Scalar expected.");
+	ExpectToken(NUMBER);
 	PARSER_DS("SCALAR", fl.yylval.num);
 	Scalar ret=fl.yylval.num;
 	fl.GetNext();
@@ -34,21 +34,21 @@ Scalar anitmt::ADLParser::ParseScalar() throw () {
 }
 
 Vector anitmt::ADLParser::ParseVector() throw (EXParser) {
-	if (fl.tok() != OP_VECTOR) throw EXParser("< expected.");
+	ConsumeToken(OP_VECTOR);
 	PARSER_DS("VECTOR", "");
 	fl.GetNext();
 	Scalar x, y, z;
 	x=ParseScalar(); ConsumeToken(COMMA);
 	y=ParseScalar(); ConsumeToken(COMMA);
-	z=ParseScalar(); ConsumeToken(CL_VECTOR);
+	z=ParseScalar();
+	ConsumeToken(CL_VECTOR);
 	Vector ret=Vector(x, y, z);
 	PARSER_DE;
 	return ret;
 }
 
-
 String anitmt::ADLParser::ParseString() throw () {
-	if(fl.tok() != STRING) throw EXParser("String expected.");
+	ExpectToken(STRING);
 	PARSER_DS("STRING", fl.yylval.str); 
 	String ret=fl.yylval.str;
 	fl.GetNext();
@@ -56,12 +56,16 @@ String anitmt::ADLParser::ParseString() throw () {
 	return ret;
 }
 
-void anitmt::ADLParser::ConsumeToken(const int tok) {
-	PARSER_DS("CONSUMETOKEN", "");
-	// Check for semicolon
+void anitmt::ADLParser::ExpectToken(const int tok) {
 	if (fl.tok() != tok) throw EXParser("Syntax error. Got '"+
 					    NameOfToken(fl.tok())+
 					    "' wanted '"+NameOfToken(tok)+"'");
+}
+
+void anitmt::ADLParser::ConsumeToken(const int tok) {
+	PARSER_DS("CONSUMETOKEN", "");
+	// Check for the token
+	ExpectToken(tok);
 	// Consume it.
 	fl.GetNext();
 	PARSER_DE;
@@ -95,10 +99,10 @@ void anitmt::ADLParser::ParseNode(Prop_Tree_Node *pt) {
 	case IDENTIFIER:
 		name=fl.yylval.str; fl.GetNext();
 		// Current token must be "{"...
-		if (fl.tok() != OP_SECTION) throw EXParser("{ expected.");
+		ExpectToken(OP_SECTION);
 		break;
 	default:
-		  throw EXParser("{ or node name expected.");
+		  throw EXParser("{ or node name expected, got '"+NameOfToken(fl.tok())+"'.");
 		  break;
 	}
 	fl.GetNext();
