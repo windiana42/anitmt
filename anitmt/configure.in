@@ -4,10 +4,10 @@ AC_PROG_CC
 AC_PROG_CXX
 AC_PROG_INSTALL
 AC_PROG_RANLIB
-dnl FIXME: Yacc check seems to necessary.
+dnl FIXME: Yacc check seems to necessary for detection of the "ylwrap" script.
 AC_PROG_YACC
 AM_PROG_LEX
-if test "$LEX" != "flex"; then echo "Warning: You need flex for rebuild of .lxx-sources!"; fi
+if test "$LEX" != "flex"; then echo "Warning: You need flex for rebuild of .ll-sources!"; fi
 AC_OUTPUT(
 	Makefile \
 	anitmt-calc/Makefile \
