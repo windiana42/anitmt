@@ -1,3 +1,4 @@
+EXTRA_DIST=.cvsignore
 INCLUDES=-I$(srcdir)/../lib/include/
 bin_PROGRAMS=anitmt-calc
 anitmt_calc_SOURCES = 	anitmt.cpp solver.cpp solver.hpp \
