@@ -113,7 +113,7 @@ void TaskDriver::procnotify(const ProcStatus *ps)
 			_FillInStatistics(ps);
 			
 			// Tell the driver which writes out the error: 
-			_SendProcessError(PEI_ExecFailed,ps);
+			_SendProcessError(PEI_ExecFailed,ps,ps->estatus);
 			
 			// Tell manager: 
 			_StateChanged();
@@ -159,12 +159,13 @@ void TaskDriver::procnotify(const ProcStatus *ps)
 		_FillInStatistics(ps);
 		
 		_SendProcessError(
-			(esdetail==EDSuccess) ? PEI_RunSuccess : PEI_RunFailed,ps);
+			(esdetail==EDSuccess) ? PEI_RunSuccess : PEI_RunFailed, ps, 0);
 		
 		// Tell manager: 
 		_StateChanged();
 	}
 }
+
 
 // Called by the driver (instead of directly calling 
 // ProcessBase::StartProcess()). 
@@ -203,27 +204,7 @@ int TaskDriver::StartProcess(
 	pinfo.pid=ProcessBase::StartProcess(*sp_p,_sp_a,*sp_m,*sp_f,*sp_e);
 	if(pinfo.pid<0)
 	{
-		int save_errno=errno;
-		
-		estat=ESDone;
-		esdetail=EDFailed;
-		
-		// Fill in that info: 
-		pinfo.tes.status=TTR_ExecFailed;
-		if(pinfo.pid==SPS_AccessFailed /* ... rest is internal error */)
-		{  pinfo.tes.signal=JK_FailedToExec;  }
-		else
-		{  pinfo.tes.signal=JK_InternalError;  }
-		
-		// Error reported on driver layer (lowest layer): 
-		_SendProcessError(PEI_StartFailed,NULL,save_errno);
-		
-		// This is important for TaskDriverInterface_Local::IAmDone: 
-		pinfo.ctsk=NULL;
-		
-		// Tell manager: 
-		_StateChanged();
-		
+		_StartProcess_ErrorPart(errno);
 		return(int(pinfo.pid));
 	}
 	
@@ -241,6 +222,39 @@ int TaskDriver::StartProcess(
 	_StateChanged();
 	
 	return(0);
+}
+
+
+// This is part of StartProcess() dealing with error at 
+// ProcessBase::StartProcess() (called from TaskDriver::StartProcess()) 
+// and errors in XYZDriver::Execute() (called from 
+// TaskDriverInterface::LaunchTask()) 
+void TaskDriver::_StartProcess_ErrorPart(int save_errno)
+{
+	estat=ESDone;
+	esdetail=EDFailed;
+	
+	// Fill in that info: 
+	pinfo.tes.status=TTR_ExecFailed;
+	
+	switch(pinfo.pid)
+	{
+		case SPS_AccessFailed:    pinfo.tes.signal=JK_FailedToExec;     break;
+		case SPSi_OpenInFailed:   pinfo.tes.signal=JK_FailedToOpenIn;   break;
+		case SPSi_OpenOutFailed:  pinfo.tes.signal=JK_FailedToOpenOut;  break;
+		default:  /* ... rest is internal error */
+			pinfo.tes.signal=JK_InternalError;  break;
+	}
+	
+	// Error reported on driver layer (lowest layer): 
+	_SendProcessError(PEI_StartFailed,NULL,save_errno);
+	
+	// This is important for TaskDriverInterface_Local::IAmDone: 
+	assert(pinfo.ctsk->d.td==NULL);  // If this fails, assign NULL to it here (?) 
+	pinfo.ctsk=NULL;
+	
+	// Tell manager: 
+	_StateChanged();
 }
 
 
@@ -312,6 +326,7 @@ const char *TaskDriver::PSFailedErrorString(ProcessErrorInfo *pei)
 {
 	const ProcStatus *ps=pei->ps;
 	assert(ps->action==PSFailed);  // Otherwise this function is inapropriate. 
+	assert(ps->estatus==pei->errno_val);  // <- should be set using _SendProcessError()
 	
 	static char tmp[128];
 	snprintf(tmp,128,"while calling %s: %s (code %d)\n",
@@ -326,7 +341,24 @@ const char *TaskDriver::PSFailedErrorString(ProcessErrorInfo *pei)
 const char *TaskDriver::StartProcessErrorString(ProcessErrorInfo *pei)
 {
 	static char tmp[80];
-	ProcessBase::StartProcessErrorString(pei->pinfo->pid,tmp,80);
+	switch(pei->pinfo->pid)
+	{
+		case SPSi_IllegalParams:
+			return("internal error");
+		case SPSi_OpenInFailed:
+		case SPSi_OpenOutFailed:
+			snprintf(tmp,80,"failed to open %s file: %s",
+				(pei->pinfo->pid==SPSi_OpenInFailed) ? "input" : "output",
+				strerror(pei->errno_val));
+			break;
+		default:  // including SPSi_Success: 
+		{
+			int etmp=errno;
+			errno=pei->errno_val;
+			ProcessBase::StartProcessErrorString(pei->pinfo->pid,tmp,80);
+			errno=etmp;
+		}  break;
+	}
 	return(tmp);
 }
 

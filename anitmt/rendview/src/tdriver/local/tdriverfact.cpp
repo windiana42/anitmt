@@ -151,12 +151,15 @@ const char *TaskExecutionStatus::JK_String(int jk_value)
 {
 	switch(jk_value)
 	{
-		case JK_UserInterrupt:  return("user interrupt");
-		case JK_Timeout:  return("timeout");
+		case JK_UserInterrupt:   return("user interrupt");
+		case JK_Timeout:         return("timeout");
 		// JK_ServerError: rendview does not want to go on for what reason ever
-		case JK_ServerError:  return("rendview error");
-		case JK_FailedToExec:  return("failed to start job");
-		case JK_InternalError:  return("internal error");
+		case JK_ServerError:     return("rendview error");
+		
+		case JK_FailedToOpenIn:  return("failed to open input file");
+		case JK_FailedToOpenOut: return("failed to open output file");
+		case JK_FailedToExec:    return("failed to start job");
+		case JK_InternalError:   return("internal error");
 	}
 	return("???");
 }

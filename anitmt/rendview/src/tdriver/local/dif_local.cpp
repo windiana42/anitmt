@@ -159,8 +159,26 @@ int TaskDriverInterface_Local::_DoLaunchTask(CompleteTask *ctsk,TaskDriver **td)
 	// Already set ctsk; task driver removes it again if an error occurs: 
 	(*td)->pinfo.ctsk=ctsk;
 	int rv=(*td)->Run(tsb,tp);
-	if(rv)   // Error was already written. 
-	{  return(2);  }  // IAmDone() was called...
+	if(rv)  // Error happened. 
+	{
+		// Okay, let's see: 
+		// If (*td)->pinfo.ctsk is NULL, then TaskDriver::StartProcess() 
+		//   was called and that called ProcessBase::StartProcess() which 
+		//   failed. The error is already reported to the user and 
+		//   pinfo.tes.status is set to indicate the error. 
+		// If (*td)->pinfo.ctsk is NOT NULL, then TaskDriver::StartProcess() 
+		//   not called and Run() (or the XYZDriver::Execute()) function 
+		//   had an error before attempting to fork. In this case, we still 
+		//   have to deal with the error: 
+		if((*td)->pinfo.ctsk)
+		{
+			// Valid return codes in this case: 
+			// SPSi_Open{In,Out}Failed, SPSi_IllegalParams, SPS_LMallocFailed 
+			(*td)->pinfo.pid=rv;
+			(*td)->_StartProcess_ErrorPart(errno);  // sets pinfo.ctsk=NULL
+		}
+		return(2);  // IAmDone() was called...
+	}
 	
 	// This is that we know which TaskDriver does which CompleteTask: 
 	// NOTE that this is set AFTER Run() returns success. 
@@ -194,8 +212,6 @@ void TaskDriverInterface_Local::IAmDone(TaskDriver *td)
 		// the task driver. 
 		// In this case, simply delete it again. 
 		// (We may NOT decrease running_jobs as this job was not RUNING.) 
-		// (Also, ctsk->d.td is NULL here.)
-		assert(ctsk->d.td==NULL);  // YES!!
 		td->DeleteMe();  // will unregister
 		return;
 	}

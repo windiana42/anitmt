@@ -37,8 +37,10 @@ enum
 	JK_ServerError,        // rendview does not want to go on for what 
 	                       // reason ever
 	//-- for TTR_ExecFailed--
-	JK_FailedToExec,    // failed to exec job because access(X_OK) / execve failed
-	JK_InternalError    // any other reason
+	JK_FailedToOpenIn,   // failed to open requied input file
+	JK_FailedToOpenOut,  // failed to open requied output file
+	JK_FailedToExec,     // failed to exec job because access(X_OK) / execve failed
+	JK_InternalError     // any other reason
 };
 
 struct TaskExecutionStatus
@@ -231,6 +233,15 @@ class TaskDriver :
 			// Only used for PEI_StartFailed [because then ps=NULL]: 
 			int errno_val;  // value of errno; else 0
 		};
+		enum
+		{
+			// BE SURE THAT THESE DO NOT COLLIDE WITH THE SPS_* FROM 
+			// ProcessManager:  
+			SPSi_Success=0,
+			SPSi_IllegalParams=1,
+			SPSi_OpenInFailed=2,
+			SPSi_OpenOutFailed=3
+		};
 	private:
 		enum ExecStatus
 		{
@@ -257,6 +268,12 @@ class TaskDriver :
 		inline void _StateChanged();
 		
 		void _FillInStatistics(const ProcStatus *ps);
+		
+		// This is part of StartProcess() dealing with error at 
+		// ProcessBase::StartProcess() (called from TaskDriver::StartProcess()) 
+		// and errors in XYZDriver::Execute() (called from 
+		// TaskDriverInterface::LaunchTask()) 
+		void _StartProcess_ErrorPart(int save_errno);
 		
 		// May also be used by TaskManager - actually TaskDriverInterface_Local: 
 		// reason_detail: one of the JK_* - values
@@ -331,10 +348,11 @@ class TaskDriver :
 		//   (DTRender, DTFilter) (abort() in this case). 
 		//   [DONE BY RenderDriver/FilterDriver.]
 		// Return value: 
-		//   1 -> invalid TaskStructBase / TaskParams
-		//   0 -> success
-		//  <0 -> see ProcessBase::StartProcess()
-		//  -1 -> allocation failure 
+		//   SPSi_Open{In,Out}Failed  -> failed to open required file
+		//   SPSi_IllegalParams -> invalid TaskStructBase / TaskParams
+		//   SPSi_Success (0)   -> success
+		//   <0 -> see ProcessBase::StartProcess() (SPS_*)
+		//   SPS_LMallocFailed  -> allocation failure 
 		// (This calls Render/FilterDriver::Execute(). 
 		virtual int Run(
 			const TaskStructBase * /*tsb*/,

@@ -27,115 +27,8 @@
 // Return value: currently ignored; use 0. 
 int POVRayDriver::ProcessError(ProcessErrorInfo *pei)
 {
-	int print_cmd=0;
-	
-	#warning FIXME: this function should probably be moved up; \
-		i.e. POVRayDriver::ProcessError() should call a function on higher level \
-		unless the error is really POVRay-specific. 
-	
-	char _frame_no_str[24];
-	if(pei->pinfo && pei->pinfo->ctsk && pei->pinfo->ctsk->frame_no>=0)
-	{  snprintf(_frame_no_str,24,"%d",pei->pinfo->ctsk->frame_no);  }
-	else
-	{  strcpy(_frame_no_str,"???");  }
-	
-	//const RenderTaskParams *rtp=(const RenderTaskParams*)pei->pinfo->tp;
-	const RenderTask *rt=(const RenderTask *)pei->pinfo->tsb;
-	
-	switch(pei->reason)
-	{
-		// *** verbose messages: ***
-		case PEI_Starting:
-			Verbose(0,"POV: Starting POVRay [frame %s].\n",_frame_no_str);
-			print_cmd=2;
-			break;
-		case PEI_StartSuccess:
-			Verbose(0,"POV: Forked to launch POVRay [frame %s]...\n",_frame_no_str);
-			break;
-		case PEI_ExecSuccess:
-			Verbose(0,"POV: POVRay started successfully [frame %s].\n",
-				_frame_no_str);
-			break;
-		case PEI_RunSuccess:
-			Verbose(0,"POV: POVRay terminated successfully [frame %s].\n",
-				_frame_no_str);
-			break;
-		
-		// *** warning/error messages (as you like to define it): ***
-		case PEI_Timeout:
-			Error("POV: POVRay [frame %s] exceeded time limit (%ld s).\n",
-				_frame_no_str,(pei->pinfo->tp->timeout+500)/1000);
-			print_cmd=1;
-			break;
-		
-		// *** error messages: ***
-		case PEI_StartFailed:
-			Error("POV: Failed to start POVRay [frame %s].\n",_frame_no_str);
-			Error("POV:   Error: %s\n",StartProcessErrorString(pei));
-			Error("POV:   Binary: %s\n",rt->rdesc->binpath.str());
-			Error("POV:   Working dir: %s\n",
-				pei->pinfo->tsb->wdir.str() ? pei->pinfo->tsb->wdir.str() : "[cwd]");
-			Error("POV:   Search path:");
-			for(const RefStrList::Node *i=component_db()->GetBinSearchPath(
-				rt->dtype)->first(); i; i=i->next)
-			{  Error(" %s",i->str());  }
-			Error("\n");
-			if(rt->rdesc->binpath[0]=='/')
-			{  Error("POV:   Note: search path not used as binary "
-				"contains absolute path\n");  }
-			break;
-		case PEI_ExecFailed:
-			Error("POV: Failed to execute POVRay [frame %s].\n",_frame_no_str);
-			Error("POV:   Failure: %s\n",PSFailedErrorString(pei));
-			break;
-		case PEI_RunFailed:
-			Error("POV: POVRay [frame %s] execution failed.\n",_frame_no_str);
-			Error("POV:   Failure: ");
-			switch(pei->ps->detail)
-			{
-				case PSExited:
-					Error("Exited with non-zero status %d.\n",
-						pei->ps->estatus);
-					print_cmd=1;
-					break;
-				case PSKilled:
-					Error("Killed by signal %d (pid %ld)\n",
-						pei->ps->estatus,long(pei->pinfo->pid));
-					break;
-				case PSDumped:
-					Error("Dumped (pid %ld, signal %d)\n",
-						long(pei->pinfo->pid),pei->ps->estatus);
-					print_cmd=1;
-					break;
-				default:
-					Error("???\n");
-					abort();
-					break;
-			}
-			break;
-	}
-	
-	// Uh, yes this is an ugly code duplication: 
-	if(print_cmd==1)
-	{
-		Error("POV:   Command:");
-		for(const RefStrList::Node *i=pei->pinfo->args.first(); i; i=i->next)
-		{  Error(" %s",i->str());  }
-		Error("\n");
-		const char *tmp=pei->pinfo->tsb->wdir.str();
-		Error("POV:   Working dir: %s\n",tmp ? tmp : "[cwd]");
-	}
-	else if(print_cmd==2)
-	{
-		Verbose(0,"POV:   Command:");
-		for(const RefStrList::Node *i=pei->pinfo->args.first(); i; i=i->next)
-		{  Verbose(0," %s",i->str());  }
-		Verbose(0,"\n");
-		const char *tmp=pei->pinfo->tsb->wdir.str();
-		Verbose(0,"POV:   Working dir: %s\n",tmp ? tmp : "[cwd]");
-	}
-	
-	return(0);
+	// This is all done by the standard function in RenderDriver. 
+	return(RenderDriver::ProcessErrorStdMessage("POV","POVRay",pei));
 }
 
 
@@ -146,8 +39,8 @@ int POVRayDriver::Execute(
 	// Check for illegal *rp: 
 	if(!rt->rdesc || !rt->oformat || 
 	   !rt->infile || !rt->outfile || 
-	   rt->width<1 || rt->height<1)
-	{  return(1);  }
+	   rt->width<1 || rt->height<1 )
+	{  return(SPSi_IllegalParams);  }
 	
 	RefString infile=rt->infile->HDPath();
 	RefString outfile=rt->outfile->HDPath();
@@ -155,10 +48,10 @@ int POVRayDriver::Execute(
 	if(!infile.str() || !outfile.str() || 
 	   rt->infile->GetIOType()!=TaskFile::IOTRenderInput || 
 	   rt->outfile->GetIOType()!=TaskFile::IOTRenderOutput )
-	{  return(1);  }
+	{  return(SPSi_IllegalParams);  }
 	
 	if(rt->rdesc->dfactory!=f)   // inapropriate driver (factory)
-	{  return(1);  }
+	{  return(SPSi_IllegalParams);  }
 	
 	// What gets called: 
 	// povray +Wwith +Hheight +-/-C +Iinput +Ooutput 
@@ -172,15 +65,15 @@ int POVRayDriver::Execute(
 		if(failed>0)
 		{  Error("POV: Requested image format %s/%dbpp not supported.\n",
 			rt->oformat->name,rt->oformat->bits_p_rgb);  }
-		return(-1);
+		return(SPS_LMallocFailed);
 	}
 	
 	RefStrList args(&failed);
 	RefStrList lib_args(&failed);
 	RefString Ifile(&failed),Ofile(&failed);
-	if(failed)  return(-1);
+	if(failed)  return(SPS_LMallocFailed);
 	
-	// Binary parh (arg[0]): 
+	// Binary path (arg[0]): 
 	if(args.append(rt->rdesc->binpath))  ++failed;
 	
 	// Width & height args: 
@@ -194,7 +87,7 @@ int POVRayDriver::Execute(
 	// Input & output: 
 	if(Ifile.sprintf(0,"+I%s",infile.str()))  ++failed;
 	if(Ofile.sprintf(0,"+O%s",outfile.str()))  ++failed;
-	if(failed)  return(-1);
+	if(failed)  return(SPS_LMallocFailed);
 	if(args.append(Ifile))  ++failed;
 	if(args.append(Ofile))  ++failed;
 	
@@ -216,7 +109,7 @@ int POVRayDriver::Execute(
 	if(args.append(&rt->add_args))  ++failed;
 	
 	// Okay, that should be all args now.
-	if(failed)  return(-1);
+	if(failed)  return(SPS_LMallocFailed);
 	
 	// Set up varous other stuff for program launch: 
 	ProcessBase::ProcMisc pmisc;
@@ -231,7 +124,7 @@ int POVRayDriver::Execute(
 		if(rtp->stdin_fd>=0)   fail|=sp_f.Add(rtp->stdin_fd, 0);
 		if(rtp->stdout_fd>=0)  fail|=sp_f.Add(rtp->stdout_fd,1);
 		if(rtp->stderr_fd>=0)  fail|=sp_f.Add(rtp->stderr_fd,2);
-		if(fail)  return(-1);
+		if(fail)  return(SPS_LMallocFailed);
 	}
 	
 	// Okay, construct the command line: 
@@ -310,7 +203,7 @@ int POVRayDriverFactory::init(ComponentDataBase *cdb)
 	POVRayDriverFactory *f=NEW1<POVRayDriverFactory>(cdb);
 	if(!f)
 	{
-		Error("Failed to initialize POVRay driver\n");
+		Error("Failed to initialize POVRay driver.\n");
 		return(1);
 	}
 	Verbose(BasicInit,"[POVRay] ");

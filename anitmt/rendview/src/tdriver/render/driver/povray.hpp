@@ -64,7 +64,8 @@ class POVRayDriver :
 		// Return value: currently ignored; use 0. 
 		int ProcessError(ProcessErrorInfo *pei);
 	public:  _CPP_OPERATORS_FF
-		POVRayDriver(POVRayDriverFactory *pf,TaskDriverInterface_Local *tdif,int *failflag=NULL);
+		POVRayDriver(POVRayDriverFactory *pf,
+			TaskDriverInterface_Local *tdif,int *failflag=NULL);
 		~POVRayDriver();
 		
 		// Overriding virtual: 

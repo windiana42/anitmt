@@ -55,6 +55,7 @@ struct FilterTaskParams : public TaskParams
 };
 
 
+// Linked list hold by DataBase. 
 class FilterDriver : public TaskDriver
 {
 	private:
@@ -65,6 +66,14 @@ class FilterDriver : public TaskDriver
 			const TaskStructBase *tsb,
 			const TaskParams *tp);
 	protected:
+		// Open input/output file. 
+		// dir: direction: -1 -> input; +1 -> output 
+		// Return value: 
+		//    >=0 -> valid FD
+		//     -1 -> file or file->str() NULL or dir==0
+		//     -2 -> open( failed (see errno)
+		int OpenIOFile(RefString *file,int dir);
+		
 		// Called by derived class: 
 		int StartProcess(
 			const FilterTask *ft,

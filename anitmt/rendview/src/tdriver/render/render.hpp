@@ -68,7 +68,7 @@ struct RenderTaskParams : public TaskParams
 };
 
 
-// Linked list hold by RenderDataBase. 
+// Linked list hold by DataBase. 
 class RenderDriver : public TaskDriver
 {
 	private:
@@ -89,6 +89,16 @@ class RenderDriver : public TaskDriver
 			ProcessBase::ProcFDs  *sp_f,
 			ProcessBase::ProcEnv  *sp_e)
 		{  return(TaskDriver::StartProcess(rt,rtp,sp_p,sp_a,sp_m,sp_f,sp_e));  }
+		
+		// Can be called by ProcessError() function (from lowest level, 
+		// e.g. POVRayDriver) to output standard messages. 
+		// prefix: put at beginning of line, e.g. "POV"
+		// prg_name: name of program to be executed in some fany manner, 
+		//           e.g. "POVRay". 
+		// Both MAY NOT be NULL. 
+		// Return value: 0. 
+		int ProcessErrorStdMessage(const char *prefix,const char *prg_name,
+			ProcessErrorInfo *pei);
 	public:  _CPP_OPERATORS_FF
 		// Driver name copied into RefString. 
 		RenderDriver(TaskDriverFactory *f,TaskDriverInterface_Local *tdif,int *failflag=NULL);
@@ -106,8 +116,6 @@ class RenderDriver : public TaskDriver
 			const RenderTask *ft,
 			const RenderTaskParams *ftp
 			) HL_PureVirt(1)
-		
-		
 };
 
 #endif  /* _RNDV_RENDER_RENDER_HPP_ */
