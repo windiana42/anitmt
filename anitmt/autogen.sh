@@ -63,4 +63,4 @@ done
 
 echo "Now you may run \"./configure\" to configure the source code,"
 echo "followed by \"make\" to build it."
-echo "If you want to install it, type \"make install\" after all."
+echo "Finally, if you want to install it, type \"make install\"."
