@@ -6,6 +6,7 @@ libval_a_SOURCES = internals.hpp \
 	imatrix.cpp imatrix.hpp \
 	ivector.cpp ivector.hpp \
 	flag.hpp flag.cpp \
+	neutral.hpp neutral.cpp \
 	scalar.hpp \
 	vector.cpp vector.hpp \
 	matrix.cpp matrix.hpp \
