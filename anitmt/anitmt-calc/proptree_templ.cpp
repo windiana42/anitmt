@@ -23,13 +23,32 @@ namespace anitmt{
   // Prop_Tree_Node: provides tree structure for property groups
   //************************************************************
 
+  //************
+  // exceptions
+
+  class Prop_Tree_Node::EX_property_rejected : public EX {
+  public:
+    EX_property_rejected() : EX( "property rejected" ) {}
+  };
+  class Prop_Tree_Node::EX_property_type_rejected : public EX {
+  public:
+    EX_property_type_rejected(/* std::string wrong_type, std::string right_type*/ )
+      : EX( /*right_type + " expected. " + wrong_type + " found instead"*/ "wrong property type" ) {}
+  };
+  class Prop_Tree_Node::EX_property_unknown : public EX {
+  public:
+    EX_property_unknown( /*std::string prop_name*/ ) 
+      : EX( "unknown property" /*+ prop_name*/ ) {}
+  };
+
   //*******************
   // template functions
   
   // set property
   template< class T >  
   void Prop_Tree_Node::set_property( std::string name, T val ) 
-    throw( EX_unknown_property,EX_wrong_property_type ) {
+    throw( EX_property_unknown, EX_property_type_rejected, 
+	   EX_property_rejected ) {
     
     if( get_property( name ) != 0 )
       {
@@ -37,14 +56,21 @@ namespace anitmt{
 	    dynamic_cast< Type_Property<T>* >( properties[ name ] );
 	
 	if( !p )
-	  throw EX_wrong_property_type();
+	  throw EX_property_type_rejected();
 	
-	bool accepted = p->set_if_ok( val );
+	bool accepted;
+	try{
+	  accepted = p->set_if_ok( val );
+	}
+	catch( EX ){
+	  throw EX_property_rejected();
+	}
+
 	if( !accepted )
 	  throw EX_property_rejected();
       }
     else
-      throw EX_unknown_property();
+      throw EX_property_unknown();
   }
 
   //**************************************************************************

@@ -40,6 +40,7 @@ namespace anitmt{
     priority_tab_type priority_tab;
 
     bool invoke_Action();
+
   public:
     void add_Action( level_type level, Priority_Action *action );
     void invoke_all_Actions();
@@ -91,9 +92,9 @@ namespace anitmt{
     Action_Caller_Inserter( Priority_Action *action );
   };
 
-  //***************************************************
+  //****************************************************
   // Default_Value<T>: Action that sets a default value
-  //***************************************************
+  //****************************************************
 
   template<class T>
   class Default_Value : public Priority_Action {
@@ -116,6 +117,14 @@ namespace anitmt{
     new Default_Value<T>( sys, level, p, v );
   }
 
+  // specialization for assigning double value to values::Scalar property
+  inline void establish_Default_Value( Priority_System *sys, 
+				       Priority_System::level_type level,
+				       Type_Property<values::Scalar> *p, 
+				       double v ){
+    new Default_Value<values::Scalar>( sys, level, p, values::Scalar(v) );
+  }
+
   //***************************************************************************
   // Push_Connection<T>: establish push connection from one property to another
   //***************************************************************************
@@ -134,6 +143,7 @@ namespace anitmt{
     virtual ~Push_Connection();
   };
 
+  // establishes push connection between two properties
   template<class T>
   inline void establish_Push_Connection( Priority_System *sys, 
 					 Priority_System::level_type level,
@@ -141,6 +151,16 @@ namespace anitmt{
 					 Type_Property<T> *dest ) {
     new Push_Connection<T>( sys, level, src, dest );
   }
+
+  // establishes push connection to property of foreign tree node
+  // ( returnvalue false means: unknown property )
+  template<class T>
+  bool establish_Push_Connection( Priority_System *sys, 
+				  Priority_System::level_type level,
+				  Type_Property<T> *src, 
+				  Prop_Tree_Node   *dest_node,
+				  std::string dest_prop );
+
 }
 
 // force template generation of all used types

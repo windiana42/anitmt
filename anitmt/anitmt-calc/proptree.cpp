@@ -20,6 +20,27 @@ namespace anitmt{
   // Prop_Tree_Node: provides tree structure for property groups
   //************************************************************
 
+  //************
+  // exceptions
+
+  class Prop_Tree_Node::EX_child_type_unknown : public EX {
+  public:
+    EX_child_type_unknown() : EX( "child type unknown" ) {}
+  };
+  class Prop_Tree_Node::EX_child_type_rejected : public EX {
+  public:
+    EX_child_type_rejected() : EX( "child type rejected" ) {}
+  };
+  class Prop_Tree_Node::EX_child_type_already_defined : public EX {
+  public:
+    EX_child_type_already_defined() : EX( "child_type_already_defined" ) {}
+  };
+  class Prop_Tree_Node::EX_invalid_reference : public EX {
+  public:
+    EX_invalid_reference() : EX( "invalid reference" ) {}
+  };
+
+
   //**********
   // constants
 
@@ -102,12 +123,12 @@ namespace anitmt{
   // add child of type with name
   Prop_Tree_Node *Prop_Tree_Node::add_child( std::string type, 
 					     std::string name ) 
-    throw( EX_child_type_unkown, EX_child_type_rejected ) {
+    throw( EX_child_type_unknown, EX_child_type_rejected ) {
 
     child_factory_type::iterator i = child_factory.find( type );
     // if type not found
     if( i == child_factory.end() )
-      throw EX_child_type_unkown();
+      throw EX_child_type_unknown();
 
     // create node with factory found
     Prop_Tree_Node *node = i->second->create( name, ani );

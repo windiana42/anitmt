@@ -24,15 +24,15 @@ namespace anitmt{
   
   // a property collision occured!
   void User_Problem_Handler::property_collision_occured
-  ( std::list<Property*> ) {
-
+  ( std::list<Property*> ) throw( EX ) {
+    
     throw EX_property_collision();
   }
   
   // property signals to reject value 
   // usage may be enforced by returning false
   bool User_Problem_Handler::may_property_reject_val
-  ( std::list<Property*> ) {
+  ( std::list<Property*> ) throw( EX ) {
     
     return false;		// user values may not be rejected
   }

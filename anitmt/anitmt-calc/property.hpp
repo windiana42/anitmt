@@ -22,6 +22,7 @@ namespace anitmt{
   class Solve_Problem_Handler;
 
   class Property;
+  template<class T> class Type_Property;
   class Scalar_Property;
   class Vector_Property;
   class String_Property;
@@ -30,6 +31,7 @@ namespace anitmt{
 
 #include "val.hpp"
 #include "solver.hpp"
+#include "error.hpp"
 
 namespace anitmt{
 
@@ -37,8 +39,15 @@ namespace anitmt{
   // Exceptions:
   //************
   
-  class EX_property_collision {};
-  class EX_solver_is_not_connected {};
+  class EX_property_collision : public EX {
+  public:
+    EX_property_collision() : EX( "property collision" ) {}
+  };
+
+  class EX_solver_is_not_connected : public EX {
+  public:
+    EX_solver_is_not_connected() : EX( "solver is not connected" ) {}
+  };
 
   //*********************************************************
   // Solve_Problem_Handler: handles problems in solve system
@@ -49,13 +58,13 @@ namespace anitmt{
     // a property collision occured!
     // (may throw exceptions!!!)
     virtual void property_collision_occured( std::list< Property* > bad_props )
-      = 0;
+      throw( EX ) = 0;
 
     // property signals to reject value 
     // usage may be enforced by returning false
     // (may throw exceptions!!!)
     virtual bool may_property_reject_val( std::list< Property* > bad_props )
-      = 0;
+      throw( EX ) = 0;
   };
 
   //********************************************************
@@ -66,11 +75,13 @@ namespace anitmt{
   public:
     // a property collision occured!
     // (throws exceptions)
-    virtual void property_collision_occured( std::list<Property*> bad_props );
+    virtual void property_collision_occured( std::list<Property*> bad_props )
+      throw( EX );
 
     // property signals to reject value 
     // usage may be enforced by returning false
-    virtual bool may_property_reject_val( std::list<Property*> bad_props );
+    virtual bool may_property_reject_val( std::list<Property*> bad_props )
+      throw( EX );
   };
 
   //****************************************
@@ -181,34 +192,6 @@ namespace anitmt{
   class Flag_Property : public Type_Property<values::Flag>{
   public:
   };
-
-  //**************************************
-  // Prop_Pair: Pair of Property and Value
-  //**************************************
-  class Prop_Pair{
-  public:
-    virtual bool set_if_ok() = 0;
-  };
-
-  //*************************************************************
-  // Type_Prop_Pair: Pair of Property and Value of a certain type
-  //*************************************************************
-  template<class TP, class T>
-  class Type_Prop_Pair : public Prop_Pair{
-    TP *property;
-    T  value;
-  public:
-    // set the property to the according value
-    virtual bool set_if_ok(){ return property->set_if_ok(value); }
-
-    Type_Prop_Pair( TP *prop, T v ) : property(prop), value(v) {}
-  };
-
-  // easy access function
-  template<class TP, class T>
-  Type_Prop_Pair<TP,T> *T_Prop_Pair( TP *prop, T v ){
-    return new Type_Prop_Pair<TP,T>( prop, v );
-  }
 
 }
 

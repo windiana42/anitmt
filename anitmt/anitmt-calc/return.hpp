@@ -17,6 +17,7 @@
 
 #include <list>
 #include "val.hpp"
+#include "error.hpp"
 
 namespace anitmt{
 
@@ -46,6 +47,10 @@ namespace anitmt{
     friend Contain_Return<Return_Type>;
     void set_prev( Return<Return_Type> *prev );
     void set_next( Return<Return_Type> *next );
+    // initializes the connection to next/previous node
+    virtual void init_next( Return<Return_Type> *node ) {}
+    virtual void init_prev( Return<Return_Type> *node ) {}
+
   protected:
     Return<Return_Type> *get_prev( Return_Type type_ID = Return_Type() );
     Return<Return_Type> *get_next( Return_Type type_ID = Return_Type() );
@@ -53,9 +58,10 @@ namespace anitmt{
     // returns the result at time t of defined return type
     virtual Return_Type get_return_value( values::Scalar t, 
 					  Return_Type type_ID = Return_Type() )
-      throw( EX_not_active_at_time ) = 0;
+      throw( EX_not_active_at_time, EX_user_error ) = 0;
 
     Return();
+
   };
 
   //**************************************************************
@@ -80,9 +86,10 @@ namespace anitmt{
     // returns the result according to childs that are active at time t
     Return_Type get_return_value( values::Scalar t, 
 				  Return_Type type_ID = Return_Type() )
-      throw( EX_essential_child_missing, EX_no_active_child );
+      throw( EX_essential_child_missing, EX_no_active_child, EX_user_error );
 
     Contain_Return( bool essential_child, bool is_unique_child );
+    virtual ~Contain_Return() {}
   };
   
 

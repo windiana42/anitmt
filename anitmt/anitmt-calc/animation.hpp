@@ -20,6 +20,7 @@
 #include "val.hpp"
 #include "tmttype.hpp"
 #include "property.hpp"
+#include "priority.hpp"
 #include "proptree.hpp"
 #include "return.hpp"
 
@@ -47,7 +48,7 @@ namespace anitmt{
     // semi global variables for the animation
 
     Animation_Options opts;	// all options
-
+    Priority_System   pri_sys;	// priority system
   };
 }
 #endif

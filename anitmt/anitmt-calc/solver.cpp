@@ -56,21 +56,24 @@ namespace anitmt{
     
     bool are_all_props_solved = true; // test if all props are solved
 
+    do_when_prop_was_solved( caller );
+
     // tell the properties that were calculated in the try before that they
     // may use the result as definitive solution
     properties_type::iterator i;
     for( i = properties.begin(); i != properties.end(); i++ )
       {
+	
 	// was property just solved and it isn't the caller
-	if( (i->second & prop_just_solved) && (caller != i->first) ) 
+	if( (i->second == prop_just_solved) && (caller != i->first) ) 
 	  {
-	    i->second |= prop_solved;
+	    i->second = prop_solved;
 	    i->first->use_it( this );
 	  }
-
-	// check if all props are solved
-	if( !(i->second & prop_solved) )
-	  are_all_props_solved = false;
+	else
+	  // check if all props are solved
+	  if( i->second != prop_solved )
+	    are_all_props_solved = false;
       }
 
     if( are_all_props_solved ) 
@@ -93,7 +96,7 @@ namespace anitmt{
 	// reset the check flags that indicate which properties were solved
 	properties_type::iterator i;
 	for( i = properties.begin(); i != properties.end(); i++ )
-	  i->second &= ~prop_just_solved;
+	  i->second = prop_not_solved;
 
 	try_id = cur_try_id;
       }
@@ -103,7 +106,7 @@ namespace anitmt{
   }
 
   void Solver::add_Property( Property *prop ) {
-    properties[ prop ] = prop_unsolved; 
+    properties[ prop ] = prop_not_solved; 
     prop->add_Solver( this );
   }
 
@@ -149,8 +152,8 @@ namespace anitmt{
 		if( !d.is_this_ok( res_d, this, problem_handler ) )
 		  return false; 
 
-		properties[ &ve ] |= prop_just_solved; // endspeed solved
-		properties[ &d ] |= prop_just_solved; // stretch solved
+		properties[ &ve ] = prop_just_solved; // endspeed solved
+		properties[ &d ] = prop_just_solved; // stretch solved
 	      }	    
 	    //...
 	  }	    
@@ -194,7 +197,7 @@ namespace anitmt{
 	    if( !e.is_this_ok( res_e, this, problem_handler ) )
 	      return false; 
 
-	    properties[ &e ] |= prop_just_solved; // end value solved
+	    properties[ &e ] = prop_just_solved; // end value solved
 	  }	    
 
 	// end value known ?
@@ -207,7 +210,7 @@ namespace anitmt{
 	    if( !s.is_this_ok( res_s, this, problem_handler ) )
 	      return false; 
 
-	    properties[ &s ] |= prop_just_solved; // end value solved
+	    properties[ &s ] = prop_just_solved; // end value solved
 	  }	    
       }
 
@@ -226,7 +229,7 @@ namespace anitmt{
 	    if( !e.is_this_ok( res_e, this, problem_handler ) )
 	      return false; 
 
-	    properties[ &e ] |= prop_just_solved; // end value solved
+	    properties[ &e ] = prop_just_solved; // end value solved
 	  }	    
 
 	// end value known ?
@@ -239,7 +242,7 @@ namespace anitmt{
 	    if( !d.is_this_ok( res_d, this, problem_handler ) )
 	      return false; 
 
-	    properties[ &d ] |= prop_just_solved; // difference solved
+	    properties[ &d ] = prop_just_solved; // difference solved
 	  }	    
       }
 
@@ -258,7 +261,7 @@ namespace anitmt{
 	    if( !s.is_this_ok( res_s, this, problem_handler ) )
 	      return false; 
 
-	    properties[ &s ] |= prop_just_solved; // start value solved
+	    properties[ &s ] = prop_just_solved; // start value solved
 	  }	    
 
 	// start value known ?
@@ -271,7 +274,7 @@ namespace anitmt{
 	    if( !d.is_this_ok( res_d, this, problem_handler ) )
 	      return false; 
 
-	    properties[ &d ] |= prop_just_solved; // start value solved
+	    properties[ &d ] = prop_just_solved; // start value solved
 	  }	    
       }
 
@@ -315,7 +318,7 @@ namespace anitmt{
 	    if( !d.is_this_ok( res_d, this, problem_handler ) )
 	      return false; 
 
-	    properties[ &d ] |= prop_just_solved; // denominator
+	    properties[ &d ] = prop_just_solved; // denominator
 	  }	    
 
 	// denominator known ?
@@ -328,7 +331,7 @@ namespace anitmt{
 	    if( !n.is_this_ok( res_n, this, problem_handler ) )
 	      return false; 
 
-	    properties[ &n ] |= prop_just_solved; // numerator solved
+	    properties[ &n ] = prop_just_solved; // numerator solved
 	  }	    
       }
 
@@ -347,7 +350,7 @@ namespace anitmt{
 	    if( !d.is_this_ok( res_d, this, problem_handler ) )
 	      return false; 
 
-	    properties[ &d ] |= prop_just_solved; // denominator solved
+	    properties[ &d ] = prop_just_solved; // denominator solved
 	  }	    
 
 	// denominator known ?
@@ -360,7 +363,7 @@ namespace anitmt{
 	    if( !q.is_this_ok( res_q, this, problem_handler ) )
 	      return false; 
 
-	    properties[ &q ] |= prop_just_solved; // quotient solved
+	    properties[ &q ] = prop_just_solved; // quotient solved
 	  }	    
       }
 
@@ -379,7 +382,7 @@ namespace anitmt{
 	    if( !n.is_this_ok( res_n, this, problem_handler ) )
 	      return false; 
 
-	    properties[ &n ] |= prop_just_solved; // numerator solved
+	    properties[ &n ] = prop_just_solved; // numerator solved
 	  }	    
 
 	// numerator known ?
@@ -392,7 +395,7 @@ namespace anitmt{
 	    if( !q.is_this_ok( res_q, this, problem_handler ) )
 	      return false; 
 
-	    properties[ &q ] |= prop_just_solved; // numerator solved
+	    properties[ &q ] = prop_just_solved; // numerator solved
 	  }	    
       }
 

@@ -49,7 +49,10 @@ namespace anitmt{
     void disconnect_Property( Property *prop )
       throw( EX_Property_Not_Connected );
     // Properties call that if they were solved
+    // (uses virtual function do_when_prop_was_solved)
     void prop_was_solved( Property *ID );
+    // is called when property was solved
+    virtual void do_when_prop_was_solved( Property *ID ) {}
     // Properties call that if they want to validate their results
     // (uses virtual function check_prop_solution)
     bool is_prop_solution_ok
@@ -62,7 +65,7 @@ namespace anitmt{
     int n_props_available;
     long try_id;		// id to identify a solution try
 
-    enum prop_status{ prop_unsolved=0, prop_solved=1, prop_just_solved=2 };
+    enum prop_status{ prop_not_solved, prop_just_solved, prop_solved };
     // associates properties with their status
     typedef std::map< Property*, prop_status > properties_type;
     properties_type properties;	// all properties and if they are solved

@@ -23,8 +23,10 @@ namespace anitmt {
 #include "tmttype.hpp"
 #include "property.hpp"
 #include "solver.hpp"
+#include "priority.hpp"
 #include "proptree.hpp"
 #include "return.hpp"
+#include "animation.hpp"
 
 namespace anitmt{
 
@@ -46,17 +48,21 @@ namespace anitmt{
     Scalar_Property te_f;	// endframe
     Scalar_Property s;		// slope or changing speed
 
-    //...
   protected:
   public:
     static std::string get_type_name();
 
     Scal_Linear( std::string name, Animation *ani );
     
+    // initializes the connection to next/previous node
+    virtual void init_next( Return<values::Scalar> *node );
+    virtual void init_prev( Return<values::Scalar> *node );
+
     values::Scalar get_return_value( values::Scalar t, 
 				     values::Scalar = values::Scalar() );
 
     bool try_add_child( Prop_Tree_Node *node );
+
   };
 }
 #endif

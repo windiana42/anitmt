@@ -27,22 +27,34 @@ namespace anitmt{
 
   template <class Return_Type>
   Return<Return_Type> *Return<Return_Type>::get_prev( Return_Type ){
+#ifdef __DEBUG__
+    std::cout << "return prev node: " << prev << std::endl;
+#endif
     return prev;
   }
 
   template <class Return_Type>
   Return<Return_Type> *Return<Return_Type>::get_next( Return_Type ){
+#ifdef __DEBUG__
+    std::cout << "return next node: " << next << std::endl;
+#endif
     return next;
   }
 
   template <class Return_Type>
   void Return<Return_Type>::set_prev( Return<Return_Type> *p ){
     prev = p;
+#ifdef __DEBUG__
+    std::cout << "setting previous node to: " << p << std::endl;
+#endif
   }
 
   template <class Return_Type>
   void Return<Return_Type>::set_next( Return<Return_Type> *n ){
     next = n;
+#ifdef __DEBUG__
+    std::cout << "setting next node to: " << n << std::endl;
+#endif
   }
 
   // constructor
@@ -70,7 +82,9 @@ namespace anitmt{
 	    {
 	      Return<Return_Type> *last = *(--content.end()) ;
 	      last->set_next( node );
+	      last->init_next( node );
 	      node->set_prev( last );
+	      node->init_prev( last );
 	    }
 
 	  content.push_back( node );
@@ -83,7 +97,7 @@ namespace anitmt{
   template <class Return_Type>
   Return_Type Contain_Return<Return_Type>::get_return_value( values::Scalar t,
 							     Return_Type ) 
-    throw( EX_essential_child_missing, EX_no_active_child ) {
+    throw( EX_essential_child_missing, EX_no_active_child, EX_user_error ) {
 
     if( essential_child && ( num_childs == 0 ) )
       throw EX_essential_child_missing();

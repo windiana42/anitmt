@@ -26,6 +26,7 @@ namespace anitmt{
 
 #include "val.hpp"
 #include "property.hpp"
+#include "error.hpp"
 
 #include "animation_classes.hpp"
 
@@ -46,8 +47,6 @@ namespace anitmt{
     std::string type;		// type of this node
     std::string name;		// name for reference
 
-    Animation *ani;		// animation as root node
-
     // properties
     typedef std::map< std::string, Property* > properties_type;
     properties_type properties;
@@ -66,28 +65,36 @@ namespace anitmt{
     static child_factory_type child_factory;
 
   protected:
+    Animation *ani;		// animation as root node
+
     // Access functions for hiding data structure
     inline void add_property( std::string name, Property *prop ){
       properties[ name ] = prop;
     }
 
   public:
+    //*****************
     // known exceptions
-    class EX_child_type_unkown {};
-    class EX_child_type_rejected {};
-    class EX_child_type_already_defined {};
-    class EX_unknown_property {};
-    class EX_wrong_property_type {};
-    class EX_property_rejected {};
-    class EX_invalid_reference {}; //!!! should be more differentiated
+
+    class EX_child_type_unknown;
+    class EX_child_type_rejected;
+    class EX_child_type_already_defined;
+    class EX_property_unknown;
+    class EX_property_rejected;
+    class EX_property_type_rejected;
+    class EX_invalid_reference;
+
+    //***********
+    // functions
 
     std::string	get_name();	// return name
     std::string get_type();	// return type
     Property *get_property( std::string name );	
-				// return property
+				// return property (0 = unknown name)
     template< class T > 
     void set_property( std::string name, T val )
-      throw( EX_unknown_property,EX_wrong_property_type );
+      throw( EX_property_unknown, EX_property_type_rejected, 
+	     EX_property_rejected );
 				// set value of a property 
     std::list<std::string> get_properties_names(); 
 				// returns all property names
@@ -97,7 +104,7 @@ namespace anitmt{
     std::list<Prop_Tree_Node*> get_all_childs();
 				// return all childs
     Prop_Tree_Node *add_child( std::string type, std::string name )
-      throw( EX_child_type_unkown, EX_child_type_rejected );
+      throw( EX_child_type_unknown, EX_child_type_rejected );
 				// add child of type with name
     virtual Prop_Tree_Node *get_referenced_node( std::string ref );
 				// returns node by interpreting the hierachical

@@ -22,7 +22,10 @@ namespace anitmt{
   //************************************************************************
 
   // Properties call that if they were solved
-  void Action_Caller::prop_was_solved( Property *ID ) {
+  void Action_Caller::do_when_prop_was_solved( Property *ID ) {
+#ifdef __DEBUG__
+    std::cout << "place Action!" << std::endl;
+#endif
     priority_action->place_Action();
     //!!! no more function calls here !!! (may be deleted by place_Action)
   }
@@ -30,6 +33,10 @@ namespace anitmt{
   // Properties call that if they want to validate their results
   bool Action_Caller::check_prop_solution_and_results( Property*, 
 					   Solve_Problem_Handler* ) {
+    
+#ifdef __DEBUG__
+    std::cout << "action caller was asked for a solution!" << std::endl;
+#endif
 
     return true;		// always ok!
   }
@@ -37,6 +44,9 @@ namespace anitmt{
   // Construtor
   Action_Caller::Action_Caller( Property *cause, Priority_Action *act )
     : priority_action( act ) {
+#ifdef __DEBUG__
+    std::cout << "Action Caller created!" << std::endl;
+#endif
     add_Property( cause );
   }
 }

@@ -35,7 +35,7 @@ namespace anitmt{
     Priority_Action *priority_action;
 
     // Properties call that if they were solved
-    virtual void prop_was_solved( Property *ID );
+    virtual void do_when_prop_was_solved( Property *ID );
     // Properties call that if they want to validate their results
     virtual bool check_prop_solution_and_results
     ( Property *ID, Solve_Problem_Handler *problem_handler );
