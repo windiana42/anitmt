@@ -713,7 +713,7 @@ int TaskManager::_LaunchJobForTask(CompleteTask *ctsk)
 	// See which task to launch: 
 	const RF_DescBase *d=NULL;
 	TaskStructBase *tsb=NULL;
-	#warning Passing NULL as TaskParams is a VERY BAD IDEA!*******************
+	#warning ********Passing NULL as TaskParams is a VERY BAD IDEA!******************
 	TaskParams *tp=NULL;
 	TaskDriverType dtype=DTNone;
 	switch(ctsk->state)

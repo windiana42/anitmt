@@ -40,7 +40,7 @@ const char *HTime::PrintTime(int local=1,int with_msec=0)
 	char *end=tmp+48;
 	ptr+=strftime(ptr,end-tmp,"%a %b %d %Y, %H:%M:%S",stm);
 	if(with_msec && end>tmp)
-	{  ptr+=snprintf(ptr,end-ptr,":%03d",msec);  }
+	{  ptr+=snprintf(ptr,end-ptr,".%03d",msec);  }
 	if(end>tmp)
 	{  strftime(ptr,end-tmp," %Z",stm);  }
 	
@@ -65,7 +65,7 @@ const char *HTime::PrintElapsed()
 		ptr+=snprintf(ptr,end-ptr,"%ldd ",hours/24);
 		hours%=24;
 	}
-	snprintf(ptr,end-ptr,"%02ld:%02ld:%02ld:%03d",
+	snprintf(ptr,end-ptr,"%02ld:%02ld:%02ld.%03d",
 		(sec/3600),
 		(sec/60)%60,
 		sec%60,
