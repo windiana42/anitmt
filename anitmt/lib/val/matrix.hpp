@@ -71,6 +71,7 @@ public: // work around for the template friend problem
 		Matrix(enum MatRotY,double angle);
 		Matrix(enum MatRotZ,double angle);
 		Matrix(enum MatScale,double fact,int idx);  // idx unchecked. 
+		Matrix(enum MatScale,double fact);  // scale all
 		Matrix(enum MatScale,const Vector<3> &v);
 		Matrix(enum MatTrans,double delta,int idx);  // idx unchecked. 
 		Matrix(enum MatTrans,const Vector<3> &v);
@@ -308,6 +309,8 @@ inline Matrix<4,4> MscaleX(double fact)  {  return(Matrix<4,4>(Matrix<4,4>::mats
 inline Matrix<4,4> MscaleY(double fact)  {  return(Matrix<4,4>(Matrix<4,4>::matscale,fact,1));  }
 inline Matrix<4,4> MscaleZ(double fact)  {  return(Matrix<4,4>(Matrix<4,4>::matscale,fact,2));  }
 inline Matrix<4,4> Mscale(const Vector<3> &v)  {  return(Matrix<4,4>(Matrix<4,4>::matscale,v));  }
+// Scale all axes: 
+inline Matrix<4,4> MScale(double fact)   {  return(Matrix<4,4>(Matrix<4,4>::matscale,fact));  }
 // Translation matrices: 
 inline Matrix<4,4> MtranslateX(double d)  {  return(Matrix<4,4>(Matrix<4,4>::mattrans,d,0));  }
 inline Matrix<4,4> MtranslateY(double d)  {  return(Matrix<4,4>(Matrix<4,4>::mattrans,d,1));  }
@@ -319,7 +322,7 @@ inline Matrix<4,4> MrotateY(double angle)  {  return(Matrix<4,4>(Matrix<4,4>::ma
 inline Matrix<4,4> MrotateZ(double angle)  {  return(Matrix<4,4>(Matrix<4,4>::matrotz,angle));  }
 // Rotates around x,y and z in this order; angles stored in v: 
 inline Matrix<4,4> Mrotate(const Vector<3> &v)
-	{  return(MrotateX(v[0])*MrotateY(v[1])*MrotateZ(v[2]));  }
+	{  return(MrotateZ(v[2])*MrotateY(v[1])*MrotateX(v[0]));  }
 
 
 /** FUNCTIONS FOR 3d VECTORS AND 4x4 MATRICES: **/
