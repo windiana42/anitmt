@@ -1,5 +1,5 @@
 # Makefile.am for parser of anitmt adl - animation description language 
-INCLUDES=		-I$(srcdir)/../.. -I$(top_srcdir)/lib/
+INCLUDES=		-I$(srcdir)/../.. -I$(top_srcdir)/lib 
 noinst_LIBRARIES=	libadlparser.a
 check_PROGRAMS=		adltest
 CXXFLAGS =		@CXXFLAGS@ -Wno-non-template-friend

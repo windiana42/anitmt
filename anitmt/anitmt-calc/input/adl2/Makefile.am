@@ -1,5 +1,5 @@
 # Makefile.am for parser of anitmt adl - animation description language 
-INCLUDES=		-I$(top_srcdir)/lib/ -I$(top_srcdir)/lib/flex \
+INCLUDES=		-I$(top_srcdir)/lib -I$(top_srcdir)/lib/flex \
 			-I$(srcdir)/../../
 noinst_LIBRARIES=	libadlparser.a
 check_PROGRAMS=		testadlparser
@@ -11,16 +11,16 @@ libadlparser_a_SOURCES=	scanner.ll parser.yy tokens.h \
 
 testadlparser_SOURCES=	testadlparser.cpp 
 testadlparser_LDADD=	libadlparser.a \
-			$(srcdir)/../../libanitmt.a \
-			$(top_srcdir)/lib/val/libval.a \
-			$(top_srcdir)/lib/par/libpar.a \
-			$(top_srcdir)/lib/solve/libsolve.a \
-			$(top_srcdir)/lib/message/libmessage.a \
-			$(srcdir)/../adl/libadlparser.a \
-			$(srcdir)/../libinput.a \
-			$(srcdir)/../../output/lib/liboutput.a \
-			$(srcdir)/../../output/raw/librawout.a \
-			$(srcdir)/../../output/pov/libpovout.a 
+			../libanitmt.a \
+			../../lib/val/libval.a \
+			../../lib/par/libpar.a \
+			../../lib/solve/libsolve.a \
+			../../lib/message/libmessage.a \
+			../adl/libadlparser.a \
+			../libinput.a \
+			../output/lib/liboutput.a \
+			../output/raw/librawout.a \
+			../output/pov/libpovout.a 
 #also includes old adl/libadlparser.a for libanitmt
 
 YLWRAP  = 		$(top_srcdir)/ylwrap

@@ -10,10 +10,10 @@ libexparser_a_SOURCES=	scanner.ll parser.yy \
 
 testexparser_SOURCES=	testexparser.cpp
 testexparser_LDADD=	libexparser.a \
-			$(top_srcdir)/lib/val/libval.a \
-			$(top_srcdir)/lib/par/libpar.a \
-			$(top_srcdir)/lib/solve/libsolve.a \
-			$(top_srcdir)/lib/message/libmessage.a 
+			../val/libval.a \
+			../par/libpar.a \
+			../solve/libsolve.a \
+			../message/libmessage.a 
 
 YLWRAP  = 		$(top_srcdir)/ylwrap
 
