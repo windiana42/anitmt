@@ -1,0 +1,34 @@
+pwd
+echo $srcdir
+
+if test "x$srcdir" != "x"; then
+  cd $srcdir;
+fi
+
+pwd
+
+cd test/
+../../anitmt-calc/anitmt-calc test.ini
+cd test_ani/
+../../../utils/render -w 200 -h 150
+../../../utils/tga2avi/tga2avi -f 5 -e 150
+../../../utils/mkavi/mkavi -f 5 -e 150 -o film-cram.avi
+cd ../../
+
+cd myrobot/
+../../anitmt-calc/anitmt-calc myrobot.ini
+cd ani/
+../../../utils/render -w 400 -h 300
+../../../utils/tga2avi/tga2avi -f 24 -e 336
+../../../utils/mkavi/mkavi -f 24 -e 336 -o film-cram.avi
+cd ../../
+
+cd circles/
+../../anitmt-calc/anitmt-calc circles.ini
+cd ani/
+../../../utils/render -w 96 -h 72
+../../../utils/tga2avi/tga2avi -f 24 -e 336
+../../../utils/mkavi/mkavi -f 24 -e 336 -o film-cram.avi
+cd ../../
+
+exit 0
