@@ -1,5 +1,5 @@
 # Makefile.am for test functionality
-INCLUDES=		-I$(top_srcdir)/lib -I$(srcdir) -I$(builddir)
+INCLUDES=		-I$(top_srcdir)/lib -I$(srcdir)
 
 noinst_LIBRARIES=	libfunctionality.a
 
