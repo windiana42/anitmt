@@ -52,6 +52,7 @@ class HTime
 			tv->tv_sec+=m;  tv->tv_usec-=1000000*m;  }
 		
 		void _SetVal(long val,TimeSpec sp,timeval *tv);
+		void _SetValL(int64_t val,TimeSpec sp,timeval *tv);
 		int64_t _Delta(const HTime *endtime) const;
 		inline int64_t _LLConv(const timeval *tv) const
 			{  return(int64_t(tv->tv_sec)*int64_t(1000000)+int64_t(tv->tv_usec));  }
@@ -78,17 +79,22 @@ class HTime
 		HTime &operator=(_CurrentTime)  {  SetCurr();  return(*this);  }
 		HTime &Set(long val,TimeSpec sp=msec)
 			{  _SetVal(val,sp,&tv);  return(*this);  }
+		HTime &SetL(int64_t val,TimeSpec sp=msec)
+			{  _SetValL(val,sp,&tv);  return(*this);  }
 		
 		// Get stored time. This is only useful if HTime stores some 
 		// elapsed time (e.g. consumed system time) and not a real 
 		// date. Only call if !IsInvalid(). 
 		// Get() -> get integer value; result truncated at division
+		// GetL() -> get 64bit integer value; result truncated at division
 		// GetR() -> get integer value; result rounded at division
 		// GetD() -> get floating point value 
 		long   Get (TimeSpec sp) const
 			{  return((sp<_tslast) ? long(_LLConv(&tv)/conv_fact[sp]) : (-1));  }
 		long   GetR(TimeSpec sp) const
 			{  return((sp<_tslast) ? long(_RoundAdd(_LLConv(&tv),sp)/conv_fact[sp]) : (-1));  }
+		int64_t GetL(TimeSpec sp) const
+			{  return((sp<_tslast) ? (_LLConv(&tv)/conv_fact[sp]) : (-1));  }
 		double GetD(TimeSpec sp) const
 			{  return((sp<_tslast) ? (double(_LLConv(&tv))/conv_factD[sp]) : (-1.0));  }
 		
@@ -133,10 +139,13 @@ class HTime
 		// starttime: *this; endtime: NULL=current 
 		// BEWARE OF OVERFLOWS. Only call if !IsInvalid(). 
 		// Note: Elapsed()  -> result truncated at division
+		//       ElapsedL() -> result truncated at division
 		//       ElapsedR() -> result rounded at division
 		//       ElapsedD() -> floating point division
 		long   Elapsed (TimeSpec sp,const HTime *endtime=NULL) const
 			{  return((sp<_tslast) ? long(_Delta(endtime)/conv_fact[sp]) : (-1L));  }
+		int64_t ElapsedL(TimeSpec sp,const HTime *endtime=NULL) const
+			{  return((sp<_tslast) ? (_Delta(endtime)/conv_fact[sp]) : (-1L));  }
 		long   ElapsedR(TimeSpec sp,const HTime *endtime=NULL) const
 			{  return((sp<_tslast) ? long(_RoundAdd(_Delta(endtime),sp)/conv_fact[sp]) : (-1L));  }
 		double ElapsedD(TimeSpec sp,const HTime *endtime=NULL) const

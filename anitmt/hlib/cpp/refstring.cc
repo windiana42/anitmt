@@ -115,6 +115,29 @@ int RefString::set0(const char *str_to_copy,size_t len)
 }
 
 
+int RefString::zero()
+{
+	if(!ref)  return(1);
+	if((*ref)>3)
+	{  _deref();  return(1);  }
+	
+	// we're the only ref. 
+	if(_sflag())
+	{
+		memset(_str(),0,_rlength());
+		*(((size_t*)ref)-1)=0;  // zero size, too
+	}
+	else
+	{
+		for(char *c=_str(); *c; )
+		{  *(c++)='\0';  }
+	}
+	
+	_deref();
+	return(0);
+}
+
+
 bool RefString::operator==(const RefString &b) const
 {
 	// First, the fast path: if it is the same ref, then also 
@@ -145,6 +168,7 @@ void RefString::_destroy()
 		// Now, free the string...
 		// If the size flag is set, we must go back sizeof(size_t) 
 		// bytes, else *ref is the right pointer. 
+		// NOTE: MAY NOT look at size because it may have been zeroed. 
 		LFree(_sflag() ? (int*)(((size_t*)ref)-1) : ref);
 		//ref=NULL;  // <- done by caller. 
 	}

@@ -21,8 +21,8 @@
 const int64_t HTime::conv_fact[HTime::_tslast]=
 #if __GNUC__ < 3
 { 1LL, 1000LL, 1000000LL, 60000000LL, 3600000000LL, 86400000000LL };
-#else
-{ 1, 1000, 1000000, 60000000, 3600000000, 86400000000 };
+#else                                /* ++--- required... */
+{ 1, 1000, 1000000, 60000000, 3600000000LL, 86400000000 };
 #endif
 
 const int64_t HTime::round_delta[HTime::_tslast]=
@@ -43,23 +43,49 @@ void HTime::_SetVal(long val,TimeSpec sp,timeval *tv)
 	{
 		case usec:
 		{
-			register long m=val/1000000L;
+			register long m=val/1000000;
 			if(val<0)  --m;
 			tv->tv_sec=m;
 			tv->tv_usec=val-m*1000000;
 		}  break;
 		case msec:
 		{
-			register long m=val/1000L;
+			register long m=val/1000;
 			if(val<0)  --m;
 			tv->tv_sec=m;
 			tv->tv_usec=1000*(val-m*1000);
 		}  break;
-		case seconds:  tv->tv_sec=val;         break;
-		case minutes:  tv->tv_sec=val*60L;     break;
-		case hours:    tv->tv_sec=val*3600L;   break;
-		case days:     tv->tv_sec=val*86400L;  break;
+		case seconds:  tv->tv_sec=val;        break;
+		case minutes:  tv->tv_sec=val*60;     break;
+		case hours:    tv->tv_sec=val*3600;   break;
+		case days:     tv->tv_sec=val*86400;  break;
 		default:  tv->tv_sec=0;  break;
+	}
+}
+
+void HTime::_SetValL(int64_t val,TimeSpec sp,timeval *tv)
+{
+	switch(sp)
+	{
+		case usec:
+		{
+			register int64_t m=val/1000000;
+			if(val<0)  --m;
+			tv->tv_sec=m;
+			tv->tv_usec=val-m*1000000;
+		}  break;
+		case msec:
+		{
+			register int64_t m=val/1000;
+			if(val<0)  --m;
+			tv->tv_sec=m;
+			tv->tv_usec=1000*(val-m*1000);
+		}  break;
+		case seconds:
+			tv->tv_sec=val;
+			tv->tv_usec=0L;
+			break;
+		default:  _SetVal(val,sp,tv);
 	}
 }
 

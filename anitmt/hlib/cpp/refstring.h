@@ -181,6 +181,11 @@ class RefString
 		// deref() has the same effect as set(NULL). 
 		void deref()  {  _deref();  }
 		
+		// How many refs exist to the string? 
+		// Returns 0 for NULL reference. 
+		int nrefs()
+			{  return(ref ? ((*ref)>>2) : 0);  }
+		
 		// This works like operator=() but with strings to be copied. 
 		// First, dereferences the currently used string, then 
 		// it assignes the new string. 
@@ -201,6 +206,12 @@ class RefString
 		// This is like set(), bit creating a '\0'-terminated string 
 		// out of the first len bytes of str_to_copy. 
 		int set0(const char *str_to_copy,size_t len);
+		
+		// This can be used to zero out the string. Only effective, 
+		// if we are the only reference to the string. 
+		// Does a deref() after zeroing. 
+		// Return value: 0 -> zeroed out; 1 -> only deref()
+		int zero();
 		
 		// Like snprintf() on RefString. The passed format string and 
 		// args are formatted into the string. deref() is called before, 

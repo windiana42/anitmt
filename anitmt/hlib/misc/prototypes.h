@@ -138,6 +138,15 @@ extern char *prg_name;
    */
   extern int SetNonblocking(int fd);
 
+/* sockerror.c: */
+  /* Get socket's pending error code. 
+   * Return value: 
+   *   0 -> no error
+   *  >0 -> error (see errno)
+   *  -1 -> getsockopt(SOL_SOCKET,SO_ERROR) failed
+   */
+  extern int GetSocketError(int fd);
+
 /* tcpnodelay.c: */
   /* Disable Nagle algorithm on TCP sockets.
    * Return value:
