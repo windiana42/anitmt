@@ -181,7 +181,8 @@ namespace
 		int ns0=N_Set();
 		// IMPORTANT: ns0<3 check is performed below. 
 		
-		for(int change;change;)
+		int change;
+		do
 		{
 			change=0;
 			//Print_Set_Pars(std::cerr,verbose());  std::cerr << "\n";
@@ -204,6 +205,7 @@ namespace
 			change+=SetIfUnset(fps,div(startframe,starttime));
 			change+=SetIfUnset(fps,div(endframe,endtime));
 		}
+		while(change);
 		
 		int ns=N_Set();
 		//cerr << "ns0=" << ns0 << "; ns=" << ns << "\n";
