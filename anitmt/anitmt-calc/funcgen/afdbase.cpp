@@ -23,16 +23,21 @@ namespace funcgen
   //! add element type to structure
   void Base_Type::add_element( std::string type, std::string name )
   {
-    element_types[type] = name;
+    element_types[name] = type;
   }
 
+  bool Base_Type::is_structure() const
+  {
+    return structure;
+  }
+  
   //! returns the type name
-  std::string Base_Type::get_type()
+  std::string Base_Type::get_type() const
   {
     if( structure )
     {
       std::string type = "struct {";
-      std::map<std::string,std::string>::iterator i;
+      std::map<std::string,std::string>::const_iterator i;
       for( i = element_types.begin(); i != element_types.end(); i++ )
 	type += i->first + " " + i->second + ";";
       type += "}";
@@ -40,6 +45,17 @@ namespace funcgen
     }
     else
       return type_name;
+  }
+
+  Base_Type::element_types_type::const_iterator Base_Type::element_begin()
+    const
+  {
+    return element_types.begin();
+  }
+  Base_Type::element_types_type::const_iterator Base_Type::element_end() 
+    const
+  {
+    return element_types.end();
   }
 
   //! new type is structure
@@ -670,7 +686,7 @@ namespace funcgen
     // provider types
     {
       std::map<std::string, Provider_Type>::const_iterator i;
-      for( i = types.begin(); i != types.end(); i++ )
+      for( i = provider_types.begin(); i != provider_types.end(); i++ )
       {
 	i->second.print(i->first);
       }
@@ -689,5 +705,9 @@ namespace funcgen
       }
     }
   }
+
+  AFD_Root::AFD_Root( Code_Translator *trans )
+    : translator(trans)
+  {}
 }
 

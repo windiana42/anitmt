@@ -30,6 +30,7 @@ namespace funcgen
     I->lexer->goto_code_copy_mode();
 
     message::Message_Reporter &msg = I->msg;
+    Code_Translator *translator = I->afd->translator;
     Tree_Node_Type *node = I->afd->current_node;
     assert(node != 0);
     Provided_Results *provided = node->current_provided_results;
@@ -39,8 +40,7 @@ namespace funcgen
 
       if( res_code )		// in valid result code?
       {
-	// !?! C++-Code specific !?!
-	res_code->code += "\n{\n"; 
+	res_code->code += "\n" + translator->open_block();
 	res_code->start_src_line = I->file_pos.get_line();
 	res_code->start_src_column = I->file_pos.get_column();
       }
@@ -48,8 +48,10 @@ namespace funcgen
   }
   void finish_code_block( void *info )
   {
-    message::Message_Reporter &msg = static_cast<afd_info*>(info)->msg;
-    Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;
+    afd_info *I=static_cast<afd_info*>(info);
+    message::Message_Reporter &msg = I->msg;
+    Code_Translator *translator = I->afd->translator;
+    Tree_Node_Type *node = I->afd->current_node;
     assert(node != 0);
     Provided_Results *provided = node->current_provided_results;
     if( provided )
@@ -58,8 +60,7 @@ namespace funcgen
 
       if( res_code )		// in valid result code?
       {
-	// !?! C++-Code specific !?!
-	res_code->code += "\n}\n"; 
+	res_code->code += "\n" + I->afd->translator->close_block(); 
       }
     }    
   }
@@ -81,7 +82,6 @@ namespace funcgen
 
       if( res_code )		// in valid result code?
       {
-	// !?! C++-Code specific !?!
 	res_code->code += line; 
       }
     }    
@@ -95,13 +95,20 @@ namespace funcgen
 			  const std::string &type )
   {
     AFD_Root *afd = static_cast<afd_info*>(info)->afd;
-    afd->base_types[name] = Base_Type(type);
+    // add to map and a pointer to sequence list
+    afd->base_types_list.push_back
+      (std::pair<std::string,Base_Type*>
+       (name,&(afd->base_types[name] = Base_Type(type))));    
   }
 
   void declare_base_type_structure( void *info, const std::string &name )
   {
     AFD_Root *afd = static_cast<afd_info*>(info)->afd;
+    // add to map and store current pointer
     afd->current_base_type = &afd->base_types[name];
+    // add pointer to sequence list
+    afd->base_types_list.push_back
+      (std::pair<std::string,Base_Type*>(name,afd->current_base_type));    
   }
   
   void base_type_structure_element( void *info, const std::string &type, 
@@ -116,7 +123,7 @@ namespace funcgen
 					const std::string &name )
   {
     AFD_Root *afd = static_cast<afd_info*>(info)->afd;
-    afd->current_type = &afd->types[name];
+    afd->current_type = &afd->provider_types[name];
     afd->current_type->serial = serial;
   }
 
@@ -174,8 +181,8 @@ namespace funcgen
     
     // check if provider type exists
     std::map<std::string,Provider_Type>::iterator i;
-    i = afd->types.find(type);
-    if( i == afd->types.end() )
+    i = afd->provider_types.find(type);
+    if( i == afd->provider_types.end() )
       info->msg.error() << "Provided type " << type << " doesn't exist";
     else
     {
@@ -441,7 +448,7 @@ namespace funcgen
       {
 	node->current_provided_results = &(i->second);
 				// get the pointer to the provided results code
-	node->current_provided_result_type = &afd->types[type];
+	node->current_provided_result_type = &afd->provider_types[type];
 				// get the pointer to the provider type
       }
       else			// provided type not found?
@@ -550,8 +557,10 @@ namespace funcgen
 
   void res_ref_property( void *info, std::string prop )
   {
-    message::Message_Reporter &msg = static_cast<afd_info*>(info)->msg;
-    Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;
+    afd_info *I=static_cast<afd_info*>(info);
+    message::Message_Reporter &msg = I->msg;
+    Code_Translator *translator = I->afd->translator;
+    Tree_Node_Type *node = I->afd->current_node;
     assert(node != 0);
     Provided_Results *provided = node->current_provided_results;
     if( provided )
@@ -562,15 +571,18 @@ namespace funcgen
       {
 	//!!! check whether property exists !!!
 
-	res_code->code += prop + "()"; // !?! C++-Code specific !?!
+	res_code->code += translator->property_value(prop); 
       }
     }    
   }
   void res_ref_child( void *info, std::string provider, 
-		      std::string result_type, std::string parameter )
+		      std::string result_type, std::string parameter_type, 
+		      std::string parameter )
   {
-    message::Message_Reporter &msg = static_cast<afd_info*>(info)->msg;
-    Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;
+    afd_info *I=static_cast<afd_info*>(info);
+    message::Message_Reporter &msg = I->msg;
+    Code_Translator *translator = I->afd->translator;
+    Tree_Node_Type *node = I->afd->current_node;
     assert(node != 0);
     Provided_Results *provided = node->current_provided_results;
     if( provided )
@@ -580,18 +592,21 @@ namespace funcgen
       if( res_code )		// in valid result code?
       {
 	//!!! check whether result function of child exists exists !!!
-
-	// !?! C++-Code specific !?!
-	res_code->code += "serial_container_" + provider + "->get_result("
-	  + result_type + "," + parameter + ")"; 
+	
+	res_code->code += translator->child_result( provider, result_type, 
+						    parameter_type, 
+						    parameter );
       }
     }    
   }
   void res_ref_this( void *info, std::string provider, 
-		      std::string result_type, std::string parameter )
+		      std::string result_type, std::string parameter_type, 
+		      std::string parameter )
   {
-    message::Message_Reporter &msg = static_cast<afd_info*>(info)->msg;
-    Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;
+    afd_info *I=static_cast<afd_info*>(info);
+    message::Message_Reporter &msg = I->msg;
+    Code_Translator *translator = I->afd->translator;
+    Tree_Node_Type *node = I->afd->current_node;
     assert(node != 0);
     Provided_Results *provided = node->current_provided_results;
     if( provided )
@@ -602,9 +617,9 @@ namespace funcgen
       {
 	//!!! check whether result function of child exists exists !!!
 
-	// !?! C++-Code specific !?!
-	res_code->code += "prov_" + provider + "::get_result("
-	  + result_type + "," + parameter + ")"; 
+	res_code->code += translator->provided_result( provider, result_type, 
+						       parameter_type, 
+						       parameter );
       }
     }    
   }

@@ -145,9 +145,11 @@ namespace funcgen
 
   void res_ref_property( void *info, std::string prop );
   void res_ref_child( void *info, std::string provider, 
-		      std::string result_type, std::string parameter );
+		      std::string result_type, std::string parameter_type, 
+		      std::string parameter );
   void res_ref_this( void *info, std::string provider, 
-		      std::string result_type, std::string parameter );
+		     std::string result_type, std::string parameter_type, 
+		     std::string parameter );
 
   Expression *bool_expr( Expression *exp1, 
 			 const std::string &op, 

@@ -374,10 +374,12 @@ code_statement:
 ;
 result_reference:
     TAFD_IDENTIFIER		{ res_ref_property(info,$1); }
-  | TAFD_child '.' TAFD_IDENTIFIER '.' TAFD_IDENTIFIER '(' TAFD_IDENTIFIER ')'
-				{ res_ref_child(info,$3,$5,$7); }
-  | TAFD_this '.' opt_res_ref_provider TAFD_IDENTIFIER '(' TAFD_IDENTIFIER ')'
-				{ res_ref_this(info,$3,$4,$6); }
+  | TAFD_child '.' TAFD_IDENTIFIER '.' TAFD_IDENTIFIER '('
+    TAFD_IDENTIFIER TAFD_IDENTIFIER ')'
+				{ res_ref_child(info,$3,$5,$7,$8); }
+  | TAFD_this '.' opt_res_ref_provider TAFD_IDENTIFIER '(' 
+    TAFD_IDENTIFIER TAFD_IDENTIFIER ')'
+				{ res_ref_this(info,$3,$4,$6,$7); }
 ;
 opt_res_ref_provider: /*optional*/ { $$ = ""; }
   | TAFD_IDENTIFIER '.'		{ $$ = $1; }

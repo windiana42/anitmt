@@ -40,19 +40,30 @@ namespace funcgen
   class Expression;
   class Tree_Node_Type;
   class AFD_Root;
+}
 
+#include "gen_code.hpp"
+
+namespace funcgen
+{
   class Base_Type
   {
     bool structure;
     std::string type_name;
-    std::map<std::string,std::string> element_types; // name->type
+    typedef std::map<std::string,std::string> element_types_type; 
+    element_types_type element_types; // map name->type
   public:
     //! add element type to structure
     void add_element( std::string type, std::string name ); 
 
+    bool is_structure() const;
     //! returns the type name
-    std::string get_type();	
-
+    std::string get_type() const;	
+    //! returns element begin-iterator
+    element_types_type::const_iterator element_begin() const;
+    //! returns element end-iterator
+    element_types_type::const_iterator element_end() const;
+    
     //! new type is structure
     Base_Type();		
     //! new type is same as old type
@@ -75,7 +86,8 @@ namespace funcgen
   class Provider_Type
   {
   public:
-    std::set<Result_Type> result_types;
+    typedef std::set<Result_Type> result_types_type;
+    result_types_type result_types;
     bool serial;
 
     // special functions for identification
@@ -298,14 +310,24 @@ namespace funcgen
   class AFD_Root
   {
   public:
+    Code_Translator *translator; // translates code peaces 
+
     std::map<std::string, Base_Type> base_types;
     Base_Type      *current_base_type;
-    std::map<std::string, Provider_Type> types;
+    typedef 
+    std::list< std::pair<std::string, Base_Type*> > base_types_list_type; 
+    base_types_list_type base_types_list;
+				// list in original sequence
+
+    typedef std::map<std::string, Provider_Type> provider_types_type;
+    provider_types_type provider_types;
     Provider_Type  *current_type;
-    std::map<std::string, Tree_Node_Type> nodes;
+
+    typedef std::map<std::string, Tree_Node_Type> nodes_type;
+    nodes_type nodes;
     Tree_Node_Type *current_node;
 
-    //AFD_Root(){}
+    AFD_Root( Code_Translator *translator );
     void print() const;		// print, just for debug purposes
   };
 
