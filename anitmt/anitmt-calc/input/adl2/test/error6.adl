@@ -1,0 +1,9 @@
+scene{
+  filename 5; //error1
+  scene_type "raw"+"hi" - "i" / "j"; //error2
+  scalr s{
+    linear{
+      starttime 0; 
+    }
+  }
+}

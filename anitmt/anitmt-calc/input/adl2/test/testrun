@@ -1,0 +1,3 @@
+../testadlparser $1 
+cp test_filled_adl.out $1.out0
+cp final_test_filled_adl.out $1.out1

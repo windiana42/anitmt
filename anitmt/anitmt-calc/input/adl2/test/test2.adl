@@ -1,0 +1,10 @@
+scene{
+  filename "test.pov";
+  scene_type "raw";
+  scalar s{
+    linear{
+      endtime   starttime + 5;
+      starttime -1.345;
+    }
+  }
+}

@@ -1,0 +1,9 @@
+scene{
+  filename "test.pov";
+  scenetype "raw"; //error
+  scalar s{
+    linear{
+      starttime 0; 
+    }
+  }
+}
