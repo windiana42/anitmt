@@ -6,132 +6,40 @@
 #endif
 
 
-#include "strlist.hpp"
+#include <strlist.hpp>
+#include <params.hpp>
+
+#include <stdarg.h>
+
 
 namespace anitmt
 {
 
-bool stringlist::next()
+void stringlist::_addlist(const stringlist &sl)
 {
-	if(!curr)
-		return(false);
-	curr=curr->next;
-	return(curr ? true : false);
+	for(const_iterator i=sl.begin(); i!=sl.end(); i++)
+	{  add(*i);  }
 }
 
 
-std::string &stringlist::current()
+stringlist::stringlist(const char *str0,...)  // NULL-terminated!!!
 {
-	if(curr)
-		return(curr->str);
-	return(empty);  // Be sure not to modify the empty string. 
-}
-
-
-void stringlist::_delete(stringlist::Node *n)
-{
-	if(!n)  return;
-	if(n==curr)  curr=NULL;
-	if(n==first && n==last)
+	add(str0);
+	va_list ap;
+	va_start(ap,str0);
+	for(;;)
 	{
-		first=NULL;
-		last=NULL;
+		const char *str=va_arg(ap,const char*);
+		if(!str)  break;
+		add(str);
 	}
-	else if(n==first)
-	{
-		first=first->next;
-		if(first)  first->prev=NULL;
-	}
-	else if(n==last)
-	{
-		last=last->prev;
-		if(last)  last->next=NULL;
-	}
-	else
-	{
-		if(n->prev)  n->prev->next=n->next;
-		if(n->next)  n->next->prev=n->prev;
-	}
-	delete n;
-}
-
-
-void stringlist::clear()
-{
-	//cerr << "CLEEEEEEAAAAAAAAARRRRRR!!!!\n";
-	// ...you see, I had problems with this one...
-	while(first)
-		stringlist::_delete(first);
-}
-
-
-void stringlist::add(std::string &str)
-{
-	Node *n=new Node(str);
-	if(!first)
-	{  first=n;  }
-	else
-	{  last->next=n;  n->prev=last;  }
-	last=n;
-}
-
-void stringlist::add(const char *str)
-{
-	std::string tmp(str);
-	add(tmp);
-}
-
-
-void stringlist::_copy(const stringlist &sl)
-{
-	for(Node *i=sl.first; i; i=i->next)
-	{
-		add(i->str);
-		if(sl.curr==i)
-			curr=last;
-	}
-}
-
-
-stringlist &stringlist::operator=(const stringlist &sl)
-{
-	clear();
-	_copy(sl);
-	return(*this);
-}
-
-stringlist &stringlist::operator+=(const stringlist &sl)
-{
-	for(Node *i=sl.first; i; i=i->next)
-	{  add(i->str);  }
-	return(*this);
-}
-
-
-stringlist::stringlist(const stringlist &sl) : empty()
-{
-	first=NULL;
-	last=NULL;
-	curr=NULL;
-	_copy(sl);
-}
-
-
-stringlist::stringlist()
-{
-	first=NULL;
-	last=NULL;
-	curr=NULL;
-}
-
-stringlist::~stringlist()
-{
-	clear();
+	va_end(ap);
 }
 
 
 ostream& operator<<(ostream& os,const stringlist &sl)
 {
+	#if 0
 	for(stringlist::Node *i=sl.first; i; i=i->next)
 	{
 		os << i->str;
@@ -139,6 +47,9 @@ ostream& operator<<(ostream& os,const stringlist &sl)
 			os << " ";
 	}
 	return(os);
+	#else
+	return(String_Value_Converter::Print_Value(os,sl));
+	#endif
 }
 
 }  /* end of namespace anitmt */

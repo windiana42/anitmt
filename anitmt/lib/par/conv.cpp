@@ -418,7 +418,7 @@ ostream &String_Value_Converter::Print_Value(ostream &os,double &val)
 	return(os);
 }
 
-ostream &String_Value_Converter::Print_Value(ostream &os,std::string &val)
+ostream &String_Value_Converter::Print_Value(ostream &os,const std::string &val)
 {
 	os << "\"";
 	int end=val.length();
@@ -432,17 +432,17 @@ ostream &String_Value_Converter::Print_Value(ostream &os,std::string &val)
 	return(os);
 }
 
-ostream &String_Value_Converter::Print_Value(ostream &os,stringlist &val)
+ostream &String_Value_Converter::Print_Value(ostream &os,const stringlist &val)
 {
-	if(val.rewind())
+	if(!val.empty())
 	{
-		// There is a first element. 
-		Print_Value(os,val.current());
-		for(;;)
+		stringlist::const_iterator i=val.begin();
+		assert(i!=val.end());
+		Print_Value(os,*i);
+		for(++i; i!=val.end(); i++)
 		{
-			if(!val.next())  break;
 			os << " ";  // strings separated by space
-			Print_Value(os,val.current());
+			Print_Value(os,*i);
 		}
 	}
 	return(os);

@@ -61,11 +61,10 @@ int main(int argc,char **argv,char **envp)
     typedef std::list<Input_Interface*> input_type;
     input_type input;
 
-    adlfiles.rewind();
-    do
-    { 
-      input.push_back( new ADL_Input( adlfiles.current(), &ani ) );
-    } while( adlfiles.next() );
+    for(stringlist::iterator i=adlfiles.begin(); i!=adlfiles.end(); i++)
+	{
+		input.push_back( new ADL_Input( *i, &ani ) );
+	}
 
     // for all input interfaces
     for( input_type::iterator i = input.begin(); i != input.end(); i++ )

@@ -214,8 +214,8 @@ class String_Value_Converter
 		static ostream &Print_Value(ostream &os,bool &val);
 		static ostream &Print_Value(ostream &os,int &val);
 		static ostream &Print_Value(ostream &os,double &val);
-		static ostream &Print_Value(ostream &os,std::string &val);
-		static ostream &Print_Value(ostream &os,stringlist &val);
+		static ostream &Print_Value(ostream &os,const std::string &val);
+		static ostream &Print_Value(ostream &os,const stringlist &val);
 };
 
 

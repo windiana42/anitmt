@@ -1,60 +1,35 @@
 #ifndef __stringlist_hpp__
 #define __stringlist_hpp__
 
+#include <string>
+#include <list>
+
 namespace anitmt
 {
 
-class stringlist
+class stringlist : public std::list<std::string>
 {
 	private:
-		struct Node
-		{
-			Node *next,*prev;
-			std::string str;
-			Node(const std::string &_str) : next(NULL),prev(NULL)
-				{  str.assign(_str);  }
-			~Node() { }
-			private:
-			Node(const Node &) { }
-		} *first,*last,*curr;
-		std::string empty;
-		
-		void _delete(Node *n);
-		void _copy(const stringlist &);
+		void _addlist(const stringlist &sl);
 	public:
-		stringlist();
-		stringlist(const stringlist &);
-		~stringlist();
+		stringlist() { }
+		stringlist(const stringlist &sl)  {  _addlist(sl);  }
+		stringlist(const char *str0,...);  // NULL-terminated!!!
+		~stringlist()  {  clear();  }
 		
-		stringlist &operator=(const stringlist &);
-		stringlist &operator+=(const stringlist &);
+		stringlist &operator=(const stringlist &sl)
+			{  clear();  _addlist(sl);  }
+		stringlist &operator+=(const stringlist &sl)
+			{  _addlist(sl);  }
 		
-		bool is_empty()  {  return(first ? false : true);  }
-		
-		/*** Dealing with current pointer: ***/
-		// rewind() sets the current pointer to the first string. 
-		//   return value: false: no first element; else: true 
-		// next() sets the current pointer to the next string in the list. 
-		//   return value: false: no next string; else: true 
-		// current() returns the current string
-		//   The return value may be modified affecting the list. 
-		// delete_current() removes the current entry from the list. 
-		bool         rewind()   {  curr=first;  return(curr ? true : false);  }
-		bool         next();
-		std::string &current();
-		void         delete_current();
-		
-		/*** Dealing with string entries: ***/
+		bool is_empty()
+			{  return((begin()==end()) ? true : false);  }
 		
 		// Add an entry at the end of the list: 
-		void add(std::string &str);
-		void add(const char *str);
+		void add(const std::string &str)  {  push_back(str);  }
+		void add(const char *str)  {  add(std::string(str));  }
 		
-		// Clear the list deleting all entries. 
-		void clear();
-		
-		// To write the string list to a stream (strings separated 
-		// by a space). 
+		// To write the string list to a stream: 
 		friend ostream& operator<<(ostream& os,const stringlist &sl);
 };
 
