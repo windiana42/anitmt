@@ -9,6 +9,7 @@ bash# make
 On i386 I also recommend compiling with special optimizations; 
 for this do 
 bash# make opt
+(Works only in the hlib build root dir, not in subdirs.)
 
 On other platforms using gcc, I recommend adding 
 -Os -fno-exceptions -fno-rtti
