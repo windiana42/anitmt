@@ -11,13 +11,16 @@ files and config.h.in. For that you need GNU autoconf and GNU automake.
 bash# aclocal && autoconf && autoheader && automake
 
 If that fails, make sure you are using recent versions of automake and 
-autoconf. (I'm using autoconf-2.53, automake-1.6)
+autoconf. (I'm using autoconf-2.53, automake-1.6.3)
 
 Now, go on as if you got hlib as source tarball (B): 
 
 
 B) If you got hlib as source tarball:
    ---------------------------------
+
+Unpack the archive. If you don't know how to do that better go doing 
+something else (hint: "tar xvfz ..." or "gzip -dc ... | tar xvf -"). 
 
 First, I recommend creating a separate build directory. Yes, you can also 
 build hlib in the source dir but I strongly recommend against that. 
@@ -28,6 +31,22 @@ bash# ../<sourcedir>/configure
 You may want to pass some of the standard options to configure; 
 try configure --help. 
 
+There are two ways to build hlib: 
+Using "make opt" and using "make all" (or simple "make"). 
+In the latter case, CFLAGS and CXXFLAGS are passed to the compiler. 
+In the first case, OPTCFLAGS and OPTCXXFLAGS take their place. 
+I recommend using some nice optimization, especially to switch off 
+RTTI (gcc: -fno-rtti) and exceptions (gcc: -fno-exceptions). 
+(Do not switch off virtual functions if you compiler allows that). 
+If you do not pass OPTCFLAGS and OPTCXXFLAGS, then configure will choose 
+nice ones for some special architectures only. Configure dumps the used 
+flags quite early and you should stop and re-run configure with more 
+suitable compiler flags if you are not satisfied, especially if you are 
+not using the GNU C/C++ compiler. (Try your favourite ones.)
+
+Note that if you are using gcc-3.0 or above, you may export COLUMNS so 
+that -fmessage-length=$COLUMNS is passed to the compiler. 
+
 See what configure writes on the terminal. If everything works fine, 
 you can actually build hlib. Please use GNU make. All that automake-generated 
 stuff works best with GNU make. If you are not using GNU make, you may need 
@@ -37,32 +56,20 @@ First, try using
 
 bash# make opt
 
-If that fails immediately, try 
-
-bash# make opt-generic
-
-If that also fails, you are probably in trouble. Make sure you are using 
-the GNU C/C++ compiler (gcc). I am using gcc-3.0, but hlib should also build 
-with gcc-2.95.x. In case gcc is unavailable, you may fall back to 
+If that fails, you may consider changing your OPTCFLAGS / OPTCXXFLAGS in 
+case the error is related to them. 
+Otherwise you are probably in trouble. Make sure you are using the 
+GNU C/C++ compiler (gcc). I am using gcc-3.2, but hlib should also build 
+with any version since gcc-2.95. 
+In case gcc is unavailable you are already using gcc, you may fall back to 
 
 bash# make 
 
-or check what CFLAGS/CXXFLAGS are set by make opt-generic and pass all those 
-which do not make problems. (Note: exceptions and runtime type identification 
-are not used by hlib; but virtual functions are)
-
 Note that you may use ADDFLAGS to pass additional flags to both the C and C++ 
-compiler. If you are using gcc version 3 or above you may find it convenient 
-to use 
-
-make ADDFLAGS="-fmessage-length=$COLUMNS"
+compiler during "make opt". 
 
 Okay, if you have successfully build hlib, run the check programs: 
-If you compiled with any of the make opt-xxx, then call 
-
-bash# make check-xxx
-
-Important: If you compiled with "make opt", then run 
+If you compiled with any of the make opt, then call 
 
 bash# make check-opt
 
@@ -128,13 +135,15 @@ If hlib compiles & runs without problems, please send me an e-mail so that
 the arch can be added here. 
 If you do have problems: I wish you happy porting... (And keep one thing in 
 mind: the more POSIX-conform the better your chances.) 
+If you were successful, please e-mail me and send me fixes to the configure 
+script and/or source code if available. 
 
 If compilation failed: If you did not use gcc, please consider using gcc. 
 If gcc failed (versions since 2.95): 
 Is the issue some damn undefined symbol at linking: 
 - The function may be inlined and the compiler did get that wrong somehow. 
   gcc-3.0 does not have that problem but gcc-2.95 has if you compile without 
-  "make opt-generic" or "make opt". 
+  "make opt". 
 - Are all libraries present or does some compatibility lib need to be added?
 If the issue is a real compiler error: Please track it down, fix it and send 
 me the fix. 

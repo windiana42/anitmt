@@ -34,57 +34,62 @@ static void _SetSize(char *str,char id,int val)
 
 const char *HLIB_GetConfigString()
 {
-	static char str[]=
+	static char str[]=  /* NON-const! */
 		"hlib version " VERSION " (c) 1999--2002 by Wolfgang Wieser\n"
-		"arch: " HLIB_BUILD_SYSTEM "\n"
-		"built: " HLIB_BUILD_DATE "\n"
+		"date: " HLIB_BUILD_DATE "\n"
+		"build:  " HLIB_BUILD_SYSTEM "\n"
+		"host:   " HLIB_HOST_SYSTEM "\n"
+		"target: " HLIB_TARGET_SYSTEM "\n"
+		"arch: " HLIB_BUILD_UNAME "\n"
 		"size: size_t: AAA  ssize_t: BBB  void *: CCC  | float: GGG\n"
 		"size: short: DDD   int: EEE      long: FFF    | double: HHH\n"
 
 /*----------------------------------------------------------------------------*/
 #if defined(__GNUC__)
-		"GNU C/C++: yes\n"
+		"GNU C/C++: yes"
 #else
-		"GNU C/C++: no\n"
+		"GNU C/C++: no "
 #endif
+		"     [config: " HLIB_CXXCOMPILER_VERSION "]\n"
 
 #if HLIB_SIZE_OPT
-		"SIZE_OPT: yes\t\t"
+		"SIZE_OPT: yes      "
 #else
-		"SIZE_OPT: no\t\t"
+		"SIZE_OPT: no       "
 #endif
 
 #if !defined(TESTING)
-		"TESTING: undefined\n"
+		"TESTING: undefined       "
 #elif !TESTING
-		"TESTING: no\n"
+		"TESTING: no              "
 #else
-		"TESTING: yes\n"
+		"TESTING: yes             "
+#endif
+
+#if defined(_GNU_SOURCE)
+		"_GNU_SOURCE: yes\n"
+#else
+		"_GNU_SOURCE: no\n"
 #endif
 
 #if HAVE_POLL
-		"poll: system\n"
+		"poll: system       "
 #else
-		"poll: emulation using select(2)\n"
+		"poll: emulation    "  /* using select(2) */
 #endif
 
 #ifdef HLIB_CRIPPLED_SIGINFO_T
-		"siginfo_t: crippled replacement\n"
+		"siginfo_t: replacement   "
 #else
-		"siginfo_t: system\n"
+		"siginfo_t: system        "
 #endif
 
 #ifdef HLIB_PROCMAN_USE_LESS_SIGINFO_T
 		"procman: wait-only\n"
 #else
-		"procman: combined (wait & siginfo)\n"
+		"procman: combined\n"
 #endif
 
-#ifdef HLIB_DONT_USE_MALLOC_USABLE_SIZE
-		"malloc_usable_size: no\n"
-#else
-		"malloc_usable_size: yes\n"
-#endif
 		"functions:"
 #if HAVE_GETLOADAVG
 		" getloadavg"
@@ -94,6 +99,10 @@ const char *HLIB_GetConfigString()
 #endif
 #if HAVE_WORKING_FORK
 		" fork"
+#endif
+#ifdef HLIB_DONT_USE_MALLOC_USABLE_SIZE
+#else
+		" malloc_usable_size"
 #endif
 
 		"\n"   /* end of functions */

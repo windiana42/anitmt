@@ -16,6 +16,6 @@
 
 const char *HLIB_GetVersionString()
 {
-	return("hlib version " VERSION );
+	return("hlib version " VERSION " (" HLIB_TARGET_SYSTEM ")");
 }
 

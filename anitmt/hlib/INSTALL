@@ -1,0 +1,15 @@
+Please install HLIB by hand. 
+
+Put all the required header files (see $builddir/include/hlib) 
+into a subdirectory (e.g. /usr/include/hlib) and copy the library 
+to some convenient place (/usr/lib if you like). 
+
+Of course, the easiest way is to symlink 
+/usr/include/hlib -> $builddir/include/hlib
+(and the same for the library). 
+
+I recommend using 
+  #include <hlib/xyz.h>
+in your code in order to prevent name collision with some other xyz.h. 
+(This is the reason why you should put all the headers into a 
+directory named "hlib"). 
