@@ -1,18 +1,7 @@
-pwd
-echo $srcdir
-
-if test "x$srcdir" != "x"; then
-  cd $srcdir;
-fi
-
-pwd
-top_builddir=".."
-
-
 cd test/
 ../$top_builddir/anitmt-calc/anitmt-calc test.ini
 cd test_ani/
-../../$top_builddir/utils/render -w 200 -h 150
+../../$top_builddir/utils/render -w 192 -h 144
 ../../$top_builddir/utils/tga2avi/tga2avi -f 5 -e 150
 ../../$top_builddir/utils/mkavi/mkavi -f 5 -e 150 -o film-cram.avi
 cd ../../

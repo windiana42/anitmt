@@ -23,6 +23,8 @@ echo $top_builddir
 DIR=test
 ANI_DIR=test_ani
 INI=autocheck_test.ini
+RENDER_ARG="-w 192 -h 144"
+GENFILM_ARG="-f 5 -e 150"
 
 echo "ani_dir=$builddir/$DIR/$ANI_DIR/" > $builddir/$DIR/__TMP_ANI_DIR__
 cat $srcdir/$DIR/$INI $builddir/$DIR/__TMP_ANI_DIR__ > $builddir/$DIR/__TMP_INI__.ini
@@ -32,15 +34,17 @@ cd $origdir # just in case of srcdir/builddir being relative pathes
 rm $builddir/$DIR/__TMP_ANI_DIR__ $builddir/$DIR/__TMP_INI__.ini
 
 cd $builddir/$DIR/$ANI_DIR/ || exit 1
-$srcdir/../utils/render -w 192 -h 144 || exit -1
-$builddir/../utils/tga2avi/tga2avi -f 5 -e 150 -o film-raw.avi || exit -2
-$builddir/../utils/mkavi/mkavi -f 5 -e 150 -o film-cram.avi || exit -3
-cd $origdir # just in case of srcdir/builddir being relative pathes
+$srcdir/../utils/render $RENDER_ARG || exit -1
+$builddir/../utils/tga2avi/tga2avi $GENFILM_ARG -o film-raw.avi || exit -2
+$builddir/../utils/mkavi/mkavi $GENFILM_ARG -o film-cram.avi || exit -3
+cd $origdir 
 
 # ================ Example: myrobot ====================================
 DIR=myrobot
 ANI_DIR=ani
 INI=autocheck_myrobot.ini
+RENDER_ARG="-w 400 -h 300"
+GENFILM_ARG="-f 1 -e 14"
 
 echo "ani_dir=$builddir/$DIR/$ANI_DIR/" > $builddir/$DIR/__TMP_ANI_DIR__
 cat $srcdir/$DIR/$INI $builddir/$DIR/__TMP_ANI_DIR__ > $builddir/$DIR/__TMP_INI__.ini
@@ -50,15 +54,17 @@ cd $origdir # just in case of srcdir/builddir being relative pathes
 rm $builddir/$DIR/__TMP_ANI_DIR__ $builddir/$DIR/__TMP_INI__.ini
 
 cd $builddir/$DIR/$ANI_DIR/ || exit 1
-$srcdir/../utils/render -w 400 -h 300 || exit -4
-$builddir/../utils/tga2avi/tga2avi -f 1 -e 14 -o film-raw.avi || exit -5
-$builddir/../utils/mkavi/mkavi -f 1 -e 14 -o film-cram.avi || exit -6
-cd $origdir # just in case of srcdir/builddir being relative pathes
+$srcdir/../utils/render $RENDER_ARG || exit -1
+$builddir/../utils/tga2avi/tga2avi $GENFILM_ARG -o film-raw.avi || exit -2
+$builddir/../utils/mkavi/mkavi $GENFILM_ARG -o film-cram.avi || exit -3
+cd $origdir 
 
 # ================ Example: circles ====================================
 DIR=circles
 ANI_DIR=ani
 INI=autocheck_circles.ini
+RENDER_ARG="-w 96 -h 72"
+GENFILM_ARG="-f 1 -e 14"
 
 echo "ani_dir=$builddir/$DIR/$ANI_DIR/" > $builddir/$DIR/__TMP_ANI_DIR__
 cat $srcdir/$DIR/$INI $builddir/$DIR/__TMP_ANI_DIR__ > $builddir/$DIR/__TMP_INI__.ini
@@ -68,13 +74,13 @@ cd $origdir # just in case of srcdir/builddir being relative pathes
 rm $builddir/$DIR/__TMP_ANI_DIR__ $builddir/$DIR/__TMP_INI__.ini
 
 cd $builddir/$DIR/$ANI_DIR/ || exit 1
-$srcdir/../utils/render -w 96 -h 72 || exit -7
-$builddir/../utils/tga2avi/tga2avi -f 1 -e 14 -o film-raw.avi || exit -8
-$builddir/../utils/mkavi/mkavi -f 1 -e 14 -o film-cram.avi || exit -9
-cd $origdir # just in case of srcdir/builddir being relative pathes
+$srcdir/../utils/render $RENDER_ARG || exit -1
+$builddir/../utils/tga2avi/tga2avi $GENFILM_ARG -o film-raw.avi || exit -2
+$builddir/../utils/mkavi/mkavi $GENFILM_ARG -o film-cram.avi || exit -3
+cd $origdir 
 
 cd $builddir
-#$srcdir/clean_examples || exit 1
+$srcdir/clean_examples || exit 1
 cd $origdir
 
 exit 0
