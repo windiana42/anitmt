@@ -13,6 +13,18 @@
 namespace functionality
 {
   // ****************************
+  // help functions
+  // ****************************
+
+  template<class T>
+  inline T extract_status( std::pair<bool,T> value, bool &status, 
+			   bool &any_false )
+  {
+    status = value.first;
+    any_false |= !value.first;
+    return value.second;
+  }
+  // ****************************
   // provider type implementation
   // ****************************
 
@@ -362,8 +374,8 @@ namespace functionality
 
   void node_scalar::_rf_scalar_vsa_first_init()
   {
-    solve::establish_Default_Value( info->priority_system,100, _op_start_time, 0);
-    solve::establish_Default_Value( info->priority_system,1000, _op_start_value, 0);
+    solve::establish_Default_Value( info->priority_system,_pl_default_first_time, _op_start_time, 0);
+    solve::establish_Default_Value( info->priority_system,_pl_default_first_state, _op_start_value, 0);
   }
 
   // ** result functions **
@@ -371,6 +383,10 @@ namespace functionality
   {
     std::pair<bool,value> no_res;
     no_res.first = false;
+    bool did_any_result_fail;
+    bool did_result_fail;
+    did_any_result_fail = false;
+    did_result_fail = false;
     // ** check for required children
     if( !_cn_scalar_vsa._av_scalar_vsa_value_time_is_avail.is_solved() )
     {
@@ -387,6 +403,10 @@ namespace functionality
   {
     std::pair<bool,acceleration> no_res;
     no_res.first = false;
+    bool did_any_result_fail;
+    bool did_result_fail;
+    did_any_result_fail = false;
+    did_result_fail = false;
     // ** check for required children
     if( !_cn_scalar_vsa._av_scalar_vsa_acceleration_time_is_avail.is_solved() )
     {
@@ -403,6 +423,10 @@ namespace functionality
   {
     std::pair<bool,slope> no_res;
     no_res.first = false;
+    bool did_any_result_fail;
+    bool did_result_fail;
+    did_any_result_fail = false;
+    did_result_fail = false;
     // ** check for required children
     if( !_cn_scalar_vsa._av_scalar_vsa_slope_time_is_avail.is_solved() )
     {
@@ -419,6 +443,10 @@ namespace functionality
   {
     std::pair<bool,value> no_res;
     no_res.first = false;
+    bool did_any_result_fail;
+    bool did_result_fail;
+    did_any_result_fail = false;
+    did_result_fail = false;
     // ** check for required children
     if( !_cn_scalar_vsa._av_scalar_vsa_value_time_is_avail.is_solved() )
     {
@@ -465,6 +493,11 @@ namespace functionality
     add_property( "start_slope", &_op_start_slope );
     add_property( "start_time", &_op_start_time );
     add_property( "start_value", &_op_start_value );
+
+    // *****************
+    // Register Aliases 
+    add_property( "diff_slope", &_op_slope_difference );
+    add_property( "diff_value", &_op_difference );
   }
 
   // *****************************

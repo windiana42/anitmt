@@ -72,6 +72,10 @@ qstring_err 	(\"([^\"\n]|\\\")*)
 <ML_COMMENT>[^\n\*]* 	{ inc_col(); /* ingore multiline comment */ }
 <ML_COMMENT>[^\n\*]*\n 	{ info->file_pos.inc_line(); /*optimized*/ }
 <ML_COMMENT>.	 	{ inc_col(); /* singel '*' would fail otherwise */ }
+<ML_COMMENT><<EOF>>	{ llerr(info) << "unexpected end of file within "
+			    << "comment"; 
+			  finished_file(info); 
+			  if( info->close_file() ) return 0; }
 
 " "+	  { inc_col(); }    
 "\t"	  { info->file_pos.tab_inc_column(); } 
@@ -94,6 +98,7 @@ qstring_err 	(\"([^\"\n]|\\\")*)
 include		{ tok_pos(); return TAFD_include; }
 declaration	{ tok_pos(); return TAFD_declaration; }
 header		{ tok_pos(); return TAFD_header; }
+priority_list	{ tok_pos(); return TAFD_priority_list; }
 base_types	{ tok_pos(); return TAFD_base_types; }
 serial		{ tok_pos(); return TAFD_serial; }
 type		{ tok_pos(); return TAFD_type; }
@@ -129,11 +134,13 @@ start_param	{ tok_pos(); return TAFD_start_param; }
 end_param	{ tok_pos(); return TAFD_end_param; }
 true		{ tok_pos(); return TAFD_true; }
 false		{ tok_pos(); return TAFD_false; }
-return_res	{ tok_pos(); return TAFD_return_res; }
-return_prop	{ tok_pos(); return TAFD_return_prop; }
 return		{ tok_pos(); return TAFD_return; }
+return_prop	{ tok_pos(); return TAFD_return_prop; }
+return_fail	{ tok_pos(); return TAFD_return_fail; }
+return_if_fail	{ tok_pos(); return TAFD_return_if_fail; }
 operators	{ tok_pos(); return TAFD_operators; }
 versions	{ tok_pos(); return TAFD_versions; }
+"->"    	{ tok_pos(); return TAFD_PT_CONCAT; }
 
 {id}	  { tok_pos(); yylval->string = yytext; return TAFD_IDENTIFIER; }
 
@@ -144,8 +151,6 @@ versions	{ tok_pos(); return TAFD_versions; }
 <COPY_CODE>"\n"	{ info->file_pos.inc_line(); 
 		  copy_code_line( info, yytext,yyleng ); }
 <COPY_CODE>"\r"	{ ; /*ignore DOS specific line end*/ }
-<COPY_CODE>"["	{ tok_pos(); code_block_escape(info); yy_pop_state(); 
-		  return yytext[0]; }
 <COPY_CODE>"{"	{ inc_col(); ++info->depth_counter; 
 		  copy_code_line( info, yytext, yyleng ); }
 <COPY_CODE>"}"	{ if( --info->depth_counter < 0 ) 
@@ -153,6 +158,9 @@ versions	{ tok_pos(); return TAFD_versions; }
 		  else
 		  { inc_col(); copy_code_line( info, yytext, yyleng ); }
                 }
+<COPY_CODE>"[["	{ tok_pos(); code_block_escape(info); yy_pop_state(); 
+		  return TAFD_BB_left; }
+<COPY_CODE>\[   { inc_col(); copy_code_line( info, yytext, yyleng ); }
 <COPY_CODE>[^\n\t\[{}]+   {inc_col(); copy_code_line( info, yytext, yyleng ); }
 <COPY_CODE>[^\n\[{}]+"\n" {info->file_pos.inc_line(); 
 			   copy_code_line( info, yytext,yyleng ); }

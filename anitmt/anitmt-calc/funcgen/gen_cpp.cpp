@@ -30,6 +30,10 @@ namespace funcgen
   {
     return "}\n";
   }
+  std::string Cpp_Code_Translator::priority_label( std::string name )
+  {
+    return prefix_priority_label + name;
+  }
   std::string Cpp_Code_Translator::base_type( std::string name )
   {
     return prefix_base_type + name;
@@ -47,20 +51,23 @@ namespace funcgen
     return "proptree::Prop_Tree_Node";
   }
   std::string Cpp_Code_Translator::open_action( std::string action, 
-						double level )
+						std::string priority )
   {
     if( action == "push" )
     {
       return std::string("solve::establish_Push_Connection( "
-			 "info->priority_system,") + level;
+			 "info->priority_system,")
+	+ priority_label( priority );
     }
     if( action == "default" )
     {
       return std::string("solve::establish_Default_Value( "
-			 "info->priority_system,") + level;
+			 "info->priority_system,") 
+	+ priority_label( priority );
     }
     // if any other action ??? could also output error ???
-    return "solve::" + action + "( info->priority_system, " + level;
+    return "solve::" + action + "( info->priority_system, " 
+      + priority_label( priority );
   }
   std::string Cpp_Code_Translator::parameter_add( std::string param )
   {
@@ -113,6 +120,14 @@ namespace funcgen
   std::string Cpp_Code_Translator::finish_return( std::string )
   {
     return ")";
+  }
+  std::string Cpp_Code_Translator::return_fail()
+  {
+    return "return no_res";
+  }
+  std::string Cpp_Code_Translator::return_if_fail()
+  {
+    return "if( did_any_result_fail ) return no_res";
   }
 
   std::string Cpp_Code_Translator::start_param
@@ -184,6 +199,23 @@ namespace funcgen
   {
     return result_function_call( prov_type, ret_type, par_type, par );
   }
+  std::string Cpp_Code_Translator::child_result_with_status
+    ( std::string provider_type, std::string ret, std::string par_type,
+      std::string par, std::string fail_bool_var  )
+  {
+    if( fail_bool_var == "" ) fail_bool_var = "did_result_fail";
+    return "extract_status( " + child_result(provider_type,ret,par_type,par)
+      + ", " + fail_bool_var + ", did_any_result_fail )";
+  }
+  std::string Cpp_Code_Translator::provided_result_with_status
+    ( std::string provider_type, std::string ret, std::string par_type,
+      std::string par, std::string fail_bool_var )
+  {
+    if( fail_bool_var == "" ) fail_bool_var = "did_result_fail";
+    return "extract_status( " + provided_result(provider_type,ret,par_type,par)
+      + ", " + fail_bool_var + ", did_any_result_fail )";
+  }
+
   std::string Cpp_Code_Translator::first_init( std::string provider_type )
   {
     return prefix_res_fun + provider_type + "_first_init()";
@@ -230,9 +262,13 @@ namespace funcgen
   {
     return std::string("/*!!!insert child ")/* + n*/ + "!!!*/" ;
   }
+  std::string Cpp_Code_Translator::reference_concat_string()
+  {
+    return "->";
+  }
 
   Cpp_Code_Translator::Cpp_Code_Translator( code_gen_info *info )
-    : Code_Translator(info),
+    : Code_Translator(info), prefix_priority_label("_pl_"),
       prefix_base_type(""), prefix_provider_type("_pt_"), 
       prefix_node_type("node_"), prefix_prop_op("_op_"),prefix_res_fun("_rf_"),
 
@@ -271,11 +307,16 @@ namespace funcgen
     *decl << "#include <proptree/property.hpp>" << std::endl;
     *decl << "#include <proptree/proptree.hpp>" << std::endl;
     *decl << std::endl;
-    std::list<std::string>::iterator i;
+    std::list<std::string>::const_iterator i;
     for( i  = afd->included_basenames.begin();
 	 i != afd->included_basenames.end(); ++i )
     {
       *decl << "#include \"" << *i << ".hpp\"" << std::endl;
+    }
+    for( i  = afd->header_files.begin();
+	 i != afd->header_files.end(); ++i )
+    {
+      *decl << "#include \"" << *i << "\""<< std::endl;
     }
     *decl << "namespace functionality" << std::endl;
     *decl << "{" << std::endl;
@@ -294,12 +335,43 @@ namespace funcgen
     *impl << std::endl;
     *impl << "namespace functionality" << std::endl;
     *impl << "{" << std::endl;
+    *impl << "  // ****************************" << std::endl;
+    *impl << "  // help functions" << std::endl;
+    *impl << "  // ****************************" << std::endl;
+    *impl << std::endl;
+    *impl << "  template<class T>" << std::endl;
+    *impl << "  inline T extract_status( std::pair<bool,T> value, "
+	  << "bool &status, " << std::endl;
+    *impl << "			   bool &any_false )" << std::endl;
+    *impl << "  {" << std::endl;
+    *impl << "    status = value.first;" << std::endl;
+    *impl << "    any_false |= !value.first;" << std::endl;
+    *impl << "    return value.second;" << std::endl;
+    *impl << "  }" << std::endl;
   }
   void Cpp_Code_Generator::generate_footer()
   {
     *impl << "}" << std::endl;
     *decl << "}" << std::endl;
     *decl << "#endif" << std::endl;
+  }
+
+  void Cpp_Code_Generator::generate_priority_list()
+  {
+    if( afd->write_priority_list )
+    {
+      *decl << "  // **********************" << std::endl;
+      *decl << "  // priority list labels  " << std::endl;
+      *decl << "  // **********************" << std::endl;
+      *decl << std::endl;
+      std::list<std::string>::const_iterator i;
+      int num = 1;
+      for( i = afd->priority_list.begin(); i!=afd->priority_list.end(); ++i )
+      {
+	*decl << "  const double " << translator.priority_label(*i) 
+	      << " = " << num++ << ";" << std::endl;
+      }        
+    }
   }
 
   void Cpp_Code_Generator::generate_base_types()
@@ -1122,6 +1194,7 @@ namespace funcgen
 	      << std::endl
 	      << "    }" << std::endl;
       }
+
       bool first = true;
       std::map<std::string, Provided_Results>::const_iterator n;
       for( n = node.provided_results.begin(); n != node.provided_results.end();
@@ -1301,7 +1374,11 @@ namespace funcgen
 		<< "    std::pair<bool," 
 		<< translator.base_type(res_type.return_type) << "> no_res;"
 		<< std::endl
-		<< "    no_res.first = false;" << std::endl;
+		<< "    no_res.first = false;" << std::endl
+		<< "    bool did_any_result_fail;" << std::endl
+		<< "    bool did_result_fail;" << std::endl
+		<< "    did_any_result_fail = false;" << std::endl
+		<< "    did_result_fail = false;" << std::endl;
 
 	  if( !res_code.required_properties.empty() )
 	  {
@@ -1486,6 +1563,17 @@ namespace funcgen
 	      << translator.prop_op(j->first)
 	      << " );" << std::endl;
       }
+      *impl << std::endl
+	    << "    // *****************" << std::endl
+	    << "    // Register Aliases " << std::endl;
+
+      std::list<Alias>::const_iterator alias;
+      for( alias=node.aliases.begin(); alias!=node.aliases.end(); ++alias )
+      {
+	*impl << "    add_property( \"" << alias->alias << "\", &"
+	      << translator.prop_op(alias->src)
+	      << " );" << std::endl;
+      }
       *impl << "  }" << std::endl
 	    << std::endl;
       
@@ -1529,6 +1617,7 @@ namespace funcgen
     decl = new std::ofstream( (info->base_name+".hpp").c_str() );
     impl = new std::ofstream( (info->base_name+".cpp").c_str() );
     generate_header();
+    generate_priority_list();
     generate_base_types();
     generate_types();
     generate_nodes();

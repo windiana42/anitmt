@@ -13,6 +13,18 @@
 namespace functionality
 {
   // ****************************
+  // help functions
+  // ****************************
+
+  template<class T>
+  inline T extract_status( std::pair<bool,T> value, bool &status, 
+			   bool &any_false )
+  {
+    status = value.first;
+    any_false |= !value.first;
+    return value.second;
+  }
+  // ****************************
   // provider type implementation
   // ****************************
 
@@ -142,6 +154,9 @@ namespace functionality
   {
     // ********************
     // Register Properties 
+
+    // *****************
+    // Register Aliases 
   }
 
   // *****************************
@@ -197,6 +212,9 @@ namespace functionality
     // Register Properties 
     add_property( "filename", &_op_filename );
     add_property( "scene_type", &_op_scene_type );
+
+    // *****************
+    // Register Aliases 
   }
 
   // *****************************

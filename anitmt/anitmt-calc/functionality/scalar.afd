@@ -42,14 +42,14 @@ abstract node scalar_subfunction extends scalar_base provides scalar_vsa {
   common {
     actions {
       // times, forward and backward
-      push( 10, end_time, scalar_vsa.next.start_time );
-      push( 11, start_time, scalar_vsa.prev.end_time );
+      push( push_time_fw, end_time, scalar_vsa.next.start_time );
+      push( push_time_bw, start_time, scalar_vsa.prev.end_time );
       // values, forward and backward
-      push( 20, end_value, scalar_vsa.next.start_value );
-      push( 21, start_value, scalar_vsa.prev.end_value );
+      push( push_state_fw, end_value, scalar_vsa.next.start_value );
+      push( push_state_bw, start_value, scalar_vsa.prev.end_value );
       // slopes, forward and backward
-      push( 30, end_slope, scalar_vsa.next.start_slope );
-      push( 31, start_slope, scalar_vsa.prev.end_slope );
+      push( push_speed_fw, end_slope, scalar_vsa.next.start_slope );
+      push( push_speed_bw, start_slope, scalar_vsa.prev.end_slope );
     }
   }
 
@@ -90,13 +90,13 @@ node change extends scalar_subfunction {
   // result functions using the scalar subfunctions
   provide scalar_vsa {
     resulting value( time t ) requires child.scalar_vsa.value ( time ) { 
-      [return_res child.scalar_vsa.value ( time t )];
+      [[ return child.scalar_vsa.value ( time t ) ]];
     } 
     resulting slope( time t ) requires child.scalar_vsa.slope ( time ) {
-      [return_res child.scalar_vsa.slope ( time t )];
+      [[ return child.scalar_vsa.slope ( time t ) ]];
     }
     resulting acceleration( time t ) requires child.scalar_vsa.acceleration ( time ) {
-      [return_res child.scalar_vsa.acceleration ( time t )];
+      [[ return child.scalar_vsa.acceleration ( time t ) ]];
     }
   }
 }
@@ -138,8 +138,8 @@ node constant extends scalar_subfunction {
     }
     
     actions {
-      default(2100, duration, 0 );
-      default(2200, start_value, 0 );
+      default( default_duration, duration, 0 );
+      default( default_state, start_value, 0 );
     }
   }
 
@@ -147,15 +147,15 @@ node constant extends scalar_subfunction {
   provide scalar_vsa {
     resulting value( time t ) requires value
     {
-      [return_prop value];
+      [[ return_prop value ]];
     }
     resulting slope( time t ) 
     {
-      [return 0];
+      [[ return 0 ]];
     }
     resulting acceleration( time t ) 
     {
-      [return 0];
+      [[ return 0 ]];
     }
   }
 }
@@ -191,9 +191,9 @@ node linear extends scalar_subfunction provides scalar_vsa {
       equal_solver( slope, end_slope   );
     }
     actions {
-      default(2000, slope, 0 );
-      default(2100, duration, 0 );
-      default(2200, start_value, 0 );
+      default( default_speed, slope, 0 );
+      default( default_duration, duration, 0 );
+      default( default_state, start_value, 0 );
     }
   }
 
@@ -201,16 +201,16 @@ node linear extends scalar_subfunction provides scalar_vsa {
   provide scalar_vsa {
     resulting value( time t ) requires start_value, start_time, slope
     {
-      scalar res = [start_value] + (t - [start_time]) * [slope];
-      [return res];
+      scalar res = [[ start_value ]] + (t - [[ start_time ]]) * [[ slope ]];
+      [[ return res ]];
     }
     resulting slope( time t ) requires slope
     {
-      [return_prop slope];
+      [[ return_prop slope ]];
     }
     resulting acceleration( time t ) 
     {
-      [return 0];
+      [[ return 0 ]];
     }
   }
 }
@@ -245,11 +245,12 @@ node accelerated extends scalar_subfunction provides scalar_vsa {
       // accel_solver(difference, duration, acceleration, start_slope, end_slope, slope_difference);
     }
     actions {
-      default(200,  acceleration, 0 ); // <-- still wrong better is:
+      default( default_acceleration,  acceleration, 0 ); 
+      // <-- still wrong better is:
       // default(200,  slope_difference, 0 );
-      default(2000, start_slope, 0 );
-      default(2100, duration, 0 );
-      default(2200, start_value, 0 );
+      default( default_speed, start_slope, 0 );
+      default( default_duration, duration, 0 );
+      default( default_state, start_value, 0 );
     }
   }
 
@@ -258,21 +259,22 @@ node accelerated extends scalar_subfunction provides scalar_vsa {
     resulting value(time abs_t) 
     requires start_value, start_time, start_slope, acceleration
     {
-      scalar t = abs_t - [start_time];
-      scalar res = [start_value] + [start_slope]*t + 0.5*[acceleration]*t*t;
-      [return res];
+      scalar t = abs_t - [[ start_time ]];
+      scalar res = [[ start_value ]] + [[ start_slope ]]*t 
+                   + 0.5*[[ acceleration ]]*t*t;
+      [[ return res ]];
     }
     resulting slope( time abs_t ) 
     requires start_time, start_slope, acceleration
     {
-      scalar t = abs_t - [start_time];
-      scalar res = [start_slope] + [acceleration] * t;
-      [return res];
+      scalar t = abs_t - [[ start_time ]];
+      scalar res = [[ start_slope ]] + [[ acceleration ]] * t;
+      [[ return res ]];
     }
     resulting acceleration( time t ) 
     requires acceleration
     {
-      [return_prop acceleration];
+      [[ return_prop acceleration ]];
     }
   }
 }

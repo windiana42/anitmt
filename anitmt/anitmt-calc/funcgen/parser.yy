@@ -28,6 +28,8 @@
 
 #include "parser_functions.hpp"	// help functions for the parser
 				// including nessessary defines 
+#include "stdextend.hpp"
+
 
 #define MAX_OLD_POSITIONS 	10
 
@@ -48,16 +50,16 @@ namespace funcgen
 //********
 
 // keywords
-%token TAFD_include TAFD_declaration TAFD_header TAFD_base_types TAFD_serial
-%token TAFD_type TAFD_abstract TAFD_node TAFD_provides TAFD_extends 
-%token TAFD_properties TAFD_aliases TAFD_operands TAFD_common TAFD_constraints 
-%token TAFD_solvers TAFD_actions TAFD_push TAFD_default
-%token TAFD_contains TAFD_max1 TAFD_min1 TAFD_provide TAFD_resulting 
-%token TAFD_requires TAFD_this TAFD_prev TAFD_next TAFD_first TAFD_last 
-%token TAFD_parent TAFD_child TAFD_first_child TAFD_last_child 
+%token TAFD_include TAFD_declaration TAFD_header TAFD_priority_list 
+%token TAFD_base_types TAFD_serial TAFD_type TAFD_abstract TAFD_node 
+%token TAFD_provides TAFD_extends TAFD_properties TAFD_aliases TAFD_operands 
+%token TAFD_common TAFD_constraints TAFD_solvers TAFD_actions TAFD_push 
+%token TAFD_default TAFD_contains TAFD_max1 TAFD_min1 TAFD_provide 
+%token TAFD_resulting TAFD_requires TAFD_this TAFD_prev TAFD_next TAFD_first 
+%token TAFD_last TAFD_parent TAFD_child TAFD_first_child TAFD_last_child 
 %token TAFD_start_param TAFD_end_param TAFD_true TAFD_false
-%token TAFD_return_res TAFD_return_prop TAFD_return
-%token TAFD_operators TAFD_versions
+%token TAFD_return TAFD_return_prop TAFD_return_fail TAFD_return_if_fail 
+%token TAFD_operators TAFD_versions TAFD_BB_left TAFD_PT_CONCAT
 // lexer error
 %token TAFD_ERROR 
 // multi character operators
@@ -70,27 +72,38 @@ namespace funcgen
 %token <u.scalar> TAFD_SCALAR
 %token <string> TAFD_QSTRING
 
-%type <string>  CXX_identifier
 %type <string>  opt_provider_type
-%type <u.scalar>  priority_level
+%type <string>  priority_level
 %type <u.boolean> opt_abstract
 %type <u.boolean> opt_max1
 %type <u.boolean> opt_min1
 %type <u.boolean> opt_serial
-%type <string>  opt_second_identifier
-%type <u.exp>  bool_expression
-%type <u.exp>  expression
-%type <u.exp>  expression_list
+%type <string> opt_second_identifier
+%type <string> opt_fail_bool_var
+%type <u.exp> bool_op_expression
+%type <u.exp> op_expression
+%type <u.exp> op_expression_list
+%type <string> Cxx_type_identifier_element
+%type <string> Cxx_type_identifier
+%type <string> Cxx_type_identifier_list
+%type <string> Cxx_identifier
+%type <string> Cxx_complex_identifier
+%type <string> Cxx_expression
+%type <string> Cxx_expression_list
 //****************
 // precicion table
 //****************
 
 //********************
 // normal precedences
+%left '?' ':'
 %nonassoc '<' '>' TAFD_IS_EQUAL TAFD_NOT_EQUAL TAFD_MORE_EQUAL TAFD_LESS_EQUAL 
 %left '+' '-'
 %left '*' '/'
+%left '&' '|' '^' // !!! check this precedence !!!
 %nonassoc UMINUS
+%left '.' ID_CONCAT
+%left NS_CONCAT
 
 //****************
 // Parser Rules
@@ -103,6 +116,7 @@ statements:
 statement:
     include_declaration
   | include_header
+  | priority_list_declaration
   | base_types_declaration
   | type_declaration
   | node_declaration
@@ -113,7 +127,17 @@ include_declaration:
 					{ include_declaration( info, $3 ); }
 ;
 include_header:
-    TAFD_include TAFD_header TAFD_QSTRING ';' {/*warning not implemented*/}
+    TAFD_include TAFD_header TAFD_QSTRING ';' { include_header( info, $3 ); }
+;
+priority_list_declaration:
+    TAFD_priority_list '{' priority_list_statements '}'
+					{ priority_list_defined( info ); }
+;
+priority_list_statements: /* optional */
+  | priority_list_statements priority_list_statement
+;
+priority_list_statement:
+    TAFD_IDENTIFIER ';'			{ priority_label_add( info, $1 ); }
 ;
 base_types_declaration: 
     TAFD_base_types '{' base_type_statements '}'
@@ -122,15 +146,11 @@ base_type_statements: /*optional*/
   | base_type_statements base_type_statement
 ;
 base_type_statement:
-    TAFD_IDENTIFIER '=' CXX_identifier ';'			
+    TAFD_IDENTIFIER '=' Cxx_type_identifier ';'			
       { declare_base_type( info, $1, $3 ); }
   | TAFD_IDENTIFIER '=' '{' 
       { declare_base_type_structure( info, $1 ); }
       base_type_structure '}' ';'
-;
-CXX_identifier:
-    TAFD_IDENTIFIER					{$$ = $1}
-  | CXX_identifier TAFD_NS_CONCAT TAFD_IDENTIFIER	{$$ = $1 + "::" + $3}
 ;
 base_type_structure: 
     base_type_structure_element
@@ -308,7 +328,7 @@ constraint_statements: /*optional*/
   | constraint_statements constraint_statement
 ;
 constraint_statement:
-    bool_expression ';'			{ node_solve_constraint( info, $1 ); }
+    bool_op_expression ';'		{ node_solve_constraint( info, $1 ); }
 ;
 solvers_declaration:
     TAFD_solvers '{' solver_statements '}'
@@ -321,7 +341,8 @@ solver_statement:
       { node_start_solver( info, $1 ); }
       '(' solver_parameter_list ')' ';'	
       { node_finish_solver( info ); }
-  | TAFD_IDENTIFIER '=' expression ';' { node_solve_expression( info,$1,$3 ); }
+  | TAFD_IDENTIFIER '=' op_expression ';'
+      { node_solve_expression( info,$1,$3 ); }
 ;
 solver_parameter_list: 
     property_reference
@@ -340,8 +361,8 @@ action_statement:
       { node_start_action( info, "default", $3 ); }
 	             property_reference ',' 
       { node_add_action_parameter_ref( info ); }
-		     expression ')' ';'
-      { node_add_action_parameter_exp( info, $9 );
+		     Cxx_expression ')' ';'
+      { node_add_action_parameter_str( info, $9 );
 	node_finish_action( info ); }
   | TAFD_push '(' priority_level ',' 
       { node_start_action( info, "push", $3 ); }
@@ -350,13 +371,13 @@ action_statement:
 		  property_reference ')' ';'  
       { node_add_action_parameter_ref( info ); // store second parameter
 	node_finish_action( info ); }
-  | TAFD_IDENTIFIER '(' priority_level ',' 
+/*| TAFD_IDENTIFIER '(' priority_level ',' 
       { node_start_action( info, $1, $3 ); }
       action_parameter_list ')' ';' 
-      { node_finish_action( info ); } //!!! obsolete?
+      { node_finish_action( info ); } //!!! obsolete? */
 ;
 priority_level:
-    TAFD_SCALAR	
+    TAFD_IDENTIFIER		// only priority level labels allowed
 ;
 action_parameter_list: property_reference
   | action_parameter_list ',' property_reference
@@ -420,29 +441,26 @@ code_statements: /*optional*/
   | code_statements code_statement
 ;
 code_statement:
-    TAFD_CODE
-  | '[' result_reference ']' 	{ continue_code_mode(info); }
-  | '[' TAFD_SCALAR ']' 	{ write_code(info,"[");
-				  write_code(info,$2);
-				  write_code(info,"]");
-				  continue_code_mode(info); }
-  | '[' TAFD_return_res		{ res_ref_start_return_res(info); }
-      result_function_reference ']' 	
-				{ res_ref_finish_return_res(info);
-				  continue_code_mode(info); }
-  | '[' TAFD_return_prop	{ res_ref_start_return_prop(info); }
-      result_property_reference ']' 	
-				{ res_ref_finish_return_prop(info);
-				  continue_code_mode(info); }
-  | '[' TAFD_return		{ res_ref_start_return(info); }
-      TAFD_IDENTIFIER ']'	{ write_code(info,$4);
-				  res_ref_finish_return(info);
-				  continue_code_mode(info); }
-  | '[' TAFD_return		{ res_ref_start_return(info); }
-      TAFD_SCALAR ']'		{ write_code(info,$4);
-				  res_ref_finish_return(info);
-				  continue_code_mode(info); }
-  | '[' error ']' 		{ continue_code_mode(info); }
+    TAFD_CODE	
+// closing brackets may be single to avoid C++ code conflicts with tokens
+  | TAFD_BB_left result_reference ']' ']' { continue_code_mode(info); }
+  | TAFD_BB_left TAFD_return_prop	  { res_ref_start_return_prop(info); }
+      result_property_reference ']' ']'   { res_ref_finish_return_prop(info);
+					    continue_code_mode(info); }
+  | TAFD_BB_left TAFD_return		  { res_ref_start_return(info); }
+      Cxx_expression ']' ']'		  { write_code(info,$4);
+					    res_ref_finish_return(info);
+					    continue_code_mode(info); }
+  | TAFD_BB_left TAFD_return		  { res_ref_start_return_res(info); }
+      strict_result_function_reference ']' ']'   
+					  { res_ref_finish_return_res(info);
+					    continue_code_mode(info); }
+  | TAFD_BB_left TAFD_return_fail ']' ']' { res_ref_return_fail(info);
+					    continue_code_mode(info); }
+  | TAFD_BB_left TAFD_return_if_fail ']' ']' 
+					  { res_ref_return_if_fail(info);
+					    continue_code_mode(info); }
+  | TAFD_BB_left error ']' ']'		  { continue_code_mode(info); }
 ;
 result_reference:
     result_property_reference
@@ -452,39 +470,106 @@ result_property_reference:
     TAFD_IDENTIFIER		{ res_ref_property(info,$1); }
 ;
 result_function_reference:
-  | TAFD_child '.' TAFD_IDENTIFIER '.' TAFD_IDENTIFIER '('
+    TAFD_child '.' TAFD_IDENTIFIER '.' TAFD_IDENTIFIER '('
+    TAFD_IDENTIFIER TAFD_IDENTIFIER ')' opt_fail_bool_var
+				{ res_ref_child(info,$3,$5,$7,$8,$10); }
+  | opt_this TAFD_IDENTIFIER opt_second_identifier '(' 
+    TAFD_IDENTIFIER TAFD_IDENTIFIER ')' opt_fail_bool_var
+				{ res_ref_this(info,$2,$3,$5,$6,$8); }
+;
+strict_result_function_reference: // for return statements
+    TAFD_child '.' TAFD_IDENTIFIER '.' TAFD_IDENTIFIER '('
     TAFD_IDENTIFIER TAFD_IDENTIFIER ')'
-				{ res_ref_child(info,$3,$5,$7,$8); }
+				{ res_ref_ret_child(info,$3,$5,$7,$8); }
   | TAFD_this '.' TAFD_IDENTIFIER opt_second_identifier '(' 
     TAFD_IDENTIFIER TAFD_IDENTIFIER ')'
-				{ res_ref_this(info,$3,$4,$6,$7); }
+				{ res_ref_ret_this(info,$3,$4,$6,$7); }
+;
+opt_this: /*optional*/
+  | TAFD_this '.'
 ;
 opt_second_identifier: /*optional*/ { $$ = ""; }
   | '.' TAFD_IDENTIFIER 	    { $$ = $2; }
 ;
-bool_expression:
-    expression TAFD_IS_EQUAL expression	  {$$ = bool_expr($1,"==",$3);}
-  | expression TAFD_NOT_EQUAL expression  {$$ = bool_expr($1,"!=",$3);}
-  | expression TAFD_MORE_EQUAL expression {$$ = bool_expr($1,">=",$3);}
-  | expression TAFD_LESS_EQUAL expression {$$ = bool_expr($1,"<=",$3);}
-  | expression '>' expression		  {$$ = bool_expr($1,">",$3);}
-  | expression '<' expression		  {$$ = bool_expr($1,"<",$3);}
+opt_fail_bool_var: /*optional*/     { $$ = ""; }
+  | ',' TAFD_IDENTIFIER 	    { $$ = $2; }
+;    
+bool_op_expression:
+    op_expression TAFD_IS_EQUAL op_expression	{$$ = bool_expr($1,"==",$3);}
+  | op_expression TAFD_NOT_EQUAL op_expression  {$$ = bool_expr($1,"!=",$3);}
+  | op_expression TAFD_MORE_EQUAL op_expression {$$ = bool_expr($1,">=",$3);}
+  | op_expression TAFD_LESS_EQUAL op_expression {$$ = bool_expr($1,"<=",$3);}
+  | op_expression '>' op_expression		{$$ = bool_expr($1,">",$3);}
+  | op_expression '<' op_expression		{$$ = bool_expr($1,"<",$3);}
 ;
-expression:
+op_expression:
     property_reference			  {$$ = expr_from_ref(info);}
   | TAFD_SCALAR				  {$$ = expr_scalar($1);}
-  | '(' expression ')'			  {$$ = expr($2);}
-  | expression '+' expression		  {$$ = expr($1,"+",$3);}
-  | expression '-' expression		  {$$ = expr($1,"-",$3);}
-  | expression '*' expression		  {$$ = expr($1,"*",$3);}
-  | expression '/' expression		  {$$ = expr($1,"/",$3);}
+  | '(' op_expression ')'		  {$$ = expr($2);}
+  | op_expression '+' op_expression	  {$$ = expr($1,"+",$3);}
+  | op_expression '-' op_expression	  {$$ = expr($1,"-",$3);}
+  | op_expression '*' op_expression	  {$$ = expr($1,"*",$3);}
+  | op_expression '/' op_expression	  {$$ = expr($1,"/",$3);}
   | TAFD_IDENTIFIER '(' ')'		  {$$ = expr_function($1);}
-  | TAFD_IDENTIFIER '(' expression_list ')'
+  | TAFD_IDENTIFIER '(' op_expression_list ')'
 					  {$$ = expr_function($1,$3);}
 ;
-expression_list: 
-    expression				  {$$ = expr($1);}
-  | expression_list ',' expression	  {$$ = expr($1,",",$3);}
+op_expression_list: 
+    op_expression				  {$$ = expr($1);}
+  | op_expression_list ',' op_expression	  {$$ = expr($1,",",$3);}
+;
+Cxx_type_identifier_element:
+    TAFD_IDENTIFIER				  {$$ = $1;}
+  | TAFD_IDENTIFIER '<'Cxx_type_identifier_list'>'{$$ = $1 + "<" + $3 + ">";}
+;
+Cxx_type_identifier: /* C++ Type Identifier like values::Scalar */
+    Cxx_type_identifier_element			  {$$ = $1;}
+  | Cxx_type_identifier TAFD_NS_CONCAT Cxx_type_identifier_element 
+      %prec NS_CONCAT				  {$$ = $1 + "::" + $3;}
+;
+Cxx_type_identifier_list: 
+    Cxx_type_identifier				  {$$ = $1;}
+  | Cxx_type_identifier_list ',' Cxx_type_identifier
+						  {$$ = $1 + "," + $3;}
+;
+Cxx_identifier:
+    TAFD_IDENTIFIER				  {$$ = $1;}
+  | Cxx_type_identifier TAFD_NS_CONCAT TAFD_IDENTIFIER %prec NS_CONCAT
+						  {$$ = $1 + "::" + $3;}
+;
+Cxx_complex_identifier: /* C++ Identifier like values::value.x->y.z */
+    Cxx_identifier					{$$ = $1}
+  | Cxx_complex_identifier '.' TAFD_IDENTIFIER		{$$ = $1 + "." + $3}
+  | Cxx_complex_identifier TAFD_PT_CONCAT TAFD_IDENTIFIER %prec ID_CONCAT  
+							{$$ = $1 + "->" + $3}
+;
+Cxx_expression:
+    Cxx_complex_identifier		  {$$ = $1;}
+  | TAFD_SCALAR				  {$$ = to_string($1);}
+  | '(' Cxx_expression ')'		  {$$ = '(' + $2 + ')';}
+  | Cxx_complex_identifier '(' ')'	  {$$ = $1 + '(' + ')';}
+  | Cxx_complex_identifier '(' Cxx_expression_list ')'
+					  {$$ = $1 + '(' + $3 + ')';}
+  | Cxx_expression '+' Cxx_expression	  {$$ = $1 + "+" + $3;}
+  | Cxx_expression '-' Cxx_expression	  {$$ = $1 + "-" + $3;}
+  | Cxx_expression '*' Cxx_expression	  {$$ = $1 + "*" + $3;}
+  | Cxx_expression '/' Cxx_expression	  {$$ = $1 + "/" + $3;}
+  | Cxx_expression '|' Cxx_expression	  {$$ = $1 + "|" + $3;}
+  | Cxx_expression '&' Cxx_expression	  {$$ = $1 + "&" + $3;}
+  | Cxx_expression '^' Cxx_expression	  {$$ = $1 + "^" + $3;}
+//!!! extend this list !!!
+  | Cxx_expression '<' Cxx_expression	  {$$ = $1 + "<" + $3;}
+  | Cxx_expression '>' Cxx_expression	  {$$ = $1 + ">" + $3;}
+  | Cxx_expression TAFD_IS_EQUAL Cxx_expression   {$$ = $1 + "==" + $3;}
+  | Cxx_expression TAFD_NOT_EQUAL Cxx_expression  {$$ = $1 + "!=" + $3;}
+  | Cxx_expression TAFD_MORE_EQUAL Cxx_expression {$$ = $1 + ">=" + $3;}
+  | Cxx_expression TAFD_LESS_EQUAL Cxx_expression {$$ = $1 + "<=" + $3;}
+  | Cxx_expression '?' Cxx_expression ':' Cxx_expression
+					  {$$ = $1 + "?" + $3 + ":" + $5;}
+;
+Cxx_expression_list: 
+    Cxx_expression				  {$$ = $1;}
+  | Cxx_expression_list ',' Cxx_expression	  {$$ = $1 + "," + $3;}
 ;
 property_reference:
     /* property or operand */

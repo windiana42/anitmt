@@ -145,6 +145,9 @@ base_types {
       <Any C++-Code using 
 
 <<<< in doubled square brackets("[[   ]]"):
+// accepts [[ ... ] ] as well, as "]]" might occur in C-Code and shouldn't be
+// a token
+
        <Propertyname>
 //!!! rethink about all this references...
 // default value and failvar isn't implemented yet
@@ -160,9 +163,10 @@ base_types {
 <<<< in doubled square brackets("[[   ]]") 
 
       // availible variables in C++ code:
-       any_result_failed		// true: one previous result function
+       did_any_result_fail		// true: one previous result function
 					// call failed
 					// set to false to reinitalize
+       did_result_fail			// default fail_bool_var
       >
     }
     ...

@@ -106,28 +106,28 @@ node scalar extends scalar_base provides scalar_component, scalar_vsa {
   // MM: can first also be common ?
   first scalar_vsa {
     actions {
-      default (  100, start_time, 0 ); 
-      default ( 1000, start_value, 0 );
+      default ( default_first_time, start_time, 0 ); 
+      default ( default_first_state, start_value, 0 );
     }
   }
   
   // result functions using the scalar subfunctions
   provide scalar_vsa {
     resulting value ( time t ) requires child.scalar_vsa.value ( time ) { 
-      [return_res child.scalar_vsa.value ( time t )];
+      [[ return child.scalar_vsa.value ( time t ) ]];
     } 
     resulting slope ( time t ) requires child.scalar_vsa.slope ( time ) {
-      [return_res child.scalar_vsa.slope ( time t )];
+      [[ return child.scalar_vsa.slope ( time t ) ]];
     }
     resulting acceleration ( time t ) requires child.scalar_vsa.acceleration ( time ) {
-      [return_res child.scalar_vsa.acceleration ( time t )];
+      [[ return child.scalar_vsa.acceleration ( time t ) ]];
     }
   }
   
   // output result function
   provide scalar_component {
     resulting value ( time t ) requires child.scalar_vsa.value (time) { 
-      [return_res child.scalar_vsa.value (time t)];
+      [[ return child.scalar_vsa.value (time t) ]];
     } 
   }
 }

@@ -26,7 +26,9 @@ scene testscene {
       duration 3;
       end_slope 6;
     }
-    linear {}
+    linear {
+      end_time 23; // autoset from ini file doesn't work
+    }
   }
 /*
   scalar testval2 {

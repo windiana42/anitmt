@@ -1,7 +1,7 @@
 scene MyRoboterSzene {
   filename "myrobot.pov";
   scene_type "pov";
-
+/*
   scalar Kameradreh2 {
     change c {
 /*
@@ -24,7 +24,7 @@ scene MyRoboterSzene {
       }
     }
   }
-
+*/
 //  Rob_Drehgelenk_W       =    0
 //  Rob_Armteil1_W         =   45
 //  Rob_Armteil2_W         =  -90

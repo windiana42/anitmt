@@ -26,6 +26,7 @@ namespace funcgen
   //! translates code peaces to C++ code
   class Cpp_Code_Translator : public Code_Translator
   {
+    std::string prefix_priority_label; //! prefix for priority labels
     std::string prefix_base_type; //! prefix for base type names
     std::string prefix_provider_type; //! prefix for provider type names
     std::string prefix_node_type; //! prefix for node types
@@ -39,11 +40,13 @@ namespace funcgen
   public:
     virtual std::string open_block();
     virtual std::string close_block();
+    virtual std::string priority_label( std::string name );
     virtual std::string base_type( std::string name );
     virtual std::string provider_type( std::string name );
     virtual std::string node_type( std::string name );
     virtual std::string node_base_type();
-    virtual std::string open_action( std::string action, double level );
+    virtual std::string open_action( std::string action, 
+				     std::string priority_label );
     virtual std::string parameter_add( std::string param );
     virtual std::string close_function();
     virtual std::string result_function_decl( std::string provider_type,
@@ -63,6 +66,8 @@ namespace funcgen
     virtual std::string finish_return_prop( std::string return_type );
     virtual std::string start_return( std::string return_type );
     virtual std::string finish_return( std::string return_type );
+    virtual std::string return_fail();
+    virtual std::string return_if_fail();
     virtual std::string start_param( std::string provider_type,
 				     std::string ret_type,
 				     std::string par_type );
@@ -83,6 +88,12 @@ namespace funcgen
     virtual std::string provided_result
     ( std::string provider_type, std::string ret, std::string par_type,
       std::string par );
+    virtual std::string child_result_with_status
+    ( std::string provider_type, std::string ret, std::string par_type,
+      std::string par, std::string fail_bool_var  );
+    virtual std::string provided_result_with_status
+    ( std::string provider_type, std::string ret, std::string par_type,
+      std::string par, std::string fail_bool_var );
     virtual std::string first_init( std::string provider_type );
     virtual std::string last_init( std::string provider_type );
     virtual std::string is_avail( std::string provider_type,
@@ -96,6 +107,7 @@ namespace funcgen
     virtual std::string first_child();
     virtual std::string last_child();
     virtual std::string get_child( int n );
+    virtual std::string reference_concat_string();
 
     Cpp_Code_Translator(code_gen_info *);
   };
@@ -112,6 +124,7 @@ namespace funcgen
 
     void generate_header();
     void generate_footer();
+    void generate_priority_list();
     void generate_base_types();
     void generate_types();
     void generate_nodes();

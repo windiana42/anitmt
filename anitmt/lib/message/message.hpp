@@ -95,7 +95,7 @@ namespace message
 		  const int tab_len=8);
   private:
     std::string filename;
-    int line, column;
+    int line, column;		// -1 means unset (init with set_filename)
     int tab_len;
   };
 

@@ -58,6 +58,9 @@ scene CircleScene {
   }
   
   scalar PlasmaOffset {
+      linear { // /* to fix starttime default */
+	start_time 0;
+      }
       linear {
         start_value  0;
         slope     100; 

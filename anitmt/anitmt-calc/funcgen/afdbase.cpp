@@ -20,6 +20,37 @@
 
 namespace funcgen
 {
+  void Header_Files::add_header( std::string header )
+  {
+    headers.push_back( header );
+  }
+  std::list<std::string>::const_iterator Header_Files::begin()
+  {
+    return headers.begin();
+  }
+  std::list<std::string>::const_iterator Header_Files::end()
+  {
+    return headers.end();
+  }
+
+  void Priority_List::add_priority_label( std::string label )
+  {
+    priority_labels.push_back( label );
+    priority_label_set.insert( label );
+  }
+  bool Priority_List::is_priority_label( std::string label )
+  {
+    return priority_label_set.find(label) != priority_label_set.end();
+  }
+  std::list<std::string>::const_iterator Priority_List::begin()
+  {
+    return priority_labels.begin();
+  }
+  std::list<std::string>::const_iterator Priority_List::end()
+  {
+    return priority_labels.end();
+  }
+
   //! add element type to structure
   void Base_Type::add_element( std::string type, std::string name )
   {
@@ -264,14 +295,15 @@ namespace funcgen
     std::cout << "      " << action_code << std::endl;// should include ';'
   }
 
-  void Action_Code::new_action( std::string action, double level, 
+  void Action_Code::new_action( std::string action, std::string priority_label,
 				Code_Translator *translator )
   {
     // open action call, insert it and store the iterator
     current_action = action_declarations.insert
 	(action_declarations.end(), Action_Declaration());
 
-    current_action->action_code = translator->open_action( action, level );
+    current_action->action_code = translator->open_action( action, 
+							   priority_label );
   }
 
   void Action_Code::add_parameter_ref( Property_Reference &ref, 
@@ -282,6 +314,13 @@ namespace funcgen
 				       ref.essentials.begin(),
 				       ref.essentials.end() );
     ref.clear();
+  }
+
+  void Action_Code::add_parameter_str( std::string str, 
+				       Code_Translator *translator )
+  {
+    current_action->action_code 
+      += translator->parameter_add( str );
   }
 
   void Action_Code::add_parameter_exp( Expression *exp, 
@@ -573,21 +612,21 @@ namespace funcgen
     essentials.clear(); code = ""; 
     first = true;
   }
-  void Property_Reference::add( std::string add_code )
+  void Property_Reference::add( std::string add_code, std::string concat_str )
   {
     if(!first)
-      code += "->";		// add concat point when more then one elements
-#warning should be told by translator object
+      code += concat_str;    // add concat string when more then one elements
     else
       first = false;
 
     code += add_code;
     essentials.push_back( code );
   }
-  void Property_Reference::add_unchecked( std::string add_code )
+  void Property_Reference::add_unchecked( std::string add_code, 
+					  std::string concat_str )
   {
     if(!first)
-      code += '.';		// add concat point when more then one elements
+      code += concat_str;    // add concat point when more then one elements
     else
       first = false;
 
@@ -657,7 +696,7 @@ namespace funcgen
   }
 
   AFD_Root::AFD_Root( Code_Translator *trans )
-    : translator(trans)
+    : translator(trans), priority_list_defined(false), write_priority_list(false)
   {
     don_t_create_code.push( false );
   }

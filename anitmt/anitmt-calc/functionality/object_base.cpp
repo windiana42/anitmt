@@ -13,6 +13,18 @@
 namespace functionality
 {
   // ****************************
+  // help functions
+  // ****************************
+
+  template<class T>
+  inline T extract_status( std::pair<bool,T> value, bool &status, 
+			   bool &any_false )
+  {
+    status = value.first;
+    any_false |= !value.first;
+    return value.second;
+  }
+  // ****************************
   // provider type implementation
   // ****************************
 
@@ -1019,9 +1031,9 @@ namespace functionality
 
   void node_object::common_init()
   {
-    solve::establish_Default_Value( info->priority_system,3000, _op_center, vector((0),0,0));
-    solve::establish_Default_Value( info->priority_system,3001, _op_front, vector((1),0,0));
-    solve::establish_Default_Value( info->priority_system,3002, _op_up_vector, vector((0),1,0));
+    solve::establish_Default_Value( info->priority_system,_pl_default_unconnected1, _op_center, vector(0,0,0));
+    solve::establish_Default_Value( info->priority_system,_pl_default_unconnected2, _op_front, vector(1,0,0));
+    solve::establish_Default_Value( info->priority_system,_pl_default_unconnected3, _op_up_vector, vector(0,1,0));
     // ** invoke first_/last_init() for each child container **
     if( !_cn_object_state.elements_empty() )
     {
@@ -1136,6 +1148,10 @@ namespace functionality
   {
     std::pair<bool,front> no_res;
     no_res.first = false;
+    bool did_any_result_fail;
+    bool did_result_fail;
+    did_any_result_fail = false;
+    did_result_fail = false;
     // ** check for required children
     if( !_cn_object_state._av_object_state_front_time_is_avail.is_solved() )
     {
@@ -1152,6 +1168,10 @@ namespace functionality
   {
     std::pair<bool,position> no_res;
     no_res.first = false;
+    bool did_any_result_fail;
+    bool did_result_fail;
+    did_any_result_fail = false;
+    did_result_fail = false;
     // ** check for required children
     if( !_cn_object_state._av_object_state_position_time_is_avail.is_solved() )
     {
@@ -1168,6 +1188,10 @@ namespace functionality
   {
     std::pair<bool,rotation> no_res;
     no_res.first = false;
+    bool did_any_result_fail;
+    bool did_result_fail;
+    did_any_result_fail = false;
+    did_result_fail = false;
     // ** check for required properties 
     if( !_op_front.is_solved() || !_op_up_vector.is_solved() )
     {
@@ -1182,8 +1206,8 @@ namespace functionality
     }
     // *** user code following... line:89 ***
       
-      vector dest_front = _cn_object_state._rf_object_state_front_time( t ).second;
-      vector dest_up_vector = _cn_object_state._rf_object_state_up_vector_time( t ).second;
+      vector dest_front = extract_status( _cn_object_state._rf_object_state_front_time( t ), did_result_fail, did_any_result_fail );
+      vector dest_up_vector = extract_status( _cn_object_state._rf_object_state_up_vector_time( t ), did_result_fail, did_any_result_fail );
       vector rotate = Vrotate_pair_pair( _op_front(), _op_up_vector(), 
            dest_front, dest_up_vector );
       return std::pair<bool,rotation>(true,rotate );
@@ -1194,6 +1218,10 @@ namespace functionality
   {
     std::pair<bool,speed> no_res;
     no_res.first = false;
+    bool did_any_result_fail;
+    bool did_result_fail;
+    did_any_result_fail = false;
+    did_result_fail = false;
     // ** check for required children
     if( !_cn_object_state._av_object_state_speed_time_is_avail.is_solved() )
     {
@@ -1210,6 +1238,10 @@ namespace functionality
   {
     std::pair<bool,translation> no_res;
     no_res.first = false;
+    bool did_any_result_fail;
+    bool did_result_fail;
+    did_any_result_fail = false;
+    did_result_fail = false;
     // ** check for required properties 
     if( !_op_center.is_solved() )
     {
@@ -1224,7 +1256,7 @@ namespace functionality
     }
     // *** user code following... line:81 ***
       
-      vector position = _cn_object_state._rf_object_state_position_time( t ).second;
+      vector position = extract_status( _cn_object_state._rf_object_state_position_time( t ), did_result_fail, did_any_result_fail );
       vector translate = position - _op_center();
       return std::pair<bool,translation>(true,translate );
     
@@ -1234,6 +1266,10 @@ namespace functionality
   {
     std::pair<bool,up_vector> no_res;
     no_res.first = false;
+    bool did_any_result_fail;
+    bool did_result_fail;
+    did_any_result_fail = false;
+    did_result_fail = false;
     // ** check for required children
     if( !_cn_object_state._av_object_state_up_vector_time_is_avail.is_solved() )
     {
@@ -1250,6 +1286,10 @@ namespace functionality
   {
     std::pair<bool,acceleration> no_res;
     no_res.first = false;
+    bool did_any_result_fail;
+    bool did_result_fail;
+    did_any_result_fail = false;
+    did_result_fail = false;
     // ** check for required children
     if( !_cn_object_state._av_object_state_acceleration_stretch_is_avail.is_solved() )
     {
@@ -1266,6 +1306,10 @@ namespace functionality
   {
     std::pair<bool,acceleration> no_res;
     no_res.first = false;
+    bool did_any_result_fail;
+    bool did_result_fail;
+    did_any_result_fail = false;
+    did_result_fail = false;
     // ** check for required children
     if( !_cn_object_state._av_object_state_acceleration_time_is_avail.is_solved() )
     {
@@ -1282,6 +1326,10 @@ namespace functionality
   {
     std::pair<bool,direction> no_res;
     no_res.first = false;
+    bool did_any_result_fail;
+    bool did_result_fail;
+    did_any_result_fail = false;
+    did_result_fail = false;
     // ** check for required children
     if( !_cn_object_state._av_object_state_direction_stretch_is_avail.is_solved() )
     {
@@ -1298,6 +1346,10 @@ namespace functionality
   {
     std::pair<bool,direction> no_res;
     no_res.first = false;
+    bool did_any_result_fail;
+    bool did_result_fail;
+    did_any_result_fail = false;
+    did_result_fail = false;
     // ** check for required children
     if( !_cn_object_state._av_object_state_direction_time_is_avail.is_solved() )
     {
@@ -1314,6 +1366,10 @@ namespace functionality
   {
     std::pair<bool,front> no_res;
     no_res.first = false;
+    bool did_any_result_fail;
+    bool did_result_fail;
+    did_any_result_fail = false;
+    did_result_fail = false;
     // ** check for required children
     if( !_cn_object_state._av_object_state_front_stretch_is_avail.is_solved() )
     {
@@ -1330,6 +1386,10 @@ namespace functionality
   {
     std::pair<bool,front> no_res;
     no_res.first = false;
+    bool did_any_result_fail;
+    bool did_result_fail;
+    did_any_result_fail = false;
+    did_result_fail = false;
     // ** check for required children
     if( !_cn_object_state._av_object_state_front_time_is_avail.is_solved() )
     {
@@ -1346,6 +1406,10 @@ namespace functionality
   {
     std::pair<bool,position> no_res;
     no_res.first = false;
+    bool did_any_result_fail;
+    bool did_result_fail;
+    did_any_result_fail = false;
+    did_result_fail = false;
     // ** check for required children
     if( !_cn_object_state._av_object_state_position_stretch_is_avail.is_solved() )
     {
@@ -1362,6 +1426,10 @@ namespace functionality
   {
     std::pair<bool,position> no_res;
     no_res.first = false;
+    bool did_any_result_fail;
+    bool did_result_fail;
+    did_any_result_fail = false;
+    did_result_fail = false;
     // ** check for required children
     if( !_cn_object_state._av_object_state_position_time_is_avail.is_solved() )
     {
@@ -1378,6 +1446,10 @@ namespace functionality
   {
     std::pair<bool,speed> no_res;
     no_res.first = false;
+    bool did_any_result_fail;
+    bool did_result_fail;
+    did_any_result_fail = false;
+    did_result_fail = false;
     // ** check for required children
     if( !_cn_object_state._av_object_state_speed_stretch_is_avail.is_solved() )
     {
@@ -1394,6 +1466,10 @@ namespace functionality
   {
     std::pair<bool,speed> no_res;
     no_res.first = false;
+    bool did_any_result_fail;
+    bool did_result_fail;
+    did_any_result_fail = false;
+    did_result_fail = false;
     // ** check for required children
     if( !_cn_object_state._av_object_state_speed_time_is_avail.is_solved() )
     {
@@ -1410,6 +1486,10 @@ namespace functionality
   {
     std::pair<bool,stretch> no_res;
     no_res.first = false;
+    bool did_any_result_fail;
+    bool did_result_fail;
+    did_any_result_fail = false;
+    did_result_fail = false;
     // ** check for required children
     if( !_cn_object_state._av_object_state_stretch_time_is_avail.is_solved() )
     {
@@ -1426,6 +1506,10 @@ namespace functionality
   {
     std::pair<bool,up_vector> no_res;
     no_res.first = false;
+    bool did_any_result_fail;
+    bool did_result_fail;
+    did_any_result_fail = false;
+    did_result_fail = false;
     // ** check for required children
     if( !_cn_object_state._av_object_state_up_vector_stretch_is_avail.is_solved() )
     {
@@ -1442,6 +1526,10 @@ namespace functionality
   {
     std::pair<bool,up_vector> no_res;
     no_res.first = false;
+    bool did_any_result_fail;
+    bool did_result_fail;
+    did_any_result_fail = false;
+    did_result_fail = false;
     // ** check for required children
     if( !_cn_object_state._av_object_state_up_vector_time_is_avail.is_solved() )
     {
@@ -1476,6 +1564,9 @@ namespace functionality
     add_property( "center", &_op_center );
     add_property( "front", &_op_front );
     add_property( "up_vector", &_op_up_vector );
+
+    // *****************
+    // Register Aliases 
   }
 
   // *****************************

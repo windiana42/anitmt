@@ -62,11 +62,13 @@ namespace funcgen
 
     virtual std::string open_block() = 0;
     virtual std::string close_block() = 0;
+    virtual std::string priority_label( std::string name ) = 0;
     virtual std::string base_type( std::string name ) = 0;
     virtual std::string provider_type( std::string name ) = 0;
     virtual std::string node_type( std::string name ) = 0;
     virtual std::string node_base_type() = 0;
-    virtual std::string open_action( std::string action, double level ) = 0;
+    virtual std::string open_action( std::string action, 
+				     std::string priority_label ) = 0;
     virtual std::string parameter_add( std::string param ) = 0;
     virtual std::string close_function() = 0;
     virtual std::string result_function_decl( std::string provider_type,
@@ -86,7 +88,8 @@ namespace funcgen
     virtual std::string finish_return_prop( std::string return_type ) = 0;
     virtual std::string start_return( std::string return_type ) = 0;
     virtual std::string finish_return( std::string return_type ) = 0;
-
+    virtual std::string return_fail() = 0;
+    virtual std::string return_if_fail() = 0;
     virtual std::string start_param( std::string provider_type,
 				     std::string ret_type,
 				     std::string par_type ) = 0;
@@ -107,6 +110,12 @@ namespace funcgen
     virtual std::string provided_result
     ( std::string provider_type, std::string ret, std::string par_type,
       std::string par ) = 0;
+    virtual std::string child_result_with_status
+    ( std::string provider_type, std::string ret, std::string par_type,
+      std::string par, std::string fail_bool_var  ) = 0;
+    virtual std::string provided_result_with_status
+    ( std::string provider_type, std::string ret, std::string par_type,
+      std::string par, std::string fail_bool_var ) = 0;
     virtual std::string first_init( std::string provider_type ) = 0;
     virtual std::string last_init( std::string provider_type ) = 0;
     virtual std::string is_avail( std::string provider_type,
@@ -120,6 +129,7 @@ namespace funcgen
     virtual std::string first_child() = 0;
     virtual std::string last_child() = 0;
     virtual std::string get_child( int n ) = 0;
+    virtual std::string reference_concat_string() = 0;
 
     Code_Translator( code_gen_info * );
     virtual ~Code_Translator(){}

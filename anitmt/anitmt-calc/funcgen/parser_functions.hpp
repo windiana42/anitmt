@@ -79,6 +79,9 @@ namespace funcgen
   // concrete help functions for parser rules
 
   void include_declaration( void *info, const std::string &file );
+  void include_header( void *info, const std::string &file );
+  void priority_list_defined( void *info );
+  void priority_label_add( void *info, std::string label );
   void declare_base_type( void *info, const std::string &name, 
 			  const std::string &type );
   void declare_base_type_structure( void *info, const std::string &name );
@@ -127,8 +130,9 @@ namespace funcgen
   //void node_action_value( double, double, double  );	// vector value
   //void node_action_value( std::string );		// string value
   void node_start_action( void *info, const std::string &name, 
-			  double priority );
+			  std::string priority_label );
   void node_add_action_parameter_ref( void *info );
+  void node_add_action_parameter_str( void *info, std::string str );
   void node_add_action_parameter_exp( void *info, Expression *exp );
   void node_finish_action( void *info );
 
@@ -155,16 +159,24 @@ namespace funcgen
   void res_ref_property( void *info, std::string prop );
   void res_ref_child( void *info, std::string provider, 
 		      std::string result_type, std::string parameter_type, 
-		      std::string parameter );
+		      std::string parameter, std::string fail_bool_var );
   void res_ref_this( void *info, std::string provider, 
 		     std::string result_type, std::string parameter_type, 
-		     std::string parameter );
+		     std::string parameter, std::string fail_bool_var );
+  void res_ref_ret_child( void *info, std::string provider, 
+			  std::string result_type, std::string parameter_type, 
+			  std::string parameter );
+  void res_ref_ret_this( void *info, std::string provider, 
+			 std::string result_type, std::string parameter_type, 
+			 std::string parameter );
   void res_ref_start_return_res( void *info );
   void res_ref_finish_return_res( void *info );
   void res_ref_start_return_prop( void *info );
   void res_ref_finish_return_prop( void *info );
   void res_ref_start_return( void *info );
   void res_ref_finish_return( void *info );
+  void res_ref_return_fail( void *info );
+  void res_ref_return_if_fail( void *info );
 
   Expression *bool_expr( Expression *exp1, 
 			 const std::string &op, 

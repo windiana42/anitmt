@@ -30,16 +30,18 @@ test_functionality_LDADD= \
 			../../lib/solve/libsolve.a \
 			../../lib/proptree/libproptree.a 
 
+clean:
+	rm -f $(BUILT_SOURCES)
+
 FUNCGEN=../funcgen/funcgen
 FUNCGEN_CODE=$(srcdir)/../funcgen/gen_cpp.cpp
 
-clean:
-	rm -f $(BUILT_SOURCES)
+AFD_COMMON=$(FUNCGEN) $(srcdir)/base_func.afd 
 
 # exec funcgen...
 # base_func isn't regenerated when funcgen is changed
 base_func.cpp \
-base_func.hpp: $(srcdir)/base_func.afd 
+base_func.hpp: $(srcdir)/base_func.afd $(AFD_COMMON)
 	@if test -e $(FUNCGEN); then					\
 	  $(FUNCGEN) -i $(srcdir)/base_func.afd -o base_func -n functionality	\
 	    -I+=$(srcdir)/ ;						\
@@ -48,7 +50,7 @@ base_func.hpp: $(srcdir)/base_func.afd
 	fi
 
 scene_base.cpp \
-scene_base.hpp: $(srcdir)/scene_base.afd $(FUNCGEN_CODE)
+scene_base.hpp: $(srcdir)/scene_base.afd $(AFD_COMMON)
 	@if test -e $(FUNCGEN); then					     \
 	  $(FUNCGEN) -i $(srcdir)/scene_base.afd -o scene_base -n functionality \
 	    -I+=$(srcdir)/ ;						     \
@@ -57,7 +59,7 @@ scene_base.hpp: $(srcdir)/scene_base.afd $(FUNCGEN_CODE)
 	fi
 
 scalar_base.cpp \
-scalar_base.hpp: $(srcdir)/scalar_base.afd $(FUNCGEN_CODE)
+scalar_base.hpp: $(srcdir)/scalar_base.afd $(AFD_COMMON)
 	@if test -e $(FUNCGEN); then					    \
 	  $(FUNCGEN) -i $(srcdir)/scalar_base.afd -o scalar_base -n functionality -I+=$(srcdir)/ ; \
 	else								    \
@@ -65,7 +67,7 @@ scalar_base.hpp: $(srcdir)/scalar_base.afd $(FUNCGEN_CODE)
 	fi
 
 scalar.cpp \
-scalar.hpp: $(srcdir)/scalar.afd $(FUNCGEN_CODE)
+scalar.hpp: $(srcdir)/scalar.afd $(srcdir)/scalar_base.afd $(AFD_COMMON)
 	@if test -e $(FUNCGEN); then					    \
 	  $(FUNCGEN) -i $(srcdir)/scalar.afd -o scalar -n functionality -I+=$(srcdir)/ ; \
 	else								    \
@@ -73,7 +75,7 @@ scalar.hpp: $(srcdir)/scalar.afd $(FUNCGEN_CODE)
 	fi
 
 object_base.cpp \
-object_base.hpp: $(srcdir)/object_base.afd $(FUNCGEN_CODE)
+object_base.hpp: $(srcdir)/object_base.afd $(AFD_COMMON)
 	@if test -e $(FUNCGEN); then					    \
 	  $(FUNCGEN) -i $(srcdir)/object_base.afd -o object_base -n functionality -I+=$(srcdir)/ ; \
 	else								    \
@@ -81,7 +83,7 @@ object_base.hpp: $(srcdir)/object_base.afd $(FUNCGEN_CODE)
 	fi
 
 object.cpp \
-object.hpp: $(srcdir)/object.afd $(FUNCGEN_CODE)
+object.hpp: $(srcdir)/object.afd $(srcdir)/object_base.afd $(AFD_COMMON)
 	@if test -e $(FUNCGEN); then					    \
 	  $(FUNCGEN) -i $(srcdir)/object.afd -o object -n functionality -I+=$(srcdir)/ ; \
 	else								    \

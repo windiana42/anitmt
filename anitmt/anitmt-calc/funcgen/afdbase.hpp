@@ -25,6 +25,8 @@
 
 namespace funcgen
 {
+  class Header_Files;
+  class Priority_List;
   class Basic_Type;
   class Provider_Type;
   class Result_Type;
@@ -47,6 +49,27 @@ namespace funcgen
 
 namespace funcgen
 {
+  class Header_Files
+  {
+  private:
+    std::list<std::string> headers;
+  public:
+    void add_header( std::string header );
+    std::list<std::string>::const_iterator begin();
+    std::list<std::string>::const_iterator end();
+  };
+  class Priority_List
+  {
+  private:
+    std::list<std::string> priority_labels;
+    std::set<std::string> priority_label_set;
+  public:
+    void add_priority_label( std::string label );
+    bool is_priority_label( std::string label );
+    std::list<std::string>::const_iterator begin();
+    std::list<std::string>::const_iterator end();
+  };
+
   class Base_Type
   {
   private:
@@ -173,9 +196,11 @@ namespace funcgen
     std::list<Action_Declaration> action_declarations;
     std::list<Action_Declaration>::iterator current_action;
 
-    void new_action( std::string name, double level, Code_Translator *t );
+    void new_action( std::string name, std::string priority_label, 
+		     Code_Translator *t );
     void add_parameter_ref( Property_Reference &ref, Code_Translator *t );
     void add_parameter_exp( Expression *ref, Code_Translator *t );
+    void add_parameter_str( std::string str, Code_Translator *t );
     void finish_action( Code_Translator *t );
     void merge( const Action_Code & );
     void print() const;		// print, just for debug purposes
@@ -234,6 +259,7 @@ namespace funcgen
     std::map<Result_Type, Result_Code> results;
     Result_Code *current_result_code;
     Provider_Type *type;	// provider type of these provided results
+    std::string    type_name;	// name of provider type
     void print() const;		// print, just for debug purposes
   };
 
@@ -250,8 +276,10 @@ namespace funcgen
     std::string par_type;
     // ** access functions
     void clear();		// clear reference
-    void add( std::string code ); // add checked reference element
-    void add_unchecked( std::string code ); // add unchecked reference element
+    //! add checked reference element
+    void add( std::string code, std::string concat_str ); 
+    //! add unchecked reference element
+    void add_unchecked( std::string code, std::string concat_str ); 
 
     Property_Reference();
   };
@@ -321,8 +349,16 @@ namespace funcgen
   class AFD_Root
   {
   public:
+    std::stack<bool> don_t_create_code; // whether source shouldn't be written
     Code_Translator *translator; // translates code peaces 
 
+    std::list<std::string> included_basenames;
+    Header_Files header_files;
+
+    Priority_List priority_list;
+    bool priority_list_defined;
+    bool write_priority_list;
+    
     std::map<std::string, Base_Type> base_types;
     Base_Type      *current_base_type;
     typedef 
@@ -337,9 +373,6 @@ namespace funcgen
     typedef std::map<std::string, Tree_Node_Type> nodes_type;
     nodes_type nodes;
     Tree_Node_Type *current_node;
-
-    std::list<std::string> included_basenames;
-    std::stack<bool> don_t_create_code; // whether source shouldn't be written
 
     AFD_Root( Code_Translator *translator );
     void print() const;		// print, just for debug purposes

@@ -14,6 +14,9 @@ libfd_a_SOURCES = \
 
 EXTRA_DIST = depend.txt
 
+# !!! just work around (is it ok?) !!! autogen.sh aborts otherwise 
+LIBS = 
+
 check_PROGRAMS = check_fd
 check_fd_SOURCES = check_fd.cc
 check_fd_LDADD = ../libhlib.a $(LIBS) -lm

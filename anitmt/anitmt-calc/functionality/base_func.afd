@@ -35,3 +35,122 @@ base_types{
   
   //orientation = { direction dir, up_vector up };
 }
+
+// **************
+// Priority List
+// **************
+
+priority_list{				// old values
+
+  default_initial;
+  
+  // *******
+  // pushes
+  // *******
+  push_time_fw;				// 10
+  push_time_bw;				// 11
+
+  push_length_fw;
+  push_length_bw;
+
+  push_state_fw;			// 20
+  push_state_bw;			// 21
+  push_state1_fw;			
+  push_state1_bw;			
+  push_state2_fw;			
+  push_state2_bw;			
+  push_state3_fw;			
+  push_state3_bw;			
+  push_state4_fw;			
+  push_state4_bw;			
+
+  push_state_post_fw;
+  push_state_post_bw;
+
+  push_speed_fw;			// 30
+  push_speed_bw;			// 31
+  push_speed1_fw;
+  push_speed1_bw;
+  push_speed2_fw;
+  push_speed2_bw;
+  push_speed3_fw;
+  push_speed3_bw;
+  push_speed4_fw;
+  push_speed4_bw;
+
+  push_state_non_urgent_fw;		// 50
+  push_state_non_urgent_bw;		// 51
+  push_state_non_urgent1_fw;
+  push_state_non_urgent1_bw;
+  push_state_non_urgent2_fw;
+  push_state_non_urgent2_bw;
+  push_state_non_urgent3_fw;
+  push_state_non_urgent3_bw;
+  push_state_non_urgent4_fw;
+  push_state_non_urgent4_bw;
+
+  // ***************
+  // default values
+  // ***************
+  default_first_time;			// 100
+  default_last_time;			// 101
+  default_first_length;
+
+  default_acceleration;			// 200
+  default_diff_speed;
+
+  default_first_state_pre;
+  default_last_state_pre;
+  default_first_state_pre1;		// rot_horizontal
+  default_last_state_pre1;
+  default_first_state_pre2;		// rot_vertical
+  default_last_state_pre2;
+  default_first_state_pre3;		// rot_roll
+  default_last_state_pre3;
+  default_first_state_pre4;
+  default_last_state_pre4;
+
+  default_first_up_norm;
+
+  default_first_state;			// 1000
+  default_last_state;	
+  default_first_state1;
+  default_last_state1;
+  default_first_state2;
+  default_last_state2;	
+  default_first_state3;
+  default_last_state3;	
+  default_first_state4;
+  default_last_state4;
+
+  default_unconnected;			// 3000?!?
+  default_unconnected1;			// center
+  default_unconnected2;			// front
+  default_unconnected3;			// up-vector
+  default_unconnected4;
+  default_unconnected5;
+  default_unconnected6;
+  default_unconnected7;
+  default_unconnected8;
+  default_unconnected9;
+
+  default_up_norm_roll;			// 1500
+
+  default_speed;			// 2000
+  default_speed1;			
+  default_speed2;			
+  default_speed3;			
+  default_speed4;			
+  default_duration;			// 2100
+  default_state;			// 2200
+  default_state1;			
+  default_state2;			
+  default_state3;			
+  default_state4;			
+
+  default_state_post;		// direction
+  default_state_2x_post;		// front
+  default_state_2x_post1;
+  default_state_2x_post2;		// up_vector
+  
+}

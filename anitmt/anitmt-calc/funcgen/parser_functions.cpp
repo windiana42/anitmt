@@ -6,7 +6,7 @@
 /**									    **/
 /** EMail:   martintrautmann@gmx.de					    **/
 /**									    **/
-/** License: GPL - free and without any warranty - read COPYING             **/
+/** License: LGPL - free and without any warranty - read COPYING            **/
 /**									    **/
 /** Package: AniTMT							    **/
 /**									    **/
@@ -144,6 +144,24 @@ namespace funcgen
     }
   }
 
+  void include_header( void *info, const std::string &file )
+  {
+    AFD_Root *afd = static_cast<afd_info*>(info)->afd;
+    afd->header_files.add_header( file );
+  }
+
+  void priority_list_defined( void *info )
+  {
+    AFD_Root *afd = static_cast<afd_info*>(info)->afd;
+    afd->priority_list_defined = true;
+    afd->write_priority_list = !afd->don_t_create_code.top();
+  }
+  void priority_label_add( void *info, std::string label )
+  {
+    AFD_Root *afd = static_cast<afd_info*>(info)->afd;
+    afd->priority_list.add_priority_label( label );
+  }
+
   void declare_base_type( void *info, const std::string &name, 
 			  const std::string &type )
   {
@@ -261,6 +279,7 @@ namespace funcgen
       Provided_Results &provided_res 
 	= afd->current_node->provided_results[type];
       provided_res.type = &provider_type;
+      provided_res.type_name = type;
 
       // insert all result functions of this provider type
       Provider_Type::result_types_type::const_iterator j;
@@ -453,17 +472,24 @@ namespace funcgen
   }
 
   void node_start_action( void *info, const std::string &name, 
-			  double priority )
+			  std::string priority_label )
   {
     afd_info *I=static_cast<afd_info*>(info);
-    Code_Translator *translator = I->afd->translator;
-    Tree_Node_Type *node = I->afd->current_node;
+    message::Message_Reporter &msg = I->msg;
+    AFD_Root *afd = I->afd;
+    Code_Translator *translator = afd->translator;
+    Tree_Node_Type *node = afd->current_node;
     assert(node != 0);
     Solve_System_Code *solve_code = node->current_solve_code;    
 
     if( solve_code )
     {
-      solve_code->actions.new_action(name, priority, translator);
+      if( !(afd->priority_list.is_priority_label(priority_label)) )
+      {
+	msg.error() << "unknown label for priority level: " << priority_label;
+      }
+      else
+	solve_code->actions.new_action(name, priority_label, translator);
     }
   }
   void node_add_action_parameter_ref( void *info )
@@ -478,6 +504,19 @@ namespace funcgen
     {
       solve_code->actions.add_parameter_ref(node->current_reference,
 					    translator);
+    }
+  }
+  void node_add_action_parameter_str( void *info, std::string str )
+  {
+    afd_info *I=static_cast<afd_info*>(info);
+    Code_Translator *translator = I->afd->translator;
+    Tree_Node_Type *node = I->afd->current_node;
+    assert(node != 0);
+    Solve_System_Code *solve_code = node->current_solve_code;    
+
+    if( solve_code )
+    {
+      solve_code->actions.add_parameter_str(str,translator);
     }
   }
   void node_add_action_parameter_exp( void *info, Expression *exp )
@@ -718,7 +757,7 @@ namespace funcgen
   }
   void res_ref_child( void *info, std::string provider, 
 		      std::string result_type, std::string parameter_type, 
-		      std::string parameter )
+		      std::string parameter, std::string fail_bool_var )
   {
     afd_info *I=static_cast<afd_info*>(info);
     //message::Message_Reporter &msg = I->msg;
@@ -733,24 +772,51 @@ namespace funcgen
       if( res_code )		// in valid result code?
       {
 	//!!! check whether result function of child exists !!!
-	
-	res_code->code += translator->child_result( provider, result_type, 
-						    parameter_type, 
-						    parameter );
+
+	res_code->code += 
+	  translator->child_result_with_status( provider, result_type, 
+						parameter_type, parameter, 
+						fail_bool_var );
       }
     }    
   }
   void res_ref_this( void *info, std::string provider, 
 		      std::string result_type, std::string parameter_type, 
-		      std::string parameter )
+		      std::string parameter, std::string fail_bool_var )
   {
+    afd_info *I=static_cast<afd_info*>(info);
+    //message::Message_Reporter &msg = I->msg;
+    Code_Translator *translator = I->afd->translator;
+    Tree_Node_Type *node = I->afd->current_node;
+    assert(node != 0);
+    Provided_Results *provided = node->current_provided_results;
+
     // test whether optional provider wasn't specified
     if( result_type == "" )
     {
       result_type = provider;	//!! parameter are used shifted (see parser.yy)
-      provider = "";
-#warning enter current provider type here
+      provider = provided->type_name;
     }
+
+    if( provided )
+    {
+      Result_Code *res_code = provided->current_result_code;
+
+      if( res_code )		// in valid result code?
+      {
+	//!!! check whether result function of child exists exists !!!
+
+	res_code->code += 
+	  translator->provided_result_with_status( provider, result_type, 
+						   parameter_type, parameter, 
+						   fail_bool_var );
+      }
+    }    
+  }
+  void res_ref_ret_child( void *info, std::string provider, 
+			  std::string result_type, std::string parameter_type, 
+			  std::string parameter )
+  {
     afd_info *I=static_cast<afd_info*>(info);
     //message::Message_Reporter &msg = I->msg;
     Code_Translator *translator = I->afd->translator;
@@ -763,11 +829,43 @@ namespace funcgen
 
       if( res_code )		// in valid result code?
       {
+	//!!! check whether result function of child exists !!!
+
+	res_code->code += 
+	  translator->child_result( provider, result_type, 
+				    parameter_type, parameter );
+      }
+    }    
+  }
+  void res_ref_ret_this( void *info, std::string provider, 
+			 std::string result_type, std::string parameter_type, 
+			 std::string parameter )
+  {
+    afd_info *I=static_cast<afd_info*>(info);
+    //message::Message_Reporter &msg = I->msg;
+    Code_Translator *translator = I->afd->translator;
+    Tree_Node_Type *node = I->afd->current_node;
+    assert(node != 0);
+    Provided_Results *provided = node->current_provided_results;
+
+    // test whether optional provider wasn't specified
+    if( result_type == "" )
+    {
+      result_type = provider;	//!! parameter are used shifted (see parser.yy)
+      provider = provided->type_name;
+    }
+
+    if( provided )
+    {
+      Result_Code *res_code = provided->current_result_code;
+
+      if( res_code )		// in valid result code?
+      {
 	//!!! check whether result function of child exists exists !!!
 
-	res_code->code += translator->provided_result( provider, result_type, 
-						       parameter_type, 
-						       parameter );
+	res_code->code += 
+	  translator->provided_result( provider, result_type, 
+				       parameter_type, parameter );
       }
     }    
   }
@@ -884,6 +982,42 @@ namespace funcgen
       }
     }
   }
+  void res_ref_return_fail( void *info )
+  {
+    afd_info *I=static_cast<afd_info*>(info);
+    //message::Message_Reporter &msg = I->msg;
+    Code_Translator *translator = I->afd->translator;
+    Tree_Node_Type *node = I->afd->current_node;
+    assert(node != 0);
+    Provided_Results *provided = node->current_provided_results;
+    if( provided )
+    {
+      Result_Code *res_code = provided->current_result_code;
+
+      if( res_code )		// in valid result code?
+      {
+	res_code->code += translator->return_fail();
+      }
+    }
+  }
+  void res_ref_return_if_fail( void *info )
+  {
+    afd_info *I=static_cast<afd_info*>(info);
+    //message::Message_Reporter &msg = I->msg;
+    Code_Translator *translator = I->afd->translator;
+    Tree_Node_Type *node = I->afd->current_node;
+    assert(node != 0);
+    Provided_Results *provided = node->current_provided_results;
+    if( provided )
+    {
+      Result_Code *res_code = provided->current_result_code;
+
+      if( res_code )		// in valid result code?
+      {
+	res_code->code += translator->return_fail();
+      }
+    }
+  }
 
   Expression *bool_expr( Expression *exp1, 
 			 const std::string &op, 
@@ -962,7 +1096,8 @@ namespace funcgen
     Tree_Node_Type *node = I->afd->current_node;
     assert( node != 0 );
     
-    node->current_reference.add_unchecked( translator->prop_op(name) );
+    node->current_reference.add_unchecked( translator->prop_op(name), 
+					   "<unused>" );
   }
   void ref_node_prop( void *info, const std::string &prop)
   {
@@ -972,7 +1107,8 @@ namespace funcgen
     Tree_Node_Type *node = I->afd->current_node;
     assert( node != 0 );
 
-    node->current_reference.add( translator->node_prop(prop) );
+    node->current_reference.add( translator->node_prop(prop),
+				 translator->reference_concat_string() );
   }
   void ref_start_param( void *info )
   {
@@ -985,7 +1121,8 @@ namespace funcgen
     node->current_reference.add_unchecked
       ( translator->start_param( node->current_reference.provider_type,
 			       node->current_reference.ret_type,
-			       node->current_reference.par_type ) );
+			       node->current_reference.par_type ), 
+	"<unused>" );
   }
   void ref_end_param( void *info )
   {
@@ -998,7 +1135,8 @@ namespace funcgen
     node->current_reference.add_unchecked
       ( translator->end_param( node->current_reference.provider_type,
 			       node->current_reference.ret_type,
-			       node->current_reference.par_type ) );
+			       node->current_reference.par_type ), 
+	"<unused>" );
   }
   void ref_provider_type( void *info, const std::string &provider_type, 
 			  const std::string &ret_type, 
@@ -1021,7 +1159,8 @@ namespace funcgen
     Tree_Node_Type *node = I->afd->current_node;
     assert( node != 0 );
 
-    node->current_reference.add( translator->prev( provider_type ) );
+    node->current_reference.add( translator->prev( provider_type ),
+				 translator->reference_concat_string() );
   }
   void ref_node_local_next( void *info, std::string provider_type )
   {
@@ -1031,7 +1170,8 @@ namespace funcgen
     Tree_Node_Type *node = I->afd->current_node;
     assert( node != 0 );
 
-    node->current_reference.add( translator->next( provider_type ) );
+    node->current_reference.add( translator->next( provider_type ),
+				 translator->reference_concat_string() );
   }
   void ref_node_local_child_first( void *info, const std::string &type )
   {
@@ -1041,7 +1181,8 @@ namespace funcgen
     Tree_Node_Type *node = I->afd->current_node;
     assert( node != 0 );
 
-    node->current_reference.add( translator->first_child() );
+    node->current_reference.add( translator->first_child(),
+				 translator->reference_concat_string() );
   }
   void ref_node_local_child_last( void *info, const std::string &type )
   {
@@ -1051,7 +1192,8 @@ namespace funcgen
     Tree_Node_Type *node = I->afd->current_node;
     assert( node != 0 );
 
-    node->current_reference.add( translator->last_child() );
+    node->current_reference.add( translator->last_child(),
+				 translator->reference_concat_string() );
   }
   void ref_node_local_child( void *info, const std::string &type, double n )
   {
@@ -1061,7 +1203,8 @@ namespace funcgen
     Tree_Node_Type *node = I->afd->current_node;
     assert( node != 0 );
 
-    node->current_reference.add( translator->get_child(int(n)) );
+    node->current_reference.add( translator->get_child(int(n)),
+				 translator->reference_concat_string() );
   }
   void ref_node_prev( void *info )
   {
@@ -1071,7 +1214,8 @@ namespace funcgen
     Tree_Node_Type *node = I->afd->current_node;
     assert( node != 0 );
 
-    node->current_reference.add( translator->prev() );
+    node->current_reference.add( translator->prev(),
+				 translator->reference_concat_string() );
   }
   void ref_node_next( void *info )
   {
@@ -1081,7 +1225,8 @@ namespace funcgen
     Tree_Node_Type *node = I->afd->current_node;
     assert( node != 0 );
 
-    node->current_reference.add( translator->next() );
+    node->current_reference.add( translator->next(),
+				 translator->reference_concat_string() );
   }
   void ref_node_parent( void *info )
   {
@@ -1091,7 +1236,8 @@ namespace funcgen
     Tree_Node_Type *node = I->afd->current_node;
     assert( node != 0 );
 
-    node->current_reference.add( translator->parent() );
+    node->current_reference.add( translator->parent(),
+				 translator->reference_concat_string() );
   }
   void ref_node_first_child( void *info )
   {
@@ -1101,7 +1247,8 @@ namespace funcgen
     Tree_Node_Type *node = I->afd->current_node;
     assert( node != 0 );
 
-    node->current_reference.add( translator->first_child() );
+    node->current_reference.add( translator->first_child(),
+				 translator->reference_concat_string() );
   }
   void ref_node_last_child( void *info )
   {
@@ -1111,7 +1258,8 @@ namespace funcgen
     Tree_Node_Type *node = I->afd->current_node;
     assert( node != 0 );
 
-    node->current_reference.add( translator->last_child() );
+    node->current_reference.add( translator->last_child(),
+				 translator->reference_concat_string() );
   }
   void ref_node_child( void *info, double n )
   {
@@ -1121,7 +1269,8 @@ namespace funcgen
     Tree_Node_Type *node = I->afd->current_node;
     assert( node != 0 );
 
-    node->current_reference.add( translator->get_child(int(n)) );
+    node->current_reference.add( translator->get_child(int(n)),
+				 translator->reference_concat_string() );
   }
 
 }

@@ -29,5 +29,9 @@ namespace std
   std::string &operator+=( std::string &s, int v );
   std::string &operator+=( std::string &s, long v );
   std::string &operator+=( std::string &s, double v );
+
+  string to_string( int );
+  string to_string( long );
+  string to_string( double );
 }
 

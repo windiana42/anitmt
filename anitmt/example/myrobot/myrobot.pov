@@ -26,12 +26,13 @@ camera { // Kamera
 }
 */
 
-#declare Kameradreh2 = 120;
-#declare Kameraentf2 = 100;
+#declare Kameradreh2 = -40;//120;
+#declare Kameraentf2 = 80;//100;
 camera { // Kamera
   location < Kameraentf2, 12 , 0 >
   look_at < 0 , 5 , 0 >
   rotate < 0, Kameradreh2, 0 >
+  //translate < 5,0,-7 >
 }
 
 /* ------ Licht-Quellen ---------------- */
