@@ -16,10 +16,6 @@
 
 #include <hlib/htime.h>
 
-#include <stdlib.h>
-#include <unistd.h>
-#include <sys/time.h>
-
 
 static inline void _normalize(struct timeval *tv)
 {

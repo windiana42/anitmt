@@ -1,4 +1,4 @@
-HlibHeaders = hconfig.h \
+HlibHeaders = hconfig.h hlib-config.h \
 	cpp/cplusplus.h cpp/refstring.h cpp/linkedlist.h cpp/refstrlist.h cpp/growbuffer.h \
 	fd/procbase.h fd/procmanager.h fd/fdmanager.h fd/htime.h fd/intprocbase.h fd/fdbase.h \
 		fd/cpbase.h fd/cpmanager.h \
@@ -16,13 +16,14 @@ clean: FORCE
 	rm -f *.h
 
 # `:;' is a bash NOP (No Operation) 
+# Newer bash can use "$${i/*\//}" instead of basename (faster!)
 LinkHeaders: 
 	@echo -n "Checking for dangling header links: " ; \
 	headers="`echo *.h`" ; \
 	if test "$$headers" != "*.h" ; then \
 		for i in $$headers ; do \
 			test -f "$$i" && continue ; \
-			rm -f "$$i" ; \
+			$(RM) -f "$$i" ; \
 			echo -n "*" ; \
 		done \
 	fi ; \
@@ -30,10 +31,13 @@ LinkHeaders:
 	@echo -n "Setting up header links: " ; \
 	notfound="" ; \
 	for i in $(HlibHeaders) ; do \
-		incname="$${i/*\//}" ; \
+		incname="`basename "$$i"`" ; \
 		test -L "$$incname" && continue ; \
 		if test -f "$(top_srcdir)/$$i" ; then \
-			ln -s "$(top_srcdir)/$$i" "$$incname" ; \
+			$(LN_S) "$(top_srcdir)/$$i" "$$incname" ; \
+			echo -n "." ; \
+		elif test -f "$(top_builddir)/$$i" ; then \
+			$(LN_S) "$(top_builddir)/$$i" "$$incname" ; \
 			echo -n "." ; \
 		else \
 			echo -n "?" ; \

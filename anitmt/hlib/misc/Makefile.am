@@ -13,5 +13,15 @@ libmisc_a_SOURCES = \
 		nonblock.c tcpnodelay.c \
 		getprgname.c \
 		gettermsize.c \
+		getloadavg.c \
 	prototypes.h hlib.h 
+
+check_PROGRAMS = check_misc
+check_misc_SOURCES = check_misc.cc
+check_misc_LDADD = ../libhlib.a -lm
+
+check: check_misc ../libhlib.a  xFORCE
+	./check_misc
+
+xFORCE:
 

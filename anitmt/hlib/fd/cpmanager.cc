@@ -16,21 +16,15 @@
  * 
  */
 
+#include <hlib/htime.h>
 #include <hlib/fdmanager.h>
 #include <hlib/fdbase.h>
 #include <hlib/cpmanager.h>
 #include <hlib/cpbase.h>
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
 #include <string.h>
 #include <signal.h>
-#include <errno.h>
 
-#include <sys/poll.h>
-#include <sys/time.h>
-#include <sys/socket.h>   /* shutdown() */
 
 #ifndef TESTING
 #define TESTING 1
@@ -643,7 +637,7 @@ FDCopyManager::CopyID FDCopyManager::CopyFD(FDCopyBase *client,
 	if(req->low_read_thresh<0 || low_read_thresh>=iobs)
 	{  req->low_read_thresh=iobs/8;  }
 	if(req->high_read_thresh<0 || req->high_read_thresh>=iobs)
-	{  req->low_read_thresh=iobs-iobs/8;  }
+	{  req->high_read_thresh=iobs-iobs/8;  }
 	if(req->high_read_thresh<=req->low_read_thresh)
 	{
 		#error ...
@@ -652,7 +646,7 @@ FDCopyManager::CopyID FDCopyManager::CopyFD(FDCopyBase *client,
 	if(req->low_write_thresh<0 || low_write_thresh>=iobs)
 	{  req->low_write_thresh=iobs/8;  }
 	if(req->high_write_thresh<0 || req->high_write_thresh>=iobs)
-	{  req->low_write_thresh=iobs-iobs/8;  }
+	{  req->high_write_thresh=iobs-iobs/8;  }
 	if(req->high_write_thresh<=req->low_write_thresh)
 	{
 		#error ...
@@ -763,6 +757,11 @@ int FDCopyManager::CopyControl(CopyID cpid,ControlCommand cc)
 		case CCKill:
 			CopyInfo cpi(cpn,SCKilled);
 			_FinishRequest(cpn,&cpi);
+			break;
+		case CCTerm:
+			#error add CCTerm; it simply terms input; buffer still flushed. 
+			CopyInfo cpi(cpn,SCTerminated);
+			_FinshInput(cpn,&cpi);
 			break;
 		case CCStop:
 			if(cpn->cpstate & CPSStopped)
@@ -876,7 +875,7 @@ inline void FDCopyManager::_SendCpNotify(MCopyNode *cpn,CopyInfo *cpi)
 	cpn->client->cpnotify(cpi);
 }
 
-// Kill request without any side effects (does not notify cli
+// Kill request without any side effects (does not notify client, 
 // does not restore client's fd flags, etc.)
 void FDCopyManager::_KillRequest(MCopyNode *cpn)
 {

@@ -94,7 +94,11 @@ class FDCopyBase : LinkedListBase<FDCopyBase>
 		CopyID CopyFD(CopyRequest *req,FDBase *fdb)
 			{  return(cpmanager()->CopyFD(this,req,fdb));  }
 		
+		// CCTerm -> terminate the request: no more input is read, but the 
+		//           buffer is written; cpnotify() [SCTerm] gets called 
+		//           immediately by CopyControl() 
 		// CCKill -> kill request (cpnotify() [SCKilled] gets called)
+		//           immediately stops request, buffer gets lost 
 		// CCStop -> stop request; must be started again using CCCont
 		// CCCont -> start a stopped request
 		//           Note that the timeout timer(s) (if any) is not affected 
@@ -120,7 +124,7 @@ class FDCopyBase : LinkedListBase<FDCopyBase>
 		//   0 -> success (ProgressInfo stored)
 		//  -2 -> cpid illegal (i.e. NULL)
 		int QueryProgress(CopyID cpid,ProgressInfo *save_here)
-		{  return(cpmanager()->QueryProgress(cpid,save_here));  }
+			{  return(cpmanager()->QueryProgress(cpid,save_here));  }
 };
 
 #endif  /* _HLIB_FDCopyBase_H_ */

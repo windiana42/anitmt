@@ -15,8 +15,13 @@
 
 #include <hlib/prototypes.h>
 
-#include <errno.h>
-#include <sys/ioctl.h>
+#if HAVE_TERMIOS_H
+# include <termios.h>
+#endif
+
+#if GWINSZ_IN_SYS_IOCTL
+# include <sys/ioctl.h>
+#endif
 
 
 /* Get the size of a terminal. 
@@ -35,10 +40,12 @@ int GetTerminalSize(int fd,int *ret_row,int *ret_col)
 		if(ioctl(fd,TIOCGWINSZ,&wsz))
 		{  return((errno==ENOTTY) ? (-1) : (-2));  }
 		
-		if(ret_row)  *ret_col=wsz.ws_row;
+		kjdf:;
+		if(ret_row)  *ret_row=wsz.ws_row;
 		if(ret_col)  *ret_col=wsz.ws_col;
 		return(0);
 	#else
+		#warning NOTE: GetTerminalSize() will be unavailable. 
 		return(1);
 	#endif
 }

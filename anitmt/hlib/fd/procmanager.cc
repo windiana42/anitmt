@@ -18,20 +18,25 @@
 
 #include <hlib/prototypes.h>  /* MUST BE FIRST */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
 #include <string.h>
 #include <signal.h>
-#include <errno.h>
 #include <fcntl.h>
 
-#include <sys/poll.h>
-#include <sys/time.h>
-#include <sys/socket.h>   /* shutdown() */
-#include <sys/resource.h>
-#include <sys/wait.h>
+#if HAVE_SYS_WAIT_H
+# include <sys/wait.h>
+#endif
+#ifndef WEXITSTATUS
+# define WEXITSTATUS(stat_val) ((unsigned)(stat_val) >> 8)
+#endif
+#ifndef WIFEXITED
+# define WIFEXITED(stat_val) (((stat_val) & 255) == 0)
+#endif
 
+#if HAVE_SYS_RESOURCE_H
+#include <sys/resource.h>
+#endif
+
+#include <hlib/htime.h>
 #include <hlib/fdmanager.h>
 #include <hlib/fdbase.h>
 #include <hlib/procmanager.h>
@@ -652,7 +657,7 @@ void ProcessManager::_AddToProcStatus(ProcStatus *ps,
 }
 
 
-#ifndef ProcMan_USE_LESS_SIGINFO_T
+#ifndef HLIB_PROCMAN_USE_LESS_SIGINFO_T
 // Return value: 1 -> ignore signal
 int ProcessManager::_CheckSigInfo(const SigInfo *sig)
 {
@@ -743,9 +748,9 @@ void ProcessManager::_FillProcStatus(Node *n,ProcStatus *ps,
 	ps->uid=sig->info.si_uid;
 	ps->sigcode=sig->info.si_code;
 }
-#endif  /* ProcMan_USE_LESS_SIGINFO_T */
+#endif  /* HLIB_PROCMAN_USE_LESS_SIGINFO_T */
 
-// Calls a wait3() to check for all exited children. 
+// Calls a wait3()/wait4() to check for all exited children. 
 void ProcessManager::_ZombieCheck()
 {
 	ProcStatus ps;
@@ -755,12 +760,12 @@ void ProcessManager::_ZombieCheck()
 		struct rusage rus;
 		pid_t pid;
 		do
-		{  pid=::wait3(&status,WNOHANG | WUNTRACED,&rus);  }
+		{  pid=::wait4(-1,&status,WNOHANG | WUNTRACED,&rus);  }
 		while(pid==-1 && errno==EINTR);
 		//fprintf(stderr,"SIGCHILD: %d (%s)\n",pid,strerror(errno));
 		if(pid<=0)  break;  // pid=0 means: no child exited. 
 		
-		#if !defined(ProcMan_USE_LESS_SIGINFO_T) && TESTING
+		#if !defined(HLIB_PROCMAN_USE_LESS_SIGINFO_T) && TESTING
 		// This means that the found process was not reported by a 
 		// SIGCHILD or that the signal was not yet delivered to us. 
 		fprintf(stderr,"Hep.. _ZombieCheck() found child %d.\n",pid);
@@ -811,7 +816,7 @@ int ProcessManager::signotify(const SigInfo *sig)
 	if(sig->info.si_signo!=SIGCHLD)
 	{  return(0);  }
 	
-	#ifndef ProcMan_USE_LESS_SIGINFO_T
+	#ifndef HLIB_PROCMAN_USE_LESS_SIGINFO_T
 	pdebug("SIGNOTIFY(pid=%d)\n",sig->info.si_pid);
 	
 	if(_CheckSigInfo(sig))
@@ -879,7 +884,7 @@ int ProcessManager::signotify(const SigInfo *sig)
 	if(!SigPending(SIGCHLD))
 	{  _ScheduleZombieCheck();  }
 	
-	#else  /* ProcMan_USE_LESS_SIGINFO_T */
+	#else  /* HLIB_PROCMAN_USE_LESS_SIGINFO_T */
 	_ZombieCheck();
 	#endif	
 	

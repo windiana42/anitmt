@@ -16,10 +16,6 @@
 
 #include <hlib/htime.h>
 
-#include <stdlib.h>
-#include <unistd.h>
-#include <sys/time.h>
-
 
 // Used constants: 
 const long long HTime::conv_fact[HTime::_tslast]=

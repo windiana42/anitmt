@@ -20,8 +20,9 @@
 /* include config */
 #include <hlib/hconfig.h>
 
-#include <stdio.h>
-#include <stdlib.h>
+
+/* some forward decls: */
+struct timeval;
 
 
 #ifdef __cplusplus
@@ -62,6 +63,14 @@ extern char *prg_name;
   extern void *CheckMalloc(void *ptr);
   static inline void *Free(void *ptr)
     {  if(ptr)  free(ptr);  return(NULL);  }
+
+/* getloadavg.c: */
+  /* This function returns the 1-minute load average multiplied with 100. 
+   * Negative return values indicate error. 
+   * If it failed once, failure is memorized and all subsequent calls will 
+   * return failure. 
+   */
+  extern int GetLoadAverage();
 
 /* getprgname.c: */
   /* Used to get the program name from argv[0]. Will return "???" in

@@ -45,6 +45,7 @@ class FDCopyManager : FDBase
 		
 		enum ControlCommand
 		{
+			CCTerm,
 			CCKill,
 			CCStop,
 			CCCont
@@ -144,7 +145,8 @@ class FDCopyManager : FDBase
 			SCFinal=  0x01,   // IMPORTANT: last time cpnotify() called 
 			SCLimit=  0x02,   // copy limit reached 
 			SCTimeout=0x04,   // some CopyRequest::*timeout passed (see errno)
-			SCKilled= 0x08,   // 
+			SCKilled= 0x08,   // CopyControl(CCKill) called
+			SCTerm=   0x10,   // CopyControl(CCTerm) called
 			// See below for combined flags of these: 
 			SCInHup=  0x0100,   // hangup on input fd (POLLHUP)
 			SCOutHup= 0x0200,   // hangup on output fd (POLLHUP)

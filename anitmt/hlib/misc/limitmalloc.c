@@ -35,7 +35,7 @@
  * will then be assumed tobe of size 1, i.e. we're actually counting 
  * the number of *calls* to LMalloc()/LRealloc()/LFree().  
  */ 
-#ifdef DONT_USE_MALLOC_USABLE_SIZE
+#ifdef HLIB_DONT_USE_MALLOC_USABLE_SIZE
 #warning Not using malloc_usable_size; allocation debugging counting calls only
 #define malloc_usable_size(x) 1
 #endif

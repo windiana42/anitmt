@@ -21,6 +21,8 @@
 #include <string.h>
 #include <ctype.h>
 
+#define DirSepChar '/'
+
 
 namespace par
 {

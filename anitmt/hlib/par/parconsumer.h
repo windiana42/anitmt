@@ -228,6 +228,7 @@ class ParameterConsumer :
 		// the section *top. 
 		// Use only if you really need it
 		// Returns number of deleted parameters. 
+		// (Note that this may also delete the specified section.) 
 		void RecursiveDeleteParams(Section *top=NULL);
 		
 		// Query if a parameter was set (better: how often it 

@@ -21,8 +21,12 @@
 
 #include <hlib/prototypes.h>
 
-#include <errno.h>
-#include <sys/poll.h>
+#if HAVE_SYS_POLL_H
+# include <sys/poll.h>
+#endif
+#if HAVE_SYS_SOCKET_H
+#include <sys/socket.h>   /* shutdown() */
+#endif
 
 /*
  * CHANGES / WHAT TO CHECK ON TROUBLE: 
@@ -386,5 +390,42 @@ class FDBase
 		int SigPending(int sig)
 			{  return(fdmanager()->SigPending(sig));  }
 };
+
+// These functions are here because when compiling with gcc-2.95 you get 
+// problems when linking (unresolved symbols) if these are put into 
+// fdmanager.cc. 
+inline void FDBase::AddFDNode(FDManager::FDNode *n)
+{
+	n->next=fds;
+	if(fds)
+	{  fds->prev=n;  }
+	fds=n;
+}
+
+inline void FDBase::_DoResetTimer(FDManager::TimerNode *i)
+{
+	i->msec_left=i->msec_val;  // reset timer
+	sh_timer_dirty=1;
+	fdmanager()->TimeoutChange();
+}			
+
+inline void FDBase::AddTimerNode(FDManager::TimerNode *n)
+{
+	n->next=timers;
+	if(timers)
+	{  timers->prev=n;  }
+	timers=n;
+	
+	// Keep sh_timer up to date: 
+	// This does not have to be done here as the calling function will 
+	// call fdb->_MsecLeftChanged() after AddTimerNode() [and possibly 
+	// AlignTimer()]. 
+	// NOTE: InstallTimer() depends on that we do NOT check sh_timer here. 
+	/*if(!sh_timer_dirty)
+	{
+		if(!sh_timer || sh_timer->msec_left>n->msec_left)
+		{  sh_timer=n;  fdmanager()->TimeoutChange();  }
+	}*/
+}
 
 #endif /* _HLIB_FDBase_H_ */

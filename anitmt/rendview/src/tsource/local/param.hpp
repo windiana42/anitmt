@@ -103,6 +103,8 @@ class TaskSourceFactory_Local :
 		// requests: 
 		long response_delay;
 		
+		PerFrameTaskInfo *_DoGetPerFrameTaskInfo(int frame_no,int *next_pfbs);
+		
 		const char *_FrameInfoLocationString(const PerFrameTaskInfo *fi);
 		int _CheckFramePattern(RefString *s,const char *name,
 			const PerFrameTaskInfo *fi);
@@ -113,7 +115,7 @@ class TaskSourceFactory_Local :
 		
 		void _VPrintFrameInfo(PerFrameTaskInfo *fi,
 			const PerFrameTaskInfo *compare_to);
-	
+		
 		int _RegisterParams();
 		
 		// Overriding virtuial from ParameterConsumer: 

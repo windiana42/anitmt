@@ -63,6 +63,32 @@ const TaskSourceFactory_Local::PerFrameTaskInfo *TaskSourceFactory_Local::
 	   (nframes>=0 && frame_no>=startframe+nframes) )
 	{  return(NULL);  }
 	
+	int next_pfbs;
+	PerFrameTaskInfo *fi=_DoGetPerFrameTaskInfo(frame_no,&next_pfbs);
+	// See if there is something to do for that frame. 
+	if(fi->rdesc || fi->fdesc)  return(fi);
+	
+	// Nothing to do for that frame here. 
+	// FIXME: maywe we want a per-block jump option and do real JUMPing 
+	//        (to next block which has rdesc || fdesc). 
+	// If we have unlimited frames and this is the master block, 
+	// then we may run into trouble. 
+	if(fi==&master_fi)
+	{
+		// See if there are non-empty blocks following: 
+		if(next_pfbs<startframe)  return(NULL);  // no more tasks to do
+	}
+	
+	return(fi);
+}
+
+// next_pfbs: saves next per-frame block start frame number (or startframe-1). 
+// Only valid of return value is &master_fi. 
+TaskSourceFactory_Local::PerFrameTaskInfo *TaskSourceFactory_Local::
+	_DoGetPerFrameTaskInfo(int frame_no,int *next_pfbs)
+{
+	*next_pfbs=startframe-1;
+	
 	// NOTE!! last_looked_up may !!NEVER!! be master_fi. 
 	if(!last_looked_up)  last_looked_up=fi_list.first();
 	if(!last_looked_up)  return(&master_fi);
@@ -71,6 +97,7 @@ const TaskSourceFactory_Local::PerFrameTaskInfo *TaskSourceFactory_Local::
 	if(frame_no>=last_looked_up->first_frame_no && 
 	   frame_no<(last_looked_up->first_frame_no+last_looked_up->nframes) )
 	{  return(last_looked_up);  }
+	
 	// Check previous and next ones: 
 	if(frame_no<last_looked_up->first_frame_no)
 	{
@@ -78,8 +105,7 @@ const TaskSourceFactory_Local::PerFrameTaskInfo *TaskSourceFactory_Local::
 		{
 			if(frame_no<fi->first_frame_no)  continue;
 			last_looked_up=fi;
-			if(frame_no>=(fi->first_frame_no+fi->nframes))
-			{  return(&master_fi);  }
+			if(frame_no>=(fi->first_frame_no+fi->nframes))  break;
 			return(fi);
 		}
 	}
@@ -89,14 +115,19 @@ const TaskSourceFactory_Local::PerFrameTaskInfo *TaskSourceFactory_Local::
 		{
 			if(frame_no>=(fi->first_frame_no+fi->nframes))  continue;
 			if(frame_no<fi->first_frame_no)
-			{
-				last_looked_up=fi->prev;
-				return(&master_fi);
-			}
+			{  last_looked_up=fi->prev;  break;  }
 			last_looked_up=fi;
 			return(fi);
 		}
 	}
+	
+	assert(last_looked_up);
+	if(last_looked_up->next)
+	{
+		*next_pfbs=last_looked_up->next->first_frame_no;
+		assert(*next_pfbs>frame_no);
+	}
+	
 	return(&master_fi);
 }
 
@@ -501,6 +532,7 @@ int TaskSourceFactory_Local::FinalInit()
 	{
 		// PER-FRAME FRAME INFO...
 		// Also get rid of the fi->ii stuff: 
+			
 		for(PerFrameTaskInfo *fi=fi_list.first(); fi; fi=fi->next)
 		{
 			// Set defaults...
@@ -531,8 +563,11 @@ int TaskSourceFactory_Local::FinalInit()
 		
 		// Okay, now set up the rest of the members in the per-frame 
 		// info structures: 
-		for(PerFrameTaskInfo *fi=fi_list.first(); fi; fi=fi->next)
+		for(PerFrameTaskInfo *_fi=fi_list.first(); _fi; )
 		{
+			PerFrameTaskInfo *fi=_fi;
+			_fi=_fi->next;
+			
 			// First, the easy part: 
 			if(!fi->rdir)  fi->rdir=master_fi.rdir;
 			else  _PathAppendSlashIfNeeded(&fi->rdir);
@@ -551,6 +586,20 @@ int TaskSourceFactory_Local::FinalInit()
 			//rinfpattern
 			//routfpattern
 			//foutfpattern
+			
+			// NOTE: We will NOT delete fdesc=rdesc=NULL blocks UNLESS the 
+			//       master block is also fdesc=rdesc=NULL. This allows to 
+			//       specify blocks which shall not be processed. 
+			if(!fi->rdesc && !fi->fdesc && 
+			   !master_fi.rdesc && !master_fi.fdesc)
+			{
+				delete fi_list.dequeue(fi);
+				continue;
+			}
+			
+			Error("Check if it is possible to create invalid per-frame block if no action for master block (or invalid data for master block such as wicth=-1)\n");
+			abort();
+			
 		}
 	}
 	
@@ -574,6 +623,10 @@ int TaskSourceFactory_Local::FinalInit()
 				fi->nframes);
 			_VPrintFrameInfo(fi,&master_fi);
 		}
+		
+		if(!master_fi.rdesc && !master_fi.fdesc && fi_list.is_empty())
+		{  VerboseSpecial("Local: Nothing to do at all. "
+			"Try %s --help if you're puzzled.",prg_name);  }
 	}
 	
 	return(failed ? 1 : 0);
@@ -605,6 +658,12 @@ int TaskSourceFactory_Local::CheckParams()
 		Error("Local: Cannot use unlimited nframes value (nframes not specified\n"
 			"Local:   or negative value) combined with reverse jumps (%d).\n",
 			fjump);
+		++failed;
+	}
+	
+	if(startframe<0)
+	{
+		Error("Local: Illegal start frame number %d.\n",startframe);
 		++failed;
 	}
 	

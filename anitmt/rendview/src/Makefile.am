@@ -20,5 +20,6 @@ rendview_LDADD = \
 	tsource/ldr/libtsource_ldr.a \
 	tsource/libtsource.a \
 	imgfmt/libimgfmt.a \
-	lib/libsupport.a
+	lib/libsupport.a \
+	$(top_builddir)/../hlib/libhlib.a 	
 

@@ -9,6 +9,6 @@ configure
 stamp-h.in
 stamp-h2.in
 stamp-h1.in
-config.h.in
-config.h
+hlib-config.h.in
+hlib-config.h
 autom4te.cache

@@ -17,6 +17,12 @@
 #include <sys/socket.h>
 #include <netinet/tcp.h>
 
+#ifdef SOL_TCP
+#define MY_SOL_SPEC SOL_TCP
+#else
+#define MY_SOL_SPEC SOL_SOCKET
+#endif
+
 /* Disable Nagle algorithm on TCP sockets.  
  * Return value: 
  *   0 -> success
@@ -25,7 +31,7 @@
 int SetTcpNoDelay(int fd)
 {
 	int x=1;
-	if(setsockopt(fd,SOL_TCP,TCP_NODELAY,&x,sizeof(x)) == -1)
+	if(setsockopt(fd,MY_SOL_SPEC,TCP_NODELAY,&x,sizeof(x)) == -1)
 	{  return(-1);  }
 	return(0);
 }

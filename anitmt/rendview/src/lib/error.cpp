@@ -74,6 +74,8 @@ void VerboseSpecial(const char *fmt,...)
 	vfprintf(stdout,fmt,ap);
 	if(do_colored_output_stdout)
 	{  fprintf(stdout,"\33[00m\n");  }
+	else
+	{  fprintf(stdout,"\n");  }
 	va_end(ap);
 	fflush(stdout);
 }

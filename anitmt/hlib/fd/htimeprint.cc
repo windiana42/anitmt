@@ -16,12 +16,6 @@
 
 #include <hlib/htime.h>
 
-#include <stdlib.h>
-#include <unistd.h>
-#include <sys/time.h>
-
-#include <time.h>
-
 
 const char *HTime::PrintTime(int local=1,int with_msec=0)
 {

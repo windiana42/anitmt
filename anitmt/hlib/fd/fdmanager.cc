@@ -32,20 +32,12 @@
 
 #include <hlib/prototypes.h>  /* MUST BE FIRST */
 
-#include <stdio.h>   /* for ``NULL'' ;) */
-#include <stdlib.h>
-#include <unistd.h>
 #include <string.h>
 #include <signal.h>
-#include <errno.h>
 
-#include <sys/poll.h>
-#include <sys/time.h>
-#include <sys/socket.h>   /* shutdown() */
-
+#include <hlib/htime.h>
 #include <hlib/fdmanager.h>
 #include <hlib/fdbase.h>
-#include <hlib/htime.h>
 
 #ifndef TESTING
 #define TESTING 1
@@ -84,13 +76,26 @@
 /* global manager */
 class FDManager *FDManager::manager=NULL;
 
-static void _fd_sig_handler(int, siginfo_t *info, void *)
+
+#ifdef HLIB_CRIPPLED_SIGINFO_T
+static RETSIGTYPE _fd_sig_handler_simple(int sig)
 {
+	if(!FDManager::manager)  return;
+	siginfo_t tmp;
+	tmp.si_signo=sig;
+	FDManager::manager->CaughtSignal(info);
+}
+#else
+static void _fd_sig_handler_sigaction(int, siginfo_t *info, void *)
+{
+	if(!FDManager::manager)  return;
 	// We don't need locking here as all other signals are blocked 
 	// during signal handler execution (see FDManager::FDManager(), 
 	// call to sigaction(2)). 
 	FDManager::manager->CaughtSignal(info);
 }
+#endif
+
 
 static int _fd_signals[]=
 {
@@ -99,7 +104,7 @@ static int _fd_signals[]=
 	SIGPIPE, SIGCHLD, 
 	SIGWINCH, 
 	SIGTSTP, SIGCONT, // terminal stop (^Z); cont with SIGCONT
-	-10000 };
+	-22000 };
 
 // THERE MAY BE ONLY ONE FDManager. 
 
@@ -114,40 +119,8 @@ static inline int fd_close(int fd)
 }
 
 /************************ INLINE FROM FDBase *************************/
-
-inline void FDBase::AddTimerNode(FDManager::TimerNode *n)
-{
-	n->next=timers;
-	if(timers)
-	{  timers->prev=n;  }
-	timers=n;
-	
-	// Keep sh_timer up to date: 
-	// This does not have to be done here as the calling function will 
-	// call fdb->_MsecLeftChanged() after AddTimerNode() [and possibly 
-	// AlignTimer()]. 
-	// NOTE: InstallTimer() depends on that we do NOT check sh_timer here. 
-	/*if(!sh_timer_dirty)
-	{
-		if(!sh_timer || sh_timer->msec_left>n->msec_left)
-		{  sh_timer=n;  fdmanager()->TimeoutChange();  }
-	}*/
-}
-
-inline void FDBase::_DoResetTimer(FDManager::TimerNode *i)
-{
-	i->msec_left=i->msec_val;  // reset timer
-	sh_timer_dirty=1;
-	fdmanager()->TimeoutChange();
-}			
-
-inline void FDBase::AddFDNode(FDManager::FDNode *n)
-{
-	n->next=fds;
-	if(fds)
-	{  fds->prev=n;  }
-	fds=n;
-}
+// NOW IN fdbase.h AS SOME EARLIER GCC VERSIONS SOMETIMES GENERATE 
+// PROBLEMS WHEN LINKING. 
 
 // Be careful: old_msec_left may be -1 (after AddTimer). 
 void FDBase::_MsecLeftChanged(
@@ -533,8 +506,11 @@ void FDManager::__UpdateFDArray()
 			pfd=(pollfd*)LMalloc(sizeof(pollfd)*pfd_dim + 1);
 			if(!pfd)
 			{
-				// damn! re-allocation of pollfd array failed. 
-				// memory is REALLY LOW if we cannot get these few bytes. 
+				// Damn! Re-allocation of pollfd array failed. 
+				// Memory is REALLY LOW if we cannot get these few bytes. 
+				// NOTE: WE CAN GIVE UP COMPLETELY HERE IF THAT IS DUE TO 
+				//       LMalloc() LIMIT!
+				#warning FIXME!!!
 				pfd_dim=0;
 				// OK, what can we do?! Wait until memory is back again. 
 				usleep(25000);  // 25 msec delay (do not comsume lots of CPU)
@@ -545,54 +521,6 @@ void FDManager::__UpdateFDArray()
 			//       FDManager against poll/signal race. 
 			*(pfd++)=*pipe_pfd;   // implicite copy
 		}
-		
-		int idx=0;
-		pollfd *p=pfd;
-		for(FDBNode *fb=fdblist.first; fb; fb=fb->next)
-		{
-			FDBase *fdb=fb->fdb;
-			#if TESTING
-			if(!fdb || fdb->deleted)
-			{
-				fprintf(stderr,"BUG!! fdb=%p, deleted=%d in FDBase list (%d)\n",
-					fdb,fdb->deleted,__LINE__);
-				continue;
-			}
-			#endif
-			for(FDNode *i=fdb->fds; i; i=i->next)
-			{
-				if(i->idx==-2)
-				{
-					#if TESTING
-					fprintf(stderr,"strange: idx==-2 while fd list rebuild\n");
-					#endif
-					continue;
-				}
-				if(i->events)
-				{
-					#if TESTING
-					if(idx>=npfds)
-					{
-						fprintf(stderr,"GREAT internal error: pollnodes=%d too small.\n",
-							pollnodes);
-						exit(1);
-					}
-					#endif
-					p->fd=i->fd;
-					p->events=i->events;
-					i->idx=idx;
-					++idx;  ++p;
-				}
-				else
-				{  i->idx=-1;  }
-			}
-		}
-		#if TESTING
-		if(idx!=pollnodes)
-		{  fprintf(stderr,"internal error: pollnodes=%d != idx=%d\n",
-			pollnodes,idx);  }
-		npfds=idx;
-		#endif
 	}
 	else if(pfd_dim>=fd_thresh)
 	{
@@ -603,6 +531,55 @@ void FDManager::__UpdateFDArray()
 			pfd=pipe_pfd+1;
 		}
 	}
+	
+	int idx=0;
+	pollfd *p=pfd;
+	for(FDBNode *fb=fdblist.first; fb; fb=fb->next)
+	{
+		FDBase *fdb=fb->fdb;
+		#if TESTING
+		if(!fdb || fdb->deleted)
+		{
+			fprintf(stderr,"BUG!! fdb=%p, deleted=%d in FDBase list (%d)\n",
+				fdb,fdb->deleted,__LINE__);
+			continue;
+		}
+		#endif
+		for(FDNode *i=fdb->fds; i; i=i->next)
+		{
+			if(i->idx==-2)
+			{
+				#if TESTING
+				fprintf(stderr,"OOPS: idx==-2 while fd list rebuild\n");
+				#endif
+				continue;
+			}
+			if(i->events)
+			{
+				#if TESTING
+				if(idx>=npfds)
+				{
+					fprintf(stderr,"OOPS: GREAT internal error: pollnodes=%d too small.\n",
+						pollnodes);
+					exit(1);
+				}
+				#endif
+				p->fd=i->fd;
+				p->events=i->events;
+				i->idx=idx;
+				++idx;  ++p;
+			}
+			else
+			{  i->idx=-1;  }
+		}
+	}
+	#if TESTING
+	if(idx!=pollnodes)
+	{  fprintf(stderr,"internal error: pollnodes=%d != idx=%d\n",
+		pollnodes,idx);  }
+	npfds=idx;
+	#endif
+	
 	fdlist_change_serial=0;
 }
 
@@ -612,6 +589,9 @@ void FDManager::__UpdateFDArray()
 #if TESTING_CHECK
 #define TestingCheckFDStuff \
 { \
+	if(fdlist_change_serial) \
+	{  fprintf(stderr,"OOPS: fdlist_change_serial=%d in TestingCheckFDStuff\n", \
+		fdlist_change_serial);  }  \
 	char flag[pollnodes]; \
 	memset(flag,0,pollnodes); \
 	for(FDBNode *fb=fdblist.first; fb; fb=fb->next) \
@@ -629,7 +609,7 @@ void FDManager::__UpdateFDArray()
 			if((i->events && i->idx<0) || \
 			   (!i->events && i->idx>=0)) \
 			{  fprintf(stderr,"BUG!![tst] fd=%d has events=%d and idx=%d\n", \
-				i->fd,i->events,i->idx);  continue;  } \
+				i->fd,i->events,i->idx);  ++fdlist_change_serial;  continue;  } \
 			if(i->idx>=0) \
 			{ \
 				if(i->idx>=pollnodes) \
@@ -1101,7 +1081,7 @@ static void _fd_sigaction_failed()
 {
 	fprintf(stderr,"%s: sigaction failed: %s\n",
 		prg_name,strerror(errno));
-	abort();
+	//abort();
 }
 
 
@@ -1162,13 +1142,34 @@ FDManager::FDManager(int *failflag=NULL) :
 	
 	//quitval=-1;  <-- set in MainLoop(). 
 	
+	// Set up signal handlers: 
+	sigfillset(&full_sigset);
+	sigemptyset(&prev_sigset);
+	
+	struct sigaction sact;
+	memset(&sact,0,sizeof(sact));
+	#ifdef HLIB_CRIPPLED_SIGINFO_T
+	sact.sa_handler=&_fd_sig_handler_simple;
+	sact.sa_flags=0;   // do NOT add SA_RESTART here.
+	#else
+	sact.sa_sigaction=&_fd_sig_handler_sigaction;
+	sact.sa_flags=SA_SIGINFO;   // do NOT add SA_RESTART here.
+	#endif
+	sigfillset(&sact.sa_mask);  // block all signals during signal handler execution
+	//sact.sa_restorer=NULL;
+	for(int i=0; _fd_signals[i]!=-22000; i++)
+	{
+		if(sigaction(_fd_signals[i],&sact,NULL))
+		{  _fd_sigaction_failed();  ++failed;  }
+	}
+	
 	if(failed)
 	{
 		if(failflag)
 		{  *failflag-=failed;  return;  }
 		ConstructorFailedExit("FD");
 	}
-
+	
 	/*--- DO NOT USE >int failed< BELOW HERE. ---*/
 	
 	// Init global manager: 
@@ -1178,22 +1179,6 @@ FDManager::FDManager(int *failflag=NULL) :
 	#endif
 	
 	manager=this;
-	
-	sigfillset(&full_sigset);
-	sigemptyset(&prev_sigset);
-	
-	struct sigaction sact;
-	memset(&sact,0,sizeof(sact));
-	sact.sa_handler=NULL;  // we use sa_sigaction
-	sact.sa_sigaction=&_fd_sig_handler;
-	sigfillset(&sact.sa_mask);  // block all signals during signal handler execution
-	sact.sa_flags=SA_SIGINFO;   // do NOT add SA_RESTART here. 
-	//sact.sa_restorer=NULL;
-	for(int i=0; _fd_signals[i]>-10000; i++)
-	{
-		if(sigaction(_fd_signals[i],&sact,NULL))
-		{  _fd_sigaction_failed();  ++failed;  }
-	}
 }
 
 
@@ -1250,11 +1235,10 @@ FDManager::~FDManager()
 	#else
 	sact.sa_handler=SIG_DFL;  // default handler
 	#endif
-	sact.sa_sigaction=NULL;
 	sigemptyset(&sact.sa_mask);
 	sact.sa_flags=0;
 	//sact.sa_restorer=NULL;
-	for(int i=0; _fd_signals[i]>-10000; i++)
+	for(int i=0; _fd_signals[i]!=-22000; i++)
 	{
 		if(sigaction(_fd_signals[i],&sact,NULL))
 		{  _fd_sigaction_failed();  }
