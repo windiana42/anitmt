@@ -1,0 +1,38 @@
+This is HLIB. 
+
+Q: What license is HLIB published under?
+A: HLIB is published under the GNU General Public License version 2; 
+   see COPYING for details. 
+
+Q: Why is it called HLIB?
+A: `LIB' stands for `library' and `H' is just the next letter after 
+   `G' (as used by `GNU'). `glib' was already taken, (belongs to GTK). 
+
+Q: Can I extend HLIB with my own functions?
+A: Of course. The best idea is probably if you create your own sub-directory 
+   (like misc/ or fd/) and put your code in there. Copy a Makefile from 
+   misc/ or fd/ and modify it for your needs. Then, add your subdir to 
+   the SUBDIRS value in the main Makefile and everything should work. 
+   Also have a look at rules.make in the main directory. 
+
+Q: Wnat platforms does HLIB run on?
+A: It runs under Linux-2.2 and Linux-2.4 with >=glibc-2.1 and gcc-2.95.2. 
+   It will probably run on other platforms with minor modifications or 
+   maybe even as it is; I did not try out yet. 
+
+Q: I found a bug in HLIB. Whom do I contact?
+A: The guy who put his name in the comment at the beginning of the source 
+   code file the bug is in. 
+
+Q: What's HLIB's goal?
+A: To be 
+   * flexible, 
+   * modular in desing, 
+   * fast and 
+   * small (as of executable size). 
+   For this reason, 
+   - C++ exceptions, 
+   - runtime type identification and 
+   - the standard C++ library (libstdc++ / STL)
+   are not used by HLIB. 
+
