@@ -12,8 +12,8 @@ all-wolfgang: FORCE
 	$(MAKE) -C anitmt-view CFLAGS="" CXXFLAGS=""
 	$(MAKE) -C mkavi CFLAGS="" CXXFLAGS=""
 debug-wolfgang: FORCE
-	$(MAKE) -C hlib CXXFLAGS="-g" CFLAGS="-g" 
-	$(MAKE) -C rendview CXXFLAGS="-g"
+	$(MAKE) -C hlib CXXFLAGS="-g" CFLAGS="-g $(ADDFLAGS)" 
+	$(MAKE) -C rendview CXXFLAGS="-g $(ADDFLAGS)"
 	$(MAKE) -C lib CXXFLAGS="-g -Wno-non-template-friend -ftemplate-depth-33 -fmessage-length=$(COLUMNS) -DYYDEBUG -DWOLFGANG"
 	$(MAKE) -C anitmt-calc CXXFLAGS="-O -g -Wno-non-template-friend -ftemplate-depth-33 -fmessage-length=$(COLUMNS) -DYYDEBUG -DWOLFGANG"
 	$(MAKE) -C anitmt-view CFLAGS="-g" CXXFLAGS="-g"
