@@ -42,23 +42,23 @@ namespace anitmt{
     Prop_Tree_Node *next;	// next node
     Prop_Tree_Node *prev;	// previous node
 
-    // Other Prop_Tree_Nodes that were involved by a push to this node.
-    involve_list_type involve_list;
-  protected:
+    // Prop_Tree_Nodes that were involved in a solve run
+    static involve_list_type involve_list;
+
     // remove all entries from the involve list
-    void clear_involve_list();
+    static void clear_involve_list();
     // return the actual involve list
-    const involve_list_type &get_involve_list();
+    static const involve_list_type &get_involve_list();
+    friend Priority_Action::do_it(); // uses the two functions above
+  protected:
 
     // check each priority level until max_priority for allowed actions
     // and return a list of all involved Prop_Tree_Nodes
-    involve_list_type check_priorities( int max_priority );
+    //involve_list_type check_priorities( int max_priority );
 
     // properties
     typedef std::map<std::string, Property*> properties_type;
-    properties_type start_give_props;
     properties_type properties;
-    properties_type end_give_props;
 
     // priority levels for actions like a transmission of properties to 
     // neighbour nodes or like setting default values
@@ -68,8 +68,12 @@ namespace anitmt{
   };
 
   class Priority_Action{
+  protected:
+    involve_list_type recheck_priorities( int max_priority, 
+					  involve_list_type involved_nodes );
   public:
-    virtual involve_list_type do_it() = 0;
+    // do the action which is on the given priority level 
+    virtual involve_list_type do_it( int level ) = 0;
     
     virtual ~Priority_Action() {}
   };
@@ -80,10 +84,14 @@ namespace anitmt{
     T val;
     Prop_Tree_Node *node;
   public:
-    virtual involve_list_type do_it(){ 
-      node->clear_involve_list();
-      prop->set_if_ok( val ); 
-      return node->get_involve_list();
+    virtual involve_list_type do_it( int level ){ 
+      Prop_Tree_Node::clear_involve_list(); // prepare an empty involve list
+      // set will try to set the value and its results and additionally
+      // it will fill the involve list with the involved nodes
+      if( !prop->set_if_ok( val ) ) // set failed?
+	return involve_list_type(); // return empty list
+      
+      return recheck_priorities( level, Prop_Tree_Node::get_involve_list() );
     }
 
     Default_Value( Type_Property<T> *p, T v, Prop_Tree_Node *n ) 

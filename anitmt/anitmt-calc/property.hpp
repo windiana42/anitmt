@@ -100,6 +100,7 @@ namespace anitmt{
   //******************************************************
   class Vector_Property : public Type_Property<values::Vector>{
   public:
+    operator vect::vector3() const;	// implicite convertion to vector3
   };
 
   //******************************************************
@@ -144,10 +145,11 @@ namespace anitmt{
     return new Type_Prop_Pair<TP,T>( prop, v );
   }
 
-  // include implementation to make sure that all specializations are compiled 
-  // !in namespace is ok!
-#include "property_templ.hpp"
-
 }
+
+// include implementation to make sure that all specializations of the
+// templates are compiled 
+#include "property_templ.cpp"
+
 #endif
 

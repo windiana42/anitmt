@@ -19,24 +19,64 @@
 #include <list>
 #include <map>
 
-namespace anitmt{
+namespace anitmt {
+  class Obj_Move;
   class Obj_Move_Straight;
 }
 
 #include "val.hpp"
+#include "tmttype.hpp"
 #include "property.hpp"
 #include "solver.hpp"
 #include "proptree.hpp"
+#include "return.hpp"
 
 namespace anitmt{
+
+  //**********************************************************
+  // Obj_Move: moves Objects on a flight path
+  //**********************************************************
+  class Obj_Move : public Prop_Tree_Node, 
+		   public Return<values::Matrix>,
+		   public Return<Position>,
+		   public Return<Direction>,
+		   public Return<Up_Vector> {
+    static std::string type_name;
+    
+    Contain_Return<Position>  pos;
+    Contain_Return<Direction> dir;
+    Contain_Return<Up_Vector> up;
+
+    Vector_Property c;		// rotation center (?piveau? point)
+  public:
+    Obj_Move( std::string name );
+    
+    values::Matrix get_return_value( values::Scalar t, 
+				     values::Matrix m = values::Matrix() );
+    Position get_return_value( values::Scalar t, 
+			       Position m = Position() );
+    Direction get_return_value( values::Scalar t, 
+				Direction m = Direction() );
+    Up_Vector get_return_value( values::Scalar t, 
+				Up_Vector m = Up_Vector() );
+  };
+  
+
   //**********************************************************
   // Obj_Move_Straight: moves Objects on a staight flight path
   //**********************************************************
-  class Obj_Move_Straight : public Prop_Tree_Node{
+  class Obj_Move_Straight : public Prop_Tree_Node, 
+			    public Return<Position>, 
+			    public Return<Direction>,
+			    public Return<Up_Vector> {
+    static std::string type_name;
+
     Vector_Property s0;		// startpos
     Vector_Property se;		// endpos
     Vector_Property d0;		// startdir
     Vector_Property de;		// enddir
+    Vector_Property u0;		// startup
+    Vector_Property ue;		// endup
     Scalar_Property s;		// length
     Scalar_Property t;		// duration in s
     Scalar_Property t0;		// starttime in s
@@ -51,47 +91,12 @@ namespace anitmt{
     //...
   protected:
   public:
-    Obj_Move_Straight(){
-      new Accel_Solver( &s, &t, &a, &v0, &ve );
-      new Diff_Solver( &t, &t0, &te );
-      new Diff_Solver( &t_f, &t0_f, &te_f );
-      
-      properties["startpos"] = &s0;
-      properties["endpos"] = &se;
-      properties["length"] = &s;
-      properties["duration"] = &t;
-      properties["acceleration"] = &a;
-      properties["startspeed"] = &v0;
-      properties["endspeed"] = &ve;
-      //...
-      
-      /*
-      start_give_props["time"] = &t0;
-      start_give_props["pos"] = &s0;
-      start_give_props["speed"] = &v0;
-      //...
-
-      end_give_props["time"] = &te;
-      end_give_props["pos"] = &se;
-      end_give_props["speed"] = &ve;
-      //...
-
-      priority_level[1] = new &t0, dir::back)  );
-      priority_level[2].push_back( prop_dir_pair(&te, dir::front)  );
-      //...
-      */
- 
-      //add_start_give_prop(&t0, "time", 1 /*priority*/ );
-      //add_end_give_prop  (&te, "time", 2 /*priority*/ );
- 
-      priority_level[3] = new Default_Value<values::Scalar>( &a, 0, this );
-      //...
-      /*
-      add_default_value( &a, values::Scalar(0) );
-      */
-    }
+    Obj_Move_Straight( std::string name );
+    
+    Position get_return_value( values::Scalar t, Position = Position() );
+    Direction get_return_value( values::Scalar t, Direction = Direction() );
+    Up_Vector get_return_value( values::Scalar t, Up_Vector = Up_Vector() );
   };
-
 }
 #endif
 

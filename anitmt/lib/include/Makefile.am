@@ -1,2 +1,1 @@
-EXTRA_DIST=.cvsignore
-noinst_HEADERS=val.hpp utl.hpp
+noinst_HEADERS=val.hpp vector.hpp vector3.hh utl.hpp
