@@ -6,12 +6,16 @@
 CFLAGS='@CFLAGS@'
 CXXFLAGS='@CXXFLAGS@'
 LDADD='@LDADD@'
+CC='@CC@'
+CXX='@CXX@'
 
 case "$1" in
 	"") ;;
 	"CFLAGS")    echo "$CFLAGS" ;;
 	"CXXFLAGS")  echo "$CXXFLAGS" ;;
 	"LDADD")     echo "$LDADD" ;;
+	"CC")        echo "$CC" ;;
+	"CXX")       echo "$CXX" ;;
 	*)  echo "[unknown]" ;;
 esac
 

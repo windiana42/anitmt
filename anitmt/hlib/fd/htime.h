@@ -183,7 +183,7 @@ class HTime
 		// This is useful to print elapsed times: 
 		// (You may use operator-() to calc elapsed time.) 
 		// Returns static buffer. 
-		const char *PrintElapsed() const;
+		const char *PrintElapsed(int with_msec=1) const;
 		
 		// This can be used to read in time from a string. 
 		// This is done in the following way: localtime(3) is used to 

@@ -75,6 +75,9 @@ hlibcfg_final_add_cxxflags="\$(ADDFLAGS) \$(ADDCXXFLAGS)"
 if test "$GXX" = "yes" ; then
 	HLIB_CXXCOMPILER_VERSION="GCC:"
 	
+	# We use gcc and NOT g++: 
+	CXX="${CXX/"g++"/gcc}"
+	
 	# Make sure that we get rid of the horrible default "-g -O2":
 	# See above for more info...
 	CFLAGS=""

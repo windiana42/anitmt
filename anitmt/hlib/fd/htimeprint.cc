@@ -51,7 +51,7 @@ const char *HTime::PrintTime(int local,int with_msec) const
 }
 
 
-const char *HTime::PrintElapsed() const
+const char *HTime::PrintElapsed(int with_msec) const
 {
 	if(IsInvalid())
 	{  return(_is_invalid_str);  }
@@ -81,7 +81,7 @@ const char *HTime::PrintElapsed() const
 		ptr+=snprintf(ptr,end-ptr,"%ldd ",hours/24);
 		hours%=24;
 	}
-	snprintf(ptr,end-ptr,"%02ld:%02ld:%02ld.%03ld",
+	snprintf(ptr,end-ptr,with_msec ? "%02ld:%02ld:%02ld.%03ld" : "%02ld:%02ld:%02ld",
 		hours,
 		(sec/60)%60,
 		sec%60,
