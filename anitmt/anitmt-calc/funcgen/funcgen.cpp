@@ -61,7 +61,7 @@ FuncgenParameters::FuncgenParameters(par::ParameterManager *manager) :
   AddParam("i/input","input file",&in_file);
   AddParam("o/output","output basename",&out_basename);
   AddParam("n/namespace","namespace",&namesp);
-  AddParam("I","include path",&include_path);
+  AddParam("I","include path (use -I+=path to add a path)",&include_path);
 }
 
 int FuncgenParameters::CheckParams()
