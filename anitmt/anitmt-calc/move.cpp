@@ -29,7 +29,8 @@ namespace anitmt{
   //    returns type name as string
   //
   //
-  std::string Obj_Move::get_type_name(){
+  std::string Obj_Move::get_type_name()
+  {
     return type_name;
   }
 
@@ -43,8 +44,8 @@ namespace anitmt{
     : Prop_Tree_Node( type_name, name, ani ),
       pos(true,false),
       dir(true,false),
-      up(true,false) {
-
+      up(true,false) 
+  {
     add_property( "center", &c );
   }
 
@@ -55,8 +56,8 @@ namespace anitmt{
   //
   //
   values::Matrix Obj_Move::get_return_value( values::Scalar t, 
-					     values::Matrix ) {
-
+					     values::Matrix ) 
+  {
     values::Matrix ret;
 
     //ret *= values::Matrix::translate( -c );
@@ -67,20 +68,21 @@ namespace anitmt{
     return ret;
   }
 
-  Position Obj_Move::get_return_value( values::Scalar t, 
-				       Position ) {
+  Position Obj_Move::get_return_value( values::Scalar t, Position ) 
+  {
     return pos.get_return_value( t );
   }
-  Direction Obj_Move::get_return_value( values::Scalar t, 
-					Direction ) {
+  Direction Obj_Move::get_return_value( values::Scalar t, Direction ) 
+  {
     return dir.get_return_value( t );
   }
-  Up_Vector Obj_Move::get_return_value( values::Scalar t, 
-					Up_Vector ) {
+  Up_Vector Obj_Move::get_return_value( values::Scalar t, Up_Vector ) 
+  {
     return up.get_return_value( t );
   }
 
-  bool Obj_Move::try_add_child( Prop_Tree_Node *node ){
+  bool Obj_Move::try_add_child( Prop_Tree_Node *node )
+  {
     Return<Position>  *p = dynamic_cast< Return<Position>*  >( node );
     Return<Direction> *d = dynamic_cast< Return<Direction>* >( node );
     Return<Up_Vector> *u = dynamic_cast< Return<Up_Vector>* >( node );
@@ -99,15 +101,20 @@ namespace anitmt{
 
   const std::string Obj_Move_Straight::type_name = "straight";
 
-  std::string Obj_Move_Straight::get_type_name(){
+  std::string Obj_Move_Straight::get_type_name()
+  {
     return type_name;
   }
 
   Obj_Move_Straight::Obj_Move_Straight( std::string name, Animation *ani ) 
-    : Prop_Tree_Node( type_name, name, ani ) {
+    : Prop_Tree_Node( type_name, name, ani ) 
+  {
     establish_accel_solver( s, t, a, v0, ve );
     establish_sum_solver( te, t, t0 );
     establish_sum_solver( te_f, t_f, t0_f );
+    //establish_product_solver( t_f, t, ?FPS? ); // t_f = t * fps 
+    //establish_product_solver( t0_f, t0, ?FPS? ); // t0_f = t0 * fps 
+    //establish_product_solver( te_f, te, ?FPS? ); // te_f = te * fps 
     
     add_property( "startpos", &s0 );
     add_property( "startpos", &s0 );
@@ -123,24 +130,28 @@ namespace anitmt{
   }
     
   Position Obj_Move_Straight::get_return_value( values::Scalar t,
-						Position ) {
-    values::Scalar s_t = v0 * t + 0.5 * a * t*t;
-    values::Scalar rel_pos = s / s_t;
+						Position ) 
+  {
+    values::Scalar s_t = v0() * t + 0.5 * a() * t*t;
+    values::Scalar rel_pos = s() / s_t;
 
-    return (1-rel_pos)*s0 + rel_pos*se;
+    return (1-rel_pos)*s0() + rel_pos*se();
   }
 
   Direction Obj_Move_Straight::get_return_value( values::Scalar t,
-						 Direction ) {
-    return d0 * (1/abs(d0));	// !!! rotations not reguarded
+						 Direction ) 
+  {
+    return d0() * (1/abs(d0())); // !!! rotations not reguarded
   }
 
   Up_Vector Obj_Move_Straight::get_return_value( values::Scalar t, 
-						 Up_Vector ) {
-    return u0 * (1/abs(u0));	// !!! object rotation not reguarded
+						 Up_Vector ) 
+  {
+    return u0() * (1/abs(u0())); // !!! object rotation not reguarded
   }
 
-  bool Obj_Move_Straight::try_add_child( Prop_Tree_Node *node ){
+  bool Obj_Move_Straight::try_add_child( Prop_Tree_Node *node )
+  {
     return false;		// straight has no childs
   }
 }

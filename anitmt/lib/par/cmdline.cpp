@@ -35,7 +35,7 @@
  *
  */
 
-#include "pars.hpp"
+#include "params.hpp"
 
 #ifndef VERSION
 #warning "VERSION not defined."

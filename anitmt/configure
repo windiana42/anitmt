@@ -1523,7 +1523,7 @@ EOF
 
 fi
 
-if test "$LEX" != "flex"; then echo "Warning: You need flex for rebuild of .lxx-sources!"; fi
+if test "$LEX" != "flex"; then echo "Warning: You need flex for rebuild of .ll-sources!"; fi
 trap '' 1 2 15
 cat > confcache <<\EOF
 # This file is a shell script that caches the results of configure

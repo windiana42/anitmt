@@ -9,7 +9,7 @@ libadlparser_a_SOURCES=		scanner.ll \
 
 
 adltest_SOURCES=		adltest.cpp
-adltest_LDADD=			libadlparser.a ../libanitmt.a ../../lib/val/libval.a -lfl
+adltest_LDADD=			libadlparser.a ../libanitmt.a ../../lib/val/libval.a ../../lib/par/libpar.a -lfl
 
 YLWRAP  = $(top_srcdir)/ylwrap
 

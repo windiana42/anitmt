@@ -22,12 +22,14 @@ namespace anitmt{
 
   const std::string Scal_Linear::type_name = "linear";
 
-  std::string Scal_Linear::get_type_name(){
+  std::string Scal_Linear::get_type_name()
+  {
     return type_name;
   }
 
   Scal_Linear::Scal_Linear( std::string name, Animation *ani ) 
-    : Prop_Tree_Node( type_name, name, ani ) {
+    : Prop_Tree_Node( type_name, name, ani ) 
+  {
 
     //*********
     // Solvers
@@ -36,9 +38,9 @@ namespace anitmt{
     establish_sum_solver( te, t, t0 );
     establish_sum_solver( te_f, t_f, t0_f );
     establish_product_solver( d, s, t ); // d = s * t 
-    //new Relation_Solver( ?FPS?, &t_f, &t );
-    //new Relation_Solver( ?FPS?, &t0_f, &t0 );
-    //new Relation_Solver( ?FPS?, &te_f, &te );
+    //establish_product_solver( t_f, t, ?FPS? ); // t_f = t * fps 
+    //establish_product_solver( t0_f, t0, ?FPS? ); // t0_f = t0 * fps 
+    //establish_product_solver( te_f, te, ?FPS? ); // te_f = te * fps 
 
     //*********************
     // Register Properties
@@ -91,7 +93,8 @@ namespace anitmt{
   // Pushes
 
   // initializes the connection to next/previous node
-  void Scal_Linear::init_next( Return<values::Scalar> *next ) {
+  void Scal_Linear::init_next( Return<values::Scalar> *next ) 
+  {
     Prop_Tree_Node *next_node = dynamic_cast< Prop_Tree_Node* >( next );
 
     // push endtime to next starttime on level 1
@@ -102,7 +105,8 @@ namespace anitmt{
 			       3, ve, next_node, "startvalue" );
   }
 
-  void Scal_Linear::init_prev( Return<values::Scalar> *prev ) {
+  void Scal_Linear::init_prev( Return<values::Scalar> *prev ) 
+  {
     Prop_Tree_Node *prev_node = dynamic_cast< Prop_Tree_Node* >( prev );
 
     // push starttime to previous endtime on level 2
@@ -114,11 +118,13 @@ namespace anitmt{
   }
     
   values::Scalar Scal_Linear::get_return_value( values::Scalar t,
-						values::Scalar ) {
-    return v0 + s * t;
+						values::Scalar ) 
+  {
+    return v0() + s() * t;
   }
 
-  bool Scal_Linear::try_add_child( Prop_Tree_Node *node ){
+  bool Scal_Linear::try_add_child( Prop_Tree_Node *node )
+  {
     return false;		// straight has no childs
   }
 }

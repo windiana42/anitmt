@@ -180,6 +180,7 @@ namespace anitmt
   public:	
     inline bool is_solved() const;
     inline const T& get_value() const;
+    inline const T& operator()() const;	// returns value 
     inline bool set_value( T res, 
 			   Solve_Problem_Handler *handler = &default_handler )
       throw(EX);

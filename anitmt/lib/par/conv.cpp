@@ -38,7 +38,7 @@
 #include <errno.h>
 #include <limits.h>
 #include <iostream>
-#include "pars.hpp"
+#include "params.hpp"
 
 namespace anitmt
 {

@@ -25,23 +25,26 @@ namespace anitmt{
   // type name identifier as string
   const std::string Ani_Scalar::type_name = "scalar";
 
-  std::string Ani_Scalar::get_type_name(){
+  std::string Ani_Scalar::get_type_name()
+  {
     return type_name;
   }
 
   Ani_Scalar::Ani_Scalar( std::string name, Animation *ani ) 
     : Prop_Tree_Node( type_name, name, ani ),
-      s(false,false) {
-
+      s(false,false) 
+  {
+    
   }
 
   Scalar_State Ani_Scalar::get_return_value( values::Scalar t, 
-					     Scalar_State ){
+					     Scalar_State )
+  {
     return s.get_return_value(t);
   }
 
-  bool Ani_Scalar::try_add_child( Prop_Tree_Node *node ){
-
+  bool Ani_Scalar::try_add_child( Prop_Tree_Node *node )
+  {
     Return<values::Scalar>  *scal = 
       dynamic_cast< Return<values::Scalar>*  >( node );
 

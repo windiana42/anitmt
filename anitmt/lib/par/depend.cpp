@@ -36,7 +36,7 @@
  *
  */
 
-#include "pars.hpp"
+#include "params.hpp"
 #include <string.h>
 
 namespace anitmt

@@ -24,7 +24,7 @@
 #include "proptree.hpp"
 #include "return.hpp"
 
-#include "options.hpp"
+#include "params.hpp"
 
 namespace anitmt{
 
@@ -47,7 +47,7 @@ namespace anitmt{
     //*****************************************
     // semi global variables for the animation
 
-    Animation_Options opts;	// all options
+    Animation_Parameters param;	// all options
     Priority_System   pri_sys;	// priority system
   };
 }
