@@ -63,6 +63,7 @@ class TaskSourceFactory_Local :
 			RefString routfpattern;      // render output file name pattern
 			bool render_resume_flag;
 			long rtimeout;               // render timeout (msec; initially seconds)
+			RefStrList radd_files;       // Additional files
 			
 			// Filter stuff: 
 			const FilterDesc *fdesc;     // filter to use
@@ -70,6 +71,7 @@ class TaskSourceFactory_Local :
 			RefString fdir;              // cd into fdir before calling filter
 			RefString foutfpattern;      // filter output file name pattern
 			long ftimeout;               // filter timeout (msec; initially seconds)
+			RefStrList fadd_files;       // Additional files
 			
 			// NOTE: as long as ii!=NULL, the information in *this 
 			//       was not properly set up from the data in ii. 
@@ -77,6 +79,8 @@ class TaskSourceFactory_Local :
 			
 			_CPP_OPERATORS_FF
 			PerFrameTaskInfo(int *failflag=NULL);
+			// NOTE: ii is not copied. 
+			PerFrameTaskInfo(PerFrameTaskInfo *copy_from,int *failflag);
 			~PerFrameTaskInfo();
 		};
 	private:
@@ -106,6 +110,9 @@ class TaskSourceFactory_Local :
 		// requests: 
 		long response_delay;
 		
+		// Check if the per-frame block f0,n will ever be used (1) or not (0): 
+		inline int _CheckWillUseFrameBlock(int f0,int n);
+		
 		PerFrameTaskInfo *_DoGetPerFrameTaskInfo(int frame_no,int *next_pfbs);
 		
 		const char *_FrameInfoLocationString(const PerFrameTaskInfo *fi);
@@ -117,6 +124,8 @@ class TaskSourceFactory_Local :
 		int _Param_ParseRenderDesc(PerFrameTaskInfo *fi,int warn_unspec);
 		int _Param_ParseFilterDesc(PerFrameTaskInfo *fi);
 		
+		void _VPrintFrameInfo_DumpListIfNeeded(const char *title,
+			const RefStrList *compare_to,const RefStrList *list);
 		void _VPrintFrameInfo(PerFrameTaskInfo *fi,
 			const PerFrameTaskInfo *compare_to);
 		

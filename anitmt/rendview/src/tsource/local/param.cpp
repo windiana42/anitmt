@@ -323,6 +323,29 @@ int TaskSourceFactory_Local::_Param_ParseFilterDesc(PerFrameTaskInfo *fi)
 }
 
 
+void TaskSourceFactory_Local::_VPrintFrameInfo_DumpListIfNeeded(
+	const char *title,const RefStrList *compare_to,const RefStrList *list)
+{
+	if(compare_to)
+	{
+		// This is a simple compare algo; the lists have to match 
+		// also in order. 
+		for(const RefStrList::Node *i=list->first(),*j=compare_to->first(); 
+			(i || j) /* <== REALLY! */; i=i->next,j=j->next)
+		{
+			if(!(i && j))  goto doit;
+			if((*i)!=(*j))  goto doit;
+		}
+		return; doit:;
+	}
+	
+	Verbose(TSI,"%s:",title);
+	for(const RefStrList::Node *i=list->first(); i; i=i->next)
+	{  Verbose(TSI," %s",i->str());  }
+	Verbose(TSI,"%s\n",list->is_empty() ? " [none]" : "");
+}
+
+
 // Only print info if it is different from the one in compare_to. 
 // Pass compare_to=NULL to get it all dumped. 
 void TaskSourceFactory_Local::_VPrintFrameInfo(PerFrameTaskInfo *fi,
@@ -358,18 +381,20 @@ void TaskSourceFactory_Local::_VPrintFrameInfo(PerFrameTaskInfo *fi,
 				"resume (-rcont)" : "re-render (-no-rcont)");  }
 		if(!compare_to || fi->rdir!=compare_to->rdir)
 		{  Verbose(TSI,"      Render dir: %s\n",fi->rdir.str() ? fi->rdir.str() : "[cwd]");  }
-	}
-	#warning radd_args not dumped. 
-	
-	if(!compare_to || 
-	   (fi->rtimeout!=compare_to->rtimeout) )
-	{
-		char tmp[32];
-		if(fi->rtimeout<=0)
-		{  strcpy(tmp,"[none]");  }
-		else
-		{  snprintf(tmp,32,"%ld seconds",fi->rtimeout/1000);  }
-		Verbose(TSI,"      Render timeout: %s\n",tmp);
+		if(!compare_to || 
+		   (fi->rtimeout!=compare_to->rtimeout) )
+		{
+			char tmp[32];
+			if(fi->rtimeout<=0)
+			{  strcpy(tmp,"[none]");  }
+			else
+			{  snprintf(tmp,32,"%ld seconds",fi->rtimeout/1000);  }
+			Verbose(TSI,"      Render timeout: %s\n",tmp);
+		}
+		_VPrintFrameInfo_DumpListIfNeeded("      Add args",
+			compare_to ? &compare_to->radd_args : NULL,&fi->radd_args);
+		_VPrintFrameInfo_DumpListIfNeeded("      Add files",
+			compare_to ? &compare_to->radd_files : NULL,&fi->radd_files);
 	}
 	
 	if(!compare_to || 
@@ -387,18 +412,20 @@ void TaskSourceFactory_Local::_VPrintFrameInfo(PerFrameTaskInfo *fi,
 	{
 		if(!compare_to || fi->fdir!=compare_to->fdir)
 		{  Verbose(TSI,"      Filter dir: %s\n",fi->fdir.str() ? fi->fdir.str() : "[cwd]");  }
-	}
-	#warning fadd_args not dumped. 
-	
-	if(!compare_to || 
-	   (fi->ftimeout!=compare_to->ftimeout) )
-	{
-		char tmp[32];
-		if(fi->ftimeout<=0)
-		{  strcpy(tmp,"[none]");  }
-		else
-		{  snprintf(tmp,32,"%ld seconds",fi->ftimeout/1000);  }
-		Verbose(TSI,"      Filter timeout: %s\n",tmp);
+		if(!compare_to || 
+		   (fi->ftimeout!=compare_to->ftimeout) )
+		{
+			char tmp[32];
+			if(fi->ftimeout<=0)
+			{  strcpy(tmp,"[none]");  }
+			else
+			{  snprintf(tmp,32,"%ld seconds",fi->ftimeout/1000);  }
+			Verbose(TSI,"      Filter timeout: %s\n",tmp);
+		}
+		_VPrintFrameInfo_DumpListIfNeeded("      Add args",
+			compare_to ? &compare_to->fadd_args : NULL,&fi->fadd_args);
+		_VPrintFrameInfo_DumpListIfNeeded("      Add files",
+			compare_to ? &compare_to->fadd_files : NULL,&fi->fadd_files);
 	}
 	
 	if(!compare_to || 
@@ -454,6 +481,13 @@ static void _FrameBlockTimeoutOverride(long *timeout,TaskDriverType dtype,
 	{  *timeout=master_timeout;  }  // master_timeout already in msec
 	else
 	{  ConvertTimeout2MSec(timeout,dtype==DTRender ? _ltsrt_str : _ltsft_str);  }
+}
+
+
+// Check if the per-frame block f0,n will ever be used (1) or not (0): 
+inline int TaskSourceFactory_Local::_CheckWillUseFrameBlock(int f0,int n)
+{
+	return( !((nframes>=0 && f0>=(startframe+nframes)) || (f0+n)<startframe) );
 }
 
 
@@ -542,8 +576,7 @@ int TaskSourceFactory_Local::FinalInit()
 				goto cfailed;
 			}
 			
-			if((nframes>=0 && fi->first_frame_no>=(startframe+nframes)) || 
-			   (fi->first_frame_no+fi->nframes)<startframe )
+			if(!_CheckWillUseFrameBlock(fi->first_frame_no,fi->nframes))
 			{  ++never_used;  goto cdelete;  }
 			
 			continue;
@@ -571,26 +604,6 @@ int TaskSourceFactory_Local::FinalInit()
 			}
 			fi_list.append(fi);
 			enqueued:;
-		}
-		
-		// Finally, check for overlapping regions: 
-		if(fi_list.first() && fi_list.first()->next)  // need at least 2 elems
-		{
-			for(PerFrameTaskInfo *fi=fi_list.first(); fi->next; fi=fi->next)
-			{
-				// Collision detection: Check if fi collides with fi->next. 
-				// NOTE: fi->next not NULL here (see for() condition). 
-				if(fi->first_frame_no+fi->nframes>fi->next->first_frame_no)
-				{
-					// So they overlap. 
-					// MISSING: See if they are disjunct. 
-					#warning could create three PFBlocks if they are disjunct. 
-					Error("Local: %s: Per-frame info overlaps with %d:%d.\n",
-						_FrameInfoLocationString(fi),
-						fi->next->first_frame_no,fi->next->nframes);
-					++failed;
-				}
-			}
 		}
 	}
 	
@@ -636,7 +649,9 @@ int TaskSourceFactory_Local::FinalInit()
 		// Note... radd_args and fadd_args contain one NULL ref by 
 		//         default to see if they were modified. Delete that. 
 		_DeleteStrListFirstNULLRef(&master_fi.radd_args);
+		_DeleteStrListFirstNULLRef(&master_fi.radd_files);
 		_DeleteStrListFirstNULLRef(&master_fi.fadd_args);
+		_DeleteStrListFirstNULLRef(&master_fi.fadd_files);
 		
 		// Okay, now set up the rest of the members in the per-frame 
 		// info structures: 
@@ -659,7 +674,9 @@ int TaskSourceFactory_Local::FinalInit()
 			// If the first NULL-string is still there, we prepend 
 			// the master params, else we override. 
 			_AppendOverrideStrListArgs(&fi->radd_args,&master_fi.radd_args);
+			_AppendOverrideStrListArgs(&fi->radd_files,&master_fi.radd_files);
 			_AppendOverrideStrListArgs(&fi->fadd_args,&master_fi.fadd_args);
+			_AppendOverrideStrListArgs(&fi->fadd_files,&master_fi.fadd_files);
 			
 			// NOTE: We will NOT delete fdesc=rdesc=NULL blocks UNLESS the 
 			//       master block is also fdesc=rdesc=NULL. This allows to 
@@ -673,6 +690,77 @@ int TaskSourceFactory_Local::FinalInit()
 			
 			Error("*** Check if it is possible to create invalid per-frame block if no action for master block (or invalid data for master block such as wicth=-1) ***\n");
 			
+		}
+	}
+	
+	if(!failed)
+	{
+		// Finally, check for overlapping blocks and split them: 
+		if(fi_list.first() && fi_list.first()->next)  // need at least 2 elems
+		{
+			for(PerFrameTaskInfo *_fi=fi_list.first(); (_fi && _fi->next); )
+			{
+				PerFrameTaskInfo *fi=_fi;
+				_fi=_fi->next;
+				
+				// Collision detection: Check if fi collides with fi->next. 
+				// NOTE: fi->next not NULL here (see for() condition). 
+				if(fi->first_frame_no+fi->nframes<=fi->next->first_frame_no)
+				{  continue;  }
+				
+				// So they overlap. 
+				// There can be up to three resulting per-frame blocks: 
+				int s0_f0=fi->first_frame_no;
+				int s0_n=fi->next->first_frame_no-fi->first_frame_no;
+				int s1_f0=fi->next->first_frame_no;
+				int s1_n=fi->first_frame_no+fi->nframes-fi->next->first_frame_no;
+				int s2_f0=fi->first_frame_no+fi->nframes;
+				int s2_n=fi->next->first_frame_no+fi->next->nframes-
+					(fi->first_frame_no+fi->nframes);
+				Verbose(TSP,"Local: %s: Per-frame info overlaps with %d:%d; "
+					"splitting into:",
+					_FrameInfoLocationString(fi),
+					fi->next->first_frame_no,fi->next->nframes);
+				// We do not generate blocks which will neber ne used. 
+				if(s1_n>0 && _CheckWillUseFrameBlock(s1_f0,s1_n))
+				{
+					Verbose(TSP," %d,%d",s1_f0,s1_n);
+					
+					PerFrameTaskInfo *s1=NEW<PerFrameTaskInfo>();
+					_CheckAllocFail(!s1);
+					delete s1->ii;  s1->ii=NULL;
+					
+					// Okay, actually merge it: 
+					Error("Merging overlapping per-frame blocks not yet supported.\n");
+					hack_assert(0);
+					
+					s1->first_frame_no=s1_f0;
+					s1->nframes=s1_n;
+					
+					fi_list.queueafter(s1,fi);
+				}
+				// DONT CHANGE THIS ORDER. 
+				if(s2_n>0 && _CheckWillUseFrameBlock(s2_f0,s2_n))
+				{
+					Verbose(TSP," %d,%d",s2_f0,s2_n);
+					fi->next->first_frame_no=s2_f0;
+					fi->next->nframes=s2_n;
+				}
+				else
+				{  delete fi_list.dequeue(fi->next);  }
+				// DONT CHANGE THIS ORDER. 
+				_fi=fi->prev;  // May be NULL, yes... (see below)
+				if(s0_n>0 && _CheckWillUseFrameBlock(s0_f0,s0_n))
+				{
+					Verbose(TSP," %d,%d",s0_f0,s0_n);
+					fi->first_frame_no=s0_f0;
+					fi->nframes=s0_n;
+				}
+				else
+				{  delete fi_list.dequeue(fi);  }
+				Verbose(TSP,"\n");
+				if(!_fi)  _fi=fi_list.first();
+			}
 		}
 	}
 	
@@ -980,6 +1068,8 @@ int TaskSourceFactory_Local::_RegisterFrameInfoParams(PerFrameTaskInfo *fi,
 		fi ? &fi->ii->rdesc_string : NULL,flags);
 	AddParam("rargs","additional args to be passed to the renderer",
 		fi ? &fi->radd_args : NULL,flags);
+	//AddParam("rfiles","additional files needed by the rendering process",
+	//	fi ? &fi->radd_files : NULL,flags);
 	ParamInfo *tmp=AddParam("rcont",
 		"resume cont; This switch enables/disables render continue "
 		"feature: If enabled, interrupted files are named *-unfinished "
@@ -1007,6 +1097,8 @@ int TaskSourceFactory_Local::_RegisterFrameInfoParams(PerFrameTaskInfo *fi,
 		fi ? &fi->ii->fdesc_string : NULL,flags);
 	AddParam("fargs","additional args to be passed to the filter",
 		fi ? &fi->fadd_args : NULL,flags);
+	//AddParam("ffiles","additional files needed by the filtering process",
+	//	fi ? &fi->fadd_files : NULL,flags);
 	AddParam("fdir","chdir to this directory before calling filter",
 		fi ? &fi->fdir : NULL,flags);
 	AddParam("fofpattern","filter output file pattern (e.g. f%07d-f.png; "
@@ -1087,13 +1179,16 @@ TaskSourceFactory_Local::~TaskSourceFactory_Local()
 
 TaskSourceFactory_Local::PerFrameTaskInfo::PerFrameTaskInfo(int *failflag) : 
 	LinkedListBase<PerFrameTaskInfo>(),
+	// !!DONT FORGET THE COPY CONSTRUCTOR BELOW!!
 	radd_args(failflag),
 	rdir(failflag),
 	rinfpattern(failflag),
 	routfpattern(failflag),
+	radd_files(failflag),
 	fadd_args(failflag),
 	fdir(failflag),
-	foutfpattern(failflag)
+	foutfpattern(failflag),
+	fadd_files(failflag)
 {
 	// This is always called with passed failflag: 
 	assert(failflag);
@@ -1116,6 +1211,54 @@ TaskSourceFactory_Local::PerFrameTaskInfo::PerFrameTaskInfo(int *failflag) :
 	ii=NEW<PerFrameTaskInfo_Internal>();
 	if(!ii)
 	{  --(*failflag);  }
+}
+
+TaskSourceFactory_Local::PerFrameTaskInfo::PerFrameTaskInfo(
+	PerFrameTaskInfo *c,int *failflag) : 
+	// !!DONT FORGET THE NORMAL CONSTRUCTOR ABOVE!!
+	LinkedListBase<PerFrameTaskInfo>(),
+	radd_args(failflag),
+	rdir(failflag),
+	rinfpattern(failflag),
+	routfpattern(failflag),
+	radd_files(failflag),
+	fadd_args(failflag),
+	fdir(failflag),
+	foutfpattern(failflag),
+	fadd_files(failflag)
+{
+	// This is always called with passed failflag: 
+	assert(failflag);
+	int failed=0;
+	
+	assert(c->ii==NULL);  // Not copied. 
+	ii=NULL;
+	
+	first_frame_no=c->first_frame_no;
+	nframes=c->nframes;
+	tobe_rendered=c->tobe_rendered;
+	tobe_filtered=c->tobe_filtered;
+	
+	width=c->width;
+	height=c->height;
+	oformat=c->oformat;
+	rdesc=c->rdesc;
+	if(radd_args.append(&c->radd_args))  ++failed;
+	rdir=c->rdir;
+	rinfpattern=c->rinfpattern;
+	routfpattern=c->routfpattern;
+	render_resume_flag=c->render_resume_flag;
+	rtimeout=c->rtimeout;
+	if(radd_files.append(&c->radd_files))  ++failed;
+	
+	fdesc=c->fdesc;
+	if(fadd_args.append(&c->fadd_args))  ++failed;
+	fdir=c->fdir;
+	foutfpattern=c->foutfpattern;
+	ftimeout=c->ftimeout;
+	if(fadd_files.append(&c->fadd_files))  ++failed;
+	
+	(*failflag)-=failed;
 }
 
 TaskSourceFactory_Local::PerFrameTaskInfo::~PerFrameTaskInfo()

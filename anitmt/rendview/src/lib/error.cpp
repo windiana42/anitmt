@@ -50,6 +50,16 @@ void InitRVOutputParams(int &argc,char **argv,char ** /*envp*/)
 		| VERBOSE_0
 		;
 	
+	// These work on my Linux XTerm and (not that goog) Linux console. 
+	rv_oparams.console_red_start="\33[0;31m";
+	rv_oparams.console_red_end="\33[00m";
+	rv_oparams.console_Red_start="\33[1;31m";
+	rv_oparams.console_Red_end="\33[00m";
+	rv_oparams.console_blue_start="\33[0;34m";
+	rv_oparams.console_blue_end="\33[00m";
+	rv_oparams.console_Blue_start="\33[1;34m";
+	rv_oparams.console_Blue_end="\33[00m";
+	
 	// Check cmd line: 
 	int color_arg=0;
 	for(int i=1; i<argc; i++)
@@ -92,10 +102,10 @@ void Error(const char *fmt,...)
 	va_list ap;
 	va_start(ap,fmt);
 	if(rv_oparams.enable_color_stderr)
-	{  fprintf(stderr,"\33[1;31m");  }
+	{  fprintf(stderr,rv_oparams.console_Red_start);  }
 	vfprintf(stderr,fmt,ap);
 	if(rv_oparams.enable_color_stderr)
-	{  fprintf(stderr,"\33[00m");  }
+	{  fprintf(stderr,rv_oparams.console_Red_end);  }
 	va_end(ap);
 }
 
@@ -104,10 +114,10 @@ void Warning(const char *fmt,...)
 	va_list ap;
 	va_start(ap,fmt);
 	if(rv_oparams.enable_color_stderr)
-	{  fprintf(stderr,"\33[0;31m");  }
+	{  fprintf(stderr,rv_oparams.console_red_start);  }
 	vfprintf(stderr,fmt,ap);
 	if(rv_oparams.enable_color_stderr)
-	{  fprintf(stderr,"\33[00m");  }
+	{  fprintf(stderr,rv_oparams.console_red_end);  }
 	va_end(ap);
 }
 
@@ -116,10 +126,10 @@ void _Verbose(const char *fmt,...)
 	va_list ap;
 	va_start(ap,fmt);
 	if(rv_oparams.enable_color_stdout)
-	{  fprintf(stdout,"\33[0;34m");  }
+	{  fprintf(stdout,rv_oparams.console_blue_start);  }
 	vfprintf(stdout,fmt,ap);
 	if(rv_oparams.enable_color_stdout)
-	{  fprintf(stdout,"\33[00m");  }
+	{  fprintf(stdout,rv_oparams.console_blue_end);  }
 	va_end(ap);
 	fflush(stdout);
 }
@@ -133,11 +143,11 @@ void VerboseSpecial(const char *fmt,...)
 	if(rv_oparams.enable_color_stdout)
 	{
 		//fprintf(stdout,"\33[0;42m");   // <-- green background
-		fprintf(stdout,"\33[1;34m");   // <-- bold blue 
+		fprintf(stdout,rv_oparams.console_Blue_start);   // <-- bold blue 
 	}
 	vfprintf(stdout,fmt,ap);
 	if(rv_oparams.enable_color_stdout)
-	{  fprintf(stdout,"\33[00m\n");  }
+	{  fprintf(stdout,"%s\n",rv_oparams.console_Blue_end);  }
 	else
 	{  fprintf(stdout,"\n");  }
 	va_end(ap);

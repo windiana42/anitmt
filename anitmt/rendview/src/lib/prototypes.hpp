@@ -51,6 +51,11 @@ struct RVOutputParams
 	int enable_color_stderr : 1;
 	int : (sizeof(int)*8 - 2);   // <-- Use modulo if more than 16 bits. 
 	
+	const char *console_red_start,*console_red_end;     // red
+	const char *console_Red_start,*console_Red_end;     // bold red
+	const char *console_blue_start,*console_blue_end;   // blue
+	const char *console_Blue_start,*console_Blue_end;   // bold blue
+	
 	// Verbose level field. See VERBOSE_xxx for bitmask. 
 	u_int32_t vlevel_field;
 };

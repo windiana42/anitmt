@@ -94,32 +94,45 @@ static int MAIN(int argc,char **argv,char **envp)
 		"RendView (c) 2001--2002 by Wolfgang Wieser.\n"
 		"Bug report instructions: See http://anitmt.sf.net/rendview/");
 	parman->AdditionalHelpText(
-		"RendView is a utility to render (and postprocess) animations. "
+		"RendView is a utility to render (and postprocess) animations.  "
 		"While the actual rendering is done by some render application "
 		"like e.g. POVRay and the real animation logic is computed by a "
 		"animation calculator like aniTMT, rendview can be used to "
-		"have the render program actually generate the frames calculated. "
-		"RendView has sopthistcated job control and allows you to start "
-		"several processes in parallel as well as only processing "
-		"changed/not-yet-done frames. Further features include resuming "
-		"partly-rendered images, load control and lots of informative "
-		"output.\n"
+		"have the render program actually generate the frames calculated.  "
+		"RendView has sopthistcated job control, allows you to start "
+		"several processes in parallel and supports distributed rendering "
+		"(LDR) in local IP networks.  "
+		"Further features include only processing changed/not-yet-done "
+		"frames, resuming partly-rendered images, load control and lots "
+		"of informative output.\n"
 		"NOTE: Pressig ^C on the terminal (SIGINT) will tell RendView to "
 		"start no more processes and wait for all current jobs to "
-		"exit; pressing ^C twice will kill all jobs. In either way "
-		"rendview exits cleanly. Pressing ^C three times makes "
-		"RendView abort. SIGTERM acts like two ^C. SIGTSTP (^Z) will "
+		"exit; pressing ^C twice will kill all jobs.  In either way "
+		"rendview exits cleanly.  Pressing ^C three times makes "
+		"RendView abort.  SIGTERM acts like two ^C.  SIGTSTP (^Z) will "
 		"make RendView stop all tasks and then also stop; SIGCONT (fg or "
 		"bg in bash) makes them continue all again.\n"
 		"NOTE: COLORED OUTPUT is automatically switched off for non-ttys "
 		"but you can manually force it off/on using --nocolor/--color."
 		"\n\n** LDR is in experimental state **"
-		"\n\nExample:\n"
-		"rendview --rdfile=/dir/to/renderers.par -l-rd=povray3.5 "
+		"\n\nExamples:\n"
+		"# rendview --rdfile=/dir/to/renderers.par -l-rd=povray3.5 "
 		"-l-n=240 -l-f0=10 -l-size=320x200 -l-oformat=ppm -l-cont "
-		"-ld-r-quiet ");
+		"-ld-r-quiet\n"
+		"# rendview -opmode=ldrclient --rdfile=... -L-port=7001 "
+		"-L-servernet=192.168.0.0/8 -ld-njobs=2 -ld-r-quiet -ld-r-nice=15\n"
+		"# rendview -opmode=ldrserver --rdfile=... -Ld-clients=\"localhost/7001 "
+		"192.168.0.2/7001 192.168.0.3/7001\" -Ld-ctimeout=5000 "
+		"-l-rd=povray3.1g -l-n=245 -l-rargs=\"-display 192.168.0.1:0.0\" "
+		"-l-size=320x240 -l-cont\n");
 		// ...as well as only rendering changed frames or resuming operation
 		// ...and later create a film of them...
+	if(rv_oparams.enable_color_stdout)
+	{
+		parman->SetHighlightStrings(
+			rv_oparams.console_blue_start,rv_oparams.console_blue_end,
+			rv_oparams.console_red_start,rv_oparams.console_red_end);
+	}
 		
 		Verbose(BasicInit,"[CDB] ");
 		cdb=NEW1<ComponentDataBase>(parman);
