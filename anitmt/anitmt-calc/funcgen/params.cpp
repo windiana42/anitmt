@@ -22,12 +22,16 @@ FuncgenParameters::FuncgenParameters(par::ParameterManager *manager) :
     par::ParameterConsumer_Overloaded(manager)
 {
   // Set up defaults for the parameters: 
+#if YYDEBUG
   yydebug=0;
+#endif
   stdebug=0;
   
   // Then, register the parameters: 
   SetSection(NULL);
+#if YYDEBUG
   AddOpt("yydebug|d","enable parser debugging output (LOTS of text)",&yydebug);
+#endif
   AddOpt("stdebug|s","dump structure debug output",&stdebug);
   
   AddParam("input|i","input file",&in_file,STExactlyOnce);
