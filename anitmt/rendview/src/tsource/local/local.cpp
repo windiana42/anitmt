@@ -453,8 +453,8 @@ void TaskSource_Local::_ProcessDoneTask(TSNotifyInfo *ni)
 		done_task->frame_no,p->_FrameInfoLocationString(fi));
 	
 	// See if successful: 
-	if(done_task->rt && done_task->rtes.status!=TTR_Unset && 
-	   done_task->rtes.status!=TTR_Success )
+	if(done_task->rt && done_task->rtes.tes.status!=TTR_Unset && 
+	   done_task->rtes.tes.status!=TTR_Success )
 	{
 		// Render task was not successful. 
 		// File must get special treatment: 
@@ -483,8 +483,8 @@ void TaskSource_Local::_ProcessDoneTask(TSNotifyInfo *ni)
 				"output file of failed render task");  }
 		}
 	}
-	if(done_task->ft && done_task->ftes.status!=TTR_Unset && 
-	   done_task->ftes.status!=TTR_Success )
+	if(done_task->ft && done_task->ftes.tes.status!=TTR_Unset && 
+	   done_task->ftes.tes.status!=TTR_Success )
 	{
 		// Filter task was not successful. 
 		// Delete it if dest file is there: 

@@ -1112,8 +1112,17 @@ int LDRClient::_ParseDoneComplete(RespBuf *buf)
 	assert(!tdi.recv_file);  // Must be NULL here. 
 	
 	// Okay, we're complete. Store the success info: 
-	tdi.done_ctsk->rtes=tdi.save_rtes;
-	tdi.done_ctsk->ftes=tdi.save_ftes;
+	// ##FIXME##
+static int warned=0;
+if(!warned)
+{  fprintf(stderr,"ldrclient.cpp: illegal success info storing. FIXME\n");  ++warned;  }
+	// NOTE: We may only store the success info for things the client 
+	// has actually done. If we tell it to render but not to filter, 
+	// then filter info may not be stored. Same for processed_by. 
+	tdi.done_ctsk->rtes.tes=tdi.save_rtes;
+	tdi.done_ctsk->ftes.tes=tdi.save_ftes;
+	tdi.done_ctsk->rtes.processed_by.sprintf(0,"LDR: %s",_ClientName().str());
+	tdi.done_ctsk->ftes.processed_by=tdi.done_ctsk->rtes.processed_by;
 	
 	--assigned_jobs;
 	assert(assigned_jobs>=0);

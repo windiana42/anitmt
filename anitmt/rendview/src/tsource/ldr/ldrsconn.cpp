@@ -891,7 +891,7 @@ int TaskSource_LDR_ServerConn::_SendNextFileUploadHdr()
 	// See which is the next file we send: 
 	for(;;)
 	{
-		TaskExecutionStatus *tts=NULL;
+		CompleteTask::TES *tts=NULL;
 		
 		switch(tdi.upload_file_type)
 		{  // NOTE: Lots of fall-through logic; be careful!!
@@ -920,7 +920,8 @@ int TaskSource_LDR_ServerConn::_SendNextFileUploadHdr()
 		if(tdi.upload_file_type==FRFT_None)  break;
 		
 		// If the job was not launched skip to next file. 
-		if(tts->status==TTR_Unset || tts->status==TTR_ExecFailed)  continue;
+		if(tts->tes.status==TTR_Unset || tts->tes.status==TTR_ExecFailed)
+			continue;
 		
 		// If this assert fails, there is a tdi.done_ctsk->rt/fd which 
 		// has an output file of NULL. This is now allowed. 
@@ -935,7 +936,7 @@ int TaskSource_LDR_ServerConn::_SendNextFileUploadHdr()
 				"no hd path" : strerror(errno));
 			static const char *_err_fmt=
 				"LDR: Trying to stat output file \"%s\": %s [frame %d]\n";
-			if(tts->status==TTR_Success || tts->status==TTR_JobTerm)
+			if(tts->tes.status==TTR_Success || tts->tes.status==TTR_JobTerm)
 			{  Warning(_err_fmt,
 				tdi.upload_file->HDPath().str(),err_str,tdi.done_ctsk->frame_no);  }
 			else
@@ -1385,8 +1386,8 @@ int TaskSource_LDR_ServerConn::cpnotify_outpump_start()
 				pack->command=Cmd_TaskDone;  // host order
 				pack->frame_no=htonl(tdi.done_ctsk->frame_no);
 				pack->task_id=htonl(tdi.done_ctsk->task_id);
-				LDRStoreTaskExecutionStatus(&pack->rtes,&tdi.done_ctsk->rtes);
-				LDRStoreTaskExecutionStatus(&pack->ftes,&tdi.done_ctsk->ftes);
+				LDRStoreTaskExecutionStatus(&pack->rtes,&tdi.done_ctsk->rtes.tes);
+				LDRStoreTaskExecutionStatus(&pack->ftes,&tdi.done_ctsk->ftes.tes);
 				
 				// Okay, make ready to send it: 
 				if(_FDCopyStartSendBuf(pack))  break;

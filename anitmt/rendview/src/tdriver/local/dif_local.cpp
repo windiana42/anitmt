@@ -261,13 +261,15 @@ void TaskDriverInterface_Local::IAmDone(TaskDriver *td)
 		switch(ctsk->state)
 		{
 			case CompleteTask::ToBeRendered:
-				ctsk->rtes=td->pinfo.tes;
+				ctsk->rtes.tes=td->pinfo.tes;
+				ctsk->rtes.processed_by.set("[local]");
 				// Either waiting to be filtered or done. 
 				if(ctsk->ft)  ctsk->state=CompleteTask::ToBeFiltered;
 				else  ctsk->state=CompleteTask::TaskDone;
 				break;
 			case CompleteTask::ToBeFiltered:
-				ctsk->ftes=td->pinfo.tes;
+				ctsk->ftes.tes=td->pinfo.tes;
+				ctsk->ftes.processed_by.set("[local]");
 				// Task now done. 
 				ctsk->state=CompleteTask::TaskDone;
 				break;
@@ -377,7 +379,7 @@ int TaskDriverInterface_Local::_DoDealWithNewTask(CompleteTask *ctsk)
 void TaskDriverInterface_Local::_HandleFailedJob(CompleteTask *ctsk,TaskDriver *td)
 {
 	// Store error info: 
-	TaskExecutionStatus *uset=NULL;
+	CompleteTask::TES *uset=NULL;
 	switch(ctsk->state)
 	{
 		case CompleteTask::ToBeRendered:  uset=&ctsk->rtes;  break;
@@ -385,13 +387,14 @@ void TaskDriverInterface_Local::_HandleFailedJob(CompleteTask *ctsk,TaskDriver *
 		default:  assert(0);  break;
 	}
 	if(td)
-	{  *uset=td->pinfo.tes;  }
+	{  uset->tes=td->pinfo.tes;  }
 	else
 	{
 		// We have td=NULL. This can happen if we fail at launch time. 
-		uset->status=TTR_ExecFailed;
-		uset->signal=JK_InternalError;
+		uset->tes.status=TTR_ExecFailed;
+		uset->tes.signal=JK_InternalError;
 	}
+	uset->processed_by.set("[local]");
 	
 	component_db()->taskmanager()->HandleFailedTask(ctsk,RunningJobs());
 }

@@ -305,8 +305,8 @@ void TaskDriverInterface_LDR::_HandleTaskTermination(CompleteTask *ctsk)
 	{  fprintf(stderr,"Fix this quick-hack implementation...\n");  ++warned;  }
 	
 	int complete_success=1;
-	if(ctsk->rt && ctsk->rtes.status!=TTR_Success)  complete_success=0;
-	if(ctsk->ft && ctsk->ftes.status!=TTR_Success)  complete_success=0;
+	if(ctsk->rt && ctsk->rtes.tes.status!=TTR_Success)  complete_success=0;
+	if(ctsk->ft && ctsk->ftes.tes.status!=TTR_Success)  complete_success=0;
 	
 	// Make sure client is no longer attached to task: 
 	ctsk->d.ldrc=NULL;
@@ -471,7 +471,6 @@ void TaskDriverInterface_LDR::_PrintThreshAndQueueInfo(int with_thresh)
 			todo_thresh_low,todo_thresh_high,done_thresh_high);
 	}
 	Verbose(TDI,"  Task queue: todo=%d, proc=%d, done=%d\n",
-		todo_thresh_low,todo_thresh_high,
 		GetTaskList()->todo_nelem,GetTaskList()->proc_nelem,
 		GetTaskList()->done_nelem);
 }
@@ -808,6 +807,10 @@ void TaskDriverInterface_LDR::FailedToConnect(LDRClient *client)
 void TaskDriverInterface_LDR::ClientDisconnected(LDRClient *client)
 {
 	if(!client)  return;
+	
+	// Make sure disconnected client is not our next "free client": 
+	if(free_client==client)
+	{  free_client=NULL;  }
 	
 	// Let's see if the client has tasks. In this case, we must 
 	// "put back" the tasks so that a different client gets them. 

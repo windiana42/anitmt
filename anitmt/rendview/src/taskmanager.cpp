@@ -108,8 +108,9 @@ bool TaskManager::IsPartlyRenderedTask(const CompleteTask *ctsk)
 {
 	//if(ctsk->td && ctsk->td->GetFactory()->DType()==DTRender)  return(true);
 	assert(!ctsk->d.any());
-	if(ctsk->rtes.status==TTR_JobTerm && 
-	   (ctsk->rtes.signal==JK_UserInterrupt || ctsk->rtes.signal==JK_Timeout) )
+	if(ctsk->rtes.tes.status==TTR_JobTerm && 
+	   (ctsk->rtes.tes.signal==JK_UserInterrupt || 
+	    ctsk->rtes.tes.signal==JK_Timeout) )
 	{  return(true);  }
 	return(false);
 }
@@ -117,8 +118,9 @@ bool TaskManager::IsPartlyFilteredTask(const CompleteTask *ctsk)
 {
 	//if(ctsk->td && ctsk->td->GetFactory()->DType()==DTFilter)  return(true);
 	assert(!ctsk->d.any());
-	if(ctsk->ftes.status==TTR_JobTerm && 
-	   (ctsk->ftes.signal==JK_UserInterrupt || ctsk->ftes.signal==JK_Timeout) )
+	if(ctsk->ftes.tes.status==TTR_JobTerm && 
+	   (ctsk->ftes.tes.signal==JK_UserInterrupt || 
+	    ctsk->ftes.tes.signal==JK_Timeout) )
 	{  return(true);  }
 	return(false);
 }
@@ -1023,15 +1025,15 @@ void TaskManager::_EmitCPUStats(const char *title,
 	
 	char tmp[48];
 	snprintf(tmp,48,"%s",ptu_self->utime.PrintElapsed());
-	Verbose(TDI,"    RendView: %4d.%02d%% CPU  (user: %s; sys: %s)\n",
+	Verbose(TDI,"    RendView:   %4d.%02d%% CPU  (user: %s; sys: %s)\n",
 		int(rv_cpu),int(100.0*rv_cpu+0.5)%100,
 		tmp,ptu_self->stime.PrintElapsed());
 	snprintf(tmp,48,"%s",ptu_chld->utime.PrintElapsed());
-	Verbose(TDI,"    Jobs:     %4d.%02d%% CPU  (user: %s; sys: %s)\n",
+	Verbose(TDI,"    Local jobs: %4d.%02d%% CPU  (user: %s; sys: %s)\n",
 		int(ch_cpu),int(100.0*ch_cpu+0.5)%100,
 		tmp,ptu_chld->stime.PrintElapsed());
 	snprintf(tmp,48,"%s",(ptu_chld->utime+ptu_self->utime).PrintElapsed());
-	Verbose(TDI,"    Together: %4d.%02d%% CPU  (user: %s; sys: %s)\n",
+	Verbose(TDI,"    Together:   %4d.%02d%% CPU  (user: %s; sys: %s)\n",
 		int(ch_cpu+rv_cpu),int(100.0*(ch_cpu+rv_cpu)+0.5)%100,
 		tmp,(ptu_chld->stime+ptu_self->stime).PrintElapsed());
 }
@@ -1823,10 +1825,15 @@ void TaskManager::_DisableLoadFeature()
 }
 
 // Special function used by _PrintDoneInfo(): 
-void TaskManager::_PrintTaskExecStatus(TaskExecutionStatus *tes)
+void TaskManager::_PrintTaskExecStatus(CompleteTask::TES *ct_tes,
+	const char *rnd_flt)
 {
+	TaskExecutionStatus *tes=&ct_tes->tes;
+	
 	VerboseSpecial("      Status: %s",tes->StatusString());
 	if(tes->status==TTR_Unset)  return;
+	Verbose(TDR,"      %sed by: %s\n",rnd_flt,
+		ct_tes->processed_by.str() ? ct_tes->processed_by.str() : "[n/a]");
 	Verbose(TDR,"      Started: %s\n",tes->starttime.PrintTime(1,1));
 	Verbose(TDR,"      Done:    %s\n",tes->endtime.PrintTime(1,1));
 	HTime duration=tes->endtime-tes->starttime;
@@ -1919,7 +1926,7 @@ void TaskManager::_PrintDoneInfo(CompleteTask *ctsk)
 		#warning more info?
 		_DoPrintTaskExecuted(ctsk->rtp,ctsk->rt,ctsk->rt->rdesc->binpath.str(),
 			IsARenderedTask(ctsk) || IsPartlyRenderedTask(ctsk));
-		_PrintTaskExecStatus(&ctsk->rtes);
+		_PrintTaskExecStatus(&ctsk->rtes,"Render");
 	}
 	else
 	{  Verbose(TDR,"  Render task: [none]\n");  }
@@ -1935,7 +1942,7 @@ void TaskManager::_PrintDoneInfo(CompleteTask *ctsk)
 		#warning more info?
 		_DoPrintTaskExecuted(ctsk->ftp,ctsk->ft,ctsk->ft->fdesc->binpath.str(),
 			IsAFilteredTask(ctsk) || IsPartlyFilteredTask(ctsk));
-		_PrintTaskExecStatus(&ctsk->ftes);
+		_PrintTaskExecStatus(&ctsk->ftes,"Filter");
 	}
 	else
 	{  Verbose(TDR,"  Filter task: [none]\n");  }

@@ -82,10 +82,19 @@ struct CompleteTask : LinkedListBase<CompleteTask>
 	} radd,fadd;
 	
 	// Render and filter task execution status: 
-	TaskExecutionStatus rtes;
-	TaskExecutionStatus ftes;
+	struct TES
+	{
+		TaskExecutionStatus tes;
+		RefString processed_by;
+		
+		_CPP_OPERATORS_FF
+		TES(int *failflag=NULL);
+		~TES() {}
+	};
+	TES rtes;
+	TES ftes;
 	
-	// FIXME: MISSING: what to do with result files?? [or in TaskFile]
+	// ##FIXME#: MISSING: what to do with result files?? [or in TaskFile]
 	
 	_CPP_OPERATORS_FF
 	CompleteTask(int *failflag=NULL);

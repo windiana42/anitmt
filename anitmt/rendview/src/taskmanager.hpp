@@ -185,7 +185,7 @@ class TaskManager :
 		// Do some things with new tasks (set up state & TaskParams): 
 		int _DealWithNewTask(CompleteTask *ctsk);
 		
-		void _PrintTaskExecStatus(TaskExecutionStatus *tes);
+		void _PrintTaskExecStatus(CompleteTask::TES *tes,const char *rnd_flt);
 		void _DoPrintTaskExecuted(TaskParams *tsb,TaskStructBase *tp,
 			const char *binpath,bool was_processed);
 		void _PrintDoneInfo(CompleteTask *ctsk);

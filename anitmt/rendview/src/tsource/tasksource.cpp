@@ -119,6 +119,13 @@ CompleteTask::~CompleteTask()
 }
 
 
+CompleteTask::TES::TES(int *failflag) : 
+	tes(failflag),
+	processed_by(failflag)
+{
+	
+}
+
 /******************************************************************************/
 
 TaskSource::TSNotifyInfo::TSNotifyInfo(/*int *failflag*/)
