@@ -81,8 +81,8 @@ namespace values
     friend bool operator!=(double,const Scalar &);
 
     // Returns 1, if this scalar is 0 (exactly: if |this->x| <= epsilon )
-    bool operator!()  {  return(fabs(x)<=epsilon);  }
-    bool is_null()  {  return(fabs(x)<=epsilon);  }
+    bool operator!() const {  return(fabs(x)<=epsilon);  }
+    bool is_null() const {  return(fabs(x)<=epsilon);  }
 
     // addition/subtraction operators: 
     Scalar &operator-=(double a)  {  x-=a;  return(*this);  }
@@ -177,7 +177,7 @@ namespace values
     friend Vector operator*(const Vector &a,const Matrix &b);
 
     // Unary operators: 
-    Vector  operator+() const  {  return(*this);  }
+    Vector  operator+() const  {  return(*this);  } //!!!should copy object!!!
     Vector  operator-() const {  Vector r(noinit);  r.x.neg(x);   return(r);  }
 
     // Operators comparing vectors (are using epsilon): 
@@ -186,8 +186,8 @@ namespace values
 
     // Returns 1, if this vector is the null-vector (or if no component 
     // is larger than epsilon). 
-    bool operator!()  {  return(x.is_null(epsilon));  }
-    bool is_null()    {  return(x.is_null(epsilon));  }
+    bool operator!() const {  return(x.is_null(epsilon));  }
+    bool is_null() const {  return(x.is_null(epsilon));  }
 
     // Return vector length and its square (the latter is faster): 
     // (Use abs(Vector) if you want a Scalar as return value.) 

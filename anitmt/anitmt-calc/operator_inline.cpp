@@ -144,38 +144,76 @@ namespace anitmt
   // Mul_Operator: operator for muling 2 operands of different types
   //**********************************************************************
 
-  template< class T1, class T2 >
-  inline Operand<T2>& operator*( Operand<T1> &op1, Operand<T2> &op2 ) 
+  //*****************
+  // scalar * scalar
+
+  inline Operand<values::Scalar>& 
+  operator*( Operand<values::Scalar> &op1, Operand<values::Scalar> &op2 ) 
   {
-    return (new Mul_Operator<T2,T1,T2>( op1, op2 ))->get_result();
+    return (new Mul_Operator<values::Scalar,values::Scalar,values::Scalar>
+	    ( op1, op2 ))->get_result();
   }
 
-  template< class T1 >
-  inline Operand<T1>& operator*( Operand<T1> &op1, values::Scalar op2 ) 
+  inline Operand<values::Scalar>& 
+  operator*( Operand<values::Scalar> &op1, values::Scalar op2 ) 
   {
-    return (new Mul_Operator<T1,T1,values::Scalar>
-      ( op1, *(new Constant<values::Scalar>(op2)) ))->get_result();
+    return (new Mul_Operator<values::Scalar,values::Scalar,values::Scalar>
+	    ( op1, const_op(op2) ))->get_result();
   }
 
-  template< class T2 >
-  inline Operand<T2>& operator*( values::Scalar op1, Operand<T2> &op2 ) 
+  inline Operand<values::Scalar>& 
+  operator*( values::Scalar op1, Operand<values::Scalar> &op2 ) 
   {
-    return (new Mul_Operator<T2,values::Scalar,T2>
-      ( *(new Constant<values::Scalar>(op1)), op2 ))->get_result();
+    return (new Mul_Operator<values::Scalar,values::Scalar,values::Scalar>
+	    ( const_op(op1), op2 ))->get_result();
   }
 
-  template< class T1 >
-  inline Operand<T1>& operator*( Operand<T1> &op1, values::Vector op2 ) 
+  //*****************
+  // scalar * vector
+
+  inline Operand<values::Vector>& 
+  operator*( Operand<values::Scalar> &op1, Operand<values::Vector> &op2 ) 
   {
-    return (new Mul_Operator<T1,T1,values::Vector>
-      ( op1, *(new Constant<values::Vector>(op2)) ))->get_result();
+    return (new Mul_Operator<values::Vector,values::Scalar,values::Vector>
+	    ( op1, op2 ))->get_result();
   }
 
-  template< class T2 >
-  inline Operand<T2>& operator*( values::Vector op1, Operand<T2> &op2 ) 
+  inline Operand<values::Vector>& 
+  operator*( Operand<values::Scalar> &op1, values::Vector op2 ) 
   {
-    return (new Mul_Operator<T2,values::Vector,T2>
-      ( *(new Constant<values::Vector>(op1)), op2 ))->get_result();
+    return (new Mul_Operator<values::Vector,values::Scalar,values::Vector>
+	    ( op1, const_op(op2) ))->get_result();
+  }
+
+  inline Operand<values::Vector>& 
+  operator*( values::Scalar op1, Operand<values::Vector> &op2 ) 
+  {
+    return (new Mul_Operator<values::Vector,values::Scalar,values::Vector>
+	    ( const_op(op1), op2 ))->get_result();
+  }
+
+  //*****************
+  // vector * scalar
+
+  inline Operand<values::Vector>& 
+  operator*( Operand<values::Vector> &op1, Operand<values::Scalar> &op2 ) 
+  {
+    return (new Mul_Operator<values::Vector,values::Vector,values::Scalar>
+	    ( op1, op2 ))->get_result();
+  }
+
+  inline Operand<values::Vector>& 
+  operator*( Operand<values::Vector> &op1, values::Scalar op2 ) 
+  {
+    return (new Mul_Operator<values::Vector,values::Vector,values::Scalar>
+	    ( op1, const_op(op2) ))->get_result();
+  }
+
+  inline Operand<values::Vector>& 
+  operator*( values::Vector op1, Operand<values::Scalar> &op2 ) 
+  {
+    return (new Mul_Operator<values::Vector,values::Vector,values::Scalar>
+	    ( const_op(op1), op2 ))->get_result();
   }
 
   //**********************************************************************
@@ -216,6 +254,43 @@ namespace anitmt
       ( *(new Constant<values::Vector>(op1)), op2 ))->get_result();
   }
 
+  //***************************************************
+  // Equal_Operator: operator for comparing 2 operands
+  //***************************************************
+
+  template< class T1, class T2 >
+  inline Operand<bool>& operator==( Operand<T1> &op1, Operand<T2> &op2 ) 
+  {
+    return (new Equal_Operator<bool,T1,T2>( op1, op2 ))->get_result();
+  }
+
+  template< class T1 >
+  inline Operand<bool>& operator==( Operand<T1> &op1, values::Scalar op2 ) 
+  {
+    return (new Equal_Operator<bool,T1,values::Scalar>
+      ( op1, *(new Constant<values::Scalar>(op2)) ))->get_result();
+  }
+
+  template< class T2 >
+  inline Operand<bool>& operator==( values::Scalar op1, Operand<T2> &op2 ) 
+  {
+    return (new Equal_Operator<bool,values::Scalar,T2>
+      ( *(new Constant<values::Scalar>(op1)), op2 ))->get_result();
+  }
+
+  template< class T1 >
+  inline Operand<bool>& operator==( Operand<T1> &op1, values::Vector op2 ) 
+  {
+    return (new Equal_Operator<bool,T1,values::Vector>
+      ( op1, *(new Constant<values::Vector>(op2)) ))->get_result();
+  }
+
+  template< class T2 >
+  inline Operand<bool>& operator==( values::Vector op1, Operand<T2> &op2 ) 
+  {
+    return (new Equal_Operator<bool,values::Vector,T2>
+      ( *(new Constant<values::Vector>(op1)), op2 ))->get_result();
+  }
 }
 
 #endif

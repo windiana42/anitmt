@@ -1,0 +1,67 @@
+0.1.10: (only Example for ChangeLog for a future Version)
+	D (design)
+	  B (basic implemention)
+	    I (implemention of variants)
+	      T (tests)
+
+	X X + +	solving system
+	X X X +	  Operands
+	X X + +	  Operators
+	X X + +	  Solvers
+	Y - - -	    multiple solution Solver
+	+ + + -	output filter
+	+ + + -	  POV 
+	
+0.1.9: 	first version of the new design
+
+a general list of all systems:
+
+	Meaning of the following notes:
+	  X: Done
+	  Y: Nearly done
+	  +: In Work
+	  -: Not started
+	
+	D (design)
+	  B (basic implemention)
+	    I (implemention of variants)
+	      T (tests)
+
+	X X X Y	data types
+	X X + +	solving system
+	X X X +	  Operands
+	X X + +	  Operators
+	Y - - -	    multiple solution Operator
+	X X + +	  Solvers
+	Y - - -	    explicite Solver
+	Y - - -	    multiple solution Solver
+	X X X +	priority system
+	X X + +	data tree
+	X X + +	  general node
+	X X X +	  return system
+	+ - - -	  dynamic return system
+	+ + + -	output filter
+	Y Y + -	  RAW 
+	+ + + -	  POV 
+	+ + + -	input filter
+	+ + + -	  ADL 
+	X X + +	animation functions
+	X + + -	  Object
+	X + + -	    movements
+	X + + -	      move
+	X + + -	        straight
+	X - - -	        circle
+	Y - - -	        bezier
+	+ - - -	        spline
+	- - - -	    rotations
+	- - - -	      rotate
+	- - - -	      inverse kinematics
+	- - - -	    scalations
+	+ - - -	    mixed
+	+ - - -	      3 component system
+	X X + -	  Scalar
+	X X Y +	    linear
+	X - - -	    accelerated
+	+ - - -	  Vector
+	+ - - -	  String
+

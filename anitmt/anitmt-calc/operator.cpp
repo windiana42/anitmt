@@ -410,16 +410,190 @@ namespace anitmt
       }
     }
     
-    // property assignment test
-    cout << " Tests Operand assignment to Property" << endl;
+    // calc x * <1,2,3> 
+    {
+      Operand<values::Scalar> x; 
+      Operand<values::Vector> &op = x * values::Vector(1,2,3);
+
+      if( op.is_solved() )
+      {
+	cerr << "!!Error why can he solve x * <1,2,3> without knowing x?!! " 
+	     << endl;
+	errors++;
+      }
+
+      x.set_value( 3 );
+
+      if( op.is_solved() )
+      {
+	cout << "  x(=3) * <1,2,3> = " << op.get_value() 
+	     << " (<3,6,9>)" <<  endl;
+	assert( op.get_value() == values::Vector(3,6,9) );
+      }
+      else
+      {
+	cerr << "!!Error could not calc x(=3) * <1,2,3>!! " << endl;
+	errors++;
+      }
+    }
+
+    // calc x * <0,0,0> 
+    {
+      Operand<values::Scalar> x; 
+      Operand<values::Vector> &op = x * values::Vector(0,0,0);
+
+      if( op.is_solved() )
+      {
+	cout << "  x * <0,0,0> = " << op.get_value() 
+	     << " (<0,0,0>)" <<  endl;
+	assert( op.get_value() == values::Vector(0,0,0) );
+      }
+      else
+      {
+	cerr << "!!Error x needed for calculating x * <0,0,0>!! " << endl;
+	errors++;
+      }
+      
+      x.set_value( 3 );
+
+      if( op.is_solved() )
+      {
+	cout << "  x(=3) * <0,0,0> = " << op.get_value() 
+	     << " (<0,0,0>)" <<  endl;
+	assert( op.get_value() == values::Vector(0,0,0) );
+      }
+      else
+      {
+	cerr << "!!Error could not calc x(=3) * <0,0,0>!! " << endl;
+	errors++;
+      }
+    }
+
+    // calc x * v
+    {
+      Operand<values::Scalar> x; 
+      Operand<values::Vector> v; 
+      Operand<values::Vector> &op = x * v;
+      x.set_value( 0 );
+
+      if( op.is_solved() )
+      {
+	cout << "  x(=0) * v = " << op.get_value() 
+	     << " (<0,0,0>)" <<  endl;
+	assert( op.get_value() == values::Vector(0,0,0) );
+      }
+      else
+      {
+	cerr << "!!Error v needed for calculating x(=0) * v!! " << endl;
+	errors++;
+      }
+      
+      v.set_value( values::Vector(0,0,0) );
+
+      if( op.is_solved() )
+      {
+	cout << "  x(=0) * v(=<0,0,0>) = " << op.get_value() 
+	     << " (<0,0,0>)" <<  endl;
+	assert( op.get_value() == values::Vector(0,0,0) );
+      }
+      else
+      {
+	cerr << "!!Error could not calc x(=0) * v(=<0,0,0>)!! " << endl;
+	errors++;
+      }
+    }
+
+    // calc 5 / x> 
+    {
+      Operand<values::Scalar> x; 
+      Operand<values::Scalar> &op = 5 / x;
+
+      if( op.is_solved() )
+      {
+	cerr << "!!Error why can he solve 5 / x without knowing x?!! " 
+	     << endl;
+	errors++;
+      }
+
+      x.set_value( 3 );
+
+      if( op.is_solved() )
+      {
+	cout << "  5 / x(=3) = " << op.get_value() 
+	     << " (1.666...)" <<  endl;
+	assert( op.get_value() == 5/3 );
+      }
+      else
+      {
+	cerr << "!!Error could not calc 5 / x(=3)!! " << endl;
+	errors++;
+      }
+    }
+
+    // calc 5 == x> 
+    {
+      Operand<values::Scalar> x; 
+      Operand<bool> &op = 5 == x;
+
+      if( op.is_solved() )
+      {
+	cerr << "!!Error why can he solve 5 == x without knowing x?!! " 
+	     << endl;
+	errors++;
+      }
+
+      x.set_value( 5 );
+
+      if( op.is_solved() )
+      {
+	cout << "  5 == x(=5) = " << op.get_value() 
+	     << " (true)" <<  endl;
+	assert( op.get_value() == true );
+      }
+      else
+      {
+	cerr << "!!Error could not calc 5 == x(=5)!! " << endl;
+	errors++;
+      }
+    }
+
+    // calc x == 5> 
+    {
+      Operand<values::Scalar> x; 
+      Operand<bool> &op = x == 5;
+
+      if( op.is_solved() )
+      {
+	cerr << "!!Error why can he solve x == 5 without knowing x?!! " 
+	     << endl;
+	errors++;
+      }
+
+      x.set_value( 5.1 );
+
+      if( op.is_solved() )
+      {
+	cout << "  x(=5.1) == 5 = " << op.get_value() 
+	     << " (false)" <<  endl;
+	assert( op.get_value() == false );
+      }
+      else
+      {
+	cerr << "!!Error could not calc x(=5.1) == 5!! " << endl;
+	errors++;
+      }
+    }
+
+    // operand assignment test
+    cout << " Tests Operand assignment to Operand" << endl;
 
     // calc x + 2 (x = 5)    
     {
       Operand<values::Scalar> x;
-      Type_Property<values::Scalar> prop;
-      prop = x + 2;
+      Operand<values::Scalar> op;
+      op = x + 2;
 
-      if( prop.is_solved() )
+      if( op.is_solved() )
       {
 	cerr << "!!Error why can he solve x + 2 without knowing x?!! " 
 	     << endl;
@@ -427,15 +601,35 @@ namespace anitmt
       }
 
       x.set_value( 5 );
-      
-      if( prop.is_solved() )
+
+      if( op.is_solved() )
       {
-	cout << "  x(=5) + 2 = " << prop << "(7)" << endl;
-	assert( prop == 7 );
+	cout << "  x(=5) + 2 = " << op << "(7)" << endl;
+	assert( op.get_value() == 7 );
       }
       else
       {
-	cerr << "!!Error could not assign x + 2 to property!!" << endl;
+	cerr << "!!Error could assign x + 2 to operand!!" << endl;
+	errors++;
+      }
+    }
+    
+    // property assignment test
+    cout << " Tests Operand assignment to Property" << endl;
+
+    // calc 5 + 2    
+    {
+      Type_Property<values::Scalar> prop;
+      prop = const_op( values::Scalar(5) ) + 2;
+
+      if( prop.is_solved() )
+      {
+	cout << "  5 + 2 = " << prop << "(7)" << endl;
+	assert( prop() == 7 );
+      }
+      else
+      {
+	cerr << "!!Error could not assign 5 + 2 to property!!" << endl;
 	errors++;
       }
     }

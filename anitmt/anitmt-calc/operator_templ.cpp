@@ -364,32 +364,31 @@ namespace anitmt
   bool Mul_Operator<T_Result,T_Op1,T_Op2>
   ::is_operand1_enough( const T_Op1 &value1 ) 
   {
-    return value1 == 0;
+    return !value1;
   }
 
   template<class T_Result, class T_Op1, class T_Op2>
   bool Mul_Operator<T_Result,T_Op1,T_Op2>
   ::is_operand2_enough( const T_Op2 &value2 ) 
   {
-    return value2 == 0;
+    return !value2;
   }
 
   template<class T_Result, class T_Op1, class T_Op2>
   T_Result Mul_Operator<T_Result,T_Op1,T_Op2>
   ::calc_result_from_op1( const T_Op1 &value1 ) 
   {
-    assert( value1 == 0 );
-    return 0;
+    assert( !value1 );
+    return T_Result();		// return 0 equavalent
   }
 
   template<class T_Result, class T_Op1, class T_Op2>
   T_Result Mul_Operator<T_Result,T_Op1,T_Op2>
   ::calc_result_from_op2( const T_Op2 &value2 ) 
   {
-    assert( value2 == 0 );
-    return 0;
+    assert( !value2 );
+    return T_Result();		// return 0 equavalent
   }
-
 
   template<class T_Result, class T_Op1, class T_Op2>
   Mul_Operator<T_Result,T_Op1,T_Op2>::Mul_Operator
@@ -454,6 +453,27 @@ namespace anitmt
 
   template<class T_Result, class T_Op1, class T_Op2>
   Div_Operator<T_Result,T_Op1,T_Op2>::Div_Operator
+  ( Operand<T_Op1> &operand1, Operand<T_Op2> &operand2 ) 
+    : Basic_Operator_for_2_Operands<T_Result,T_Op1,T_Op2>( operand1,
+							   operand2 ) 
+  {
+    init();
+  }
+
+  //***************************************************
+  // Equal_Operator: operator for comparing 2 operands 
+  //***************************************************
+
+  // may throw exception!
+  template<class T_Result, class T_Op1, class T_Op2>
+  T_Result Equal_Operator<T_Result,T_Op1,T_Op2>
+  ::calc_result( const T_Op1 &value1, const T_Op2 &value2 ) 
+  {
+    return value1 == value2;
+  }
+
+  template<class T_Result, class T_Op1, class T_Op2>
+  Equal_Operator<T_Result,T_Op1,T_Op2>::Equal_Operator
   ( Operand<T_Op1> &operand1, Operand<T_Op2> &operand2 ) 
     : Basic_Operator_for_2_Operands<T_Result,T_Op1,T_Op2>( operand1,
 							   operand2 ) 

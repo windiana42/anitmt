@@ -336,16 +336,29 @@ namespace anitmt
   //**********
   // Operators
 
-  template< class T1, class T2 >
-  inline Operand<T2>& operator*( Operand<T1> &op1, Operand<T2> &op2 );
-  template< class T1 >
-  inline Operand<T1>& operator*( Operand<T1> &op1, values::Scalar op2 );
-  template< class T2 >
-  inline Operand<T2>& operator*( values::Scalar op1, Operand<T2> &op2 );
-  template< class T1 >
-  inline Operand<T1>& operator*( Operand<T1> &op1, values::Vector op2 );
-  template< class T2 >
-  inline Operand<T2>& operator*( values::Vector op1, Operand<T2> &op2 );
+  // scalar * scalar
+  inline Operand<values::Scalar>& 
+  operator*( Operand<values::Scalar> &op1, Operand<values::Scalar> &op2 );
+  inline Operand<values::Scalar>& 
+  operator*( Operand<values::Scalar> &op1, values::Scalar op2 );
+  inline Operand<values::Scalar>& 
+  operator*( values::Scalar op1,           Operand<values::Scalar> &op2 );
+
+  // scalar * vector
+  inline Operand<values::Vector>& 
+  operator*( Operand<values::Scalar> &op1, Operand<values::Vector> &op2 );
+  inline Operand<values::Vector>& 
+  operator*( Operand<values::Scalar> &op1, values::Vector op2 );
+  inline Operand<values::Vector>& 
+  operator*( values::Scalar op1,           Operand<values::Vector> &op2 );
+
+  // vector * scalar
+  inline Operand<values::Vector>& 
+  operator*( Operand<values::Vector> &op1, Operand<values::Scalar> &op2 );
+  inline Operand<values::Vector>& 
+  operator*( Operand<values::Vector> &op1, values::Scalar op2 );
+  inline Operand<values::Vector>& 
+  operator*( values::Vector op1,           Operand<values::Scalar> &op2 );
 
   //**********************************************************************
   // Div_Operator: operator for dividing 2 operands of different types
@@ -391,6 +404,36 @@ namespace anitmt
   inline Operand<T1>& operator/( Operand<T1> &op1, values::Vector op2 );
   template< class T2 >
   inline Operand<T2>& operator/( values::Vector op1, Operand<T2> &op2 );
+
+  //***************************************************
+  // Equal_Operator: operator for comparing 2 operands 
+  //***************************************************
+
+  template<class T_Result=bool, class T_Op1, class T_Op2>
+  class Equal_Operator
+    : public Basic_Operator_for_2_Operands<T_Result, T_Op1, T_Op2> 
+  {
+    /*! has to calculate the result when both is_operand_ok and 
+      is_operand_enough  return true */
+    virtual T_Result calc_result( const T_Op1 &value1, const T_Op2 &value2 ); 
+
+  public:
+    Equal_Operator( Operand<T_Op1> &operand1, Operand<T_Op2> &operand2 );
+  };
+
+  //**********
+  // Operators
+
+  template< class T1, class T2 >
+  inline Operand<bool>& operator==( Operand<T1> &op1, Operand<T2> &op2 );
+  template< class T1 >
+  inline Operand<bool>& operator==( Operand<T1> &op1, values::Scalar op2 );
+  template< class T2 >
+  inline Operand<bool>& operator==( values::Scalar op1, Operand<T2> &op2 );
+  template< class T1 >
+  inline Operand<bool>& operator==( Operand<T1> &op1, values::Vector op2 );
+  template< class T2 >
+  inline Operand<bool>& operator==( values::Vector op1, Operand<T2> &op2 );
 
   //***************
   // test function
