@@ -6,29 +6,31 @@ if test "x$srcdir" != "x"; then
 fi
 
 pwd
+top_builddir=".."
+
 
 cd test/
-../../anitmt-calc/anitmt-calc test.ini
+../$top_builddir/anitmt-calc/anitmt-calc test.ini
 cd test_ani/
-../../../utils/render -w 200 -h 150
-../../../utils/tga2avi/tga2avi -f 5 -e 150
-../../../utils/mkavi/mkavi -f 5 -e 150 -o film-cram.avi
+../../$top_builddir/utils/render -w 200 -h 150
+../../$top_builddir/utils/tga2avi/tga2avi -f 5 -e 150
+../../$top_builddir/utils/mkavi/mkavi -f 5 -e 150 -o film-cram.avi
 cd ../../
 
 cd myrobot/
-../../anitmt-calc/anitmt-calc myrobot.ini
+../$top_builddir/anitmt-calc/anitmt-calc myrobot.ini
 cd ani/
 ../../../utils/render -w 400 -h 300
-../../../utils/tga2avi/tga2avi -f 24 -e 336
-../../../utils/mkavi/mkavi -f 24 -e 336 -o film-cram.avi
+../../$top_builddir/utils/tga2avi/tga2avi -f 24 -e 336
+../../$top_builddir/utils/mkavi/mkavi -f 24 -e 336 -o film-cram.avi
 cd ../../
 
 cd circles/
-../../anitmt-calc/anitmt-calc circles.ini
+../$top_builddir/anitmt-calc/anitmt-calc circles.ini
 cd ani/
 ../../../utils/render -w 96 -h 72
-../../../utils/tga2avi/tga2avi -f 24 -e 336
-../../../utils/mkavi/mkavi -f 24 -e 336 -o film-cram.avi
+../../$top_builddir/utils/tga2avi/tga2avi -f 24 -e 336
+../../$top_builddir/utils/mkavi/mkavi -f 24 -e 336 -o film-cram.avi
 cd ../../
 
 exit 0
