@@ -29,10 +29,8 @@ AC_CHECK_FUNCS([sysconf])
 AC_MSG_CHECKING([for _SC_NPROCESSORS_ONLN/CONF])
   AC_TRY_COMPILE([#include <unistd.h>
 	#include <stdlib.h>],
-	[#if HAVE_SYSCONF
-	long n=sysconf(_SC_NPROCESSORS_ONLN);
-	n=sysconf(_SC_NPROCESSORS_CONF);;
-	#endif ],
+	[long n=sysconf(_SC_NPROCESSORS_ONLN);
+	n=sysconf(_SC_NPROCESSORS_CONF); ],
 	[AC_MSG_RESULT([yes])
 	 AC_DEFINE(RENDVIEW_HAVE_SYSCONF_NPROCESSORS,1,\
 	 	[Defined, if _SC_NPROCESSORS_ONLN and ~_CONF was found])],
