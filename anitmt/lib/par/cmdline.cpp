@@ -337,7 +337,7 @@ bool Animation_Parameters::Parse_Command_Line(Command_Line *cmd)
 		}
 		if(verbinc>0)
 		{
-			if(!cmd_pars.verbose().is_set)
+			if(!cmd_pars.par_int[PID::verbose].is_set)
 			{  cmd_pars.par_int[PID::verbose]=0;  }
 			cmd_pars.par_int[PID::verbose].val+=verbinc;
 		}
@@ -381,7 +381,7 @@ bool Animation_Parameters::Parse_Command_Line(Command_Line *cmd)
 	// get solved (as they depend on others). 
 	// Dealing with: start/endtime, start/endframe, duration, frames, fps 
 	if(Solve_TimeFrame_Net(pars,n_o_pars,cerr,
-		warnings().is_set ? warnings().val : true))
+		par_bool[PID::warnings].is_set ? par_bool[PID::warnings].val : true))
 	{
 		++errors;
 	}

@@ -39,6 +39,7 @@
 #include "params.hpp"
 #include <string.h>
 
+#include "val.hpp"
 #include <assert.h>
 
 namespace anitmt
@@ -85,7 +86,7 @@ namespace
 		int Calc_All();
 		void Set_Array(NamedAParameter **array);  // array of 7 pointers 
 		void Add_Pars(TFPars *toadd);
-		void Print_Set_Pars(ostream &os);
+		void Print_Set_Pars(ostream &os,int verbose);
 	};
 	
 	TFPars::TFPars() : 
@@ -106,12 +107,20 @@ namespace
 	{
 		if(a.is_set && b.is_set)
 		{
-			if(fabs(a.val-b.val)<0.000000001)
+			if(fabs(a.val-b.val)<values::epsilon)
 			{  return(true);  }
 		}
 		return(false);
 	}
-	
+	bool notequal(const AParameter<double> &a,const AParameter<double> &b)
+	{
+		if(a.is_set && b.is_set)
+		{
+			if(fabs(a.val-b.val)>=values::epsilon)
+			{  return(true);  }
+		}
+		return(false);  // special; keep that
+	}
 	
 	// Some calculation routines probably only needed here: 
 	template<class OP> inline AParameter<double> Operation(
@@ -174,7 +183,7 @@ namespace
 		for(int change;change;)
 		{
 			change=0;
-			//Print_Set_Pars(cerr);  cerr << "\n";
+			//Print_Set_Pars(cerr,verbose());  cerr << "\n";
 			
 			change+=SetIfUnset(starttime,sub(endtime,duration));
 			change+=SetIfUnset(starttime,div(startframe,fps));
@@ -201,12 +210,13 @@ namespace
 		{
 			if(ns0<3)  return(-1);  // surely too few 
 			// Check if this is a wrong set of pars: 
-			// equal() returns false if one if the args is not set. 
-			if((duration.is_set && !equal(sub(endtime,starttime),duration)) || 
-			   (frames.is_set && !equal(sub(endframe,startframe),frames))   || 
-			   (fps.is_set && !equal(div(frames,duration),fps))              )
-			{  return(-1);  }  // redundant but okay and underdetermined 
-			return(2);  // wrong set of parameters
+			// notequal() returns false if one of the args is not set. 
+			// notequal(a,b) returns true if a.is_set && b.is_set && a!=b 
+			if(notequal(sub(endtime,starttime),duration) || 
+			   notequal(sub(endframe,startframe),frames) ||
+			   notequal(div(frames,duration),fps) )
+			{  return(2);  }  // wrong set of parameters
+			return(-1);  // redundant but okay and underdetermined 
 		}
 		
 		// Check for overdeterminmation: 
@@ -237,19 +247,19 @@ namespace
 	// warn: 1 -> warning; 0 -> error
 	// Returns 1 on error; 0 on warning or no error 
 	int Solve_Tell_User(ostream &os,int rv,TFPars *tfp,
-		const char *levelname,bool warn)
+		const char *levelname,bool warn,int verbose)
 	{
 		if(!rv)  return(0);
 		os << (warn ? "Warning" : "Error") << 
 			" in level " << levelname << ": " <<
 			Calc_Stat_Str(rv) <<
 			" parameter set (";
-		tfp->Print_Set_Pars(os);
+		tfp->Print_Set_Pars(os,verbose);
 		os << ")" << endl;
 		return(warn ? 0 : 1);
 	}
 	
-	void TFPars::Print_Set_Pars(ostream &os)
+	void TFPars::Print_Set_Pars(ostream &os,int verbose)
 	{
 		NamedAParameter *nap[7];
 		Set_Array(nap);
@@ -260,6 +270,10 @@ namespace
 				if(first)  first=false;
 				else  os << ", ";
 				os << nap[i]->name;
+				if(fabs(nap[i]->val)<values::epsilon)
+				{  os << "=0";  }
+				else if(verbose>1)
+				{  os << "=" << nap[i]->val;  }
 			}
 		if(first)  os << "(none)";
 	}
@@ -291,13 +305,13 @@ int Animation_Parameters::Solve_TimeFrame_Net(Override_Pars *ovp,int nlevels,
 	for(int i=0; i<nlevels; i++)
 	{
 		Animation_Parameters *ap=ovp[i].ap;
-		tfp[i].starttime= ap->starttime();
-		tfp[i].endtime=   ap->endtime();
-		tfp[i].duration=  ap->duration();
-		tfp[i].startframe=ap->startframe();
-		tfp[i].endframe=  ap->endframe();
-		tfp[i].frames=    ap->frames();
-		tfp[i].fps=       ap->fps();
+		tfp[i].starttime= ap->par_double[PID::starttime];
+		tfp[i].endtime=   ap->par_double[PID::endtime];
+		tfp[i].duration=  ap->par_double[PID::duration];
+		tfp[i].startframe=ap->par_int[PID::startframe];
+		tfp[i].endframe=  ap->par_int[PID::endframe];
+		tfp[i].frames=    ap->par_int[PID::frames];
+		tfp[i].fps=       ap->par_double[PID::fps];
 	}
 	
 	// First, we check all levels for overdetermination and warn 
@@ -309,55 +323,62 @@ int Animation_Parameters::Solve_TimeFrame_Net(Override_Pars *ovp,int nlevels,
 		int rv=tmp.Calc_All();
 		if(rv>0)  // overdefinition / wrong set
 		{  errors+=Solve_Tell_User(os,rv,&tfp[i],
-			ovp[i].type,(i!=nlevels-1));  }
+			ovp[i].type,(i!=nlevels-1),verbose());  }
 	}
 	
 	if(errors)  return(errors);
 	
 	// Okay, cmd line level is not overdetermined. 
 	// Let's see if it provides all pars: 
-	TFPars accup;
 	int rv=0;
-	if(verbose().val)
+	//**TFPars tfpar;
+	TFPars accup;  //**
+	if(verbose())
 	{  vstream << "Solving dependent parameters (time/frame/fps):" << endl;  }
 	for(int calclevel=nlevels-1; calclevel>=0; --calclevel)
 	{
-		TFPars newp;
-		newp=tfp[calclevel];
-		accup.Add_Pars(&newp);
+		//**TFPars accup;
+		//**// accumulate the pars: 
+		//**for(int cl=nlevels-1; cl>=calclevel; --cl)
+		//**{
+			TFPars newp;
+			newp=tfp[calclevel];
+			accup.Add_Pars(&newp);
+		//**}
 		TFPars before_calc=accup;
 		rv=accup.Calc_All();
-		if(verbose().val)
+		if(verbose())
 		{
 			vstream << "[" << ovp[calclevel].type << "]   \t";
-			before_calc.Print_Set_Pars(vstream);
+			before_calc.Print_Set_Pars(vstream,verbose());
 			vstream << "  (" << Calc_Stat_Str(rv) << ")" << endl;
 			vstream << "[" << ovp[calclevel].type << "]==>\t";
-			accup.Print_Set_Pars(vstream);
+			accup.Print_Set_Pars(vstream,verbose());
 			vstream << endl;
 		}
 		
 		if(rv==0)   // Okay, we have it. 
 		{
 			Solve_TimeFrame_Done(&accup);   // Copy pars into *this 
-			if(verbose().val)
+			if(verbose())
 			{  vstream << "Solving time/frame/fps done." << endl;  }
 			return(errors);
 		}
 		else if(rv==1 || rv==2)  // overdetermined / wrong set 
 		{
 			errors+=Solve_Tell_User(os,rv,&before_calc,
-				ovp[calclevel].type,/*warn=*/false);
+				ovp[calclevel].type,/*warn=*/false,verbose());
 			return(errors);
 		}
 		
 		// What if we first calc all new parameters?! 
 		#warning Fixme? (Does it behave as we expect?) 
+		//**tfpar=accup;
 	}
 	
 	// If we reach here, the pars are underdetermined. 
 	os << "Error: time/frame/fps underdetermined (computed: "; 
-	accup.Print_Set_Pars(os);
+	accup.Print_Set_Pars(os,verbose());
 	os << ")" << endl;
 	++errors;
 	
@@ -376,7 +397,7 @@ void Animation_Parameters::Solve_TimeFrame_Done(void *_tmp)
 	par_double[PID::fps]=      tmp->fps;
 	par_int[PID::startframe]=  int(tmp->startframe+0.5);
 	par_int[PID::endframe]=    int(tmp->endframe+0.5);
-	par_int[PID::frames]=endframe().val-startframe().val;
+	par_int[PID::frames]=par_int[PID::endframe]-par_int[PID::startframe];
 }
 
 }  /* namespace anitmt */

@@ -37,7 +37,7 @@ class stringlist
 		// next() sets the current pointer to the next string in the list. 
 		//   return value: false: no next string; else: true 
 		// current() returns the current string
-		//   The return value may be midified affecting the list. 
+		//   The return value may be modified affecting the list. 
 		// delete_current() removes the current entry from the list. 
 		bool         rewind()   {  curr=first;  return(curr ? true : false);  }
 		bool         next();
@@ -54,7 +54,7 @@ class stringlist
 		void clear();
 		
 		// To write the string list to a stream (strings separated 
-		// by a space. 
+		// by a space). 
 		friend ostream& operator<<(ostream& os,const stringlist &sl);
 };
 

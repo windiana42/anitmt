@@ -6,4 +6,4 @@ test_utl_LDADD=$(srcdir)/../lib/utl/libutl.a
 test_val_SOURCES = 	test_val.cpp
 test_val_LDADD=$(srcdir)/../lib/val/libval.a
 test_par_SOURCES = 	test_par.cpp
-test_par_LDADD=$(srcdir)/../lib/par/libpar.a
+test_par_LDADD=$(srcdir)/../lib/par/libpar.a $(srcdir)/../lib/val/libval.a

@@ -338,32 +338,32 @@ class Animation_Parameters : String_Value_Converter
 		/********* METHODS TO QUERY PARAMETERS *********/
 		
 		// BOOL parameters: 
-		AParameter<bool> warnings()   {  return(par_bool[PID::warnings]);   }
+		bool warnings()   {  return(par_bool[PID::warnings].val);   }
 		
 		// INTEGER parameters: 
-		AParameter<int> width()       {  return(par_int[PID::width]);       }
-		AParameter<int> height()      {  return(par_int[PID::height]);      }
-		AParameter<int> startframe()  {  return(par_int[PID::startframe]);  }
-		AParameter<int> endframe()    {  return(par_int[PID::endframe]);    }
-		AParameter<int> frames()      {  return(par_int[PID::frames]);      }
-		AParameter<int> verbose()     {  return(par_int[PID::verbose]);     }
+		int width() 	  {  return(par_int[PID::width].val);		}
+		int height()	  {  return(par_int[PID::height].val);  	}
+		int startframe()  {  return(par_int[PID::startframe].val);  }
+		int endframe()    {  return(par_int[PID::endframe].val);	}
+		int frames()	  {  return(par_int[PID::frames].val);  	}
+		int verbose()	  {  return(par_int[PID::verbose].val); 	}
 		
 		// DOUBLE parameters: 
-		AParameter<double> starttime()  {  return(par_double[PID::starttime]);  }
-		AParameter<double> endtime()    {  return(par_double[PID::endtime]);    }
-		AParameter<double> duration()   {  return(par_double[PID::duration]);   }
-		AParameter<double> fps()        {  return(par_double[PID::fps]);        }
+		double starttime()  {  return(par_double[PID::starttime].val);  }
+		double endtime()	{  return(par_double[PID::endtime].val);	}
+		double duration()	{  return(par_double[PID::duration].val);	}
+		double fps()		{  return(par_double[PID::fps].val);		}
 		
 		// STRING parameters: 
-		AParameter<std::string> renderer()  {  return(par_string[PID::renderer]);  }
-		AParameter<std::string> ani_dir()  {  return(par_string[PID::ani_dir]);  }
-		AParameter<std::string> name()  {  return(par_string[PID::name]);  }
+		std::string renderer()  {  return(par_string[PID::renderer].val);  }
+		std::string ani_dir()   {  return(par_string[PID::ani_dir].val);   }
+		std::string name()      {  return(par_string[PID::name].val);      }
 		
 		// STRING LIST parameters: 
-		AParameter<stringlist> renderargs()  {  return(par_stringlist[PID::renderargs]);  }
-		AParameter<stringlist> adl()  {  return(par_stringlist[PID::adl]);  }
-		AParameter<stringlist> scene()  {  return(par_stringlist[PID::scene]);  }
-		AParameter<stringlist> copy()  {  return(par_stringlist[PID::copy]);  }
+		stringlist renderargs()  {  return(par_stringlist[PID::renderargs].val);  }
+		stringlist adl()         {  return(par_stringlist[PID::adl].val);         }
+		stringlist scene()       {  return(par_stringlist[PID::scene].val);       }
+		stringlist copy()        {  return(par_stringlist[PID::copy].val);        }
 };
 
 // Returns "-" or "--". 
