@@ -6,9 +6,10 @@ the installation should not be done by root.
 (Note: `#' is used to symbolise the shell prompt, the text left 
        of it is an example for the current directory.) 
 
-1. In the source directory, call aclocal and automake:
+1. In the source directory, call aclocal, autoconf and automake:
    
    /home/me/source/anitmt# aclocal
+   /home/me/source/anitmt# autoconf
    /home/me/source/anitmt# automake
 
 2. Create the build directory if it is not already there. 
