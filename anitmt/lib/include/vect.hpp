@@ -54,13 +54,16 @@ namespace vect
 	
 	// Matrix exceptions: 
 	class EX_Matrix {};
-	class EX_Matrix_Illegal_Mult     : EX_Matrix {};
-	class EX_Matrix_Illegal_Invert   : EX_Matrix {};
-	class EX_Matrix_Illegal_VectMult : EX_Matrix {};
+	// More detailed exceptions all derived from EX_Matrix: 
+	class EX_Matrix_Illegal_Mult;
+	class EX_Matrix_Illegal_Invert;
+	class EX_Matrix_Illegal_VectMult;
+	class EX_Matrix_34_Problem;
 	
 	// Multiply matrix * matrix: 
 	template<int M,int L,int N> void mult(matrix<L,M> &r,const matrix<N,L> &a,const matrix<N,M> &b);
 	// Multiply matrix * vector: 
+	void mult(vector<3> &r,const matrix<4,4> &m,const vector<3> &v); // special
 	template<int C,int R> void mult(vector<R> &r,const matrix<C,R> &m,const vector<C> &v);
 	
 	// Write vector and matrix to ostream: 
@@ -74,6 +77,12 @@ namespace vect
 			      double *rv,int rn,
 			const double *m,int mc,int mr,
 			const double *v,int vn)  throw(vect::EX_Matrix_Illegal_VectMult);
+		// Special function: multiply a 3d vector with a 4x4 matrix and 
+		// get a 3d vector. 
+		// The exception is thrown if the 4th element of the result is 
+		// different from 1. 
+		extern void matrix_mul_vect343(double *rv,const double *m,const double *v)
+			throw(vect::EX_Matrix_34_Problem);
 	}
 }
 
@@ -84,6 +93,13 @@ namespace vect
 
 namespace vect
 {
+	class EX_Matrix_Illegal_Mult     : EX_Matrix {};
+	class EX_Matrix_Illegal_Invert   : EX_Matrix {};
+	class EX_Matrix_Illegal_VectMult : EX_Matrix {};
+	class EX_Matrix_34_Problem : EX_Matrix {
+		// special cases (3d vector + 4x4 mat)
+		public: matrix<4,4> mat; vector<3> v3;  vector<4> v4;
+	};
 
 // Function to multiply the vector v with matrix m, storing the resulting 
 // vector in r. 
@@ -91,6 +107,9 @@ template<int C,int R> inline
 	void mult(vector<R> &r,const matrix<C,R> &m,const vector<C> &v)
 	{  internal::matrix_mul_vect(r._get_ptr(),R,m.x[0],C,R,v._get_ptr(),C);  }
 
+// Special functions: 
+inline void mult(vector<3> &r,const matrix<4,4> &m,const vector<3> &v)
+{  internal::matrix_mul_vect343(r._get_ptr(),m.x[0],v._get_ptr());  }
 
 } /* end of namespace vect */
 

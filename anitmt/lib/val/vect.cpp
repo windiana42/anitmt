@@ -37,8 +37,7 @@
 
 #include <iostream>
 
-#include <vector.hpp>
-#include <matrix.hpp>
+#include <vect.hpp>
 
 // Most is done inline for speed increase. 
 
@@ -230,6 +229,33 @@ namespace vect
 				for(int c=0; c<mc; c++)
 				{  s += SUB(m,mc,c,r) * v[c];  }
 				rv[r]=s;
+			}
+		}
+		
+		// Special function: multiply a 3d vector with a 4x4 matrix and 
+		// get a 3d vector. 
+		// The exception is thrown if the 4th element of the result is 
+		// different from 1. 
+		void matrix_mul_vect343(double *rv,const double *m,const double *v)
+			throw(vect::EX_Matrix_34_Problem)
+		{
+			for(int r=0; r<3; r++)
+			{
+				rv[r] = SUB(m,4,0,r)*v[0] + SUB(m,4,1,r)*v[1] + 
+				        SUB(m,4,2,r)*v[2] + SUB(m,4,3,r) /* *1 */;
+			}
+			
+			double tmp = SUB(m,4,0,3)*v[0] + SUB(m,4,1,3)*v[1] + 
+				         SUB(m,4,2,3)*v[2] + SUB(m,4,3,3) /* *1 */;
+			if(fabs(tmp-1.0)>0.00001)  // gonna throw the exception, damn!!
+			{
+				EX_Matrix_34_Problem exc;
+				for(int c=0; c<4; c++)
+					for(int r=0; r<4; r++)
+						exc.mat(c,r,SUB(m,4,c,r));
+				for(int i=0; i<3; i++)  exc.v3(i,v[i]);
+				for(int i=0; i<3; i++)  exc.v4(i,rv[i]);  exc.v4(3,tmp);
+				throw(exc);
 			}
 		}
 		

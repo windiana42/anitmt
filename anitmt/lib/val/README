@@ -284,9 +284,15 @@ Functions:
       * You may construct matrices for scaling using MscaleX(), MscaleY(), 
         MscaleZ(). Each of these functions takes a double argument being 
         the scale factor. 
+        You may also use Mscale(Vector) using x,y,z from the vector. 
       * You may construct matrices for rotation around an axis using 
         MrotateX(), MrotateY(), MrotateZ(). The double argument is the 
         rotation ange (in radians, of course). 
+        You may also use Mrotate(Vector) using x,y,z angles from the vector. 
+        in the given order (x, then y, then z). 
+      * You may construct matrices for translation using MtranslateX(), 
+        MtranslateY() and MtranslateZ(). 
+        You may also use Mtranslate(Vector) using x,y,z from the vector. 
       * To rotate around the x, the y and the z axis in this order, you 
         may use Mrotate(Vector v). The elements of the vector specify the 
         rotation angles. 

@@ -342,12 +342,13 @@ namespace values
   inline ostream& operator<<(ostream& s,const Vector &v)
     {  return(vect::operator<<(s,v.x));  }
 
+
 /******************************************************************************/
 /*   MATRIX                                                                   */
 /******************************************************************************/
 
   class Matrix : public Valtype{
-    vect::matrix<3,3> x;
+    vect::matrix<4,4> x;
     enum NoInit { noinit };
     // This constructor is fast as it does no initialisation: 
     Matrix(NoInit) : Valtype(Valtype::matrix),x() {}
@@ -358,10 +359,11 @@ namespace values
     enum MatRotY { matroty };
     enum MatRotZ { matrotz };
     enum MatScale { matscale };
-	
+    enum MatTrans { mattrans };
+
     // Copy constructor: 
     Matrix(const Matrix &m) : Valtype(Valtype::matrix),x(m.x)  {}
-    //Matrix(const vect::matrix<3,3> &m) : Valtype(Valtype::matrix),x(m)  {}
+    //Matrix(const vect::matrix<4,4> &m) : Valtype(Valtype::matrix),x(m)  {}
     // These generate an initialized identity matrix. 
     Matrix()         : Valtype(Valtype::matrix),x(0)  {}
     Matrix(IdentMat) : Valtype(Valtype::matrix),x(0)  {}
@@ -369,17 +371,19 @@ namespace values
     Matrix(NullMat) : Valtype(Valtype::matrix),x()  {  x.set_null(); }
 
     // You may (of couse) use these functions but the non-member 
-	// functions below (MrotateX(),...) are more convenient. 
+    // functions below (MrotateX(),...) are more convenient. 
     Matrix(enum MatRotX,double angle);
     Matrix(enum MatRotY,double angle);
     Matrix(enum MatRotZ,double angle);
     Matrix(enum MatScale,double fact,int idx);  // idx unchecked. 
     Matrix(enum MatScale,const Vector &v);
+    Matrix(enum MatTrans,double delta,int idx);  // idx unchecked. 
+    Matrix(enum MatTrans,const Vector &v);
 
     // Assignment operator 
     Matrix &operator=(const Matrix &m)  {  x=m.x;  return(*this);  }
 
-    //operator vect::matrix<3,3>() const  {  return(x);  }
+    //operator vect::matrix<4,4>() const  {  return(x);  }
 
     /************************************/
     /* COLUMNS -> c -> ``X coordinate'' */
@@ -392,7 +396,7 @@ namespace values
     // Using Matrix mat, you can access every element by calling 
     //   double val=mat[c][r];
     // FOR SPEED INCREASE, NO RANGE CHECK IS PERFORMED ON c, r. 
-    vect::matrix_column<3> operator[](int c)  {  return(x[c]);  }
+    vect::matrix_column<4> operator[](int c)  {  return(x[c]);  }
 
     // Set an element of the matrix: c is the column index, r the row index. 
     // NO RANGE CHECK IS PERFORMED ON c,r. 
@@ -491,6 +495,11 @@ namespace values
   inline Matrix MscaleY(double fact)  {  return(Matrix(Matrix::matscale,fact,1));  }
   inline Matrix MscaleZ(double fact)  {  return(Matrix(Matrix::matscale,fact,2));  }
   inline Matrix Mscale(const Vector &v)  {  return(Matrix(Matrix::matscale,v));  }
+  // Translation matrices: 
+  inline Matrix MtranslateX(double d)  {  return(Matrix(Matrix::mattrans,d,0));  }
+  inline Matrix MtranslateY(double d)  {  return(Matrix(Matrix::mattrans,d,1));  }
+  inline Matrix MtranslateZ(double d)  {  return(Matrix(Matrix::mattrans,d,2));  }
+  inline Matrix Mtranslate(const Vector &v)  {  return(Matrix(Matrix::mattrans,v));  }
   // Rotation matrices: 
   inline Matrix MrotateX(double angle)  {  return(Matrix(Matrix::matrotx,angle));  }
   inline Matrix MrotateY(double angle)  {  return(Matrix(Matrix::matroty,angle));  }
@@ -524,7 +533,7 @@ namespace values
 
   // get the rotation from v1 to v2 around axis 
   extern double get_rotation_around(
-  	const Vector &v1,const Vector &v2,const Vector &axis);
+    const Vector &v1,const Vector &v2,const Vector &axis);
 
 
 /******************************************************************************/

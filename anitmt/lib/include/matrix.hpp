@@ -199,6 +199,7 @@ template<int C,int R> class matrix
 		// Function to multiply the vector v with matrix m, storing the 
 		// resulting vector in r. 
 		friend void mult<>(vector<R> &r,const matrix<C,R> &m,const vector<C> &v);
+		friend void mult(vector<3> &r,const matrix<4,4> &m,const vector<3> &v);
 		
 		friend ostream& operator<< <>(ostream &s,const matrix<C,R> &m);
 		

@@ -201,6 +201,20 @@ namespace values
 		x(2,2,v[2]);
 	}
 	
+	Matrix::Matrix(enum MatTrans,double delta,int idx) : 
+		Valtype(Valtype::matrix),x(0)
+	{
+		x(3,idx,delta);
+	}
+	
+	Matrix::Matrix(enum MatTrans,const Vector &v) : 
+		Valtype(Valtype::matrix),x(0)
+	{
+		x(3,0,v[0]);
+		x(3,1,v[1]);
+		x(3,2,v[2]);
+	}
+	
 	// rotates a specified angle around v 
 	Matrix Mrotate_around(const Vector &v,double angle)
 	{
