@@ -79,12 +79,12 @@ namespace internal_vect
 // MATRIX * VECTOR: 
 template<int R,int C> inline 
 	void mult_mv(vector<R> &r,const matrix<R,C> &m,const vector<C> &v)
-	{  internal::matrix_mul_vect(r.x, R, m.x[0], R, C, v.x, C);  }
+	{  internal::matrix_mul_vect_mv(r.x, R, m.x[0], R, C, v.x, C);  }
 #ifndef LIBVAL_DISABLE__VEC_MUL_MAT
 // VECTOR * MATRIX: 
 template<int R,int C> inline 
 	void mult_vm(vector<C> &r,const matrix<R,C> &m,const vector<R> &v)
-	{  internal::matrix_mul_vect(r.x, C, m.x[0], R, C, v.x, R);  }
+	{  internal::matrix_mul_vect_vm(r.x, C, m.x[0], R, C, v.x, R);  }
 #endif
 
 // Special functions: 

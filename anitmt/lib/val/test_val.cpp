@@ -310,7 +310,7 @@ int main()
 	#warning "** GCC-3.0.5 will SIGSEGV with this code. **"
 	#warning "** GCC-3.1 makes no trouble.              **"
 	#warning "********************************************"
-	#if 0
+	#if 1
 		tr=t1;  tr.inverse();
 		if(tr!=mat_inverse(t1))
 		{  cerr << "ERROR in inverse\n";  }
@@ -353,8 +353,8 @@ int main()
 		m5x10=m5x10*m10x10;
 		
 		#warning "**** PLEASE ENABLE ME, TOO ****"
-		//V5=m5x10*V1;
-		//V1*=m10x10;
+		V5=m5x10*V1;
+		V1*=m10x10;
 	}
 	
 	/*********************************************/
