@@ -14,7 +14,7 @@ libfunctionality_a_SOURCES= base_func.afd base_func.hpp base_func.cpp \
 			scalar.afd scalar.hpp scalar.cpp \
 			object_base.afd object_base.hpp object_base.cpp \
 			object.afd object.hpp object.cpp \
-			make_avail.cpp
+			make_avail.cpp make_avail.hpp
 
 check_PROGRAMS=		test_functionality
 CXXFLAGS =		@CXXFLAGS@ -Wno-non-template-friend -DYYDEBUG \

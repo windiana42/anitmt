@@ -138,7 +138,7 @@ base_types {
        //<<< I was thinking about:
        return_fail			// return undefined
        return_if_fail			// return if last command failed
-       check_fail			// return true if last command failed
+       check_fail			// true if last command didn't failed
        //<<< 
        ...
        in SQ_Brackets("[]") 
@@ -170,16 +170,16 @@ if( x_failed )
 <Propertyreference>:    <PROPERTYNAME>
                       | <OPERANDNAME>
                       | <Nodereference>.<PROPERTYNAME>
-                      | <PROVIDERTYPE>.<RETURNTYPE>(<PARAMETERTYPE>).start_param                    // range properties for result function
+                      | <PROVIDERTYPE>.<RETURNTYPE>(<PARAMETERTYPE>).start_param   // range properties for result function
                       | <PROVIDERTYPE>.<RETURNTYPE>(<PARAMETERTYPE>).end_param                    
 <Nodereference>:        <Localnodeidentifier>
                       | <Nodeidentifier>
                       | <Nodereference>.<Nodeidentifier>                           // recursive
 <Localnodeidentifier>:  <PROVIDERTYPE>.prev                           // return type specific sequence
                       | <PROVIDERTYPE>.next                    
-                      | child.<CHILDNAME>.first                     
-                      | child.<CHILDNAME>.last
-                      | child.<CHILDNAME>[n]
+                      | child.<CHILDPROVIDERTYPE>.first                     
+                      | child.<CHILDPROVIDERTYPE>.last
+                      | child.<CHILDPROVIDERTYPE>[n]
 <Nodeidentifier>:       prev
                       | next
                       | parent
