@@ -19,6 +19,7 @@ test_ldrproto_SOURCES = test_ldrproto.cpp
 test_ldrproto_LDADD = \
 	$(top_builddir)/hlib/libhlib.a \
 	libsupport.a \
+	../admin/libadmin.a \
 	$(top_builddir)/hlib/libhlib.a
 
 check: test_ldrproto$(EXEEXT) libsupport.a xFORCE
