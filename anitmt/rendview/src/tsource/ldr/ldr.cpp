@@ -108,7 +108,7 @@ void TaskSource_LDR::_ConnClose(ServerConn *sc,int reason)
 	// Okay, if that was not our server, then everything is okay: 
 	if(!sc->authenticated)
 	{
-		Verbose("LDR: Closed connection to %s.\n",
+		Verbose(TSLLR,"LDR: Closed connection to %s.\n",
 			sc->addr.GetAddress().str());
 		// Hehe... simply delete it: 
 		delete sconn.dequeue(sc);
@@ -118,7 +118,7 @@ void TaskSource_LDR::_ConnClose(ServerConn *sc,int reason)
 	
 	if(reason==1)
 	{
-		Verbose("LDR: Got quit request from server %s.\n",
+		Verbose(TSLLR,"LDR: Got quit request from server %s.\n",
 			sc->addr.GetAddress().str());
 		#warning This is okay as long as we do not have tasks...?
 		delete sconn.dequeue(sc);  return;
@@ -319,7 +319,7 @@ void TaskSource_LDR::_ListenFdNotify(FDInfo *fdi)
 		}
 		
 		// Okay, accepted a connection: 
-		Verbose("LDR: Accepted connection from %s.\n",sc->addr.GetAddress().str());
+		Verbose(TSLLR,"LDR: Accepted connection from %s.\n",sc->addr.GetAddress().str());
 		sconn.append(sc);
 		return;
 	}

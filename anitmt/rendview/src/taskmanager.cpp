@@ -561,7 +561,7 @@ void TaskManager::_schedule(TimerInfo *ti)
 		int nkilled=interface->TermAllJobs(
 			(sched_kill_tasks==1) ? JK_UserInterrupt : JK_ServerError);
 		
-		Verbose("Sent SIGTERM to %d jobs.%s",nkilled,
+		Verbose(0,"Sent SIGTERM to %d jobs.%s",nkilled,
 			kill_tasks_and_quit_now ? "" : "\n");
 		
 		// Okay, did that. 
@@ -571,12 +571,12 @@ void TaskManager::_schedule(TimerInfo *ti)
 		{
 			if(nkilled==0)
 			{
-				Verbose(" QUITTING\n");
+				Verbose(0," QUITTING\n");
 				fdmanager()->Quit(2);  // QUIT NOW. 
 				return;
 			}
 			else
-			{  Verbose(" Waiting for jobs to quit.\n");  }
+			{  Verbose(0," Waiting for jobs to quit.\n");  }
 			_KillScheduledForStart();
 		}
 	}
@@ -702,35 +702,35 @@ void TaskManager::_DoQuit(int status)
 	
 	HTime elapsed=ptu_self.uptime;
 	HTime endtime=starttime+elapsed;
-	Verbose("  exiting at (local): %s\n",endtime.PrintTime(1,1));
-	Verbose("  elapsed time: %s\n",elapsed.PrintElapsed());
+	Verbose(TDI,"  exiting at (local): %s\n",endtime.PrintTime(1,1));
+	Verbose(TDI,"  elapsed time: %s\n",elapsed.PrintElapsed());
 	
 	int loadval=_GetLoadValue();
-	Verbose("  load control: ");
+	Verbose(TDI,"  load control: ");
 	if(load_low_thresh<=0)
-	{  Verbose(" [disabled]\n");  }
+	{  Verbose(TDI," [disabled]\n");  }
 	else
 	{
 		char max_tmp[32];
 		if(max_load_measured<0)  *max_tmp='\0';
 		else  snprintf(max_tmp,32,"; max: %.2f",double(max_load_measured)/100.0);
-		Verbose("%d times; curr: %.2f%s  (%.2f/%.2f)\n",
+		Verbose(TDI,"%d times; curr: %.2f%s  (%.2f/%.2f)\n",
 			load_control_stop_counter,double(loadval)/100.0,max_tmp,
 			double(load_low_thresh)/100.0,double(load_high_thresh)/100.0);
 	}
 	
 	if(lpf_hist_size)
 	{
-		Verbose("  last successfully done frames:");
+		Verbose(TDI,"  last successfully done frames:");
 		qsort(last_proc_frames,lpf_hist_size,sizeof(int),&_int_cmp);
 		int nw=0;
 		for(int i=0; i<lpf_hist_size; i++)
 		{
 			int l=last_proc_frames[i];
 			if(l<0)  continue;
-			Verbose(" %d",l);  ++nw;
+			Verbose(TDI," %d",l);  ++nw;
 		}
-		Verbose("%s\n",nw ? "" : " [none]");
+		Verbose(TDI,"%s\n",nw ? "" : " [none]");
 	}
 	
 	if(elapsed.GetD(HTime::seconds)>0.2)
@@ -742,13 +742,13 @@ void TaskManager::_DoQuit(int status)
 		
 		char tmp[48];
 		snprintf(tmp,48,"%s",ptu_self.utime.PrintElapsed());
-		Verbose("  RendView:  %.2f%% CPU  (user: %s; sys: %s)\n",
+		Verbose(TDI,"  RendView:  %.2f%% CPU  (user: %s; sys: %s)\n",
 			rv_cpu,tmp,ptu_self.stime.PrintElapsed());
 		snprintf(tmp,48,"%s",ptu_chld.utime.PrintElapsed());
-		Verbose("  Jobs:     %.2f%% CPU  (user: %s; sys: %s)\n",
+		Verbose(TDI,"  Jobs:     %.2f%% CPU  (user: %s; sys: %s)\n",
 			ch_cpu,tmp,ptu_chld.stime.PrintElapsed());
 		snprintf(tmp,48,"%s",(ptu_chld.utime+ptu_self.utime).PrintElapsed());
-		Verbose("  Together: %.2f%% CPU  (user: %s; sys: %s)\n",
+		Verbose(TDI,"  Together: %.2f%% CPU  (user: %s; sys: %s)\n",
 			ch_cpu+rv_cpu,tmp,(ptu_chld.stime+ptu_self.stime).PrintElapsed());
 	}
 	
@@ -804,7 +804,7 @@ int TaskManager::_StartProcessing()
 	const char *ts_name=tsource_name.str();
 	assert(tdif_name && ts_name);
 	
-	Verbose("Choosing: %s task source; %s task driver (interface)\n",
+	Verbose(MiscInfo,"Choosing: %s task source; %s task driver (interface)\n",
 		ts_name,tdif_name);
 	
 	// OKAY; SET UP TASK SOURCE: 
@@ -856,20 +856,20 @@ int TaskManager::_StartProcessing()
 	char tmp[24];
 	if(max_failed_in_sequence)  snprintf(tmp,24,"%d",max_failed_in_sequence);
 	else  strcpy(tmp,"OFF");
-	Verbose("Ready to perform work: max-failed-in-seq=%s\n",tmp);
+	Verbose(TDI,"Ready to perform work: max-failed-in-seq=%s\n",tmp);
 	
 	// Get load val for first time; see if it is >0: 
 	int loadval=_GetLoadValue();
 	
-	Verbose("  load control: ");
+	Verbose(TDI,"  load control: ");
 	if(load_low_thresh<=0)
 	{
-		Verbose("[disabled]\n");
+		Verbose(TDI,"[disabled]\n");
 		assert(load_poll_msec<0);
 	}
 	else
 	{
-		Verbose("min: %.2f; max: %.2f; poll: %ld msec; curr: %.2f\n",
+		Verbose(TDI,"min: %.2f; max: %.2f; poll: %ld msec; curr: %.2f\n",
 			double(load_low_thresh)/100.0,double(load_high_thresh)/100.0,
 			load_poll_msec,double(loadval)/100.0);
 		assert(load_high_thresh>=load_low_thresh);
@@ -879,7 +879,7 @@ int TaskManager::_StartProcessing()
 	ProcessManager::ProcTimeUsage ptu;
 	ProcessManager::manager->GetTimeUsage(-1,&ptu);
 	starttime=ptu.starttime;
-	Verbose("  starting at (local): %s\n",starttime.PrintTime(1,1));
+	Verbose(TDI,"  starting at (local): %s\n",starttime.PrintTime(1,1));
 	
 	// Tell the interface to really start things; this will call 
 	// TaskManager::ReallyStartProcessing(). 
@@ -1255,16 +1255,16 @@ void TaskManager::_PrintTaskExecStatus(TaskExecutionStatus *tes)
 {
 	VerboseSpecial("      Status: %s",tes->StatusString());
 	if(tes->status==TTR_Unset)  return;
-	Verbose("      Started: %s\n",tes->starttime.PrintTime(1,1));
-	Verbose("      Done:    %s\n",tes->endtime.PrintTime(1,1));
+	Verbose(TDR,"      Started: %s\n",tes->starttime.PrintTime(1,1));
+	Verbose(TDR,"      Done:    %s\n",tes->endtime.PrintTime(1,1));
 	HTime duration=tes->endtime-tes->starttime;
-	Verbose("      Elapsed: %s  (%.2f%% CPU)\n",
+	Verbose(TDR,"      Elapsed: %s  (%.2f%% CPU)\n",
 		duration.PrintElapsed(),
 		100.0*(tes->utime.GetD(HTime::seconds)+tes->stime.GetD(HTime::seconds))/
 			duration.GetD(HTime::seconds));
 	char tmp[48];
 	snprintf(tmp,48,"%s",tes->utime.PrintElapsed());
-	Verbose("      Time in mode: user: %s; system: %s\n",
+	Verbose(TDR,"      Time in mode: user: %s; system: %s\n",
 		tmp,tes->stime.PrintElapsed());
 }
 
@@ -1285,7 +1285,7 @@ void TaskManager::_DoPrintTaskExecuted(TaskParams *tp,const char *binpath,
 	}
 	else
 	{  strcpy(tmpA,"??");  strcpy(tmpB,"??");  }
-	Verbose("    Executed: %s (nice value: %s; timeout: %s; tty: %s)\n",
+	Verbose(TDR,"    Executed: %s (nice value: %s; timeout: %s; tty: %s)\n",
 		binpath,tmpA,tmpB,tp->call_setsid ? "no" : "yes");
 }
 
@@ -1303,15 +1303,15 @@ void TaskManager::_PrintDoneInfo(CompleteTask *ctsk)
 	
 	VerboseSpecial("Reporting task [frame %d] as done (%s processed).",
 		ctsk->frame_no,hp_msg[how_processed]);
-	Verbose("  Task state: %s\n",CompleteTask::StateString(ctsk->state));
+	Verbose(TDR,"  Task state: %s\n",CompleteTask::StateString(ctsk->state));
 	
 	if(ctsk->rt)
 	{
-		Verbose("  Render task: %s (%s driver)\n",
+		Verbose(TDR,"  Render task: %s (%s driver)\n",
 			ctsk->rt->rdesc->name.str(),ctsk->rt->rdesc->dfactory->DriverName());
-		Verbose("    Input file:  hd path: %s\n",
+		Verbose(TDR,"    Input file:  hd path: %s\n",
 			ctsk->rt->infile ? ctsk->rt->infile->HDPath().str() : NULL);
-		Verbose("    Output file: hd path: %s; size %dx%d; format: %s\n",
+		Verbose(TDR,"    Output file: hd path: %s; size %dx%d; format: %s\n",
 			ctsk->rt->outfile ? ctsk->rt->outfile->HDPath().str() : NULL,
 			ctsk->rt->width,ctsk->rt->height,
 			ctsk->rt->oformat ? ctsk->rt->oformat->name : NULL);
@@ -1320,11 +1320,11 @@ void TaskManager::_PrintDoneInfo(CompleteTask *ctsk)
 		_PrintTaskExecStatus(&ctsk->rtes);
 	}
 	else
-	{  Verbose("  Render task: [none]\n");  }
+	{  Verbose(TDR,"  Render task: [none]\n");  }
 	
 	if(ctsk->ft)
 	{
-		Verbose("  Filter task: %s (%s driver)\n",NULL,NULL);
+		Verbose(TDR,"  Filter task: %s (%s driver)\n",NULL,NULL);
 		Error("** Filter task info not yet supported. [FIXME!] **\n");
 		
 		_DoPrintTaskExecuted(ctsk->ftp,ctsk->ft->fdesc->binpath.str(),
@@ -1332,7 +1332,7 @@ void TaskManager::_PrintDoneInfo(CompleteTask *ctsk)
 		_PrintTaskExecStatus(&ctsk->ftes);
 	}
 	else
-	{  Verbose("  Filter task: [none]\n");  }
+	{  Verbose(TDR,"  Filter task: [none]\n");  }
 }
 
 
@@ -1343,7 +1343,7 @@ int TaskManager::CheckParams()
 	if(max_failed_in_sequence<0)
 	{  max_failed_in_sequence=0;  }
 	if(!max_failed_in_sequence)
-	{  Verbose("Note that max-failed-in-seq feature is disabled.\n");  }
+	{  Verbose(MiscInfo,"Note that max-failed-in-seq feature is disabled.\n");  }
 	
 	if(load_low_thresh<=0)
 	{

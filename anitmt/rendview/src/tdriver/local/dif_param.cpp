@@ -222,7 +222,7 @@ int TaskDriverInterfaceFactory_Local::init(ComponentDataBase *cdb)
 		Error("Failed to initialize local task driver interface.\n");
 		return(1);
 	}
-	Verbose("[local] ");
+	Verbose(BasicInit,"[local] ");
 	return(0);
 }
 

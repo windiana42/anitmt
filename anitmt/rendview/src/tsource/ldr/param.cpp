@@ -86,7 +86,7 @@ int TaskSourceFactory_LDR::FinalInit()
 	
 	if(!failed)
 	{
-		Verbose("LDR task source: Listening on port %d (procotol version %d)\n",
+		Verbose(TSP,"LDR task source: Listening on port %d (procotol version %d)\n",
 			listen_port,LDRProtocolVersion);
 	}
 	
@@ -135,7 +135,7 @@ int TaskSourceFactory_LDR::init(ComponentDataBase *cdb)
 		Error("Failed to initialize LDR task source.\n");
 		return(1);
 	}
-	Verbose("[LDR] ");
+	Verbose(BasicInit,"[LDR] ");
 	return(0);
 }
 

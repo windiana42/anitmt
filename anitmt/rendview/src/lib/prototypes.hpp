@@ -35,14 +35,51 @@
 
 class RefString;
 
-// Used to switch on/off colored output: (Initially 0)
-extern int do_colored_output_stdout,do_colored_output_stderr;
-void Error(const char *fmt,...);
-void Warning(const char *fmt,...);
-void Verbose(const char *fmt,...);
-void VerboseSpecial(const char *fmt,...);
+struct RVOutputParams
+{
+	// Used to switch on/off colored output: (Initially 0)
+	int enable_color_stdout : 1;
+	int enable_color_stderr : 1;
+	int : 30;
+	
+	// Verbose level field. See VERBOSE_xxx for bitmask. 
+	u_int32_t vlevel_field;
+};
 
-// Returns number of CPUs; assumes one CPU is detection fails. 
+enum
+{
+	VERBOSE_BasicInit = 0x00000001,   // basic init at startup (managers, ...)
+	VERBOSE_MiscInfo =  0x00000002,   // misc info like number of CPUs. 
+	VERBOSE_TDI =       0x00000004,   // TaskDriver init info (start processing/end)
+	VERBOSE_TDR =       0x00000008,   // TaskDriver runtime info (kill/start...)
+	VERBOSE_TSI =       0x00000010,   // TaskSource init info (per-frame blocks...)
+	VERBOSE_TSP =       0x00000020,   // TaskSource param parse/setup info (skipped xy,...)
+	VERBOSE_TSR0 =      0x00000040,   // TaskSource runtime info level 0 (less important)
+	VERBOSE_TSR1 =      0x000000b0,   // TaskSource runtime info level 1 (more important)
+	VERBOSE_TSLR =      0x00000100,   // local task source runtime info (file re-naming...)
+	VERBOSE_TSLLR =     0x00000200,   // LDR task source runtime info
+	VERBOSE_0 =         0x10000000
+};
+
+
+// Global output params: 
+extern  RVOutputParams rv_oparams;
+// Set them up: 
+void InitRVOutputParams(int &argc,char **argv,char **envp);
+
+void Error(const char *fmt,...)    __attribute__ ((__format__ (__printf__, 1, 2)));
+void Warning(const char *fmt,...)  __attribute__ ((__format__ (__printf__, 1, 2)));
+void _Verbose(const char *fmt,...) __attribute__ ((__format__ (__printf__, 1, 2)));
+void VerboseSpecial(const char *fmt,...) __attribute__ ((__format__ (__printf__, 1, 2)));
+
+// Do the checking inline
+#define Verbose(vspec,fmt...)  \
+	do { \
+		if(rv_oparams.vlevel_field & VERBOSE_##vspec) \
+		{  _Verbose(fmt);  } \
+	} while(0)
+
+// Returns number of CPUs; assumes one CPU and warn if detection fails. 
 int GetNumberOfCPUs();
 
 // Returns the system load multiplied with 100: 

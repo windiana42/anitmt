@@ -67,7 +67,7 @@ int TaskDriverInterfaceFactory_LDR::FinalInit()
 	int failed=0;
 	
 	// Try to resolve the client names: 
-	Verbose("Looking up LDR clients...\n");
+	Verbose(TDR,"Looking up LDR clients...\n");
 	for(const RefStrList::Node *n=str_clients.first(); n; n=n->next)
 	{
 		const char *name=n->str();
@@ -269,7 +269,7 @@ int TaskDriverInterfaceFactory_LDR::init(ComponentDataBase *cdb)
 		Error("Failed to initialize LDR task driver interface.\n");
 		return(1);
 	}
-	Verbose("[LDR] ");
+	Verbose(BasicInit,"[LDR] ");
 	return(0);
 }
 

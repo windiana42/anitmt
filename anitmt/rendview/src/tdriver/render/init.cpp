@@ -25,13 +25,13 @@ int RenderDriver::init_factories(ComponentDataBase *cdb)
 {
 	int failed=0;
 	
-	Verbose("Initializing render drivers: ");
+	Verbose(BasicInit,"Initializing render drivers: ");
 	
 	// List the init function of all drivers here. 
 	// Currently the POVRay driver is feeling lonely...
 	failed+=POVRayDriverFactory::init(cdb);
 	
-	Verbose(failed ? "FAILED\n" : "OK\n");
+	Verbose(BasicInit,failed ? "FAILED\n" : "OK\n");
 	
 	return(failed);
 }

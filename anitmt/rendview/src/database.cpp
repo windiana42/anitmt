@@ -280,7 +280,7 @@ int ComponentDataBase::ReadInDescFiles(par::ParameterSource_File *file_src)
 		if(!dti->descfile.str())  continue;   // no file to read in
 		assert(dti->descfile.stype()==0);
 		
-		Verbose("Reading in %s description file.\n",
+		Verbose(MiscInfo,"Reading in %s description file.\n",
 			DTypeString((TaskDriverType)dtype));
 		
 		assert(dti->i_section);
@@ -360,7 +360,7 @@ int ComponentDataBase::parse(const Section *s,PAR::SPHInfo *info)
 		}
 	}
 	// Okay, now we have the new name. 
-	Verbose("Adding new %s description \"%.*s\".\n",
+	Verbose(0,"Adding new %s description \"%.*s\".\n",
 		DTypeString(dt),
 		int(xnamelen),xname);
 	
@@ -537,7 +537,7 @@ int ComponentDataBase::CheckParams()
 	int err_failed=0;
 	int warn_failed=0;
 	
-	Verbose("Final desc setup: ");
+	Verbose(0,"Final desc setup: ");
 	static const char *_vfailed_str="failure]\n";
 	
 	for(int _dtype=0; _dtype<_DTLast; _dtype++)
@@ -545,7 +545,7 @@ int ComponentDataBase::CheckParams()
 		TaskDriverType dtype=(TaskDriverType)_dtype;
 		
 		if(!err_failed && !warn_failed)
-		{  Verbose("[%s: ",DTypeString(dtype));  }
+		{  Verbose(0,"[%s: ",DTypeString(dtype));  }
 		
 		InfoPerType *dti=&ift[dtype];
 		
@@ -560,7 +560,7 @@ int ComponentDataBase::CheckParams()
 			const char *dname=i->_drivername.str();
 			if(!dname)
 			{
-				if(!err_failed && !warn_failed)  Verbose(_vfailed_str);
+				if(!err_failed && !warn_failed)  Verbose(0,_vfailed_str);
 				Error("Failed to specify a %s driver for %s desc \"%s\".\n",
 					DTypeString(dtype),DTypeString(dtype),i->name.str());
 				++err_failed;
@@ -570,7 +570,7 @@ int ComponentDataBase::CheckParams()
 			TaskDriverFactory *tdf=_FindDriverFactoryByName(dname,dtype);
 			if(!tdf)
 			{
-				if(!err_failed && !warn_failed)  Verbose(_vfailed_str);
+				if(!err_failed && !warn_failed)  Verbose(0,_vfailed_str);
 				Warning("Unknown %s driver \"%s\" used by %s desc \"%s\" (deleted).\n",
 					DTypeString(dtype),dname,DTypeString(dtype),i->name.str());
 				++warn_failed;
@@ -605,7 +605,7 @@ int ComponentDataBase::CheckParams()
 		}
 		
 		if(!err_failed && !warn_failed)
-		{  Verbose("%d entries] ",nent);  }
+		{  Verbose(0,"%d entries] ",nent);  }
 		
 		// And, get delete the parameters (par:: stuff)...
 		// They are no longer needed. 
@@ -618,7 +618,7 @@ int ComponentDataBase::CheckParams()
 	}
 	
 	if(!err_failed && !warn_failed)
-	{  Verbose("OK\n");  }
+	{  Verbose(0,"OK\n");  }
 	
 	return(err_failed ? 1 : 0);
 }
@@ -808,13 +808,13 @@ ComponentDataBase::ComponentDataBase(par::ParameterManager *pman,int *failflag) 
 
 ComponentDataBase::~ComponentDataBase()
 {
-	//Verbose("Cleanup: ");
-	Verbose(".");
+	//Verbose(BasicInit,"Cleanup: ");
+	Verbose(BasicInit,".");
 	
 	if(ift) for(int i=0; i<_DTLast; i++)
 	{
 		//Verbose("[%s drivers] ",DTypeString((TaskDriverType)i));
-		Verbose(".");
+		Verbose(BasicInit,".");
 		InfoPerType *dti=&ift[i];
 		
 		// Must kill all the driver factories: 
@@ -832,23 +832,23 @@ ComponentDataBase::~ComponentDataBase()
 	
 	// Must also kill the source factories: 
 	//Verbose("[task sources] ");
-	Verbose(".");
+	Verbose(BasicInit,".");
 	while(!tsources.is_empty())
 	{  delete tsources.popfirst();  }
 	
 	// ...and the image formats. 
 	//Verbose("[image formats] ");
-	Verbose(".");
+	Verbose(BasicInit,".");
 	while(!iflist.is_empty())
 	{  delete iflist.popfirst();  }
 	
 	// ...and finally the task driver interface factories: 
 	//Verbose("[task driver interfaces] ");
-	Verbose(".");
+	Verbose(BasicInit,".");
 	while(!tdinterfaces.is_empty())
 	{  delete tdinterfaces.popfirst();  }
 	
-	//Verbose("OK\n");
+	//Verbose(BasicInit,"OK\n");
 }
 
 

@@ -25,7 +25,13 @@ AC_TYPE_SIZE_T
 
 # Checks for library functions.
 # FIXME: missing
+AC_CHECK_FUNCS([sysconf])
 
+
+# Check if socket is in -lsocket: 
+AC_CHECK_LIB([socket],[socket])
+
+# Finally write files: 
 AC_CONFIG_FILES([ \
 	Makefile \
 	src/Makefile \

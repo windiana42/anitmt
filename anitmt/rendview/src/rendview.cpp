@@ -29,43 +29,6 @@ char *prg_name=NULL;
 
 static const char *fti="Failed to initialize %s.\n";
 
-static void _color_setup(int &argc,char **argv,char ** /*envp*/)
-{
-	int color_arg=0;
-	for(int i=1; i<argc; i++)
-	{
-		const char *a=argv[i];
-		if(*a!='-')  continue;
-		++a;  while(*a=='-')  ++a;
-		if(*a=='n' && !strcmp(a,"nocolor"))
-		{
-			color_arg=-1;
-			for(int j=i+1; j<argc; j++)
-			{  argv[j-1]=argv[j];  }
-			--i; --argc;
-		}
-		else if(*a=='c' && !strcmp(a,"color"))
-		{
-			if(!color_arg)  color_arg=+1;
-			for(int j=i+1; j<argc; j++)
-			{  argv[j-1]=argv[j];  }
-			--i; --argc;
-		}
-	}
-	if(!color_arg)
-	{
-		if(GetTerminalSize(fileno(stdout),NULL,NULL)==0)
-		{  do_colored_output_stdout=1;  }
-		if(GetTerminalSize(fileno(stderr),NULL,NULL)==0)
-		{  do_colored_output_stderr=1;  }
-	}
-	else if(color_arg==1)
-	{
-		do_colored_output_stdout=1;
-		do_colored_output_stderr=1;
-	}
-}
-
 
 static volatile void _SeedRandom()
 {
@@ -75,14 +38,15 @@ static volatile void _SeedRandom()
 
 static int MAIN(int argc,char **argv,char **envp)
 {
+	// Before we do anything, set these up: 
+	// This also checks if we may have color output: 
+	InitRVOutputParams(argc,argv,envp);
+	
 	// First, seed the random generator: 
 	_SeedRandom();
 	
-	// Then, let`s see if we may have color output: 
-	_color_setup(argc,argv,envp);
-	
 	// Okay, then... Here we go...
-	Verbose("Setting up managers: [FD] ");
+	Verbose(BasicInit,"Setting up managers: [FD] ");
 	FDManager *fdman=NEW<FDManager>();
 	if(!fdman)
 	{
@@ -90,7 +54,7 @@ static int MAIN(int argc,char **argv,char **envp)
 		return(1);
 	}
 	
-	Verbose("[timeout] ");
+	Verbose(BasicInit,"[timeout] ");
 	TimeoutManager *timeoutman=NEW<TimeoutManager>();
 	if(!timeoutman)
 	{
@@ -98,7 +62,7 @@ static int MAIN(int argc,char **argv,char **envp)
 		return(1);
 	}
 	
-	Verbose("[CP] ");
+	Verbose(BasicInit,"[CP] ");
 	FDCopyManager *cpman=NEW<FDCopyManager>();
 	if(!cpman)
 	{
@@ -106,7 +70,7 @@ static int MAIN(int argc,char **argv,char **envp)
 		return(1);
 	}
 	
-	Verbose("[process] ");
+	Verbose(BasicInit,"[process] ");
 	ProcessManager *procman=NEW1<ProcessManager>(envp);
 	if(!procman)
 	{
@@ -116,7 +80,7 @@ static int MAIN(int argc,char **argv,char **envp)
 	// FIXME?
 	procman->TermKillDelay(1000);
 	
-	Verbose("[parameter] ");
+	Verbose(BasicInit,"[parameter] ");
 	par::ParameterManager *parman=NEW<par::ParameterManager>();
 	if(!parman)
 	{
@@ -163,7 +127,7 @@ static int MAIN(int argc,char **argv,char **envp)
 		// ...as well as only rendering changed frames or resuming operation
 		// ...and later create a film of them...
 	
-	Verbose("[CDB] ");
+	Verbose(BasicInit,"[CDB] ");
 	ComponentDataBase *cdb=NEW1<ComponentDataBase>(parman);
 	if(!cdb)
 	{
@@ -171,7 +135,7 @@ static int MAIN(int argc,char **argv,char **envp)
 		return(1);
 	}
 	
-	Verbose("[Task] ");
+	Verbose(BasicInit,"[Task] ");
 	TaskManager *taskman=NEW1<TaskManager>(cdb);
 	if(!cdb)
 	{
@@ -180,7 +144,7 @@ static int MAIN(int argc,char **argv,char **envp)
 	}
 	
 	
-	Verbose("OK\n");
+	Verbose(BasicInit,"OK\n");
 	
 	int fail=0;
 	int will_exit=0;
@@ -255,17 +219,17 @@ static int MAIN(int argc,char **argv,char **envp)
 	} while(0);
 	
 	// Cleanup: 
-	Verbose("Cleanup:");
-    if(taskman)     Verbose(" [Task");        delete taskman;
-    if(cdb)         Verbose("] [CDB");        delete cdb;
-    if(parman)      Verbose("] [parameter");  delete parman;
-    if(procman)     Verbose("] [process");    delete procman;
-    if(cpman)       Verbose("] [CP");         delete cpman;
-    if(timeoutman)  Verbose("] [timeout");    delete timeoutman;
-    if(fdman)    Verbose("] [FD");            delete fdman;
-	Verbose("] OK\n");
+	Verbose(BasicInit,"Cleanup:");
+    if(taskman)     Verbose(BasicInit," [Task");        delete taskman;
+    if(cdb)         Verbose(BasicInit,"] [CDB");        delete cdb;
+    if(parman)      Verbose(BasicInit,"] [parameter");  delete parman;
+    if(procman)     Verbose(BasicInit,"] [process");    delete procman;
+    if(cpman)       Verbose(BasicInit,"] [CP");         delete cpman;
+    if(timeoutman)  Verbose(BasicInit,"] [timeout");    delete timeoutman;
+    if(fdman)    Verbose(BasicInit,"] [FD");            delete fdman;
+	Verbose(BasicInit,"] OK\n");
 	
-	Verbose("Exiting: status=%s\n",fail ? "failure" : "success");
+	Verbose(BasicInit,"Exiting: status=%s\n",fail ? "failure" : "success");
 	return(fail ? 1 : 0);
 }
 

@@ -418,28 +418,28 @@ void TaskDriverInterface_Local::_WriteStartProcInfo(const char *msg)
 	// Write out useful verbose information: 
 	VerboseSpecial("Okay, %s work: njobs=%d (parallel tasks)",msg,p->njobs);
 	
-	Verbose("  jtype    jmax  nice   timeout  tty\n");
+	Verbose(TDI,"  jtype    jmax  nice   timeout  tty\n");
 	for(int i=0; i<_DTLast; i++)
 	{
 		TaskDriverInterfaceFactory_Local::DTPrm *pr=&p->prm[i];
-		Verbose("  %s:  %4d  ",DTypeString(TaskDriverType(i)),pr->maxjobs);
+		Verbose(TDI,"  %s:  %4d  ",DTypeString(TaskDriverType(i)),pr->maxjobs);
 		if(pr->niceval==TaskParams::NoNice)
-		{  Verbose("  --");  }
+		{  Verbose(TDI,"  --");  }
 		else
-		{  Verbose("%s%3d%s",pr->nice_jitter ? "" : " ",
+		{  Verbose(TDI,"%s%3d%s",pr->nice_jitter ? "" : " ",
 			pr->niceval,pr->nice_jitter ? "±" : "");  }
 		if(pr->timeout<0)
-		{  Verbose("        --");  }
+		{  Verbose(TDI,"        --");  }
 		else
 		{  long x=(pr->timeout+500)/1000;
-			Verbose("  %02d:%02d:%02d",x/3600,(x/60)%60,x%60);  }
-		Verbose("  %s",pr->call_setsid ? " no" : "yes");
+			Verbose(TDI,"  %02d:%02d:%02d",x/3600,(x/60)%60,x%60);  }
+		Verbose(TDI,"  %s",pr->call_setsid ? " no" : "yes");
 		if(pr->mute || pr->quiet)
-		{  Verbose(pr->quiet ? "  (quiet)" : "  (mute)");  }
-		Verbose("\n");
+		{  Verbose(TDI,pr->quiet ? "  (quiet)" : "  (mute)");  }
+		Verbose(TDI,"\n");
 	}
 	
-	Verbose("  task-thresh: low=%d, high=%d\n",
+	Verbose(TDI,"  task-thresh: low=%d, high=%d\n",
 		todo_thresh_low,todo_thresh_high);
 	
 }

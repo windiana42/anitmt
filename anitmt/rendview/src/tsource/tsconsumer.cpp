@@ -51,10 +51,10 @@ void TaskSourceConsumer::_TSWriteError_Connect(const TSNotifyInfo *ni)
 	{
 		case CSNone:  assert(0);  break;   // ...not talking about connect...
 		case CSWorking:
-			Verbose("TS: %s to connect.\n",wfts);
+			Verbose(TSR0,"TS: %s to connect.\n",wfts);
 			break;
 		case CSConnected:
-			Verbose("TS: Task source connected successfully.\n");
+			Verbose(TSR0,"TS: Task source connected successfully.\n");
 			break;
 		case CSTimeout:
 			Error("%s connect timeout.\n",tsr);
@@ -74,10 +74,10 @@ void TaskSourceConsumer::_TSWriteError_GetTask(const TSNotifyInfo *ni)
 	{
 		case GTSNone:  assert(0);  break;
 		case GTSWorking:
-			Verbose("TS: %s to retrieve task.\n",wfts);
+			Verbose(TSR0,"TS: %s to retrieve task.\n",wfts);
 			break;
 		case GTSGotTask:
-			Verbose("TS: Okay, got task [frame %d] from task source.\n",
+			Verbose(TSR1,"TS: Okay, got task [frame %d] from task source.\n",
 				ni->ctsk->frame_no);
 			#warning more info?
 			break;
@@ -85,10 +85,10 @@ void TaskSourceConsumer::_TSWriteError_GetTask(const TSNotifyInfo *ni)
 			Error("%s allocation failure.\n",tsr);
 			break;
 		case GTSNoMoreTasks:
-			Verbose("TS: %s no more available tasks.\n",tsr);
+			Verbose(TSR1,"TS: %s no more available tasks.\n",tsr);
 			break;
 		case GTSEnoughTasks:
-			Verbose("TS: thinks we already have enough tasks.\n");
+			Verbose(TSR1,"TS: thinks we already have enough tasks.\n");
 			break;
 		default:  assert(0);  break;
 	}
@@ -101,10 +101,10 @@ void TaskSourceConsumer::_TSWriteError_DoneTask(const TSNotifyInfo *ni)
 	{
 		case DTSNone:  assert(0);  break;
 		case DTSWorking:
-			Verbose("TS: %s working on done task.\n",wfts);
+			Verbose(TSR0,"TS: %s working on done task.\n",wfts);
 			break;
 		case DTSOkay:
-			Verbose("TS: Okay, task source accepted done task.\n");
+			Verbose(TSR1,"TS: Okay, task source accepted done task.\n");
 			break;
 		default:  assert(0);  break;
 	}
@@ -117,10 +117,10 @@ void TaskSourceConsumer::_TSWriteError_Disconnect(const TSNotifyInfo *ni)
 	{
 		case DSNone:  assert(0);  break;
 		case DSWorking:
-			Verbose("TS: %s to disconnect\n",wfts);
+			Verbose(TSR0,"TS: %s to disconnect\n",wfts);
 			break;
 		case DSOkay:
-			Verbose("TS: Okay, task source disconnected successfully.\n");
+			Verbose(TSR0,"TS: Okay, task source disconnected successfully.\n");
 			break;
 		default:  assert(0);  break;
 	}

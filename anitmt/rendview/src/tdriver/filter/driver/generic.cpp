@@ -26,11 +26,11 @@ int GenericFilterDriver::ProcessError(ProcessErrorInfo*)
 }
 
 
-int GenericFilterDriver::Execute(const FilterTask *rt,const FilterTaskParams *rtp)
+int GenericFilterDriver::Execute(const FilterTask *ft,const FilterTaskParams *ftp)
 {
 	#warning "Generic filter driver not implemented."
 	Error("NOT IMPLEMENTED");
-	assert(0);
+	assert(0 && ft && ft && ftp);
 }
 
 
@@ -62,7 +62,7 @@ int GenericFilterDriverFactory::CheckDesc(RF_DescBase *d)
 	assert(d->dtype==DTFilter);
 	FilterDesc *fd=(FilterDesc*)d;
 	//fd->blah=blah2;
-	return(0);
+	return(0 && fd);
 }
 
 
@@ -77,7 +77,7 @@ int GenericFilterDriverFactory::init(ComponentDataBase *cdb)
 		Error("Failed to initialize generic filter driver\n");
 		return(1);
 	}
-	Verbose("[generic] ");
+	Verbose(BasicInit,"[generic] ");
 	return(0);
 }
 

@@ -47,14 +47,14 @@ static int max_jobs_per_client=24;
 //  -1 -> error
 int LDRClient::ConnectTo(ClientParam *cp)
 {
-	Verbose("  Client %s (%s): ",cp->name.str(),cp->addr.GetAddress().str());
+	Verbose(TDR,"  Client %s (%s): ",cp->name.str(),cp->addr.GetAddress().str());
 	
 	const char *failure="FAILURE\n";
 	
 	int sock=cp->addr.socket();
 	if(sock<0)
 	{
-		Verbose(failure);
+		Verbose(TDR,failure);
 		Error("Failed to create inet socket: %s\n",strerror(errno));
 		return(-1);
 	}
@@ -64,7 +64,7 @@ int LDRClient::ConnectTo(ClientParam *cp)
 	do {
 		if(SetNonblocking(sock)<0)
 		{
-			Verbose(failure);
+			Verbose(TDR,failure);
 			Error("Failed to set socket non-blocking: %s\n",strerror(errno));
 			break;
 		}
@@ -77,19 +77,19 @@ int LDRClient::ConnectTo(ClientParam *cp)
 		{
 			if(errno!=EINPROGRESS)
 			{
-				Verbose(failure);
+				Verbose(TDR,failure);
 				Error("Failed to connect to %s: %s\n",
 					cp->addr.GetAddress().str(),strerror(errno));
 				break;
 			}
 			// Okay, must poll for it to see when connection estblishes. 
-			Verbose("[in progress]\n");
+			Verbose(TDR,"[in progress]\n");
 		}
 		else if(!rv)
 		{
 			// Oh! That was fast. We're already connected. 
 			already_connected=1;
-			Verbose("[connected]\n");
+			Verbose(TDR,"[connected]\n");
 		}
 		else assert(rv<=0);
 		
@@ -128,7 +128,7 @@ int LDRClient::Disconnect()
 {
 	if(connected_state<2)
 	{
-		Verbose("  Nothing to do for disconnect from %s.\n",
+		Verbose(TDR,"  Nothing to do for disconnect from %s.\n",
 			_ClientName().str());
 		ShutdownFD();
 		return(1);
@@ -203,8 +203,6 @@ int LDRClient::_DoFinishConnect(FDBase::FDInfo *fdi)
 {
 	assert(connected_state==1);
 	
-	//Verbose("XXX>>> ");
-	
 	// Okay, see if we have POLLIN. (DO THAT FIRST; YES!!)
 	if(fdi->revents & POLLIN)
 	{
@@ -239,7 +237,7 @@ int LDRClient::_DoFinishConnect(FDBase::FDInfo *fdi)
 	
 	// Okay, we're connected. 
 	connected_state=2;
-	Verbose("Okay, connected to %s. Waiting for challenge...\n",
+	Verbose(TDR,"Okay, connected to %s. Waiting for challenge...\n",
 		_ClientName().str());
 	next_send_cmd=Cmd_NoCommand;
 	expect_cmd=Cmd_ChallengeRequest;
@@ -332,7 +330,7 @@ int LDRClient::_DoAuthHandshake(FDBase::FDInfo *fdi)
 				return(1);
 			}
 			
-			Verbose("Client %s: %.*s\n",
+			Verbose(TDR,"Client %s: %.*s\n",
 				_ClientName().str(),
 				LDRIDStringLength,d.id_string);
 			
@@ -395,7 +393,7 @@ int LDRClient::_DoAuthHandshake(FDBase::FDInfo *fdi)
 			}
 			
 			// Okay, we are now connected. 
-			Verbose("Client %s: Now connected: njobs=%d (parallel jobs)\n"
+			Verbose(TDR,"Client %s: Now connected: njobs=%d (parallel jobs)\n"
 				"  Up since: %s  (local)\n",
 				_ClientName().str(),c_jobs,
 				up_since.PrintTime(1));
@@ -465,7 +463,7 @@ void LDRClient::_DoSendQuit(FDBase::FDInfo *fdi)
 			// This is unexpected but okay, because we want to 
 			// disconnect now. 
 			// For poll emulation, we can use the POLLOUT below. 
-			Verbose("Client %s disconnected just in time.\n",
+			Verbose(TDR,"Client %s disconnected just in time.\n",
 				_ClientName().str());
 			send_quit_cmd=3;
 		}
@@ -483,14 +481,14 @@ void LDRClient::_DoSendQuit(FDBase::FDInfo *fdi)
 			}
 			else
 			{
-				Verbose("  Sent quit to client %s.\n",_ClientName().str());
+				Verbose(TDR,"  Sent quit to client %s.\n",_ClientName().str());
 				send_quit_cmd=2;
 				PollFD(POLLIN);
 			}
 		}
 		else
 		{
-			Verbose("Client %s: strange revents %d during quitting.\n",
+			Verbose(TDR,"Client %s: strange revents %d during quitting.\n",
 				_ClientName().str(),fdi->revents);
 			send_quit_cmd=3;  // simply shut down NOW. 
 		}
@@ -513,7 +511,7 @@ void LDRClient::_DoSendQuit(FDBase::FDInfo *fdi)
 			{  client_disconnected=1;  }
 		}
 		if(client_disconnected)
-		{  Verbose("Client %s disconnected due to our quit request.\n",
+		{  Verbose(TDR,"Client %s disconnected due to our quit request.\n",
 			_ClientName().str());  }
 		else
 		{  Warning("Client %s: did not disconnect after our request. "

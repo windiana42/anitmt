@@ -23,7 +23,6 @@ class POVRayDriverFactory :
 {
 	friend class POVRayDriver;
 	private:
-		int verbose;
 	
 	public:  _CPP_OPERATORS_FF
 		POVRayDriverFactory(ComponentDataBase *cdb,int *failflag=NULL);

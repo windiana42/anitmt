@@ -46,22 +46,18 @@ int POVRayDriver::ProcessError(ProcessErrorInfo *pei)
 	{
 		// *** verbose messages: ***
 		case PEI_Starting:
-			if(!settings()->verbose)  break;
-			Verbose("POV: Starting POVRay [frame %s].\n",_frame_no_str);
+			Verbose(0,"POV: Starting POVRay [frame %s].\n",_frame_no_str);
 			print_cmd=2;
 			break;
 		case PEI_StartSuccess:
-			if(!settings()->verbose)  break;
-			Verbose("POV: Forked to launch POVRay [frame %s]...\n",_frame_no_str);
+			Verbose(0,"POV: Forked to launch POVRay [frame %s]...\n",_frame_no_str);
 			break;
 		case PEI_ExecSuccess:
-			if(!settings()->verbose)  break;
-			Verbose("POV: POVRay started successfully [frame %s].\n",
+			Verbose(0,"POV: POVRay started successfully [frame %s].\n",
 				_frame_no_str);
 			break;
 		case PEI_RunSuccess:
-			if(!settings()->verbose)  break;
-			Verbose("POV: POVRay terminated successfully [frame %s].\n",
+			Verbose(0,"POV: POVRay terminated successfully [frame %s].\n",
 				_frame_no_str);
 			break;
 		
@@ -131,12 +127,12 @@ int POVRayDriver::ProcessError(ProcessErrorInfo *pei)
 	}
 	else if(print_cmd==2)
 	{
-		Verbose("POV:   Command:");
+		Verbose(0,"POV:   Command:");
 		for(const RefStrList::Node *i=pei->pinfo->args.first(); i; i=i->next)
-		{  Verbose(" %s",i->str());  }
-		Verbose("\n");
+		{  Verbose(0," %s",i->str());  }
+		Verbose(0,"\n");
 		const char *tmp=pei->pinfo->tsb->wdir.str();
-		Verbose("POV:   Working dir: %s\n",tmp ? tmp : "[cwd]");
+		Verbose(0,"POV:   Working dir: %s\n",tmp ? tmp : "[cwd]");
 	}
 	
 	return(0);
@@ -317,7 +313,7 @@ int POVRayDriverFactory::init(ComponentDataBase *cdb)
 		Error("Failed to initialize POVRay driver\n");
 		return(1);
 	}
-	Verbose("[POVRay] ");
+	Verbose(BasicInit,"[POVRay] ");
 	return(0);
 }
 
@@ -333,7 +329,7 @@ const char *POVRayDriverFactory::DriverDesc() const
 POVRayDriverFactory::POVRayDriverFactory(ComponentDataBase *_cdb,int *failflag) : 
 	TaskDriverFactory(_cdb,"povray",DTRender,failflag)
 {
-	verbose=2;
+	
 }
 
 

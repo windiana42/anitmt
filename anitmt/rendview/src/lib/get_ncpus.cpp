@@ -1,7 +1,8 @@
 /*
  * get_ncpus.cpp
  * Get the number of CPUs in a system. 
- * Currenly this works with linux. 
+ * Currenly this works with linux and all systems providing 
+ * sysconf(). 
  *
  * Copyright (c) 2002 by Wolfgang Wieser (wwieser@gmx.de) 
  * 
@@ -19,6 +20,61 @@
 #include <string.h>
 #include <assert.h>
 
+
+#if HAVE_SYSCONF
+static int NCPUsBySysconf()
+{
+	const char *scf="Warning: sysconf(%s) failed.\n";
+	long n=sysconf(_SC_NPROCESSORS_ONLN);
+	if(n<0)
+	{  Warning(scf,"NPROCESSORS_ONLN");  }
+	
+	long nconf=sysconf(_SC_NPROCESSORS_CONF);
+	if(nconf<0)
+	{  Warning(scf,"NPROCESSORS_CONF");  }
+	
+	if(n<0 && nconf<0)  return(-1);
+	if(n<0)      n=nconf;
+	if(nconf<0)  nconf=n;
+	
+	if(n!=nconf)
+	{  Warning("System reports %d CPUs but %s%d are online.\n",
+		int(nconf),(n<nconf ? "only " : ""),int(n));  }
+	else if(!n)
+	{  Warning("System reports 0 CPUs online (quite few, eh?)\n");  }
+	
+	return((n<=0) ? (-1) : int(n));
+}
+#endif
+
+
+// Returns number of CPUs; assumes one CPU and warn if detection fails. 
+int GetNumberOfCPUs()
+{
+	int n=-1;
+	do {
+#if HAVE_SYSCONF
+		n=NCPUsBySysconf();
+		if(n>0)  break;
+#endif
+		// Insert more checks here...
+		
+	}  while(0);
+	
+	if(n<=0)
+	{
+		Warning("Unable to detect number of CPUs. Assuming 1.\n");
+		n=1;
+	}
+	else
+	{  Verbose(MiscInfo,"Okay, system reports %d CPU%s.\n",n,n>1 ? "s" : "");  }
+	
+	return(n);
+}
+
+
+#if 0
+/* OLD CODE, parsing /proc/cpuinfo. */
 
 // mhz_sum: sum of all CPU MHz values 
 //    Returns <0 on error. 
@@ -80,20 +136,4 @@ static int _GetNumberOfCPUs(double *mhz_sum)
 	fclose(fp);
 	return(ncpu);
 }
-
-
-// Returns number of CPUs; assumes one CPU is detection fails. 
-int GetNumberOfCPUs()
-{
-	double mhz_sum;
-	int ncpu=_GetNumberOfCPUs(&mhz_sum);
-	if(ncpu>0)
-	{
-		Verbose("Okay, system has %d CPU%s (%s%.0f MHz)\n",
-			ncpu,(ncpu==1) ? "" : "s",
-			(ncpu==1) ? "" : "sum: ",mhz_sum);
-	}
-	else
-	{  Verbose("Unable to detect number of CPUs. Assuming 1.\n");  }
-	return(ncpu>0 ? ncpu : 1);
-}
+#endif

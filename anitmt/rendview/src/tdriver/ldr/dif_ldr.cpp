@@ -69,7 +69,7 @@ void TaskDriverInterface_LDR::PleaseQuit()
 		return;
 	}
 	
-	Verbose("Disconnecting from clients (%d usable)...\n",nclients);
+	Verbose(TDR,"Disconnecting from clients (%d usable)...\n",nclients);
 	
 	// Schedule disconnect from all clients: 
 	for(LDRClient *_i=clientlist.first(); _i; )
@@ -156,7 +156,7 @@ void TaskDriverInterface_LDR::_WriteStartProcInfo(const char *msg)
 	VerboseSpecial("Okay, %s work: %d parallel tasks on %d clients.",
 		msg,njobs,nclients);
 	
-	Verbose("  task-thresh: low=%d, high=%d\n",
+	Verbose(TDI,"  task-thresh: low=%d, high=%d\n",
 		todo_thresh_low,todo_thresh_high);
 	
 }
@@ -167,7 +167,7 @@ void TaskDriverInterface_LDR::_WriteProcInfoUpdate()
 	{
 		VerboseSpecial("Update: %d parallel tasks on %d clients",
 			njobs,nclients);
-		Verbose("  task-thresh: low=%d, high=%d\n",
+		Verbose(TDI,"  task-thresh: low=%d, high=%d\n",
 			todo_thresh_low,todo_thresh_high);
 	}
 	if(shall_quit && clientlist.is_empty())
@@ -199,7 +199,7 @@ void TaskDriverInterface_LDR::ReallyStartProcessing()
 	#warning allow variable timeout; hack the timer!!
 	UpdateTimer(tid_connedt_to,10000,0);
 	
-	Verbose("Simultaniously initiating connections to all clients:\n");
+	Verbose(TDR,"Simultaniously initiating connections to all clients:\n");
 	
 	int n_connecting=0;
 	for(TaskDriverInterfaceFactory_LDR::ClientParam *i=p->cparam.first();
@@ -235,7 +235,7 @@ void TaskDriverInterface_LDR::ReallyStartProcessing()
 		return;
 	}
 	
-	Verbose("Waiting for %d LDR connections to establish.\n",n_connecting);
+	Verbose(TDR,"Waiting for %d LDR connections to establish.\n",n_connecting);
 }
 
 

@@ -328,20 +328,20 @@ void TaskSourceFactory_Local::_VPrintFrameInfo(PerFrameTaskInfo *fi,
 	if(!compare_to || 
 	   (fi->rdesc!=compare_to->rdesc || fi->oformat!=compare_to->oformat) )
 	{
-		Verbose("    Renderer: ");
+		Verbose(TSI,"    Renderer: ");
 		if(fi->rdesc)
-		{  Verbose("%s (%s driver)",fi->rdesc->name.str(),
+		{  Verbose(TSI,"%s (%s driver)",fi->rdesc->name.str(),
 			fi->rdesc->dfactory->DriverName());  }
 		else
-		{  Verbose("[not rendering]");  }
+		{  Verbose(TSI,"[not rendering]");  }
 		// YES! It makes sense to dump oformat if renderer is unspecified. 
 		// Because it is used e.g. for frame pattern names. 
-		Verbose("; output format: ");
+		Verbose(TSI,"; output format: ");
 		if(fi->oformat)  // pbc = bits per channel
-		{  Verbose("%s (%d bpc)\n",fi->oformat->name,
+		{  Verbose(TSI,"%s (%d bpc)\n",fi->oformat->name,
 			fi->oformat->bits_p_rgb);  }
 		else
-		{  Verbose("[unspecified]\n");  }
+		{  Verbose(TSI,"[unspecified]\n");  }
 	}
 	
 	if(fi->rdesc)
@@ -349,30 +349,30 @@ void TaskSourceFactory_Local::_VPrintFrameInfo(PerFrameTaskInfo *fi,
 		if(!compare_to || 
 		   (fi->render_resume_flag!=compare_to->render_resume_flag || 
 		    fi->width!=compare_to->width || fi->height!=compare_to->height ) )
-		{  Verbose("      Size: %dx%d; cont operation: %s\n",
+		{  Verbose(TSI,"      Size: %dx%d; cont operation: %s\n",
 			fi->width,fi->height,
 			fi->render_resume_flag ? 
 				"resume (-rcont)" : "re-render (-no-rcont)");  }
 		if(!compare_to || fi->rdir!=compare_to->rdir)
-		{  Verbose("      Render dir: %s\n",fi->rdir.str() ? fi->rdir.str() : "[cwd]");  }
+		{  Verbose(TSI,"      Render dir: %s\n",fi->rdir.str() ? fi->rdir.str() : "[cwd]");  }
 		#warning radd_args not dumped. 
 	}
 	
 	if(!compare_to || 
 	   (fi->fdesc!=compare_to->fdesc) )
 	{
-		Verbose("    Filter: ");
+		Verbose(TSI,"    Filter: ");
 		if(fi->fdesc)
-		{  Verbose("%s (%s driver)\n",fi->fdesc->name.str(),
+		{  Verbose(TSI,"%s (%s driver)\n",fi->fdesc->name.str(),
 			fi->fdesc->dfactory->DriverName());  }
 		else
-		{  Verbose("[not filtering]\n");  }
+		{  Verbose(TSI,"[not filtering]\n");  }
 	}
 	
 	if(fi->fdesc)
 	{
 		if(!compare_to || fi->fdir!=compare_to->fdir)
-		{  Verbose("      Filter dir: %s\n",fi->fdir.str() ? fi->fdir.str() : "[cwd]");  }
+		{  Verbose(TSI,"      Filter dir: %s\n",fi->fdir.str() ? fi->fdir.str() : "[cwd]");  }
 		#warning fadd_args not dumped. 
 	}
 	
@@ -381,9 +381,9 @@ void TaskSourceFactory_Local::_VPrintFrameInfo(PerFrameTaskInfo *fi,
 	    fi->routfpattern!=compare_to->routfpattern || 
 	    fi->foutfpattern!=compare_to->foutfpattern ) )
 	{
-		Verbose("    Frame patterns: render: \"%s\" -> \"%s\"\n",
+		Verbose(TSI,"    Frame patterns: render: \"%s\" -> \"%s\"\n",
 			fi->rinfpattern.str(),fi->routfpattern.str());
-		Verbose("                    filter: ... -> \"%s\"\n",
+		Verbose(TSI,"                    filter: ... -> \"%s\"\n",
 			fi->foutfpattern.str());
 	}
 }
@@ -461,7 +461,7 @@ int TaskSourceFactory_Local::FinalInit()
 	}
 	
 	if(mfailed)
-	{  Verbose("Local: Errors in master frame info spec; "
+	{  Verbose(TSP,"Local: Errors in master frame info spec; "
 		"skipping per-frame info.\n");  }
 	int failed=mfailed;
 	
@@ -507,7 +507,7 @@ int TaskSourceFactory_Local::FinalInit()
 			cdelete:  delete fi_list.dequeue(fi);
 		}
 		if(never_used)
-		{  Verbose("Local: Deleted %d per-frame info blocks as they "
+		{  Verbose(TSP,"Local: Deleted %d per-frame info blocks as they "
 			"will not be used.\n",never_used);  }
 		
 		// Then, sort them: 
@@ -635,7 +635,7 @@ int TaskSourceFactory_Local::FinalInit()
 			// This algorithm will stop at the first non-existing 
 			// frame file: 
 			int fno=startframe;
-			Verbose("Local: Looking for last frame to render... %7d",fno);
+			Verbose(MiscInfo,"Local: Looking for last frame to render... %7d",fno);
 			RefString tmp;
 			for(int chk=0;;chk++,fno-=fjump)
 			{
@@ -654,10 +654,10 @@ int TaskSourceFactory_Local::FinalInit()
 				if(!CheckExistFile(&tmp,1))  break;
 				
 				if(!(chk%50))
-				{  Verbose("\b\b\b\b\b\b\b%7d",fno);  }
+				{  Verbose(MiscInfo,"\b\b\b\b\b\b\b%7d",fno);  }
 			}
 			nframes=fno-startframe;
-			Verbose("\b\b\b\b\b\b\b%d (nframes=%d)\n",fno,nframes);
+			Verbose(MiscInfo,"\b\b\b\b\b\b\b%d (nframes=%d)\n",fno,nframes);
 		}
 	}
 	
@@ -666,17 +666,17 @@ int TaskSourceFactory_Local::FinalInit()
 		char nf_tmp[24];
 		if(nframes>=0)  snprintf(nf_tmp,24,"%d",nframes);
 		else  strcpy(nf_tmp,"[unlimited]");
-		Verbose("Local task source: jump: %d; nframes: %s; startframe: %d\n",
+		Verbose(TSI,"Local task source: jump: %d; nframes: %s; startframe: %d\n",
 			fjump,nf_tmp,startframe);
-		Verbose("  Continuing: %s\n",
+		Verbose(TSI,"  Continuing: %s\n",
 			cont_flag ? "yes" : "no");
 		
-		Verbose("  Master frame info:\n");
+		Verbose(TSI,"  Master frame info:\n");
 		_VPrintFrameInfo(&master_fi,NULL);
 		
 		for(PerFrameTaskInfo *fi=fi_list.first(); fi; fi=fi->next)
 		{
-			Verbose("  Frame info difference for frames %d--%d (%d frames):\n",
+			Verbose(TSI,"  Frame info difference for frames %d--%d (%d frames):\n",
 				fi->first_frame_no,fi->first_frame_no+fi->nframes-1,
 				fi->nframes);
 			_VPrintFrameInfo(fi,&master_fi);
@@ -800,7 +800,7 @@ int TaskSourceFactory_Local::init(ComponentDataBase *cdb)
 		Error("Failed to initialize local task source.\n");
 		return(1);
 	}
-	Verbose("[local] ");
+	Verbose(BasicInit,"[local] ");
 	return(0);
 }
 

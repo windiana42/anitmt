@@ -31,13 +31,13 @@ int TaskSourceFactory::init_factories(ComponentDataBase *cdb)
 	// Add an entry for each TaskSourceFactory here: 
 	int failed=0;
 	
-	Verbose("Initializing task sources: ");
+	Verbose(BasicInit,"Initializing task sources: ");
 	
 	// List the init function of all task sources here. 
 	failed+=TaskSourceFactory_Local::init(cdb);
 	failed+=TaskSourceFactory_LDR::init(cdb);
 	
-	Verbose(failed ? "FAILED\n" : "OK\n");
+	Verbose(BasicInit,failed ? "FAILED\n" : "OK\n");
 	
 	return(failed);
 }

@@ -26,13 +26,13 @@ int FilterDriver::init_factories(ComponentDataBase *cdb)
 {
 	int failed=0;
 	
-	Verbose("Initializing filter drivers: ");
+	Verbose(BasicInit,"Initializing filter drivers: ");
 	
 	// List the init function of all drivers here. 
 	// Currently the generic driver is feeling lonely...
 	failed+=GenericFilterDriverFactory::init(cdb);
 	
-	Verbose(failed ? "FAILED\n" : "OK\n");
+	Verbose(BasicInit,failed ? "FAILED\n" : "OK\n");
 	
 	return(failed);
 }

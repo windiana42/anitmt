@@ -52,7 +52,7 @@ static void _DeleteFile(RefString path,int may_not_exist,const char *desc)
 {
 	int rv=DeleteFile(&path,may_not_exist,"Local: ");
 	if(!rv)
-	{  Verbose("Local: Deleted %s: %s\n",desc,path.str());  }
+	{  Verbose(TSLR,"Local: Deleted %s: %s\n",desc,path.str());  }
 }
 
 // Return val: <0 -> error; 0 -> okay; 1 -> ENOENT && may_not_exist
@@ -60,7 +60,7 @@ static int _RenameFile(RefString old_name,RefString new_name,int may_not_exist)
 {
 	int rv=RenameFile(&old_name,&new_name,may_not_exist,"Local: ");
 	if(!rv)
-	{  Verbose("Local: Renamed unfinished frame: %s -> %s\n",
+	{  Verbose(TSLR,"Local: Renamed unfinished frame: %s -> %s\n",
 			old_name.str(),new_name.str());  }
 	return(rv);
 }
@@ -192,7 +192,7 @@ int TaskSource_Local::_FillInRenderJobFiles(FrameToProcessInfo *ftpi)
 	// Check what to do with the frame: 
 	if(frame_action=='r' || frame_action=='c')
 	{
-		Verbose("Local: %s frame %d (job %s -> %s).\n",
+		Verbose(TSLR,"Local: %s frame %d (job %s -> %s).\n",
 			(frame_action=='r') ? 
 				"Completely rendering" : "Continuing to render",
 			ftpi->frame_no,inf.str(),outf.str());
@@ -202,7 +202,7 @@ int TaskSource_Local::_FillInRenderJobFiles(FrameToProcessInfo *ftpi)
 	}
 	else if(frame_action=='s')
 	{
-		Verbose("Local: Not re-rendering frame %d (job %s -> %s).\n",
+		Verbose(TSLR,"Local: Not re-rendering frame %d (job %s -> %s).\n",
 			ftpi->frame_no,inf.str(),outf.str());
 		ftpi->tobe_rendered=0;
 		retval=0;  // render frame; nothing will be done as tobe_rendered=0. 
@@ -410,7 +410,7 @@ void TaskSource_Local::_ProcessDoneTask(TSNotifyInfo *ni)
 	const PerFrameTaskInfo *fi=p->GetPerFrameTaskInfo(done_task->frame_no);
 	assert(fi);  // HUGE internal bug if that fails. 
 	
-	Verbose("  Done task [frame %d] was from per-frame block %s.\n",
+	Verbose(TSLR,"  Done task [frame %d] was from per-frame block %s.\n",
 		done_task->frame_no,p->_FrameInfoLocationString(fi));
 	
 	// See if successful: 

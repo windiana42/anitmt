@@ -22,7 +22,7 @@
 static int _SetupIFmt(ComponentDataBase *cdb,
 	ImageFormatID fmtid, const char *name, int bits,const char *ext)
 {
-	Verbose("[%s] ",name);
+	Verbose(BasicInit,"[%s] ",name);
 	ImageFormat *fmt=NEW<ImageFormat>();
 	if(!fmt)  return(1);
 	fmt->fmtid=fmtid;
@@ -37,13 +37,13 @@ static int _SetupIFmt(ComponentDataBase *cdb,
 int ImageFormat::init(ComponentDataBase *cdb)
 {
 	int failed=0;
-	Verbose("Setting up image formats: ");
+	Verbose(BasicInit,"Setting up image formats: ");
 	failed+=_SetupIFmt(cdb,IF_PNG,"PNG",8,"png");
 	failed+=_SetupIFmt(cdb,IF_PNG,"PNG6",6,"png");
 	failed+=_SetupIFmt(cdb,IF_PNG,"PNG5",5,"png");
 	failed+=_SetupIFmt(cdb,IF_PPM,"PPM",8,"ppm");
 	failed+=_SetupIFmt(cdb,IF_TGA,"TGA",8,"tga");
-	Verbose(failed ? "FAILED\n" : "OK\n");
+	Verbose(BasicInit,failed ? "FAILED\n" : "OK\n");
 	return(failed ? 1 : 0);
 }
 

@@ -31,13 +31,13 @@ int TaskDriverInterfaceFactory::init_factories(ComponentDataBase *cdb)
 	// Add an entry for each TaskDriverInterfaceFactory here: 
 	int failed=0;
 	
-	Verbose("Initializing task driver interfaces: ");
+	Verbose(BasicInit,"Initializing task driver interfaces: ");
 	
 	// List the init function of all task sources here. 
 	failed+=TaskDriverInterfaceFactory_Local::init(cdb);
 	failed+=TaskDriverInterfaceFactory_LDR::init(cdb);
 	
-	Verbose(failed ? "FAILED\n" : "OK\n");
+	Verbose(BasicInit,failed ? "FAILED\n" : "OK\n");
 	
 	return(failed);
 }
