@@ -183,7 +183,8 @@ if test "$GCC_LESS_THAN_3" = "yes" ; then
 			echo "You are using a 2.x version of gcc and your CXXFLAGS"
 			echo "contain optimization flags (-O2 etc.)."
 			echo "BEWARE: Builting anitmt takes _ages_. Better upgrade to gcc-3.x or"
-			echo "        do not pass optimization flags (try --enable-debug=false)."
+			echo "        do not pass optimization flags (try --enable-debug=fast)."
+			echo "If unsure what to do simply re-configure using --enable-debug=fast."
 			echo 
 			;;
 	esac
