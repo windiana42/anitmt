@@ -1,1 +1,6 @@
+Makefile
 Makefile.in
+test.out
+test_pre.out
+.deps
+anitmt-calc
