@@ -28,8 +28,8 @@ namespace internal
 // Suffix 1 for 1-dim array (vector). 
 std::ostream& stream_write_array1(std::ostream& s,const double *x,int n)
 {
-	std::ostream::streamsize width = s.width();
-	std::ostream::streamsize col_width = (width - n + 1) / 3;
+	std::streamsize width = s.width();
+	std::streamsize col_width = (width - n + 1) / n;
 
 	s << std::setw(1) << "<";
 	if(n>0)
