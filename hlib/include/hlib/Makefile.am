@@ -2,7 +2,7 @@ HlibHeaders = hconfig.h hlib-config.h \
 	cpp/cplusplus.h cpp/refstring.h cpp/linkedlist.h cpp/refstrlist.h \
 		cpp/refstrhash.h cpp/growbuffer.h cpp/defop.h cpp/orderedarray.h \
 		cpp/cdrecorder.h cpp/btree.h cpp/binsearch.h cpp/heap.h \
-		cpp/notifierlist.h \
+		cpp/notifierlist.h cpp/refnode.h \
 	fd/procbase.h fd/procmanager.h fd/fdmanager.h fd/htime.h fd/intprocbase.h fd/fdbase.h \
 		fd/fdfifobuf.h fd/fdcopybase.h fd/timeoutbase.h fd/timeoutmanager.h fd/searchpath.h \
 	par/cmdline.h par/parsource.h par/parintrnl.h par/paramarg.h par/parconsumer.h \
@@ -14,18 +14,12 @@ HlibHeaders = hconfig.h hlib-config.h \
 		compress/pngwrite.h compress/pngread.h
 
 headersincludedir= $(pkgincludedir)/
-headersinclude_HEADERS = \
-	base64.h         defop.h         heap.h         notifierlist.h    parsource.h    refstrlist.h   timeoutmanager.h \
-	base_cinfile.h   fdbase.h        hlib-config.h  orderedarray.h    pngread.h      searchpath.h   valhdl.h \
-	binsearch.h      fdcopybase.h    hlib.h         paramarg.h        pngwrite.h     secthdl.h      valuehandler.h \
-	btree.h          fdfifobuf.h     htime.h        parbase.h         procbase.h     sindentcout.h \
-	bzip2_cinfile.h  fdmanager.h     intprocbase.h  parconsumer.h     procmanager.h  srccmd.h \
-	cdrecorder.h     growbuffer.h    linkedlist.h   parconsumerovl.h  prototypes.h   srcenv.h \
-	cmdline.h        gzip_cinfile.h  lmalloc.h      parintrnl.h       refstrhash.h   srcfile.h \
-	cplusplus.h      hconfig.h       parmanager.h      refstring.h    timeoutbase.h 
+headersinclude_HEADERS = $(patsubst %.h,../../%.h,$(HlibHeaders))
+
 
 all: LinkHeaders
 opt: LinkHeaders
+cplusplus.h: LinkHeaders
 
 clean: FORCE
 	rm -f $(HlibHeaders)

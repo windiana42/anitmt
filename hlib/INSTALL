@@ -1,4 +1,17 @@
-Please install HLIB by hand. 
+As of version 1.1.0, hlib can be installed using 
+
+  make install
+
+after a successful build. 
+
+This will install all the headers in $prefix/include/hlib/ (i.e. in a 
+separate subdir called hlib/ so that the headers won't collide with other 
+headers and that one can still use #include <hlib/xxx.h>) and the static 
+library archive in $prefix/lib/libhlib.a. 
+
+--------------------------------------------------------------------------------
+
+You can, however, still use the pre-1.1.0 method and install per hand: 
 
 Put all the required header files (see $builddir/include/hlib) 
 into a subdirectory (e.g. /usr/include/hlib) and copy the library 
