@@ -71,7 +71,7 @@ qstring_err 	(\"([^\"\n]|\\\")*)
 <ML_COMMENT>\r        	{ ; /*ignore DOS specific line end*/ }
 <ML_COMMENT>[^\n\*]* 	{ inc_col(); /* ingore multiline comment */ }
 <ML_COMMENT>[^\n\*]*\n 	{ info->file_pos.inc_line(); /*optimized*/ }
-<ML_COMMENT>.	 	{ inc_col(); /* singel '*' would fail otherwise */ }
+<ML_COMMENT>.	 	{ inc_col(); /* single '*' would fail otherwise */ }
 <ML_COMMENT><<EOF>>	{ llerr(info) << "unexpected end of file within "
 			    << "comment"; 
 			  finished_file(info); 
