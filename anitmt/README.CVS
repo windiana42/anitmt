@@ -1,11 +1,17 @@
 CVS ISSUES
 ----------
 
+To checkout (this is the CVS word expressing the initial download of the 
+complete source) aniTMT from sourceforge, see our page at sourceforge: 
+http://sourceforge.net/projects/anitmt and follow the link `CVS' in the 
+navigation bar. 
+
 To update the sources from the CVS repository, call the following 
 command from the anitmt source dir top: 
 (Referring to the BUILD file, this would be /home/me/source/anitmt.)
 
    /home/me/source/anitmt# <== this is just the prompt. Don't write this!
+                          (I know, people reading this file already know...)
 
    /home/me/source/anitmt# cvs update -dP
 
@@ -39,7 +45,7 @@ should help. But consider using a separate build dir the next time!
 
 If you still get errors preventing you from compiling anitmt, 
 send us a bug report. 
-Feel free to include some flames it it makes you feel better :p
+Feel free to include some flames it it makes you feel better/easier :p
 See BUGS for more info about reporting bugs. 
 
 Have fun, 
