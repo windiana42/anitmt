@@ -4,8 +4,7 @@ INCLUDES=		-I$(top_srcdir)/lib -I$(top_srcdir)/lib/flex \
 			-I../../functionality/ -I$(srcdir)/../../functionality/
 noinst_LIBRARIES=	libadlparser.a
 check_PROGRAMS=		testadlparser
-CXXFLAGS =		@CXXFLAGS@ -Wno-non-template-friend -DYYDEBUG \
-			-D__CPLUSPLUS -DTHROW_NIL=throw\(\)
+CXXFLAGS =		@CXXFLAGS@ -Wno-non-template-friend -DYYDEBUG 
 
 BUILT_SOURCES=		scanner.cc parser.cc tokens.h 
 libadlparser_a_SOURCES=	parser.yy tokens.h\
@@ -46,3 +45,4 @@ parser.cc tokens.h:	$(srcdir)/parser.yy
 	$(SHELL) $(YLWRAP) "$(YACC)" $(srcdir)/parser.yy \
 	y.tab.c parser.cc \
 	y.tab.h tokens.h -- -d
+

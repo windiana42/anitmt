@@ -3,7 +3,6 @@ INCLUDES=		-I$(top_srcdir)/lib -I$(top_srcdir)/lib/flex -I$(top_builddir)/hlib/i
 
 bin_PROGRAMS=		funcgen
 CXXFLAGS =		@CXXFLAGS@ -Wno-non-template-friend -DYYDEBUG \
-			-D__CPLUSPLUS -DTHROW_NIL=throw\(\) \
 			-ftemplate-depth-30
 
 BUILT_SOURCES=		scanner.cc parser.cc tokens.h 
@@ -39,3 +38,4 @@ parser.cc tokens.h:	$(srcdir)/parser.yy
 params.o: params.cpp funcgen.hpp
 #$(CXX) $(INCLUDES) $(CFLAGS) -fno-rtti -c $(srcdir)/params.cpp
 	$(CXXCOMPILE) -fno-rtti -c $(srcdir)/params.cpp -o $@
+

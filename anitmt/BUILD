@@ -81,9 +81,12 @@ the installation should not be done by root.
    Example: 
    /home/me/source/anitmt-build# make CXXFLAGS="-O -g"
    
-   NOTE: Passing CXXFLAGS is tricky. Different versions of gcc and 
-         of flex++ may need additional flags. (E.g. -DGCC_HACK=1 for 
-         gcc versions prior to 3.0)
+   NOTE: Passing CXXFLAGS is tricky. Different versions of gcc may  
+         need additional flags. (E.g. -DGCC_HACK=1 for gcc versions 
+         prior to 3.0)
+   HOWEVER, you may save a LOT of build time when disabling optimization 
+         (no -O) and debugging symbols (no -g), at least for 
+         lib/ and anitmt-calc/. 
 
 5. Do checks: 
    You may get some internal checks done by calling `make check'. 

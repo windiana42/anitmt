@@ -23,7 +23,6 @@ libfunctionality_a_SOURCES= solver.afd solver.hpp solver.cpp \
 
 check_PROGRAMS=		test_functionality
 CXXFLAGS =		@CXXFLAGS@ -Wno-non-template-friend -DYYDEBUG \
-			-D__CPLUSPLUS -DTHROW_NIL=throw\(\) \
 			-ftemplate-depth-30
 
 test_functionality_SOURCES= \
