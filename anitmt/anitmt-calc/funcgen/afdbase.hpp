@@ -152,7 +152,8 @@ namespace funcgen
     void new_solver( std::string name );
     void add_parameter_ref( Property_Reference &ref );
     void finish_solver();
-    void new_expression_solver( const Expression *exp );
+    void new_expression_solver( const std::string &op, const Expression *exp, 
+				Code_Translator *translator );
     void merge( const Solver_Code & );
     void print() const;		// print, just for debug purposes
   };

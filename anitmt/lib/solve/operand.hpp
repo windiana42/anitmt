@@ -180,6 +180,7 @@ namespace solve
       throw();
 
     //! connects another operand as a solution source
+    Operand<T>& assign   ( Operand<T> &src ) throw();
     Operand<T>& operator=( Operand<T> &src ) throw();
     //! connects another operand as a solution source
     Operand( Operand<T> &src ) throw();

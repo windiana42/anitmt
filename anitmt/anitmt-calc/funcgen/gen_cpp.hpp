@@ -90,6 +90,8 @@ namespace funcgen
 				  std::string par_type);
     virtual std::string prev();
     virtual std::string next();
+    virtual std::string prev( std::string provider_type );
+    virtual std::string next( std::string provider_type );
     virtual std::string parent();
     virtual std::string first_child();
     virtual std::string last_child();

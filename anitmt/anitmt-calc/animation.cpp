@@ -16,7 +16,6 @@
 
 #include <functionality/make_avail.hpp>
 
-#include "save_filled.hpp"
 #include "anitmt.hpp"
 
 namespace proptree
@@ -69,9 +68,6 @@ namespace anitmt{
   void Animation::finish_calculations()
   {
     tree_info.priority_system->invoke_all_Actions();
-
-#warning !!! fixed filename for filled ADL output !!!
-    save_filled("filled.out", this );
   }
 
   // ***************************************

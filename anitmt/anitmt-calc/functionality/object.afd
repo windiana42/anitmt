@@ -70,6 +70,13 @@ abstract node object_subfunc_base provides object_state
       equal_solver( start_dir, direction );
       equal_solver( end_dir, direction );
 
+      length = abs( diff_pos );
+//!!! a lot missing here !!!
+
+//!!! dummy solvers: !!!
+      equal_solver( start_front, end_front );
+      equal_solver( start_up_vector, end_up_vector );
+
       // ********************
       // start/end parameters
       
@@ -109,23 +116,23 @@ abstract node object_subfunc_base provides object_state
     }
     actions
     {
-      push( 10, end_time, next.start_time );
-      push( 11, start_time, prev.end_time );
-      push( 12, end_length, next.start_length );
-      push( 13, start_length, prev.end_length );
-      push( 20, end_pos, next.start_pos );
-      push( 21, start_pos, prev.end_pos );
-      push( 30, end_dir, next.start_dir );
-      push( 31, start_dir, prev.end_dir );
-      push( 40, end_speed, next.start_speed );
-      push( 41, start_speed, prev.end_speed );
+      push( 10, end_time, object_state.next.start_time );
+      push( 11, start_time, object_state.prev.end_time );
+      push( 12, end_length, object_state.next.start_length );
+      push( 13, start_length, object_state.prev.end_length );
+      push( 20, end_pos, object_state.next.start_pos );
+      push( 21, start_pos, object_state.prev.end_pos );
+      push( 30, end_dir, object_state.next.start_dir );
+      push( 31, start_dir, object_state.prev.end_dir );
+      push( 40, end_speed, object_state.next.start_speed );
+      push( 41, start_speed, object_state.prev.end_speed );
 
-      push( 50, end_up_norm, next.start_up_norm );
-      push( 51, start_up_norm, prev.end_up_norm );
-      push( 60, end_front, next.start_front );
-      push( 61, start_front, prev.end_front );
-      push( 70, end_up_vector, next.start_up_vector );
-      push( 71, start_up_vector, prev.end_up_vector );
+      push( 50, end_up_norm, object_state.next.start_up_norm );
+      push( 51, start_up_norm, object_state.prev.end_up_norm );
+      push( 60, end_front, object_state.next.start_front );
+      push( 61, start_front, object_state.prev.end_front );
+      push( 70, end_up_vector, object_state.next.start_up_vector );
+      push( 71, start_up_vector, object_state.prev.end_up_vector );
 
       default( 999, diff_speed, 0 );
       default( 1500, up_norm_roll, 0 );
@@ -157,6 +164,7 @@ node move_straight extends object_subfunc_base
     solvers
     {
       accel_solver(length, duration, acceleration, start_speed, end_speed);
+      product_solver(diff_speed, acceleration, duration);
     }
   }
   provide object_state

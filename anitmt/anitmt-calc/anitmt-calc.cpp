@@ -93,6 +93,9 @@ int main(int argc,char **argv,char **envp)
       (*i)->create_structure(); // let create tree node structure
     }
 
+#warning !!! fixed filename for filled ADL output !!!
+    save_filled("unfilled.out", &ani );
+
     if( msg.get_num_errors() > 0 )
     {
       msg.vindent_set(0);
@@ -128,6 +131,9 @@ int main(int argc,char **argv,char **envp)
       (*i)->insert_values();	// insert concrete values for properties
     }
 
+#warning !!! fixed filename for filled ADL output !!!
+    save_filled("expl_filled.out", &ani );
+
     if( msg.get_num_errors() > 0 )
     {
       msg.vindent_set(0);
@@ -138,6 +144,9 @@ int main(int argc,char **argv,char **envp)
     }
 
     ani.finish_calculations();
+
+#warning !!! fixed filename for filled ADL output !!!
+    save_filled("filled.out", &ani );
 
     Output_Interface *output;
 

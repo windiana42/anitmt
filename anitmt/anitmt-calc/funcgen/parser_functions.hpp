@@ -187,8 +187,8 @@ namespace funcgen
   void ref_provider_type( void *info, const std::string &provider_type, 
 			  const std::string &ret_type, 
 			  const std::string &par_type );
-  void ref_node_local_prev( void *info );
-  void ref_node_local_next( void *info );
+  void ref_node_local_prev( void *info, std::string provider_type );
+  void ref_node_local_next( void *info, std::string provider_type );
   void ref_node_local_child_first( void *info, const std::string &type );
   void ref_node_local_child_last( void *info, const std::string &type );
   void ref_node_local_child( void *info, const std::string &type, double n );

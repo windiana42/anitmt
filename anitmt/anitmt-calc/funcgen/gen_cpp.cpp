@@ -206,6 +206,14 @@ namespace funcgen
   {
     return "get_next()";
   }
+  std::string Cpp_Code_Translator::prev( std::string provider_type )
+  {
+    return "get_prev_" + provider_type + "()";
+  }
+  std::string Cpp_Code_Translator::next( std::string provider_type )
+  {
+    return "get_next_" + provider_type + "()";
+  }
   std::string Cpp_Code_Translator::parent()
   {
     return "get_parent()";

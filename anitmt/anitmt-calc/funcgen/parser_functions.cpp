@@ -432,16 +432,18 @@ namespace funcgen
       solve_code->solvers.finish_solver();
     }
   } 
-  void node_solve_expression( void *info, const std::string &property,
+  void node_solve_expression( void *info, const std::string &op,
 			      Expression *exp )
   {
-    Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;
+    afd_info *I=static_cast<afd_info*>(info);
+    Code_Translator *translator = I->afd->translator;
+    Tree_Node_Type *node = I->afd->current_node;
     assert(node != 0);
     Solve_System_Code *solve_code = node->current_solve_code;    
 
     if( solve_code )
     {
-      solve_code->solvers.new_expression_solver(exp);
+      solve_code->solvers.new_expression_solver(op, exp, translator);
     }
     delete exp;
   }
@@ -1000,7 +1002,7 @@ namespace funcgen
     node->current_reference.par_type = par_type;
   }
 
-  void ref_node_local_prev( void *info )
+  void ref_node_local_prev( void *info, std::string provider_type )
   {
     //message::Message_Reporter &msg = static_cast<afd_info*>(info)->msg;
     afd_info *I=static_cast<afd_info*>(info);
@@ -1008,9 +1010,9 @@ namespace funcgen
     Tree_Node_Type *node = I->afd->current_node;
     assert( node != 0 );
 
-    node->current_reference.add( translator->prev() );
+    node->current_reference.add( translator->prev( provider_type ) );
   }
-  void ref_node_local_next( void *info )
+  void ref_node_local_next( void *info, std::string provider_type )
   {
     //message::Message_Reporter &msg = static_cast<afd_info*>(info)->msg;
     afd_info *I=static_cast<afd_info*>(info);
@@ -1018,7 +1020,7 @@ namespace funcgen
     Tree_Node_Type *node = I->afd->current_node;
     assert( node != 0 );
 
-    node->current_reference.add( translator->next() );
+    node->current_reference.add( translator->next( provider_type ) );
   }
   void ref_node_local_child_first( void *info, const std::string &type )
   {

@@ -219,14 +219,17 @@ namespace funcgen
     current_solver->solver_code += ");";
   }
 
-  void Solver_Code::new_expression_solver( const Expression *exp )
+  void Solver_Code::new_expression_solver( const std::string &op, 
+					   const Expression *exp, 
+					   Code_Translator *translator )
   {
     // open solver call, insert it and store the iterator
     current_solver = solver_declarations.insert
 	(solver_declarations.end(), Solver_Declaration());
 
     current_solver->essentials = exp->essentials;
-    current_solver->solver_code = exp->expression_code;
+    current_solver->solver_code = 
+      translator->prop_op(op) + ".assign(" + exp->expression_code + ");";
   }
 
   void Solver_Code::merge( const Solver_Code &sc )

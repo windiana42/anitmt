@@ -53,6 +53,12 @@ namespace solve
 
   //! connects another operand as a solution source
   template<class T>
+  Operand<T>& Operand<T>::assign   ( Operand<T> &src ) throw()
+  {
+    new Store_Operand_to_Operand<T>( src, *this );
+    return *this;
+  }
+  template<class T>
   Operand<T>& Operand<T>::operator=( Operand<T> &src ) throw()
   {
     new Store_Operand_to_Operand<T>( src, *this );

@@ -463,8 +463,8 @@ node_reference:
   | node_reference '.' node_identifier
 ;
 local_node_identifier:
-    provider_type '.' TAFD_prev		{ ref_node_local_prev(info); }
-  | provider_type '.' TAFD_next		{ ref_node_local_next(info); }
+    TAFD_IDENTIFIER '.' TAFD_prev	{ ref_node_local_prev(info,$1); }
+  | TAFD_IDENTIFIER '.' TAFD_next	{ ref_node_local_next(info,$1); }
   | TAFD_child '.' TAFD_IDENTIFIER '.' TAFD_first	/* first child */
       { ref_node_local_child_first(info,$3); }
   | TAFD_child '.' TAFD_IDENTIFIER '.' TAFD_last	/* last child */

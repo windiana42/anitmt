@@ -150,15 +150,6 @@ node scalar_base {
       sum_solver ( end_value, difference, start_value );
       sum_solver ( end_slope, slope_difference, start_slope );
     }
-    actions {
-      default( 999, slope_difference, 0 );
-      push( 10, end_time, next.start_time );
-      push( 11, start_time, prev.end_time );
-      push( 20, end_value, next.start_value );
-      push( 21, start_value, prev.end_value );
-      push( 30, end_slope, next.start_slope );
-      push( 31, start_slope, prev.end_slope );
-    }
   }
 }
 

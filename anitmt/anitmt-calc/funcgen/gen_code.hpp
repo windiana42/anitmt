@@ -114,6 +114,8 @@ namespace funcgen
 				  std::string par_type) = 0;
     virtual std::string prev() = 0;
     virtual std::string next() = 0;
+    virtual std::string prev( std::string provider_type ) = 0;
+    virtual std::string next( std::string provider_type ) = 0;
     virtual std::string parent() = 0;
     virtual std::string first_child() = 0;
     virtual std::string last_child() = 0;
