@@ -1,10 +1,12 @@
 #declare testval = 5;
-#declare s = 1;
+#declare test_s = 1;
 
-Background <0,1,testvar>
+background { rgb <0,1,(testval-1)/2> }
+
+sphere { <0,0,0> 0.0000001 }
 
 camera{ // testobj
 
 }
 
-#warning s
+/*#warning test_s*/

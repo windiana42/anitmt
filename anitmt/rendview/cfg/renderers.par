@@ -13,7 +13,8 @@ searchpath = /usr/bin /usr/local/bin /usr/bin/X11
 #section povray3.1g
   driver = povray
   binpath = povray
-  req_args=
+#  req_args= -display :0.0
+  req_args = 
   inc_path= /usr/lib/povray/include /home/me
 #end
 
