@@ -103,7 +103,8 @@ struct TaskSource_NAMESPACE
 		AConnect,
 		AGetTask,
 		ADoneTask,
-		ADisconnect
+		ADisconnect,
+		AActive   // <-- TST_Active task source - specific, see TSTActiveStat
 	};
 	enum ConnectStat
 	{
@@ -134,6 +135,11 @@ struct TaskSource_NAMESPACE
 		DSWorking,
 		DSOkay
 	};
+	enum TSTActiveStat
+	{
+		TASNone=0,
+		TASTakeTask   // active task source got task (passed in ctsk)
+	};
 	
 	enum ErrCommand
 	{
@@ -160,6 +166,7 @@ struct TaskSource_NAMESPACE
 		GetTaskStat getstat;
 		DoneTaskStat donestat;
 		DisconnectStat disconnstat;
+		TSTActiveStat activestat;
 		
 		// Further data fields: 
 		CompleteTask *ctsk;    // only for TSGetTask
@@ -221,7 +228,9 @@ class TaskSource : public TaskSource_NAMESPACE
 		virtual long ConnectRetryMakesSense() HL_PureVirt(-1);
 		
 		// Get TaskSourceType: 
-		TaskSourceType GetTaskSourceType()
+		// For active task sources, the passed TaskSourceConsumer will 
+		// be persistent and no other TaskSourceConsumer can use it. 
+		virtual TaskSourceType GetTaskSourceType(TaskSourceConsumer * /*persistent*/)
 			{  return(tstype);  }
 };
 
@@ -239,6 +248,7 @@ class TaskSourceConsumer : public TaskSource_NAMESPACE
 		void _TSWriteError_GetTask(const TSNotifyInfo *ni);
 		void _TSWriteError_DoneTask(const TSNotifyInfo *ni);
 		void _TSWriteError_Disconnect(const TSNotifyInfo *ni);
+		void _TSWriteError_Active(const TSNotifyInfo *ni);
 		void _WriteErrCmd(const TSNotifyInfo *ni);
 	protected: 
 		// This is the function called by the TaskSource notifying you 
@@ -315,7 +325,7 @@ class TaskSourceConsumer : public TaskSource_NAMESPACE
 		
 		// Query TaskSourceType: 
 		TaskSourceType GetTaskSourceType()
-			{  return(tsource->GetTaskSourceType());  }
+			{  return(tsource->GetTaskSourceType(this));  }
 };
 
 #endif  /* _RNDV_TASKSOURCE_HPP_ */

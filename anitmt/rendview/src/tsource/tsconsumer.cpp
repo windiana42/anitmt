@@ -127,6 +127,20 @@ void TaskSourceConsumer::_TSWriteError_Disconnect(const TSNotifyInfo *ni)
 }
 
 
+void TaskSourceConsumer::_TSWriteError_Active(const TSNotifyInfo *ni)
+{
+	switch(ni->activestat)
+	{
+		case TASNone:  assert(0);  break;
+		case TASTakeTask:
+			Verbose(TSR0,"TS: Okay, task source reports task [frame %d].\n",
+				ni->ctsk->frame_no);
+			break;
+		default:  assert(0);  break;
+	}
+}
+
+
 void TaskSourceConsumer::TSWriteError(const TSNotifyInfo *ni)
 {
 	switch(ni->action)
@@ -136,6 +150,7 @@ void TaskSourceConsumer::TSWriteError(const TSNotifyInfo *ni)
 		case AGetTask:     _TSWriteError_GetTask(ni);     break;
 		case ADoneTask:    _TSWriteError_DoneTask(ni);    break;
 		case ADisconnect:  _TSWriteError_Disconnect(ni);  break;
+		case AActive:      _TSWriteError_Active(ni);      break;
 		default:  assert(0);  break;
 	}
 }

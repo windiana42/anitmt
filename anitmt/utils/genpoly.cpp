@@ -4,7 +4,7 @@
  * Polinon creation utility. Algorithm works well in my tests 
  * (but is not the best one ever invented). 
  * 
- * Copyright (c) 2001 by Wolfgang Wieser (wwieser@gmx.de) 
+ * Copyright (c) 2001 -- 2002 by Wolfgang Wieser (wwieser@gmx.de) 
  * 
  * This file may be distributed and/or modified under the terms of the 
  * GNU General Public License version 2 as published by the Free Software 
@@ -257,7 +257,7 @@ static int ParseInt(char **str,int *rv)
 
 static void PrintHelp()
 {
-	printf("Usage: genpoly [--help] [-cpq] [info...]\n"
+	printf("Usage: genpoly [--help] [-acpq] [info...]\n"
 	  "  -c  print coefficients only\n"
 	  "  -p  use pow(x,y) instead of x^y in output\n"
 	  "  -a  use x**y instead of x^y in output\n"

@@ -119,6 +119,7 @@ struct TaskSource_LDR_ServerConn :
 		~TaskSource_LDR_ServerConn();
 		int Setup(int sock,MyAddrInfo *addr);
 		
+		// Called after TellTaskManagerToGetTask(): 
 		void TaskManagerGotTask();
 		
 		MyAddrInfo addr;  // server address
@@ -146,6 +147,7 @@ class TaskSource_LDR :
 		
 		// What we're currently doing: 
 		TSAction pending;
+		CompleteTask *active_taketask;
 		
 		// Are we connected? This is just a dummy to ensure 
 		// correct behavior of the other classes...
@@ -173,6 +175,7 @@ class TaskSource_LDR :
 		int srcDisconnect(TaskSourceConsumer *);
 		
 		long ConnectRetryMakesSense();
+		TaskSourceType GetTaskSourceType(TaskSourceConsumer *persistent);
 	public: _CPP_OPERATORS_FF
 		TaskSource_LDR(TaskSourceFactory_LDR *,int *failflag=NULL);
 		~TaskSource_LDR();
@@ -197,7 +200,7 @@ class TaskSource_LDR :
 		void ConnClose(TaskSource_LDR_ServerConn *sc,int reason);
 		
 		// Called by TaskSource_LDR_ServerConn: 
-		int TellTaskManagerToGetTask(CompleteTask *ctsk);
+		void TellTaskManagerToGetTask(CompleteTask *ctsk);
 };
 
 #endif  /* _RNDV_TSOURCE_LDR_HPP_ */

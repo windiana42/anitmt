@@ -129,6 +129,7 @@ TaskSource::TSNotifyInfo::TSNotifyInfo(/*int *failflag*/)
 	getstat=GTSNone;
 	donestat=DTSNone;
 	disconnstat=DSNone;
+	activestat=TASNone;
 	
 	ctsk=NULL;
 	

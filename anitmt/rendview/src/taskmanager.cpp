@@ -493,6 +493,20 @@ int TaskManager::tsnotify(TSNotifyInfo *ni)
 				{  ReSched();  }
 			}
 		}  break;
+		case AActive:
+		{
+			// Active task source only. 
+			// We must neither be connected to the task source to receive 
+			// this nor must we have send a query. 
+			if(ni->activestat==TASTakeTask)
+			{
+				assert(ni->ctsk);
+				
+				Error("Got task from active task source. Hack on...\n");
+				assert(0);
+			}
+			else assert(0);
+		}  break;
 		default:  assert(0);  break;
 	}
 	
@@ -1063,6 +1077,7 @@ void TaskManager::ReallyStartProcessing(int error_occured)
 	interface->WriteProcessingInfo(0,
 		(GetTaskSourceType()==TST_Active) ? "waiting for" : "beginning to");
 	
+	// Active tas source (TST_Active) will call tsnotify(AActive). 
 	if(GetTaskSourceType()==TST_Passive)
 	{
 		// Do start exchange with task source: 
