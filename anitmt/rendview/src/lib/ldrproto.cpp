@@ -55,7 +55,8 @@ static const char *_command_str[_Cmd_LAST]=
 
 const char *LDRCommandString(LDRCommand c)
 {
-	return((c<0 || c>=_Cmd_LAST) ? "[unknown]" : _command_str[c]);
+	if(c<0 || c>=_Cmd_LAST)  return("[unknown]");
+	return(_command_str[c]);
 }
 
 

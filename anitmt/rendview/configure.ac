@@ -11,6 +11,21 @@ AC_PROG_INSTALL
 AC_PROG_CXX
 AC_PROG_RANLIB
 
+# Okay; we need hlib, so check for hlib-config: 
+# This should be improved. 
+AC_MSG_CHECKING([for hlib])
+hlibdir=""
+for i in ../hlib ; do
+  test -x "$i/HConfigVars" || continue
+  hlibdir="$i"
+done
+if test "x$hlibdir" = "x" ; then
+	AC_MSG_RESULT([failed])
+	AC_MSG_ERROR([Unable to find hlib. Giving up.])
+else
+	AC_MSG_RESULT([$hlibdir])
+fi
+
 # Checks for header files. HLIB already does a lot of these checks, some 
 # are repeated here. 
 AC_HEADER_STDC
@@ -43,6 +58,13 @@ AC_MSG_CHECKING([for _SC_NPROCESSORS_ONLN/CONF])
 
 # Check if socket is in -lsocket: 
 AC_CHECK_LIB([socket],[socket])
+
+# Set hlib's CFLAGS and CXXFLAGS: 
+# This must be done at the end bcause of $(ADDFLAGS). 
+CFLAGS="$($hlibdir/HConfigVars CFLAGS)"
+CXXFLAGS="$($hlibdir/HConfigVars CXXFLAGS)"
+#echo "$CFLAGS"
+#echo "$CXXFLAGS"
 
 # Finally write files: 
 AC_CONFIG_FILES([ \

@@ -94,7 +94,7 @@ class NetworkIOBase :
 		
 		// Sum up the size of all strings in l including terminating '\0' for 
 		// each string: 
-		static inline size_t SumUpSize(RefStrList *l)
+		static inline size_t SumUpSize(const RefStrList *l)
 		{
 			size_t len=0;
 			for(const RefStrList::Node *i=l->first(); i; i=i->next)
@@ -105,7 +105,7 @@ class NetworkIOBase :
 		// Copy string list into buffer *dest; make sure it is large 
 		// enough (use SumUpSize()). 
 		// Returns updated dest pointer; copies '\0' at the end.
-		static char *CopyStrList2Data(char *dest,RefStrList *l);
+		static char *CopyStrList2Data(char *dest,const RefStrList *l);
 		
 		// These 2 do the opposite of the function above. 
 		//---

@@ -347,8 +347,8 @@ AC_CONFIG_FILES([ \
 	misc/Makefile \
 	crypto/Makefile \
 	Makefile])
-echo "$srcdir/HConfigVars"
-AC_CONFIG_FILES([$srcdir/HConfigVars],[chmod ug+x "$srcdir/HConfigVars"])
+#AC_CONFIG_FILES([$srcdir/HConfigVars],[chmod ug+x "$srcdir/HConfigVars"])
+AC_CONFIG_FILES([HConfigVars],[chmod ug+x "HConfigVars"])
 
 # Finally do it: 
 AC_OUTPUT

@@ -40,7 +40,7 @@ void NetworkIOBase::_DoChangeEvents_Error(int rv)
 }
 
 
-char *NetworkIOBase::CopyStrList2Data(char *dest,RefStrList *l)
+char *NetworkIOBase::CopyStrList2Data(char *dest,const RefStrList *l)
 {
 	for(const RefStrList::Node *i=l->first(); i; i=i->next)
 	{
