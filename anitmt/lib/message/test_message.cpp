@@ -59,6 +59,12 @@ public:
     for( int i=0; i<=5; i++ )
       error(new Test_Position(),i) << "position detail level is " << i;
     verbose(0) << "...done";
+	
+	verbose(0) << "testing long message...";
+	std::string tmp="message";
+	error(new Test_Position(),0) << "this" << " is " << 1 << " long " << tmp <<
+	  " written " << 't' << 'o' << " the con" << "sole" << '.';
+	verbose(0) << "...done";
   }
   test( Message_Consultant *consultant, int level ) 
     : Message_Reporter( consultant ) 

@@ -34,20 +34,31 @@ namespace message
   //**************************************************************
   // Message streams
 
+  // Message_Stream (base class): 
+  Message_Stream::Message_Stream( Abstract_Position *p, int pos_detail,
+			      Message_Consultant *consult, bool _enabled )
+    : enabled(_enabled), 
+      pos(p), position_detail(pos_detail), consultant(consult),
+      msg_stream(message,_Message_Buf_Size) {}
+
+  Message_Stream::Message_Stream( Message_Stream& src ) 
+    : enabled(src.enabled), pos(src.pos), position_detail(src.position_detail),
+      consultant(src.consultant), message(src.message), msg_stream(message,_Message_Buf_Size)
+  {
+    src.enabled = false;
+  }
+
+  Message_Stream::~Message_Stream()
+  { }
+
   // error stream
 
   Error_Stream::Error_Stream( Abstract_Position *p, int pos_detail,
 			      Message_Consultant *consult )
-    : enabled(true), 
-      pos(p), position_detail(pos_detail), consultant(consult),
-      msg_stream(message,300) {}
+    : Message_Stream(p,pos_detail,consult,true) {}
 
   Error_Stream::Error_Stream( Error_Stream& src ) 
-    : enabled(src.enabled), pos(src.pos), position_detail(src.position_detail),
-      consultant(src.consultant), message(src.message), msg_stream(message,300)
-  {
-    src.enabled = false;
-  }
+    : Message_Stream(src) {}
 
   Error_Stream::~Error_Stream()
   {
@@ -60,17 +71,10 @@ namespace message
 
   Warn_Stream::Warn_Stream( Abstract_Position *p, int pos_detail,
 			    Message_Consultant *consult )
-    : enabled(consult->is_warning()), 
-      pos(p), position_detail(pos_detail), consultant(consult),
-      msg_stream(message,300) {}
+    : Message_Stream(p,pos_detail,consult,consult->is_warning()) {}
 
   Warn_Stream::Warn_Stream( Warn_Stream& src ) 
-    : enabled(src.enabled), 
-      pos(src.pos), position_detail(src.position_detail),
-      consultant(src.consultant), message(src.message), msg_stream(message,300)
-  {
-    src.enabled = false;
-  }
+    : Message_Stream(src) {}
 
   Warn_Stream::~Warn_Stream()
   {
@@ -84,18 +88,13 @@ namespace message
   Verbose_Stream::Verbose_Stream( int verbose_level,
 				  Abstract_Position *p, int pos_detail,
 				  Message_Consultant *consult )
-    : enabled(consult->is_verbose(verbose_level)), 
-      min_verbose_level(verbose_level),
-      pos(p), position_detail(pos_detail), consultant(consult),
-      msg_stream(message,300) {}
+    : Message_Stream(p,pos_detail,consult,
+	   consult->is_verbose(verbose_level)),
+	   min_verbose_level(verbose_level) {}
 
   Verbose_Stream::Verbose_Stream( Verbose_Stream& src ) 
-    : enabled(src.enabled), min_verbose_level(src.min_verbose_level),
-      pos(src.pos), position_detail(src.position_detail),
-      consultant(src.consultant), message(src.message), msg_stream(message,300)
-  {
-    src.enabled = false;
-  }
+    : Message_Stream(src), 
+	  min_verbose_level(src.min_verbose_level) {}
 
   Verbose_Stream::~Verbose_Stream()
   {
