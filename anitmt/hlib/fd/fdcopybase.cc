@@ -513,6 +513,7 @@ FDCopyBase::~FDCopyBase()
 		{  fprintf(stderr,"OOPS?!: ~FDCopyBase: deleting persistent "
 			"FDCopyPump\n");  }
 		#endif
+		p->persistent=0;
 		delete p;
 	}
 }
@@ -568,10 +569,15 @@ void FDCopyPump::_DoSuicide()
 
 int FDCopyPump::Control(FDCopyBase::ControlCommand cc)
 {
+	if(is_dead)
+	{  return(-2);  }
+	
 	int rv=VControl(cc);
+	
 	// See if the FDCopyPump has to be deleted: 
 	if(is_dead)
 	{  _DoSuicide();  }
+	
 	return(rv);
 }
 
@@ -622,6 +628,7 @@ FDCopyPump::~FDCopyPump()
 		if(src->persistent)
 		{  fprintf(stderr,_warn_persist_fdcopyio,src->Type());  }
 		#endif
+		src->persistent=0;
 		src->DoSuicide();  src=NULL;
 	}
 	if(dest)
@@ -630,6 +637,7 @@ FDCopyPump::~FDCopyPump()
 		if(dest->persistent)
 		{  fprintf(stderr,_warn_persist_fdcopyio,dest->Type());  }
 		#endif
+		dest->persistent=0;
 		dest->DoSuicide();  dest=NULL;
 	}
 	

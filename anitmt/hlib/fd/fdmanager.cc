@@ -795,8 +795,12 @@ inline void FDManager::_DeliverFDNotify(const HTime *fdtime)
 			pollfd *p=&pfd[i->idx];
 			#if TESTING
 			if(p->fd!=i->fd || p->events!=i->events)
-			{  fprintf(stderr,"internal error: fd=%d,%d; events=%d,%d\n",
-				p->fd,i->fd,p->events,i->events);  abort();  }
+			{
+				fprintf(stderr,"%s: fd=%d,%d; events=0x%x,0x%x\n",
+					fdlist_change_serial ? "FD: Hmmm...." : "FD: internal error",
+					p->fd,i->fd,p->events,i->events);
+				if(!fdlist_change_serial)  abort();
+			}
 			#endif
 			if(p->revents)
 			{
@@ -1788,7 +1792,7 @@ inline void FDManager::_AssignFDArrElem(FDManager::FDNode *n)
 int FDManager::_PollFD(FDBase * /*fdb*/,FDManager::FDNode *j,
 	short events,const void **dptr)
 {
-	//fprintf(stderr,"_PollFD(events=0x%x; fd=%d,events=0x%x,idx=%d; &dptr=%p\n",
+	//fprintf(stderr,"_PollFD(events=0x%x; fd=%d,events=0x%x,idx=%d; &dptr=%p)\n",
 	//	events,j->fd,j->events,j->idx,dptr);
 	
 	// Just update events & dptr: 

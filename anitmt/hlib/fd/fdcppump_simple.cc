@@ -371,7 +371,7 @@ int FDCopyPump_Simple::_StopContJob(int stop)
 int FDCopyPump_Simple::SetIO(FDCopyIO *nsrc,FDCopyIO *ndest)
 {
 	// Are we active? If so, we refuse: 
-	if(IsActive() || is_dead)
+	if(IsActive() || (is_dead && (nsrc || ndest)) )
 	{  return(-5);  }
 	
 	// First, check if the passed FDCopyIO's are active: 
@@ -412,6 +412,8 @@ int FDCopyPump_Simple::SetIO(FDCopyIO *nsrc,FDCopyIO *ndest)
 	if(src)   {  src->DoSuicide();   src=NULL;   }
 	if(dest)  {  dest->DoSuicide();  dest=NULL;  }
 	
+	// Do !!NOT!! set is_dead=0 here. 
+	// We may be here in case is_dead=1 and nsrc=ndest=NULL. 
 	src=nsrc;
 	dest=ndest;
 	fd_dir=nfd_dir;

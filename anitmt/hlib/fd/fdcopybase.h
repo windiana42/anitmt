@@ -498,7 +498,8 @@ class FDCopyPump :
 		//        supported by this FDCopyPump or one of them is NULL 
 		//  -3 -> one of the passed FDCopyIO classes is maked active
 		//  -4 -> FDCopyPump's current src / dest set and active 
-		//  -5 -> FDCopyPump currently marked active
+		//  -5 -> FDCopyPump currently marked active or it is dead 
+		//        AND dest or src are non-NULL. 
 		// UNLESS 0 is returned, the source and dest stored in *this 
 		// were not modified. 
 		// NOTE!! Unless 0 or -3 is returned and unless src / dest (as 
