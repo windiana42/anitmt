@@ -2,6 +2,7 @@
 INCLUDES=			-I$(srcdir)/.. -I$(srcdir)/../../lib/include/
 noinst_LIBRARIES=		libadlparser.a
 check_PROGRAMS=			adltest
+CXXFLAGS =			@CXXFLAGS@ -Wno-non-template-friend
 
 libadlparser_a_SOURCES=		scanner.ll \
 				support.hpp		support.cpp \

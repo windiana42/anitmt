@@ -1645,7 +1645,10 @@ trap 'rm -fr `echo "Makefile \
 	lib/par/Makefile \
 	lib/include/Makefile \
 	test/Makefile \
-	anitmt-calc/parser/Makefile" | sed "s/:[^ ]*//g"` conftest*; exit 1' 1 2 15
+	anitmt-calc/parser/Makefile
+        anitmt-view/Makefile
+	anitmt-view/parser/Makefile
+	mkavi/Makefile" | sed "s/:[^ ]*//g"` conftest*; exit 1' 1 2 15
 EOF
 cat >> $CONFIG_STATUS <<EOF
 
@@ -1745,7 +1748,10 @@ CONFIG_FILES=\${CONFIG_FILES-"Makefile \
 	lib/par/Makefile \
 	lib/include/Makefile \
 	test/Makefile \
-	anitmt-calc/parser/Makefile"}
+	anitmt-calc/parser/Makefile
+        anitmt-view/Makefile
+	anitmt-view/parser/Makefile
+	mkavi/Makefile"}
 EOF
 cat >> $CONFIG_STATUS <<\EOF
 for ac_file in .. $CONFIG_FILES; do if test "x$ac_file" != x..; then

@@ -17,4 +17,7 @@ AC_OUTPUT(
 	lib/par/Makefile \
 	lib/include/Makefile \
 	test/Makefile \
-	anitmt-calc/parser/Makefile)
+	anitmt-calc/parser/Makefile
+        anitmt-view/Makefile
+	anitmt-view/parser/Makefile
+	mkavi/Makefile)
