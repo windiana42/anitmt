@@ -55,6 +55,7 @@ namespace funcgen
   {
     lexer->info = this;
     file_pos.set_filename("standard input");
+    msg.set_msg_default_position( &file_pos ); // set default message position
   }
   afd_info::~afd_info()
   {

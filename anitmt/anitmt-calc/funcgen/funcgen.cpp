@@ -39,4 +39,9 @@ int main(int argn, char *argc[])
   
   std::cout << "Parsing " << argc[1] << "..." << std::endl;
   funcgen::parse_afd( &afd, &default_msg_consultant, argc[1] );
+
+  std::cout << std::endl;
+  std::cout << "Result: " << std::endl;
+
+  afd.print();			// debug print data in structure
 }

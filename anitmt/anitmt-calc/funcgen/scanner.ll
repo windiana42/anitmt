@@ -76,7 +76,7 @@ qstring_err 	(\"([^\"\n]|\\\")*)
 "\n"	  { info->file_pos.inc_line(); }
 "\r"	  { ; /*ignore DOS specific line end*/ }
 
-{scal}	      { tok_pos(); yylval->scalar = atof(yytext);return TAFD_SCALAR; }
+{scal}	      { tok_pos(); yylval->u.scalar=atof(yytext);return TAFD_SCALAR; }
 {qstring}     { tok_pos(); yylval->string = strip_quotes(yytext); 
 	        return TAFD_QSTRING; }
 {qstring_err} { llerr(info) << "unterminated string"; tok_pos();
@@ -92,11 +92,11 @@ qstring_err 	(\"([^\"\n]|\\\")*)
 include		{ tok_pos(); return TAFD_include; }
 declaration	{ tok_pos(); return TAFD_declaration; }
 base_types	{ tok_pos(); return TAFD_base_types; }
+serial		{ tok_pos(); return TAFD_serial; }
 type		{ tok_pos(); return TAFD_type; }
 node		{ tok_pos(); return TAFD_node; }
 provides	{ tok_pos(); return TAFD_provides; }
 extends		{ tok_pos(); return TAFD_extends; }
-seriatim	{ tok_pos(); return TAFD_seriatim; }
 properties	{ tok_pos(); return TAFD_properties; }
 aliases		{ tok_pos(); return TAFD_aliases; }
 operands	{ tok_pos(); return TAFD_operands; }
@@ -104,6 +104,8 @@ common		{ tok_pos(); return TAFD_common; }
 constraints	{ tok_pos(); return TAFD_constraints; }
 solvers		{ tok_pos(); return TAFD_solvers; }
 actions		{ tok_pos(); return TAFD_actions; }
+push		{ tok_pos(); return TAFD_push; }
+default		{ tok_pos(); return TAFD_default; }
 contains	{ tok_pos(); return TAFD_contains; }
 max1		{ tok_pos(); return TAFD_max1; }
 min1		{ tok_pos(); return TAFD_min1; }

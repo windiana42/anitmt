@@ -3,14 +3,15 @@ INCLUDES=		-I$(top_srcdir)/lib -I$(top_srcdir)/lib/flex
 
 bin_PROGRAMS=		funcgen
 CXXFLAGS =		@CXXFLAGS@ -Wno-non-template-friend -DYYDEBUG \
-			-D__CPLUSPLUS -DTHROW_NIL=throw\(\)
+			-D__CPLUSPLUS -DTHROW_NIL=throw\(\) \
+			-ftemplate-depth-30
 
-funcgen_SOURCES=	parser.yy tokens.h token.hpp \
+funcgen_SOURCES=	afdbase.hpp afdbase.cpp parser.yy tokens.h token.hpp \
 			flexlexer_public.h flexlexer_global.h scanner.ll \
 			parser_functions.hpp parser_functions.cpp \
 			parser_functions_inline.cpp \
 			parsinfo.hpp parsinfo.cpp parsinfo_inline.cpp \
-			afdbase.hpp funcgen.cpp
+			funcgen.cpp stdextend.hpp stdextend.cpp 
 
 funcgen_LDADD=		../../lib/message/libmessage.a -lefence
 

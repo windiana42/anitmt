@@ -17,14 +17,18 @@
 
 #include <string>
 #include <message/message.hpp>
+#include <afdbase.hpp>
 
 namespace funcgen
 {
   struct Token
   {
-    double scalar;
-    bool boolean;
     std::string string;
+    union{
+      double scalar;
+      bool boolean;
+      Expression *exp;
+    }u;
   };
 }
 

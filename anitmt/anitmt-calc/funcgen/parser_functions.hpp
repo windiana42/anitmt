@@ -83,13 +83,14 @@ namespace funcgen
   void base_type_structure_element( void *info, const std::string &type, 
 				    const std::string &name );
 
-  void start_provider_type_declaration( void *info, const std::string &name );
+  void start_provider_type_declaration( void *info, bool serial, 
+					const std::string &name );
   void add_provided_result_type( void *info, const std::string &ret, 
 				 const std::string &par );
 
   void start_node_declaration( void *info, const std::string &name );
   void node_extends( void *info, const std::string &node );
-  void node_provides( void *info, const std::string &type, bool seriatim );
+  void node_provides( void *info, const std::string &type );
 
   void node_start_property_type( void *info, const std::string &type );
   void node_declare_property( void *info, const std::string &name );
@@ -104,20 +105,28 @@ namespace funcgen
   void node_start_first_declaration( void *info, const std::string &type="" ); 
   void node_start_last_declaration( void *info, const std::string &type="" ); 
 
-  void node_solve_constraint( void *info );
+  void node_solve_constraint( void *info, const Expression *exp );
 
   void node_start_solver( void *info, const std::string &solver );
   void node_add_solver_parameter( void *info ); // from reference
   void node_finish_solver( void *info ); 
-  void node_solve_expression( void *info, const std::string &property );
+  void node_solve_expression( void *info, const std::string &property,
+			      Expression *exp );
 
+  //void node_action_ref_param( info, int num ); // store reference parameter
+  //void node_default_action( info, double, Expression *val );
+  //void node_push_action( info, double );
+  //void node_action_value( double );			// scalar value
+  //void node_action_value( double, double, double  );	// vector value
+  //void node_action_value( std::string );		// string value
   void node_start_action( void *info, const std::string &name, 
 			  double priority );
-  void node_add_action_parameter( void *info );
+  void node_add_action_parameter_ref( void *info );
+  void node_add_action_parameter_exp( void *info, Expression *exp );
   void node_finish_action( void *info );
 
   void node_contains( void *info, bool max1, bool min1, 
-		      const std::string &type, bool seriatim );
+		      const std::string &type );
 
   void node_start_provide( void *info, const std::string &type );
 
@@ -134,28 +143,31 @@ namespace funcgen
 				     const std::string &ret="", 
 				     const std::string &par="" );
 
-  std::string bool_expr( void *info, const std::string &exp1, 
+  void res_ref_property( void *info, std::string prop );
+  void res_ref_child( void *info, std::string provider, 
+		      std::string result_type, std::string parameter );
+  void res_ref_this( void *info, std::string provider, 
+		      std::string result_type, std::string parameter );
+
+  Expression *bool_expr( Expression *exp1, 
 			 const std::string &op, 
-			 const std::string &exp2 );
-  std::string expr_from_ref( void *info );
-  std::string expr_scalar( void *info, double val );
-  std::string expr( void *info, const std::string &exp1, 
+			 Expression *exp2 );
+  Expression *expr_from_ref( void *info );
+  Expression *expr_scalar( double val );
+  Expression *expr( Expression *exp1, 
 		    const std::string &op, 
-		    const std::string &exp2 );
-  std::string expr_function(void *info, const std::string &name, 
-			    const std::string &par );
+		    Expression *exp2 );
+  Expression *expr( Expression *exp );
+  Expression *expr_function(const std::string &name, 
+			    Expression *par );
 
   void ref_prop_or_op( void *info, const std::string &name );
   void ref_node_prop( void *info, const std::string &prop);
   void ref_start_param( void *info );
   void ref_end_param( void *info );
-  void ref_child_res( void *info );
-  void provider_type( void *info, const std::string &provider_type, 
-		      const std::string &ret_type, 
-		      const std::string &par_type );
-  void provider_result( void *info, const std::string &provider_type, 
-			const std::string &ret_type );
-
+  void ref_provider_type( void *info, const std::string &provider_type, 
+			  const std::string &ret_type, 
+			  const std::string &par_type );
   void ref_node_local_prev( void *info );
   void ref_node_local_next( void *info );
   void ref_node_local_child_first( void *info, const std::string &type );
