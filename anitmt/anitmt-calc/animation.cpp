@@ -12,13 +12,13 @@
 /**									    **/
 /*****************************************************************************/
 
+#include <config.h>
+
 #include <functionality/make_avail.hpp>
 
 #include "animation.hpp"
 
 #include "anitmt.hpp"
-
-#include <config.h>
 
 namespace proptree
 {
@@ -30,7 +30,7 @@ namespace proptree
 
 namespace anitmt{
 
-#if(YYDEBUG)
+#if YYDEBUG
   namespace adlparser {
     extern int yydebug;
   }
@@ -60,7 +60,7 @@ namespace anitmt{
     // register animation tree nodes
     functionality::make_nodes_availible();
 
-#if(YYDEBUG)
+#if YYDEBUG
     // activate DEBUG function of parser at verbose level 5
     if( GLOB.param.verbose() >= 4 )
     {

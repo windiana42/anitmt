@@ -12,14 +12,14 @@
 /**									    **/
 /*****************************************************************************/
 
+#include <config.h>
+
 #include <iostream>
 #include <message/message.hpp>
 #include "afdbase.hpp"
 #include "gen_cpp.hpp"
 
 #include "funcgen.hpp"
-
-#include <config.h>
 
 namespace funcgen
 {
