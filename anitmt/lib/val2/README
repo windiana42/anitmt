@@ -63,7 +63,7 @@ Operators:
       * Both the operators == and != are implemented. 
       * The logical not (operator!()) returns true (1), if the 
         scalar is 0. 
-      * All comparisons use the global value values::epsilon: 
+      * All comparisons use the global value vect::epsilon: 
         If two scalars a and b should be compared, they are considered 
         equal, if  fabs(a-b)<=epsilon . 
         NOTE that this might not be what you want, if you are comparing 
@@ -108,7 +108,7 @@ Operators:
   > Comparison:
       * Vectors can be compared to other vectors. 
       * Both operator!= and operator== are implemented. 
-      * The operators use values::epsilon (see Scalar/Comparison). 
+      * The operators use vect::epsilon (see Scalar/Comparison). 
       * Operator!() returns true (1) if the vector *this is the null vector. 
         Alternatively, you can use the method is_null(). 
   > Arithmetics: 
@@ -235,12 +235,12 @@ Operators:
         is the new value for the component. 
   > Comparison:
       * You can compare a matrix to another one. The matrices are simply 
-        compared component-wise with respect to values::epsilon. 
+        compared component-wise with respect to vect::epsilon. 
       * Both operator== and operator!= are implemented. 
       * operator!() and is_ident() return true, if the matrix is the 
-        identity matrix (with respect to values::epsilon). 
+        identity matrix (with respect to vect::epsilon). 
       * is_null() returns true if the matrix is the null-matrix (with 
-        respecto to values::epsilon). 
+        respecto to vect::epsilon). 
   > Arthmetics: 
       * Matrices can be added to and subtracted from matrices. 
         This is done by adding/subtracting the element of one matrix to/from 

@@ -57,9 +57,9 @@ namespace anitmt
     values::Vector up_vector = u.second;
 
     // !!! 
-    ret *= values::Mtranslate( -c() );
-    ret *= values::Mtranslate( position );
-    ret *= values::Mrotate_pair_pair
+    ret *= vect::Mtranslate( -c() );
+    ret *= vect::Mtranslate( position );
+    ret *= vect::Mrotate_pair_pair
       ( values::Vector(1,0,0), values::Vector(0,1,0), direction , up_vector );
 
     return Ani_Object::Optional_Return_Type( true, ret );

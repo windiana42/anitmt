@@ -7,9 +7,9 @@ CXXFLAGS=		@CXXFLAGS@ -Wno-non-template-friend
 
 test_core_SOURCES=	test_core.cpp 
 test_core_LDADD=	libanitmt.a \
+			../lib/par/libpar.a \
 			../lib/val/libval.a \
 			../lib/utl/libutl.a \
-			../lib/par/libpar.a \
 			../lib/message/libmessage.a \
 			../lib/solve/libsolve.a 
 
@@ -28,15 +28,18 @@ libanitmt_a_SOURCES= 	error.hpp error.cpp \
 			anitmt.hpp anitmt.cpp
 
 anitmt_calc_SOURCES=	anitmt-calc.cpp	
-anitmt_calc_LDADD=	../lib/val/libval.a  \
-			../lib/par/libpar.a \
-			../lib/utl/libutl.a \
+anitmt_calc_LDADD=	../lib/utl/libutl.a \
 			../lib/message/libmessage.a \
-			../lib/solve/libsolve.a \
+			../lib/solve/libsolve.a  \
 			input/libinput.a \
 			input/adl2/libadlparser.a \
 			output/raw/librawout.a \
 			output/pov/libpovout.a \
 			output/lib/liboutput.a \
-			output/liboutput.a libanitmt.a 
+			output/liboutput.a \
+			libanitmt.a \
+			../lib/message/libmessage.a \
+			../lib/par/libpar.a \
+			../lib/val/libval.a
+
 
