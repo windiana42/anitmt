@@ -18,6 +18,9 @@
 #define _RNDV_TSOURCE_LOCALPARS_HPP_ 1
 
 class ComponentDataBase;
+class ImageFormat;
+class RenderDesc;
+class FilterDesc;
 
 
 class TaskSourceFactory_Local : 
@@ -27,10 +30,33 @@ class TaskSourceFactory_Local :
 	private:
 		// We may access ComponentDataBase::component_db. 
 		
-		RefString frame_pattern;
+		RefString inp_frame_pattern;
+		RefString outp_frame_pattern;
+		
+		int startframe;
+		// NOTE: fjump may be negative. 
+		int fjump;
+		// nframes=-1 -> as many as we can get
 		int nframes;
 		
+		int width,height;
+		RefString size_string;
+		
+		// Output format to use: 
+		const ImageFormat *oformat;
+		RefString oformat_string;  // NULL after CheckParams(). 
+		
+		RefString rdesc_string;
+		const RenderDesc *rdesc;
+		
+		int _CheckFramePattern(const char *name,RefString *s);
+		
 		int _RegisterParams();
+		
+		// Overriding virtuial from ParameterConsumer: 
+		int CheckParams();
+		// Overriding virtuial from TaskSourceFactory: 
+		int FinalInit();  // called after CheckParams(), before Create()
 	public: _CPP_OPERATORS_FF
 		TaskSourceFactory_Local(ComponentDataBase *cdb,int *failflag=NULL);
 		~TaskSourceFactory_Local();
@@ -40,7 +66,7 @@ class TaskSourceFactory_Local :
 		// Return value: 0 -> OK; >0 -> error. 
 		static int init(ComponentDataBase *cdb);
 		
-		// Create a TaskSource_Local: 
+		// Create a TaskSource_Local: (Call after FinalInit())
 		TaskSource *Create();
 };
 

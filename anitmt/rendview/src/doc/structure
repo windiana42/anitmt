@@ -1,17 +1,33 @@
 LLB = LinkedListBase<>
 
- +-------------------------+     +-------------------------------------+
- |   ==TaskStructBase==    |     |           ==TaskParams==            |
- | TaskDriverType dtype;   |     | TaskDriverType dtype;               |
- | TaskFile *infile;       |     | RefStrList add_args;                |
- | TaskFile *outfile;      |     | int niceval;                        |
- | RefStrList add_args;    |     | long timeout;                       |
- |                         |     | RefString crdir;                    |
- |                         |     | RefString wdir;                     |
- |                         |     |                                     |
- |#########################|     |#####################################|
- | RenderTask | FilterTask |     | RenderTaskParams | FilterTaskParams |
- +------------+------------+     +------------------+------------------+
+ +-----------------------------------------+
+ |           ==TaskStructBase==            |
+ | TaskDriverType dtype;                   |
+ | TaskFile *infile;                       |
+ | TaskFile *outfile;                      |
+ | RefStrList add_args;                    |
+ |                                         |
+ |#########################################|
+ |     RenderTask     |     FilterTask     |
+ | RenderDesc *rdesc; | FilterDesc *fdesc; |
+ | width,height;      | ImageFormat;       |
+ | ImageFormat;       |                    |
+ +--------------------+--------------------+
+
+ +---------------------------------------+
+ |           ==TaskParams==              |
+ | TaskDriverType dtype;                 |
+ | RefStrList add_args;                  |
+ | int niceval;                          |
+ | long timeout;                         |
+ | RefString crdir;                      |
+ | RefString wdir;                       |
+ |                                       |
+ |#######################################|
+ |  RenderTaskParams  | FilterTaskParams |
+ | std{out,err,in}fd  |                  |
+ +--------------------+------------------+
+
 
                 ,--TaskManager (between GetTask() / DoneTask()
                 V

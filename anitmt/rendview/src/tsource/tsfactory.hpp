@@ -43,6 +43,10 @@ class TaskSourceFactory :
 		ComponentDataBase *component_db()
 			{  return(_component_db);  }
 		
+		// Return value: 0 -> OK; else error 
+		// Called after CheckParams(), before Create(). 
+		virtual int FinalInit() HL_PureVirt(1)
+		
 		// Called on program start to set up the TaskSourceFactory classes, 
 		// so that they register at the ComponentDataBase. 
 		// Return value: 0 -> OK; >0 -> failed. 

@@ -19,6 +19,7 @@
 #include "param.hpp"
 
 #include <assert.h>
+#include <ctype.h>
 
 
 		
@@ -29,13 +30,165 @@ TaskSource *TaskSourceFactory_Local::Create()
 }
 
 
+// Check if the passed pattern is something containing ONE 
+// "%123d" or "%07x". 
+int TaskSourceFactory_Local::_CheckFramePattern(const char *name,RefString *s)
+{
+	const char *ptr=s->str();
+	do {
+		if(!ptr)  break;
+		ptr=strchr(ptr,'%');
+		if(!ptr)  break;
+		++ptr;
+		while(isdigit(*ptr))  ++ptr;
+		if(*ptr!='x' && *ptr!='d')
+		{  ptr=NULL;  break;  }
+		if(strchr(ptr,'%'))
+		{  ptr=NULL;  break;  }
+	}  while(0);
+	if(!ptr)
+	{
+		Error("Invalid %s frame pattern \"%s\".\n",name,s->str());
+		return(1);
+	}
+	return(0);
+}
+
+
+int TaskSourceFactory_Local::FinalInit()
+{
+	int failed=0;
+	
+	// Parse output format.
+	if(oformat_string.str())
+	{
+		oformat=component_db()->FindImageFormatByName(oformat_string.str());
+		#warning NEED -list-imgfmt TO LIST IMAGE FORMATS. 
+		if(!oformat)
+		{  Error("Image (output) format \"%s\" not recognized.\n",
+			oformat_string.str());  ++failed;  }
+		oformat_string.set(NULL);
+	}
+	
+	if(!oformat)
+	{
+		oformat=component_db()->FindImageFormatByName("png");
+		// PNG must be present: 
+		assert(oformat);
+	}
+	
+	// Parse renderer to use: 
+	rdesc=component_db()->FindRenderDescByName(rdesc_string.str());
+	if(!rdesc)
+	{
+		Error("Unknown render DESC named \"%s\".\n",rdesc_string.str());
+		++failed;
+	}
+	
+	// Check frame pattern: 
+	failed+=_CheckFramePattern("input",&inp_frame_pattern);
+	if(outp_frame_pattern.str())
+	{
+		failed+=_CheckFramePattern("output",&outp_frame_pattern);
+		if(!failed)
+		{
+			outp_frame_pattern.append(".");
+			outp_frame_pattern.append(oformat->file_extension);
+		}
+	}
+	else if(!failed)
+	{
+		// No output pattern. 
+		// Use input pattern without extension: 
+		const char *ip=inp_frame_pattern.str();
+		const char *es=strrchr(ip,'.');
+		if(!es)  es=ip+strlen(ip);
+		outp_frame_pattern.sprintf(0,"%.*s.%s",es-ip,ip,
+			oformat->file_extension);
+	}
+	
+	if(!failed)
+	{
+		// Only reason for this assertion to fail would be alloc failure or 
+		// internal error. 
+		assert(outp_frame_pattern.str());
+	}
+	
+	if(!failed)
+	{
+		Verbose("Local task source: jump=%d; nframes=%d; startframe=%d\n",
+			fjump,nframes,startframe);
+		Verbose("  Renderer: %s (%s driver); output format: %s (%d bpp)\n",
+			rdesc->name.str(),rdesc->dfactory->DriverName(),
+			oformat->name,oformat->bitspp);
+		Verbose("  Frame patterns: input: \"%s\"; output: \"%s\"\n",
+			inp_frame_pattern.str(),outp_frame_pattern.str());
+	}
+	
+	return(failed ? 1 : 0);
+}
+
+
+int TaskSourceFactory_Local::CheckParams()
+{
+	int failed=0;
+	
+	// Check size: 
+	if(size_string.str())
+	{
+		const char *ptr=size_string.str();
+		char *end;
+		int valid=1;
+		width=strtol(ptr,&end,0);
+		if(end<=ptr)  valid=0;
+		ptr=end;
+		if(*ptr=='x' || *ptr==',')  ++ptr;
+		else  valid=0;
+		height=strtol(ptr,&end,0);
+		if(end<=ptr || *end)  valid=0;
+		if(!valid || width<=0 || height<=0)
+		{  Error("Illegal size spec \"%s\".\n",size_string.str());
+			++failed;  }
+	}
+	
+	if(!fjump)
+	{
+		fjump=1;
+		Warning("Illegal frame jump value 0 corrected to 1.\n");
+	}
+	
+	if(nframes<0)
+	{
+		Error("Illegal value for nframes=%d\n",nframes);
+		++failed;
+	}
+	
+	return(failed ? 1 : 0);
+}
+
+
 int TaskSourceFactory_Local::_RegisterParams()
 {
 	if(SetSection("l","loacal task source"))
 	{  return(-1);  }
 	
-	AddParam("pattern","frame pattern (e.g. frame_dir/f%07d.pov)",&frame_pattern);
+	AddParam("fjump|j","frame jump value; use negative values to "
+		"process last frames first",&fjump);
 	AddParam("nframes|n","number of frames to process",&nframes);
+	AddParam("startframe|f0","first frame to process",&startframe);
+	
+	AddParam("size|s","size (WWWxHHH) of created images",&size_string);
+	
+	AddParam("ifpattern","input frame pattern (e.g. f%07d.pov)",
+		&inp_frame_pattern);
+	AddParam("ofpattern","output frame pattern (e.g. f%07d); extension "
+		"added according to output format",
+		&inp_frame_pattern);
+	AddParam("oformat","image output format (must be supported by "
+		"render/filter driver)",&oformat_string);
+	
+	AddParam("renderer|rd","renderer to use (render DESC name)\n",
+		&rdesc_string);
 	
 	return(add_failed ? (-1) : 0);
 }
@@ -60,13 +213,26 @@ int TaskSourceFactory_Local::init(ComponentDataBase *cdb)
 TaskSourceFactory_Local::TaskSourceFactory_Local(
 	ComponentDataBase *cdb,int *failflag) : 
 	TaskSourceFactory("local",cdb,failflag),
-	frame_pattern(failflag)
+	inp_frame_pattern(failflag),
+	outp_frame_pattern(failflag),
+	size_string(failflag),
+	oformat_string(failflag),
+	rdesc_string(failflag)
 {
-	nframes=1;
+	nframes=0;
+	startframe=0;
+	fjump=1;
+	
+	width=320;
+	height=240;
+	
+	oformat=NULL;
 	
 	int failed=0;
 	
-	if(frame_pattern.set("f%07d.pov"))
+	if(inp_frame_pattern.set("f%07d.pov"))
+	{  ++failed;  }
+	if(rdesc_string.set("povray3.1g"))
 	{  ++failed;  }
 	if(_RegisterParams())
 	{  ++failed;  }

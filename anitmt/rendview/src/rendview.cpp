@@ -84,7 +84,7 @@ static int MAIN(int argc,char **argv,char **envp)
 	
 	int fail=0;
 	int will_exit=0;
-	//InitImageFormats(cdb); FIXME: MISSING...
+	fail+=ImageFormat::init(cdb);
 	fail+=TaskDriverFactory::init(cdb);
 	fail+=TaskSourceFactory::init_factories(cdb);
 	
@@ -157,12 +157,12 @@ static int MAIN(int argc,char **argv,char **envp)
 	
 	// Cleanup: 
 	Verbose("Cleanup:");
-	if(taskman)  delete taskman;    Verbose(" [Task]");
-	if(cdb)      delete cdb;        Verbose(" [CDB]");
-	if(parman)   delete parman;     Verbose(" [parameter]");
-	if(procman)  delete procman;    Verbose(" [process]");
-	if(fdman)    delete fdman;      Verbose(" [FD]");
-	Verbose(" OK\n");
+    if(taskman)  Verbose(" [Task");       delete taskman;
+    if(cdb)      Verbose("] [CDB");        delete cdb;
+    if(parman)   Verbose("] [parameter");  delete parman;
+    if(procman)  Verbose("] [process");    delete procman;
+    if(fdman)    Verbose("] [FD");           delete fdman;
+	Verbose("] OK\n");
 	
 	Verbose("Exiting: status=%s\n",fail ? "failure" : "success");
 	return(fail ? 1 : 0);

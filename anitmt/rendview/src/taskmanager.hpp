@@ -60,8 +60,17 @@ class TaskManager :
 		// Number of simultanious jobs (limit and optimum): 
 		int njobs;
 		
-		// Limit for simultanious render and filter jobs: 
-		int maxjobs[_DTLast];
+		struct DTPrm
+		{
+			// Limit for simultanious render and filter jobs: 
+			int maxjobs;
+			// Nice value or NoNiceValSpec
+			int niceval;
+			// Change nice value by +-1 
+			bool nice_jitter;
+			// Execution timeout or -1: 
+			long timeout;
+		} prm[_DTLast];
 		
 		// Number of running tasks: 
 		int running_jobs[_DTLast];
@@ -124,6 +133,9 @@ class TaskManager :
 		int _StartProcessing();   // actually starts things 
 		int _LaunchJobForTask(CompleteTask *ctsk);
 		void _HandleFailedJob(CompleteTask *ctsk);
+		
+		// Do some things with new tasks (set up state & TaskParams): 
+		int _DealWithNewTask(CompleteTask *ctsk);
 		
 		// Initialisation of parameter stuff: 
 		int _SetUpParams();

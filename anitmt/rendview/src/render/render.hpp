@@ -36,7 +36,7 @@ struct RenderTask : public TaskStructBase
 	const RenderDesc *rdesc;  // renderer description (for binpath, required args...)
 	int width;         // width of image to render
 	int height;        // height of image to render
-	const ImageFormat *oformat;  // image output format
+	const ImageFormat *oformat;  // image output format (static data, do NOT delete)
 	
 	_CPP_OPERATORS_FF
 	RenderTask(int *failflag=NULL);

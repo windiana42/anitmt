@@ -19,6 +19,8 @@
 
 #include <assert.h>
 
+#define NoNiceValSpec (-32767)
+
 
 // NOTE: 
 // TaskManager contains a highly non-trivial state machine. 
@@ -233,22 +235,21 @@ int TaskManager::tsnotify(TSNotifyInfo *ni)
 				assert(ni->ctsk);   // otherwise internal error
 				
 				// NOTE: ni->ctsk->state = TaskDone here. Must set up 
-				//       proper value now. 
-				if(ni->ctsk->rt)
-				{  ni->ctsk->state=CompleteTask::ToBeRendered;  }
-				else if(ni->ctsk->ft)
-				{  ni->ctsk->state=CompleteTask::ToBeFiltered;  }
-				else 
+				//       proper value now and set up TaskParams: 
+				int rv=_DealWithNewTask(ni->ctsk);
+				if(rv)
 				{
-					// This is an internal error. Task source may not 
-					// return a task without anything to do (i.e. with 
-					// rt and ft set to NULL). 
-					assert(ni->ctsk->rt || ni->ctsk->ft);
+					// Grmbl...
+					// Something is wrong with the task or allocatio 
+					// failure. 
+					// (Note that task is already queued.)
+					#warning DEAL WITH THIS CASE!!!!
+					Error("Please fix me.\n");
+					assert(0);
 				}
 				
-				// Great. Queue task, see if we want to start a job 
+				// Great. Task queued; now see if we want to start a job 
 				// and go on talking to task source: 
-				tasklist_todo.append(ni->ctsk);
 				_CheckStartTasks();
 				_TS_GetOrDoneTask();
 			}
@@ -491,8 +492,11 @@ void TaskManager::_schedule(TimerInfo *ti)
 		int rv=_StartProcessing();
 		if(rv)
 		{  fdmanager()->Quit((rv==1) ? 0 : 1);  }
-		// If rv==0, tasksource() MAY not be NULL here: 
-		assert(tasksource());
+		else
+		{
+			// If rv==0, tasksource() MAY not be NULL here: 
+			assert(tasksource());
+		}
 		return;
 	}
 	
@@ -642,6 +646,14 @@ int TaskManager::_StartProcessing()
 	#warning fixme: allow for other task sources
 	const char *ts_name="local";
 	TaskSourceFactory *tsf=component_db->FindSourceFactoryByName(ts_name);
+	
+	// Let TaskSourceFactory do final init: 
+	if(tsf->FinalInit())
+	{
+		// Failed; message(s) written. 
+		return(-1);
+	}
+	
 	TaskSource *ts = tsf ? tsf->Create() : NULL;
 	if(!ts)
 	{
@@ -659,13 +671,17 @@ int TaskManager::_StartProcessing()
 	Verbose("Task source (%s) set up successfully.\n",ts_name);
 	
 	// Adjust task limits (if not told otherwise by user): 
-	if(njobs<0)
+	if(njobs<1)
 	{
 		njobs=GetNumberOfCPUs();
 		assert(njobs>=1);
 	}
 	for(int i=0; i<_DTLast; i++)
-	{  if(maxjobs[i]<0)  maxjobs[i]=njobs;  }
+	{
+		if(prm[i].maxjobs<0)  prm[i].maxjobs=njobs;
+		// Convert timeout from seconds to msec: 
+		prm[i].timeout=(prm[i].timeout<0) ? -1 : (prm[i].timeout*1000);
+	}
 	
 	if(todo_thresh_low<1)  // YES: <1, NOT <0
 	{  todo_thresh_low=njobs+1;  }
@@ -684,14 +700,30 @@ int TaskManager::_StartProcessing()
 	}
 	
 	// Write out useful verbose information: 
-	Verbose("Okay, beginning to work: njobs=%d (",njobs);
+	Verbose("Okay, beginning to work: njobs=%d (parallel tasks)\n",njobs);
+	Verbose("  jtype    jmax  nice   timeout  \n");
 	for(int i=0; i<_DTLast; i++)
-	{  Verbose("max-%s-jobs=%d%s",DTypeString(TaskDriverType(i)),maxjobs[i],
-		(i+1==_DTLast) ? ")\n" : "; ");  }
+	{
+		DTPrm *p=&prm[i];
+		Verbose("  %s:  %4d  ",DTypeString(TaskDriverType(i)),p->maxjobs);
+		if(p->niceval==NoNiceValSpec)
+		{  Verbose("  --");  }
+		else
+		{  Verbose("%s%3d%s",p->nice_jitter ? "" : " ",
+			p->niceval,p->nice_jitter ? "±" : "");  }
+		if(p->timeout<0)
+		{  Verbose("        --");  }
+		else
+		{  long x=(p->timeout+500)/1000;
+			Verbose("  %02d:%02d:%02d",x/3600,(x/60)%60,x%60);  }
+		Verbose("\n");
+	}
+	
 	Verbose("  task-thresh: low=%d, high=%d; max-failed-in-seq=",
 		todo_thresh_low,todo_thresh_high);
 	if(max_failed_in_sequence)  Verbose("%d\n",max_failed_in_sequence);
 	else Verbose("OFF\n");
+	
 	starttime.SetCurr();
 	Verbose("  starting at (local): %s\n",starttime.PrintTime(1,1));
 	
@@ -713,24 +745,26 @@ int TaskManager::_LaunchJobForTask(CompleteTask *ctsk)
 	// See which task to launch: 
 	const RF_DescBase *d=NULL;
 	TaskStructBase *tsb=NULL;
-	#warning ********Passing NULL as TaskParams is a VERY BAD IDEA!******************
 	TaskParams *tp=NULL;
 	TaskDriverType dtype=DTNone;
 	switch(ctsk->state)
 	{
 		case CompleteTask::ToBeRendered:
-			tsb=ctsk->rt;  assert(tsb);
-			d=ctsk->rt->rdesc;  assert(d);
+			tsb=ctsk->rt;
+			tp=ctsk->rtp;
+			d=ctsk->rt ? ctsk->rt->rdesc : NULL;
 			dtype=DTRender;
 			break;
 		case CompleteTask::ToBeFiltered:
-			tsb=ctsk->ft;  assert(tsb);
-			d=ctsk->ft->fdesc;  assert(d);
+			tsb=ctsk->ft;
+			tp=ctsk->ftp;
+			d=ctsk->ft ? ctsk->ft->fdesc : NULL;
 			dtype=DTFilter;
 			break;
 		default:  assert(0);  break;
 	}
 	
+	assert(d);
 	assert(d->dfactory);
 	TaskDriver *td=d->dfactory->Create();
 	
@@ -775,7 +809,7 @@ void TaskManager::_CheckStartTasks()
 	int may_start_anything=0;
 	for(int i=0; i<_DTLast; i++)
 	{
-		bool tmp=(running_jobs[i]<maxjobs[i]);
+		bool tmp=(running_jobs[i]<prm[i].maxjobs);
 		may_start[i]=tmp;
 		if(tmp)  ++may_start_anything;
 	}
@@ -997,6 +1031,74 @@ void TaskManager::_HandleFailedJob(CompleteTask *ctsk)
 }
 
 
+int TaskManager::_DealWithNewTask(CompleteTask *ctsk)
+{
+	// First, set up state: 
+	if(ctsk->rt)
+	{  ctsk->state=CompleteTask::ToBeRendered;  }
+	else if(ctsk->ft)
+	{  ctsk->state=CompleteTask::ToBeFiltered;  }
+	else 
+	{
+		// This is an internal error. Task source may not 
+		// return a task without anything to do (i.e. with 
+		// rt and ft set to NULL). 
+		assert(ctsk->rt || ctsk->ft);
+	}
+	
+	// Queue task: 
+	tasklist_todo.append(ctsk);
+	
+	// Then, create TaskParams: 
+	if(ctsk->rt)
+	{
+		ctsk->rtp=NEW<RenderTaskParams>();
+		if(!ctsk->rtp)  return(1);
+		
+	}
+	if(ctsk->ft)
+	{
+		ctsk->ftp=NEW<FilterTaskParams>();
+		if(!ctsk->ftp)  return(1);
+		
+		Error("Cannot yet deal with filter.\n");
+		abort();
+	}
+	
+	// Set up common fields in TaskParams:
+	for(int i=0; i<_DTLast; i++)
+	{
+		TaskParams *tp=NULL;
+		switch(i)
+		{
+			case DTRender:  tp=ctsk->rtp;  break;
+			case DTFilter:  tp=ctsk->ftp;  break;
+			default:  assert(0);  break;
+		}
+		// tp=NULL -> not a `i´ (DTRender/DTFilter) - task. 
+		if(!tp)  continue;
+		
+		DTPrm *p=&prm[i];
+		if(p->niceval!=NoNiceValSpec)
+		{
+			tp->niceval=p->niceval;
+			if(p->nice_jitter)
+			{
+				tp->niceval+=(random()%3-1);
+				// Prevent nice to be <0 if the original value was >=0. 
+				if(p->niceval>=0 && tp->niceval<0)
+				{  tp->niceval=0;  }
+			}
+		}
+		tp->timeout=(p->timeout<0) ? (-1) : p->timeout;
+		// crdir
+		// wdir
+	}
+	
+	return(0);
+}
+
+
 // These are called by the constructor/destructor of TaskDriver: 
 int TaskManager::RegisterTaskDriver(TaskDriver *td)
 {
@@ -1059,6 +1161,7 @@ int TaskManager::CheckParams()
 	return(0);
 }
 
+
 // Return value: 0 -> OK; 1 -> error
 int TaskManager::_SetUpParams()
 {
@@ -1066,8 +1169,10 @@ int TaskManager::_SetUpParams()
 	{  return(1);  }
 	
 	AddParam("njobs","number of simultanious jobs",&njobs);
-	AddParam("max-render-jobs","max number of simultanious render jobs",&maxjobs[DTRender]);
-	AddParam("max-filter-jobs","max number of simultanious filter jobs",&maxjobs[DTFilter]);
+	AddParam("rjobs-max","max number of simultanious render jobs",
+		&prm[DTRender].maxjobs);
+	AddParam("fjobs-max","max number of simultanious filter jobs",
+		&prm[DTFilter].maxjobs);
 	AddParam("max-failed-in-seq|mfis",
 		"max number of jobs to fail in sequence until giving up "
 		"(0 to disable [NOT recommended])",&max_failed_in_sequence);
@@ -1078,6 +1183,18 @@ int TaskManager::_SetUpParams()
 	AddParam("task-thresh-high",
 		"never store more than this number of tasks in the local task queue",
 		&todo_thresh_high);
+	AddParam("rnice","render job nice value",&prm[DTRender].niceval);
+	AddParam("fnice","filter job nice value",&prm[DTFilter].niceval);
+	AddParam("rtimeout","render job time limit (seconds; -1 for none)",
+		&prm[DTRender].timeout);
+	AddParam("ftimeout","filter job time limit (seconds; -1 for none)",
+		&prm[DTFilter].timeout);
+	AddParam("rnice-jitter","render job nice jitter (change nice value "
+		"+/- 1 to prevent jobs from running completely simultaniously; "
+		"no effect unless -rnice is used)",
+		&prm[DTRender].nice_jitter);
+	AddParam("fnice-jitter","filter job nice jitter",
+		&prm[DTFilter].nice_jitter);
 	
 	#warning further params: delay_between_tasks, max_failed_jobs, \
 		dont_fail_on_failed_jobs, launch_if_load_smaller_than, \
@@ -1104,7 +1221,11 @@ TaskManager::TaskManager(ComponentDataBase *cdb,int *failflag) :
 	for(int i=0; i<_DTLast; i++)
 	{
 		running_jobs[i]=0;
-		maxjobs[i]=-1;   // initial value
+		DTPrm *p=&prm[i];
+		p->maxjobs=-1;   // initial value
+		p->niceval=NoNiceValSpec;
+		p->nice_jitter=true;
+		p->timeout=-1;
 	}
 	jobs_failed_in_sequence=0;
 	max_failed_in_sequence=3;   // 0 -> switch off `failed in sequence´-feature

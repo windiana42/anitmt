@@ -234,6 +234,9 @@ int POVRayDriver::_FillOutputFormat(char *dest,int len,const ImageFormat *fmt)
 		case IF_PPM:
 			snprintf(dest,len,"+FP");
 			break;
+		case IF_TGA:
+			snprintf(dest,len,"+FT");
+			break;
 		case IF_None: assert(0);  break;
 		default:  return(+1);
 	}

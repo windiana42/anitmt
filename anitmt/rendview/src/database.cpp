@@ -114,6 +114,22 @@ const RF_DescBase *ComponentDataBase::_FindDescByName(const char *name,
 }
 
 
+const ImageFormat *ComponentDataBase::FindImageFormatByName(const char *name)
+{
+	if(!name)  return(NULL);
+	
+	size_t slen=strlen(name);
+	for(ImageFormat *i=iflist.first(); i; i=i->next)
+	{
+		if(strlen(i->name)!=slen)  continue;
+		if(strcasecmp(i->name,name))  continue;
+		return(i);
+	}
+	
+	return(NULL);
+}
+
+
 int ComponentDataBase::RegisterDriverFactory(
 	TaskDriverFactory *drv,TaskDriverType dtype)
 {
@@ -186,6 +202,22 @@ void ComponentDataBase::UnregisterSourceFactory(TaskSourceFactory *tsf)
 	if(tsources.first()!=tsf && !tsources.prev(tsf))  return;
 	
 	tsources.dequeue(tsf);
+}
+
+
+int ComponentDataBase::RegisterImageFormat(ImageFormat *ifmt)
+{
+	if(!ifmt)  return(0);
+	
+	if(!ifmt->name)
+	{  return(1);  }
+	if(FindImageFormatByName(ifmt->name))
+	{  return(1);  }
+	
+	assert(!iflist.prev(ifmt) && iflist.first()!=ifmt);
+	iflist.append(ifmt);
+	
+	return(0);
 }
 
 
@@ -598,8 +630,13 @@ ComponentDataBase::ComponentDataBase(par::ParameterManager *pman,int *failflag) 
 
 ComponentDataBase::~ComponentDataBase()
 {
+	//Verbose("Cleanup: ");
+	Verbose(".");
+	
 	if(ift) for(int i=0; i<_DTLast; i++)
 	{
+		//Verbose("[%s drivers] ",DTypeString((TaskDriverType)i));
+		Verbose(".");
 		InfoPerType *dti=&ift[i];
 		
 		// Must kill all the driver factories: 
@@ -616,8 +653,18 @@ ComponentDataBase::~ComponentDataBase()
 	ift=NULL;
 	
 	// Must also kill the source factories: 
+	//Verbose("[task sources] ");
+	Verbose(".");
 	while(!tsources.is_empty())
 	{  delete tsources.popfirst();  }
+	
+	// ...and the image formats. 
+	//Verbose("[image formats] ");
+	Verbose(".");
+	while(!iflist.is_empty())
+	{  delete iflist.popfirst();  }
+	
+	//Verbose("OK\n");
 }
 
 

@@ -35,8 +35,9 @@ inline void TaskSource_Local::_Stop0msecTimer()
 
 void TaskSource_Local::_ProcessGetTask(TSNotifyInfo *ni)
 {
-	if(next_frame_no>=p->nframes)
-	{   ni->getstat=GTSNoMoreTasks;  return;  }
+	if( (p->fjump>0 && next_frame_no>=p->nframes+p->startframe) || 
+	    (p->fjump<0 && next_frame_no<p->startframe ) )
+	{  ni->getstat=GTSNoMoreTasks;  return;  }
 	
 	CompleteTask *ctsk=NEW<CompleteTask>();
 	if(!ctsk)
@@ -45,31 +46,27 @@ void TaskSource_Local::_ProcessGetTask(TSNotifyInfo *ni)
 	RenderTask *rt=NEW<RenderTask>();
 	ctsk->rt=rt;
 	
-	rt->rdesc=component_db->FindRenderDescByName("povray3.1g");
-	rt->width=320;
-	rt->height=240;
-	#warning FIXME: 
-static ImageFormat oformat;
-	oformat.fmtid=IF_PNG;  // use IF_PPM here for PPM
-	oformat.bitspp=8;
-	rt->oformat=&oformat;
+	rt->rdesc=p->rdesc;
+	assert(p->rdesc);   // Otherwise FinalInit() should have failed. 
+	rt->width=p->width;
+	rt->height=p->height;
+	rt->oformat=p->oformat;
 	
-	// This is ultra-ugly!! (because of the %d in frame_pattern)
+	// This is ultra-ugly!! (because of the %d in inp_frame_pattern)
 	RefString intmp;
-	intmp.sprintf(0,p->frame_pattern,next_frame_no);
+	intmp.sprintf(0,p->inp_frame_pattern,next_frame_no);
 	rt->infile=NEW2<TaskFile>(TaskFile::FTFrame,TaskFile::IOTRenderInput);
 	rt->infile->SetHDPath(intmp);
 	
 	RefString outtmp;
-	#warning need oformat->FilenameSuffix()
-	outtmp.sprintf(0,"frame-image-%07d.png",next_frame_no);
+	outtmp.sprintf(0,p->outp_frame_pattern,next_frame_no);
 	rt->outfile=NEW2<TaskFile>(TaskFile::FTImage,TaskFile::IOTRenderOutput);
 	rt->outfile->SetHDPath(outtmp);
 	
 	ni->ctsk=ctsk;
 	ni->getstat=GTSGotTask;
 	
-	++next_frame_no;
+	next_frame_no+=p->fjump;
 }
 
 
@@ -198,7 +195,15 @@ TaskSource_Local::TaskSource_Local(TaskSourceFactory_Local *tsf,int *failflag) :
 	connected=0;
 	done_task=NULL;
 	
-	next_frame_no=0;
+	if(p->fjump>0)
+	{  next_frame_no=p->startframe;  }
+	else
+	{
+		// Make sure we stop at start frame: 
+		int jv=-p->fjump;
+		int njumps=(p->nframes+jv-1)/jv - 1;
+		next_frame_no = p->startframe + njumps*jv;
+	}
 	
 	int failed=0;
 	

@@ -36,7 +36,7 @@ struct RF_DescBase : LinkedListBase<RF_DescBase>
 {
 	TaskDriverType dtype;
 	
-	// Description name (for render desc, e.g. povray-3.1g): 
+	// Description name (for render desc, e.g. povray3.1g): 
 	RefString name;
 	
 	// driver factory for the renderer 
@@ -139,6 +139,9 @@ class ComponentDataBase :
 		TaskSourceFactory *FindSourceFactoryByName(const char *name)
 			{  return(_FindSourceFactoryByName(name));  }
 		
+		// Return image format with specified name (not case sensitive): 
+		const ImageFormat *FindImageFormatByName(const char *name);
+		
 		// Used by task drivers to get binary search path (one per 
 		// task driver type). 
 		const RefStrList *GetBinSearchPath(TaskDriverType dtype)
@@ -162,6 +165,12 @@ class ComponentDataBase :
 		// -1 -> allocation failure 
 		int RegisterSourceFactory(TaskSourceFactory *tsf);
 		void UnregisterSourceFactory(TaskSourceFactory *tsf);
+		
+		// Used by image format init routine to initalize image formats. 
+		// There is no unregister function as the formats are deleted by 
+		// the destructor of ComponentDataBase. 
+		// Return value: as usual 
+		int RegisterImageFormat(ImageFormat *ifmt);
 };
 
 #include "imgfmt/imgfmt.hpp"

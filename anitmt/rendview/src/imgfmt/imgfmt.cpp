@@ -3,7 +3,7 @@
  * 
  * Image format virtual interface: implementation. 
  * 
- * Copyright (c) 2001 by Wolfgang Wieser (wwieser@gmx.de) 
+ * Copyright (c) 2001--2002 by Wolfgang Wieser (wwieser@gmx.de) 
  * 
  * This file may be distributed and/or modified under the terms of the 
  * GNU General Public License version 2 as published by the Free Software 
@@ -16,9 +16,11 @@
 
 #include "imgfmt.hpp"
 
+
+
+
 ImageFormat::ImageFormat(int *failflag=NULL)
 {
-	#warning ImageFormat unimplemented...
 	fmtid=IF_None;
 	name=NULL;
 	bitspp=-1;
@@ -26,5 +28,5 @@ ImageFormat::ImageFormat(int *failflag=NULL)
 
 ImageFormat::~ImageFormat()
 {
-
+	
 }

@@ -81,17 +81,17 @@ CompleteTask::CompleteTask(int * /*failflag*/) :
 {
 	state=TaskDone;  // okay. 
 	td=NULL;
-	rt=NULL;
-	ft=NULL;
+	rt=NULL;   ft=NULL;
+	ftp=NULL;  ftp=NULL;
 }
 
 CompleteTask::~CompleteTask()
 {
 	assert(!td);
-	if(rt)
-	{  delete rt;  rt=NULL;  }
-	if(ft)
-	{  delete ft;  ft=NULL;  }
+	if(rt)   {  delete rt;   rt=NULL;   }
+	if(ft)   {  delete ft;   ft=NULL;   }
+	if(rtp)  {  delete rtp;  rtp=NULL;  }
+	if(ftp)  {  delete ftp;  ftp=NULL;  }
 }
 
 

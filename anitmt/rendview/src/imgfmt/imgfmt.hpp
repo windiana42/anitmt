@@ -3,7 +3,7 @@
  * 
  * Image format virtual interface...
  * 
- * Copyright (c) 2001 by Wolfgang Wieser (wwieser@gmx.de) 
+ * Copyright (c) 2001--2002 by Wolfgang Wieser (wwieser@gmx.de) 
  * 
  * This file may be distributed and/or modified under the terms of the 
  * GNU General Public License version 2 as published by the Free Software 
@@ -20,24 +20,33 @@
 #include <hlib/prototypes.h>
 #include <hlib/linkedlist.h>
 
+class ComponentDataBase;
+
 enum ImageFormatID
 {
 	IF_None=0,
 	IF_PNG,
-	IF_PPM
+	IF_PPM,
+	IF_TGA
 };
 
+// Linked list hold by ComponentDataBase. 
 struct ImageFormat : LinkedListBase<ImageFormat>
 {
-	ImageFormatID fmtid;
-	const char *name;   // e.g. "PNG"
-	int bitspp;         // bits per pixel
+	ImageFormatID fmtid;  //                 e.g.     PNG
+	const char *name;     //                 e.g. "png", "png6"
+	int bitspp;           // bits per pixel, e.g. 8,     6
+	const char *file_extension;   //        e.g. "png", "png"
 	
 	// NEED MORE HERE (query/verify routines/depth)
 	
 	_CPP_OPERATORS_FF
 	ImageFormat(int *failflag=NULL);
 	~ImageFormat();
+	
+	// Called om startup to set up list of known image formats at 
+	// component data base. Return value as usuas: 0 -> OK; >0 -> error
+	static int init(ComponentDataBase *cdb);
 };
 
 #endif  /* _RNDV_IMGFMT_IMGFMT_HPP_ */

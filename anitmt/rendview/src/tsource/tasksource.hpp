@@ -48,6 +48,11 @@ struct CompleteTask : LinkedListBase<CompleteTask>
 	RenderTask *rt;   // or NULL 
 	FilterTask *ft;   // or NULL
 	
+	// Allocated by TaskManager and freed by destructor ~CompleteTask():
+	// Set up to be NULL by task source. 
+	RenderTaskParams *rtp;   // or NULL
+	FilterTaskParams *ftp;   // or NULL
+	
 	// FIXME: MISSING: what to do with result files?? [or in TaskFile]
 	
 	_CPP_OPERATORS_FF
