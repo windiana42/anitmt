@@ -42,7 +42,11 @@ namespace anitmt{
 #ifdef __DEBUG__
     std::cout << "place Action!" << std::endl;
 #endif
-    priority_action->place_Action();
+    if( !action_placed )
+    {
+      priority_action->place_Action();
+      action_placed = true;
+    }
     //!!! no more function calls here !!! (may be deleted by place_Action)
   }
 
@@ -60,7 +64,7 @@ namespace anitmt{
   // Construtor/Destructor
 
   Action_Caller::Action_Caller( Basic_Operand &op, Priority_Action *act )
-    : trigger(&op), priority_action( act ) 
+    : trigger(&op), priority_action( act ), action_placed(false)
   {
 #ifdef __DEBUG__
     std::cout << "Action Caller created!" << std::endl;

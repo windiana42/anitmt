@@ -20,21 +20,6 @@
 #include "operand.hpp"
 
 namespace anitmt{
-  // Methods
-  template< class T_A, class T_B, class T_C >
-  void establish_sum_solver( Operand<T_A> &a, Operand<T_A> &b, 
-			     Operand<T_A> &c );
-  template< class T_A, class T_B, class T_C >
-  void establish_product_solver( Operand<T_A> &a, Operand<T_A> &b, 
-				 Operand<T_A> &c );
-  void establish_accel_solver( Operand<values::Scalar> &d, 
-			       Operand<values::Scalar> &t, 
-			       Operand<values::Scalar> &a, 
-			       Operand<values::Scalar> &v0, 
-			       Operand<values::Scalar> &ve );
-}
-
-namespace anitmt{
 
   //*************************************************************************
   // Basic_Solver_for_2_Operands: base class for solvers that can solve each
@@ -48,7 +33,6 @@ namespace anitmt{
     Operand<T_B> &b;
 
     bool just_solving;           // is set while testing result of solved value
-    bool just_solved_a, just_solved_b;
 
     //**********************************
     // Virtual Operand_Listener methods
@@ -79,6 +63,53 @@ namespace anitmt{
   };
 
   //*************************************************************************
+  // Basic_Dual_Solution_Solver_for_2_Operands: 
+  //                              base class for solvers that can solve each
+  //                              of the three operands from the other two
+  //*************************************************************************
+
+  template< class T_A, class T_B >
+  class Basic_Dual_Solution_Solver_for_2_Operands : public Operand_Listener
+  {
+    Operand<T_A> &a;
+    Operand<T_B> &b;
+
+    bool just_solving;           // is set while testing result of solved value
+
+    //**********************************
+    // Virtual Operand_Listener methods
+
+    // has to check the result of the operand with ID as pointer to operand
+    bool is_result_ok( const void *ID, Solve_Run_Info *info ) throw(EX);
+    // tells to use the result calculated by is_result_ok()
+    void use_result( const void *ID, Solve_Run_Info *info ) throw(EX);
+    // disconnect operand
+    void disconnect( const void *ID );
+
+    //*************************************
+    // Virtual methods for concrete solvers
+
+    virtual T_A calc_a1( const T_B &b ) = 0;
+    virtual T_A calc_a2( const T_B &b ) { assert(0); }
+    virtual T_B calc_b1( const T_A &a ) = 0;
+    virtual T_B calc_b2( const T_A &a ) { assert(0); }
+
+    virtual bool is_a_ok( const T_A &a, const T_B &b, bool avail_b ) 
+    { return true; }
+    virtual bool is_b_ok( const T_A &a, const T_B &b, bool avail_a ) 
+    { return true; }
+
+    virtual bool is_a1_calcable( const T_B & ) { return true; }
+    virtual bool is_a2_calcable( const T_B & ) { return false; }
+    virtual bool is_b1_calcable( const T_A & ) { return true; }
+    virtual bool is_b2_calcable( const T_A & ) { return false; }
+
+  public:
+    Basic_Dual_Solution_Solver_for_2_Operands( Operand<T_A> &a, 
+					       Operand<T_B> &b );
+  };
+
+  //*************************************************************************
   // Basic_Solver_for_3_Operands: base class for solvers that can solve each
   //                              of the three operands from the other two
   //*************************************************************************
@@ -91,7 +122,6 @@ namespace anitmt{
     Operand<T_C> &c;
 
     bool just_solving;           // is set while testing result of solved value
-    bool just_solved_a, just_solved_b, just_solved_c;
 
     //**********************************
     // Virtual Operand_Listener methods
@@ -140,7 +170,7 @@ namespace anitmt{
     };
 
   //************************************************
-  // Equal_Solver: solves a = b + c in any direction
+  // Equal_Solver: solves a = b in any direction
   //************************************************
 
   template< class T_A, class T_B >
@@ -155,10 +185,25 @@ namespace anitmt{
   };
 
   // a = b 
-  template< class T_A, class T_B >
-  void establish_equal_solver( Operand<T_A> &a, Operand<T_B> &b )
+  inline void equal_solver( Operand<values::Scalar> &a, 
+			    Operand<values::Scalar> &b )
   {
-    new Equal_Solver<T_A,T_B>( a, b );
+    new Equal_Solver<values::Scalar,values::Scalar>( a, b );
+  }
+  inline void equal_solver( Operand<values::Vector> &a, 
+			    Operand<values::Vector> &b )
+  {
+    new Equal_Solver<values::Vector,values::Vector>( a, b );
+  }
+  inline void equal_solver( Operand<values::Matrix> &a, 
+			    Operand<values::Matrix> &b )
+  {
+    new Equal_Solver<values::Matrix,values::Matrix>( a, b );
+  }
+  inline void equal_solver( Operand<values::String> &a, 
+			    Operand<values::String> &b )
+  {
+    new Equal_Solver<values::String,values::String>( a, b );
   }
 
   //************************************************
@@ -178,24 +223,27 @@ namespace anitmt{
   };
 
   // a = b + c
-  template< class T_A, class T_B, class T_C >
-  void establish_sum_solver( Operand<T_A> &a, Operand<T_B> &b, 
-			     Operand<T_C> &c )
+  inline void sum_solver( Operand<values::Scalar> &a, 
+			  Operand<values::Scalar> &b, 
+			  Operand<values::Scalar> &c )
   {
-    new Sum_Solver<T_A,T_B,T_C>( a, b, c );
+    new Sum_Solver<values::Scalar,values::Scalar,values::Scalar>( a, b, c );
+  }
+
+  inline void sum_solver( Operand<values::Vector> &a, 
+			  Operand<values::Vector> &b, 
+			  Operand<values::Vector> &c )
+  {
+    new Sum_Solver<values::Vector,values::Vector,values::Vector>( a, b, c );
   }
 
   //***************************************************
   // Product_Solver: solves a = b * c in any direction
   //***************************************************
 
-  class Product_Solver : public Basic_Solver_for_3_Operands
-  <values::Scalar, values::Scalar, values::Scalar>
+  template< class T_A, class T_B, class T_C >
+  class Product_Solver : public Basic_Solver_for_3_Operands<T_A,T_B,T_C>
   {
-    typedef values::Scalar T_A;
-    typedef values::Scalar T_B;
-    typedef values::Scalar T_C;
-
     virtual T_A calc_a( const T_B &b, const T_C &c );
     virtual T_B calc_b( const T_A &a, const T_C &c );
     virtual T_C calc_c( const T_A &a, const T_B &b );
@@ -222,39 +270,55 @@ namespace anitmt{
   };
 
   // a = b * c
-  template< class T_A, class T_B, class T_C >
-  void establish_product_solver( Operand<T_A> &a, Operand<T_B> &b, 
-				 Operand<T_C> &c )
+  inline void product_solver( Operand<values::Scalar> &a, 
+			      Operand<values::Scalar> &b, 
+			      Operand<values::Scalar> &c )
   {
-    new Product_Solver( a, b, c );
+    new Product_Solver<values::Scalar,values::Scalar,values::Scalar>(a, b, c);
+  }
+
+  //************************************************
+  // Square_Solver: solves a = b^2 in any direction
+  //************************************************
+
+  template< class T_A, class T_B >
+  class Square_Solver 
+    : public Basic_Dual_Solution_Solver_for_2_Operands<T_A,T_B>
+  {
+    virtual T_A calc_a1( const T_B &b );
+    virtual T_B calc_b1( const T_A &a );
+    virtual T_B calc_b2( const T_A &a );
+    virtual bool is_b2_calcable( const T_A & ) { return true; }
+
+    virtual bool is_a_ok( const T_A &a, const T_B &b, bool avail_b );
+  public:
+    // Square solver a = b
+    Square_Solver( Operand<T_A> &a, Operand<T_B> &b )
+      : Basic_Dual_Solution_Solver_for_2_Operands<T_A,T_B>(a,b) {}
+  };
+
+  // a = b^2
+  inline void square_solver( Operand<values::Scalar> &a, 
+			     Operand<values::Scalar> &b )
+  {
+    new Square_Solver<values::Scalar,values::Scalar>( a, b );
+  }
+
+  inline void square_solver( Operand<values::Scalar> &a, 
+			     Operand<values::Vector> &b )
+  {
+    new Square_Solver<values::Scalar,values::Vector>( a, b );
   }
 
   //*********************************************************
   // Accel_Solver: Solver for a constantly accelerated system
   //*********************************************************
-  /*
-    class Accel_Solver : public Solver{
-    Scalar_Property &d;		// differance
-    Scalar_Property &t;		// duration
-    Scalar_Property &a;		// acceleration
-    Scalar_Property &v0;	// startspeed
-    Scalar_Property &ve;	// endspeed
-    bool s_d, s_t, s_a, s_v0, s_ve; // indicates wheater a property was solved
-				    // while checking a solution
-  public:
-    // Properties call that if they want to validate their results
-    virtual bool check_prop_solution_and_results
-    ( Property *ID, Solve_Run_Info const *info );
 
-    Accel_Solver( Scalar_Property *d, Scalar_Property *t, Scalar_Property *a,
-		  Scalar_Property *v0, Scalar_Property *ve );
-  };
-  */
-  void establish_accel_solver( Operand<values::Scalar> &s, 
-			       Operand<values::Scalar> &t, 
-			       Operand<values::Scalar> &a, 
-			       Operand<values::Scalar> &v0, 
-			       Operand<values::Scalar> &ve );
+  void accel_solver( Operand<values::Scalar> &s, 
+		     Operand<values::Scalar> &t, 
+		     Operand<values::Scalar> &a, 
+		     Operand<values::Scalar> &v0, 
+		     Operand<values::Scalar> &ve );
 
   //***************
   // test function

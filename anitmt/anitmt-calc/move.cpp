@@ -124,18 +124,18 @@ namespace anitmt{
     Operand<values::Scalar> &fps = 
       const_op( values::Scalar(ani->param.fps()) );
 
-    establish_accel_solver( s, t, a, v0, ve );
-    establish_equal_solver( d0, de );
-    establish_equal_solver( u0, ue ); //!!! rot_up not recognized
-    establish_sum_solver( te, t, t0 );
-    establish_sum_solver( te_f, t_f, t0_f );
-    establish_product_solver( t_f,  t,  fps ); // t_f = t * fps 
-    establish_product_solver( t0_f, t0, fps ); // t0_f = t0 * fps 
-    establish_product_solver( te_f, te, fps ); // te_f = te * fps 
+    accel_solver( s, t, a, v0, ve );
+    equal_solver( d0, de );
+    equal_solver( u0, ue ); //!!! rot_up not recognized
+    sum_solver( te, t, t0 );
+    sum_solver( te_f, t_f, t0_f );
+    product_solver( t_f,  t,  fps ); // t_f = t * fps 
+    product_solver( t0_f, t0, fps ); // t0_f = t0 * fps 
+    product_solver( te_f, te, fps ); // te_f = te * fps 
 
     Operand<values::Vector> sdiff; // position difference
-    establish_sum_solver( se, sdiff, s0 );
-    //establish_product_solver( sdiff, d0,  s ); // sdiff = d0 * s 
+    sum_solver( se, sdiff, s0 );
+    //product_solver( sdiff, d0,  s ); // sdiff = d0 * s 
     //!!! d0 has to be 1 in length !!!
 
     

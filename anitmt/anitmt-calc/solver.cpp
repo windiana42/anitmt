@@ -20,118 +20,41 @@
 #include "operator.hpp"
 
 namespace anitmt{
-  //***************************************************
-  // Product_Solver: solves a = b * c in any direction
-  //***************************************************
-
-  Product_Solver::T_A Product_Solver::calc_a( const T_B &b, const T_C &c )
-  {
-    return b * c;
-  }
-  Product_Solver::T_A Product_Solver::calc_b( const T_A &a, const T_C &c )
-  {
-    assert( c != 0 );
-    return a / c;
-  }
-  Product_Solver::T_A Product_Solver::calc_c( const T_A &a, const T_B &b )
-  {
-    assert( b != 0 );
-    return a / b;
-  }
-
-  bool Product_Solver::is_a_ok( const T_A &a, const T_B &b, const T_C &c, 
-				bool avail_b, bool avail_c )
-  {
-    if( a != 0 )
-    {
-      if( avail_b ) if( b == 0 ) return false;
-      if( avail_c ) if( c == 0 ) return false;
-    }
-    else // a == 0
-    {
-      if( avail_b && avail_c ) if( b != 0 && c != 0 ) return false;
-    }
-    return true;
-  }
-  bool Product_Solver::is_b_ok( const T_A &a, const T_B &b, const T_C &c, 
-				bool avail_a, bool avail_c )
-  {
-    if( avail_a )
-    {
-      if( a != 0 )
-      {
-	if( b == 0 ) return false;
-      }
-      else // a == 0
-      {
-	if( avail_c ) if( c != 0 && b != 0 ) return false;
-      }
-    }
-    return true;
-  }
-  bool Product_Solver::is_c_ok( const T_A &a, const T_B &b, const T_C &c, 
-				bool avail_a, bool avail_b )
-  {
-    if( avail_a )
-    {
-      if( a != 0 )
-      {
-	if( c == 0 ) return false;
-      }
-      else // a == 0
-      {
-	if( avail_b ) if( b != 0 && c != 0 ) return false;
-      }
-    }
-    return true;
-  }
-
-  bool Product_Solver::is_b_calcable( const T_A &, const T_C &c )
-  { 
-    return c != 0; 
-  }
-  bool Product_Solver::is_c_calcable( const T_A &, const T_B &b )
-  { 
-    return b != 0; 
-  }
-  
-  bool Product_Solver::is_a_calcable_from_b( const T_B &b )
-  {
-    return b == 0;
-  }
-  bool Product_Solver::is_a_calcable_from_c( const T_C &c )
-  {
-    return c == 0;
-  }
-  
-  Product_Solver::T_A Product_Solver::calc_a_from_b( const T_B &b )
-  {
-    assert( b == 0 );
-    return 0;
-  }
-  Product_Solver::T_A Product_Solver::calc_a_from_c( const T_C &c )
-  {
-    assert( c == 0 );
-    return 0;
-  }
-
-  Product_Solver::Product_Solver
-  ( Operand<T_A> &a, Operand<T_A> &b, Operand<T_A> &c )
-  : Basic_Solver_for_3_Operands<T_A,T_B,T_C>( a, b, c ) {}
-
-
   //*********************************************************
   // Accel_Solver: Solver for a constantly accelerated system
   //*********************************************************
 
-  void establish_accel_solver( Operand<values::Scalar> &s, 
-			       Operand<values::Scalar> &t, 
-			       Operand<values::Scalar> &a, 
-			       Operand<values::Scalar> &v0,
-			       Operand<values::Scalar> &ve )
+  void accel_solver( Operand<values::Scalar> &s, 
+		     Operand<values::Scalar> &t, 
+		     Operand<values::Scalar> &a, 
+		     Operand<values::Scalar> &v0,
+		     Operand<values::Scalar> &ve )
   {
-    s = 0.5 * a * t*t + v0 * t;
-    ve = v0 + a * t;
+    // ve = v0 + a*t
+    Operand<values::Scalar> &at = *new Operand<values::Scalar>();
+    product_solver( at, a, t );	// x = a*t
+    sum_solver( ve, v0, at );	// ve = v0 + x
+
+    //v0 = s/t - 0.5*a*t
+    v0 = s/t - 0.5*a*t;		// this is the only equation without ve
+
+    //s  = 0.5 * (v0+ve) * t
+    Operand<values::Scalar> &v0ve = *new Operand<values::Scalar>();
+    sum_solver( v0ve, v0, ve );	// v0ve = v0 + ve
+    Operand<values::Scalar> &vt = *new Operand<values::Scalar>();
+    product_solver( vt, v0ve, t ); // vt = v0ve * t
+    product_solver( s, const_op(values::Scalar(0.5)), vt ); // s = 0.5 * prod
+    
+    //ve^2 = v0^2 + 2*a*s  
+    Operand<values::Scalar> &ve2 = *new Operand<values::Scalar>();
+    Operand<values::Scalar> &v02 = *new Operand<values::Scalar>();
+    Operand<values::Scalar> &prod = *new Operand<values::Scalar>();
+    Operand<values::Scalar> &as = *new Operand<values::Scalar>();
+    product_solver( as, a, s );	// as = a * s
+    product_solver( prod, const_op(values::Scalar(2)), as );
+    square_solver( ve2, ve );	// ve2 = ve^2
+    square_solver( v02, v0 );	// v02 = v0^2
+    sum_solver( ve2, v02, prod ); // ve2 = ve0 + prod
   }
 
 
@@ -154,7 +77,7 @@ namespace anitmt{
       {
 	cout << "  solve for a: ";
 	Operand<values::Scalar> a,b,c ; 
-	establish_sum_solver( a, b, c );
+	sum_solver( a, b, c );
 	if(!b.set_value( 5 ) )
 	{
 	  cerr << "Error: could not set b!!! Anyway  a="; 
@@ -190,7 +113,7 @@ namespace anitmt{
       {
 	cout << "  solve for b: ";
 	Operand<values::Scalar> a,b,c ; 
-	establish_sum_solver( a, b, c );
+	sum_solver( a, b, c );
 	if(!a.set_value( 12 ) )
 	{
 	  cerr << "Error: could not set a!!! Anyway  b="; 
@@ -226,7 +149,7 @@ namespace anitmt{
       {
 	cout << "  solve for c: ";
 	Operand<values::Scalar> a,b,c ; 
-	establish_sum_solver( a, b, c );
+	sum_solver( a, b, c );
 	if(!a.set_value( 12 ) )
 	{
 	  cerr << "Error: could not set a!!! Anyway  c="; 
@@ -264,7 +187,7 @@ namespace anitmt{
       {
 	cout << "  solve for a: ";
 	Operand<values::Scalar> a,b,c ; 
-	establish_product_solver( a, b, c );
+	product_solver( a, b, c );
 	if(!b.set_value( 5 ) )
 	{
 	  cerr << "Error: could not set b!!! Anyway  a="; 
@@ -300,7 +223,7 @@ namespace anitmt{
       {
 	cout << "  solve for b: ";
 	Operand<values::Scalar> a,b,c ; 
-	establish_product_solver( a, b, c );
+	product_solver( a, b, c );
 	if(!a.set_value( 35 ) )
 	{
 	  cerr << "Error: could not set a!!! Anyway  b="; 
@@ -336,7 +259,7 @@ namespace anitmt{
       {
 	cout << "  solve for c: ";
 	Operand<values::Scalar> a,b,c ; 
-	establish_product_solver( a, b, c );
+	product_solver( a, b, c );
 	if(!a.set_value( 35 ) )
 	{
 	  cerr << "Error: could not set a!!! Anyway  c="; 
@@ -375,7 +298,7 @@ namespace anitmt{
       {
 	cout << "  solve for a: ";
 	Operand<values::Scalar> a,b,c ; 
-	establish_product_solver( a, b, c );
+	product_solver( a, b, c );
 	if(!b.set_value( 0 ) )
 	{
 	  cerr << "Error: could not set b!!! Anyway  a="; 
@@ -423,7 +346,7 @@ namespace anitmt{
       {
 	cout << "  solve for b: ";
 	Operand<values::Scalar> a,b,c ; 
-	establish_product_solver( a, b, c );
+	product_solver( a, b, c );
 	if(!c.set_value( 7 ) )
 	{
 	  cerr << "Error: could not set c!!! Anyway  b="; 
@@ -459,7 +382,7 @@ namespace anitmt{
       {
 	cout << "  solve for c: ";
 	Operand<values::Scalar> a,b,c ; 
-	establish_product_solver( a, b, c );
+	product_solver( a, b, c );
 	if(!b.set_value( 0 ) )
 	{
 	  cerr << "Error: could not set b!!! Anyway  c="; 
@@ -500,7 +423,7 @@ namespace anitmt{
       {
 	cout << "  solve for a: ";
 	Operand<values::Scalar> a,b,c ; 
-	establish_product_solver( a, b, c );
+	product_solver( a, b, c );
 	if(!c.set_value( 7 ) )
 	{
 	  cerr << "Error: could not set c!!! Anyway  a="; 
@@ -536,7 +459,7 @@ namespace anitmt{
       {
 	cout << "  solve for b: ";
 	Operand<values::Scalar> a,b,c ; 
-	establish_product_solver( a, b, c );
+	product_solver( a, b, c );
 	if(!c.set_value( 7 ) )
 	{
 	  cerr << "Error: could not set c!!! Anyway  b="; 
@@ -572,7 +495,7 @@ namespace anitmt{
       {
 	cout << "  solve for c: ";
 	Operand<values::Scalar> a,b,c ; 
-	establish_product_solver( a, b, c );
+	product_solver( a, b, c );
 	if(!b.set_value( 5 ) )
 	{
 	  cerr << "Error: could not set b!!! Anyway  c="; 
@@ -611,7 +534,7 @@ namespace anitmt{
       {
 	cout << "  solve for a: ";
 	Operand<values::Scalar> a,b,c ; 
-	establish_product_solver( a, b, c );
+	product_solver( a, b, c );
 	if(!c.set_value( 7 ) )
 	{
 	  cerr << "Error: could not set c!!! Anyway  a="; 
@@ -647,7 +570,7 @@ namespace anitmt{
       {
 	cout << "  solve for b: ";
 	Operand<values::Scalar> a,b,c ; 
-	establish_product_solver( a, b, c );
+	product_solver( a, b, c );
 	if(!c.set_value( 7 ) )
 	{
 	  cerr << "Error: could not set c!!! Anyway  b="; 
@@ -683,7 +606,7 @@ namespace anitmt{
       {
 	cout << "  solve for c: ";
 	Operand<values::Scalar> a,b,c ; 
-	establish_product_solver( a, b, c );
+	product_solver( a, b, c );
 	if(!b.set_value( 0 ) )
 	{
 	  cerr << "Error: could not set b!!! Anyway  c="; 
@@ -724,8 +647,8 @@ namespace anitmt{
       {
 	cout << "  inserting... ";
 	Operand<values::Scalar> a,b,c,d,sum ; 
-	establish_sum_solver( sum, b, c );     // sum = b + c
-	establish_product_solver( a, sum, d ); // a = sum * d
+	sum_solver( sum, b, c );     // sum = b + c
+	product_solver( a, sum, d ); // a = sum * d
 	if(!c.set_value( 6 ) )
 	{
 	  cerr << "Error: could not set c!!!,"; 
@@ -780,8 +703,8 @@ namespace anitmt{
       {
 	cout << "  inserting... ";
 	Operand<values::Scalar> a,b,c,d,sum ; 
-	establish_sum_solver( sum, b, c );     // sum = b + c
-	establish_product_solver( a, sum, d ); // a = sum * d
+	sum_solver( sum, b, c );     // sum = b + c
+	product_solver( a, sum, d ); // a = sum * d
 	if(!d.set_value( 7 ) )
 	{
 	  cerr << "Error: could not set d!!!,"; 
@@ -836,8 +759,8 @@ namespace anitmt{
       {
 	cout << "  inserting... ";
 	Operand<values::Scalar> a,b,c,d,sum ; 
-	establish_sum_solver( sum, b, c );     // sum = b + c
-	establish_product_solver( a, sum, d ); // a = sum * d
+	sum_solver( sum, b, c );     // sum = b + c
+	product_solver( a, sum, d ); // a = sum * d
 	if(!a.set_value( 77 ) )
 	{
 	  cerr << "Error: could not set a!!! "; 
@@ -892,8 +815,8 @@ namespace anitmt{
       {
 	cout << "  inserting... ";
 	Operand<values::Scalar> a,b,c,d,sum ; 
-	establish_sum_solver( sum, b, c );     // sum = b + c
-	establish_product_solver( a, sum, d ); // a = sum * d
+	sum_solver( sum, b, c );     // sum = b + c
+	product_solver( a, sum, d ); // a = sum * d
 	if(!c.set_value( 6 ) )
 	{
 	  cerr << "Error: could not set c!!!,"; 
@@ -957,8 +880,8 @@ namespace anitmt{
       Operand<values::Scalar> v0; // startspeed
       Operand<values::Scalar> ve; // endspeed
 
-      establish_accel_solver( s, t, a, v0, ve );
-      establish_sum_solver( se, s, s0 );
+      accel_solver( s, t, a, v0, ve );
+      sum_solver( se, s, s0 );
 
       cout << "s0=" << s0 << " s=" << s << " se=" << se << " t=" <<  t 
 	   << " a=" << a << " v0=" << v0 << " ve=" << ve << endl;

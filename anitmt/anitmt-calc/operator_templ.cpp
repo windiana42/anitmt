@@ -34,7 +34,7 @@ namespace anitmt
   ( const void *ID, Solve_Run_Info *info ) throw(EX)
   {
     assert( ID == &operand );
-    just_solved = false;
+    bool just_solved = false;
 
     T_Operand op = operand.get_value( info );
     if( !is_operand_ok( op ) ) 
@@ -54,7 +54,7 @@ namespace anitmt
   ( const void *ID, Solve_Run_Info *info ) throw(EX)
   {
     assert( ID == &operand );
-    if( just_solved )		// if result was just solved 
+    if( result.is_solved_in_try( info ) ) // if result was just solved 
       result.use_test_value( info );
   }
 
@@ -109,7 +109,7 @@ namespace anitmt
   ( const void *ID, Solve_Run_Info *info ) throw(EX)
   {
     assert( ID == &operand );
-    just_solved = false;
+    bool just_solved = false;
 
     const T_Operand &op = operand.get_value( info );
     if( !is_operand_ok( op ) ) 
@@ -117,15 +117,18 @@ namespace anitmt
 
     if( is_operand_enough1( op ) )
     {
+      // change test_id for first test run
       Solve_Run_Info::id_type test1_id = info->new_test_run_id();
+      // start first test run
       just_solved = result.test_set_value( calc_result1(op), info );
-      if( !just_solved )
-	info->remove_test_run_id( test1_id );
-      else
+      if( just_solved )	
         return just_solved;	// return true if solving and test_set succeded
+      else			
+	info->remove_test_run_id( test1_id ); // undo first test run
     }
     if( is_operand_enough2( op ) )
     {
+      // start test run with second solution
       just_solved = result.test_set_value( calc_result2(op), info );
       return just_solved;	// return true if solving and test_set succeded
     }
@@ -139,7 +142,7 @@ namespace anitmt
   ( const void *ID, Solve_Run_Info *info ) throw(EX)
   {
     assert( ID == &operand );
-    if( just_solved )		// if result was just solved 
+    if( result.is_solved_in_try(info) ) // if result was just solved 
       result.use_test_value( info );
   }
 
@@ -213,7 +216,7 @@ namespace anitmt
   bool Basic_Operator_for_2_Operands<T_Result,T_Op1,T_Op2>::is_result_ok
   ( const void *ID, Solve_Run_Info *info ) throw(EX)
   {
-    just_solved = false;	// reset flag
+    bool just_solved = false;	// reset flag
     if( ID == &operand1 )	// is operand1 solved?
     {
       T_Op1 op1 = operand1.get_value( info );	// get value
@@ -275,7 +278,7 @@ namespace anitmt
   ( const void *ID, Solve_Run_Info *info ) throw(EX)
   {
     assert( ID == &operand1 || ID == &operand2 );
-    if( just_solved )		// if result was just solved 
+    if( result.is_solved_in_try( info ) ) // if result was just solved 
       result.use_test_value( info ); // tell result operand to accept value
   }
 

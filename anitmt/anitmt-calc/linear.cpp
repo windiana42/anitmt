@@ -32,13 +32,13 @@ namespace anitmt{
     Operand<values::Scalar> &fps = 
       const_op( values::Scalar(ani->param.fps()) );
 
-    establish_sum_solver( ve, d, v0 ); // ve = d + v0
-    establish_sum_solver( te, t, t0 );
-    establish_sum_solver( te_f, t_f, t0_f );
-    establish_product_solver( d, s, t ); // d = s * t 
-    establish_product_solver( t_f,  t,  fps ); // t_f = t * fps 
-    establish_product_solver( t0_f, t0, fps ); // t0_f = t0 * fps 
-    establish_product_solver( te_f, te, fps ); // te_f = te * fps 
+    sum_solver( ve, d, v0 ); // ve = d + v0
+    sum_solver( te, t, t0 );
+    sum_solver( te_f, t_f, t0_f );
+    product_solver( d, s, t ); // d = s * t 
+    product_solver( t_f,  t,  fps ); // t_f = t * fps 
+    product_solver( t0_f, t0, fps ); // t0_f = t0 * fps 
+    product_solver( te_f, te, fps ); // te_f = te * fps 
 
     //*********************
     // Register Properties

@@ -41,8 +41,6 @@ namespace anitmt
   class Basic_Operator_for_1_Operand 
     : public Operand_Listener 
   {
-    bool just_solved;		// did operator just solve the result
-
     //*** Operand_Listener methods ***
 
     //! has to check the result of the operand with ID as pointer to operand
@@ -90,8 +88,6 @@ namespace anitmt
   class Basic_Dual_Solution_Operator_for_1_Operand 
     : public Operand_Listener 
   {
-    bool just_solved;		// did operator just solve the result
-
     //*** Operand_Listener methods ***
 
     //! has to check the result of the operand with ID as pointer to operand
@@ -146,8 +142,6 @@ namespace anitmt
   class Basic_Operator_for_2_Operands
     : public Operand_Listener
   {
-    bool just_solved;		// did operator just solve the result
-
     //*** Operand_Listener methods ***
 
     //! has to check the result of the operand with ID as pointer to operand

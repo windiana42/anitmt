@@ -80,11 +80,13 @@ namespace anitmt
   // deletes callers and runs do_it()
   void Priority_Action::invoke() {
     // remove callers
+    /*!!!
     callers_type::iterator i;
     for( i = callers.begin(); i != callers.end(); i++ )
-      delete *i;
+       delete *i;
     callers.clear();
-    
+    !!!*/
+
     // do the action
     do_it();
   }
@@ -155,8 +157,8 @@ namespace anitmt
     cout << " beginning" << endl;
     cout << "  s0="<< s0 << " se=" << se << " s=" << s << " t=" <<  t << " a=" << a << " v0=" << v0 << " ve=" << ve << endl;
 
-    establish_accel_solver( s, t, a, v0, ve );
-    establish_sum_solver( se, s, s0 );
+    accel_solver( s, t, a, v0, ve );
+    sum_solver( se, s, s0 );
 
     Priority_System sys;
     

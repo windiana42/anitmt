@@ -34,6 +34,7 @@ namespace anitmt{
   class Action_Caller : public Operand_Listener {
     Basic_Operand *trigger;
     Priority_Action *priority_action;
+    bool action_placed;
 
     // has to check the result of the operand with ID as pointer to operand
     virtual bool is_result_ok( const void *ID, 
