@@ -69,7 +69,7 @@ class ParameterSource :
 		// Alloc a section node and append it to the snlist. 
 		SectionNode *_AppendNewSectionNode(Section *s);
 		// Dequeue and delete a section node (NOT the assigned params!!) 
-		inline void _DequeueDeleteSectionNode(SectionNode *sn);
+		void _DequeueDeleteSectionNode(SectionNode *sn);
 		
 		// Delete and dequeue all param copies in the passed section node: 
 		void _DeleteSectionNodeParams(SectionNode *sn);

@@ -6,7 +6,7 @@
 /**									    **/
 /** EMail:   martintrautmann@gmx.de					    **/
 /**									    **/
-/** License: LGPL - free and without any warranty - read COPYING            **/
+/** License: LLGPL - free and without any warranty - read COPYING           **/
 /**									    **/
 /** Package: AniTMT							    **/
 /**									    **/

@@ -6,7 +6,7 @@
 /**									    **/
 /** EMail:   martintrautmann@gmx.de, wwieser@gmx.de			    **/
 /**									    **/
-/** License: GPL - free and without any warranty - read COPYING             **/
+/** License: LGPL - free and without any warranty - read COPYING            **/
 /**									    **/
 /** Package: AniTMT							    **/
 /**									    **/

@@ -8,7 +8,7 @@
 /** Website: http://www.anitmt.org/      				    **/
 /** EMail:   anitmt@theofel.de						    **/
 /**									    **/
-/** License: GPL - free and without any warranty - read COPYING             **/
+/** License: LGPL - free and without any warranty - read COPYING            **/
 /**									    **/
 /*****************************************************************************/
 

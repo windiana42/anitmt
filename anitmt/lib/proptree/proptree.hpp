@@ -6,7 +6,7 @@
 /**									    **/
 /** EMail:   martintrautmann@gmx.de					    **/
 /**									    **/
-/** License: GPL - free and without any warranty - read COPYING             **/
+/** License: LGPL - free and without any warranty - read COPYING            **/
 /**									    **/
 /** Package: AniTMT							    **/
 /**									    **/
@@ -220,7 +220,12 @@ namespace solve
 				  Operand<T> &src, 
 				  proptree::Prop_Tree_Node   *dest_node,
 				  std::string dest_prop );
-
+  /*
+  //!! implement!
+  template<class T>
+  void equal_solver( Operand<values::Scalar> &a, 
+		     proptree::Property *prop );
+  */
 }
 // force template generation of all used types
 #include "proptree_templ.cpp"

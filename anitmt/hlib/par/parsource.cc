@@ -153,7 +153,7 @@ static const char *_ddsn_warn_blah="parsource.cc:%d: "
 	"destroying SectionNode with params assigned to it!\n";
 #endif
 
-inline void ParameterSource::_DequeueDeleteSectionNode(SectionNode *sn)
+void ParameterSource::_DequeueDeleteSectionNode(SectionNode *sn)
 {
 	if(!sn)  return;
 	#if TESTING

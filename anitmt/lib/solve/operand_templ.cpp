@@ -6,7 +6,7 @@
 /**									    **/
 /** EMail:   martintrautmann@gmx.de					    **/
 /**									    **/
-/** License: GPL - free and without any warranty - read COPYING             **/
+/** License: LGPL - free and without any warranty - read COPYING            **/
 /**									    **/
 /** Package: AniTMT							    **/
 /**									    **/
@@ -51,6 +51,12 @@ namespace solve
       delete this;		// !!! No further commands !!!
   }
 
+  template<class T>
+  Operand<T>& Operand<T>::assign   ( T src ) throw()
+  {
+    set_value( src );
+    return *this;
+  }
   //! connects another operand as a solution source
   template<class T>
   Operand<T>& Operand<T>::assign   ( Operand<T> &src ) throw()

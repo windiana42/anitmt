@@ -6,7 +6,7 @@
 /**									    **/
 /** EMail:   martintrautmann@gmx.de, wwieser@gmx.de			    **/
 /**									    **/
-/** License: GPL - free and without any warranty - read COPYING             **/
+/** License: LGPL - free and without any warranty - read COPYING            **/
 /**									    **/
 /** Package: AniTMT							    **/
 /**									    **/
@@ -106,10 +106,11 @@ int main(int argc, char *argv[], char *envp[])
     "funcgen");  // program name
   // Additional help text what funcgen actually does; do NOT put any 
   // newlines in the text. 
-  #warning Martin, please fix me (easy)
   parmanager.AdditionalHelpText(
-    "funcgen is used to atomatically create ... "
-    "Martin, please add some lines about what funcgen actually does");
+    "funcgen is used to automatically create c++-code from a "
+    "functionality description (.afd). "
+    "It may be used to generate a data tree with calculation facilities"
+  );
   
   FuncgenParameters fgpar(&parmanager);
   

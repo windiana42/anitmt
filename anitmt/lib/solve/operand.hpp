@@ -6,7 +6,7 @@
 /**									    **/
 /** EMail:   martintrautmann@gmx.de					    **/
 /**									    **/
-/** License: GPL - free and without any warranty - read COPYING             **/
+/** License: LGPL - free and without any warranty - read COPYING            **/
 /**									    **/
 /** Package: AniTMT							    **/
 /**									    **/
@@ -181,6 +181,7 @@ namespace solve
 
     //! connects another operand as a solution source
     Operand<T>& assign   ( Operand<T> &src ) throw();
+    Operand<T>& assign   ( T src ) throw();
     Operand<T>& operator=( Operand<T> &src ) throw();
     //! connects another operand as a solution source
     Operand( Operand<T> &src ) throw();
