@@ -347,8 +347,8 @@ int TaskSourceFactory_LDR::_RegisterParams()
 		"to connect to this client; leave away or \"none\" to disable; "
 		"\"prompt\" to prompt for one ",&password);
 	
-	AddParam("servernet","space separated list of hosts or hosts with "
-		"netmasks (e.g. 192.168.1.1/24) to allow as servers.",
+	AddParam("servernet","space separated list of hosts or networks/hosts with "
+		"netmasks (e.g. 192.168.1.0/24 or myhost/24) to allow as servers.",
 		&server_net_str);
 	
 	return(add_failed ? (-1) : 0);
