@@ -195,14 +195,14 @@ namespace solve
   bool establish_Push_Connection( Priority_System *sys, 
 				  Priority_System::level_type level,
 				  Operand<T> &src, 
-				  functionality::Property *dest );
+				  anitmt::Property *dest );
 
   // establishes push connection to operand of foreign tree node
   // ( returnvalue false means: unknown operand )
   template<class T>
   bool establish_Push_Connection( Priority_System *sys, 
 				  Priority_System::level_type level,
-				  functionality::Property *src, 
+				  anitmt::Property *src, 
 				  Operand<T> &dest );
 
 }

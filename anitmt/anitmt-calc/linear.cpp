@@ -47,7 +47,7 @@ namespace anitmt{
 
     solve::sum_solver( ve, d, v0 ); // ve = d + v0
     solve::sum_solver( te, t, t0 );
-    solve::sum_solver( te_f, t_f, t0_f );
+    //solve::sum_solver( te_f, t_f, t0_f );
     solve::product_solver( d, s, t ); // d = s * t 
     solve::product_solver( t_f,  t,  fps ); // t_f = t * fps 
     solve::product_solver( t0_f, t0, fps ); // t0_f = t0 * fps 

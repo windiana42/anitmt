@@ -24,6 +24,7 @@ libanitmt_a_SOURCES= 	error.hpp error.cpp \
 			animation_classes.hpp animation.hpp animation.cpp \
 			scene.hpp scene.cpp \
 			scalar.hpp scalar.cpp linear.hpp linear.cpp \
+			accelerated.hpp accelerated.cpp \
 			object.hpp object.cpp move.hpp move.cpp \
 			save_filled.hpp save_filled.cpp \
 			anitmt.hpp anitmt.cpp
