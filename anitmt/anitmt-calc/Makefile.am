@@ -2,6 +2,7 @@ INCLUDES=-I$(srcdir)/../lib/include/
 SUBDIRS=parser
 bin_PROGRAMS=anitmt-calc
 anitmt_calc_SOURCES = 	error.hpp error.cpp\
+			operand.hpp operand.cpp operand_templ.cpp \
 			property.hpp property_templ.cpp property.cpp \
 			solver.cpp solver.hpp caller.hpp caller.cpp \
 			priority.hpp priority.cpp priority_templ.cpp \
