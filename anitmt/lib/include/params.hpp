@@ -104,10 +104,16 @@ namespace PID
 		_last_double,  //  must be largest double ID 
 	// Type: STRING (first entry must be set to 0)
 		renderer=0,
+		ani_dir,
+		name,		// animation name
+		
 		
 		_last_string,  //  must be largest string ID 
 	// Type: STRINGLIST (first entry must be set to 0)
 		renderargs=0,
+		adl,		// animation description files
+		scene,		// additional static scene files
+		copy,		// needed files to copy
 		
 		_last_stringlist   //  must be largest stringlist ID 
 	};
@@ -350,9 +356,14 @@ class Animation_Parameters : String_Value_Converter
 		
 		// STRING parameters: 
 		AParameter<std::string> renderer()  {  return(par_string[PID::renderer]);  }
+		AParameter<std::string> ani_dir()  {  return(par_string[PID::ani_dir]);  }
+		AParameter<std::string> name()  {  return(par_string[PID::name]);  }
 		
 		// STRING LIST parameters: 
-		AParameter<stringlist> rendeargs()  {  return(par_stringlist[PID::renderargs]);  }
+		AParameter<stringlist> renderargs()  {  return(par_stringlist[PID::renderargs]);  }
+		AParameter<stringlist> adl()  {  return(par_stringlist[PID::adl]);  }
+		AParameter<stringlist> scene()  {  return(par_stringlist[PID::scene]);  }
+		AParameter<stringlist> copy()  {  return(par_stringlist[PID::copy]);  }
 };
 
 // Returns "-" or "--". 

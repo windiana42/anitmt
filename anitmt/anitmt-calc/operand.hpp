@@ -225,6 +225,10 @@ namespace anitmt
     Constant( T val );
   };
 
+  template<class T>
+  inline Operand<T> &const_op( T val )
+  { return *(new Constant<T>(val)); }
+
   //**********************************************************************
   // Store_Operand_to_Operand: stores the value of one operand to another
   //**********************************************************************

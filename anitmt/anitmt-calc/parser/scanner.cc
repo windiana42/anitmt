@@ -386,9 +386,9 @@ goto find_rule; \
 #define yymore() yymore_used_but_not_detected
 #define YY_MORE_ADJ 0
 #define YY_RESTORE_YY_MORE_OFFSET
-#line 1 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/parser/scanner.ll"
+#line 1 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/parser/scanner.ll"
 #define INITIAL 0
-#line 2 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/parser/scanner.ll"
+#line 2 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/parser/scanner.ll"
 #include "support.hpp"
 /* Scanner/Lexer for the anitmt scene description language 
    Copyright Onno Kortmann 
@@ -529,7 +529,7 @@ YY_DECL
 	register char *yy_cp, *yy_bp;
 	register int yy_act;
 
-#line 19 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/parser/scanner.ll"
+#line 19 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/parser/scanner.ll"
 
 
 #line 536 "lex.ADL.cc"
@@ -640,84 +640,84 @@ do_action:	/* This label is used only to access EOF actions. */
 	{ /* beginning of action switch */
 case 1:
 YY_RULE_SETUP
-#line 21 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/parser/scanner.ll"
+#line 21 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/parser/scanner.ll"
 ; /* Comment ... */
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 22 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/parser/scanner.ll"
+#line 22 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/parser/scanner.ll"
 ; /* Whitespace */
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 24 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/parser/scanner.ll"
+#line 24 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/parser/scanner.ll"
 return (OP_SECTION);
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 25 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/parser/scanner.ll"
+#line 25 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/parser/scanner.ll"
 return (CL_SECTION);
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 26 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/parser/scanner.ll"
+#line 26 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/parser/scanner.ll"
 return (SEMICOLON);
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 27 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/parser/scanner.ll"
+#line 27 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/parser/scanner.ll"
 return (PLUS);
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 28 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/parser/scanner.ll"
+#line 28 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/parser/scanner.ll"
 return (MINUS);
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 29 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/parser/scanner.ll"
+#line 29 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/parser/scanner.ll"
 return (ASTERISK);
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 30 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/parser/scanner.ll"
+#line 30 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/parser/scanner.ll"
 return (SLASH);
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 31 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/parser/scanner.ll"
+#line 31 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/parser/scanner.ll"
 return (OP_VECTOR);
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 32 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/parser/scanner.ll"
+#line 32 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/parser/scanner.ll"
 return (CL_VECTOR);
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 33 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/parser/scanner.ll"
+#line 33 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/parser/scanner.ll"
 return (DOT);
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 34 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/parser/scanner.ll"
+#line 34 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/parser/scanner.ll"
 return (COMMA);
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 35 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/parser/scanner.ll"
+#line 35 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/parser/scanner.ll"
 return (N_A);
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 36 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/parser/scanner.ll"
+#line 36 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/parser/scanner.ll"
 {
 	((VADLFlexLexer*)this)->yylval.str=yytext; return (NODE);
 }
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 40 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/parser/scanner.ll"
+#line 40 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/parser/scanner.ll"
 {
 	((VADLFlexLexer*)this)->yylval.str=yytext;
 	return (IDENTIFIER);
@@ -725,7 +725,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 44 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/parser/scanner.ll"
+#line 44 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/parser/scanner.ll"
 {	/*" this hyphen brings the emacs colorizer back into normal mode :)*/
 	((VADLFlexLexer*)this)->yylval.str=string(yytext+1).substr(0, yyleng-2);
 	return (STRING);
@@ -733,24 +733,24 @@ YY_RULE_SETUP
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 48 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/parser/scanner.ll"
+#line 48 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/parser/scanner.ll"
 {
         ((VADLFlexLexer*)this)->yylval.num=atof(yytext);
         return (NUMBER);
 }
 	YY_BREAK
 case YY_STATE_EOF(INITIAL):
-#line 53 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/parser/scanner.ll"
+#line 53 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/parser/scanner.ll"
 return (END_OF_FILE);
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 54 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/parser/scanner.ll"
+#line 54 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/parser/scanner.ll"
 ((VADLFlexLexer*)this)->Warning(string("Invalid character: ")+yytext);
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 57 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/parser/scanner.ll"
+#line 57 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/parser/scanner.ll"
 ECHO;
 	YY_BREAK
 #line 757 "lex.ADL.cc"
@@ -1558,5 +1558,5 @@ int main()
 	return 0;
 	}
 #endif
-#line 57 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/parser/scanner.ll"
+#line 57 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/parser/scanner.ll"
 

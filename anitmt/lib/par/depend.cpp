@@ -39,6 +39,8 @@
 #include "params.hpp"
 #include <string.h>
 
+#include <assert.h>
+
 namespace anitmt
 {
 
@@ -226,6 +228,7 @@ namespace
 			case +1: return("overdetermined");
 			case  2: return("illegal");
 		}
+		assert(0);	// shouldn't reach that
 	}
 	
 	// rv: value returned by TFPars::Calc_All()

@@ -161,7 +161,13 @@ static Parameter_Description<std::string> desc_string[PID::_last_string]=
 {
 	{ PID::renderer,   {"renderer"},
 	  Default<std::string>(),  PAT::Needed, POT::Simple,
-	  "Name of renderer" }
+	  "Name of renderer" },
+	{ PID::name,   {"name"},
+	  Default<std::string>(),  PAT::Needed, POT::Simple,
+	  "Name of Animation" },
+	{ PID::ani_dir,   {"ani_dir"},
+	  Default<std::string>(),  PAT::Needed, POT::Simple,
+	  "Directory where the animation should be placed" }
 };
 
 static Parameter_Description<stringlist> desc_stringlist[PID::_last_stringlist]=
@@ -169,7 +175,16 @@ static Parameter_Description<stringlist> desc_stringlist[PID::_last_stringlist]=
 	{ PID::renderargs, {"renderargs"},
 	  Default<stringlist>(),   PAT::Needed /*PAT::Replace*/, POT::Simple, 
 	  "Arguments to be passed to the renderer. $(width) and $(height) get\n"
-	  "        replaced by the real width/height values ($$ -> $)." }
+	  "        replaced by the real width/height values ($$ -> $)." },
+	{ PID::adl,        {"adl"},
+	  Default<stringlist>(),   PAT::Needed /*PAT::Replace*/, POT::Simple, 
+	  "Animation source files in ADL language" },
+	{ PID::scene,      {"scene"},
+	  Default<stringlist>(),   PAT::Needed /*PAT::Replace*/, POT::Simple, 
+	  "Additional static scene files" },
+	{ PID::copy,       {"copy"},
+	  Default<stringlist>(),   PAT::Needed /*PAT::Replace*/, POT::Simple, 
+	  "Needed files to copy with the animation that were not detected." }
 };
 
 

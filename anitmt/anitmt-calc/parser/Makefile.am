@@ -5,7 +5,7 @@ check_PROGRAMS=			adltest
 
 libadlparser_a_SOURCES=		scanner.ll \
 				support.hpp		support.cpp \
-				parser.hpp		parser.cpp
+				adlparser.hpp		adlparser.cpp
 
 
 adltest_SOURCES=		adltest.cpp

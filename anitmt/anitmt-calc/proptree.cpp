@@ -234,7 +234,7 @@ namespace anitmt{
     cout << "-----------------" << endl;
 
     cout << " Node name initialization..." << endl;
-    anitmt::make_all_nodes_available();
+    make_all_nodes_available();
     
     cout << " Building data hierarchy..." << endl;
     cout << "  ani dummy_name" << endl;

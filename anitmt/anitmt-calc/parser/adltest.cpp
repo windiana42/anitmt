@@ -2,12 +2,10 @@
 /* Copyright '01 Onno Kortmann */
 /* License: GNU GPL */
 
-#define yyFlexLexer ADLFlexLexer
-#include <FlexLexer.h>
 #include <nodes.hpp>
 #include <save_filled.hpp>
-#include "support.hpp"
-#include "parser.hpp"
+
+#include "adlparser.hpp"
 
 using namespace anitmt;
 

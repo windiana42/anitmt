@@ -6,6 +6,7 @@
 // FIXME: Find a better way to handle this flex include stuff!
 #define yyFlexLexer ADLFlexLexer
 #include <FlexLexer.h>
+
 #include "support.hpp"
 //-----------------------------------------------------------------------------
 struct TokenTableEntry {int index; char *desc;};

@@ -14,6 +14,8 @@
 
 #include "move.hpp"
 
+#include "animation.hpp"
+
 namespace anitmt{
 
 
@@ -109,12 +111,15 @@ namespace anitmt{
   Obj_Move_Straight::Obj_Move_Straight( std::string name, Animation *ani ) 
     : Prop_Tree_Node( type_name, name, ani ) 
   {
+    Operand<values::Scalar> &fps = 
+      const_op( values::Scalar(ani->param.fps()) );
+
     establish_accel_solver( s, t, a, v0, ve );
     establish_sum_solver( te, t, t0 );
     establish_sum_solver( te_f, t_f, t0_f );
-    //establish_product_solver( t_f, t, ?FPS? ); // t_f = t * fps 
-    //establish_product_solver( t0_f, t0, ?FPS? ); // t0_f = t0 * fps 
-    //establish_product_solver( te_f, te, ?FPS? ); // te_f = te * fps 
+    establish_product_solver( t_f,  t,  fps ); // t_f = t * fps 
+    establish_product_solver( t0_f, t0, fps ); // t0_f = t0 * fps 
+    establish_product_solver( te_f, te, fps ); // te_f = te * fps 
     
     add_property( "startpos", &s0 );
     add_property( "startpos", &s0 );
