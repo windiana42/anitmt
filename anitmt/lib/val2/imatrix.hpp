@@ -21,7 +21,7 @@
  * 
  * This program is distributed in the hope that it will be 
  * useful, but WITHOUT ANY WARRANTY; without even the 
- * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * implied warranty of MERCHANTABILITY or FITNESS _mFOR A PARTICULAR
  * PURPOSE.
  * 
  * See the GNU General Public License for details.
@@ -42,10 +42,10 @@
 //       here (gcc -funroll-loops). 
 
 // Ugly macros increase readability and reduce amount of source. 
-#define FOR(_c_,_r_)  \
+#define _mFOR(_c_,_r_)  \
 	for(int _c_=0; _c_<C; _c_++) \
 		for(int _r_=0; _r_<R; _r_++)
-#define FORN(_c_,_r_)  \
+#define _mFORN(_c_,_r_)  \
 	for(int _c_=0; _c_<N; _c_++) \
 		for(int _r_=0; _r_<N; _r_++)
 
@@ -90,7 +90,7 @@ template<int R> class matrix_column
 		
 		// Returns the value indexed with r in the column represented 
 		// by *this. 
-		// NO RANGE CHECK IS PERFORMED ON r. 
+		// NO RANGE CHECK IS PER_mFORMED ON r. 
 		double operator[](int r) const  {  return(x[r]);  }
 };
 
@@ -114,29 +114,29 @@ template<int C,int R> class matrix
 		//   1 0 0 
 		//   0 1 0
 		//   0 0 1
-		matrix(int)  {  FOR(c,r)  x[c][r] = (c==r) ? 1.0 : 0.0;  }
+		matrix(int)  {  _mFOR(c,r)  x[c][r] = (c==r) ? 1.0 : 0.0;  }
 		// Copy-constructor: 
-		matrix(const matrix<C,R> &m)  {  FOR(c,r)  x[c][r]=m.x[c][r];  }
+		matrix(const matrix<C,R> &m)  {  _mFOR(c,r)  x[c][r]=m.x[c][r];  }
 		
 		// Assignment operator: 
 		matrix<C,R> &operator=(const matrix<C,R> &m)
-			{  FOR(c,r) x[c][r]=m.x[c][r];  return(*this);  }
+			{  _mFOR(c,r) x[c][r]=m.x[c][r];  return(*this);  }
 		
 		// Set this to a null-matrix / to a identity-matrix. 
-		void set_null()   {  FOR(c,r)  x[c][r]=0.0;  }
-		void set_ident()  {  FOR(c,r)  x[c][r] = (c==r) ? 1.0 : 0.0;  }
+		void set_null()   {  _mFOR(c,r)  x[c][r]=0.0;  }
+		void set_ident()  {  _mFOR(c,r)  x[c][r] = (c==r) ? 1.0 : 0.0;  }
 		
 		// Get matrix_column indexed c: 
 		// Do not use matrix_column in your code; only use its 
 		// operator[] to be able to access any element of the matrix: 
 		//   matrix<3,3> mat;
 		//   double val = mat[c][r];
-		// NO RANGE CHECK IS PERFORMED ON c. 
+		// NO RANGE CHECK IS PER_mFORMED ON c. 
 		matrix_column<R> operator[](int c)
 			{  return(matrix_column<R>(x[c]));  }
 		
 		// Set an element of the matrix: 
-		// NO RANGE CHECK IS PERFORMED ON c,r. 
+		// NO RANGE CHECK IS PER_mFORMED ON c,r. 
 		matrix<C,R> &operator()(int c,int r,double val)
 			{  x[c][r]=val;  return(*this); }
 		
@@ -145,17 +145,17 @@ template<int C,int R> class matrix
 		/* as they overwrite the content of *this:                    */
 		
 		matrix<C,R> &mul(const matrix<C,R> &a,double b)
-			{            FOR(c,r)  x[c][r]=a.x[c][r]*b;  return(*this);  }
+			{            _mFOR(c,r)  x[c][r]=a.x[c][r]*b;  return(*this);  }
 		matrix<C,R> &div(const matrix<C,R> &a,double b)
-			{  b=1.0/b;  FOR(c,r)  x[c][r]=a.x[c][r]*b;  return(*this);  }
+			{  b=1.0/b;  _mFOR(c,r)  x[c][r]=a.x[c][r]*b;  return(*this);  }
 		
 		matrix<C,R> &add(const matrix<C,R> &a,const matrix<C,R> &b)
-			{  FOR(c,r)  x[c][r]=a.x[c][r]+b.x[c][r];  return(*this);  }
+			{  _mFOR(c,r)  x[c][r]=a.x[c][r]+b.x[c][r];  return(*this);  }
 		matrix<C,R> &sub(const matrix<C,R> &a,const matrix<C,R> &b)
-			{  FOR(c,r)  x[c][r]=a.x[c][r]-b.x[c][r];  return(*this);  }
+			{  _mFOR(c,r)  x[c][r]=a.x[c][r]-b.x[c][r];  return(*this);  }
 		
 		matrix<C,R> &neg(const matrix<C,R> &a)
-			{  FOR(c,r)  x[c][r]=-a.x[c][r];  return(*this);  }
+			{  _mFOR(c,r)  x[c][r]=-a.x[c][r];  return(*this);  }
 		
 		// Inverts the matrix m and stores the inverted matrix in *this. 
 		// NOTE: Only quadratic matrices may be inverted; if C!=R, 
@@ -170,17 +170,17 @@ template<int C,int R> class matrix
 		/* with the result:                                           */
 		
 		matrix<C,R> &mul(double b)
-			{            FOR(c,r)  x[c][r]*=b;  return(*this);  }
+			{            _mFOR(c,r)  x[c][r]*=b;  return(*this);  }
 		matrix<C,R> &div(double b)
-			{  b=1.0/b;  FOR(c,r)  x[c][r]*=b;  return(*this);  }
+			{  b=1.0/b;  _mFOR(c,r)  x[c][r]*=b;  return(*this);  }
 		
 		matrix<C,R> &add(const matrix<C,R> &b)
-			{  FOR(c,r)  x[c][r]+=b.x[c][r];  return(*this);  }
+			{  _mFOR(c,r)  x[c][r]+=b.x[c][r];  return(*this);  }
 		matrix<C,R> &sub(const matrix<C,R> &b)
-			{  FOR(c,r)  x[c][r]-=b.x[c][r];  return(*this);  }
+			{  _mFOR(c,r)  x[c][r]-=b.x[c][r];  return(*this);  }
 		
 		matrix<C,R> &neg()
-			{  FOR(c,r)  x[c][r]*=-1.0;  return(*this);  }
+			{  _mFOR(c,r)  x[c][r]*=-1.0;  return(*this);  }
 		
 		// NOTE: This function will throw EX_Matrix_Illegal_Mult, if C!=R. 
 		// There is also a more general multiplication function available; 
@@ -205,15 +205,15 @@ template<int C,int R> class matrix
 		// Returns 1, if a is equal to *this (or each component pair does not 
 		// differ more than epsilon). 
 		int compare_to(const matrix<C,R> &a,double epsilon) const 
-			{  FOR(c,r)  if(fabs(x[c][r]-a.x[c][r])>epsilon) return(0);  return(1);  }
+			{  _mFOR(c,r)  if(fabs(x[c][r]-a.x[c][r])>epsilon) return(0);  return(1);  }
 		
 		// Returns 1, if this is a null-matrix (no component > epsilon). 
 		int is_null(double epsilon) const 
-			{  FOR(c,r)  if(fabs(x[c][r])>epsilon) return(0);  return(1);  }
+			{  _mFOR(c,r)  if(fabs(x[c][r])>epsilon) return(0);  return(1);  }
 		
 		// Returns 1, if this is an identity-matrix. 
 		int is_ident(double epsilon) const  {
-			FOR(c,r)
+			_mFOR(c,r)
 				if(fabs((c==r) ? (x[c][r]-1.0) : (x[c][r])) > epsilon)
 					return(0);
 			return(1);
@@ -232,7 +232,7 @@ template<int C,int R> inline
 
 }  /* end of namespace */
 
-#undef FOR
-#undef FORN
+#undef _mFOR
+#undef _mFORN
 
 #endif  /* _NS_internal_vect_imatrix_HPP_  */

@@ -22,7 +22,7 @@
  * 
  * This program is distributed in the hope that it will be 
  * useful, but WITHOUT ANY WARRANTY; without even the 
- * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * implied warranty of MERCHANTABILITY or FITNESS _vFOR A PARTICULAR
  * PURPOSE.
  * 
  * See the GNU General Public License for details.
@@ -45,9 +45,9 @@
 
 
 // Ugly macros increase readability and reduce amount of source. 
-#define FOR(_i_)  for(int _i_=0; _i_<N; _i_++)
-#define FORP(_p_) for(double *_p_=x; _p_<&x[N]; _p_++)
-#define FORCP(_p_) for(const double *_p_=x; _p_<&x[N]; _p_++)
+#define _vFOR(_i_)  for(int _i_=0; _i_<N; _i_++)
+#define _vFORP(_p_) for(double *_p_=x; _p_<&x[N]; _p_++)
+#define _vFORCP(_p_) for(const double *_p_=x; _p_<&x[N]; _p_++)
 
 namespace vect
 {
@@ -74,27 +74,27 @@ template<int N> class vector
 		// Constructor which generates an uninitialized vector: 
 		vector()     { }
 		// Constructor for a null-vector: 
-		vector(int)  {  FORP(p)  *p=0.0;  }
+		vector(int)  {  _vFORP(p)  *p=0.0;  }
 		// Copy-constructor: 
-		vector(const vector<N> &v)  {  FOR(i) x[i]=v.x[i];  }
+		vector(const vector<N> &v)  {  _vFOR(i) x[i]=v.x[i];  }
 		
 		// Assignment operator: 
 		vector<N> &operator=(const vector<N> &v)
-			{  FOR(i) x[i]=v.x[i];  return(*this);  }
+			{  _vFOR(i) x[i]=v.x[i];  return(*this);  }
 		
 		// This returns the i-th row value of the vector. 
 		// For a 3d-vector, i must be in range 0...2. 
-		// FOR SPEED INCREASE, NO RANGE CHECK IS PERFORMED ON i. 
+		// _vFOR SPEED INCREASE, NO RANGE CHECK IS PER_vFORMED ON i. 
 		double operator[](int i)  const  {  return(x[i]);  }
 		
 		// This sets the i-th row value of the vector. 
-		// FOR SPEED INCREASE, NO RANGE CHECK IS PERFORMED ON i. 
+		// _vFOR SPEED INCREASE, NO RANGE CHECK IS PER_vFORMED ON i. 
 		// Return value is *this. 
 		vector<N> &operator()(int i,double a)  {  x[i]=a;  return(*this);  }
 		
 		// Functions that return the length of the vector (abs()) and 
 		// the square of the length (abs2(); faster as no sqrt() is needed). 
-		double abs2()  const  {  double s=0.0;  FORCP(p) s+=(*p)*(*p);  return(s);  }
+		double abs2()  const  {  double s=0.0;  _vFORCP(p) s+=(*p)*(*p);  return(s);  }
 		double abs()   const  {  return(sqrt(abs2()));  }
 		
 		/****************************************************************/
@@ -103,13 +103,13 @@ template<int N> class vector
 		
 		// Basic operations: 
 		vector<N> &add(const vector<N> &a,const vector<N> &b)
-			{  FOR(i)  x[i]=a.x[i]+b.x[i];  return(*this);  }
+			{  _vFOR(i)  x[i]=a.x[i]+b.x[i];  return(*this);  }
 		vector<N> &sub(const vector<N> &a,const vector<N> &b)
-			{  FOR(i)  x[i]=a.x[i]-b.x[i];  return(*this);  }
+			{  _vFOR(i)  x[i]=a.x[i]-b.x[i];  return(*this);  }
 		vector<N> &mul(const vector<N> &a,double b)
-			{  FOR(i)  x[i]=a.x[i]*b;  return(*this);  }
+			{  _vFOR(i)  x[i]=a.x[i]*b;  return(*this);  }
 		vector<N> &div(const vector<N> &a,double b)
-			{  b=1.0/b;  FOR(i)  x[i]=a.x[i]*b;  return(*this);  }
+			{  b=1.0/b;  _vFOR(i)  x[i]=a.x[i]*b;  return(*this);  }
 		
 		vector<N> &vector_mul(const vector<N> &a,const vector<N> &b);
 		
@@ -120,40 +120,40 @@ template<int N> class vector
 		
 		// Changes the sign of every element:
 		vector<N> &neg(const vector<N> &a)
-			{  FOR(i)  x[i]=-a.x[i];  return(*this);  }
+			{  _vFOR(i)  x[i]=-a.x[i];  return(*this);  }
 		
 		// Translation (copies vector, adds value delta to component 
 		// with index n). 
 		vector<N> &trans(const vector<N> &v,double delta,int n)
-			{  FOR(i)  x[i]=v.x[i];  x[n]+=delta;  return(*this);  }
+			{  _vFOR(i)  x[i]=v.x[i];  x[n]+=delta;  return(*this);  }
 		
 		// Scale vector (copies vector, then multiplies value f to 
 		// component with index n). 
 		vector<N> &scale(const vector<N> &v,double f,int n)
-			{  FOR(i)  x[i]=v.x[i];  x[n]*=f;  return(*this);  }
+			{  _vFOR(i)  x[i]=v.x[i];  x[n]*=f;  return(*this);  }
 		
 		// Mirror functions; just swaps the sign of the n-th component. 
-		// NO RANGE CHECK IS PERFORMED ON n. 
+		// NO RANGE CHECK IS PER_vFORMED ON n. 
 		vector<N> &mirror(const vector<N> &v,int n)
-			{  FOR(i)  x[i]=v.x[i];  x[n]=-v.x[n];  return(*this);  }
+			{  _vFOR(i)  x[i]=v.x[i];  x[n]=-v.x[n];  return(*this);  }
 		
 		/****************************************************************/
 		/* Functions taking *this as argument a and overwriting *this   */
 		/* with the result:                                             */
 		vector<N> &add(const vector<N> &b)
-			{  FOR(i)  x[i]+=b.x[i];  return(*this);  }
+			{  _vFOR(i)  x[i]+=b.x[i];  return(*this);  }
 		vector<N> &sub(const vector<N> &b)
-			{  FOR(i)  x[i]-=b.x[i];  return(*this);  }
+			{  _vFOR(i)  x[i]-=b.x[i];  return(*this);  }
 		vector<N> &mul(double b)
-			{  FORP(p)  (*p)*=b;  return(*this);  }
+			{  _vFORP(p)  (*p)*=b;  return(*this);  }
 		vector<N> &div(double b)
-			{  b=1.0/b;  FORP(p)  (*p)*=b;  return(*this);  }
+			{  b=1.0/b;  _vFORP(p)  (*p)*=b;  return(*this);  }
 		vector<N> &normalize()
 			{  return(div(abs()));  }
 		
 		// Changes the sign of every element:
 		vector<N> &neg()
-			{  FORP(p)  *p=-(*p);  return(*this);  }
+			{  _vFORP(p)  *p=-(*p);  return(*this);  }
 		
 		// Translation (adds value delta to component with index n). 
 		vector<N> &trans(double delta,int n)
@@ -164,7 +164,7 @@ template<int N> class vector
 			{  x[n]*=f;  return(*this);  }
 		
 		// Mirror functions; just swaps the sign of the n-th component. 
-		// NO RANGE CHECK IS PERFORMED ON n. 
+		// NO RANGE CHECK IS PER_vFORMED ON n. 
 		vector<N> &mirror(int n)
 			{  x[n]=-x[n];  return(*this);  }
 		
@@ -175,16 +175,16 @@ template<int N> class vector
 		// Returns 1, if a is equal to *this (or each component pair does not 
 		// differ more than epsilon). 
 		int compare_to(const vector<N> &a,double epsilon) const 
-			{  FOR(i)  if(fabs(x[i]-a.x[i])>epsilon) return(0);  return(1);  }
+			{  _vFOR(i)  if(fabs(x[i]-a.x[i])>epsilon) return(0);  return(1);  }
 		
 		// Returns 1, if this is a null-vector (no component > epsilon). 
 		int is_null(double epsilon) const 
-			{  FORCP(p)  if(fabs(*p)>epsilon) return(0);  return(1);  }
+			{  _vFORCP(p)  if(fabs(*p)>epsilon) return(0);  return(1);  }
 };
 
 // Scalar multiplication of two vectors. 
 template<int N> inline double scalar_mul(const vector<N> &a,const vector<N> &b)
-{  double r=0.0;  FOR(i) r+=a[i]*b[i];  return(r);  }
+{  double r=0.0;  _vFOR(i) r+=a[i]*b[i];  return(r);  }
 
 // Calculates the angle between the two specified vectors. 
 // The returned value is in range 0...PI. 
@@ -205,7 +205,7 @@ template<int N> inline std::ostream& operator<<(std::ostream &s,const vector<N> 
 
 }  /* end of namespace */
 
-#undef FOR
-#undef FORP
+#undef _vFOR
+#undef _vFORP
 
 #endif  /* __vect_vector_hpp__ */
