@@ -173,6 +173,9 @@ static int MAIN(int argc,char **argv,char **envp)
 	// NOW IT IS TIME TO REALLY DO THINGS...
 	if(!fail && !will_exit) do {
 		
+		// Greeting banner...
+		fprintf(stdout,"** This is AniVision-%s **\n",VERSION);
+		// ...and here we go. 
 		fail=avmaster->Run();
 		
 	} while(0);
@@ -205,7 +208,6 @@ static void fpe_handler(int)
 int main(int argc,char **argv,char **envp)
 {
 	prg_name=GetPrgName(argv[0]);
-	fprintf(stdout,"** This is AniVision-%s **\n",VERSION);
 	
 	// Make sure allocation failures get fatal: 
 	lmalloc_failure_handler=&LMallocFailureHandler;

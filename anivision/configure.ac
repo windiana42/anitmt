@@ -103,6 +103,64 @@ fi
 CC="$($hlibdir/HConfigVars CC)"
 CXX="$($hlibdir/HConfigVars CXX)"
 
+# See if we can find anitmt: 
+opt_anitmt_build_dir=""
+opt_anitmt_src_dir=""
+AC_ARG_WITH(anitmt-build,AC_HELP_STRING([--with-anitmt-build],
+	[path to aniTMT build directory]),
+	[if test "$withval" = "no" ; then 
+		opt_anitmt_build_dir=""
+	elif test "$withval" != "yes"; then
+		opt_anitmt_build_dir="$withval" 
+	fi ])
+AC_ARG_WITH(anitmt-src,AC_HELP_STRING([--with-anitmt-src],
+	[path to aniTMT src directory]),
+	[if test "$withval" = "no" ; then 
+		opt_anitmt_src_dir=""
+	elif test "$withval" != "yes"; then
+		opt_anitmt_src_dir="$withval" 
+	fi ])
+AC_MSG_CHECKING([for anitmt])
+anitmt_build_dir=""
+# (build)
+checkdirs="./anitmt ./anitmt-* ../anitmt ../anitmt-*"
+if test "x$opt_anitmt_build_dir" != "x" ; then
+	checkdirs="$opt_anitmt_build_dir $opt_anitmt_build_dir/anitmt $opt_anitmt_build_dir/.."
+fi
+for i in $checkdirs ; do
+  test -e "$i/anitmt-calc/functionality/libfunctionality.a" || continue
+  anitmt_build_dir="$i" ; break
+done
+if test "x$anitmt_build_dir" = "x" ; then
+	AC_MSG_RESULT([failed])
+	AC_MSG_ERROR([Unable to find aniTMT build dir. Giving up.])
+fi
+# (source)
+anitmt_src_dir=""
+checkdirs="$anitmt_build_dir ./anitmt ./anitmt-* ../anitmt ../anitmt-*"
+if test "x$opt_anitmt_src_dir" != "x" ; then
+	checkdirs="$opt_anitmt_src_dir $opt_anitmt_src_dir/anitmt $opt_anitmt_src_dir/.."
+fi
+for i in $checkdirs ; do
+  test -e "$i/anitmt-calc/functionality/scalar.afd" || continue
+  anitmt_src_dir="$i" ; break
+done
+if test "x$anitmt_src_dir" = "x" ; then
+	AC_MSG_RESULT([failed])
+	AC_MSG_ERROR([Unable to find aniTMT src dir. Giving up.])
+else
+	AC_MSG_RESULT([src=$anitmt_src_dir, build=$anitmt_build_dir])
+fi
+
+if test "$anitmt_src_dir" != "./anitmt-src" -a "$anitmt_src_dir" != "anitmt-src" ; then
+	test -e "anitmt-src" && rm "anitmt-src"
+	ln -s "$anitmt_src_dir" "anitmt-src"
+fi
+if test "$anitmt_build_dir" != "./anitmt-build" -a "$anitmt_build_dir" != "anitmt-build" ; then
+	test -e "anitmt-build" && rm "anitmt-build"
+	ln -s "$anitmt_build_dir" "anitmt-build"
+fi
+
 # Checks for header files. HLIB already does a lot of these checks, some 
 # are repeated here. 
 AC_HEADER_STDC

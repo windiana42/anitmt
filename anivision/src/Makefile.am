@@ -29,14 +29,14 @@ anivision_LDADD = \
 	numerics/libnumerics.a \
 	$(top_builddir)/hlib/libhlib.a \
 	\
-	/home/wolfgang/projsrc/aniTMT/cvs-build/anitmt-calc/libanitmt.a \
-	/home/wolfgang/projsrc/aniTMT/cvs-build/anitmt-calc/functionality/libfunctionality.a \
-	/home/wolfgang/projsrc/aniTMT/cvs-build/lib/message/libmessage.a \
-	/home/wolfgang/projsrc/aniTMT/cvs-build/lib/param/libparam.a \
-	/home/wolfgang/projsrc/aniTMT/cvs-build/lib/par/libpar.a \
-	/home/wolfgang/projsrc/aniTMT/cvs-build/lib/val/libval.a \
-	/home/wolfgang/projsrc/aniTMT/cvs-build/lib/solve/libsolve.a \
-	/home/wolfgang/projsrc/aniTMT/cvs-build/lib/proptree/libproptree.a \
-	/home/wolfgang/projsrc/aniTMT/cvs-build/lib/utl/libutl.a \
+	$(top_builddir)/anitmt-build/anitmt-calc/libanitmt.a \
+	$(top_builddir)/anitmt-build/anitmt-calc/functionality/libfunctionality.a \
+	$(top_builddir)/anitmt-build/lib/message/libmessage.a \
+	$(top_builddir)/anitmt-build/lib/param/libparam.a \
+	$(top_builddir)/anitmt-build/lib/par/libpar.a \
+	$(top_builddir)/anitmt-build/lib/val/libval.a \
+	$(top_builddir)/anitmt-build/lib/solve/libsolve.a \
+	$(top_builddir)/anitmt-build/lib/proptree/libproptree.a \
+	$(top_builddir)/anitmt-build/lib/utl/libutl.a \
 	\
 	-lstdc++ 

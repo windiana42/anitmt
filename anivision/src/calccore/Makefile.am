@@ -1,9 +1,9 @@
 INCLUDES = -I$(top_srcdir)/src/ -I$(top_builddir)/hlib/include -I$(top_builddir)/src \
-	-I/home/wolfgang/projsrc/aniTMT/cvs-anitmt/lib \
-	-I/home/wolfgang/projsrc/aniTMT/cvs-anitmt/anitmt-calc/functionality \
-	-I/home/wolfgang/projsrc/aniTMT/cvs-build/anitmt-calc/functionality \
-	-I/home/wolfgang/projsrc/aniTMT/cvs-anitmt/anitmt-calc \
-	-I/home/wolfgang/projsrc/aniTMT/cvs-build/anitmt-calc
+	-I$(top_builddir)/anitmt-src/lib \
+	-I$(top_builddir)/anitmt-src/anitmt-calc/functionality \
+	-I$(top_builddir)/anitmt-build/anitmt-calc/functionality \
+	-I$(top_builddir)/anitmt-src/anitmt-calc \
+	-I$(top_builddir)/anitmt-build/anitmt-calc
 
 noinst_LIBRARIES = libcalccore.a
 

@@ -1,12 +1,14 @@
-INCLUDES = -I$(top_srcdir)/src/ -I$(top_builddir)/hlib/include -I$(top_builddir)/src \
-	-I/home/wolfgang/projsrc/aniTMT/cvs-anitmt/ \
-	-I/home/wolfgang/projsrc/aniTMT/cvs-anitmt/anitmt-calc/funcgen \
-	-I/home/wolfgang/projsrc/aniTMT/cvs-anitmt/anitmt-calc \
-	-I/home/wolfgang/projsrc/aniTMT/cvs-anitmt/anitmt-calc/functionality \
-	-I/home/wolfgang/projsrc/aniTMT/cvs-anitmt/lib \
-	-I/home/wolfgang/projsrc/aniTMT/cvs-anitmt/lib/flex \
-	-I/home/wolfgang/projsrc/aniTMT/cvs-build/anitmt-calc \
-	-I/home/wolfgang/projsrc/aniTMT/cvs-build/anitmt-calc/functionality
+INCLUDES = -I$(top_srcdir)/src/ -I$(top_builddir)/hlib/include \
+	-I$(top_builddir)/src \
+	\
+	-I$(top_builddir)/anitmt-src/ \
+	-I$(top_builddir)/anitmt-src/anitmt-calc/funcgen \
+	-I$(top_builddir)/anitmt-src/anitmt-calc \
+	-I$(top_builddir)/anitmt-src/anitmt-calc/functionality \
+	-I$(top_builddir)/anitmt-src/lib \
+	-I$(top_builddir)/anitmt-src/lib/flex \
+	-I$(top_builddir)/anitmt-build/anitmt-calc \
+	-I$(top_builddir)/anitmt-build/anitmt-calc/functionality
 
 noinst_LIBRARIES = libccanitmt.a
 
