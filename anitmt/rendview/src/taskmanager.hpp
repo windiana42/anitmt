@@ -45,6 +45,10 @@ class TaskManager :
 		TimeoutID timeout_id;
 		
 		HTime starttime;  // same as ProcessManager::starttime. 
+		// When the last work cycle started (first task from active task 
+		// source or HTime::Invalid). [only active task source]
+		ProcessManager::ProcTimeUsage ptu_self_start_work,ptu_chld_start_work;
+		int work_cycle_count;   // only active task source
 		
 		// This is the list of tasks (NOT jobs, do not mix up). 
 		// tasklist_todo holds tasks in state ToBe*. 
@@ -58,6 +62,9 @@ class TaskManager :
 		// the front (inserted). 
 		LinkedList<CompleteTask> tasklist_todo;
 		LinkedList<CompleteTask> tasklist_done;
+		// These contain the number of elements in the lists: 
+		int tasklist_todo_nelem;
+		int tasklist_done_nelem;
 		
 		CompleteTask *scheduled_for_start;
 		
@@ -76,9 +83,12 @@ class TaskManager :
 		int abort_on_signal : 1;  // abort on next SIGINT/SIGTERM
 		int schedule_quit : 3;  // 1 -> exit(0); 2 -> exit(1)
 		int schedule_quit_after : 3;  // 1 -> exit(0); 2 -> exit(1)
+		int recovering : 1;   // like the _quit* stuff but for re-start
 		int told_interface_to_quit : 1;  // PleaseQuit() called on interface?
 		int kill_tasks_and_quit_now : 1;  // 0,1
 		int sched_kill_tasks : 3;  // 0,1,2
+		
+		int failed_in_sequence_reported : 1;
 		
 		// State flags (A): 
 		int connected_to_tsource : 1;
@@ -95,7 +105,7 @@ class TaskManager :
 		int exec_stopped : 1;
 		
 		// Padding bits: 
-		int : ((100*sizeof(int)*8 - 20)%(sizeof(int)*8));
+		int : ((100*sizeof(int)*8 - 22)%(sizeof(int)*8));
 		
 		// Set by parameters, default to values set by program name: 
 		RefString tsource_name;
@@ -156,7 +166,7 @@ class TaskManager :
 		// These are called by _schedule(): 
 		int _StartProcessing();   // actually starts things 
 		
-		void _TakeFreshTask(CompleteTask *ctsk);
+		void _TakeFreshTask(CompleteTask *ctsk,int from_take_task);
 		// Do some things with new tasks (set up state & TaskParams): 
 		int _DealWithNewTask(CompleteTask *ctsk);
 		
@@ -165,6 +175,10 @@ class TaskManager :
 			const char *binpath,bool was_processed);
 		void _PrintDoneInfo(CompleteTask *ctsk);
 		
+		void _EmitCPUStats(const char *title,HTime *elapsed,
+			ProcessManager::ProcTimeUsage *ptu_self,
+			ProcessManager::ProcTimeUsage *ptu_chld);
+	
 		// Initialisation of parameter stuff: 
 		int _SetUpParams();
 		
@@ -180,6 +194,9 @@ class TaskManager :
 		void _DestructCleanup(int real_destructor=0);
 		
 		void _ActOnSignal(int signo,int real_signal);
+		
+		// Overriding virtual from TaskSourceConsumer: 
+		int tsGetDebugInfo(TSDebugInfo *dest);
 		
 		// Overriding virtual from TaskSourceConsumer: 
 		int tsnotify(TSNotifyInfo *);
@@ -211,6 +228,11 @@ class TaskManager :
 		// This is needed by the LDR task source: 
 		const HTime *Get_starttime()
 			{  return(&starttime);  }
+		int Get_todo_thresh_high()
+			{  return(interface ? interface->Get_todo_thresh_high() : -1);  }
+		
+		// Used by active task source to announce work cycle start. 
+		void PrintWorkCycleStart();
 		
 		// ******** INTERFACE TO TaskDriverInterface ********
 		
@@ -226,6 +248,11 @@ class TaskManager :
 		
 		void HandleSuccessfulJob(CompleteTask *ctsk);
 		void HandleFailedTask(CompleteTask *ctsk,int running_jobs);
+		
+		// This is called by the LDR driver when the task was finally 
+		// downloaded to the client. Will trigger launch of next task if 
+		// needed. 
+		void LaunchingTaskDone(CompleteTask *ctsk);
 		
 		// Tell TaskManager that the passed CompleteTask (which must 
 		// currently be queued in tasklist_todo (not _done, of course) 
@@ -246,10 +273,14 @@ class TaskManager :
 		// For TaskDriverInterface only. Be careful with it. 
 		const LinkedList<CompleteTask> *GetTaskListTodo()
 			{  return(&tasklist_todo);  }
+		int GetTaskListTodo_Nelem()
+			{  return(tasklist_todo_nelem);  }
 };
 
 inline const LinkedList<CompleteTask> *TaskDriverInterface::GetTaskListTodo()
 	{  return(component_db()->taskmanager()->GetTaskListTodo());  }
+inline int TaskDriverInterface::GetTaskListTodo_Nelem()
+	{  return(component_db()->taskmanager()->GetTaskListTodo_Nelem());  }
 
 inline void TaskDriverInterface::PutBackTask(CompleteTask *ctsk)
 	{  component_db()->taskmanager()->PutBackTask(ctsk);  }

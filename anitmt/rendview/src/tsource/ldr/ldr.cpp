@@ -66,17 +66,20 @@ void TaskSource_LDR::ConnClose(TaskSource_LDR_ServerConn *sc,int reason)
 	}
 	assert(reason!=2);  // Auth failure may only happen if !sc->authenticated. 
 	assert(GetAuthenticatedServer()==sc);
+	assert(quit_reason==0);
 	
 	if(reason==1)
 	{
 		Verbose(TSLLR,"LDR: Got quit request from server %s.\n",
 			sc->addr.GetAddress().str());
+		quit_reason=2;
 		#warning should warn instead of verbose here if there are still tasks
 	}
 	else
 	{
 		Error("LDR: Unexpected connection close with auth server %s.\n",
 			sc->addr.GetAddress().str());
+		quit_reason=1;
 	}
 	
 	// Okay, when we are here, what we have to do is basically: 
@@ -85,7 +88,7 @@ void TaskSource_LDR::ConnClose(TaskSource_LDR_ServerConn *sc,int reason)
 	// What is being done: 
 	//   The server is removed. 
 	//   We set the recovering flag. 
-	//   We start the "schedule" timer and call tsnotify(TASRecovering) 
+	//   We start the "schedule" timer and call tsnotify(TASRecovering*) 
 	//     (with ctsk=NULL) to tell the TaskManager. 
 	//   Task manager's action:
 	//     Report all tasks in todo and done queue as done to us 
@@ -110,6 +113,11 @@ void TaskSource_LDR::ConnClose(TaskSource_LDR_ServerConn *sc,int reason)
 
 TaskSource_NAMESPACE::DoneTaskStat TaskSource_LDR::_ProcessDoneTask()
 {
+	// _ProcessDoneTask() gets called twice for each done task. 
+	// The first time, it triggers the action to tell the LDR server that 
+	// the task was done, the next time it actually deletes the task. 
+	// Note that there are 2 positions for the delete and this if() is 
+	// needed for correct operation if we go the TaskReportedDone() way. 
 	if(!current_done_task)
 	{  return(DTSOkay);  }
 	
@@ -118,6 +126,7 @@ TaskSource_NAMESPACE::DoneTaskStat TaskSource_LDR::_ProcessDoneTask()
 	{
 		srv->TellServerDoneTask(current_done_task);
 		// This will call TaskReportedDone() when done. 
+		done_task_status=2;
 		return(DTSWorking);
 	}
 	
@@ -140,6 +149,7 @@ TaskSource_NAMESPACE::DoneTaskStat TaskSource_LDR::_ProcessDoneTask()
 	
 	// We must delete the CompleteTask (because that's the duty of 
 	// the task source). 
+	done_task_status=0;
 	DELETE(current_done_task);
 	
 	// We say "okay" here because there is no point in 
@@ -157,6 +167,7 @@ void TaskSource_LDR::TaskReportedDone(CompleteTask *ctsk)
 	
 	// We must delete the CompleteTask (because that's the duty of 
 	// the task source). 
+	done_task_status=0;
 	DELETE(current_done_task);
 	
 	// NOTE: Caller relies on the fact that we call tsnotify() via 
@@ -214,7 +225,9 @@ int TaskSource_LDR::timernotify(TimerInfo *ti)
 	
 	_StopSchedTimer();
 	
-	if(pending!=ANone)
+	// Do not enter for ADoneTask when done_task_status==2. 
+	if(pending!=ANone && 
+	   (pending!=ADoneTask || done_task_status!=2) )
 	{
 		TSNotifyInfo ni;
 		ni.action=pending;
@@ -278,12 +291,14 @@ int TaskSource_LDR::timernotify(TimerInfo *ti)
 	
 	if(recovering==2)
 	{
+		assert(quit_reason);
+		
 		recovering=1;
 		
 		// Must tell server that we lost connection. 
 		TSNotifyInfo ni;
 		ni.action=AActive;
-		ni.activestat=TASRecovering;
+		ni.activestat=(quit_reason==2) ? TASRecoveringQuit : TASRecoveringBad;
 		
 		call_tsnotify(cclient,&ni);
 	}
@@ -314,6 +329,7 @@ int TaskSource_LDR::srcGetTask(TaskSourceConsumer *cons)
 		
 		Verbose(TSLLR,"LDR: Recovery finished. Ready again.\n");
 		recovering=0;
+		quit_reason=0;
 		return(0);
 	}
 	
@@ -332,7 +348,10 @@ int TaskSource_LDR::srcDoneTask(TaskSourceConsumer *cons,CompleteTask *ct)
 	if(!connected)  return(2);
 	
 	assert(!current_done_task);
+	assert(done_task_status==0);
+	
 	current_done_task=ct;
+	done_task_status=1;
 	
 	pending=ADoneTask;
 	_StartSchedTimer();
@@ -363,6 +382,9 @@ void TaskSource_LDR::ServerHasNowAuthenticated(TaskSource_LDR_ServerConn *sc)
 	// Put the authenticated server at the beginning of the list: 
 	sconn.dequeue(sc);
 	sconn.insert(sc);
+	
+	// Tell TaskManager for some fancy output: 
+	component_db->taskmanager()->PrintWorkCycleStart();
 }
 
 
@@ -394,8 +416,10 @@ TaskSource_LDR::TaskSource_LDR(TaskSourceFactory_LDR *tsf,int *failflag) :
 	pending=ANone;
 	active_taketask=NULL;
 	current_done_task=NULL;
+	done_task_status=0;
 	connected=0;
 	recovering=0;
+	quit_reason=0;
 	
 	int failed=0;
 	

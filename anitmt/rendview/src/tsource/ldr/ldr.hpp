@@ -180,6 +180,10 @@ class TaskSource_LDR :
 		// This task is the one srcDoneTask() is currnetly working on. 
 		CompleteTask *current_done_task;
 		
+		// 0 -> nothing/deleted task; 1 -> just received srcDoneTask; 
+		// 2 -> waiting info spread to server 
+		int done_task_status : 3;
+		
 		// Are we connected? This is just a dummy to ensure 
 		// correct behavior of the other classes...
 		int connected : 2;  // <- to TaskManager, NOT to server. 
@@ -187,8 +191,12 @@ class TaskSource_LDR :
 		// This is 1 if we are recovering, i.e. the time from 
 		// connection close to auth server until we're ready again. 
 		int recovering : 3;
+		// Set during recovery: 
+		//  1 -> unexpected conn close
+		//  2 -> quit request from server
+		int quit_reason : 3;
 		
-		int : (sizeof(int)*8-5);  // padding
+		int : (sizeof(int)*8-11);  // padding
 		
 		// Struct TaskSource_LDR_ServerConn describing a 
 		// connection to a server. 

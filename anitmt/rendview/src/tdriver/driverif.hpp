@@ -40,7 +40,8 @@ class TaskDriverInterface
 		
 		// Get the tasklist_todo from the TaskManager. Useful if the 
 		// task driver interface has to search in it if a client dies. 
-		const LinkedList<CompleteTask> *GetTaskListTodo();
+		inline const LinkedList<CompleteTask> *GetTaskListTodo();
+		inline int GetTaskListTodo_Nelem();
 		
 		// See taskmanager.hpp / PutBackTask(). 
 		void PutBackTask(CompleteTask *ctsk);
@@ -66,6 +67,7 @@ class TaskDriverInterface
 		
 		// Needed by LDR task source and TaskManager: 
 		virtual int Get_njobs() HL_PureVirt(-1)
+		virtual int Get_nrunning() HL_PureVirt(-1)  // runnning means "assigned" for LDR
 		
 		// Write processing info; called from StartProcessing(): 
 		// when: 0 -> start; 1 -> end
@@ -102,8 +104,10 @@ class TaskDriverInterface
 		virtual int TermAllJobs(int /*reason*/) HL_PureVirt(0)
 		
 		// Called when everything is done to disconnect from the clients. 
-		// Local interface can handle that quickly. 
+		// Local interface can handle that quickly. Also called for recovery! 
 		virtual void PleaseQuit() HL_PureVirt(;)
+		// Called when recovery is done to restart. 
+		virtual void RecoveryDone() HL_PureVirt(;)
 };
 
 #endif  /* _RNDV_TDRIVER_DRIVERINTERFACE_HPP_ */

@@ -39,7 +39,7 @@ using namespace LDR;
 
 #warning make it configurable: 
 static int max_jobs_per_client=24;
-
+static int max_high_thresh_of_client=36;
 
 static void _AllocFailure(int fail=-1)
 {
@@ -172,7 +172,10 @@ int LDRClient::_AtomicSendData(LDRHeader *d)
 	d->length=htonl(len);
 	d->command=htons(d->command);
 	
-	ssize_t wr=write(sock_fd,(char*)d,len);
+	ssize_t wr;
+	do
+	{  wr=write(sock_fd,(char*)d,len);  }
+	while(wr<0 && errno==EINTR);
 	if(wr<0)
 	{
 		int errn=errno;
@@ -192,7 +195,10 @@ int LDRClient::_AtomicSendData(LDRHeader *d)
 // Return value: len or -1 -> error
 ssize_t LDRClient::_AtomicRecvData(LDRHeader *dest,size_t len,size_t min_len)
 {
-	ssize_t rd=read(sock_fd,(char*)dest,len);
+	ssize_t rd;
+	do
+	{  rd=read(sock_fd,(char*)dest,len);  }
+	while(rd<0 && errno==EINTR);
 	if(rd<0)
 	{
 		int errn=errno;
@@ -202,6 +208,7 @@ ssize_t LDRClient::_AtomicRecvData(LDRHeader *dest,size_t len,size_t min_len)
 	}
 	else if(!rd)
 	{
+		assert(len);
 		Error("Client %s: Disconnected unexpectedly.\n",
 			_ClientName().str());
 		return(-1);
@@ -215,7 +222,7 @@ ssize_t LDRClient::_AtomicRecvData(LDRHeader *dest,size_t len,size_t min_len)
 	// Translate to host order: 
 	dest->length=ntohl(dest->length);
 	dest->command=ntohs(dest->command);
-	return(len);
+	return(rd);
 }
 
 
@@ -409,14 +416,25 @@ int LDRClient::_DoAuthHandshake(FDBase::FDInfo *fdi)
 			{  return(-1);  }
 			
 			c_jobs=ntohs(d.njobs);
+			c_task_thresh_high=ntohs(d.task_thresh_high);
 			HTime up_since;
 			LDRTime2HTime(&d.starttime,&up_since);
 			
-			if(c_jobs>max_jobs_per_client)
+			if(c_jobs>max_jobs_per_client || 
+			   c_task_thresh_high>max_high_thresh_of_client)
 			{
-				Warning("Client %s: reports njobs=%d; using %d.\n",
-					_ClientName().str(),c_jobs,max_jobs_per_client);
-				c_jobs=max_jobs_per_client;
+				int old_j=c_jobs,old_t=c_task_thresh_high;
+				
+				if(c_jobs>max_jobs_per_client)
+				{  c_jobs=max_jobs_per_client;  }
+				if(c_task_thresh_high>max_high_thresh_of_client)
+				{  c_task_thresh_high=max_high_thresh_of_client;  }
+				
+				Warning("Client %s: reports njobs=%d,high-thresh=%d; "
+					"using %d,%d.\n",
+					_ClientName().str(),
+					old_j,old_t,
+					c_jobs,c_task_thresh_high);
 			}
 			
 			// Okay, we are now connected. 
@@ -430,9 +448,11 @@ int LDRClient::_DoAuthHandshake(FDBase::FDInfo *fdi)
 					snprintf(ltmp,12,"%d.%02d",lv/100,lv%100);
 				}
 				Verbose(TDR,"Client %s: Now connected: njobs=%d (parallel jobs)\n"
+					"  Task-thresh: high: %d\n"
 					"  Up since: %s  (local)\n"
 					"  Current load avg: %s\n",
 					_ClientName().str(),c_jobs,
+					c_task_thresh_high,
 					up_since.PrintTime(1),
 					ltmp);
 			}
@@ -547,7 +567,10 @@ void LDRClient::_DoSendQuit(FDBase::FDInfo *fdi)
 		else if(fdi->revents & POLLIN)
 		{
 			char buf[64];
-			ssize_t rd=read(sock_fd,buf,64);
+			ssize_t rd;
+			do
+			{  rd=read(sock_fd,buf,64);  }
+			while(rd<0 && errno==EINTR);
 			if(rd<0)
 			{
 				int errn=errno;
@@ -733,7 +756,7 @@ int LDRClient::SendTaskToClient(CompleteTask *ctsk)
 {
 	if(!ctsk || (!ctsk->rt && !ctsk->ft))  return(-2);
 	if(!auth_passed)  return(-1);
-	if(assigned_jobs>=c_jobs)  return(2);
+	if(assigned_jobs>=c_task_thresh_high)  return(2);
 	
 	// See if there is already a task scheduled to be sent to the client: 
 	if(tri.scheduled_to_send || out.ioaction==IOA_Locked)
@@ -788,8 +811,8 @@ int LDRClient::_HandleReceivedHeader(LDRHeader *hdr)
 		default:;
 	}
 	
-	Error("Client %s: Received unexpected command header %s (cmd=%u, length=%u).\n",
-		_ClientName().str(),LDRCommandString(recv_cmd),recv_cmd,hdr->length);
+	Error("Client %s: Received unexpected command header %s (cmd=%u, length=%u=0x%x).\n",
+		_ClientName().str(),LDRCommandString(recv_cmd),recv_cmd,hdr->length,hdr->length);
 	
 	return(-1);  // -->  _KickMe()
 }
@@ -1109,8 +1132,6 @@ int LDRClient::_ParseDoneComplete(RespBuf *buf)
 	
 	tdi.task_done_state=TDC_None;
 	tdi.done_ctsk=NULL;
-	
-	Warning("_ParseDoneComplete()... Everything okay?\n");
 	
 	return(0);
 }	
@@ -1659,6 +1680,7 @@ LDRClient::LDRClient(TaskDriverInterface_LDR *_tdif,
 	
 	c_jobs=0;
 	assigned_jobs=0;
+	c_task_thresh_high=0;
 	
 	// Register at TaskDriverInterface_LDR (-> task manager): 
 	assert(component_db()->taskmanager());

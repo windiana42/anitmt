@@ -68,6 +68,23 @@ void TaskSourceConsumer::_TSWriteError_Connect(const TSNotifyInfo *ni)
 }
 
 
+// Returns static data: 
+char *TaskSourceConsumer::_TSTaskQueueStatStr(int special)
+{
+	TSDebugInfo info;
+	int rv=tsGetDebugInfo(&info);
+	// If this assert fails, you forgot to override virtual tsGetDebugInfo(). 
+	assert(!rv);
+	
+	static char tmp[48];
+	snprintf(tmp,48,"(task queue: todo: %d%s, done: %d)",
+		info.todo_queue,special==1 ? "+1" : "",
+		info.done_queue);
+	
+	return(tmp);
+}
+
+
 void TaskSourceConsumer::_TSWriteError_GetTask(const TSNotifyInfo *ni)
 {
 	switch(ni->getstat)
@@ -77,15 +94,15 @@ void TaskSourceConsumer::_TSWriteError_GetTask(const TSNotifyInfo *ni)
 			Verbose(TSR0,"TS: %s to retrieve task.\n",wfts);
 			break;
 		case GTSGotTask:
-			Verbose(TSR1,"TS: Okay, got task [frame %d] from task source.\n",
-				ni->ctsk->frame_no);
-			#warning more info?
+			Verbose(TSR1,"TS: Okay, got task [frame %d] from task source %s.\n",
+				ni->ctsk->frame_no,_TSTaskQueueStatStr(/*special=*/1));
 			break;
 		case GTSAllocFailed:
 			Error("%s allocation failure.\n",tsr);
 			break;
 		case GTSNoMoreTasks:
-			Verbose(TSR1,"TS: %s no more available tasks.\n",tsr);
+			Verbose(TSR1,"TS: %s no more available tasks %s.\n",
+				tsr,_TSTaskQueueStatStr());
 			break;
 		case GTSEnoughTasks:
 			Verbose(TSR1,"TS: thinks we already have enough tasks.\n");
@@ -104,7 +121,8 @@ void TaskSourceConsumer::_TSWriteError_DoneTask(const TSNotifyInfo *ni)
 			Verbose(TSR0,"TS: %s working on done task.\n",wfts);
 			break;
 		case DTSOkay:
-			Verbose(TSR1,"TS: Okay, task source accepted done task.\n");
+			Verbose(TSR1,"TS: Okay, task source accepted done task %s.\n",
+				_TSTaskQueueStatStr());
 			break;
 		default:  assert(0);  break;
 	}
@@ -133,11 +151,16 @@ void TaskSourceConsumer::_TSWriteError_Active(const TSNotifyInfo *ni)
 	{
 		case TASNone:  assert(0);  break;
 		case TASTakeTask:
-			Verbose(TSR0,"TS: Okay, task source reports task [frame %d].\n",
-				ni->ctsk->frame_no);
+			Verbose(TSR1,"TS: Okay, task source reports task [frame %d] %s.\n",
+				ni->ctsk->frame_no,_TSTaskQueueStatStr(/*special=*/1));
 			break;
-		case TASRecovering:
-			Verbose(TSR1,"TS: Bad; lost connection to server; recovering.\n");
+		case TASRecoveringBad:
+			Verbose(TSR1,"TS: Bad; lost connection to server; recovering %s.\n",
+				_TSTaskQueueStatStr());
+			break;
+		case TASRecoveringQuit:
+			Verbose(TSR1,"TS: Connection to server closed down; recovering %s.\n",
+				_TSTaskQueueStatStr());
 			break;
 		default:  assert(0);  break;
 	}

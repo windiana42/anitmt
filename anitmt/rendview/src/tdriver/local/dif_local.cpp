@@ -27,6 +27,10 @@ int TaskDriverInterface_Local::Get_njobs()
 {
 	return(p->njobs);
 }
+int TaskDriverInterface_Local::Get_nrunning()
+{
+	return(RunningJobs());
+}
 
 
 // Called when everything is done to disconnect from the clients. 
@@ -35,6 +39,12 @@ void TaskDriverInterface_Local::PleaseQuit()
 {
 	// Can quit at any time. 
 	component_db()->taskmanager()->CheckStartNewJobs(/*special=*/-1);
+}
+
+void TaskDriverInterface_Local::RecoveryDone()
+{
+	assert(joblist.is_empty());
+	assert(RunningJobs()==0);
 }
 
 
@@ -197,10 +207,20 @@ int TaskDriverInterface_Local::_DoLaunchTask(CompleteTask *ctsk,TaskDriver **td)
 
 
 // Called by TaskDriver whenever estat/esdetail changed. 
-void TaskDriverInterface_Local::StateChanged(TaskDriver *)
+void TaskDriverInterface_Local::StateChanged(TaskDriver *td)
 {
-	// This is currently unused. IAmDone() gets called if the state 
+	// This is nearly unused. IAmDone() gets called if the state 
 	// changed to ESDone. 
+	
+	// Things work without that currently...
+	if(td->estat==TaskDriver::ESRunning && td->esdetail==TaskDriver::EDRunning)
+	{
+		// This might not be needed here...
+		// (Note: For local driver, the task is executed right by LaunchTask() 
+		// while the LDR driver takes some time. So, this callback is used 
+		// to tell the manager about the fact that the launch is done.) 
+		component_db()->taskmanager()->LaunchingTaskDone(td->pinfo.ctsk);
+	}
 }
 
 // Called by TaskDriver when he is done and wants to get deleted: 
@@ -441,7 +461,7 @@ void TaskDriverInterface_Local::_WriteStartProcInfo(const char *msg)
 		{  Verbose(TDI,"        --");  }
 		else
 		{  long x=(pr->timeout+500)/1000;
-			Verbose(TDI,"  %02d:%02d:%02d",x/3600,(x/60)%60,x%60);  }
+			Verbose(TDI,"  %02ld:%02d:%02d",x/3600,int((x/60)%60),int(x%60));  }
 		Verbose(TDI,"  %s",pr->call_setsid ? " no" : "yes");
 		if(pr->mute || pr->quiet)
 		{  Verbose(TDI,pr->quiet ? "  (quiet)" : "  (mute)");  }

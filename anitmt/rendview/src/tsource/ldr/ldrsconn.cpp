@@ -69,7 +69,10 @@ int TaskSource_LDR_ServerConn::_AtomicSendData(LDRHeader *d)
 	d->length=htonl(len);
 	d->command=htons(d->command);
 	
-	ssize_t wr=write(sock_fd,(char*)d,len);
+	ssize_t wr;
+	do
+	{  wr=write(sock_fd,(char*)d,len);  }
+	while(wr<0 && errno==EINTR);
 	if(wr<0)
 	{
 		Error("LDR: Failed to send %u bytes to %s: %s\n",
@@ -90,7 +93,10 @@ int TaskSource_LDR_ServerConn::_AtomicSendData(LDRHeader *d)
 int TaskSource_LDR_ServerConn::_AtomicRecvData(LDRHeader *d,
 	size_t len)
 {
-	ssize_t rd=read(sock_fd,(char*)d,len);
+	ssize_t rd;
+	do
+	{  rd=read(sock_fd,(char*)d,len);  }
+	while(rd<0 && errno==EINTR);
 	if(rd<0)
 	{
 		Error("LDR: %s: While reading: %s\n",
@@ -99,6 +105,7 @@ int TaskSource_LDR_ServerConn::_AtomicRecvData(LDRHeader *d,
 	}
 	if(!rd)
 	{
+		assert(len);  // We may not attempt zero-sized reads. 
 		Error("LDR: %s disconnected unexpectedly.\n",
 			addr.GetAddress().str());
 		return(-1);
@@ -225,15 +232,16 @@ int TaskSource_LDR_ServerConn::_RecvChallengeResponse()
 	{
 		// So, we must set the authenticated flag here. 
 		authenticated=1;
-		// And we must make sure that sc becomes the 
-		// first elem in the list: 
-		back->ServerHasNowAuthenticated(this);
 		
 		// Okay, correct challenge and no other authenticated server. 
 		VerboseSpecial("LDR: Now connected to %s (%.*s).",
 			addr.GetAddress().str(),
 			LDRIDStringLength,d.id_string);
 		authcode=CAC_Success;
+		
+		// And we must make sure that sc becomes the 
+		// first elem in the list: 
+		back->ServerHasNowAuthenticated(this);
 	}
 	memset(expect_chresp,0,LDRChallengeLength);
 	now_conn_auth_code=authcode;
@@ -264,6 +272,7 @@ int TaskSource_LDR_ServerConn::_SendNowConnected()
 	{
 		TaskManager *taskman=component_db()->taskmanager();
 		d->njobs=htons(taskman->Get_njobs());
+		d->task_thresh_high=htons(taskman->Get_todo_thresh_high());
 		HTime2LDRTime(taskman->Get_starttime(),&d->starttime);
 		int lv=::GetLoadValue();
 		d->loadval = (lv>=0 && lv<0xffff) ? htons(lv) : 0xffffU;
@@ -982,9 +991,6 @@ int TaskSource_LDR_ServerConn::_SendNextFileUploadHdr()
 			hdr=pack;
 		}
 		
-		// This may fail but if it fails, then it was not necessary to call it: 
-		out.pump_s->PumpReuseNow();
-		
 		// Okay, make ready to send it: 
 		if(_FDCopyStartSendBuf(hdr))  break;
 		
@@ -1614,7 +1620,7 @@ void TaskSource_LDR_ServerConn::_ConnClose(int reason)
 
 void TaskSource_LDR_ServerConn::TellServerDoneTask(CompleteTask *ctsk)
 {
-	// So, we have to tell the server that the passed task was done. 
+	// So, we have to tell the LDR server that the passed task was done. 
 	assert(ctsk);   // may not be NULL here. 
 	// There may not be a further task which waits for getting reported as done. 
 	// This is due to the fact that a task source can always only operate 

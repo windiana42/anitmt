@@ -362,7 +362,7 @@ int ComponentDataBase::parse(const Section *s,PAR::SPHInfo *info)
 		}
 	}
 	// Okay, now we have the new name. 
-	Verbose(0,"Adding new %s description \"%.*s\".\n",
+	Verbose(BasicInit,"Adding new %s description \"%.*s\".\n",
 		DTypeString(dt),
 		int(xnamelen),xname);
 	

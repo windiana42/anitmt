@@ -44,6 +44,10 @@
 //     always also set sched_kill_tasks. 
 // schedule_quit_after: like schedule_quit but allows to process all 
 //     tasks in the queue before quitting. 
+// recovering -> uahh.. now it gets complicated. NOTE that recovering does 
+//     not set any of the quit flags but is similar to them in many ways. 
+//     Recovery is done when we re-start because the active task source 
+//     got disconnected. 
 /******************************************************************************/
 
 
@@ -137,8 +141,8 @@ void TaskManager::DontStartMoreTasks()
 		assert(i->state==CompleteTask::ToBeFiltered);
 		
 		// In this case: Move task to done queue. 
-		tasklist_todo.dequeue(i);
-		tasklist_done.append(i);
+		tasklist_todo.dequeue(i);  --tasklist_todo_nelem;
+		tasklist_done.append(i);   ++tasklist_done_nelem;
 	}
 }
 
@@ -163,8 +167,11 @@ void TaskManager::HandleSuccessfulJob(CompleteTask *ctsk)
 			assert(tasklist_todo.find(ctsk));
 			#endif
 			
-			tasklist_todo.dequeue(ctsk);
-			tasklist_done.append(ctsk);
+			tasklist_todo.dequeue(ctsk);  --tasklist_todo_nelem;
+			tasklist_done.append(ctsk);   ++tasklist_done_nelem;
+			
+			// This is definitely needed: 
+			_CheckStartTasks();
 			
 			// See if we have to connect to the task source and schedule 
 			// that if needed: 
@@ -208,8 +215,8 @@ void TaskManager::HandleFailedTask(CompleteTask *ctsk,int running_jobs)
 	assert(tasklist_todo.find(ctsk));
 	#endif
 	
-	tasklist_todo.dequeue(ctsk);
-	tasklist_done.append(ctsk);
+	tasklist_todo.dequeue(ctsk);  --tasklist_todo_nelem;
+	tasklist_done.append(ctsk);   ++tasklist_done_nelem;
 	
 	if(kill_tasks_and_quit_now)
 	{
@@ -232,8 +239,12 @@ void TaskManager::HandleFailedTask(CompleteTask *ctsk,int running_jobs)
 	if(max_failed_in_sequence && 
 	   jobs_failed_in_sequence>=max_failed_in_sequence)
 	{
-		Error("%d jobs failed in sequence. Giving up.\n",
-			jobs_failed_in_sequence);
+		if(!failed_in_sequence_reported)
+		{
+			Error("%d jobs failed in sequence. Giving up.\n",
+				jobs_failed_in_sequence);
+			failed_in_sequence_reported=1;
+		}
 		
 		DontStartMoreTasks();
 		schedule_quit=2;
@@ -253,13 +264,27 @@ void TaskManager::HandleFailedTask(CompleteTask *ctsk,int running_jobs)
 }
 
 
+void TaskManager::LaunchingTaskDone(CompleteTask *ctsk)
+{
+	// Currently, this is only called on success. 
+	
+	// See if we can start more tasks. (NEEDED.)
+	_CheckStartTasks();
+}
+
+
 // Called for a task which was just obtained from the task source. 
-void TaskManager::_TakeFreshTask(CompleteTask *ctsk)
+// from_take_task: 1 -> TASTakeTask (active task source)
+void TaskManager::_TakeFreshTask(CompleteTask *ctsk,int /*from_take_task*/)
 {
 	assert(ctsk);   // otherwise internal error
 	
+	// This is now done by the task source: 
+	//if(from_take_task && tasklist_todo.is_empty())
+	//{  _PrintWorkCycleStart();  }
+	
 	// Put task into queue (at the END of the queue): 
-	tasklist_todo.append(ctsk);
+	tasklist_todo.append(ctsk);  ++tasklist_todo_nelem;
 	
 	// NOTE: ni->ctsk->state = TaskDone here. Must set up 
 	//       proper value now and set up TaskParams: 
@@ -282,8 +307,11 @@ void TaskManager::PutBackTask(CompleteTask *ctsk)
 	
 	// NOTE: We MAY dequeue or re-queue the passed ctsk here 
 	//       (the caller knows that and has removal-safe loop). 
-	
-fprintf(stderr,"TaskManager::PutBackTask(): ANYTHING TO DO HERE?\n");
+
+static int warned=0;
+if(!warned)	
+{ fprintf(stderr,"TaskManager::PutBackTask(): "
+	"ANYTHING TO DO HERE?\n"); ++warned; }
 }
 
 
@@ -382,7 +410,7 @@ int TaskManager::tsnotify(TSNotifyInfo *ni)
 				// Successfully got task. 
 				pending_action=ANone;
 				
-				_TakeFreshTask(ni->ctsk);
+				_TakeFreshTask(ni->ctsk,0);
 				
 				// Go on talking to task source: 
 				_TS_GetOrDoneTask();
@@ -536,7 +564,7 @@ int TaskManager::tsnotify(TSNotifyInfo *ni)
 			if(!connected_to_tsource)
 			{
 				// Make sure we schedule one time if needed: 
-				if(schedule_quit || schedule_quit_after)
+				if(schedule_quit || schedule_quit_after || recovering)
 				{  ReSched();  }
 			}
 		}  break;
@@ -547,9 +575,10 @@ int TaskManager::tsnotify(TSNotifyInfo *ni)
 			// this nor must we have send a query. 
 			if(ni->activestat==TASTakeTask)
 			{
-				_TakeFreshTask(ni->ctsk);
+				_TakeFreshTask(ni->ctsk,1);
 			}
-			else if(ni->activestat==TASRecovering)
+			else if(ni->activestat==TASRecoveringBad || 
+			        ni->activestat==TASRecoveringQuit)
 			{
 				// Bad. We lost connection to the server. 
 				// This means, we must now start recovery and call 
@@ -557,8 +586,21 @@ int TaskManager::tsnotify(TSNotifyInfo *ni)
 				// active task sources]. 
 				// Okay, then let's recover: 
 				
-				Error("hack recovery.\n");
-				assert(0);
+				int ntodo=tasklist_todo_nelem;
+				int ndone=tasklist_done_nelem;
+				int nrun=interface->Get_nrunning();
+				VerboseSpecial("Beginning recovery. "
+					"Tasks: todo=%d; done=%d; running=%d %s",
+					ntodo,ndone,nrun,
+					(ndone || nrun) ? "(bad)" : 
+					(!ntodo && !ndone && !nrun) ? "(good)" : "(hrm...)");
+				
+				DontStartMoreTasks();
+				recovering=1;
+				// DO NOT SET THESE
+				// schedule_quit=1;  NO!
+				// sched_kill_tasks=2;  NO! // server error
+				ReSched();
 			}
 			else assert(0);
 		}  break;
@@ -716,6 +758,8 @@ void TaskManager::_schedule(TimerInfo *ti)
 	// Okay, let's see what we have to do...
 	if(!tasksource())
 	{
+		assert(!recovering);
+		
 		// We're in the 0msec timer installed at the constuctor to get 
 		// things running: 
 		int rv=_StartProcessing();
@@ -768,9 +812,10 @@ void TaskManager::_schedule(TimerInfo *ti)
 		_CheckStartTasks();
 	}
 	
-	if(schedule_quit || schedule_quit_after)
+	if(schedule_quit || schedule_quit_after || recovering)
 	{
 		// Quit is scheduled. So, we quit if everything is cleaned up: 
+		// Recovering: similar...
 		
 		// The interface (in case of an LDR server) must disconnect 
 		// from the clients if there are no more jobs to do. 
@@ -790,6 +835,10 @@ void TaskManager::_schedule(TimerInfo *ti)
 		   pending_action==ANone )
 		{
 			// Okay, we may actually quit. 
+			// For recovery, this means that recovery is now complete. 
+			// (If no quit flag is set (only recovering), this will 
+			// pass -1 as argument to _DoQuit() which is exactly what 
+			// we want. 
 			_DoQuit(cmpMAX(schedule_quit,schedule_quit_after)-1);
 			return;
 		}
@@ -881,29 +930,105 @@ static int _int_cmp(const void *a,const void *b)
 	return(*(int*)a - *(int*)b);
 }
 
+
+// Used by _DoQuit() (maybe others). 
+void TaskManager::_EmitCPUStats(const char *title,
+	HTime *elapsed,
+	ProcessManager::ProcTimeUsage *ptu_self,
+	ProcessManager::ProcTimeUsage *ptu_chld)
+{
+	if(elapsed->GetD(HTime::seconds)<=0.2)  return;
+	
+	Verbose(TDI,"  %s:\n",title);
+	
+	double rv_cpu=100.0*(ptu_self->stime.GetD(HTime::seconds)+
+		ptu_self->utime.GetD(HTime::seconds)) / elapsed->GetD(HTime::seconds);
+	double ch_cpu=100.0*(ptu_chld->stime.GetD(HTime::seconds)+
+		ptu_chld->utime.GetD(HTime::seconds)) / elapsed->GetD(HTime::seconds);
+	
+	char tmp[48];
+	snprintf(tmp,48,"%s",ptu_self->utime.PrintElapsed());
+	Verbose(TDI,"    RendView: %2d.%02d%% CPU  (user: %s; sys: %s)\n",
+		int(rv_cpu),int(100.0*rv_cpu+0.5)%100,
+		tmp,ptu_self->stime.PrintElapsed());
+	snprintf(tmp,48,"%s",ptu_chld->utime.PrintElapsed());
+	Verbose(TDI,"    Jobs:     %2d.%02d%% CPU  (user: %s; sys: %s)\n",
+		int(ch_cpu),int(100.0*ch_cpu+0.5)%100,
+		tmp,ptu_chld->stime.PrintElapsed());
+	snprintf(tmp,48,"%s",(ptu_chld->utime+ptu_self->utime).PrintElapsed());
+	Verbose(TDI,"    Together: %2d.%02d%% CPU  (user: %s; sys: %s)\n",
+		int(ch_cpu+rv_cpu),int(100.0*(ch_cpu+rv_cpu)+0.5)%100,
+		tmp,(ptu_chld->stime+ptu_self->stime).PrintElapsed());
+}
+
 // Simply call fdmanager()->Quit(status) and write info. 
 // (Actually, _ActuallyQuit() is called...)
+// This is also used for recovery. 
+// NOTE: status=-1 for recovering without quit. 
 void TaskManager::_DoQuit(int status)
 {
-	VerboseSpecial("Now exiting with status=%s (%d)",
-		status ? "failure" : "success",status);
+	int doquit;
+	if(status<0)
+	{
+		assert(recovering);
+		doquit=0;
+	}
+	else
+	{
+		assert(schedule_quit || schedule_quit_after);
+		doquit=1;
+	}
+	
+	if(doquit)
+	{  VerboseSpecial("Now exiting with status=%s (%d)",
+		status ? "failure" : "success",status);  }
+	else
+	{  VerboseSpecial("Completing recovery (work cycle count: %d).",
+		work_cycle_count);  }
 	
 	if(interface)
 	{  interface->WriteProcessingInfo(1,NULL);  }
 	
-	ProcessManager::ProcTimeUsage ptu_self,ptu_chld;
-	ProcessManager::manager->GetTimeUsage(0,&ptu_self);
-	ProcessManager::manager->GetTimeUsage(1,&ptu_chld);
+	ProcessManager::ProcTimeUsage ptu_self_start,ptu_chld_start;
+	ProcessManager::manager->GetTimeUsage(0,&ptu_self_start);
+	ProcessManager::manager->GetTimeUsage(1,&ptu_chld_start);
 	
-	HTime elapsed=ptu_self.uptime;
-	HTime endtime=starttime+elapsed;
-	Verbose(TDI,"  exiting at (local): %s\n",endtime.PrintTime(1,1));
-	Verbose(TDI,"  elapsed time: %s\n",elapsed.PrintElapsed());
+	ProcessManager::ProcTimeUsage ptu_self_work,ptu_chld_work;
+	if(work_cycle_count)
+	{
+		ptu_self_work.stime=ptu_self_start.stime-ptu_self_start_work.stime;
+		ptu_self_work.utime=ptu_self_start.utime-ptu_self_start_work.utime;
+		ptu_chld_work.stime=ptu_chld_start.stime-ptu_chld_start_work.stime;
+		ptu_chld_work.utime=ptu_chld_start.utime-ptu_chld_start_work.utime;
+	}
+	
+	HTime elapsed_start=ptu_self_start.uptime;  // elapsed since start
+	HTime elapsed_work(HTime::Invalid);  // elapsed since work...
+	if(work_cycle_count)
+	{  elapsed_work=ptu_self_start.uptime-ptu_self_start_work.uptime;  }
+	
+	{
+		HTime endtime_curr=starttime+elapsed_start;
+		Verbose(TDI,"  %s at (local): %s\n",
+			doquit ? "Exiting" : "Recovery",endtime_curr.PrintTime(1,1));
+	}
+	Verbose(TDI,"  Elapsed since start:  %s\n",elapsed_start.PrintElapsed());
+	// The next line is the elapsed time since the first job of this 
+	// recovery cycle (LDR: since connection to server). 
+	if(!doquit)
+	{  Verbose(TDI,"  Elapsed time working: %s\n",elapsed_work.PrintElapsed());  }
 	
 	int loadval=_GetLoadValue();
-	Verbose(TDI,"  load control: ");
+	Verbose(TDI,"  Load control: ");
 	if(load_low_thresh<=0)
-	{  Verbose(TDI,"[disabled]\n");  }
+	{
+		char tmp[16];
+		if(loadval<0)
+		{  strcpy(tmp,"??");  }
+		else
+		{  snprintf(tmp,16,"%.2f",double(loadval)/100.0);  }
+		Verbose(TDI,"[disabled]; current load: %s\n",tmp); 
+	}
 	else
 	{
 		char max_tmp[32];
@@ -916,7 +1041,7 @@ void TaskManager::_DoQuit(int status)
 	
 	if(lpf_hist_size)
 	{
-		Verbose(TDI,"  last successfully done frames:");
+		Verbose(TDI,"  Last successfully done frames:");
 		qsort(last_proc_frames,lpf_hist_size,sizeof(int),&_int_cmp);
 		int nw=0;
 		for(int i=0; i<lpf_hist_size; i++)
@@ -928,28 +1053,94 @@ void TaskManager::_DoQuit(int status)
 		Verbose(TDI,"%s\n",nw ? "" : " [none]");
 	}
 	
-	if(elapsed.GetD(HTime::seconds)>0.2)
-	{
-		double rv_cpu=100.0*(ptu_self.stime.GetD(HTime::seconds)+
-			ptu_self.utime.GetD(HTime::seconds)) / elapsed.GetD(HTime::seconds);
-		double ch_cpu=100.0*(ptu_chld.stime.GetD(HTime::seconds)+
-			ptu_chld.utime.GetD(HTime::seconds)) / elapsed.GetD(HTime::seconds);
-		
-		char tmp[48];
-		snprintf(tmp,48,"%s",ptu_self.utime.PrintElapsed());
-		Verbose(TDI,"  RendView:  %.2f%% CPU  (user: %s; sys: %s)\n",
-			rv_cpu,tmp,ptu_self.stime.PrintElapsed());
-		snprintf(tmp,48,"%s",ptu_chld.utime.PrintElapsed());
-		Verbose(TDI,"  Jobs:     %.2f%% CPU  (user: %s; sys: %s)\n",
-			ch_cpu,tmp,ptu_chld.stime.PrintElapsed());
-		snprintf(tmp,48,"%s",(ptu_chld.utime+ptu_self.utime).PrintElapsed());
-		Verbose(TDI,"  Together: %.2f%% CPU  (user: %s; sys: %s)\n",
-			ch_cpu+rv_cpu,tmp,(ptu_chld.stime+ptu_self.stime).PrintElapsed());
-	}
+	_EmitCPUStats(doquit ? "Overall CPU stats" : "Overall CPU stats (until now)",
+		&elapsed_start,
+		&ptu_self_start,&ptu_chld_start);
+	if(!doquit)
+	{  _EmitCPUStats("CPU stats for last work cycle",&elapsed_work,
+		&ptu_self_work,&ptu_chld_work);  }
 	
 	#warning FIXME: more info to come
 	
-	_ActuallyQuit(status);
+	if(doquit)
+	{  _ActuallyQuit(status);  }
+	else
+	{
+		// Make sure state is correct. 
+		int fail=1;
+		do {
+			if(scheduled_for_start)  break;
+			if(!tasklist_todo.is_empty() || !tasklist_todo.is_empty())  break;
+			if(tasklist_todo_nelem || tasklist_done_nelem)  break;
+			if(!recovering)  break;
+			if(!dont_start_more_tasks)  break;  // Must be set by recovering. 
+			if(schedule_quit || schedule_quit_after)  break;  // We may not be here. 
+			if(!told_interface_to_quit)  break;
+			if(kill_tasks_and_quit_now)  break;  // We may not be here. 
+			if(sched_kill_tasks)  break;
+			if(connected_to_tsource)  break;
+			if(exec_stopped)  break;   // We are here and stopped??
+			if(last_pend_done_frame_no>=0)  break;  // Must be -1. 
+			if(tsgod_next_action!=ANone || pending_action!=ANone)  break;
+			// Maybe, I'll change the meaning of SIGINT for ldrclient. 
+			// But for now, sigint must schedule some quit and thus 
+			// we may not be here. 
+			if(abort_on_signal || caught_sigint)  break;
+			
+			// Misc checks: 
+			fail=2;
+			if(!interface)  break;
+			// Recovery may only be done with active task source: 
+			if(GetTaskSourceType()!=TST_Active)  break;
+			
+			fail=0;
+		} while(0);
+		if(fail)
+		{
+			Error("Internal error: Illegal internal state at end of "
+				"recovery (fail=%d).\n",fail);
+			_DumpInternalState();
+			assert(0);
+		}
+		
+		// Tell interface: 
+		interface->RecoveryDone();
+		
+		// Reset: 
+		jobs_failed_in_sequence=0;
+		failed_in_sequence_reported=0;
+		dont_start_more_tasks=0;
+		recovering=0;    // End it. 
+		told_interface_to_quit=0;
+		ts_done_all_first=0;
+		nth_call_to_get_task=0;
+		
+		// Reset little history: 
+		lpf_hist_idx=0;
+		if(lpf_hist_size>0)
+		{
+			for(int i=0; i<lpf_hist_size; i++)
+			{  last_proc_frames[i]=-1;  }
+		}
+		
+		// Probably, these shall be reset, too: 
+		// (See check above, too)  [currently useless here]
+		abort_on_signal=0;
+		caught_sigint=0;
+		
+fprintf(stderr,"task-thresh: low=%d, high=%d [debug]\n",
+	interface->Get_todo_thresh_low(),
+	interface->Get_todo_thresh_high());
+		
+		// Tell the task source: 
+		// (It is an active task source as checked above,)
+		// This is a special situation; we call TSGetTask for the 
+		// active task source to inform it about the end of recovery. 
+		int rv=TSGetTask();
+		assert(rv==0);
+		
+		ReSched();
+	}
 }
 
 
@@ -1089,7 +1280,12 @@ int TaskManager::_StartProcessing()
 	Verbose(TDI,"  Load control: ");
 	if(load_low_thresh<=0)
 	{
-		Verbose(TDI,"[disabled]\n");
+		char tmp[16];
+		if(loadval<0)
+		{  strcpy(tmp,"??");  }
+		else
+		{  snprintf(tmp,16,"%.2f",double(loadval)/100.0);  }
+		Verbose(TDI,"[disabled]; current load: %s\n",tmp);
 		assert(load_poll_msec<0);
 	}
 	else
@@ -1147,6 +1343,26 @@ void TaskManager::ReallyStartProcessing(int error_occured)
 }
 
 
+void TaskManager::PrintWorkCycleStart()
+{
+	assert(!recovering);
+	assert(tasklist_todo_nelem==0);  // bug trap...
+	
+	// Save some info from work start: 
+	ProcessManager::manager->GetTimeUsage(0,&ptu_self_start_work);
+	ProcessManager::manager->GetTimeUsage(1,&ptu_chld_start_work);
+	++work_cycle_count;
+	
+	VerboseSpecial("Beginning new work cycle (cycle count: %d)",
+		work_cycle_count);
+	HTime curr(HTime::Curr);
+	Verbose(TDI,"  Current time (local): %s\n",curr.PrintTime());
+	int loadval=_GetLoadValue();
+	if(loadval>=0)
+	{  Verbose(TDI,"  Current load: %.2f\n",double(loadval)/100.0);  }
+}
+
+
 // Called by TaskDriverInterface becuase a TaskDriver unregisterd 
 // or because new LDR clients are connected or others disconnect. 
 void TaskManager::CheckStartNewJobs(int njobs_changed)
@@ -1159,7 +1375,7 @@ void TaskManager::CheckStartNewJobs(int njobs_changed)
 	{
 		// Special case. Called by LDR interface when all clients were 
 		// disconnected. 
-		assert((schedule_quit || schedule_quit_after) && 
+		assert((schedule_quit || schedule_quit_after || recovering) && 
 			   tasklist_todo.is_empty());
 		
 		ReSched();
@@ -1191,7 +1407,7 @@ connections.
 			// This is an error unless there is nothing to do and we're 
 			// quitting. 
 			bool just_quitting = tasklist_todo.is_empty() && 
-				(schedule_quit || schedule_quit_after);
+				(schedule_quit || schedule_quit_after || recovering);
 			if(!just_quitting)
 			{  schedule_quit=2;  }
 			ReSched();
@@ -1211,6 +1427,13 @@ connections.
 			{  schedule_quit=schedule_quit_after;  }
 			ReSched();
 		}
+		if(recovering)
+		{
+			// Will this ever happen? - YES. For example when 
+			// the server disconnects while there are jobs running 
+			// and the job then terminates. 
+			ReSched();
+		}
 	}
 }
 
@@ -1220,6 +1443,7 @@ void TaskManager::_CheckStartTasks()
 {
 	// See if we're allowed to start more tasks: 
 	if(dont_start_more_tasks)  return;
+	assert(!recovering);  // For recovering, dont_start_more_tasks must be set. 
 	
 	// See if there's already a task scheduled for start: 
 	if(scheduled_for_start)  return;
@@ -1265,6 +1489,9 @@ int TaskManager::_CheckStartExchange()
 	//bool can_done=_TS_CanDo_DoneTask();
 	//bool can_get=_TS_CanDo_GetTask(can_done);;
 	
+	// Note: recovering sets dont_start_more_tasks. 
+	assert(!recovering || dont_start_more_tasks);
+	
 	int must_connect=-1;
 	if(dont_start_more_tasks || schedule_quit)
 	{
@@ -1287,9 +1514,16 @@ int TaskManager::_CheckStartExchange()
 	if(must_connect<0)
 	{  must_connect=0;  }
 	
-	if(!must_connect && schedule_quit_after && 
-	   tasklist_todo.is_empty() && !tasklist_done.is_empty())
-	{  must_connect=1;  }
+	if(!must_connect && tasklist_todo.is_empty() && !tasklist_done.is_empty())
+	{
+		if(schedule_quit_after)
+		{  must_connect=1;  }
+		else assert(!recovering);
+		// NOTE: If recovering (dont_start_more_tasks is set), 
+		//       _TS_CanDo_DoneTask() must return true if there are 
+		//       tasks in the done queue because during recovery we 
+		//       MUST report all tasks to the task source. 
+	}
 	
 	// Now, let's see...
 	if(must_connect)
@@ -1313,6 +1547,10 @@ bool TaskManager::_TS_CanDo_DoneTask(CompleteTask **special_done)
 	// schedule_quit -> put back tasks which were not yet processed. 
 	// dont_start_more_tasks -> put back all non-processed tasks. 
 	// And, we must deliver done tasks (if any). 
+	// NOTE: during recovering, we can (and MUST) report all tasks as 
+	//       done; recovering sets dont_start_more_tasks, so no extra 
+	//       condition is needed. 
+	assert(!recovering || dont_start_more_tasks);
 	     if(!tasklist_done.is_empty())  can_done=true;
 	else if(dont_start_more_tasks || schedule_quit)
 	{
@@ -1335,10 +1573,11 @@ bool TaskManager::_TS_CanDo_GetTask(bool can_done)
 {
 	if(GetTaskSourceType()==TST_Active)  return(false);
 	bool can_get=true;
+	// Note: recovering sets dont_start_more_tasks. 
 	     if(dont_start_more_tasks)  can_get=false;
 	else if(schedule_quit || schedule_quit_after)  can_get=false;
 	else if(ts_done_all_first && can_done)  can_get=false;
-	else if(tasklist_todo.count()>=interface->Get_todo_thresh_high())
+	else if(tasklist_todo_nelem>=interface->Get_todo_thresh_high())
 		can_get=false;
 	return(can_get);
 }
@@ -1401,7 +1640,9 @@ void TaskManager::_TS_GetOrDoneTask()
 		case ADoneTask:
 		{
 			CompleteTask *ctsk=tasklist_done.popfirst();
-			if(!ctsk)
+			if(ctsk)
+			{  --tasklist_done_nelem;  }
+			else
 			{
 				ctsk=special_done;
 				// We may not dequeue and call TaskDone() if the task 
@@ -1415,7 +1656,7 @@ void TaskManager::_TS_GetOrDoneTask()
 				assert(tasklist_todo.find(ctsk));
 				#endif
 				
-				tasklist_todo.dequeue(ctsk);
+				tasklist_todo.dequeue(ctsk);  --tasklist_todo_nelem;
 			}
 			assert(ctsk);  // otherwise tsgod_next_action=ADoneTask illegal
 			
@@ -1745,11 +1986,13 @@ void TaskManager::_DumpInternalState()
 		"TaskManager state:\n"
 		"  scheduled_for_start:     %s\n"
 		"  jobs_failed_in_sequence: %d\n"
+		"  failed_in_sequence_rp't: %s\n"
 		"  dont_start_more_tasks:   %d\n"
 		"  caught_sigint:           %d\n"
 		"  abort_on_signal:         %d\n"
 		"  schedule_quit:           %d\n"
 		"  schedule_quit_after:     %d\n"
+		"  recovering:              %d\n"
 		"  told_interface_to_quit:  %d\n"
 		"  kill_tasks_and_quit_now: %d\n"
 		"  sched_kill_tasks:        %d\n"
@@ -1759,6 +2002,7 @@ void TaskManager::_DumpInternalState()
 		"  exec_stopped:            %d\n"
 		"  last_pend_done_frame_no: %d\n"
 		"  tsgod_next_action:       %d\n"
+		"  pending_action:          %d   (last frame %d)\n"
 		"  nth_call_to_get_task:    %d\n"
 		"  resched (tid0):          %s\n"
 		"  tid_ts_cwait:            %ld\n"
@@ -1767,11 +2011,13 @@ void TaskManager::_DumpInternalState()
 		  (scheduled_for_start->state==CompleteTask::ToBeRendered ? 
 		    "render" : "filter") : "none",
 		jobs_failed_in_sequence,
+		failed_in_sequence_reported ? "yes" : "no",
 		dont_start_more_tasks ? 1 : 0,
 		caught_sigint,
 		abort_on_signal ? 1 : 0,
 		schedule_quit,
 		schedule_quit_after,
+		recovering ? 1 : 0,
 		told_interface_to_quit ? 1 : 0,
 		kill_tasks_and_quit_now ? 1 : 0,
 		sched_kill_tasks,
@@ -1781,13 +2027,14 @@ void TaskManager::_DumpInternalState()
 		exec_stopped ? 1 : 0,
 		last_pend_done_frame_no,
 		tsgod_next_action,
+		pending_action,last_pend_done_frame_no,
 		nth_call_to_get_task,
 		TimerInterval(tid0)<0 ? "no" : "yes",
 		TimerInterval(tid_ts_cwait),
 		TimerInterval(tid_load_poll));
 		
 	
-	fprintf(stderr,"  Tasks todo:");
+	fprintf(stderr,"  Tasks todo (%d):",tasklist_todo_nelem);
 	for(CompleteTask *i=tasklist_todo.first(); i; i=i->next)
 	{
 		char st[3]={'-','-','\0'};
@@ -1799,7 +2046,7 @@ void TaskManager::_DumpInternalState()
 	}
 	fprintf(stderr,"\n");
 	
-	fprintf(stderr,"  Tasks done:");
+	fprintf(stderr,"  Tasks done (%d):",tasklist_done_nelem);
 	for(CompleteTask *i=tasklist_done.first(); i; i=i->next)
 	{
 		fprintf(stderr," [%d:%c%c]",i->frame_no,
@@ -1809,6 +2056,20 @@ void TaskManager::_DumpInternalState()
 			   i->state==CompleteTask::TaskDone ? 'd' : '?'));
 	}
 	fprintf(stderr,"\n");
+}
+
+
+// Well... this has to be done: 
+// (Used by task source for verbose messages.) 
+int TaskManager::tsGetDebugInfo(TSDebugInfo *dest)
+{
+	dest->todo_queue=tasklist_todo_nelem;
+	dest->done_queue=tasklist_done_nelem;
+	#if TESTING
+	assert(tasklist_todo_nelem==tasklist_todo.count());
+	assert(tasklist_done_nelem==tasklist_done.count());
+	#endif
+	return(0);
 }
 
 
@@ -1827,6 +2088,9 @@ TaskManager::TaskManager(ComponentDataBase *cdb,int *failflag) :
 	
 	interface=NULL;
 	
+	tasklist_todo_nelem=0;
+	tasklist_done_nelem=0;
+	
 	// Initial values: 
 	jobs_failed_in_sequence=0;
 	max_failed_in_sequence=3;   // 0 -> switch off `failed in sequence´-feature
@@ -1839,6 +2103,7 @@ TaskManager::TaskManager(ComponentDataBase *cdb,int *failflag) :
 	abort_on_signal=0;
 	schedule_quit=0;
 	schedule_quit_after=0;
+	recovering=0;
 	sched_kill_tasks=0;
 	told_interface_to_quit=0;
 	kill_tasks_and_quit_now=0;
@@ -1858,6 +2123,10 @@ TaskManager::TaskManager(ComponentDataBase *cdb,int *failflag) :
 	load_control_stop_counter=0;
 	max_load_measured=-1;
 	
+	failed_in_sequence_reported=0;
+	
+	work_cycle_count=0;
+	
 	int failed=0;
 	
 	lpf_hist_size=5;
@@ -1871,7 +2140,6 @@ TaskManager::TaskManager(ComponentDataBase *cdb,int *failflag) :
 		{  last_proc_frames[i]=-1;  }
 	}
 	last_pend_done_frame_no=-1;
-	
 	
 	//if(FDBase::SetManager(1))
 	//{  ++failed;  }
@@ -1907,16 +2175,18 @@ void TaskManager::_DestructCleanup(int real_destructor)
 		_KillScheduledForStart();
 	}
 	
-	//if(kill_tasks_and_quit_now)
+	//if(!kill_tasks_and_quit_now)
 	{
 		if(!tasklist_todo.is_empty())
 		{  Warning("OOPS: Tasks left in todo queue.\n");  }
 		while(!tasklist_todo.is_empty())
-		{  delete tasklist_todo.popfirst();  }
+		{  delete tasklist_todo.popfirst();  --tasklist_todo_nelem;  }
 		if(!tasklist_done.is_empty())
 		{  Warning("OOPS: Tasks left in done queue.\n");  }
 		while(!tasklist_done.is_empty())
-		{  delete tasklist_done.popfirst();  }
+		{  delete tasklist_done.popfirst();  --tasklist_done_nelem;  }
+		assert(!tasklist_todo_nelem);
+		assert(!tasklist_done_nelem);
 	}
 	
 	TaskSource *ts=tasksource();
@@ -1935,8 +2205,8 @@ TaskManager::~TaskManager()
 	// Make sure there are no jobs and no tasks left: 
 	assert(!scheduled_for_start);
 	
-	assert(tasklist_todo.is_empty());
-	assert(tasklist_done.is_empty());
+	assert(tasklist_todo.is_empty());  assert(!tasklist_todo_nelem);
+	assert(tasklist_done.is_empty());  assert(!tasklist_done_nelem);
 	
 	assert(!connected_to_tsource);
 	assert(pending_action==ANone);

@@ -102,6 +102,9 @@ int NetworkIOBase::CopyData2StrList(RefStrList *dest,const char *data,
 // Start sending passed buffer using FDCopyBase etc. 
 int NetworkIOBase::_FDCopyStartSendBuf(char *buf,size_t len)
 {
+	if(out.pump_s->is_dead)
+	{  out.pump_s->PumpReuseNow();  }
+	
 	assert(out.ioaction==IOA_None);
 	
 	out.io_buf->buf=buf;
@@ -134,6 +137,9 @@ int NetworkIOBase::_FDCopyStartSendBuf(char *buf,size_t len)
 // See _FDCopyStartSendBuf()
 int NetworkIOBase::_FDCopyStartRecvBuf(char *buf,size_t len)
 {
+	if(in.pump_s->is_dead)
+	{  in.pump_s->PumpReuseNow();  }
+	
 	assert(in.ioaction==IOA_None);
 	
 	in.io_buf->buf=buf;
@@ -204,6 +210,9 @@ int NetworkIOBase::_FDCopyStartSendFile(const char *path,int64_t filelen)
 		abort();
 	}
 	
+	if(out.pump_fd->is_dead)
+	{  out.pump_fd->PumpReuseNow();  }
+	
 	out.io_fd->pollid=send_pollid;
 	assert(!out.io_fd->transferred);  // io params must be reset by copy facility
 	out.pump_fd->limit=filelen;
@@ -271,6 +280,9 @@ int NetworkIOBase::_FDCopyStartRecvFile(const char *path,int64_t filelen)
 		fprintf(stderr,"OOPS: PollFD failed: %d,%d\n",rv,fd);
 		abort();
 	}
+	
+	if(in.pump_fd->is_dead)
+	{  in.pump_fd->PumpReuseNow();  }
 	
 	in.io_fd->pollid=recv_pollid;
 	assert(!in.io_fd->transferred);  // io params must be reset by copy facility

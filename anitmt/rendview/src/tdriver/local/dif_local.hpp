@@ -60,6 +60,7 @@ class TaskDriverInterface_Local :
 		
 		// Needed by LDR task source: 
 		int Get_njobs();
+		int Get_nrunning();
 		
 		/************* INTERFACE TO TaskManager *************/
 		// ALL OVERRIDING VIRTUALS from TaskDriverInterface: 
@@ -98,6 +99,8 @@ class TaskDriverInterface_Local :
 		// Called when everything is done to disconnect from the clients. 
 		// Local interface can handle that quickly. 
 		void PleaseQuit();
+		// Called when recovery is done to restart. 
+		void RecoveryDone();
 		
 		/************* INTERFACE TO TaskDriver *************/
 		

@@ -141,6 +141,7 @@ struct LDRNowConnected : LDRHeader
 	u_int16_t auth_code;  // CAC_*
 	LDRTime starttime;  // when client was started
 	u_int16_t njobs;   // njobs param as passed on startup of client
+	u_int16_t task_thresh_high;  // no more than this many tasks will be assigned to client
 	u_int16_t loadval;  // loadavg*100 (0xffff for unknown)
 	// Could pass a bit more like unsuccessful connection attempts, etc. 
 };

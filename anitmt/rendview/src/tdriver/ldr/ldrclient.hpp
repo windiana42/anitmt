@@ -95,6 +95,8 @@ class LDRClient :
 		// Client data: 
 		int c_jobs;  // njobs reported by client. 
 		int assigned_jobs;  // number of jobs the client shall do 
+		int c_task_thresh_high;  // high task thresh of client 
+			// (client will never get more then this many tasks)
 		
 		// Returns nice client name: 
 		RefString _ClientName();
@@ -157,7 +159,8 @@ class LDRClient :
 		// less than c_jobs tasks assigned.). 
 		// That is, SendTaskToClient() can be called. 
 		int CanDoTask()
-		{  return(auth_passed && assigned_jobs<c_jobs && !tri.scheduled_to_send);  }
+		{  return(auth_passed && assigned_jobs<c_task_thresh_high && 
+			!tri.scheduled_to_send);  }
 		
 		// Actually start sending the passed task to the client. 
 		// Only one task at a time can be sent to the client. 

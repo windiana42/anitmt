@@ -41,6 +41,10 @@ int TaskDriverInterface_LDR::Get_njobs()
 {
 	return(njobs);
 }
+int TaskDriverInterface_LDR::Get_nrunning()
+{
+	return(RunningJobs());
+}
 
 
 int TaskDriverInterface_LDR::RunningJobs()
@@ -64,7 +68,7 @@ int TaskDriverInterface_LDR::AreThereJobsRunning()
 
 
 // Called when everything is done to disconnect from the clients. 
-// Local interface can handle that quickly. 
+// Local interface can handle that quickly. (Also called for recovery!)
 void TaskDriverInterface_LDR::PleaseQuit()
 {
 	if(shall_quit)  return;
@@ -96,6 +100,21 @@ void TaskDriverInterface_LDR::PleaseQuit()
 			i->DeleteMe();  // NO NEED TO DEQUEUE. 
 		}
 	}
+}
+
+
+void TaskDriverInterface_LDR::RecoveryDone()
+{
+	assert(nclients==0);
+	assert(RunningJobs()==0);
+	assert(njobs==0);   // not sure about this one
+	assert(clientlist.is_empty());   // even less sure about this one
+	
+	dont_reconnect=0;
+	_StopReconnectTrigger();  // be sure...
+	
+	already_started_processing=0;
+	shall_quit=0;
 }
 
 
@@ -152,7 +171,7 @@ int TaskDriverInterface_LDR::LaunchTask(CompleteTask *ctsk)
 	
 	int rv=c->SendTaskToClient(ctsk);
 	// NOTE: In case there is an error which MAY & DOES happen, then 
-	//       call _HandleFailedLaunch(ctsk,TRC_<to_be_added>) and return(-1). 
+	//       call TaskLaunchResult(ctsk,TRC_<to_be_added>) and return(-1). 
 	if(rv)
 	{
 		// rv=1 -> another task is currently scheduled to be sent
@@ -192,20 +211,45 @@ njobs,c->assigned_jobs,nclients);
 // This is only called for LAUNCHING the task; i.e. until we get 
 // LDRTaskResponse. If the actual execution of the task (done by client) 
 // failed, ###FIXME### must be called. 
+// --equal text--
+// Called until LDRTaskResponse was received. The client could not (try to) 
+// execute a job because an error occured before that. Action: feed task into 
+// a different client. [Also called if connection error, etc. occured.]
 void TaskDriverInterface_LDR::TaskLaunchResult(CompleteTask *ctsk,
 	int resp_code)
 {
 	assert(ctsk && ctsk->d.any());
 	
+	LDRClient *c=ctsk->d.ldrc;
+	assert(c);  // Otherwise bug near/in GetTaskToStart(). 
+	
 	if(resp_code)
-	{  _HandleFailedLaunch(ctsk,resp_code);  }
-	else
 	{
-		// So, the client actually accepted the task and will try and execute 
-		// its jobs. 
-		// Seems there is nothing to do now. Just wait...
-fprintf(stderr,"TaskLaunchResult(LDRTaskResponse=success)\n");
+		// Failure. 
+		
+		// NOTE: This cannot happend ATM because LDRClient::_ParseTaskResponse() 
+		//       kicks the client if the response code indicates error (!=0). 
+		//       So, if we finally handle the resp codes [unknown renderer,...] 
+		//       here (as we should, called by TaskLaunchResult()), first remove 
+		//       the ugly client kick in _ParseTaskResponse(). 
+		//#warning check that... ######
+		
+		// Do not forget to remove client: 
+		ctsk->d.ldrc=NULL;
+		
+		fprintf(stderr,"implement me (resp_code=%d)!\n",resp_code);
+		// Feed task into a different client (do that only XX times). oops...
+		// 1) Client error -> feed different client because this one was kicked
+		// 2) other error (unknown render desc...) -> can use _HandleFailedTask/_HandleTaskTermination() 
+		//      (in the mean time) to make it fail. 
+		assert(0);
 	}
+	
+	// In any case, tell TaskManager that the launch is 
+	// done (becuase it may want to launch a further task): 
+	// ##FIXME## this could be merged with error TaskManager's error 
+	//           handling if reso_code!=0. 
+	component_db()->taskmanager()->LaunchingTaskDone(ctsk);
 }
 
 
@@ -219,34 +263,6 @@ void TaskDriverInterface_LDR::TaskTerminationNotify(CompleteTask *ctsk)
 	assert(ctsk && ctsk->d.any());
 	
 	_HandleTaskTermination(ctsk);
-}
-
-
-// Called until LDRTaskResponse was received. The client could not (try to) 
-// execute a job because an error occured before that. Action: feed task into 
-// a different client. [Also called if connection error, etc. occured.]
-void TaskDriverInterface_LDR::_HandleFailedLaunch(CompleteTask *ctsk,
-	int resp_code)
-{
-	LDRClient *c=ctsk->d.ldrc;
-	assert(c);  // Otherwise bug near/in GetTaskToStart(). 
-	
-	// NOTE: This cannot happend ATM because LDRClient::_ParseTaskResponse() 
-	//       kicks the client if the response code indicates error (!=0). 
-	//       So, if we finally handle the resp codes [unknown renderer,...] 
-	//       here (as we should, called by TaskLaunchResult()), first remove 
-	//       the ugly client kick in _ParseTaskResponse(). 
-	//#warning check that... ######
-	
-	// Do not forget to remove client: 
-	ctsk->d.ldrc=NULL;
-	
-	fprintf(stderr,"implement me (resp_code=%d)!\n",resp_code);
-	// Feed task into a different client (do that only XX times). oops...
-	// 1) Client error -> feed different client because this one was kicked
-	// 2) other error (unknown render desc...) -> can use _HandleFailedTask/_HandleTaskTermination() 
-	//      (in the mean time) to make it fail. 
-	assert(0);
 }
 
 
@@ -399,11 +415,12 @@ void TaskDriverInterface_LDR::_PrintInitConnectMsg(const char *msg)
 void TaskDriverInterface_LDR::_WriteStartProcInfo(const char *msg)
 {
 	// Write out useful verbose information: 
-	VerboseSpecial("Okay, %s work: %d parallel tasks on %d client%s.",
+	VerboseSpecial("Okay, %s work: max %d parallel tasks on %d client%s.",
 		msg,njobs,nclients,nclients==1 ? "" : "s");
 	
-	Verbose(TDI,"  task-thresh: low=%d, high=%d\n",
-		todo_thresh_low,todo_thresh_high);
+	Verbose(TDI,"  task-thresh: low=%d, high=%d  (current: %d)\n",
+		todo_thresh_low,todo_thresh_high,
+		GetTaskListTodo_Nelem());
 	
 }
 
@@ -411,10 +428,11 @@ void TaskDriverInterface_LDR::_WriteProcInfoUpdate()
 {
 	if(!shall_quit && already_started_processing)
 	{
-		VerboseSpecial("Update: %d parallel tasks on %d clients",
-			njobs,nclients);
-		Verbose(TDI,"  task-thresh: low=%d, high=%d\n",
-			todo_thresh_low,todo_thresh_high);
+		VerboseSpecial("Update: max %d parallel tasks (currently %d) on %d client%s",
+			njobs,RunningJobs(),nclients,nclients==1 ? "" : "s");
+		Verbose(TDI,"  task-thresh: low=%d, high=%d (current=%d)\n",
+			todo_thresh_low,todo_thresh_high,
+			GetTaskListTodo_Nelem());
 	}
 	if(shall_quit && clientlist.is_empty())
 	{
@@ -725,6 +743,7 @@ void TaskDriverInterface_LDR::SuccessfullyConnected(LDRClient *client)
 
 void TaskDriverInterface_LDR::FailedToConnect(LDRClient *client)
 {
+	// Yes, this is easy...
 	client->DeleteMe();
 }
 

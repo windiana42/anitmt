@@ -139,7 +139,8 @@ struct TaskSource_NAMESPACE
 	{
 		TASNone=0,
 		TASTakeTask,   // active task source got task (passed in ctsk)
-		TASRecovering  // lost connection to server; must recover
+		TASRecoveringBad,   // lost connection to server; must recover
+		TASRecoveringQuit   // closed connection to server due to quit
 	};
 	
 	enum ErrCommand
@@ -243,10 +244,19 @@ class TaskSource : public TaskSource_NAMESPACE
 class TaskSourceConsumer : public TaskSource_NAMESPACE
 {
 	friend class TaskSource;
+	public:
+		struct TSDebugInfo
+		{
+			// Number of tasks in todo and done queue: 
+			int todo_queue;
+			int done_queue;
+		};
 	private:
 		// Pointer to the (associated) TaskSource: 
 		TaskSource *tsource;
 		
+		// Used by the write functions below: 
+		char *_TSTaskQueueStatStr(int special=0);  // Returns static data. 
 		// Used by TSWriteError(): 
 		void _TSWriteError_Connect(const TSNotifyInfo *ni);
 		void _TSWriteError_GetTask(const TSNotifyInfo *ni);
@@ -259,6 +269,10 @@ class TaskSourceConsumer : public TaskSource_NAMESPACE
 		// of the status of some TS* call. 
 		// Return value: currently unused, use 0. 
 		virtual int tsnotify(TSNotifyInfo *) HL_PureVirt(0)
+		
+		// Use this to store some info; used by verbose output. 
+		// Must return 0. 
+		virtual int tsGetDebugInfo(TSDebugInfo *dest) HL_PureVirt(-1)
 		
 		// Write error according to TSNotifyInfo. 
 		// If TSNotifyInfo contains success code, only verbose output 
