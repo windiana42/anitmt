@@ -379,6 +379,21 @@ FunctionState pf_trunc(FunctionArgs *fa)
 	return(FSSuccess);
 }
 
+FunctionState pf_vcross(FunctionArgs *fa)
+{
+	FuncVectorConv(a,0);
+	FuncVectorConv(b,1);
+	*fa->result=Vector(cross(a->rvector(),b->rvector()));
+	return(FSSuccess);
+}
+
+FunctionState pf_vdot(FunctionArgs *fa)
+{
+	FuncVectorConv(a,0);
+	FuncVectorConv(b,1);
+	*fa->result=Scalar(dot(a->rvector(),b->rvector()));
+	return(FSSuccess);
+}
 FunctionState pf_vlength(FunctionArgs *fa)
 {
 	FuncVectorConv(arg,0);
@@ -699,6 +714,8 @@ const struct FunctionDesc funcs[]=
 	{ "tan",       &ca_exactly1, &pf_tan       },
 	{ "tanh",      &ca_exactly1, &pf_tanh      },
 	{ "trunc",     &ca_exactly1, &pf_trunc     },
+	{ "vcross",    &ca_exactly2, &pf_vcross    },
+	{ "vdot",      &ca_exactly2, &pf_vdot      },
 	{ "vlength",   &ca_exactly1, &pf_vlength   },
 	{ NULL, NULL, NULL }
 };
