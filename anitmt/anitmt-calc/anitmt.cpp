@@ -1,3 +1,17 @@
+/*****************************************************************************/
+/**   AniTMT main function                                        	    **/
+/*****************************************************************************/
+/**									    **/
+/** Author: Martin Trautmann						    **/
+/**									    **/
+/** EMail:   martintrautmann@gmx.de					    **/
+/**									    **/
+/** License: GPL - free and without any warranty - read COPYING             **/
+/**									    **/
+/** Package: AniTMT							    **/
+/**									    **/
+/*****************************************************************************/
+
 #include "proptree.hpp"
 #include "animation.hpp"
 #include "nodes.hpp"
@@ -32,16 +46,27 @@ int main(int argc,char **argv,char **envp)
       return -3;
     }
 
+  typedef std::list<Input_Interface*> input_type;
+  input_type input;
+
   adlfiles.rewind();
   do
   { 
+    input.push_back( new ADL_Parser( adlfiles.current() ) );
+
+    /*
     ifstream file( adlfiles.current().c_str() );
     ADLParser p( file, cout, true);
     p.ParseTree( &ani );
+    */
   } while( adlfiles.next() );
 
+  for( 
+
+  ani.hierarchy_final_init();	// !!has to be inserted in ParseTree!!!
+
   ani.pri_sys.invoke_all_Actions();
-  save_filled("raw.out", &ani);
+  save_filled("filled.out", &ani);
 
   return 0;
 }
