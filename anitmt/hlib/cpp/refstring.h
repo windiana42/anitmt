@@ -19,8 +19,8 @@
 
 #include "cplusplus.h"
 
-#include <stddef.h>
 #include <string.h>
+
 
 // How it works: Simply allocate a RefString on the stack and store 
 // any string in it. You may copy the RefString via the copy 

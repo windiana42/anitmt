@@ -18,9 +18,6 @@
 #include "taskmanager.hpp"
 #include "tsource/tsfactory.hpp"
 
-// These are only needed for srandom()...
-#include <time.h>
-#include <unistd.h>
 
 char *prg_name=NULL;
 
@@ -29,34 +26,52 @@ static const char *fti="Failed to initialize %s.\n";
 
 static void _color_setup(int &argc,char **argv,char **envp)
 {
-	int color_forbidden=0;
+	int color_arg=0;
 	for(int i=1; i<argc; i++)
 	{
 		const char *a=argv[i];
 		if(*a!='-')  continue;
 		++a;  while(*a=='-')  ++a;
-		if(*a!='n')  continue;
-		if(!strcmp(a,"nocolor"))
+		if(*a=='n' && !strcmp(a,"nocolor"))
 		{
-			++color_forbidden;
+			color_arg=-1;
+			for(int j=i+1; j<argc; j++)
+			{  argv[j-1]=argv[j];  }
+			--i; --argc;
+		}
+		else if(*a=='c' && !strcmp(a,"color"))
+		{
+			if(!color_arg)  color_arg=+1;
 			for(int j=i+1; j<argc; j++)
 			{  argv[j-1]=argv[j];  }
 			--i; --argc;
 		}
 	}
-	if(!color_forbidden)
+	if(!color_arg)
 	{
 		if(GetTerminalSize(fileno(stdout),NULL,NULL)==0)
 		{  do_colored_output_stdout=1;  }
 		if(GetTerminalSize(fileno(stderr),NULL,NULL)==0)
 		{  do_colored_output_stderr=1;  }
 	}
+	else if(color_arg==1)
+	{
+		do_colored_output_stdout=1;
+		do_colored_output_stderr=1;
+	}
+}
+
+
+static volatile void _SeedRandom()
+{
+	HTime tmp(HTime::Curr);
+	srandom(tmp.Get(HTime::seconds));
 }
 
 static int MAIN(int argc,char **argv,char **envp)
 {
 	// First, seed the random generator: 
-	srandom(time(NULL)*getpid());
+	_SeedRandom();
 	
 	// Then, let`s see if we may have color output: 
 	_color_setup(argc,argv,envp);

@@ -22,6 +22,7 @@
 #include "linkedlist.h"
 #include "refstring.h"
 
+
 class RefStrList
 {
 	public:

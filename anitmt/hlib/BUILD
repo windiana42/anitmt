@@ -51,6 +51,12 @@ or check what CFLAGS/CXXFLAGS are set by make opt-generic and pass all those
 which do not make problems. (Note: exceptions and runtime type identification 
 are not used by hlib; but virtual functions are)
 
+Note that you may use ADDFLAGS to pass additional flags to both the C and C++ 
+compiler. If you are using gcc version 3 or above you may find it convenient 
+to use 
+
+make ADDFLAGS="-fmessage-length=$COLUMNS"
+
 Okay, if you have successfully build hlib, run the check programs: 
 If you compiled with any of the make opt-xxx, then call 
 
@@ -67,8 +73,10 @@ make# make [your flags] check
 
 Running the check programs is highly recommended. If they do not fail, then 
 that is a good sign, if something fails then you should look very carefully 
-on what failed. I do not recommend using hlib if something failed, but if 
+at what failed. I do not recommend using hlib if something failed, but if 
 the feature which failed is not used at all, there should not be a problem. 
+Note: If some check really fails, make should report that error as the check 
+program returns an error (nonzero exit code), 
 
 
 C) Troubleshooting...
@@ -86,24 +94,31 @@ if problems actually show up and I do NOT spend hours thinking about what
 could be checked. So, if you have problems and you know how to fix them, 
 please drop me an e-mail (check the source code file for the address). 
 
-Supported architectures include: 
-* i[3456]86-linux-gnu
-* i[3456]86-freebsd
-* alpha-linux-gnu
-* ppc-linux-gnu
-* sparc64-linux-gnu
-* sparc-SunOS  (tested: SunOS 5.8)
+Supported platforms include: 
+* Linux/GNU: 
+   - i[3456]86
+   - alpha
+   - ppc
+   - sparc64
+* FreeBSD:
+   - i[3456]86
+* SunOS (tested: SunOS 5.8): 
+   - sparc (sparc64 should also be ok)
+* Cygwin:
+   - i[3456]86
 
-NOT SUPPORTED architectures include: 
-* i[3456]86-win32
-  M$ Windooze (any flavour)
+NOT SUPPORTED platforms include: 
 * ppc-darwin
   alias MacOS X. 
-  To hell, why did they at Apple have to taint FreeBSD?
-  Why couldn't they leave poll(2) in the system?!
+  To hell, FreeBSD is a good system, but why did they at Apple have to 
+  come up with that tainted derivate? Why couldn't they leave the central 
+  syscall poll(2) in the system?!
   [Please correct me in case I am just too stupid.]
+* i[3456]86-win32
+  M$ Windooze (any flavour)
+  Sorry, not POSIX compliant at all. Please use Cygwin. 
 
-Okay, if your system does not belong to the supported architectures 
+Okay, if your system does not belong to the supported architectures: 
 If hlib compiles & runs without problems, please send me an e-mail so that 
 the arch can be added here. 
 If you do have problems: I wish you happy porting... (And keep one thing in 

@@ -14,8 +14,8 @@ check_PROGRAMS = check_fd
 check_fd_SOURCES = check_fd.cc
 check_fd_LDADD = ../libhlib.a $(LIBS) -lm
 
-check: check_fd ../libhlib.a  xFORCE
-	./check_fd
+check: check_fd$(EXEEXT) ../libhlib.a  xFORCE
+	./check_fd$(EXEEXT)
 
 xFORCE:
 

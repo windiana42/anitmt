@@ -14,8 +14,7 @@
  *
  */
 
-#include <hlib/prototypes.h>
-
+#include "base64.h"
 
 /* Maps the first 128 ASCII chars to their base64 code (in range 0...63) 
  * Special meaning: 

@@ -18,8 +18,6 @@
 
 #include "cplusplus.h"
 
-#include <stdio.h>
-#include <stdlib.h>
 
 #ifndef TESTING
 #define TESTING 1

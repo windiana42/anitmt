@@ -19,13 +19,6 @@
 
 #include <hlib/prototypes.h>  /* MUST BE FIRST */
 
-#include <stdio.h>   /* for ``NULL'' */
-#include <stdlib.h>
-#include <unistd.h>
-#include <signal.h>
-
-#include <sys/socket.h>
-
 #include <hlib/fdmanager.h>
 #include <hlib/fdbase.h>
 

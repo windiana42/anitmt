@@ -1,6 +1,6 @@
 # Process this file with autoconf to produce a configure script.
 AC_INIT
-AM_INIT_AUTOMAKE(rendview,0.3.7a)
+AM_INIT_AUTOMAKE(rendview,0.3.7b)
 AC_CONFIG_SRCDIR([src/rendview.cpp])
 AM_CONFIG_HEADER(config.h)
 
@@ -11,9 +11,10 @@ AC_PROG_INSTALL
 AC_PROG_CXX
 AC_PROG_RANLIB
 
-# Checks for header files.
+# Checks for header files. HLIB already does a lot of these checks, some 
+# are repeated here. 
 AC_HEADER_STDC
-# FIXME: more missing
+AC_CHECK_HEADERS([arpa/inet.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 # Most of that stuff is already checked in HLIB and in hlib's config. 

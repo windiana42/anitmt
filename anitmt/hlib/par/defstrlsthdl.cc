@@ -18,11 +18,11 @@
 #include "cmdline.h"
 #include <hlib/refstrlist.h>
 
-#include <errno.h>
+#if HAVE_LIMITS_H
 #include <limits.h>
+#endif
 #include <string.h>
 #include <ctype.h>
-#include <stdlib.h>
 
 #ifndef TESTING
 #define TESTING 1

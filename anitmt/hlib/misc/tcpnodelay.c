@@ -14,8 +14,12 @@
 
 #include <hlib/prototypes.h>
 
+#if HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
+#endif
+
 #include <netinet/tcp.h>
+
 
 #ifdef SOL_TCP
 #define MY_SOL_SPEC SOL_TCP

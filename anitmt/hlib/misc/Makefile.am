@@ -20,8 +20,8 @@ check_PROGRAMS = check_misc
 check_misc_SOURCES = check_misc.cc
 check_misc_LDADD = ../libhlib.a -lm
 
-check: check_misc ../libhlib.a  xFORCE
-	./check_misc
+check: check_misc$(EXEEXT) ../libhlib.a  xFORCE
+	./check_misc$(EXEEXT)
 
 xFORCE:
 

@@ -22,8 +22,6 @@
 
 #include "cmdline.h"
 
-#include <stddef.h>
-
 #include "parintrnl.h"
 
 namespace par

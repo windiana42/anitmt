@@ -23,8 +23,6 @@
 #include <ctype.h>
 
 #include <netinet/in.h>
-#include <sys/types.h>
-#include <sys/socket.h>
 
 
 #define UnsetNegMagic  (-29659)

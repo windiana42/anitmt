@@ -16,14 +16,8 @@
 
 #include <hlib/prototypes.h>  /* MUST BE FIRST */
 
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
-#include <unistd.h>
-#include <signal.h>
-
-#include <sys/socket.h>
 
 #include <hlib/refstrlist.h>
 

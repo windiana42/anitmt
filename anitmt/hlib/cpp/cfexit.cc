@@ -16,9 +16,6 @@
 
 #include "cplusplus.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-
 void ConstructorFailedExit(const char *opt=NULL)
 {
 	fprintf(stderr,"%s: constructor (%s) failed\n",prg_name,opt ? opt : "");

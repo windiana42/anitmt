@@ -31,7 +31,6 @@
 # endif
 #endif
 
-#warning !!!!! HTime is bugged for times (delta) < 0. REWRITE !!!!!
 
 // timeval and time_t replacement 
 class HTime
@@ -43,18 +42,22 @@ class HTime
 		enum _NullTime { Null };
 	private:
 		timeval tv;
-		static const long long conv_fact[];
-		static const long long round_delta[];
+		static const int64_t conv_fact[];
+		static const int64_t round_delta[];
 		static const double conv_factD[];
 		
+		inline void _Normalize(struct timeval *tv)
+		{  register long m=tv->tv_usec/1000000;  if(m<0)  --m;
+			tv->tv_sec+=m;  tv->tv_usec-=1000000*m;  }
+		
 		void _SetVal(long val,TimeSpec sp,timeval *tv);
-		long long _Delta(const HTime *endtime) const;
-		inline long long _LLConv(const timeval *tv) const
-			{  return(((long long)tv->tv_sec)*1000000LL+((long long)tv->tv_usec));  }
-		static inline long long _RoundAdd(long long x,TimeSpec sp)
-			{  return(x + (x<0LL ? (-round_delta[sp]) : round_delta[sp]));  }
+		int64_t _Delta(const HTime *endtime) const;
+		inline int64_t _LLConv(const timeval *tv) const
+			{  return(int64_t(tv->tv_sec)*int64_t(1000000)+int64_t(tv->tv_usec));  }
+		static inline int64_t _RoundAdd(int64_t x,TimeSpec sp)
+			{  return(x + (x<0 ? (-round_delta[sp]) : round_delta[sp]));  }
 		static inline long _RoundAddMs(long x)
-			{  return((x<0L) ? (x-500L) : (x+500L));  }
+			{  return((x<0) ? (x-500) : (x+500));  }
 	public:  _CPP_OPERATORS
 		HTime()  { }
 		HTime(_CurrentTime)  {  SetCurr();  }
@@ -66,12 +69,12 @@ class HTime
 		HTime &operator=(const HTime &h)  {  tv=h.tv;  return(*this);  }
 		
 		// Store/set value (SetCurr() for current time; others never needed): 
-		HTime(long val,TimeSpec sp=msec)  // BE SURE val>=0. 
+		HTime(long val,TimeSpec sp=msec)
 			{  _SetVal(val,sp,&tv);  }
 		int SetCurr()
 			{  return(gettimeofday(&tv,NULL));  }
 		HTime &operator=(_CurrentTime)  {  SetCurr();  return(*this);  }
-		HTime &Set(long val,TimeSpec sp=msec)  // BE SURE val>=0. 
+		HTime &Set(long val,TimeSpec sp=msec)
 			{  _SetVal(val,sp,&tv);  return(*this);  }
 		
 		// Get stored time. This is only useful if HTime stores some 
@@ -81,26 +84,26 @@ class HTime
 		// GetR() -> get integer value; result rounded at division
 		// GetD() -> get floating point value 
 		long   Get (TimeSpec sp) const
-			{  return((sp<_tslast) ? long(_LLConv(&tv)/conv_fact[sp]) : (-1L));  }
+			{  return((sp<_tslast) ? long(_LLConv(&tv)/conv_fact[sp]) : (-1));  }
 		long   GetR(TimeSpec sp) const
-			{  return((sp<_tslast) ? long(_RoundAdd(_LLConv(&tv),sp)/conv_fact[sp]) : (-1L));  }
+			{  return((sp<_tslast) ? long(_RoundAdd(_LLConv(&tv),sp)/conv_fact[sp]) : (-1));  }
 		double GetD(TimeSpec sp) const
 			{  return((sp<_tslast) ? (double(_LLConv(&tv))/conv_factD[sp]) : (-1.0));  }
 		
 		// This should not be used: 
 		void SetTimeval(timeval *stv)
-			{  tv=*stv;  }
+			{  tv=*stv;  _Normalize(&tv);  }
 		
 		// Arithmetics: (val may be <0) 
 		HTime &Add(long val,TimeSpec sp=msec);
 		HTime &Sub(long val,TimeSpec sp=msec);
 		
 		// Calc time differences: (*this = endtime)
-		HTime operator-(const HTime &start);
+		HTime operator-(const HTime &start) const;
 		HTime &operator-=(const HTime &start);
 		
 		// Add time differences: 
-		HTime operator+(const HTime &start);
+		HTime operator+(const HTime &start) const;
 		HTime &operator+=(const HTime &start);
 		
 		// To compare time values: 

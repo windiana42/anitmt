@@ -16,9 +16,6 @@
 
 #include "srcfile.h"
 
-#include <stdio.h>
-#include <errno.h>
-
 namespace par
 {
 

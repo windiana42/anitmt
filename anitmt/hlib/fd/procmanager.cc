@@ -19,7 +19,6 @@
 #include <hlib/prototypes.h>  /* MUST BE FIRST */
 
 #include <string.h>
-#include <signal.h>
 #include <fcntl.h>
 
 #if HAVE_SYS_WAIT_H
@@ -389,13 +388,13 @@ pid_t ProcessManager::StartProcess(ProcessBase *pb,
 		}
 		if(misc.pwdir)
 		{
-			if(chdir(misc.pwdir))
+			if(chdir(misc.pwdir)<0)
 			{  _ChildExit(pipefds[1],PSChdirFailed,errno);  }  // exit child's thread 
 		}
 		if((misc.useflags & ProcMisc::UseNice))
 		{
 			#warning ignore nice errors?
-			if(nice(misc.pniceval))
+			if(nice(misc.pniceval)<0)
 			{  _ChildExit(pipefds[1],PSNiceFailed,errno);  }  // exit child's thread 
 		}
 		if(misc.call_setsid)
@@ -406,12 +405,12 @@ pid_t ProcessManager::StartProcess(ProcessBase *pb,
 		}
 		if((misc.useflags & ProcMisc::UseGID))
 		{
-			if(setgid(misc.pgid))
+			if(setgid(misc.pgid)<0)
 			{  _ChildExit(pipefds[1],PSSetGidFailed,errno);  }
 		}
 		if((misc.useflags & ProcMisc::UseUID))
 		{
-			if(setuid(misc.puid))
+			if(setuid(misc.puid)<0)
 			{  _ChildExit(pipefds[1],PSSetUidFailed,errno);  }
 		}
 		if(misc.pfuncptr)
@@ -422,10 +421,10 @@ pid_t ProcessManager::StartProcess(ProcessBase *pb,
 		}
 		
 		// Finally execute the program: 
-		fprintf(stderr,"STARTING:");
-		for(int ii=0; args.args[ii]; ii++)
-		{  fprintf(stderr," `%s´",args.args[ii]);  }
-		fprintf(stderr,"\n");
+		//fprintf(stderr,"STARTING:");
+		//for(int ii=0; args.args[ii]; ii++)
+		//{  fprintf(stderr," `%s´",args.args[ii]);  }
+		//fprintf(stderr,"\n");
 		int rv;
 		do
 		{  rv=execve(binpath, args.args, env.env);  }
@@ -661,6 +660,8 @@ void ProcessManager::_AddToProcStatus(ProcStatus *ps,
 // Return value: 1 -> ignore signal
 int ProcessManager::_CheckSigInfo(const SigInfo *sig)
 {
+	// This is needed on 64bit alpha...
+	((SigInfo*)sig)->info.si_code&=0xffff;
 	switch(sig->info.si_code)
 	{
 		case CLD_EXITED:
@@ -669,6 +670,19 @@ int ProcessManager::_CheckSigInfo(const SigInfo *sig)
 		case CLD_STOPPED:
 		case CLD_CONTINUED:  /* handeled by _FillProcStatus() */ break;
 		case SI_USER:
+			if(sig->info.si_pid==0)
+			{
+				// Oh no, this is linux/sparc. It does not fill in siginfo. 
+				// Don't ignore that. 
+				#if TESTING
+				static int warned=0;
+				if(warned<10)
+				{  fprintf(stderr,"ProcMan: Hmmm! SIGCHLD (%d, %ld) "
+					"Buggy system!\n",
+					sig->info.si_code,long(sig->info.si_pid));  ++warned;  }
+				#endif
+				break;
+			}
 			#if TESTING
 			fprintf(stderr,"ProcMan: ignoring SIGCHILD (%d)\n",
 				sig->info.si_code);
@@ -826,17 +840,25 @@ int ProcessManager::signotify(const SigInfo *sig)
 	Node *n=_FindNode(sig->info.si_pid);
 	if(!n)
 	{
-		// This can happen if _ZombieCheck() detects the child 
-		// before the signal is actually delivered. 
-		#if TESTING
-		fprintf(stderr,"He?! Not aware of child %d (%d)\n",
-			int(sig->info.si_pid),sig->info.si_code);
-		#endif
-		// (At least prevent zombies from laying around...)
-		pid_t _p;
-		do
-		{  _p=waitpid(sig->info.si_pid,NULL,WNOHANG);  }
-		while(_p==-1 && errno==EINTR);
+		if(sig->info.si_pid>0)
+		{
+			// This can happen if _ZombieCheck() detects the child 
+			// before the signal is actually delivered. 
+			#if TESTING
+			fprintf(stderr,"He?! Not aware of child %ld (%d)\n",
+				long(sig->info.si_pid),sig->info.si_code);
+			#endif
+			// (At least prevent zombies from laying around...)
+			pid_t _p;
+			do
+			{  _p=waitpid(sig->info.si_pid,NULL,WNOHANG);  }
+			while(_p==-1 && errno==EINTR);
+		}
+		else
+		{
+			// No useful info in si_pid; do zombie check... 
+			_ZombieCheck();
+		}
 		return(0);
 	}
 	

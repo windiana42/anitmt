@@ -26,7 +26,6 @@
 
 #include "cmdline.h"
 
-#include <stddef.h>
 
 namespace par
 {

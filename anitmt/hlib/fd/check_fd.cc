@@ -15,14 +15,24 @@
  * 
  */
 
-#include <hlib/prototypes.h>
+// NOTE: This test suite does NOT test the complete functionality of 
+//       FDManager and ProcessManager buf the main features. The primary 
+//       purpose of this test program is when you're compiling hlib on 
+//       some arch different to the developer's arch to see if things 
+//       can be assumes to behave as expected. 
+// HOWEVER, currently those features in ProcMisc which need root perms 
+//       are NOT tested. 
 
-#include <signal.h>
-#include <fcntl.h>
+#include <hlib/prototypes.h>
 
 #include "htime.h"
 #include "fdmanager.h"
 #include "fdbase.h"
+
+#include "procmanager.h"
+#include "procbase.h"
+
+#include <fcntl.h>
 
 #include <assert.h>
 
@@ -183,6 +193,11 @@ int FDTester::fdnotify(FDInfo *fdi)
 
 int FDTester::signotify(const SigInfo *si)
 {
+	if(si->info.si_signo==SIGINT)
+	{
+		fprintf(stderr,"*** INTERRUPT\n");
+		exit(1);
+	}
 	if(action==1)
 	{
 		assert(si->info.si_signo==SIGCHLD);
@@ -226,7 +241,7 @@ FDTester::~FDTester()
 }
 
 
-static int RunTests()
+static int RunFDTests()
 {
 	int failed=0;
 	
@@ -234,7 +249,7 @@ static int RunTests()
 	// class. 
 	FDTester *tst=NEW<FDTester>();
 	if(!tst)
-	{  fprintf(stderr,"*** Tester class init failed\n");  ++failed;  }
+	{  fprintf(stderr,"*** FD tester class init failed\n");  ++failed;  }
 	
 	if(!failed)
 	{  failed=FDManager::manager->MainLoop();  }
@@ -245,17 +260,455 @@ static int RunTests()
 }
 
 
+/******************************************************************************/
+
+class ProcTester : 
+	FDBase,
+	ProcessBase
+{
+	private:
+		TimerID tid;
+		TimerID timeout_tid;
+		
+		int fail;
+		int action;
+		int devnull_fd;
+		pid_t pid;
+		
+		const char *acion_str(PSAction a);
+		const char *detail_str(PSDetail d);
+		
+		// Overriding virtual from FDBase: 
+		int timernotify(TimerInfo *);
+		void sigint()
+		{
+			fprintf(stderr,"*** INTERRUPTED\n");
+			exit(1);
+		}
+		// Overriding virtual from ProcessBase: 
+		void procnotify(const ProcStatus *ps);
+	public:  _CPP_OPERATORS_FF
+		ProcTester(int *failflag);
+		~ProcTester();
+};
+
+
+int ProcTester::timernotify(TimerInfo *ti)
+{
+	if(ti->tid==timeout_tid)
+	{
+		fprintf(stderr,"*** TEST TIMED OUT!\n");
+		++fail;
+		DeleteMe();
+		return(0);
+	}
+	
+	assert(ti->tid==tid);
+	
+	UpdateTimer(tid,-1,0);
+	
+	// Okay, launch a process: 
+	switch(action)
+	{
+		case 0:
+		{
+			ProcMisc pmisc;
+			pmisc.wdir("..");
+			pmisc.niceval(19);
+			ProcFDs pfd;
+			int arv=pfd.Add(devnull_fd,1);
+			assert(arv==0);
+			fprintf(stderr,"Forking for \"ls -l . > /dev/null\" in "
+				"parent dir, nice 19... ");
+			pid_t rv=StartProcess(
+				ProcPath("ls","/bin","/usr/bin",NULL),
+				ProcArgs("ls","-l",".",NULL),
+				pmisc,
+				pfd);
+			if(rv>0)
+			{
+				fprintf(stderr,"(pid=%ld)\n",long(pid=rv));
+				action=1;
+			}
+			else
+			{
+				fprintf(stderr,"*** FAILED\n");
+				++fail;
+				DeleteMe();
+			}
+		}  break;
+		case 2:
+		case 5:
+		{
+			fprintf(stderr,"Forking for \"sleep 1\"... ");
+			pid_t rv=StartProcess(
+				ProcPath("sleep","/bin","/usr/bin","/usr/local/bin",NULL),
+				ProcArgs("sleep","1",NULL));
+			if(rv>0)
+			{
+				fprintf(stderr,"(pid=%ld)\n",long(pid=rv));
+				++action;
+			}
+			else
+			{
+				fprintf(stderr,"*** FAILED\n");
+				++fail;
+				DeleteMe();
+			}
+		}  break;
+		case 7:
+		{
+			// Kill process. 
+			fprintf(stderr,"  Scheduling TERM/KILL on [%ld]... ",long(pid));
+			errno=0;
+			int rv=TermProcess(pid);
+			if(rv)
+			{
+				fprintf(stderr,"  *** Failed: %d, %s\n",rv,strerror(errno));
+				++fail;
+				action=9;  // skip...
+				UpdateTimer(tid,0);
+				break;
+			}
+			else
+			{  fprintf(stderr,"OK\n");  }
+			action=8;
+		}  break;
+		case 9:
+		{
+			// Start non-existing process: 
+			fprintf(stderr,"Forking for \"re41ly/n0n3xisTing/diR/fazz\"... ");
+			pid_t rv=StartProcess(
+				ProcPath("re41ly/n0n3xisTing/diR/fazz"),
+				ProcArgs("fazz",NULL));
+			if(rv>0)
+			{
+				fprintf(stderr,"*** WUH?! pid=%ld (FAILURE!)\n",
+					long(pid=rv));
+				++fail;
+				DeleteMe();
+			}
+			else
+			{
+				fprintf(stderr,"failed as expected\n");
+				++action;
+				UpdateTimer(tid,0,0);
+			}
+		}  break;
+		case 10:
+		{
+			// Start failing process: 
+			fprintf(stderr,"Forking for \"test 10 -gt 20\"... ");
+			pid_t rv=StartProcess(
+				ProcPath("test","/bin","/usr/bin","/usr/local/bin",NULL),
+				ProcArgs("test","10","-gt","20",NULL));
+			if(rv>0)
+			{
+				fprintf(stderr,"(pid=%ld)\n",long(pid=rv));
+				++action;
+			}
+			else
+			{
+				fprintf(stderr,"*** FAILED\n");
+				++fail;
+				DeleteMe();
+			}
+		}  break;
+		case 12:
+		{
+			fprintf(stderr,"%sAll done: fail=%d\n",fail ? "*** " : "",fail);
+			DeleteMe();
+		}  break;
+		default: assert(0);
+	}
+	
+	return(0);
+}
+
+const char *ProcTester::acion_str(PSAction a)
+{
+	switch(a)
+	{
+		case PSFailed: return("PSFailed");
+		case PSDead:  return("PSDead");
+		case PSStopCont:  return("PSStopCont");
+		case PSExecuted:  return("PSExecuted");
+	}
+	assert(0);
+}
+
+const char *ProcTester::detail_str(PSDetail d)
+{
+	switch(d)
+	{
+		case PSExecFailed:  return("execve failed");
+		case PSDupFailed:  return("dup failed");
+		case PSChrootFailed:  return("chroot failed");
+		case PSChdirFailed:  return("chdir failed");
+		case PSNiceFailed:  return("nice failed");
+		case PSSetSidFailed:  return("setsid failed");
+		case PSSetGidFailed:  return("setgid failed");
+		case PSSetUidFailed:  return("setuid failed");
+		case PSFunctionFailed:  return("function failed");
+		case PSUnknownError:  return("unknown error");
+		case PSExited:  return("exited");
+		case PSKilled:  return("killed");
+		case PSDumped:  return("dumped");
+		case PSStop:  return("stop");
+		case PSCont:  return("cont");
+		case PSSuccess:  return("success");
+	}
+	assert(0);
+}
+
+void ProcTester::procnotify(const ProcStatus *ps)
+{
+	fprintf(stderr,"  Notify[%ld]: %s: %s (estatus=%d)\n",
+		long(ps->pid),
+		acion_str(ps->action),detail_str(ps->detail),
+		ps->estatus);
+	int valid=0;
+	switch(action)
+	{
+		case 1: valid = 
+			(ps->action==PSDead && 
+				ps->detail==PSExited && ps->estatus==0) ||
+			(ps->action==PSExecuted && 
+				(ps->detail==PSSuccess) );
+			break;
+		case 3:
+			valid=ps->action==PSExecuted && ps->detail==PSSuccess;
+			action=4;
+			break;
+		case 4:
+			valid=ps->action==PSDead && 
+				ps->detail==PSExited && ps->estatus==0;
+			break;
+		case 6:
+			// sleep running, Wanna kill it. 
+			valid=ps->action==PSExecuted && ps->detail==PSSuccess;
+			action=7;
+			UpdateTimer(tid,200,0);  // schedule kill
+			break;
+		case 8:
+			valid=ps->action==PSDead && ps->detail==PSKilled && 
+				(ps->estatus==SIGTERM || ps->estatus==SIGKILL);
+			break;
+		case 11:
+			valid=(ps->action==PSDead && 
+				(ps->detail==PSExited && ps->estatus!=0) ) ||
+			(ps->action==PSExecuted && 
+				(ps->detail==PSSuccess) );
+			break;
+		default: assert(0);
+	}
+	
+	if(pid!=ps->pid)
+	{
+		fprintf(stderr,"  *** PID unexpected (expect %ld).\n",long(pid));
+		++fail;
+	}
+	if(!valid)
+	{
+		fprintf(stderr,"  *** Unexpected. FAILURE (%d)\n",action);
+		++fail;
+	}
+	
+	if(ps->action==PSDead)
+	{
+		if(action==4 || action==8)
+		{  fprintf(stderr,"    (Elapsed: %s)\n",
+			(ps->endtime-ps->starttime).PrintElapsed());  }
+		
+		// Schedule starting of new process: 
+		++action;
+		UpdateTimer(tid,0,0);
+		return;
+	}
+}
+
+
+ProcTester::ProcTester(int *failflag)
+{
+	action=0;
+	fail=0;
+	pid=-1;
+	
+	devnull_fd=open("/dev/null",O_WRONLY);
+	if(devnull_fd<0)
+	{
+		fprintf(stderr,"opening /dev/null: %s\n",strerror(errno));
+		--(*failflag);
+	}
+	
+	if(PollFD(devnull_fd,0))
+	{  --(*failflag);  }
+	
+	tid=InstallTimer(0,0);
+	if(!tid)
+	{  --(*failflag);  }
+	
+	timeout_tid=InstallTimer(10000,0);  // 10 seconds
+	if(!timeout_tid)
+	{  --(*failflag);  }
+}
+
+ProcTester::~ProcTester()
+{
+	CloseFD(devnull_fd);
+	
+	if(fail)
+	{  fdmanager()->Quit(1);  }
+}
+
+
+static int RunProcTests()
+{
+	fprintf(stderr,"Testing ProcessManager...\n");
+	
+	int failed=0;
+	
+	// Okay, the ProcManager is up and running. We need an ProcBase-derived 
+	// class. 
+	ProcTester *tst=NEW<ProcTester>();
+	if(!tst)
+	{  fprintf(stderr,"*** Proc rester class init failed\n");  ++failed;  }
+	
+	if(!failed)
+	{  failed=FDManager::manager->MainLoop();  }
+	
+	// tst deletes itself. 
+	
+	return(failed ? 1 : 0);
+}
+
+
+/******************************************************************************/
+
+static inline timeval *randtime()
+{
+	long msec=random();
+	int s=msec%2;
+	msec/=4;  // aginst long overflow in Get(HTime::msec)
+	static timeval x;
+	x.tv_sec=(s ? -1 : +1)*msec/1000;
+	x.tv_usec=1000*(msec%1000);
+	return(&x);
+}
+
+
+static int nfail=0;
+
+void check_sub(const HTime &a,const HTime &b,const HTime &r)
+{
+	long av=a.Get(HTime::msec);
+	long bv=b.Get(HTime::msec);
+	long rv=r.Get(HTime::msec);
+	if(av-bv != rv)  ++nfail;
+}
+void check_add(const HTime &a,const HTime &b,const HTime &r)
+{
+	long av=a.Get(HTime::msec);
+	long bv=b.Get(HTime::msec);
+	long rv=r.Get(HTime::msec);
+	if(av+bv != rv)  ++nfail;
+}
+
+void check_add2(const HTime &a,const HTime &r,long dm  /* <- delta_msec*/)
+{
+	long av=a.Get(HTime::msec);
+	long rv=r.Get(HTime::msec);
+	if(av+dm != rv)  ++nfail;
+}
+
+
+static int htime_test_diff()
+{
+	fprintf(stderr,"  Testing HTime add/sub... ");
+	for(int i=0; i<10000; i++)
+	{
+		HTime a,b;
+		a.SetTimeval(randtime());
+		b.SetTimeval(randtime());
+		
+		HTime add=a+b;   check_add(a,b,add);
+		HTime sub=a-b;   check_sub(a,b,sub);
+		
+		HTime aa(a);  aa+=b;   if(aa!=add)  ++nfail;
+		aa=a;  aa-=b;   if(aa!=sub)  ++nfail;
+		
+		aa=a;  aa.Add(+1499,HTime::msec);  check_add2(a,aa,+1499);
+		aa=a;  aa.Add(-1499,HTime::msec);  check_add2(a,aa,-1499);
+		aa=a;  aa.Sub(+1499,HTime::msec);  check_add2(a,aa,-1499);
+		aa=a;  aa.Sub(-1499,HTime::msec);  check_add2(a,aa,+1499);
+	}
+	
+	if(nfail)
+	{
+		fprintf(stderr,"*** FAILED (%d errors)\n",nfail);
+		return(1);
+	}
+	fprintf(stderr,"passed\n");
+	return(0);
+}
+
+static int check_htime()
+{
+	int fail=0;
+	fprintf(stderr,"Testing HTime:\n");
+	
+	// Okay, first, the add / sub stress test
+	fail+=htime_test_diff();
+	
+	// Other things are cuurently not tested. 
+	
+	if(fail)
+	{  fprintf(stderr,"*** HTime test FAILED\n");  }
+	else
+	{  fprintf(stderr,"HTime tests passed\n");  }
+	
+	return(fail ? 1 : 0);
+}
+
+
+/******************************************************************************/
+
 char *prg_name="check_fd";
 
-int main()
+int main(int,char**,char**envp)
 {
 	fprintf(stderr,"Running FD test program...\n");
+	srandom(getpid());
+	
+	/* ---HTime--- */
+	if(check_htime())
+	{
+		fprintf(stderr,"*** OOPS: bug in HTime. "
+			"Please submit a bug report NOW. ***\n");
+		return(1);
+	}
 	
 	FDManager *fdm=NEW<FDManager>();
 	if(!fdm)
 	{  fprintf(stderr,"*** FDManager initialisation failed.\n");  return(1);  }
 	
-	int rv=RunTests();
+	/*  ---FD--- */
+	int rv=RunFDTests();
+	
+	/* ---PROC--- */
+	if(!rv)
+	{
+		ProcessManager *procman=NEW1<ProcessManager>(envp);
+		if(!procman)
+		{  fprintf(stderr,"*** ProcManager init failed.\n");  return(1);  }
+		
+		// Set short term-kill-delay: 
+		procman->TermKillDelay(200);
+		
+		rv=RunProcTests();
+		
+		delete procman;
+	}
 	
 	delete fdm;
 	

@@ -22,8 +22,10 @@
 #include <hlib/prototypes.h>
 #include "htime.h"
 
-// requires <unistd.h>, <signal.h>, 
-//          <sys/socket.h> (for shutdown())
+#if HAVE_SIGNAL_H
+# include <signal.h>
+#endif
+
 
 class FDBase;
 class HTime;

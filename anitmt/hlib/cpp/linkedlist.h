@@ -20,8 +20,6 @@
 
 #include "cplusplus.h"
 
-#include <stddef.h>
-
 
 template<class T> struct LinkedListBase
 {

@@ -19,7 +19,6 @@
 #include "valhdl.h"
 
 #include <string.h>
-#include <stdlib.h>
 
 
 #ifndef TESTING

@@ -18,13 +18,9 @@
 
 #include <hlib/refstring.h>
 
-#include <errno.h>
-#include <unistd.h>
-#include <sys/stat.h>
-/*#include <fcntl.h>
-#include <stdlib.h>
-#include <string.h>
-#include <assert.h>*/
+#if HAVE_SYS_STAT_H
+# include <sys/stat.h>
+#endif
 
 
 // Check if a file exists and we have the passed permissions: 

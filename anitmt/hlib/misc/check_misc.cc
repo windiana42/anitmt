@@ -18,12 +18,16 @@
 #include "prototypes.h"
 
 #include <assert.h>
-#include <signal.h>
 #include <fcntl.h>
+
+#if HAVE_SIGNAL_H
+#include <signal.h>
+#endif
 
 #if HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
 #endif
+
 #include <netinet/in.h>
 
 
@@ -236,7 +240,7 @@ int main()
 	{  fprintf(stderr,"OK\n");
 		// Okay, check if it really works: 
 		fprintf(stderr,"  NOTE: If the program hangs here, non-blocking IO "
-			"does NOT work...");
+			"does NOT work...(kill it)");
 		int okay=-1;
 		for(;;)
 		{

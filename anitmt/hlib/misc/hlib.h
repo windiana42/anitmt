@@ -18,7 +18,14 @@
 #include "prototypes.h"
 
 #include <string.h>
-#include <signal.h>
+
+#if HAVE_SIGNAL_H
+# include <signal.h>
+#endif
+
+#if HAVE_SYS_SOCKET_H
+# include <sys/socket.h>
+#endif
 
 #if TIME_WITH_SYS_TIME
 # include <sys/time.h>
@@ -29,8 +36,4 @@
 # else
 #  include <time.h>
 # endif
-#endif
-
-#if HAVE_SYS_SOCKET_H
-#include <sys/socket.h>
 #endif

@@ -20,7 +20,9 @@
 
 #include <hlib/prototypes.h>
 
+#if HAVE_SYS_RESOURCE_H
 #include <sys/resource.h>  /* for struct rusage */
+#endif
 
 
 class ProcessBase;

@@ -20,9 +20,12 @@
 #include "../taskfile.hpp"
 
 #include <assert.h>
+
 #include <netinet/in.h>
-#include <arpa/inet.h>
-#include <sys/socket.h>
+
+#if HAVE_ARPA_INET_H
+# include <arpa/inet.h>
+#endif
 
 
 int TaskSource_LDR::fdnotify(FDInfo *fdi)

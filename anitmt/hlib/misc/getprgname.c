@@ -16,6 +16,7 @@
 
 #include <string.h>
 
+
 /* GetPrgName()
  * Basically something like the basename shell command. 
  * Used to get the program name from argv[0]. Will return "???" in 

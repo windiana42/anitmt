@@ -33,7 +33,6 @@
 #include <hlib/prototypes.h>  /* MUST BE FIRST */
 
 #include <string.h>
-#include <signal.h>
 
 #include <hlib/htime.h>
 #include <hlib/fdmanager.h>
@@ -83,7 +82,7 @@ static RETSIGTYPE _fd_sig_handler_simple(int sig)
 	if(!FDManager::manager)  return;
 	siginfo_t tmp;
 	tmp.si_signo=sig;
-	FDManager::manager->CaughtSignal(info);
+	FDManager::manager->CaughtSignal(&tmp);
 }
 #else
 static void _fd_sig_handler_sigaction(int, siginfo_t *info, void *)
@@ -1230,11 +1229,7 @@ FDManager::~FDManager()
 	// Cleanup global manager: 
 	struct sigaction sact;
 	memset(&sact,0,sizeof(sact));
-	#ifdef __CYGWIN__
-	sact.sa_handler=(__typeof__(sact.sa_handler))SIG_DFL;
-	#else
 	sact.sa_handler=SIG_DFL;  // default handler
-	#endif
 	sigemptyset(&sact.sa_mask);
 	sact.sa_flags=0;
 	//sact.sa_restorer=NULL;

@@ -17,8 +17,6 @@
 #include <hlib/prototypes.h>
 
 #include <string.h>
-#include <stdlib.h>
-#include <string.h>
 
 #include "parconsumer.h"
 #include "parmanager.h"

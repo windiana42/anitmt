@@ -16,31 +16,20 @@
 
 #include <hlib/htime.h>
 
+// NOTE on sec and usec values: 
+// True value is always sec+usec/1000000. 
+// Howeverm used is ALWAYS in range 0...999999; NEVER negative. 
 
 static inline void _normalize(struct timeval *tv)
 {
-	// If sec and usec have different signs, correct that: 
-	if(tv->tv_usec<0 && tv->tv_sec>0)
-	{
-		do 
-		{  --tv->tv_sec;  tv->tv_usec+=1000000;  }
-		while(tv->tv_usec<0 && tv->tv_sec>0);
-	}
-	else if(tv->tv_usec>0 && tv->tv_sec<0)
-	{
-		do
-		{  ++tv->tv_sec;  tv->tv_usec-=1000000;  }
-		while(tv->tv_usec<0 && tv->tv_sec>0);
-	}
-	
-	// Now, correct too large usec values: 
-	#warning potential problem with modulo when <0. 
-	if(tv->tv_usec>=1000000 || tv->tv_usec<=-1000000)
-	{  tv->tv_sec+=tv->tv_usec/1000000;  tv->tv_usec%=1000000;  }
+	register long m=tv->tv_usec/1000000;
+	if(m<0)  --m;
+	tv->tv_sec+=m;
+	tv->tv_usec-=1000000*m;
 }
 
 
-HTime HTime::operator-(const HTime &start)
+HTime HTime::operator-(const HTime &start) const
 {
 	HTime r;
 	
@@ -60,7 +49,7 @@ HTime &HTime::operator-=(const HTime &start)
 }
 
 
-HTime HTime::operator+(const HTime &start)
+HTime HTime::operator+(const HTime &start) const
 {
 	HTime r;
 	

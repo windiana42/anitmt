@@ -23,7 +23,6 @@
 #include <hlib/cpbase.h>
 
 #include <string.h>
-#include <signal.h>
 
 
 #ifndef TESTING

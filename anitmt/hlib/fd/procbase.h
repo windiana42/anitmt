@@ -22,15 +22,20 @@
 // This also includes prototypes.h: 
 #include "intprocbase.h"   /* MUST BE FIRST TO BE INCLUDED. */
 
+#if HAVE_SYS_POLL_H
 #include <sys/poll.h>
+#endif
 
 // NOTE: ProcessBase needs ProcessManager which depends on FDManager; 
 //       see procmanager.h for details. 
 
 class ProcessBase : 
 	public InternalProcessBase,
-	#warning should be private; try with gcc-3: 
+	#if __GNUG__ < 3
 	public LinkedListBase<ProcessBase>
+	#else
+	private LinkedListBase<ProcessBase>
+	#endif
 {
 	friend class ProcessManager;
 	private:

@@ -18,7 +18,6 @@
 #include "taskmanager.hpp"
 #include "tsource/taskfile.hpp"
 
-#include <unistd.h>
 #include <fcntl.h>
 #include <assert.h>
 

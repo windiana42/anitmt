@@ -19,8 +19,6 @@
 
 #include "valhdl.h"
 
-#include <stddef.h>
-
 
 class RefStrList;
 

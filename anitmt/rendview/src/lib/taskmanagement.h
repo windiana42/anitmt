@@ -11,10 +11,6 @@
 #include "prototypes.hpp"
 
 // Process management & related: 
-#include <stdio.h>
-#include <unistd.h>
-#include <sys/socket.h>
-#include <signal.h>
 #include <hlib/htime.h>
 #include <hlib/fdmanager.h>
 #include <hlib/fdbase.h>

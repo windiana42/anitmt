@@ -16,6 +16,7 @@
 
 #include <string.h>
 
+
 char *memfind(const char *buf,const char *tofind,size_t len)
 {
 	size_t findlen=strlen(tofind);

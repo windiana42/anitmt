@@ -18,11 +18,11 @@
 
 #include <hlib/prototypes.h>
 
-#include <stdio.h>
-#include <stdarg.h>
-
 #ifndef _HLIB_SimpleIndentConsoleOutput_H_
 #define _HLIB_SimpleIndentConsoleOutput_H_ 1
+
+#include <stdarg.h>
+
 
 namespace par
 {

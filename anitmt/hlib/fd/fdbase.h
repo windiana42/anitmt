@@ -25,7 +25,10 @@
 # include <sys/poll.h>
 #endif
 #if HAVE_SYS_SOCKET_H
-#include <sys/socket.h>   /* shutdown() */
+# include <sys/socket.h>   /* shutdown() */
+#endif
+#if HAVE_SIGNAL_H
+# include <signal.h>
 #endif
 
 /*

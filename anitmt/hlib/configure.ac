@@ -1,6 +1,6 @@
 # Process this file with autoconf to produce a configure script.
 AC_INIT
-AM_INIT_AUTOMAKE(hlib,0.9.4)
+AM_INIT_AUTOMAKE(hlib,0.9.5b)
 AC_CONFIG_SRCDIR([cpp/cplusplusff.cc])
 AM_CONFIG_HEADER(hlib-config.h)
 
@@ -19,7 +19,6 @@ AC_CHECK_HEADERS([arpa/inet.h])
 AC_CHECK_HEADERS([sys/ioctl.h sys/poll.h sys/socket.h sys/time.h sys/wait.h sys/resource.h])
 AC_CHECK_HEADERS([netinet/ip_compat.h])
 
-# AC_SUBST(COMPILE_GMP_DEP_SRC)
 AC_CHECK_HEADERS([gmp.h], \
 	[we_detected_gmp="yes"],\
 	[AC_MSG_NOTICE([You are lacking GMP. Some functionality will not be available.])

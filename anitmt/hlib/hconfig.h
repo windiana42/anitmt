@@ -49,19 +49,6 @@
 #endif
 
 
-#ifdef __CYGWIN__
-# define __rtems__
-# include <sys/signal.h>
-/*# ifndef HLIB_PROCMAN_USE_LESS_SIGINFO_T 
-#  define HLIB_PROCMAN_USE_LESS_SIGINFO_T 
-# endif
-# ifndef HLIB_DONT_USE_MALLOC_USABLE_SIZE
-#  define HLIB_DONT_USE_MALLOC_USABLE_SIZE
-# endif*/
-#endif
-
-
-
 /* Need NULL, u_int32_t, etc. */
 /* This is copied from autoconf manual and meant 
  * to save a lot of trouble... */

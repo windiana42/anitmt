@@ -16,8 +16,13 @@
  */
 
 #include <hlib/prototypes.h>
+
+#if !defined(HLIB_DONT_USE_MALLOC_USABLE_SIZE)
 #include <malloc.h>
+#endif
+
 #include <string.h>
+
 
 /* Enable allocation debugging (check if LFree() gets pointers 
  * actually obtained by LMalloc, etc). For that purpose, an array 
