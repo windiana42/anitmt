@@ -735,18 +735,6 @@ int LDRClient::_Create_TaskRequest_Packet(CompleteTask *ctsk,RespBuf *dest)
 	// Now, we must be exactly at the end of the buffer: 
 	assert(dptr==dest->data+totsize);
 	
-	#if 0
-	fprintf(stderr,"DUMP(length=%u)>>",pack->length);
-	for(char *c=(char*)pack,*cend=c+pack->length; c<cend; c++)
-	{
-		if(*(unsigned char*)c>=32 && *(unsigned char*)c!=127)
-		{  write(2,c,1);  }
-		else
-		{  write(2,".",1);  }
-	}
-	fprintf(stderr,"<<\n");
-	#endif
-	
 	dest->content=Cmd_TaskRequest;
 	return(0);
 }
@@ -1279,6 +1267,8 @@ int LDRClient::cpnotify_outpump_done(FDCopyBase::CopyInfo *cpi)
 			{  assert(0);  }
 			#endif
 			
+			assert(outpump_lock==IOPL_Download);
+			
 			if(tri.task_request_state==TRC_SendFileDownloadH)
 			{
 				// Okay, LDRFileDownload header was sent. Now, we send 
@@ -1299,7 +1289,10 @@ int LDRClient::cpnotify_outpump_done(FDCopyBase::CopyInfo *cpi)
 				fprintf(stderr,"File download completed.\n");
 				tri.task_request_state=TRC_WaitForResponse;
 				tri.req_tfile=NULL;
+				
+				outpump_lock=IOPL_Unlocked;
 			}
+			
 			// This is needed so that cpnotify_outpump_start() won't go mad. 
 			send_buf.content=Cmd_NoCommand;
 			out.ioaction=IOA_None;
@@ -1337,7 +1330,7 @@ int LDRClient::cpnotify_outpump_start()
 	if(tri.scheduled_to_send)
 	{
 		// Okay; we shall send this task or one of the needed files. 
-		if(tri.task_request_state==TRC_SendTaskRequest)
+		if(!outpump_lock && tri.task_request_state==TRC_SendTaskRequest)
 		{
 			// Okay, we have to send the main task data. 
 			int fail=1;
@@ -1358,7 +1351,7 @@ int LDRClient::cpnotify_outpump_start()
 				assert(0);
 			}
 		}
-		else if(tri.task_request_state==TRC_SendFileDownloadH)
+		else if(!outpump_lock && tri.task_request_state==TRC_SendFileDownloadH)
 		{
 			// Well, then let's send the file request. First, we send the 
 			// header, then we copy the data: 
@@ -1379,6 +1372,10 @@ int LDRClient::cpnotify_outpump_start()
 				// Okay, make ready to send it: 
 				if(_FDCopyStartSendBuf(pack))  break;
 				
+				// When pump is running, lock here so that data comes 
+				// directly after header. 
+				outpump_lock=IOPL_Download;
+				
 				fail=0;
 			} while(0);
 			static int warned=0;
@@ -1394,6 +1391,8 @@ int LDRClient::cpnotify_outpump_start()
 		}
 		else if(tri.task_request_state==TRC_SendFileDownloadB)
 		{
+			assert(outpump_lock==IOPL_Download);
+			
 			// Finally, send the file body. 
 			// Be careful with files of size 0...
 			fprintf(stderr,"TEST IF FILE TRANSFER WORKS for files with size=0\n");
@@ -1567,7 +1566,7 @@ int LDRClient::cpnotify_inpump(FDCopyBase::CopyInfo *cpi)
 
 int LDRClient::cpnotify(FDCopyBase::CopyInfo *cpi)
 {
-	fprintf(stderr,"cpnotify(scode=0x%x (final=%s; limit=%s), err_no=%d (%s), %s)\n",
+	fprintf(stderr,"cpnotify(scode=0x%x (final=%s; limit=%s), err_no=%d (%s), %s"")\n",
 		cpi->scode,
 		(cpi->scode & FDCopyPump::SCFinal) ? "yes" : "no",
 		(cpi->scode & FDCopyPump::SCLimit) ? "yes" : "no",
@@ -1669,6 +1668,8 @@ LDRClient::LDRClient(TaskDriverInterface_LDR *_tdif,
 	
 	next_send_cmd=Cmd_NoCommand;
 	expect_cmd=Cmd_NoCommand;
+	
+	outpump_lock=IOPL_Unlocked;
 	
 	tri.scheduled_to_send=NULL;
 	tri.task_request_state=TRC_None;

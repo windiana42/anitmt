@@ -63,6 +63,16 @@ struct TaskSource_LDR_ServerConn :
 		size_t _CheckRespHeader(
 			LDR::LDRHeader *d,size_t read_len,
 			size_t min_len,size_t max_len);
+			
+		enum IOPumpLock
+		{
+			IOPL_Unlocked=0,
+			IOPL_Upload
+		};
+		// This is needed for some packets so that they do not get 
+		// "interrupted" by other ones, e.g. we may not send a 
+		// FileRequest between FileUpload and [file data]. 
+		IOPumpLock outpump_lock;
 		
 		// This is filled in when we get a task until all 
 		// the file downloading, etc. is done, the task is 

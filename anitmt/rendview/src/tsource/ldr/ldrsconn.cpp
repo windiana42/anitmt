@@ -743,6 +743,7 @@ int TaskSource_LDR_ServerConn::_ParseTaskRequest_Intrnl(
 	
 	#if 1
 	// Okay, dump to the user: 
+Error("The following should not be dumped here, right?\n");
 	fprintf(stderr,"Received task request:\n");
 	fprintf(stderr,"  frame_no=%u; id=%u\n",
 		ctsk->frame_no,ctsk->task_id);
@@ -771,19 +772,6 @@ int TaskSource_LDR_ServerConn::_ParseTaskRequest_Intrnl(
 	}
 	else
 	{  fprintf(stderr,"  Filter: [none]\n");  }
-	#endif
-	
-	#if 0
-	assert(pack->length<=buf->alloc_len);
-	fprintf(stderr,"DUMP(length=%u)>>",pack->length);
-	for(char *c=(char*)pack,*cend=c+pack->length; c<cend; c++)
-	{
-		if(*(unsigned char*)c>=32 && *(unsigned char*)c!=127)
-		{  write(2,c,1);  }
-		else
-		{  write(2,".",1);  }
-	}
-	fprintf(stderr,"<<\n");
 	#endif
 	
 	// Okay, so let's fill in the success code and go on. 
@@ -894,6 +882,7 @@ int TaskSource_LDR_ServerConn::_StartSendNextFileRequest()
 
 // Either send next file upload header and set apropriate file params in 
 // tdi or send final task state. 
+// Retval: -1 -> error; 0 -> next file; 1 -> final state
 int TaskSource_LDR_ServerConn::_SendNextFileUploadHdr()
 {
 	assert(tdi.done_ctsk && tdi.next_action==TDINA_FileSendH);
@@ -1007,7 +996,7 @@ int TaskSource_LDR_ServerConn::_SendNextFileUploadHdr()
 		assert(0);
 	}
 	
-	return(0);
+	return((tdi.upload_file_type==FRFT_None) ? 1 : 0);
 }
 
 
@@ -1242,6 +1231,8 @@ int TaskSource_LDR_ServerConn::cpnotify_outpump_done(FDCopyBase::CopyInfo *cpi)
 			{  assert(0);  }
 			#endif
 			
+			assert(outpump_lock==IOPL_Upload);
+			
 			if(tdi.next_action==TDINA_FileSendH)
 			{
 				// Okay, LDRFileUpload header was sent. Now, we send 
@@ -1263,6 +1254,8 @@ int TaskSource_LDR_ServerConn::cpnotify_outpump_done(FDCopyBase::CopyInfo *cpi)
 				// Go on senting file header (or final state info). 
 				tdi.next_action=TDINA_FileSendH;
 				tdi.upload_file=NULL;
+				
+				outpump_lock=IOPL_Unlocked;
 			}
 			
 			// This is needed so that cpnotify_outpump_start() won't go mad. 
@@ -1323,8 +1316,8 @@ int TaskSource_LDR_ServerConn::cpnotify_outpump_start()
 	// ---------<SECOND PART: LAUNCH NEW REQUEST IF NEEDED>---------
 		
 	// See what we can send...
-	if(tri.resp_code>0 ||  // Not -1 "unset" and not TRC_Accepted. 
-	   (tri.resp_code==TRC_Accepted && tri.next_action==TRINA_Response) )
+	if(!outpump_lock && (tri.resp_code>0 ||  // Not -1 "unset" and not TRC_Accepted. 
+	   (tri.resp_code==TRC_Accepted && tri.next_action==TRINA_Response)) )
 	{
 		// tri.resp_code>0 
 		//      -> okay, we have to refuse the task. 
@@ -1359,7 +1352,8 @@ int TaskSource_LDR_ServerConn::cpnotify_outpump_start()
 			assert(0);
 		}
 	}
-	else if(tri.resp_code==TRC_Accepted && tri.next_action==TRINA_FileReq)
+	else if(!outpump_lock && 
+		tri.resp_code==TRC_Accepted && tri.next_action==TRINA_FileReq)
 	{
 		// NO PIPELINING will be supported. You have a fast net and 
 		// thus response time is <1msec. Yes, the box is rendering some 
@@ -1374,7 +1368,7 @@ int TaskSource_LDR_ServerConn::cpnotify_outpump_start()
 	}
 	else if(tdi.done_ctsk)
 	{
-		if(tdi.next_action==TDINA_SendDone)
+		if(!outpump_lock && tdi.next_action==TDINA_SendDone)
 		{
 			// We send the LDRTaskDone packet. 
 			int fail=1;
@@ -1407,11 +1401,18 @@ int TaskSource_LDR_ServerConn::cpnotify_outpump_start()
 				assert(0);
 			}
 		}
-		else if(tdi.next_action==TDINA_FileSendH)
+		else if(!outpump_lock && tdi.next_action==TDINA_FileSendH)
 		{
-			// This either sends the next file upload header and 
-			// sets the params of the file in question in tdi. 
-			if(_SendNextFileUploadHdr())
+			// This either sends the next file upload header or final 
+			// completion (done completely) and sets the params 
+			// of the file in question in tdi. 
+			int rv=_SendNextFileUploadHdr();
+			// rv: 0 -> Sending next file upload header; 
+			//     1 -> sending "done completely"
+			//    -1 -> error
+			if(rv==0)
+			{  outpump_lock=IOPL_Upload;  }
+			else if(rv<0)
 			{
 				Error("handle error [if it can ever happen]!!\n");
 				assert(0);
@@ -1419,6 +1420,8 @@ int TaskSource_LDR_ServerConn::cpnotify_outpump_start()
 		}
 		else if(tdi.next_action==TDINA_FileSendB)
 		{
+			assert(outpump_lock==IOPL_Upload);
+			
 			// Finally, send the file body. 
 			// Be careful with files of size 0...
 			fprintf(stderr,"TEST IF FILE TRANSFER WORKS for files with size=0\n");
@@ -1561,6 +1564,13 @@ int TaskSource_LDR_ServerConn::cpnotify(FDCopyBase::CopyInfo *cpi)
 		(cpi->scode & FDCopyPump::SCLimit) ? "yes" : "no",
 		cpi->err_no,strerror(cpi->err_no),
 		(cpi->pump==in.pump_s || cpi->pump==in.pump_fd) ? "IN" : "OUT");
+	/*fprintf(stderr,"transf=%ld/%ld, %ld/%ld;  len=%u/%u, %u/%u;  sock=%ld/%ld, %ld/%ld\n",
+		long(out.io_fd->transferred),long(out.pump_fd->limit),
+		long(in.io_fd->transferred),long(in.pump_fd->limit),
+		out.io_buf->bufdone,out.io_buf->buflen,
+		in.io_buf->bufdone,in.io_buf->buflen,
+		long(out.io_sock->transferred),long(out.pump_fd->limit),
+		long(in.io_sock->transferred),long(in.pump_fd->limit) );*/
 	
 	// We are only interested in FINAL codes. 
 	if(!(cpi->scode & FDCopyPump::SCFinal))
@@ -1668,6 +1678,8 @@ TaskSource_LDR_ServerConn::TaskSource_LDR_ServerConn(TaskSource_LDR *_back,
 	
 	next_send_cmd=Cmd_NoCommand;
 	expect_cmd=Cmd_NoCommand;
+	
+	outpump_lock=IOPL_Unlocked;
 	
 	tri.ctsk=NULL;
 	tri.task_id=0;

@@ -48,6 +48,16 @@ class LDRClient :
 		LDR::LDRCommand next_send_cmd;
 		LDR::LDRCommand expect_cmd;  // what we expect to get
 		
+		enum IOPumpLock
+		{
+			IOPL_Unlocked=0,
+			IOPL_Download
+		};
+		// This is needed for some packets so that they do not get 
+		// "interrupted" by other ones, e.g. we may not send a 
+		// TaskRequest between FileDownload and [file data]. 
+		IOPumpLock outpump_lock;
+		
 		enum TaskRequestState
 		{
 			TRC_None=0,

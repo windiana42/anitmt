@@ -48,10 +48,10 @@ typedef unsigned char uchar;
 //    ---------[...data...]--------->
 //   <------[LDRTaskResponse]-------
 
-//    --------[LDRTaskDone]--------->
-//    -------[LDRFileUpload]-------->
-//    ---------[...data...]--------->
-//    ------[LDRDoneComplete]------->
+//   <--------[LDRTaskDone]---------
+//   <-------[LDRFileUpload]--------
+//   <---------[...data...]---------
+//   <------[LDRDoneComplete]-------
 
 enum LDRCommand
 {
