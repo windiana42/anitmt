@@ -14,7 +14,10 @@
 
 #ifndef __myvektor__
 #define __myvektor__
+
 class vektor;
+
+#include <math.h>
 
 #define maxvektlen 100       /* Maximale Vektorlänge als Strings */
 

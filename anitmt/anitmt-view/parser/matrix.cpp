@@ -87,6 +87,7 @@ namespace vect{
     val[1][3] = m.val[1][3];
     val[2][3] = m.val[2][3];
     val[3][3] = m.val[3][3];
+    return *this;
   }
   
   matrix4& matrix4::operator*=(const matrix4& m ){

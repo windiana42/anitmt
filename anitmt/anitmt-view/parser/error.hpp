@@ -14,6 +14,7 @@
 #define __aniTMT_error__
 
 #include <string>
+#include <iostream>
 
 namespace err{
 

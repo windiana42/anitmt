@@ -2,7 +2,8 @@
 INCLUDES=		-I$(top_srcdir)/lib/ -I$(top_srcdir)/lib/flex
 noinst_LIBRARIES=	libexparser.a
 check_PROGRAMS=		testexparser
-CXXFLAGS =		@CXXFLAGS@ -Wno-non-template-friend
+CXXFLAGS =		@CXXFLAGS@ -Wno-non-template-friend \
+			-D__CPLUSPLUS -DTHROW_NIL=throw\(\)
 
 libexparser_a_SOURCES=	scanner.ll parser.yy \
 			exparser.hpp tokens.h \

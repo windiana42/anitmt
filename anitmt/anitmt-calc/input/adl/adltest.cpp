@@ -15,7 +15,7 @@ using namespace message;
 
 
 void ScannerTest(Message_Consultant *c) {
-	VADLFlexLexer l(std::string("stdin"), &cin, c);
+	VADLFlexLexer l(std::string("stdin"), &std::cin, c);
 	l.set_debug(true);
 	l.yylval.num=0; 
 	int tok;
@@ -28,7 +28,7 @@ void ScannerTest(Message_Consultant *c) {
 void ParserTest(Message_Consultant *c) {
 	try {
 		make_all_nodes_available();
-		ADLParser p(std::string("stdin"), cin, c);
+		ADLParser p(std::string("stdin"), std::cin, c);
 		
 		Stream_Message_Handler msg_handler(std::cerr,std::cout,std::cout);
 		Message_Manager msg_manager( &msg_handler );

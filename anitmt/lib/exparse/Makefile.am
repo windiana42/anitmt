@@ -1,5 +1,6 @@
 INCLUDES=		-I$(srcdir)/..
-CXXFLAGS =		@CXXFLAGS@ -Wno-non-template-friend -DTHROW_NIL=throw\(\) -D__CPLUSPLUS
+CXXFLAGS =		@CXXFLAGS@ -Wno-non-template-friend \
+			-DTHROW_NIL=throw\(\) -D__CPLUSPLUS
 noinst_LIBRARIES=	libexparse.a
 libexparse_a_SOURCES=	\
 	fcall.cpp fcall.hpp \

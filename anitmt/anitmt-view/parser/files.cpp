@@ -66,11 +66,13 @@ namespace file{
   }
 
   File_pos_type::File_pos_type( R_File *f )
-    : filepos(f->get_filepos()), file(f){
+    : file(f), filepos(f->get_filepos()) 
+  {
   }
 
   File_pos_type::File_pos_type( R_File *f, Filepos fp )
-    : filepos(fp), file(f){
+    : file(f), filepos(fp)
+  {
   }
 
   /*

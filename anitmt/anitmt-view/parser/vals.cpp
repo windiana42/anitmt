@@ -207,6 +207,7 @@ namespace values{
 
     error(201,"Cannot calculate: "+
 	  type2str(op1.type)+" + "+type2str(op2->type));
+    return 0;
   }
 
   datatyp *operator-( const datatyp& op1, datatyp *op2 ){
@@ -220,6 +221,7 @@ namespace values{
 
     error(201,"Cannot calculate: "+
 	  type2str(op1.type)+" - "+type2str(op2->type));
+    return 0;
   }
 
   datatyp *operator*( const datatyp& op1, datatyp *op2 ){
@@ -241,6 +243,7 @@ namespace values{
       
     error(201,"Cannot calculate: "+
 	  type2str(op1.type)+" * "+type2str(op2->type));
+    return 0;
   }
 
   datatyp *operator/( const datatyp& op1, datatyp *op2 ){
@@ -258,6 +261,7 @@ namespace values{
 
     error(201,"Cannot calculate: "+
 	  type2str(op1.type)+" / "+type2str(op2->type));
+    return 0;
   }
 
   datatyp *operator%( const datatyp& op1, datatyp *op2 ){
@@ -272,6 +276,7 @@ namespace values{
       
     error(201,"Cannot calculate: "+
 	  type2str(op1.type)+" % "+type2str(op2->type));
+    return 0;
   }
 
   bool operator!( const datatyp& op ){
@@ -297,6 +302,7 @@ namespace values{
       
     error(201,"Cannot calculate: "+
 	  type2str(op1.type)+" < "+type2str(op2->type));
+    return false;
   }
 
   bool operator>( const datatyp& op1, datatyp *op2 ){
@@ -311,6 +317,7 @@ namespace values{
 
     error(201,"Cannot calculate: "+
 	  type2str(op1.type)+" > "+type2str(op2->type));
+    return false;
   }
 
   bool operator||( const datatyp& op1, datatyp *op2 ){
@@ -319,6 +326,7 @@ namespace values{
       
     error(201,"Cannot calculate: "+
 	  type2str(op1.type)+" || "+type2str(op2->type));
+    return false;
   }
 
   bool operator&&( const datatyp& op1, datatyp *op2 ){
@@ -327,6 +335,7 @@ namespace values{
       
     error(201,"Cannot calculate: "+
 	  type2str(op1.type)+" && "+type2str(op2->type));
+    return false;
   }
 
 
@@ -337,6 +346,7 @@ namespace values{
       
     error(201,"Cannot calculate: "+
 	  type2str(op1.type)+" ^ "+type2str(op2->type));
+    return 0;
   }
 
   datatyp *pow( const datatyp& op1, datatyp *op2 ){
@@ -352,6 +362,7 @@ namespace values{
 
     error(201,"Cannot calculate: abs( "+
 	  type2str(op1.type)+" ) ");
+    return 0;
   }
 
   datatyp *sqrt( const datatyp& op1 ){
@@ -360,6 +371,7 @@ namespace values{
       
     error(201,"Cannot calculate: abs( "+
 	  type2str(op1.type)+" ) ");
+    return 0;
   }
 
   /********************************************************/

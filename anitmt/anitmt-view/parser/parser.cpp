@@ -137,6 +137,7 @@ namespace parser{
       }
     
     error( errSyntax, "I don't know \"" + word + "\"" );
+    return -1;
   }
 
   values::Valtype Parser::read_Vector(){

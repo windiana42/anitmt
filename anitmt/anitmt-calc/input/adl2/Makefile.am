@@ -3,7 +3,8 @@ INCLUDES=		-I$(top_srcdir)/lib -I$(top_srcdir)/lib/flex \
 			-I$(srcdir)/../ -I$(srcdir)/../../
 noinst_LIBRARIES=	libadlparser.a
 check_PROGRAMS=		testadlparser
-CXXFLAGS =		@CXXFLAGS@ -Wno-non-template-friend -DYYDEBUG
+CXXFLAGS =		@CXXFLAGS@ -Wno-non-template-friend -DYYDEBUG \
+			-D__CPLUSPLUS -DTHROW_NIL=throw\(\)
 
 libadlparser_a_SOURCES=	parser.yy tokens.h \
 			parser_functions.hpp parser_functions.cpp \

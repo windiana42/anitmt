@@ -144,16 +144,16 @@ public:
 
 int main()
 {
-  Stream_Message_Handler handler(cerr,cout,cout);
+  Stream_Message_Handler handler(std::cerr,std::cout,std::cout);
   Message_Manager manager( &handler );
   Message_Consultant main_consultant( &manager, Common_Test );
   for( int i=-1; i<=5; i++ )
   {
-    cerr << "================================================" << endl;
+    std::cerr << "================================================" << std::endl;
     if( i== -1 )
-      cout << "== Standard verbose level copied" << endl;
+      std::cout << "== Standard verbose level copied" << std::endl;
     else
-      cout << "== Verbose level " << i << ": " << endl;
+      std::cout << "== Verbose level " << i << ": " << std::endl;
     Message_Consultant consultant = main_consultant;
     test t(&consultant,i);
     t.complain();

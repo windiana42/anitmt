@@ -2,7 +2,8 @@
 INCLUDES=		-I$(srcdir)/../.. -I$(top_srcdir)/lib 
 noinst_LIBRARIES=	libadlparser.a
 check_PROGRAMS=		adltest
-CXXFLAGS =		@CXXFLAGS@ -Wno-non-template-friend
+CXXFLAGS =		@CXXFLAGS@ -Wno-non-template-friend \
+			-D__CPLUSPLUS -DTHROW_NIL=throw\(\)
 
 libadlparser_a_SOURCES=	scanner.ll support.hpp support.cpp \
 			flexlexer_global.h flexlexer_public.h \

@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <fstream>
+#include <iostream>
 
 #include "vals.hpp"
 #include "parser.hpp"
@@ -77,7 +78,7 @@ namespace anitmt_view{
   //  2: image has wrong width
   //  3: image has wrong height
   char image_check( char *filename ){
-    ifstream test( filename );
+    std::ifstream test( filename );
     
     if( !test ) return -1;
 
@@ -177,7 +178,7 @@ namespace anitmt_view{
     typedef std::map< std::string, values::Valtype > settype;
     settype setting;
 
-    ifstream rif( LOGname );
+    std::ifstream rif( LOGname );
 
     if( !rif ){
       std::cerr << "Unable to read rif file " << LOGname << std::endl;
@@ -224,8 +225,8 @@ namespace anitmt_view{
       std::string main_file       = num + basic_main_file;
       setting["main_file"]  = main_file;
 
-      ifstream in(basic_main_file.c_str());
-      ofstream out(main_file.c_str());
+      std::ifstream in(basic_main_file.c_str());
+      std::ofstream out(main_file.c_str());
 
       bool found = false;
       while( in ){
@@ -291,7 +292,7 @@ namespace anitmt_view{
 	      {
 		free( execstr );
 
-		cout << "Error: POVRay returned with an error" << endl;
+		std::cout << "Error: POVRay returned with an error" << std::endl;
 		endframe = z-1;
 
 		if( first ) exit(-1);
@@ -302,7 +303,8 @@ namespace anitmt_view{
 
 	    if( image_check( name ) )
 	      {
-		cout << "Error: POVRay didn't create correct picture" << endl;
+		std::cout << "Error: POVRay didn't create correct picture" 
+			  << std::endl;
 		endframe = z-1;
 		break;
 	      }

@@ -43,9 +43,9 @@ public:
   vector3(double*);
   virtual ~vector3();
 
-  friend ostream& operator<<(ostream& , const vector3& ) ;
+  friend std::ostream& operator<<(std::ostream& , const vector3& ) ;
   vector3& operator=(const vector3&);
-  friend istream& operator>>(istream& , vector3& );
+  friend std::istream& operator>>(std::istream& , vector3& );
 
   // add each element of a by constant
   // and store it in that element.
