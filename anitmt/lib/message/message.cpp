@@ -92,16 +92,16 @@ namespace message
       pos(src.pos), position_detail(src.position_detail),
       consultant(src.consultant), 
       mtype(src.mtype), 
-      no_end(src.no_end),
       #if __GNUC__ < 3  /* there is a bug in gcc-2.95.x STL... */
       #define PCOUNT(src) const_cast<std::ostrstream*>(&src.msg_stream)->pcount()
       msg_stream(msg_strcpy(message,src.message,PCOUNT(src)),
-          _Message_Buf_Size-1-PCOUNT(src))
+		 _Message_Buf_Size-1-PCOUNT(src)),
       #undef PCOUNT
       #else  // gcc-3 does not have that bug in the STL:
       msg_stream(msg_strcpy(message,src.message,src.msg_stream.pcount()),
-          _Message_Buf_Size-1-src.msg_stream.pcount())
+		 _Message_Buf_Size-1-src.msg_stream.pcount()),
       #endif
+      no_end(src.no_end)
   {
     Message_Stream *ssrc=const_cast<Message_Stream *>(&src);
     ssrc->enabled = false;

@@ -37,8 +37,8 @@ namespace functionality
   // ** constructor **
   _pt_scene_type::_pt_scene_type( message::Message_Consultant *c )
     : proptree::Prop_Tree_Node("","",0,c), /* should never be used */
-      _tc_next_scene_type(0),
-      _tc_prev_scene_type(0)
+      _tc_prev_scene_type(0),
+      _tc_next_scene_type(0)
   {
   }
 

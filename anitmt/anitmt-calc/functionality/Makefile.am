@@ -40,7 +40,7 @@ clean:
 # base_func isn't regenerated when funcgen is changed
 base_func.cpp \
 base_func.hpp: $(srcdir)/base_func.afd 
-	if test -e $(FUNCGEN); then					\
+	@if test -e $(FUNCGEN); then					\
 	  $(FUNCGEN) -i $(srcdir)/base_func.afd -o base_func -n functionality	\
 	    -I+=$(srcdir)/ ;						\
 	else								\
@@ -49,7 +49,7 @@ base_func.hpp: $(srcdir)/base_func.afd
 
 scene_base.cpp \
 scene_base.hpp: $(srcdir)/scene_base.afd $(FUNCGEN_CODE)
-	if test -e $(FUNCGEN); then					     \
+	@if test -e $(FUNCGEN); then					     \
 	  $(FUNCGEN) -i $(srcdir)/scene_base.afd -o scene_base -n functionality \
 	    -I+=$(srcdir)/ ;						     \
 	else								     \
@@ -58,7 +58,7 @@ scene_base.hpp: $(srcdir)/scene_base.afd $(FUNCGEN_CODE)
 
 scalar_base.cpp \
 scalar_base.hpp: $(srcdir)/scalar_base.afd $(FUNCGEN_CODE)
-	if test -e $(FUNCGEN); then					    \
+	@if test -e $(FUNCGEN); then					    \
 	  $(FUNCGEN) -i $(srcdir)/scalar_base.afd -o scalar_base -n functionality -I+=$(srcdir)/ ; \
 	else								    \
 	  echo "No funcgen availible, cannot create code.";		    \
@@ -66,7 +66,7 @@ scalar_base.hpp: $(srcdir)/scalar_base.afd $(FUNCGEN_CODE)
 
 scalar.cpp \
 scalar.hpp: $(srcdir)/scalar.afd $(FUNCGEN_CODE)
-	if test -e $(FUNCGEN); then					    \
+	@if test -e $(FUNCGEN); then					    \
 	  $(FUNCGEN) -i $(srcdir)/scalar.afd -o scalar -n functionality -I+=$(srcdir)/ ; \
 	else								    \
 	  echo "No funcgen availible, cannot create code.";		    \
@@ -74,7 +74,7 @@ scalar.hpp: $(srcdir)/scalar.afd $(FUNCGEN_CODE)
 
 object_base.cpp \
 object_base.hpp: $(srcdir)/object_base.afd $(FUNCGEN_CODE)
-	if test -e $(FUNCGEN); then					    \
+	@if test -e $(FUNCGEN); then					    \
 	  $(FUNCGEN) -i $(srcdir)/object_base.afd -o object_base -n functionality -I+=$(srcdir)/ ; \
 	else								    \
 	  echo "No funcgen availible, cannot create code.";		    \
@@ -82,7 +82,7 @@ object_base.hpp: $(srcdir)/object_base.afd $(FUNCGEN_CODE)
 
 object.cpp \
 object.hpp: $(srcdir)/object.afd $(FUNCGEN_CODE)
-	if test -e $(FUNCGEN); then					    \
+	@if test -e $(FUNCGEN); then					    \
 	  $(FUNCGEN) -i $(srcdir)/object.afd -o object -n functionality -I+=$(srcdir)/ ; \
 	else								    \
 	  echo "No funcgen availible, cannot create code.";		    \

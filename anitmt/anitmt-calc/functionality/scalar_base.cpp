@@ -37,8 +37,8 @@ namespace functionality
   // ** constructor **
   _pt_scalar_component::_pt_scalar_component( message::Message_Consultant *c )
     : proptree::Prop_Tree_Node("","",0,c), /* should never be used */
-      _tc_next_scalar_component(0),
       _tc_prev_scalar_component(0),
+      _tc_next_scalar_component(0),
       _av_scalar_component_value_time_is_avail(c)
   {
   }
@@ -64,8 +64,8 @@ namespace functionality
   // ** constructor **
   _pt_scalar_vsa::_pt_scalar_vsa( message::Message_Consultant *c )
     : proptree::Prop_Tree_Node("","",0,c), /* should never be used */
-      _tc_next_scalar_vsa(0),
       _tc_prev_scalar_vsa(0),
+      _tc_next_scalar_vsa(0),
       _pr_scalar_vsa_acceleration_time_start_param(c),
       _pr_scalar_vsa_acceleration_time_end_param(c),
       _pr_scalar_vsa_slope_time_start_param(c),

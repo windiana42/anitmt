@@ -37,8 +37,8 @@ namespace functionality
   // ** constructor **
   _pt_object_component::_pt_object_component( message::Message_Consultant *c )
     : proptree::Prop_Tree_Node("","",0,c), /* should never be used */
-      _tc_next_object_component(0),
       _tc_prev_object_component(0),
+      _tc_next_object_component(0),
       _av_object_component_front_time_is_avail(c),
       _av_object_component_position_time_is_avail(c),
       _av_object_component_rotation_time_is_avail(c),
@@ -69,8 +69,8 @@ namespace functionality
   // ** constructor **
   _pt_object_state::_pt_object_state( message::Message_Consultant *c )
     : proptree::Prop_Tree_Node("","",0,c), /* should never be used */
-      _tc_next_object_state(0),
       _tc_prev_object_state(0),
+      _tc_next_object_state(0),
       _pr_object_state_acceleration_stretch_start_param(c),
       _pr_object_state_acceleration_stretch_end_param(c),
       _pr_object_state_acceleration_time_start_param(c),
@@ -134,8 +134,8 @@ namespace functionality
   // ** constructor **
   _pt_timing::_pt_timing( message::Message_Consultant *c )
     : proptree::Prop_Tree_Node("","",0,c), /* should never be used */
-      _tc_next_timing(0),
       _tc_prev_timing(0),
+      _tc_next_timing(0),
       _pr_timing_acceleration_stretch_start_param(c),
       _pr_timing_acceleration_stretch_end_param(c),
       _pr_timing_acceleration_time_start_param(c),
@@ -175,8 +175,8 @@ namespace functionality
   // ** constructor **
   _pt_track::_pt_track( message::Message_Consultant *c )
     : proptree::Prop_Tree_Node("","",0,c), /* should never be used */
-      _tc_next_track(0),
       _tc_prev_track(0),
+      _tc_next_track(0),
       _pr_track_direction_stretch_start_param(c),
       _pr_track_direction_stretch_end_param(c),
       _pr_track_position_stretch_start_param(c),
