@@ -26,14 +26,6 @@
 
 class TaskDriverInterfaceFactory_LDR;
 
-class LDRClient : LinkedListBase<LDRClient>
-{
-	public:  _CPP_OPERATORS_FF
-		LDRClient(int *failflag) {}
-		~LDRClient() {}
-		
-		int ConnectTo(void *)  { return(1); }
-};
 
 class TaskDriverInterface_LDR : 
 	public TaskDriverInterface,

@@ -39,5 +39,8 @@ enum TaskDriverType
 	_DTLast
 };
 
+// Returns string representation of TaskDriverType: 
+extern char *DTypeString(TaskDriverType dt);
+
 #endif  /* _LIB_TASKMANAGEMENT_H_ */
 

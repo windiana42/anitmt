@@ -66,6 +66,8 @@ int TaskDriverInterfaceFactory_LDR::FinalInit()
 {
 	int failed=0;
 	
+	if(cparam.is_empty() && !failed)
+	{  Error("No LDR clients specified. (Cannot work.)\n");  ++failed;  }
 	
 	return(failed ? 1 : 0);
 }
@@ -84,60 +86,60 @@ int TaskDriverInterfaceFactory_LDR::CheckParams()
 	}
 	
 	// Try to resolve the client names: 
-	Verbose("Looking up LDR clients...\n");
-	for(const RefStrList::Node *n=str_clients.first(); n; n=n->next)
+	if(str_clients.first())
 	{
-		const char *name=n->str();
-		if(!name || !(*name))
+		Verbose("Looking up LDR clients...\n");
+		for(const RefStrList::Node *n=str_clients.first(); n; n=n->next)
 		{
-			Warning("Skipping LDR client with NULL name.\n");
-			continue;
-		}
-		ClientParam *cp=NEW<ClientParam>();
-		assert(cp);  // otherwise alloc failure (may abort in CheckParams())
-		
-		// See if a port is specified: 
-		// THIS WILL HAVE problems with IPv6...
-		char *pstr=strrchr(name,':');
-		int port=default_port;
-		if(pstr)
-		{
-			char *end;
-			port=(int)strtol(pstr,&end,10);
-			if(*end || port<1 || port>=65536)
+			const char *name=n->str();
+			if(!name || !(*name))
 			{
-				Warning("Illegal port spec in \"%s\". Defaulting to %d.\n",
-					name,default_port);
-				port=default_port;
+				Warning("Skipping LDR client with NULL name.\n");
+				continue;
 			}
-			// Okay, cut off port: 
-			_CheckAllocFail(cp->name.set0(name,pstr-name));
+			ClientParam *cp=NEW<ClientParam>();
+			assert(cp);  // otherwise alloc failure (may abort in CheckParams())
+
+			// See if a port is specified: 
+			// THIS WILL HAVE problems with IPv6...
+			char *pstr=strrchr(name,':');
+			int port=default_port;
+			if(pstr)
+			{
+				char *end;
+				port=(int)strtol(pstr,&end,10);
+				if(*end || port<1 || port>=65536)
+				{
+					Warning("Illegal port spec in \"%s\". Defaulting to %d.\n",
+						name,default_port);
+					port=default_port;
+				}
+				// Okay, cut off port: 
+				_CheckAllocFail(cp->name.set0(name,pstr-name));
+			}
+			else
+			{  cp->name=*n;  }
+
+			bool queued=0;
+			do {
+				const char *name=cp->name.str();
+				int rv=cp->addr.SetAddress(name,port);
+				if(rv==-1)
+				{  Error("Failed to resolve host \"%s\": %s\n",
+					name,hstrerror(h_errno));  ++failed;  break;  }
+				else if(rv==-2)
+				{  Error("gethostbyname() did not return AF_INET for \"%s\".\n",
+					name);  ++failed;  break;  }
+				else assert(!rv);
+
+				// Okay, everything went fine; put client params in queue: 
+				cparam.append(cp);
+				queued=1;
+			} while(0);
+			if(!queued)
+			{  delete cp;  cp=NULL;  }
 		}
-		else
-		{  cp->name=*n;  }
-		
-		bool queued=0;
-		do {
-			const char *name=cp->name.str();
-			int rv=cp->addr.SetAddress(name,port);
-			if(rv==-1)
-			{  Error("Failed to resolve host \"%s\": %s\n",
-				name,hstrerror(h_errno));  ++failed;  break;  }
-			else if(rv==-2)
-			{  Error("gethostbyname() did not return AF_INET for \"%s\".\n",
-				name);  ++failed;  break;  }
-			else assert(!rv);
-			
-			// Okay, everything went fine; put client params in queue: 
-			cparam.append(cp);
-			queued=1;
-		} while(0);
-		if(!queued)
-		{  delete cp;  cp=NULL;  }
 	}
-	
-	if(cparam.is_empty() && !failed)
-	{  Error("No LDR clients specified. (Cannot work.)\n");  ++failed;  }
 	
 	// Clear the client list, it's no longer needed: 
 	str_clients.clear();

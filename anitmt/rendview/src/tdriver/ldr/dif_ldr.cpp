@@ -15,10 +15,11 @@
  * 
  */
 
-#include "taskmanager.hpp"
+#include "../../taskmanager.hpp"
 
 #include "dif_ldr.hpp"
 #include "dif_param.hpp"
+#include "ldrclient.hpp"
 
 #include <assert.h>
 
@@ -137,7 +138,7 @@ void TaskDriverInterface_LDR::ReallyStartProcessing()
 	for(TaskDriverInterfaceFactory_LDR::ClientParam *i=p->cparam.first();
 		i; i=i->next)
 	{
-		LDRClient *c=NEW<LDRClient>();
+		LDRClient *c=NEW1<LDRClient>(this);
 		if(!c)
 		{
 			while(!clientlist.is_empty())

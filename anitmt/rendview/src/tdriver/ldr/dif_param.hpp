@@ -27,6 +27,16 @@ class TaskDriverInterfaceFactory_LDR :
 	public TaskDriverInterfaceFactory
 {
 	friend class TaskDriverInterface_LDR;
+	public:
+		struct ClientParam : LinkedListBase<ClientParam>
+		{
+			RefString name;   // as specified by the user (without port)
+			MyAddrInfo addr;
+			
+			_CPP_OPERATORS_FF
+			ClientParam(int *failflag=NULL);
+			~ClientParam()  { }
+		};
 	private:
 		// We may access component_db(). 
 		
@@ -45,16 +55,6 @@ class TaskDriverInterfaceFactory_LDR :
 		
 		// All clients as specified by the user (IPs or (FQ)DNs): 
 		RefStrList str_clients;  // cleared after CheckParams()
-		
-		struct ClientParam : LinkedListBase<ClientParam>
-		{
-			RefString name;   // as specified by the user (without port)
-			MyAddrInfo addr;
-			
-			_CPP_OPERATORS_FF
-			ClientParam(int *failflag=NULL);
-			~ClientParam()  { }
-		};
 		
 		LinkedList<ClientParam> cparam;
 		
