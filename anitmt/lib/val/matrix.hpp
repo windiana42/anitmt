@@ -423,12 +423,10 @@ inline Matrix<4,4> mat_compose_cols(const Vector<3> &c0,const Vector<3> &c1,cons
 inline Matrix<4,4> mat_compose_rows(const Vector<3> &c0,const Vector<3> &c1,const Vector<3> &c2)
 	{  return(Matrix<4,4>(Matrix<4,4>::matrowvec,c0,c1,c2));  }
 
-//!!! inserted by Martin
 inline Matrix<4,4> mat_compose_cols(const Vector<4> &c0,const Vector<4> &c1,const Vector<4> &c2,const Vector<4> &c3)
 	{  return(Matrix<4,4>(Matrix<4,4>::matcolvec,c0,c1,c2,c3));  }
 inline Matrix<4,4> mat_compose_rows(const Vector<4> &c0,const Vector<4> &c1,const Vector<4> &c2,const Vector<4> &c3)
 	{  return(Matrix<4,4>(Matrix<4,4>::matrowvec,c0,c1,c2,c3));  }
-//!!! end
 
 /** FUNCTIONS FOR 3d VECTORS AND 4x4 MATRICES: **/
 //! rotates a specified angle around v 
