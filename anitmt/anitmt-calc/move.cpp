@@ -97,6 +97,16 @@ namespace anitmt{
     return res;
   }
 
+
+  //! individual final init after hierarchy is set up (Has to call the 
+  //! function of the return type container
+  void Obj_Move::final_init()
+  {
+    pos.hierarchy_final_init();
+    dir.hierarchy_final_init();
+    up.hierarchy_final_init();
+  }
+
   //**********************************************************
   // Obj_Move_Straight: moves Objects on a staight flight path
   //**********************************************************
@@ -159,5 +169,10 @@ namespace anitmt{
   {
     return false;		// straight has no childs
   }
+
+  //! individual final init after hierarchy is set up (Has to call the 
+  //! function of the return type container
+  void Obj_Move_Straight::final_init() {}
+
 }
 

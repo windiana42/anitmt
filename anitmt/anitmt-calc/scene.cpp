@@ -53,6 +53,14 @@ namespace anitmt{
 					   Scene_State s = Scene_State() ) {
     return Scene_State();
   }
+
+  //! individual final init after hierarchy is set up (Has to call the 
+  //! function of the return type container
+  void Ani_Scene::final_init()
+  {
+    scalar.hierarchy_final_init();
+    object.hierarchy_final_init();
+  }
   
 }
 

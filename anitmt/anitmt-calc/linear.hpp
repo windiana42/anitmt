@@ -48,15 +48,20 @@ namespace anitmt{
     Scalar_Property te_f;	// endframe
     Scalar_Property s;		// slope or changing speed
 
+    //! individual final init after hierarchy is set up (Has to call the 
+    //! function of the return type container
+    virtual void final_init();
   protected:
   public:
-    static std::string get_type_name();
+    static inline std::string get_type_name() { return type_name; }
 
     Scal_Linear( std::string name, Animation *ani );
     
     // initializes the connection to next/previous node
-    virtual void init_next( Return<values::Scalar> *node );
-    virtual void init_prev( Return<values::Scalar> *node );
+    virtual void init_next ( Return<values::Scalar> *node );
+    virtual void init_prev ( Return<values::Scalar> *node );
+    virtual void init_first( Return<values::Scalar>* );
+    virtual void init_last ( Return<values::Scalar>* );
 
     values::Scalar get_return_value( values::Scalar t, 
 				     values::Scalar = values::Scalar() );

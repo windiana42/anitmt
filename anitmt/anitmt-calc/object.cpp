@@ -73,5 +73,16 @@ namespace anitmt{
     return res;
   }
 
+
+  //! individual final init after hierarchy is set up (Has to call the 
+  //! function of the return type container
+  void Ani_Object::final_init()
+  {
+    mat.hierarchy_final_init();
+    pos.hierarchy_final_init();
+    dir.hierarchy_final_init();
+    up.hierarchy_final_init();
+  }
+
 }
 

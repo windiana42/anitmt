@@ -55,7 +55,8 @@ namespace anitmt{
     virtual bool try_add_child( Prop_Tree_Node *node ) = 0;
 				
     // abstract child factory:
-    class Child_Factory{
+    class Child_Factory
+    {
     public:
       virtual Prop_Tree_Node *create( std::string name, Animation* ani ) = 0;
     };
@@ -64,11 +65,15 @@ namespace anitmt{
     typedef std::map< std::string, Child_Factory* > child_factory_type;
     static child_factory_type child_factory;
 
+    //! individual final init after hierarchy is set up (Has to call the 
+    //! function of the return type container
+    virtual void final_init() = 0;
   protected:
     Animation *ani;		// animation as root node
 
     // Access functions for hiding data structure
-    inline void add_property( std::string name, Property *prop ){
+    inline void add_property( std::string name, Property *prop )
+    {
       properties[ name ] = prop;
     }
 
@@ -113,6 +118,10 @@ namespace anitmt{
     static void add_child_factory( std::string name, Child_Factory* fac )
       throw( EX_child_type_already_defined );
 				// adds a factory object for class generation
+
+    //! function that is called after hierarchy was set up for each node
+    void hierarchy_final_init();
+
     //**************************
     // constructors / destructor
 

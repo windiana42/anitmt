@@ -22,11 +22,6 @@ namespace anitmt{
 
   const std::string Scal_Linear::type_name = "linear";
 
-  std::string Scal_Linear::get_type_name()
-  {
-    return type_name;
-  }
-
   Scal_Linear::Scal_Linear( std::string name, Animation *ani ) 
     : Prop_Tree_Node( type_name, name, ani ) 
   {
@@ -62,34 +57,28 @@ namespace anitmt{
     //*****************
     // Default Values
 
-    // Default value 0 for slope on level 10 
-    establish_Default_Value( &ani->pri_sys, 50, s, 0 );
+    // Default value 0 for slope on level 150 
+    establish_Default_Value( &ani->pri_sys, 150, s, 0 );
 
-    /*
-    // only first element
-    if( !get_prev() )
-      {
-	// Default value 0 for starttime on level 15 
-	establish_Default_Value( &ani->pri_sys, 55, &t0, 0 );
-      }
+    // Default value 0 for differance on level 170 
+    establish_Default_Value( &ani->pri_sys, 170, d, 0 );
+  }
 
-    // only last element
-    if( !get_next() )
-      {
-	// Default value <anim end> for endtime on level 16 
-	//establish_Default_Value( &ani->pri_sys, 16, &te, ?GLOB?endtime? );
-      }
+  // initializes the first node on a level
+  void Scal_Linear::init_first( Return<values::Scalar>* ) 
+  {
+    // Default value 0 for starttime on level 130 
+    establish_Default_Value( &ani->pri_sys, 130, t0, 0 );
 
-    // only first element
-    if( !get_prev() )
-      {
-	// Default value 0 for startvalue on level 20
-	establish_Default_Value( &ani->pri_sys, 60, &v0, 0 );
-      }
-    */
-    
-    // Default value 0 for differance on level 30 
-    establish_Default_Value( &ani->pri_sys, 70, d, 0 );
+    // Default value 0 for startvalue on level 160
+    establish_Default_Value( &ani->pri_sys, 160, v0, 0 );
+  }
+
+  // initializes the last node on a level
+  void Scal_Linear::init_last( Return<values::Scalar>* ) 
+  {
+    //Default value <anim end> for endtime on level 131 
+    establish_Default_Value( &ani->pri_sys, 131, te, ani->param.endtime() );
   }
 
   //********
@@ -103,9 +92,9 @@ namespace anitmt{
     // push endtime to next starttime on level 1
     establish_Push_Connection( &ani->pri_sys, 
 			       1, te, next_node, "starttime" );
-    // push endvalue to next startvalue on level 3
+    // push endvalue to next startvalue on level 5
     establish_Push_Connection( &ani->pri_sys, 
-			       3, ve, next_node, "startvalue" );
+			       5, ve, next_node, "startvalue" );
   }
 
   void Scal_Linear::init_prev( Return<values::Scalar> *prev ) 
@@ -115,9 +104,9 @@ namespace anitmt{
     // push starttime to previous endtime on level 2
     establish_Push_Connection( &ani->pri_sys, 
 			       2, t0, prev_node, "endtime" );
-    // push startvalue to previous endvalue on level 4
+    // push startvalue to previous endvalue on level 6
     establish_Push_Connection( &ani->pri_sys, 
-			       4, v0, prev_node, "endvalue" );
+			       6, v0, prev_node, "endvalue" );
   }
     
   values::Scalar Scal_Linear::get_return_value( values::Scalar t,
@@ -130,5 +119,9 @@ namespace anitmt{
   {
     return false;		// straight has no childs
   }
+
+  //! individual final init after hierarchy is set up (Has to call the 
+  //! function of the return type container
+  void Scal_Linear::final_init() {}
 }
 

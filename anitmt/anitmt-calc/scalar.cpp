@@ -54,5 +54,11 @@ namespace anitmt{
     return res;
   }
 
+  //! individual final init after hierarchy is set up (Has to call the 
+  //! function of the return type container
+  void Ani_Scalar::final_init()
+  {
+    s.hierarchy_final_init();
+  }
 }
 

@@ -48,8 +48,10 @@ namespace anitmt{
     void set_prev( Return<Return_Type> *prev );
     void set_next( Return<Return_Type> *next );
     // initializes the connection to next/previous node
-    virtual void init_next( Return<Return_Type> *node ) {}
-    virtual void init_prev( Return<Return_Type> *node ) {}
+    virtual void init_next ( Return<Return_Type> *node ) {}
+    virtual void init_prev ( Return<Return_Type> *node ) {}
+    virtual void init_first( Return<Return_Type> *node ) {}
+    virtual void init_last ( Return<Return_Type> *node ) {}
 
   protected:
     Return<Return_Type> *get_prev( Return_Type type_ID = Return_Type() );
@@ -59,6 +61,9 @@ namespace anitmt{
     virtual Return_Type get_return_value( values::Scalar t, 
 					  Return_Type type_ID = Return_Type() )
       throw( EX_not_active_at_time, EX_user_error ) = 0;
+
+    //! function that is called after hierarchy was set up for each node
+    void hierarchy_final_init( Return_Type type_ID );
 
     Return();
 
@@ -87,6 +92,9 @@ namespace anitmt{
     Return_Type get_return_value( values::Scalar t, 
 				  Return_Type type_ID = Return_Type() )
       throw( EX_essential_child_missing, EX_no_active_child, EX_user_error );
+
+    //! function that is called after hierarchy was set up for each node
+    void hierarchy_final_init( Return_Type type_ID = Return_Type() );
 
     Contain_Return( bool essential_child, bool is_unique_child );
     virtual ~Contain_Return() {}

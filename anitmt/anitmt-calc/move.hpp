@@ -51,6 +51,10 @@ namespace anitmt{
     Vector_Property c;		// rotation center (?piveau? point)
 
     bool try_add_child( Prop_Tree_Node *node );
+
+    //! individual final init after hierarchy is set up (Has to call the 
+    //! function of the return type container
+    virtual void final_init();
   public:
     static std::string get_type_name();
 
@@ -94,6 +98,10 @@ namespace anitmt{
     Scalar_Property ve;		// endspeed
 
     //...
+
+    //! individual final init after hierarchy is set up (Has to call the 
+    //! function of the return type container
+    virtual void final_init();
   protected:
   public:
     static std::string get_type_name();

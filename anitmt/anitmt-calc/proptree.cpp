@@ -211,6 +211,19 @@ namespace anitmt{
     child_factory[ type_name ] = fac;
   }
 
+  //! function that is called after hierarchy was set up for each node
+  void Prop_Tree_Node::hierarchy_final_init()
+  {
+    final_init();
+
+    Prop_Tree_Node *n;
+    for( n = first_child; n != 0; n = n->next )
+      {
+	n->hierarchy_final_init();
+      }    
+  }
+
+
   //**************************
   // constructors / destructor
 
