@@ -339,7 +339,8 @@ FDBase::PollID FDBase::FDPollID(int fd) const
 	if(fd<0)  return(NULL);
 	for(FDManager::FDNode *i=fds; i; i=i->next)
 	{
-		if(i->fd==fd)
+		// We do not return a dead poll node here. 
+		if(i->fd==fd && i->idx!=-2)
 		{  return((PollID)i);  }
 	}
 	return(NULL);

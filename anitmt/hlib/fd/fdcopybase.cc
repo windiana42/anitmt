@@ -242,8 +242,9 @@ int FDCopyBase::PollFD(int fd,short events,const void *dptr,PollID *ret_id)
 		// In this case, this is illegal. The user has to 
 		// call FDChangeEvents(). 
 		#if TESTING
-		fprintf(stderr,"OOPS: BUG in application: "
+		fprintf(stderr,"OOPS: BUG in application (%p,%d,%d): "
 			"Use FDChangeEvents() !! (fdcopybase.cc:%d)\n",
+			pollid,fd,((FDManager::FDNode*)pollid)->idx,
 			__LINE__);
 		#endif
 		return(-1);

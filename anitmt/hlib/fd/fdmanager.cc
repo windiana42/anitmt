@@ -49,6 +49,11 @@
 // reasons. 
 #define TESTING_CHECK 1
 
+// This is what to do if a bug check kicks in which can 
+// probably be handeled without immediate abortion (actually most). 
+// (Use "abort();" or "assert(0);" to immediately abort.)
+#define BUGACTION   abort();
+
 #if TESTING
 #  warning TESTING switched on. 
 #endif
@@ -144,7 +149,7 @@ void FDManager::ExtraSigNodes(int delta)
 	{
 		#if TESTING
 		fprintf(stderr,"FD: BUG! extra_signodes=%d <0 (%d)\n",
-			extra_signodes,delta);
+			extra_signodes,delta);  BUGACTION
 		#endif
 		extra_signodes=0;
 	}
@@ -178,7 +183,7 @@ FDManager::SigNode *FDManager::_AllocSigNode()
 	#if TESTING
 	if(free_signodes<0)
 	{  fprintf(stderr,"FD: **BUG!! free_signodes=%d in AllocSigNode()\n",
-		free_signodes);  }
+		free_signodes);  BUGACTION  }
 	#endif
 	
 	return(sn);
@@ -399,10 +404,10 @@ void FDManager::DestructionDone(FDBase *,int nfds,int npollfds)
 		#if TESTING
 		if(pollnodes<0)
 		{  fprintf(stderr,"FD:%d: OOPS: pollnodes=%d<0\n",__LINE__,pollnodes);
-			pollnodes=0;  }
+			pollnodes=0;  BUGACTION  }
 		if(fd_nnodes<pollnodes)
 		{  fprintf(stderr,"FD:%d: OOPS: fd_nnodes=%d < %d=pollnodes\n",__LINE__,
-			fd_nnodes,pollnodes);  }
+			fd_nnodes,pollnodes);  BUGACTION  }
 		#endif
 	}
 }
@@ -425,7 +430,7 @@ void FDManager::__TidyUp()
 		{
 			#if TESTING
 			if(!tmp->fdb->deleted)
-			{  fprintf(stderr,"BUG!! non-deleted FDBase in dead list.\n");  }
+			{  fprintf(stderr,"BUG!! non-deleted FDBase in dead list.\n");  BUGACTION  }
 			#endif
 			
 			if(tmp->fdb->deleted==2)
@@ -445,7 +450,7 @@ void FDManager::__TidyUp()
 	#if TESTING
 	if(fdblist.n_no_managers<0)
 	{  fprintf(stderr,"***BUG! n_no_managers=%d ***\n",
-		fdblist.n_no_managers);  }
+		fdblist.n_no_managers);  BUGACTION  }
 	#endif
 }
 
@@ -477,7 +482,7 @@ void FDManager::__UpdateFDArray()
 			
 			#if TESTING
 			if(npfds>pfd_dim || pfd_dim>(3*fd_thresh)/2+npfds)
-			{  fprintf(stderr,"FD Re-Alloc is buggy. %u %u\n",npfds,pfd_dim);  }
+			{  fprintf(stderr,"FD Re-Alloc is buggy. %u %u\n",npfds,pfd_dim);  BUGACTION  }
 			#endif
 			
 			pfd=(pollfd*)LMalloc(sizeof(pollfd)*pfd_dim + 1);
@@ -518,7 +523,7 @@ void FDManager::__UpdateFDArray()
 		if(!fdb || fdb->deleted)
 		{
 			fprintf(stderr,"BUG!! fdb=%p, deleted=%d in FDBase list (%d)\n",
-				fdb,fdb->deleted,__LINE__);
+				fdb,fdb->deleted,__LINE__);  BUGACTION
 			continue;
 		}
 		#endif
@@ -527,7 +532,7 @@ void FDManager::__UpdateFDArray()
 			if(i->idx==-2)
 			{
 				#if TESTING
-				fprintf(stderr,"OOPS: idx==-2 while fd list rebuild\n");
+				fprintf(stderr,"OOPS: idx==-2 while fd list rebuild\n");  BUGACTION
 				#endif
 				continue;
 			}
@@ -553,7 +558,7 @@ void FDManager::__UpdateFDArray()
 	#if TESTING
 	if(idx!=pollnodes)
 	{  fprintf(stderr,"internal error: pollnodes=%d != idx=%d\n",
-		pollnodes,idx);  }
+		pollnodes,idx);  BUGACTION  }
 	npfds=idx;
 	#endif
 	
@@ -568,7 +573,7 @@ void FDManager::__UpdateFDArray()
 { \
 	if(fdlist_change_serial) \
 	{  fprintf(stderr,"OOPS: fdlist_change_serial=%d in TestingCheckFDStuff\n", \
-		fdlist_change_serial);  }  \
+		fdlist_change_serial);  BUGACTION  }  \
 	char flag[pollnodes]; \
 	memset(flag,0,pollnodes); \
 	for(FDBNode *fb=fdblist.first; fb; fb=fb->next) \
@@ -576,27 +581,30 @@ void FDManager::__UpdateFDArray()
 		FDBase *fdb=fb->fdb; \
 		if(!fdb || fdb->deleted) \
 		{  fprintf(stderr,"BUG!![tst] fdb=%p, deleted=%d in FDBase list (%d)\n", \
-			fdb,fdb->deleted,__LINE__);  continue;  } \
+			fdb,fdb->deleted,__LINE__);  BUGACTION  continue;  } \
 		for(FDNode *i=fdb->fds; i; i=i->next) \
 		{ \
 			if(i->fd<0) \
-			{  fprintf(stderr,"BUG!![tst] illegal fd %d\n",i->fd);  continue;  } \
+			{  fprintf(stderr,"BUG!![tst] illegal fd %d\n",i->fd); \
+				BUGACTION  continue;  } \
 			if(i->idx==-2) \
-			{  fprintf(stderr,"BUG!![tst] fd=%d has idx=-2.\n",i->fd);  continue;  } \
+			{  fprintf(stderr,"BUG!![tst] fd=%d has idx=-2.\n",i->fd);  \
+				BUGACTION  continue;  } \
 			if((i->events && i->idx<0) || \
 			   (!i->events && i->idx>=0)) \
 			{  fprintf(stderr,"BUG!![tst] fd=%d has events=%d and idx=%d\n", \
-				i->fd,i->events,i->idx);  ++fdlist_change_serial;  continue;  } \
+				i->fd,i->events,i->idx);  BUGACTION  \
+				++fdlist_change_serial;  continue;  } \
 			if(i->idx>=0) \
 			{ \
 				if(i->idx>=pollnodes) \
 				{  fprintf(stderr,"BUG!![tst] fd=%d has idx=%d out of range (%d)\n", \
-					i->fd,i->idx,pollnodes);  continue;  } \
+					i->fd,i->idx,pollnodes);  BUGACTION  continue;  } \
 				struct pollfd *p=&pfd[i->idx]; \
 				if(p->fd!=i->fd || p->events!=i->events) \
 				{  fprintf(stderr,"BUG!![tst] data inconsistent: " \
 					"array=%d,%d; list=%d,%d\n", \
-					p->fd,p->events,i->fd,i->events);  continue;  } \
+					p->fd,p->events,i->fd,i->events);  BUGACTION  continue;  } \
 				++flag[i->idx]; \
 			} \
 		} \
@@ -605,7 +613,8 @@ void FDManager::__UpdateFDArray()
 	{ \
 		if(int(flag[i])!=1) \
 		{  fprintf(stderr,"BUG!![tst] pfd array element[%d] (fd=%d) %s!!", \
-			i,pfd[i].fd,(flag[i] ? "USED MORE TNAN ONCE" : "NOT USED"));  } \
+			i,pfd[i].fd,(flag[i] ? "USED MORE TNAN ONCE" : "NOT USED"));  \
+			BUGACTION  } \
 	} \
 }
 #endif
@@ -644,7 +653,7 @@ void FDManager::__DeliverPendingSignals(int tidy_up)
 	{
 		#if TESTING
 		fprintf(stderr,"OOPS: *** Blocked recursive call of "
-			"DeliverPendingSignals()\a\n");
+			"DeliverPendingSignals()\a\n");  BUGACTION
 		#endif
 		return;
 	}
@@ -727,7 +736,7 @@ void FDManager::_DeliverSignal(SigNode *sn)
 		#if TESTING
 		if(!fdb || fdb->deleted)
 		{  fprintf(stderr,"BUG!! fdb=%p, deleted=%d in FDBase list (%d)\n",
-			i->fdb,i->fdb->deleted,__LINE__);  continue;  }
+			i->fdb,i->fdb->deleted,__LINE__);  BUGACTION  continue;  }
 		#endif
 		// (virtual function call)
 		if(fdb->signotify(sinfo))
@@ -765,11 +774,12 @@ inline void FDManager::_DeliverFDNotify(const HTime *fdtime)
 		if(!fdb || fdb->deleted)
 		{
 			fprintf(stderr,"BUG!! fdb=%p, deleted=%d in FDBase list (%d)\n",
-				fdb,fdb->deleted,__LINE__);
+				fdb,fdb->deleted,__LINE__);  BUGACTION
 			continue;
 		}
 		if(fdb->fdslock>=0)  // already locked
-		{  fprintf(stderr,"FD: *** OOPS: fds already locked! (FDN)\n");  }
+		{  fprintf(stderr,"FD: *** OOPS: fds already locked! (FDN)\n");
+			BUGACTION  }
 		#endif
 		
 		// Make sure to deal with arrived signals: 
@@ -863,7 +873,7 @@ inline void FDManager::_DeliverTimers(long elapsed,HTime *currtv)
 		if(!fdb || fdb->deleted)
 		{
 			fprintf(stderr,"BUG!! fdb=%p, deleted=%d in FDBase list (%d)\n",
-				fdb,fdb->deleted,__LINE__);
+				fdb,fdb->deleted,__LINE__);  BUGACTION
 			continue;
 		}
 		#endif
@@ -951,7 +961,7 @@ int FDManager::MainLoop()
 			if(pfd[-1].fd!=sig_pipe_fd_r ||
 			   pfd[-1].events!=POLLIN)
 			{  fprintf(stderr,"FD: BUG!! pfd[-1] corrupt: %d,%d\n",
-				pfd[-1].fd,pfd[-1].events);  }
+				pfd[-1].fd,pfd[-1].events);  BUGACTION  }
 			#endif
 
 			// Is this loop needed?? Not for linux (see fs/select.c). 
@@ -1063,7 +1073,7 @@ int FDManager::MainLoop()
 				if(last_timeout<-1 && !timeout_change)
 				{
 					fprintf(stderr,"BUG: last_timeout<-1 (%ld) but no "
-						"timer elapsed\n",last_timeout);  
+						"timer elapsed\n",last_timeout);  BUGACTION
 					++timeout_change;
 				}
 				#endif
@@ -1207,9 +1217,9 @@ FDManager::~FDManager()
 	
 	#if TESTING
 	if(fdblist.first)  // well, not all FDBase classes unregistered!!
-	{  fprintf(stderr,"NOT ALL FDBase classes unregistered.\n");  }
+	{  fprintf(stderr,"NOT ALL FDBase classes unregistered.\n");  BUGACTION  }
 	if(fdblist.fdead)
-	{  fprintf(stderr,"~FDManager: DEAD LIST NOT EMPTY.\n");  }
+	{  fprintf(stderr,"~FDManager: DEAD LIST NOT EMPTY.\n");  BUGACTION  }
 	#endif
 	
 	// pipe_pfd=NULL can only be the case if the constructor failed. 
@@ -1263,10 +1273,10 @@ FDManager::~FDManager()
 	#if TESTING
 	if(free_signodes)
 	{  fprintf(stderr,"FD: ** BUG!! free_signodes=%d !=0 in ~FDManager\n",
-		free_signodes);  }
+		free_signodes);  BUGACTION  }
 	if(extra_signodes)
 	{  fprintf(stderr,"FD: BUG?! extra_signodes=%d !=0 in FDManager\n",
-		extra_signodes);  }
+		extra_signodes);  BUGACTION  /* ?? */ }
 	#endif
 	
 	if(sig_pipe_fd_r>=0)  fd_close(sig_pipe_fd_r);  sig_pipe_fd_r=-1;
@@ -1426,7 +1436,7 @@ void FDManager::AlignTimer(FDManager::TimerNode *n,int align)
 		if(!fdb || fdb->deleted)
 		{
 			fprintf(stderr,"BUG!! fdb=%p, deleted=%d in FDBase list (%d)\n",
-				fdb,fdb->deleted,__LINE__);
+				fdb,fdb->deleted,__LINE__);  BUGACTION
 			continue;
 		}
 		#endif
@@ -1548,8 +1558,8 @@ int FDManager::UpdateTimer(FDBase *fdb,TimerID tid,long msec,int align)
 	#if TESTING_CHECK
 	for(FDManager::TimerNode *i=fdb->timers; i; i=i->next)
 	{  if((TimerID)i==tid)  goto found;  }
-	fprintf(stderr,"**BUG in application: "
-		"attempt to update non-existant timer %p (%ld,%d)\n",tid,msec,align);
+	fprintf(stderr,"**BUG in application: attempt to update non-existant "
+		"timer %p (%ld,%d)\n",tid,msec,align);  BUGACTION
 	return(-2);
 	found:;
 	#endif
@@ -1580,8 +1590,8 @@ int FDManager::ResetTimer(FDBase *fdb,TimerID tid,int align)
 	#if TESTING_CHECK
 	for(FDManager::TimerNode *i=fdb->timers; i; i=i->next)
 	{  if((TimerID)i==tid)  goto found;  }
-	fprintf(stderr,"**BUG in application: "
-		"attempt to reset non-existant timer %p.\n",tid);
+	fprintf(stderr,"**BUG in application: attempt to reset non-existant "
+		"timer %p.\n",tid);  BUGACTION
 	return(-2);
 	found:;
 	#endif
@@ -1608,8 +1618,8 @@ int FDManager::KillTimer(FDBase *fdb,TimerID tid)
 	#if TESTING_CHECK
 	for(FDManager::TimerNode *i=fdb->timers; i; i=i->next)
 	{  if((TimerID)i==tid)  goto found;  }
-	fprintf(stderr,"**BUG in application: "
-		"attempt to delete non-existant timer %p\n",tid);
+	fprintf(stderr,"**BUG in application: attempt to delete "
+		"non-existant timer %p\n",tid);  BUGACTION
 	return(-2);
 	found:;
 	#endif
@@ -1642,7 +1652,7 @@ long FDManager::__GetTimeout()
 		if(!fb->fdb || fb->fdb->deleted)
 		{
 			fprintf(stderr,"BUG!! fdb=%p, deleted=%d in FDBase list (%d)\n",
-				fb->fdb,fb->fdb->deleted,__LINE__);
+				fb->fdb,fb->fdb->deleted,__LINE__);  BUGACTION
 			continue;
 		}
 		#endif
@@ -1656,7 +1666,7 @@ long FDManager::__GetTimeout()
 		// getting deleted which may not happen here. 
 		if(sh->msec_val<0)
 		{  fprintf(stderr,"FD: BUG!! _GetTimeout(): sh->msec_val=%ld <0\n",
-			sh->msec_val);  }
+			sh->msec_val);  BUGACTION  }
 		#endif
 		
 		if(msec>0 && msec<sh->msec_left)  continue;
@@ -1666,7 +1676,7 @@ long FDManager::__GetTimeout()
 		if(sh->msec_left<0)
 		{
 			fprintf(stderr,"BUG: _GetTimeout(): msec_left=%ld "
-				"< 0",sh->msec_left);
+				"< 0",sh->msec_left);  BUGACTION
 			msec=0;
 		}
 		#endif
@@ -1690,7 +1700,7 @@ long FDManager::__GetTimeout()
 		if(!fb->fdb || fb->fdb->deleted)
 		{
 			fprintf(stderr,"BUG!! fdb=%p, deleted=%d in FDBase list (%d)\n",
-				fb->fdb,fb->fdb->deleted,__LINE__);
+				fb->fdb,fb->fdb->deleted,__LINE__);  BUGACTION
 			continue;
 		}
 		#endif
@@ -1705,7 +1715,7 @@ long FDManager::__GetTimeout()
 				if(i->msec_left<0)
 				{
 					fprintf(stderr,"BUG: _GetTimeout(): msec_left=%ld "
-						"< 0",i->msec_left);
+						"< 0",i->msec_left);  BUGACTION
 					msec=0;
 				}
 				#endif
@@ -1747,7 +1757,8 @@ inline long FDManager::_GetTimeout(const HTime *current)
 		long nto=__GetTimeout();
 		if(last_timeout!=nto)
 		{  fprintf(stderr,"BUG!! in timer code: timeout changed "
-			"(%ld -> %ld) but timeout_change=0\n",last_timeout,nto);  }
+			"(%ld -> %ld) but timeout_change=0\n",last_timeout,nto);
+			BUGACTION  }
 		last_timeout=nto;
 	}
 	
@@ -1762,7 +1773,7 @@ inline long FDManager::_GetTimeout(const HTime *current)
 			if(i->msec_left<last_timeout)
 			{  fprintf(stderr,"FD: BUG!! in timer code: "
 				"__GetTimeout() returns %ld msec timer but %ld is shorter.\n",
-				last_timeout,i->msec_left);  }
+				last_timeout,i->msec_left);  BUGACTION  }
 		}
 	}
 	#endif  /* TESTING_CHECK */
@@ -1808,7 +1819,7 @@ int FDManager::_PollFD(FDBase * /*fdb*/,FDManager::FDNode *j,
 	#if TESTING
 	if(pollnodes<0)
 	{  fprintf(stderr,"FD:%d: OOPS: pollnodes=%d<0\n",__LINE__,pollnodes);
-		pollnodes=0;  }
+		pollnodes=0;  BUGACTION  }
 	#endif
 	// If fdlist_change_serial>0, then the fd array has to be 
 	// updated aynway, so we just quit here and do the rest 
@@ -1832,7 +1843,7 @@ int FDManager::_PollFD(FDBase * /*fdb*/,FDManager::FDNode *j,
 			// OR that j->idx is invalid. 
 			if(pfd[j->idx].fd!=j->fd)
 			{  fprintf(stderr,"BUG:%d: j->idx=%d (n=%d); pfd.fd=%d; fd=%d ***\n",
-				__LINE__,j->idx,npfds,pfd[j->idx].fd,j->fd);  }
+				__LINE__,j->idx,npfds,pfd[j->idx].fd,j->fd);  BUGACTION  }
 			#endif
 			pdebug("FastFDChange\n");
 		}
@@ -1872,24 +1883,42 @@ if(events & ~(POLLIN | POLLOUT))
 	events,fd,__LINE__);  }
 #endif
 	
+	FDManager::FDNode *recycle=NULL;
 	for(FDManager::FDNode *j=fdb->fds; j; j=j->next)
 	{
-		if(j->fd==fd)
+		if(j->fd!=fd)  continue;
+		if(j->idx==-2)
 		{
-			if(ret_id)
-			{  *ret_id=(PollID)j;  }
-			return(_PollFD(fdb,j,events,dptr));
+			// This is a poll node marked for deletion and it happens 
+			// to have the right fd set. Use it if there is no other one. 
+			recycle=j;  continue;
 		}
+		if(ret_id)
+		{  *ret_id=(PollID)j;  }
+		return(_PollFD(fdb,j,events,dptr));
 	}
 	
-	// Hmm.. the fd was not found, so add a new fd entry. 
-	FDManager::FDNode *n=fdb->AllocFDNode(fd,events,dptr ? (*dptr) : NULL);
-	if(!n)
-	{  return(-1);  }
-	fdb->AddFDNode(n);
-	//fprintf(stderr,"_NewFDN(fd=%d,events=0x%x,idx=%d)\n",
-	//	n->fd,n->events,n->idx);
-	++fd_nnodes;
+	// Hmm.. the fd was not found, so add a new fd entry or 
+	// recycle one if we found one. 
+	FDManager::FDNode *n;
+	if(recycle)
+	{
+		n=recycle;
+		//n->fd=fd;  // already
+		n->events=events;
+		n->idx=-1;  // "newly allocated"
+		n->dptr = dptr ? (*dptr) : NULL;
+	}
+	else
+	{
+		n=fdb->AllocFDNode(fd,events,dptr ? (*dptr) : NULL);
+		if(!n)
+		{  return(-1);  }
+		fdb->AddFDNode(n);
+		//fprintf(stderr,"_NewFDN(fd=%d,events=0x%x,idx=%d)\n",
+		//	n->fd,n->events,n->idx);
+		++fd_nnodes;
+	}
 	if(n->events)
 	{
 		++pollnodes;
@@ -1907,6 +1936,15 @@ if(events & ~(POLLIN | POLLOUT))
 // Internally: unpoll FD node (dequeue & free). 
 inline int FDManager::_iUnpollFD(FDBase *fdb,FDManager::FDNode *fdn)
 {
+	if(fdn->idx==-2)
+	{
+		#if TESTING
+		fprintf(stderr,"OOPS BUG in application: trying to unpoll dead node "
+			"(%p, fd=%d, events=%d)\n",fdn,fdn->fd,fdn->events);  BUGACTION
+		#endif
+		return(1);
+	}
+	
 	//fprintf(stderr,"_iUnpollFD(fd=%d,events=0x%x,idx=%d)\n",
 	//	fdn->fd,fdn->events,fdn->idx);
 	if(fdn->events)
@@ -1946,7 +1984,7 @@ int FDManager::UnpollFD(FDBase *fdb,int fd)
 	
 	for(FDManager::FDNode *j=fdb->fds; j; j=j->next)
 	{
-		if(j->fd==fd)
+		if(j->fd==fd && j->idx!=-2)
 		{  return(_iUnpollFD(fdb,j));  }
 	}
 	
