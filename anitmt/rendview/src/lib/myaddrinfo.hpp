@@ -20,7 +20,12 @@
 #include <lib/prototypes.hpp>
 #include <hlib/refstring.h>
 
+#if HAVE_SYS_SOCKET_H
+#include <sys/socket.h>
+#endif
+
 #include <netinet/in.h>
+
 
 
 // Used as client/server internet address: 

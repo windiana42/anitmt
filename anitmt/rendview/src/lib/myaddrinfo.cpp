@@ -18,10 +18,6 @@
 #include <netdb.h>
 #include <arpa/inet.h>
 
-#if HAVE_SYS_SOCKET_H
-#include <sys/socket.h>
-#endif
-
 #include <assert.h>
 
 
