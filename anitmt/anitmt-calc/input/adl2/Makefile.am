@@ -6,7 +6,7 @@ check_PROGRAMS=		testadlparser
 CXXFLAGS =		@CXXFLAGS@ -Wno-non-template-friend -DYYDEBUG \
 			-D__CPLUSPLUS -DTHROW_NIL=throw\(\)
 
-libadlparser_a_SOURCES=	parser.yy \
+libadlparser_a_SOURCES=	parser.yy tokens.h\
 			parser_functions.hpp parser_functions.cpp \
 			parser_functions_inline.cpp \
 			adlparser.hpp adlparser.cpp adlparser_inline.cpp \
