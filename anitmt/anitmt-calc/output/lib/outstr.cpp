@@ -23,7 +23,6 @@
 #include "outstr.hpp"
 
 #include <fcntl.h>
-#include <errno.h>
 
 #include <iostream>
 

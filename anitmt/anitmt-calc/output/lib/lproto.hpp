@@ -53,7 +53,9 @@
 #if HAVE_UNISTD_H
 # include <unistd.h>
 #endif
-
+#if HAVE_ERRNO_H
+# include <errno.h>
+#endif
 
 // Now some stuff: 
 #if !defined(HAVE_SSIZE_T) || (defined(HAVE_SSIZE_T) && !HAVE_SSIZE_T)

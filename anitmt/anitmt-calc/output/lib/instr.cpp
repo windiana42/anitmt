@@ -21,7 +21,6 @@
  */
 
 #include <fcntl.h>
-#include <errno.h>
 
 #include "instr.hpp"
 
