@@ -42,8 +42,8 @@ class FDManager
 			long msec_left;   // msec left till next alarm
 			const void *dptr;  // custom data pointer associated with timer 
 		};
-		struct _TimerID {};
-		typedef _TimerID (*TimerID);
+		struct _TimerID {};  typedef _TimerID (*TimerID);
+		struct _PollID {};   typedef _PollID  (*PollID);
 		struct TimerInfo
 		{
 			TimerID tid;    // ID of the timer being triggered 
@@ -60,6 +60,7 @@ class FDManager
 		};
 		struct FDInfo
 		{
+			PollID pollid;   // PollID of that poll node 
 			int fd;   // file descriptor
 			short events;  // what to poll for 
 			short revents;  // what poll returned 
@@ -147,6 +148,10 @@ class FDManager
 		
 		inline void _DeliverFDNotify();
 		
+		// Internally: unpoll FD node (dequeue & free). 
+		inline int _UnpollFD(FDBase *fdb,FDManager::FDNode *fdn);
+		int _PollFD(FDBase *fdb,FDManager::FDNode *j,short events,const void **dptr);
+		
 		// Exit status value or -1. 
 		int quitval;
 		
@@ -202,8 +207,12 @@ class FDManager
 		void KillAllTimers(FDBase *fdb);
 		
 		/* FILE DESCRIPTOR functions; see class FDBase */
-		int PollFD(FDBase *fdb,int fd,short events,const void *dptr);
+		int PollFD(FDBase *fdb,int fd,short events,const void **dptr,PollID *ret_id=NULL);
+		int PollFD(FDBase *fdb,PollID pollid,short events,const void **dptr)
+			{  return(pollid ? _PollFD(fdb,(FDManager::FDNode*)pollid,
+				events,dptr) : (-2));  }
 		int UnpollFD(FDBase *fdb,int fd);
+		int UnpollFD(FDBase *fdb,PollID pollid);   // faster, of course...
 		
 		/* (Un)Set manager flag: */
 		int SetManager(FDBase *fdb,int flag);

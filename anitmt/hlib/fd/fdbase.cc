@@ -234,6 +234,17 @@ void FDBase::_UnlockFDs()
 	}
 }
 
+// Query PollID of specified fd: 
+FDBase::PollID FDBase::FDPollID(int fd)
+{
+	if(fd<0)  return(NULL);
+	for(FDManager::FDNode *i=fds; i; i=i->next)
+	{
+		if(i->fd==fd)
+		{  return((PollID)i);  }
+	}
+	return(NULL);
+}
 // Query FD data (only fds that this FDBase is polling for): 
 // Get custon data pointer associated with fd or NULL: 
 const void *FDBase::FDDPtr(int fd)

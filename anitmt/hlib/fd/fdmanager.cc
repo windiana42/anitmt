@@ -777,6 +777,7 @@ inline void FDManager::_DeliverFDNotify()
 				// already checked: we will not send fdnotify() 
 				// on FDBases which will get deleted. 
 				FDInfo fdi;
+				fdi.pollid=(PollID)p;
 				fdi.fd=p->fd;
 				fdi.events=p->events;
 				fdi.revents=p->revents;
@@ -1628,8 +1629,69 @@ inline void FDManager::_AssignFDArrElem(FDManager::FDNode *n)
 	pdebug("FastFDAdd\n");
 }
 
+
+int FDManager::_PollFD(FDBase * /*fdb*/,FDManager::FDNode *j,
+	short events,const void **dptr)
+{
+	// Just update events & dptr: 
+	if(dptr)
+	{  j->dptr=*dptr;  }
+	// else: let j->dptr unchanged 
+	//    (Yes!, because it's a pointer to the passed dptr pointer val.)
+	if(j->events==events)  return(0);  // done
+	// Events have to be changed: 
+	if(j->events)  {  --pollnodes;  }
+	j->events=events;
+	if(j->events)  {  ++pollnodes;  }
+	// If fdlist_change_serial>0, then the fd array has to be 
+	// updated aynway, so we just quit here and do the rest 
+	// later. 
+	if(fdlist_change_serial)
+	{  ++fdlist_change_serial;  return(0);  }
+	if(events!=0)
+	{
+		// If the fd node already has an associated fd array element 
+		// (and the new events are !=0), update it (things are 
+		// consistent as fdlist_change_serial=0). 
+		if(j->idx>=0)
+		{
+			// Fast case: just change FD events in pfd[] so the list 
+			// keeps in sync with the array and we need not 
+			// ++fdlist_change_serial and need not re-build pfd[]. 
+			pfd[j->idx].events=events;
+			#if TESTING
+			// If this message is written then it means that pfd[] is 
+			// not in sync with the list although !fdlist_change_serial 
+			// OR that j->idx is invalid. 
+			if(pfd[j->idx].fd!=j->fd)
+			{  fprintf(stderr,"BUG:%d: j->idx=%d (n=%d); pfd.fd=%d; fd=%d ***\n",
+				__LINE__,j->idx,npfds,pfd[j->idx].fd,j->fd);  }
+			#endif
+			pdebug("FastFDChange\n");
+		}
+		// If the node has no associated fd array element, we may 
+		// just assign one to it if there is one left (due to alloc 
+		// ahead): 
+		else if(j->idx==-1 && npfds<pfd_dim)
+		{  _AssignFDArrElem(j);  }
+		// Otherwise, the fd array has to be updated. 
+		else
+		{  ++fdlist_change_serial;  }
+		return(0);
+	}
+	// If we come here, events==0. 
+	// We actually changed from events!=0 to events=0. 
+	// If there is an associated fd array elem, then the array 
+	// has to be updated. 
+	if(j->idx>=0)
+	{  ++fdlist_change_serial;  }
+	// Otherwiese there is nothing to do. 
+	return(0);
+}
+
 // Never removes an entry from the list; that is only node by Unpoll(). 
-int FDManager::PollFD(FDBase *fdb,int fd,short events,const void *dptr)
+int FDManager::PollFD(FDBase *fdb,int fd,short events,
+	const void **dptr,PollID *ret_id)
 {
 	if(!fdb)
 	{  return(0);  }
@@ -1645,62 +1707,16 @@ if(events & ~(POLLIN | POLLOUT))
 	
 	for(FDManager::FDNode *j=fdb->fds; j; j=j->next)
 	{
-		if(j->fd!=fd)  continue;
-		// Just update events & dptr: 
-		j->dptr=dptr;
-		if(j->events==events)  return(0);  // done
-		// Events have to be changed: 
-		if(j->events)  {  --pollnodes;  }
-		j->events=events;
-		if(j->events)  {  ++pollnodes;  }
-		// If fdlist_change_serial>0, then the fd array has to be 
-		// updated aynway, so we just quit here and do the rest 
-		// later. 
-		if(fdlist_change_serial)
-		{  ++fdlist_change_serial;  return(0);  }
-		if(events!=0)
+		if(j->fd==fd)
 		{
-			// If the fd node already has an associated fd array element 
-			// (and the new events are !=0), update it (things are 
-			// consistent as fdlist_change_serial=0). 
-			if(j->idx>=0)
-			{
-				// Fast case: just change FD events in pfd[] so the list 
-				// keeps in sync with the array and we need not 
-				// ++fdlist_change_serial and need not re-build pfd[]. 
-				pfd[j->idx].events=events;
-				#if TESTING
-				// If this message is written then it means that pfd[] is 
-				// not in sync with the list although !fdlist_change_serial 
-				// OR that j->idx is invalid. 
-				if(pfd[j->idx].fd!=j->fd)
-				{  fprintf(stderr,"BUG:%d: j->idx=%d (n=%d); pfd.fd=%d; fd=%d ***\n",
-					__LINE__,j->idx,npfds,pfd[j->idx].fd,j->fd);  }
-				#endif
-				pdebug("FastFDChange\n");
-			}
-			// If the node has no associated fd array element, we may 
-			// just assign one to it if there is one left (due to alloc 
-			// ahead): 
-			else if(j->idx==-1 && npfds<pfd_dim)
-			{  _AssignFDArrElem(j);  }
-			// Otherwise, the fd array has to be updated. 
-			else
-			{  ++fdlist_change_serial;  }
-			return(0);
+			if(ret_id)
+			{  *ret_id=(PollID)j;  }
+			return(_PollFD(fdb,j,events,dptr));
 		}
-		// If we come here, events==0. 
-		// We actually changed from events!=0 to events=0. 
-		// If there is an associated fd array elem, then the array 
-		// has to be updated. 
-		if(j->idx>=0)
-		{  ++fdlist_change_serial;  }
-		// Otherwiese there is nothing to do. 
-		return(0);
 	}
 	
 	// Hmm.. the fd was not found, so add a new fd entry. 
-	FDManager::FDNode *n=fdb->AllocFDNode(fd,events,dptr);
+	FDManager::FDNode *n=fdb->AllocFDNode(fd,events,dptr ? (*dptr) : NULL);
 	if(!n)
 	{  return(-1);  }
 	fdb->AddFDNode(n);
@@ -1713,9 +1729,28 @@ if(events & ~(POLLIN | POLLOUT))
 		else
 		{  ++fdlist_change_serial;  }
 	}
+	if(ret_id)
+	{  *ret_id=(PollID)n;  }
 	return(0);
 }
 
+
+// Internally: unpoll FD node (dequeue & free). 
+inline int FDManager::_UnpollFD(FDBase *fdb,FDManager::FDNode *fdn)
+{
+	if(fdn->events)
+	{  --pollnodes;  }
+	// In case there is no array elem associated with that fd 
+	// node, the array keeps in sync. 
+	// Hmmm... no because that gives trouble if PollFD() gets 
+	// called right after UnpollFD() in an environment where 
+	// the fdlist is locked (-> fdn->idx=-2 by DeleteFDNode()). 
+	//if(fdn->idx>=0)
+	{  ++fdlist_change_serial;  }
+	--fd_nnodes;
+	fdb->DeleteFDNode(fdn);
+	return(0);
+}
 
 // deletes fd entry from list (if existing)
 int FDManager::UnpollFD(FDBase *fdb,int fd)
@@ -1726,22 +1761,15 @@ int FDManager::UnpollFD(FDBase *fdb,int fd)
 	for(FDManager::FDNode *j=fdb->fds; j; j=j->next)
 	{
 		if(j->fd==fd)
-		{
-			if(j->events)
-			{  --pollnodes;  }
-			// In case there is no array elem associated with that fd 
-			// node, the array keeps in sync. 
-			// Hmmm... no because that gives trouble if PollFD() gets 
-			// called right after UnpollFD() in an environment where 
-			// the fdlist is locked (-> j->idx=-2 by DeleteFDNode()). 
-			//if(j->idx>=0)
-			{  ++fdlist_change_serial;  }
-			--fd_nnodes;
-			fdb->DeleteFDNode(j);
-			return(0);
-		}
+		{  return(_UnpollFD(fdb,j));  }
 	}
 	
 	return(1);
 }
 
+int FDManager::UnpollFD(FDBase *fdb,PollID pollid)
+{
+	if(!pollid)  return(1);
+	
+	return(_UnpollFD(fdb,(FDManager::FDNode*)pollid));
+}

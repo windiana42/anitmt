@@ -88,6 +88,7 @@ class FDBase
 		typedef FDManager::FDInfo FDInfo;
 		typedef FDManager::TimerInfo TimerInfo;
 		typedef FDManager::TimerID TimerID;
+		typedef FDManager::PollID PollID;
 	private:
 		friend class FDManager;
 		friend class FDManager::FDBList;
@@ -137,8 +138,11 @@ class FDBase
 		// TimerInfo memers: 
 		// - tid: timer ID of timer which expired 
 		// - current: current time (semi-current actually, the same 
-		//            for all calls done at once)
+		//            for all calls done at once); use that for 
+		//            timeouts. 
 		// - dptr: custom data pointer associated with the timer 
+		// - pollid: PollID of that fd. See FDPollID() below for more 
+		//           info. 
 		// NOTE: This function MUST NOT delete other 
 		//       FDBase classes which may receive a timernotify(). 
 		//       It may however call DeleteMe() on other FDBases. 
@@ -278,19 +282,38 @@ class FDBase
 		// ** Be sure you shutdown(), close() and UnpollFD(fd) 
 		//    all opened fds in the desctructor. 
 		// dptr is a custom data pointer associated with this fd and 
-		// also passed back by fdnotify. 
+		//   also passed back by fdnotify. If you do not pass a dptr, it 
+		//   is not changed (and if a new node is allocated, it defaults to 
+		//   NULL). 
+		// ret_id: if non-NULL: store PollID of newly created/updated fd at 
+		//   passed pointer. NOTE: *ret_id is only valid if the return value 
+		//   is 0 or 1 (no error), otherwise unchanged. 
 		// Return value: 
 		//     1 -> OK, fd entry updated. 
 		//     0 -> OK, added new fd entry. 
 		//    -1 -> malloc() failed. (BAD.)
 		//    -2 -> fd<0
-		int PollFD(int fd,short events=0,const void *dptr=NULL)
-			{  return(fdmanager()->PollFD(this,fd,events,dptr));  }
+		int PollFD(int fd,short events=0)
+			{  return(fdmanager()->PollFD(this,fd,events,NULL,NULL));  }
+		int PollFD(int fd,short events,const void *dptr,PollID *ret_id=NULL)
+			{  return(fdmanager()->PollFD(this,fd,events,&dptr,ret_id));  }
+		// Same as PollFD() above but with PollID argument instead of 
+		// PollFD. Thus, you can only use this version to CHANGE poll 
+		// settings, NOT to allocate new ones. 
+		// Return value: 
+		//    1 -> OK, fd entry updated. 
+		//   -2 -> pollid==NULL 
+		int PollFD(PollID pollid,short events=0)
+			{  return(fdmanager()->PollFD(this,pollid,events,NULL));  }
+		int PollFD(PollID pollid,short events,const void *dptr)
+			{  return(fdmanager()->PollFD(this,pollid,events,&dptr));  }
 		// Return value: 
 		//    0 -> OK; 
 		//    1 -> nothing to un-poll: no such fd for *this. 
 		int UnpollFD(int fd)
 			{  return(fdmanager()->UnpollFD(this,fd));  }
+		int UnpollFD(PollID pollid)
+			{  return(fdmanager()->UnpollFD(this,pollid));  }
 		// Return value: that of close(fd). 
 		int CloseFD(int fd)
 		{
@@ -308,12 +331,22 @@ class FDBase
 			return(CloseFD(fd));
 		}
 		
+		// Get PollID associated with specified fd: 
+		// Note: one PollID corresponds to one fd. A PollID is created when 
+		// you call PollFD() and is deleted when you call UnpollFD() (or the 
+		// class gets destroyed). Internally, a PollID is just a pointer to 
+		// the apropriate FDNode, so use it with care; illegal PollIDs 
+		// (dangling pointers) can hardly be detected. 
+		PollID FDPollID(int fd);
 		// Query FD data (only fds that this FDBase is polling for): 
-		// Get custon data pointer associated with fd or NULL: 
+		// Get custon data pointer associated with fd/PollID or NULL: 
 		const void *FDDPtr(int fd);
-		// Get events mask for this fd or -1 in case of invalid fd: 
+		const void *FDDPtr(PollID pollid)
+			{  return(pollid ? ((FDManager::FDNode*)pollid)->dptr : NULL);  }
+		// Get events mask for this fd/PollID or -1 in case of invalid fd: 
 		short FDEvents(int fd);
-		
+		short FDEvents(PollID pollid)
+			{  return(pollid ? ((FDManager::FDNode*)pollid)->events : (-1));  }
 		
 		// Like exit() for this FDBase: *this gets 
 		// destructed and if free_me==1 also LFree()'ed. 
