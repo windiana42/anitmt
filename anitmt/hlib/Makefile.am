@@ -13,13 +13,14 @@ I386_OPT_FLAGS = -march=i486 -malign-jumps=2 -malign-loops=2 -malign-functions=2
 ADDFLAGS=""
 
 SUBDIRS = include cpp misc fd crypto par
+SUBLIBS = cpp/libcpp.a misc/libmisc.a fd/libfd.a crypto/libcrypto.a par/libpar.a
 
 noinst_LIBRARIES = libhlib.a
 libhlib_a_SOURCES = 
 
 EXTRA_DIST = BUILD hlib-config.h.in hconfig.h
 
-libhlib.a: cpp/libcpp.a misc/libmisc.a fd/libfd.a crypto/libcrypto.a par/libpar.a
+libhlib.a: $(SUBLIBS)
 	@echo "Re-creating libhlib.a..."
 	@objs="" ; for i in $(SUBDIRS) ; do \
 		test "$$i" = "include" && continue ; \
