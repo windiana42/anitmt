@@ -22,14 +22,27 @@ namespace message
   //**************************************************************
   // Message managing classes
 
-  inline void Message_Manager::message( Message_Type mtype,
-					Abstract_Position *pos, 
+  inline void Message_Manager::error  ( Abstract_Position *pos, 
 					int position_detail, 
-					const std::string &message,
-					const Message_Source_Identifier &source )
+					std::string message,
+					Message_Source_Identifier source )
   {
-    Message_Handler::Message msg(mtype,pos,position_detail,message,source);
-    handler->message( msg );
+    handler->error( pos, position_detail, message, source );
+  }
+  inline void Message_Manager::warn   ( Abstract_Position *pos, 
+					int position_detail, 
+					std::string message,
+					Message_Source_Identifier source )
+  {
+    handler->warn( pos, position_detail, message, source );
+  }
+
+  inline void Message_Manager::verbose( Abstract_Position *pos, 
+					int position_detail, 
+					std::string message,
+					Message_Source_Identifier source )
+  {
+    handler->verbose( pos, position_detail, message, source );
   }
 
   int Message_Consultant::get_verbose_level() 
@@ -58,32 +71,53 @@ namespace message
     warnings = warn;
   }
 
-  void Message_Consultant::message( Message_Type mtype,
+  void Message_Consultant::error( Abstract_Position *pos, 
+				  int position_detail, 
+				  std::string message )
+  {
+    manager->error( pos, position_detail, message, msg_source );
+  }
+
+  void Message_Consultant::warn( Abstract_Position *pos, 
+				 int position_detail, 
+				 std::string message )
+  {
+    if( is_warning() )
+      manager->warn( pos, position_detail, message, msg_source );
+  }
+   
+  void Message_Consultant::verbose( int min_verbose_level,
 				    Abstract_Position *pos, 
 				    int position_detail, 
-				    const std::string message )
+				    std::string message )
   {
-    // there is no need to check verbose or warnings here as 
-    // this is already done when calling the Message_Stream 
-    // constructor. Why do things twice?
-    manager->message( mtype, pos, position_detail, message, msg_source );
+    if( is_verbose(min_verbose_level) )
+      manager->verbose( pos, position_detail, message, msg_source );
   }
 
   //**************************************************************
   // Message streams
 
-  template<class T> inline Message_Stream& Message_Stream::operator<<(T v)
+  template<class T> inline Error_Stream& Error_Stream::operator<<(T v)
   {
     if( enabled ) 
+	  msg_stream << v; 
+    return *this; 
+  } 
+
+  template<class T> inline Warn_Stream& Warn_Stream::operator<<(T v)
+  {
+    if( enabled )
       msg_stream << v; 
     return *this; 
-  }
+  } 
 
-  //**************************************************************
-  // Message reporting inline code: 
-
-  inline Message_Reporter::Message_Reporter( Message_Consultant *c )
-    : consultant(c) {}
+  template<class T> inline Verbose_Stream& Verbose_Stream::operator<<(T v)
+  {
+    if( enabled )
+      msg_stream << v; 
+    return *this; 
+  } 
 
   //**************************************************************
   // Message Interface for error reporting code
@@ -98,28 +132,25 @@ namespace message
     return consultant->is_verbose( verbose_level );
   }
 
-  Message_Stream Message_Reporter::error( Abstract_Position *pos, 
-					  int position_detail )
+  Error_Stream Message_Reporter::error( Abstract_Position *pos, 
+					int position_detail )
   {
-    Message_Stream ret( MT_Error, pos, position_detail, 
-			consultant, true );
+    Error_Stream ret( pos, position_detail, consultant );
     return ret;
   }
 
-  Message_Stream Message_Reporter::warn( Abstract_Position *pos, 
-					 int position_detail )
+  Warn_Stream Message_Reporter::warn( Abstract_Position *pos, 
+				      int position_detail )
   {
-    Message_Stream ret( MT_Warning, pos, position_detail, 
-			consultant, consultant->is_warning() );
+    Warn_Stream ret( pos, position_detail, consultant );
     return ret;
   }
 
-  Message_Stream Message_Reporter::verbose ( int min_verbose_level,
+  Verbose_Stream Message_Reporter::verbose ( int min_verbose_level,
 					     Abstract_Position *pos, 
 					     int position_detail )
   {
-    Message_Stream ret( MT_Verbose, pos, position_detail, 
-			consultant, consultant->is_verbose(min_verbose_level) );
+    Verbose_Stream ret( min_verbose_level, pos, position_detail, consultant );
     return ret;
   }
 
