@@ -5,7 +5,7 @@
  * file descriptor and time management which works in 
  * cooperation with classes derived from class FDBase. 
  *
- * Copyright (c) 2000--2002 by Wolfgang Wieser (wwieser@gmx.de) 
+ * Copyright (c) 2000--2003 by Wolfgang Wieser (wwieser@gmx.de) 
  * 
  * This file may be distributed and/or modified under the terms of the 
  * GNU General Public License version 2 as published by the Free Software 
@@ -24,11 +24,10 @@
 //------------------------------------------------------------------------------
 // TODO LIST:
 //  * NEED TO SEE WHAT TO DO WHEN WE HAVE NO FREE SIGNODES LEFT.  
-//  * what to do if pollfd array LMalloc() fails? 
-//    (or geerally switch to malloc() for that array?)
 //  * can make __GetTimeout() faster?
 //  * can make AlignTimer() faster?
 //  * check timer alignment code...?
+//  * FIX TIME DRIFT
 //------------------------------------------------------------------------------
 
 #warning Does FDManager::SigInfo need _CPP_OPERATORS?
@@ -485,14 +484,27 @@ void FDManager::__UpdateFDArray()
 			{  fprintf(stderr,"FD Re-Alloc is buggy. %u %u\n",npfds,pfd_dim);  BUGACTION  }
 			#endif
 			
-			pfd=(pollfd*)LMalloc(sizeof(pollfd)*pfd_dim + 1);
+			size_t needed_mem=ssize_t(sizeof(pollfd)*(pfd_dim+1));
+			// Read the comment in if(!pfd)...
+			LMallocUsage lmu;
+			LMallocGetUsage(&lmu);  // COPIES the current usage. 
+			if(lmu.alloc_limit)  // set new limit
+			{  LMallocSetLimit(lmu.curr_used+needed_mem+1 /*+1 for safety*/);  }
+			pfd=(pollfd*)LMalloc(needed_mem);
+			if(lmu.alloc_limit)  // restore old limit
+			{  LMallocSetLimit(lmu.alloc_limit);  }
 			if(!pfd)
 			{
 				// Damn! Re-allocation of pollfd array failed. 
 				// Memory is REALLY LOW if we cannot get these few bytes. 
-				// NOTE: WE CAN GIVE UP COMPLETELY HERE IF THAT IS DUE TO 
+				// NOTE: WE COULD GIVE UP COMPLETELY HERE IF THAT IS DUE TO 
 				//       LMalloc() LIMIT!
-				#warning FIXME!!!
+				// This is the reason, why the LMalloc limit is increased by 
+				// the number of required bytes immediately before the call. 
+				// Yes, this may violate the limit but there is no other 
+				// solution. Waiting here, of course, is none. 
+				// After all, we're in the most vital code of the application 
+				// here and the poll fd array is not really big. 
 				pfd_dim=0;
 				// OK, what can we do?! Wait until memory is back again. 
 				usleep(25000);  // 25 msec delay (do not comsume lots of CPU)
@@ -804,7 +816,11 @@ inline void FDManager::_DeliverFDNotify(const HTime *fdtime)
 			
 			pollfd *p=&pfd[i->idx];
 			#if TESTING
-			if(p->fd!=i->fd || p->events!=i->events)
+			// Well, the case that the events were changed before 
+			// delivering the notify is quite normal in some 
+			// circumstances (heavy use of FDCopy facility...:) ). 
+			// So, only complain about event mismatch if !fdlist_change_serial. 
+			if(p->fd!=i->fd || (p->events!=i->events && !fdlist_change_serial))
 			{
 				fprintf(stderr,"%s: fd=%d,%d; events=0x%x,0x%x; revents=%d\n",
 					fdlist_change_serial ? "FD: Hmmm...." : "FD: internal error",
@@ -840,6 +856,9 @@ inline void FDManager::_DeliverFDNotify(const HTime *fdtime)
 				#endif
 				fdb->CloseFD(p->fd);  // be sure...
 			}
+			
+			// In case the FDBase called DeleteMe(): 
+			if(fdb->deleted)  break;
 		}
 		fdb->UnlockFDs();
 	}
@@ -907,6 +926,9 @@ inline void FDManager::_DeliverTimers(long elapsed,HTime *currtv)
 				// (virtual function call)
 				fdb->timernotify(&tinfo);
 			}
+			
+			// In case the FDBase called DeleteMe(): 
+			if(fdb->deleted)  break;
 		}
 		fdb->UnlockTimers();  // finally remove those "deleted".
 	}
@@ -1978,7 +2000,7 @@ inline int FDManager::_iUnpollFD(FDBase *fdb,FDManager::FDNode *fdn)
 	// idx=>0 (i.e. there is an associated poll array element). 
 	#if 0
 	if(fdn->idx<0 && !fdlist_change_serial)
-	{  fprintf(stderr,"FD: CHECK THIS!!! (fd=%d,events=%d,ch_ser=%d) (is this a BUG???) "
+	{  fprintf(stderr,"FD: CHECK THIS!!! (fd=%d,events=%d,ch_ser=%d) (is this a BUG?!?) "
 		"(line %d)\n",fdn->fd,fdn->events,fdlist_change_serial,__LINE__);  }
 	#endif
 	if(fdn->idx>=0)  // fdn->idx==-2 NOT possible here (check above)

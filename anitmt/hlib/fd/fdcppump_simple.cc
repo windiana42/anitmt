@@ -4,7 +4,7 @@
  * Implementation of class FDCopyPump_Simple which works in 
  * cooperation with class FDCopyBase (and thus FDManager). 
  * 
- * Copyright (c) 2002--2003 by Wolfgang Wieser (wwieser@gmx.de) 
+ * Copyright (c) 2002--2004 by Wolfgang Wieser (wwieser@gmx.de) 
  * 
  * This file may be distributed and/or modified under the terms of the 
  * GNU General Public License version 2 as published by the Free Software 
@@ -78,7 +78,13 @@ int FDCopyPump_Simple::_ReadData(int fd,HTime *fdtime)
 		
 		if(dptr.more || ddone.donelen<dptr.buflen)
 		{
-			//#### send progress info
+			// Not the last read(). 
+			// Send progress info. 
+			ProgressInfo pi;
+			pi.pump=this;
+			pi.fdtime=fdtime;
+			pi.moved_bytes=-ssize_t(rd);  // <0, it's ssize_t
+			_CallCPProgress(&pi);
 			return(0);
 		}
 		// If we reach here: reading done; so job is done. 
@@ -136,7 +142,13 @@ int FDCopyPump_Simple::_WriteData(int fd,HTime *fdtime)
 		
 		if(dptr.more || ddone.donelen<dptr.buflen)
 		{
-			//#### send progress info
+			// Surely not the last write. 
+			// Send progress info. 
+			ProgressInfo pi;
+			pi.pump=this;
+			pi.fdtime=fdtime;
+			pi.moved_bytes=wr;  // >0
+			_CallCPProgress(&pi);
 			return(0);
 		}
 		// If we reach here: writing done; so job is done. 
@@ -271,7 +283,7 @@ int FDCopyPump_Simple::_StartJob()
 	}
 	
 	// Mark us and the FDCopIO classes active: 
-	(int)state|=PS_Active;
+	state|=PS_Active;
 	is_dead=0;  // be sure...
 	src->active=1;
 	dest->active=1;
@@ -333,7 +345,7 @@ int FDCopyPump_Simple::_EndJob(CopyInfo cpi)
 	int rv=(cpi.scode & SCError) ? (-1) : (+1);
 	
 	// Inform client: 
-	(int)cpi.scode|=SCFinal;
+	cpi.scode|=SCFinal;
 	_CallCPNotify(&cpi);
 	
 	// We get deleted (unless persistent) as soon as we're 
@@ -361,12 +373,12 @@ int FDCopyPump_Simple::_StopContJob(int stop)
 	if(stop)
 	{
 		IChangeEvents(pollid,0,(fd_dir<0 ? POLLIN : POLLOUT));
-		(int)state|=PS_Stopped;
+		state|=PS_Stopped;
 	}
 	else
 	{
 		IChangeEvents(pollid,(fd_dir<0 ? POLLIN : POLLOUT),0);
-		(int)state&=~PS_Stopped;
+		state&=~PS_Stopped;
 	}
 	
 	return(0);

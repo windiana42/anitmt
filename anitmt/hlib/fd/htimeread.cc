@@ -3,7 +3,7 @@
  * 
  * Time parsing method(s) for class HTime. 
  * 
- * Copyright (c) 2002 by Wolfgang Wieser (wwieser@gmx.de) 
+ * Copyright (c) 2002--2003 by Wolfgang Wieser (wwieser@gmx.de) 
  * 
  * This file may be distributed and/or modified under the terms of the 
  * GNU General Public License version 2 as published by the Free Software 
@@ -22,7 +22,7 @@
 
 //                            ** WARNING: **
 // DO NOT TOUCH THIS FUNCTION UNLESS YOU REALLY KNOW WHAT YOU ARE DOING. 
-int HTime::ReadTime(const char *str)
+int HTime::_DoReadTime(const char *str)
 {
 	// First, set up t with current local time: 
 	time_t timep;  ::time(&timep);

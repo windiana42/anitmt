@@ -11,7 +11,7 @@ files and config.h.in. For that you need GNU autoconf and GNU automake.
 bash# aclocal && autoconf && autoheader && automake
 
 If that fails, make sure you are using recent versions of automake and 
-autoconf. (I'm using autoconf-2.53, automake-1.6.3)
+autoconf. (I'm using autoconf-2.59, automake-1.7.9)
 
 Now, go on as if you got hlib as source tarball (B): 
 
@@ -107,6 +107,9 @@ Simply run
 
 bash# make
 
+PLEASE MAKE SURE to use GNU make whenever possible. On some systems you 
+have to call it "gmake" instead of plain "make". 
+
 If you chose to pass additional flags, you may use 
 
 bash# make ADDFLAGS="..." ADDCFLAGS="..." ADDCXXFLAGS="..."
@@ -123,9 +126,10 @@ That's okay. Special ones are maked by a box of asterisks.
 If compiling fails, consider changing the optimization flags (e.g. using 
 configure with C[XX]FLAGS="opt> " and using ADDFLAGS to test which flags 
 work). 
-If compile failure is not related to optimization flags, you are probably in trouble. Make sure you are using the 
-GNU C/C++ compiler (gcc). I am using gcc-3.2, but hlib should also build 
-with any version since gcc-2.95. 
+If compile failure is not related to optimization flags, you are probably 
+in trouble. Make sure you are using the GNU C/C++ compiler (gcc). 
+I am using gcc-3.4, but hlib should also build with any version 
+since gcc-2.95. 
 
 Okay, if you have successfully build hlib, run the check programs: 
 
@@ -170,7 +174,7 @@ Supported platforms include:
 * SunOS: 
    - sparc       (sparc-sun-solaris2.8)
 * Cygwin:
-   - i[3456]86   [untested for 0.9.7, worked with 0.9.6]
+   - i[3456]86   [untested for 0.9.7+, worked with 0.9.6]
 
 SEMI-SUPPORTED platforms include: 
 * powerpc-darwin     (powerpc-apple-darwin5.5)

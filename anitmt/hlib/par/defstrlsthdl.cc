@@ -3,11 +3,11 @@
  * 
  * Implementation of default string list value handler. 
  * 
- * Copyright (c) 2001 -- 2002 by Wolfgang Wieser (wwieser@gmx.de) 
+ * Copyright (c) 2001 -- 2004 by Wolfgang Wieser (wwieser@gmx.de) 
  * 
  * This file may be distributed and/or modified under the terms of the 
- * GNU Lesser General Public License version 2.1 as published by the 
- * Free Software Foundation. (See COPYING.LGPL for details.)
+ * GNU General Public License version 2 as published by the Free Software 
+ * Foundation. (See COPYING.GPL for details.)
  * 
  * This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
  * WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
@@ -56,7 +56,7 @@ void StringListValueHandler::free(ParamInfo *,void *valptr)
 }
 
 
-int StringListValueHandler::copy(ParamInfo *,void *_dest,void *_src,
+int StringListValueHandler::copy(ParamInfo *,void *_dest,const void *_src,
 	int operation)
 {
 	RefStrList *dest=(RefStrList*)_dest;
@@ -158,7 +158,7 @@ PAR::ParParseState StringListValueHandler::parse(ParamInfo *,void *valptr,
 					switch(*tc)
 					{
 						case '\\':
-							if(tc[1]=='\\' || tc[1]=='\"')
+							if(tc[1]=='\\' || tc[1]=='\"' || tc[1]==' ')
 							{  *(dest++)=*(++tc);  }
 							else
 							{  *(dest++)=*tc;  }
@@ -180,16 +180,29 @@ PAR::ParParseState StringListValueHandler::parse(ParamInfo *,void *valptr,
 			else  // non-encapsulated string 
 			{
 				char *dest=begin;
-				for(;*tc;tc++)
+				int in_quot=0;
+				for(;;tc++)
 				{
 					if(*tc=='\\')
 					{
-						if(tc[1]==' ')
+						if(tc[1]==' ' || tc[1]=='\"' || tc[1]=='\\')
 						{  *(dest++)=*(++tc);  }
 						else
 						{  *(dest++)=*tc;  }
 					}
-					else if(isspace(*tc))
+					else if(*tc=='\"')
+					{
+						// Oops, there is a '"'. It's something like 
+						// -this-string="has to be concatenated". 
+						in_quot=(in_quot ? 0 : 1);
+					}
+					else if(*tc=='\0')
+					{
+						if(!in_quot)  break;
+						rv=PAR::PPSArgUnterminated;
+						goto breakout;
+					}
+					else if(!in_quot && isspace(*tc))
 					{  ++tc;  break;  }
 					else
 					{  *(dest++)=*tc;  }
@@ -214,8 +227,10 @@ PAR::ParParseState StringListValueHandler::parse(ParamInfo *,void *valptr,
 	int arv=0;
 	switch(arg->assmode)
 	{
-		case '\0':  sl->clear();  // fall through
-		case '+':   arv=sl->append(&list);  break;
+		// assmode '\0' should not happen (no value!) I think... 
+		case '\0':  assert(0);  rv=PAR::PPSIllegalAssMode;  break;
+		case '=':  sl->clear();  // fall through
+		case '+':  arv=sl->append(&list);  break;
 		case '-':
 			// remove from list
 			// (see also copy())
@@ -233,7 +248,7 @@ PAR::ParParseState StringListValueHandler::parse(ParamInfo *,void *valptr,
 }
 
 
-char *StringListValueHandler::print(ParamInfo *,void *valptr,
+char *StringListValueHandler::print(ParamInfo *,const void *valptr,
 	char *dest,size_t len)
 {
 	RefStrList *sl=(RefStrList*)valptr;

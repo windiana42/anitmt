@@ -1,5 +1,5 @@
 /*
- * searchpath.hh
+ * searchpath.h
  * 
  * Implementation of class FileSearchPath, a simple search path 
  * file finder. 

@@ -5,7 +5,7 @@
  * process (task) management which works in cooperation 
  * with classes derived from class ProcessBase. 
  *
- * Copyright (c) 2001 -- 2002 by Wolfgang Wieser (wwieser@gmx.de) 
+ * Copyright (c) 2001--2004 by Wolfgang Wieser (wwieser@gmx.de) 
  * 
  * This file may be distributed and/or modified under the terms of the 
  * GNU General Public License version 2 as published by the Free Software 
@@ -135,16 +135,91 @@ static int _SPathCheckAccess(char *tmp_binpath,
 }
 
 
+ProcessManager::Node *ProcessManager::_FindNode(pid_t pid)
+{
+	for(Node *i=procs.first(); i; i=i->next)
+	{
+		if(i->pid==pid)
+		{  return(i);  }
+	}
+	return(NULL);
+}
+
+
+inline ProcessManager::Node::Node(int * /*failflag*/) : 
+	LinkedListBase<Node>(),
+	starttime() 
+{
+	pid=-1;
+	pb=NULL;
+	flags=0;
+	pipe_fd=-2;  // initial value -2
+	errnoval=0;  // success
+}
+
+inline ProcessManager::Node::~Node()
+{
+	#if TESTING
+	if(pipe_fd>=0)
+	{  fprintf(stderr,"OOPS: valid pipe_fd %d in ~Node(%d)\n",pipe_fd,pid);  }
+	#endif
+}
+
+
+inline void ProcessManager::_DeleteNode(Node *n,int may_have_pipefd_set)  // dequeue and free
+{
+	if(!n)  return;
+	procs.dequeue(n);
+	
+	// Don't need pipe_fd any more: 
+	if(n->pipe_fd>=0)
+	{
+		#if TESTING
+		if(!may_have_pipefd_set)
+		{
+			// This warning means that the Node is deleted but the pipe 
+			// was not read. 
+			// This should not happen with regular operation and thus 
+			// should be investigated when it happens. 
+			fprintf(stderr,"warning: ProcMan[%d]: n->pipe_fd=%d still set"
+				" [INVESTIGATE THAT!]\n",n->pid,n->pipe_fd);
+		}
+		#endif
+		
+		CloseFD(n->pipe_fd);
+		n->pipe_fd=-1;
+	}
+	
+	delete n;
+	--nproc;
+	// Tell the manager that the sig node for that child is not 
+	// needed any more: 
+	fdmanager()->ExtraSigNodes(-1);
+}
+
+
+void ProcessManager::_Clear()
+{
+	while(procs.first())
+	{  _DeleteNode(procs.first(),/*may_have_pipefd_set=*/1);  }
+	#if TESTING
+	if(nproc!=0)
+	{  fprintf(stderr,"Oops: ProcessManager: nproc=%d != 0 after _Clear()\n",nproc);  }
+	#endif
+	nproc=0;
+}
+
+
 pid_t ProcessManager::StartProcess(ProcessBase *pb,
-	const ProcPath &path,
-	const ProcArgs &args,
-	const ProcMisc &misc,
-	const ProcFDs &_pfds,
-	const ProcEnv &env)
+	const ProcPath *path,
+	const ProcArgs *args,
+	const ProcMisc *misc,
+	const ProcFDs *_pfds,
+	const ProcEnv *env)
 {
 	//fprintf(stderr,"ABOUT TO START:");
-	//for(int ii=0; args.args[ii]; ii++)
-	//{  fprintf(stderr," `%s´",args.args[ii]);  }
+	//for(int ii=0; args->args[ii]; ii++)
+	//{  fprintf(stderr," `%s´",args->args[ii]);  }
 	//fprintf(stderr,"<<<\n");
 	
 	if(!pb)  return(0);
@@ -152,7 +227,21 @@ pid_t ProcessManager::StartProcess(ProcessBase *pb,
 	if(limitproc>=0 && nproc>=limitproc)
 	{  return(SPS_ProcessLimitExceeded);  }
 	
-	int flags=misc.pflags;
+	// This was originally solved by using references instead of 
+	// pointers and hence the function prototype was 
+	// StartProcess(..., const ProcMisc &misc=ProcMisc(), ... )
+	// But as some (*%$/@#!!) people decided that this construct may 
+	// only be used if the copy constructor is accessible (although 
+	// it is not used!!), I had to give it up and use additional 
+	// overhead here. (-SIGH-)
+	ProcMisc d_misc;
+	ProcFDs d_pfds;
+	ProcEnv d_env;
+	if(!misc)  misc=&d_misc;
+	if(!_pfds)  _pfds=&d_pfds;
+	if(!env)  env=&d_env;
+	
+	int flags=misc->pflags;
 	{
 		int oflags=flags;
 		flags&=(
@@ -163,30 +252,30 @@ pid_t ProcessManager::StartProcess(ProcessBase *pb,
 	}
 	
 	// Check args and envp and path allocation: 
-	if(path.freearray==2)  return(SPS_PathAllocFailed);
-	if(args.freearray==2)  return(SPS_ArgAllocFailed);
-	if(args.freearray==3)  return(SPS_ArgListError);
-	if(env.freearray==2)   return(SPS_EvnAllocFailed);
+	if(path->freearray==2)  return(SPS_PathAllocFailed);
+	if(args->freearray==2)  return(SPS_ArgAllocFailed);
+	if(args->freearray==3)  return(SPS_ArgListError);
+	if(env->freearray==2)   return(SPS_EvnAllocFailed);
 	
 	
 	// Search for binary: 
 	char *binpath=NULL;
-	if(!path.path)
+	if(!path->path)
 	{  return(SPS_AccessFailed);  }
 	#warning CHROOT NOT SUPPORTED HERE!!!
-	if(path.path[0]!='/' &&  // not an absolute path 
-	   (path.searchpath || path.plist))
+	if(path->path[0]!='/' &&  // not an absolute path 
+	   (path->searchpath || path->plist))
 	{
 		size_t maxlen=0;
 		// Find longest string in search path: 
-		if(path.searchpath)
-			for(int i=0; path.searchpath[i]; i++)
+		if(path->searchpath)
+			for(int i=0; path->searchpath[i]; i++)
 			{
-				size_t tmp=strlen(path.searchpath[i]);
+				size_t tmp=strlen(path->searchpath[i]);
 				if(maxlen<tmp)  maxlen=tmp;
 			}
-		if(path.plist)
-			for(const RefStrList::Node *n=path.plist->first(); n; n=n->next)
+		if(path->plist)
+			for(const RefStrList::Node *n=path->plist->first(); n; n=n->next)
 			{
 				if(n->stype()!=0)  return(SPS_SearchPathError);  
 				size_t tmp=n->len();
@@ -194,18 +283,18 @@ pid_t ProcessManager::StartProcess(ProcessBase *pb,
 			}
 		
 		// We need 2 bytes more: one for a `/' and one for a \0. 
-		binpath=(char*)LMalloc(strlen(path.path)+maxlen+2);
+		binpath=(char*)LMalloc(strlen(path->path)+maxlen+2);
 		if(!binpath)  return(SPS_LMallocFailed);
-		if(path.searchpath)
-			for(int i=0; path.searchpath[i]; i++)
+		if(path->searchpath)
+			for(int i=0; path->searchpath[i]; i++)
 			{
-				if(_SPathCheckAccess(binpath,path.searchpath[i],path.path))
+				if(_SPathCheckAccess(binpath,path->searchpath[i],path->path))
 				{  goto found;  }
 			}
-		if(path.plist)
-			for(const RefStrList::Node *n=path.plist->first(); n; n=n->next)
+		if(path->plist)
+			for(const RefStrList::Node *n=path->plist->first(); n; n=n->next)
 			{
-				if(_SPathCheckAccess(binpath,n->str(),path.path))
+				if(_SPathCheckAccess(binpath,n->str(),path->path))
 				{  goto found;  }
 			}
 		
@@ -215,12 +304,12 @@ pid_t ProcessManager::StartProcess(ProcessBase *pb,
 	}
 	else 
 	{
-		if(access(path.path,X_OK))
+		if(access(path->path,X_OK))
 		{  return(SPS_AccessFailed);  }
-		binpath=(char*)path.path;
+		binpath=(char*)path->path;
 	}
 	
-	// Binary now at binpath. 
+	// Binary now at binpath-> 
 	pid_t retval=0;
 	Node *n=NULL;
 	int pipefds[2]={-1,-1};
@@ -363,23 +452,26 @@ pid_t ProcessManager::StartProcess(ProcessBase *pb,
 			int ofd=pfds.ourfd[i];
 			if(ofd<0)  continue;
 			if(fd_close(ofd))
-			{  ++close_errors;  }
+			{
+				if(errno!=EBADF)
+				{  ++close_errors;  }
+			}
 		}
 		
 		// We currently ignore close errors. 
-		#warning ...should we?
+		#warning "Currently ignoring close() errors... should we?"
 		
 		if(dup_errors)
 		{  _ChildExit(pipefds[1],PSDupFailed,dup_errno);  }  // exit child's thread 
 		
 		// Okay, now we gonna do some special stuff before actually 
 		// executing the program: 
-		if(misc.pcrdir)
+		if(misc->pcrdir)
 		{
 			// As chroot(2) does not change the cwd, I first do 
 			// a chdir(): 
 			int failed=1;
-			if(!chdir(misc.pcrdir))
+			if(!chdir(misc->pcrdir))
 			{
 				if(!chroot("."))
 				{  failed=0;  }
@@ -387,48 +479,48 @@ pid_t ProcessManager::StartProcess(ProcessBase *pb,
 			if(failed)
 			{  _ChildExit(pipefds[1],PSChrootFailed,errno);  }  // exit child's thread 
 		}
-		if(misc.pwdir)
+		if(misc->pwdir)
 		{
-			if(chdir(misc.pwdir)<0)
+			if(chdir(misc->pwdir)<0)
 			{  _ChildExit(pipefds[1],PSChdirFailed,errno);  }  // exit child's thread 
 		}
-		if((misc.useflags & ProcMisc::UseNice))
+		if((misc->useflags & ProcMisc::UseNice))
 		{
-			#warning ignore nice errors?
-			if(nice(misc.pniceval)<0)
+			#warning "Currently NOT ignoring nice errors."
+			if(nice(misc->pniceval)<0)
 			{  _ChildExit(pipefds[1],PSNiceFailed,errno);  }  // exit child's thread 
 		}
-		if(misc.call_setsid)
+		if(misc->call_setsid)
 		{
 			pid_t rv=setsid();
-			if(rv==-1 && misc.call_setsid!=2)
+			if(rv==-1 && misc->call_setsid!=2)
 			{  _ChildExit(pipefds[1],PSSetSidFailed,errno);  }  // exit child's thread 
 		}
-		if((misc.useflags & ProcMisc::UseGID))
+		if((misc->useflags & ProcMisc::UseGID))
 		{
-			if(setgid(misc.pgid)<0)
+			if(setgid(misc->pgid)<0)
 			{  _ChildExit(pipefds[1],PSSetGidFailed,errno);  }
 		}
-		if((misc.useflags & ProcMisc::UseUID))
+		if((misc->useflags & ProcMisc::UseUID))
 		{
-			if(setuid(misc.puid)<0)
+			if(setuid(misc->puid)<0)
 			{  _ChildExit(pipefds[1],PSSetUidFailed,errno);  }
 		}
-		if(misc.pfuncptr)
+		if(misc->pfuncptr)
 		{
-			int frv=((*misc.pfuncptr)(misc.pfuncarg));
+			int frv=((*misc->pfuncptr)(misc->pfuncarg));
 			if(frv)
 			{  _ChildExit(pipefds[1],PSFunctionFailed,frv);  }
 		}
 		
 		// Finally execute the program: 
 		//fprintf(stderr,"STARTING:");
-		//for(int ii=0; args.args[ii]; ii++)
-		//{  fprintf(stderr," `%s´",args.args[ii]);  }
+		//for(int ii=0; args->args[ii]; ii++)
+		//{  fprintf(stderr," `%s´",args->args[ii]);  }
 		//fprintf(stderr,"\n");
 		int rv;
 		do
-		{  rv=execve(binpath, args.args, env.env);  }
+		{  rv=execve(binpath, args->args, env->env);  }
 		while(rv<0 && errno==EINTR);
 		_ChildExit(pipefds[1],PSExecFailed,errno);  // exit child's thread 
 	}
@@ -439,7 +531,7 @@ doreturn3:;
 doreturn2:;
 	delete n;
 doreturn1:;
-	if(binpath!=path.path)
+	if(binpath!=path->path)
 	{  LFree(binpath);  }
 	
 	return(retval);
@@ -498,7 +590,7 @@ int ProcessManager::_ReadPipeCode(Node *n)
 		   ps->detail=PSUnknownError;
 		   CloseFD(n->pipe_fd);  n->pipe_fd=-1;
 		*/
-		#warning what shall we do? (currently aborting)
+		#warning "What shall we do? (currently aborting)"
 		abort();
 		return(-1);
 	}
@@ -508,7 +600,10 @@ int ProcessManager::_ReadPipeCode(Node *n)
 		fprintf(stderr,"Oops: ProcMan[%d]: Short read from pipe %d/%d bytes\n",
 			n->pid,rd,int(sizeof(pc)));
 		#endif
-		#warning what shall we do? (currently aborting)
+		#warning "What shall we do? (currently aborting)"
+		// This should never happen. Because we want to read just a few 
+		// bytes and we can expect that this can be done atomically 
+		// (just as the corresponding write() call). 
 		abort();
 		return(-1);
 	}
@@ -1163,81 +1258,6 @@ int ProcessManager::GetTimeUsage(int who,ProcTimeUsage *dest,int normalize)
 	}
 	
 	return(rv);
-}
-
-
-ProcessManager::Node *ProcessManager::_FindNode(pid_t pid)
-{
-	for(Node *i=procs.first(); i; i=i->next)
-	{
-		if(i->pid==pid)
-		{  return(i);  }
-	}
-	return(NULL);
-}
-
-
-inline ProcessManager::Node::Node(int * /*failflag*/) : 
-	LinkedListBase<Node>(),
-	starttime() 
-{
-	pid=-1;
-	pb=NULL;
-	flags=0;
-	pipe_fd=-2;  // initial value -2
-	errnoval=0;  // success
-}
-
-inline ProcessManager::Node::~Node()
-{
-	#if TESTING
-	if(pipe_fd>=0)
-	{  fprintf(stderr,"OOPS: valid pipe_fd %d in ~Node(%d)\n",pipe_fd,pid);  }
-	#endif
-}
-
-
-inline void ProcessManager::_DeleteNode(Node *n,int may_have_pipefd_set)  // dequeue and free
-{
-	if(!n)  return;
-	procs.dequeue(n);
-	
-	// Don't need pipe_fd any more: 
-	if(n->pipe_fd>=0)
-	{
-		#if TESTING
-		if(!may_have_pipefd_set)
-		{
-			// This warning means that the Node is deleted but the pipe 
-			// was not read. 
-			// This should not happen with regular operation and thus 
-			// should be investigated when it happens. 
-			fprintf(stderr,"warning: ProcMan[%d]: n->pipe_fd=%d still set"
-				" [INVESTIGATE THAT!]\n",n->pid,n->pipe_fd);
-		}
-		#endif
-		
-		CloseFD(n->pipe_fd);
-		n->pipe_fd=-1;
-	}
-	
-	delete n;
-	--nproc;
-	// Tell the manager that the sig node for that child is not 
-	// needed any more: 
-	fdmanager()->ExtraSigNodes(-1);
-}
-
-
-void ProcessManager::_Clear()
-{
-	while(procs.first())
-	{  _DeleteNode(procs.first(),/*may_have_pipefd_set=*/1);  }
-	#if TESTING
-	if(nproc!=0)
-	{  fprintf(stderr,"Oops: ProcessManager: nproc=%d != 0 after _Clear()\n",nproc);  }
-	#endif
-	nproc=0;
 }
 
 

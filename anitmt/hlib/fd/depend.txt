@@ -4,7 +4,7 @@ Manager dependencies:
 FDManager:      [none]
 ProcessManager: FDManager
 TimeoutManager: FDManager
-FDCopyManager:  FDManager, TimeoutManager
+FDCopyManager:  FDManager, TimeoutManager  <== FIXME!!!
 
 
 Base class dependencies: 
@@ -13,7 +13,7 @@ Base class dependencies:
 FDBase:      FDManager
 ProcessBase: ProcessManager <- FDManager
 TimeoutBase: TimeoutManager <- FDManager
-FDCopyBase:  FDCopyManager <- TimeoutManager <- FDManager
+FDCopyBase:  FDCopyManager <- TimeoutManager <- FDManager  <== FIXME!!!
 
 
 Manager setup order: 

@@ -3,11 +3,11 @@
  * 
  * Paramter system interal / shared data types. 
  * 
- * Copyright (c) 2001 -- 2002 by Wolfgang Wieser (wwieser@gmx.de) 
+ * Copyright (c) 2001 -- 2004 by Wolfgang Wieser (wwieser@gmx.de) 
  * 
  * This file may be distributed and/or modified under the terms of the 
- * GNU Lesser General Public License version 2.1 as published by the 
- * Free Software Foundation. (See COPYING.LGPL for details.)
+ * GNU General Public License version 2 as published by the Free Software 
+ * Foundation. (See COPYING.GPL for details.)
  * 
  * This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
  * WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
@@ -109,14 +109,14 @@ struct PAR  // This serves as a namespace and a base class.
 		                      // on destruction if param
 		int skip_in_help:1;   // PSkipInHelp: skip param in help output 
 		int environ_var:1;    // PEnvironVar: accept as environ var
-		int :(sizeof(int)*8 - 3);   // <-- Use modulo if more than 16 bits. 
+		int locked : 1;       // parameter locked (may not get modified?)
+		int :(sizeof(int)*8 - 4);   // <-- Use modulo if more than 16 bits. 
 		void *valptr;         // pointer to the original var (as specified 
 		                      // by the ParameterConsume-derived class) 
 		int is_set;           // Value set? AddParam sets this to 1 if there 
 		                      // is a default value, else to 0. Incremented each 
 		                      // time WriteParam() gets called. 
 		PSpecType spectype;   // see above
-		int locked;           // parameter locked (may not get modified?)
 		int nspec;            // how often the parameter was encountered, 
 		                      // summed up over all sources (default does not count)
 		
@@ -199,7 +199,7 @@ struct PAR  // This serves as a namespace and a base class.
 		                 // or hierarchy above)
 		const char *nend;  // where the matched name ends, i.e. where 
 		                   // the end of sect is in arg->name 
-		Section *bot_sect;  // botton section till where the param 
+		Section *bot_sect;  // bottom section till where the param 
 		                    // could be matched 
 		const char *bot_nend; // till where the name could be matched 
 		                      // (which lead to end_sect).

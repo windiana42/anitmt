@@ -3,11 +3,11 @@
  * 
  * Value handler abstraction - internally used header. 
  * 
- * Copyright (c) 2001 -- 2002 by Wolfgang Wieser (wwieser@gmx.de) 
+ * Copyright (c) 2001 -- 2004 by Wolfgang Wieser (wwieser@gmx.de) 
  * 
  * This file may be distributed and/or modified under the terms of the 
- * GNU Lesser General Public License version 2.1 as published by the 
- * Free Software Foundation. (See COPYING.LGPL for details.)
+ * GNU General Public License version 2 as published by the Free Software 
+ * Foundation. (See COPYING.GPL for details.)
  * 
  * This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
  * WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
@@ -66,7 +66,7 @@ struct ValueHandler : public PAR
 	//    if(operation!=PAR::SOPCopy)  return(-2);
 	//    if(!cpsize())  return(1)  
 	//    memcpy(dest,src,cpsize());  return(0). 
-	virtual int copy(ParamInfo *,void * /*dest*/,void * /*src*/,
+	virtual int copy(ParamInfo *,void * /*dest*/,const void * /*src*/,
 		int /*operation*/ = PAR::SOPCopy);
 	
 	// In case this handler handles simple values like int/double/etc 
@@ -89,7 +89,8 @@ struct ValueHandler : public PAR
 	// The parsing function must take care of the assignment 
 	// operator in ParamArg::assmode and return PPSIllegalAssMode 
 	// if it does not support that mode. 
-	// (assmode='\0' -> `='; assmode='+' -> `+='; etc.) 
+	// (assmode='\0' -> no value; assmode='=' -> `='; assmode='+' 
+	//   -> `+='; etc.) 
 	// The parsing function should noch change anything in 
 	// the ParamArg (not even pdone). 
 	// The ParamInfo* passes the info structure associated with 
@@ -118,8 +119,16 @@ struct ValueHandler : public PAR
 	// a new one is allocated via ValueHandler::stralloc() and 
 	// returned. In case stralloc() fails, NULL is returned. 
 	// Default implementation: -pure virtual-
-	virtual char *print(ParamInfo *,void * /*val*/,
+	virtual char *print(ParamInfo *,const void * /*val*/,
 		char * /*dest*/,size_t /*len*/) HL_PureVirt(NULL)
+	
+	//----------------------------------------------------------------------
+	// These are internal functions; you may use these functions if 
+	// you know what they are doing :)
+	static ParParseState _check_trim_val(const char **a,ParamArg *arg,
+		int allow_all);
+	static ParParseState _check_arg_end(PAR::ParParseState rv,
+		const char *endptr,ParamArg *arg);
 };
 
 }  // namespace end

@@ -1,11 +1,11 @@
 /*
  * gettermsize.c 
  * 
- * Copyright (c) 2002 by Wolfgang Wieser (wwieser@gmx.de) 
+ * Copyright (c) 2002--2004 by Wolfgang Wieser (wwieser@gmx.de) 
  * 
  * This file may be distributed and/or modified under the terms of the 
- * GNU Lesser General Public License version 2.1 as published by the 
- * Free Software Foundation. (See COPYING.LGPL for details.)
+ * GNU General Public License version 2 as published by the Free Software 
+ * Foundation. (See COPYING.GPL for details.)
  * 
  * This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
  * WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
@@ -40,7 +40,6 @@ int GetTerminalSize(int fd,int *ret_row,int *ret_col)
 		if(ioctl(fd,TIOCGWINSZ,&wsz))
 		{  return((errno==ENOTTY) ? (-1) : (-2));  }
 		
-		kjdf:;
 		if(ret_row)  *ret_row=wsz.ws_row;
 		if(ret_col)  *ret_col=wsz.ws_col;
 		return(0);

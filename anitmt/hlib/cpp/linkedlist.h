@@ -4,11 +4,11 @@
  * Complete implementation of a doubly linked list. 
  * List elements must be derived from LinkedListBase. 
  * 
- * Copyright (c) 2001--2002 by Wolfgang Wieser (wwieser@gmx.de) 
+ * Copyright (c) 2001--2004 by Wolfgang Wieser (wwieser@gmx.de) 
  * 
  * This file may be distributed and/or modified under the terms of the 
- * GNU Lesser General Public License version 2.1 as published by the 
- * Free Software Foundation. (See COPYING.LGPL for details.)
+ * GNU General Public License version 2 as published by the Free Software 
+ * Foundation. (See COPYING.GPL for details.)
  * 
  * This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
  * WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
@@ -25,8 +25,14 @@ template<class T> struct LinkedListBase
 {
 	T *prev,*next;
 	
-	LinkedListBase()  {  prev=next=NULL;  }
-	~LinkedListBase()  { }
+	enum _LLB_NoInit { LLB_NoInit };
+	
+	// Normal constructor: set prev and next to NULL: 
+	inline LinkedListBase()  {  prev=next=NULL;  }
+	// Special constructor which does NOT set up prev and next: 
+	inline LinkedListBase(_LLB_NoInit)  { }
+	// Destructor no-op...
+	inline ~LinkedListBase()  { }
 };
 
 
@@ -37,44 +43,45 @@ template<class T> class LinkedList
 {
 	private:
 		T *lfirst,*llast;
+		
 		// Don't use: (use assign_list in rare cases): 
-		LinkedList &operator=(const LinkedList &l)
+		inline LinkedList &operator=(const LinkedList &l)
 		{  lfirst=l.lfirst;  llast=l.llast;  return(*this);  }
-		LinkedList(const LinkedList &l)
+		inline LinkedList(const LinkedList &l)
 		{  lfirst=l.lfirst;  llast=l.llast;  }
 	public:  _CPP_OPERATORS_FF
-		LinkedList(int * /*failflag*/=NULL)  {  lfirst=llast=NULL;  }
+		inline LinkedList(int * /*failflag*/=NULL)  {  lfirst=llast=NULL;  }
 		// It is your responsibility to properly empty the 
 		// list before destroying it. 
-		~LinkedList()  {  }
+		inline ~LinkedList()  {  }
 		
 		// Get first and last element of the list (or NULL) 
-		T *first()  const  {  return(lfirst);  }
-		T *last()   const  {  return(llast);   }
+		inline T *first()  const  {  return(lfirst);  }
+		inline T *last()   const  {  return(llast);   }
 		
-		bool is_empty()  const  {  return(!lfirst);  }
+		inline bool is_empty()  const  {  return(!lfirst);  }
 		
 		// Get next/prev element from passed element. 
 		// May be used if you experience ambiguities using multiple 
 		// inheritance. 
-		T *next(T *p)  const  {  return(p->_LLB::next);  }
-		T *prev(T *p)  const  {  return(p->_LLB::prev);  }
-		const T *next(const T *p)  const  {  return(p->_LLB::next);  }
-		const T *prev(const T *p)  const  {  return(p->_LLB::prev);  }
+		inline T *next(T *p)  const  {  return(p->_LLB::next);  }
+		inline T *prev(T *p)  const  {  return(p->_LLB::prev);  }
+		inline const T *next(const T *p)  const  {  return(p->_LLB::next);  }
+		inline const T *prev(const T *p)  const  {  return(p->_LLB::prev);  }
 		
 		// Use with care!! Just copies pointer to head and tail of 
 		// list; if you modify one of the lists, the other one 
 		// will get inconsistent if lfirst/llast get modified. 
-		void assign_list(const LinkedList<T> *l)
+		inline void assign_list(const LinkedList<T> *l)
 		{  lfirst=l->lfirst;  llast=l->llast;  }
 		
 		// This is similar, just that the list pointers are swapped. 
-		void swap_list(LinkedList<T> *l)
+		inline void swap_list(LinkedList<T> *l)
 		{  T *tmp=lfirst;  lfirst=l->lfirst;  l->lfirst=tmp;
 		      tmp=llast;   llast= l->llast;   l->llast= tmp;  }
 		
 		// Insert p at the beginning of the list: 
-		void insert(T *p)
+		inline void insert(T *p)
 		{
 			if(!p)  return;
 			p->_LLB::next=lfirst;
@@ -86,7 +93,7 @@ template<class T> class LinkedList
 		}
 		
 		// Append p to the end of the list: 
-		void append(T *p)
+		inline void append(T *p)
 		{
 			if(!p)  return;
 			p->_LLB::prev=llast;
@@ -100,7 +107,7 @@ template<class T> class LinkedList
 		// Dequeues *oldp and puts newp at the place where oldp was. 
 		// Make sure neither oldp nor newp are NULL. 
 		// Returns oldp (so that you may pass it to operator delete). 
-		T *replace(T *newp,T *oldp)
+		inline T *replace(T *newp,T *oldp)
 		{
 			newp->_LLB::next=oldp->_LLB::next;
 			newp->_LLB::prev=oldp->_LLB::prev;
@@ -112,7 +119,7 @@ template<class T> class LinkedList
 		
 		// Put p before/after `where´ into the queue: 
 		// Make sure, `where´ is not NULL. 
-		void queuebefore(T *p,T *where)
+		inline void queuebefore(T *p,T *where)
 		{
 			if(!p)  return;
 			if(where==lfirst)
@@ -122,7 +129,7 @@ template<class T> class LinkedList
 			where->_LLB::prev=p;
 			p->_LLB::next=where;
 		}
-		void queueafter(T *p,T *where)
+		inline void queueafter(T *p,T *where)
 		{
 			if(!p)  return;
 			if(where==llast)
@@ -142,7 +149,7 @@ template<class T> class LinkedList
 		}
 		
 		// Dequeues element p (and returns p). 
-		T *dequeue(T *p)
+		inline T *dequeue(T *p)
 		{
 			if(!p)  return(p);
 			if(p==lfirst)  lfirst=lfirst->_LLB::next;
@@ -154,7 +161,7 @@ template<class T> class LinkedList
 		}
 		
 		// Dequeue first/last element and return it (or NULL): 
-		T *popfirst()
+		inline T *popfirst()
 		{
 			if(!lfirst)  return(lfirst);
 			T *p=lfirst;
@@ -164,7 +171,7 @@ template<class T> class LinkedList
 			p->_LLB::next=NULL;
 			return(p);
 		}
-		T *poplast()
+		inline T *poplast()
 		{
 			if(!llast)  return(llast);
 			T *p=llast;
@@ -176,20 +183,31 @@ template<class T> class LinkedList
 		}
 		
 		// Find element p in this list; returns either p or NULL. 
-		const T *find(const T *p)  const
+		inline const T *find(const T *p)  const
 		{
 			for(T *i=lfirst; i; i=i->_LLB::next)
 			{  if(i==p)  return(p);  }
 			return(NULL);
 		}
+		// The same as find() but traverse the list from last to first. 
+		inline const T *find_rev(const T *p)  const
+		{
+			for(T *i=llast; i; i=i->_LLB::prev)
+			{  if(i==p)  return(p);  }
+			return(NULL);
+		}
 		
 		// Cound the elements in the list: 
-		int count()  const
+		inline int count()  const
 		{
 			int cnt=0;
 			for(T *i=lfirst; i; i=i->_LLB::next,cnt++);
 			return(cnt);
 		}
+		
+		// Clear list by deleting all entries. 
+		inline void clear()
+			{  while(!is_empty()) delete popfirst();  }
 };
 
 #undef _LLB

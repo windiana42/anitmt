@@ -3,13 +3,15 @@ ADDFLAGS=""
 ADDCFLAGS=""
 ADDCXXFLAGS=""
 
-SUBDIRS = include cpp misc fd crypto par
-SUBLIBS = cpp/libcpp.a misc/libmisc.a fd/libfd.a crypto/libcrypto.a par/libpar.a
+SUBDIRS = include cpp misc fd crypto compress par
+SUBLIBS = cpp/libcpp.a misc/libmisc.a fd/libfd.a crypto/libcrypto.a \
+	par/libpar.a compress/libcompress.a
 
 noinst_LIBRARIES = libhlib.a
 libhlib_a_SOURCES = 
 
-EXTRA_DIST = BUILD hlib-config.h.in hconfig.h config.guess config.sub
+EXTRA_DIST = BUILD COPYING.GPL \
+	hlib-config.h.in hconfig.h config.guess config.sub
 
 libhlib.a: $(SUBLIBS)
 	@echo "Re-creating libhlib.a..."
@@ -19,7 +21,7 @@ libhlib.a: $(SUBLIBS)
 			if test -f $$i/$$o ; then objs="$$objs $$i/$$o" ; \
 			else echo "Archive: $$i/$$o missing" ; fi ; \
 	done ; done ; \
-	$(RM) -f libhlib.a ; \
+	$(RM) -f libhlib.a || true ; \
 	$(AR) -r libhlib.a $$objs ; \
 	$(RANLIB) libhlib.a 
 

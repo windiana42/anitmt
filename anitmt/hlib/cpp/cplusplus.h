@@ -9,15 +9,15 @@
  * 
  * See further down for a detailed description and how things work. 
  * 
- * Copyright (c) 1999-2002 by Wolfgang Wieser (wwieser@gmx.de) 
+ * Copyright (c) 1999-2004 by Wolfgang Wieser (wwieser@gmx.de) 
  * 
  * This file may be distributed and/or modified under the terms of the 
- * GNU Lesser General Public License version 2.1 as published by the 
- * Free Software Foundation. (See COPYING.LGPL for details.)
+ * GNU General Public License version 2 as published by the Free Software 
+ * Foundation. (See COPYING.GPL for details.)
  * 
  * This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
  * WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
- *
+ * 
  */
 
 #ifndef _HLIB_cplusplus_h_
@@ -85,8 +85,17 @@ extern void ConstructorFailedExit(const char *opt=NULL);
 //       have a look at _CPP_OPERATORS_FF below. 
 #define _CPP_OPERATORS \
 	void operator delete(void *_h_ptr) \
-	{  LFree(_h_ptr);  }    \
+	{  LFree(_h_ptr);  }  \
 	void *operator new(size_t _h_size) \
+	{  return(CheckMalloc(LMalloc(_h_size)));  }
+
+// This is the same as _CPP_OPERATORS but provides operators for 
+// new[] and delete[]. Needs default constructor (i.e. without any 
+// arguments) to work. Use NEWarray<> template for failsave version. 
+#define _CPP_OPERATORS_ARRAY \
+	void operator delete[](void *_h_ptr) \
+	{  LFree(_h_ptr);  }  \
+	void *operator new[](size_t _h_size) \
 	{  return(CheckMalloc(LMalloc(_h_size)));  }
 
 // USING _CPP_OPERATORS_FF: 
@@ -321,6 +330,8 @@ extern void ConstructorFailedExit(const char *opt=NULL);
 // NEWplus: allocate more bytes than sizeof(T). 
 template<class T> inline T *NEWplus(size_t extrasize,int *failflag)
 {  return(_NewPrepareMemory(sizeof(T)+extrasize,NULL) ? ((T*)NULL) : (new T(failflag)));  }
+template<class T,class P0> inline T *NEW1plus(size_t extrasize,P0 p0,int *failflag)
+{  return(_NewPrepareMemory(sizeof(T)+extrasize,NULL) ? ((T*)NULL) : (new T(p0,failflag)));  }
 
 // NEWff: user wants to pass failflag. 
 template<class T> inline T *NEWff(int *failflag)

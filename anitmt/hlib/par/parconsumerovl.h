@@ -3,11 +3,11 @@
  * 
  * Contains overloaded version of ParameterConsumer for your convenience. 
  * 
- * Copyright (c) 2001 -- 2002 by Wolfgang Wieser (wwieser@gmx.de) 
+ * Copyright (c) 2001 -- 2004 by Wolfgang Wieser (wwieser@gmx.de) 
  * 
  * This file may be distributed and/or modified under the terms of the 
- * GNU Lesser General Public License version 2.1 as published by the 
- * Free Software Foundation. (See COPYING.LGPL for details.)
+ * GNU General Public License version 2 as published by the Free Software 
+ * Foundation. (See COPYING.GPL for details.)
  * 
  * This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
  * WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
@@ -30,7 +30,7 @@ class ParameterConsumer_Overloaded : public ParameterConsumer
 		virtual ~ParameterConsumer_Overloaded()  { }
 		
 		// Adds a PTParameter taking an (unsigned) int/long, 
-		// or double argument. 
+		// or float/double argument. 
 		// See parconsumer.h for meaning of flags. 
 		ParamInfo *AddParam(const char *name,const char *helptext,
 			int *valptr,int flags=0)
@@ -48,6 +48,10 @@ class ParameterConsumer_Overloaded : public ParameterConsumer
 			unsigned long *valptr,int flags=0)
 			{  return(ParameterConsumer::AddParam(name,PTParameter,
 				helptext,valptr,default_ulong_handler,flags));  }
+		ParamInfo *AddParam(const char *name,const char *helptext,
+			float *valptr,int flags=0)
+			{  return(ParameterConsumer::AddParam(name,PTParameter,
+				helptext,valptr,default_float_handler,flags));  }
 		ParamInfo *AddParam(const char *name,const char *helptext,
 			double *valptr,int flags=0)
 			{  return(ParameterConsumer::AddParam(name,PTParameter,

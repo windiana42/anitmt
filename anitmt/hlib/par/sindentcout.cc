@@ -5,11 +5,11 @@
  * the console output (output to some FILE*) like inserting newlines before 
  * the line is over keeping works together and doing indention on the output. 
  * 
- * Copyright (c) 2001 -- 2002 by Wolfgang Wieser (wwieser@gmx.de) 
+ * Copyright (c) 2001 -- 2004 by Wolfgang Wieser (wwieser@gmx.de) 
  * 
  * This file may be distributed and/or modified under the terms of the 
- * GNU Lesser General Public License version 2.1 as published by the 
- * Free Software Foundation. (See COPYING.LGPL for details.)
+ * GNU General Public License version 2 as published by the Free Software 
+ * Foundation. (See COPYING.GPL for details.)
  * 
  * This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
  * WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
@@ -79,7 +79,7 @@ void SimpleIndentConsoleOutput::Puts(const char *str,int _indent)
 		{  // must write indent: 
 			int len=indent-lpos;
 			assert(bufuse+len<columns);
-			memset(buf,' ',len);
+			memset(buf+bufuse,' ',len);
 			bufuse+=len;
 			lpos+=len;
 		}

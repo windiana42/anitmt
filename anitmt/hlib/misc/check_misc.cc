@@ -353,6 +353,11 @@ int main(int argc,char **arg)
 			strerror(errno));  ++failed;  }
 		else
 		{  fprintf(stderr,"SetTcpNoDelay: OK\n");  }
+		if(SocketReUseAddr(fd))
+		{  fprintf(stderr,"SocketReUseAddr: failed: %s ***\n",
+			strerror(errno));  ++failed;  }
+		else
+		{  fprintf(stderr,"SocketReUseAddr: OK\n");  }
 		close(fd);
 	}
 	

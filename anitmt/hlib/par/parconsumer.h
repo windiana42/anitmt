@@ -3,11 +3,11 @@
  * 
  * Header file containing parameter consumer class. 
  * 
- * Copyright (c) 2001 -- 2002 by Wolfgang Wieser (wwieser@gmx.de) 
+ * Copyright (c) 2001 -- 2004 by Wolfgang Wieser (wwieser@gmx.de) 
  * 
  * This file may be distributed and/or modified under the terms of the 
- * GNU Lesser General Public License version 2.1 as published by the 
- * Free Software Foundation. (See COPYING.LGPL for details.)
+ * GNU General Public License version 2 as published by the Free Software 
+ * Foundation. (See COPYING.GPL for details.)
  * 
  * This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
  * WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
@@ -171,6 +171,7 @@ class ParameterConsumer :
 		//   yields straight into trouble. 
 		//  Oh, and don't use nastices like "w||width" or "w|"...
 		// ptype: parameter type (see enum ParameterType)
+		//        (PTParameter, PTOption, PTOptPar, PTSwitch)
 		// helptext: Help text (description) for the option. Set this 
 		//           to NULL if there is no help text (option hidden). 
 		//           The help text is formatted automatically, so you 
@@ -191,9 +192,9 @@ class ParameterConsumer :
 		//       is encountered and parse() returns PPSSuccess. 
 		//       The parse() routine will be called for PTOption with 
 		//       ParamArg::value=NULL. 
-		//  - PTOptArg: the number of occurances can be queried via 
+		//  - PTOptPar: the number of occurances can be queried via 
 		//       IsSet() from the returned handler (or you use a custom 
-		//       parser). If the PTOptArg parameter is an assignment, the 
+		//       parser). If the PTOptPar parameter is an assignment, the 
 		//       ParamArg::value is non-NULL, else it is NULL. 
 		//  - PTSwitch: must check ParamArg::name (`no-' prefix) if 
 		//       ParamArg::value=NULL.

@@ -3,11 +3,11 @@
  * 
  * Support routines / default implementations for value handlers. 
  * 
- * Copyright (c) 2001 -- 2002 by Wolfgang Wieser (wwieser@gmx.de) 
+ * Copyright (c) 2001--2004 by Wolfgang Wieser (wwieser@gmx.de) 
  * 
  * This file may be distributed and/or modified under the terms of the 
- * GNU Lesser General Public License version 2.1 as published by the 
- * Free Software Foundation. (See COPYING.LGPL for details.)
+ * GNU General Public License version 2 as published by the Free Software 
+ * Foundation. (See COPYING.GPL for details.)
  * 
  * This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
  * WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
@@ -40,7 +40,7 @@ void ValueHandler::free(ParamInfo *,void *val)
 	LFree(val);
 }
 
-int ValueHandler::copy(ParamInfo *,void *dest,void *src,int operation)
+int ValueHandler::copy(ParamInfo *,void *dest,const void *src,int operation)
 {
 	if(operation!=SOPCopy)  return(-2);  // not supported 
 	size_t sz=cpsize();

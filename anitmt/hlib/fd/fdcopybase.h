@@ -5,7 +5,7 @@
  * data from / to a file descriptor. 
  * Works in cooperation with class FDManager. 
  * 
- * Copyright (c) 2002--2003 by Wolfgang Wieser (wwieser@gmx.de) 
+ * Copyright (c) 2002--2004 by Wolfgang Wieser (wwieser@gmx.de) 
  * 
  * This file may be distributed and/or modified under the terms of the 
  * GNU General Public License version 2 as published by the Free Software 
@@ -108,6 +108,7 @@ class FDCopyIO
 		
 		// Max time which may pass between two calls to read() or two 
 		// calls to write(). 
+	// NOTE: CURRENTLY NOT IMPLEMENTED. 
 		long io_timeout;    // timeout between two read()/write() calls
 		
 		// When the job was started using FDCopyPump::Control(). 
@@ -338,6 +339,11 @@ class FDCopyPump :
 			SCError=(SCErrPollI|SCErrPollO|SCErrRead|SCErrWrite|SCErrCopyIO)
 		};
 		
+		friend inline StatusCode &operator|=(StatusCode &s,int x)
+			{  s=(StatusCode)(int(s)|x);  return(s);  }
+		friend inline StatusCode &operator&=(StatusCode &s,int x)
+			{  s=(StatusCode)(int(s)&x);  return(s);  }
+		
 		// CopyInfo structure used to inform FDCopyBase-derived 
 		// class of done jobs, errors, etc (via cpnotify()). 
 		struct CopyInfo
@@ -367,12 +373,30 @@ class FDCopyPump :
 			//   which may have POLLERR and POLLNVAL set. 
 			// - In case of SCTimeout it is the timeout which 
 			//   elapsed: 
-			#warning <hack me> (timeout number 0,1,2)
+			//   NOTE: CURRENTLY TIMEOUT NOT IMPLEMENTED. 
 			int err_no;
 			
 			CopyInfo(FDCopyPump *p,StatusCode sc,int err,HTime *t)
 				{  pump=p;  fdtime=t;  scode=sc;  err_no=err;  }
 			~CopyInfo() { }
+		};
+		
+		// ProgressInfo structure used to inform FDCopyBase-derived 
+		// class of job progress (via cpprogress()). 
+		// Only for eye candy or timeout management; all termination 
+		// and error-related information comes via cpnotify(). 
+		struct ProgressInfo
+		{
+			// Which pump we are talking about: 
+			FDCopyPump *pump;
+			
+			// Time as passed down via fdnotify(); pretty much current. 
+			const HTime *fdtime;
+			
+			// Progress info: 
+			// Number of bytes just read (moved_bytes<0) or written 
+			// (moved_bytes>0) in this cycle. 
+			ssize_t moved_bytes;
 		};
 		
 	protected:
@@ -390,6 +414,11 @@ class FDCopyPump :
 			PS_Stopped = PS_StoppedIn | PS_StoppedOut,
 			PS_Flushing=  0x0008   // input is done, waiting for output to complete
 		} state;
+		
+		friend inline PumpState &operator|=(PumpState &s,int x)
+			{  s=(PumpState)(int(s)|x);  return(s);  }
+		friend inline PumpState &operator&=(PumpState &s,int x)
+			{  s=(PumpState)(int(s)&x);  return(s);  }
 		
 		// All the copy pups MUST use this function rather than 
 		// the one of FDCopyBase or FDBase. 
@@ -427,8 +456,11 @@ class FDCopyPump :
 		// are no longer operating on the passed PollID's. 
 		inline int DoneJob(FDManager::PollID in_id,FDManager::PollID out_id);
 		
-		// Used to call virtual cpnotify() of the associated FDCopyBase: 
+		// Used to call virtual cpnotify() and cpprogress() of the 
+		// associated FDCopyBase: 
 		inline int _CallCPNotify(CopyInfo *ci);
+		inline int _CallCPProgress(ProgressInfo *pi);
+		// 
 		
 		// This must be called by SetIO() of the derived class for 
 		// basic checking. 
@@ -444,6 +476,7 @@ class FDCopyPump :
 		
 		// This is the timeout in msec for the complete copy job to 
 		// finish. Use -1 to disable (default). 
+	// NOTE: CURRENTLY NOT IMPLEMENTED. 
 		long req_timeout;   // whole job
 		
 		// See "NOTE: object live cycle" above on meaning of 
@@ -726,6 +759,7 @@ class FDCopyBase : public FDBase
 		typedef FDCopyPump::ControlCommand ControlCommand;
 		typedef FDCopyPump::StatusCode StatusCode;
 		typedef FDCopyPump::CopyInfo CopyInfo;
+		typedef FDCopyPump::ProgressInfo ProgressInfo;
 		
 		// This struct is the data hook at all dptr pointers 
 		// for FDs. 
@@ -743,12 +777,20 @@ class FDCopyBase : public FDBase
 			const void *orig_dptr;   // dptr used by derived class
 			int gets_deleted : 1;   // do not add pumps any more; FDDataHook 
 			                        // is about to get deleted
-			int : 31;
+			// lock_delete: do not delete, jut set gets_deleted. 
+			// Use _DoUnlockDelete() to unlock...
+			int lock_delete : 1;
+			int : (sizeof(int)*8-2);
 			
 			FDDataHook(int *failflag=NULL);
 			~FDDataHook();
 		};
 	private:
+		// Use this to delete a data hook: 
+		inline void _DeleteDataHook(FDDataHook *h,PollID pollid);
+		// Use this to unlock the lock_delete flag in FDDataHook. 
+		inline void _Hook_DoUnlockDelete(FDDataHook *h,PollID pollid);
+		
 		// Internally used by NEW_CopyPump(): 
 		FDCopyPump *_NEW_CopyPump_DoRest(FDCopyPump *pump,FDCopyIO *src,FDCopyIO *dest);
 		
@@ -782,6 +824,11 @@ class FDCopyBase : public FDBase
 		// Status calls informing derived class abount copy job status: 
 		// Return value: Currently unused; use 0. 
 		virtual int cpnotify(CopyInfo * /*ci*/)  {  return(0);  }
+		// Progress info from running copy requests. 
+		// Only for eye candy or timeout management; all termination 
+		// and error-related information comes via cpnotify(). 
+		// Return value: Currently unused; use 0. 
+		virtual int cpprogress(ProgressInfo * /*pi*/)  {  return(0);  }
 		
 	private:
 		// Internally used: 
@@ -878,6 +925,8 @@ inline int FDCopyPump::DoneJob(FDManager::PollID in_id,FDManager::PollID out_id)
 	{  return(fcb->DoneJob(this,in_id,out_id));  }
 inline int FDCopyPump::_CallCPNotify(CopyInfo *ci)
 	{  return(fcb->cpnotify(ci));  }
+inline int FDCopyPump::_CallCPProgress(ProgressInfo *pi)
+	{  return(fcb->cpprogress(pi));  }
 inline int FDCopyPump::IChangeEvents(FDManager::PollID pollid,short set_ev,short clear_ev)
 	{  return(fcb->IChangeEvents(this,pollid,set_ev,clear_ev));  }
 inline int FDCopyPump::ISetControlledEvents(FDBase::PollID pollid,short events)

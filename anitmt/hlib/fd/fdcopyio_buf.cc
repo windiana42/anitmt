@@ -44,7 +44,17 @@ int FDCopyIO_Buf::dataptr(DataPtr *dp)
 
 int FDCopyIO_Buf::datadone(DataDone *dd)
 {
-	assert(dd->buf==buf);
+	#if 1
+	assert(dd->buf==buf+bufdone);
+	#else
+	if(dd->buf!=buf+bufdone)
+	{
+		fprintf(stderr,"OOPS: "
+			"dd->buf=%p, buf=%p, donelen=%u, bufdone=%u, buflen=%u\n",
+			dd->buf,buf,dd->donelen,bufdone,buflen);
+		assert(0);
+	}
+	#endif
 	bufdone+=dd->donelen;
 	assert(bufdone<=buflen);
 	return(0);

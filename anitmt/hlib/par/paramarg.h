@@ -3,11 +3,11 @@
  * 
  * Basic parameter argument as read in from parameter sources. 
  * 
- * Copyright (c) 2001 -- 2002 by Wolfgang Wieser (wwieser@gmx.de) 
+ * Copyright (c) 2001 -- 2004 by Wolfgang Wieser (wwieser@gmx.de) 
  * 
  * This file may be distributed and/or modified under the terms of the 
- * GNU Lesser General Public License version 2.1 as published by the 
- * Free Software Foundation. (See COPYING.LGPL for details.)
+ * GNU General Public License version 2 as published by the Free Software 
+ * Foundation. (See COPYING.GPL for details.)
  * 
  * This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
  * WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
@@ -52,7 +52,7 @@ class ParamArg
 		const char *name;   // points to mem inside arg after leading `-'
 		size_t namelen;     // length of name in *name. 
 		const char *value;  // points to next char after `=' or NULL 
-		char assmode;       // '\0', '+' or '-'. 
+		char assmode;       // '\0', '=', '+' or '-'. 
 		int pdone;         // 1 -> already done (parsed in...) 
 		                   // 0 -> not done; -1 -> error 
 		Type atype;        // File parameters always have Assignment type. 

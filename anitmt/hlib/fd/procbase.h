@@ -5,7 +5,7 @@
  * process (task) management which works in cooperation 
  * with class ProcessManager. 
  * 
- * Copyright (c) 2001--2002 by Wolfgang Wieser (wwieser@gmx.de) 
+ * Copyright (c) 2001--2004 by Wolfgang Wieser (wwieser@gmx.de) 
  * 
  * This file may be distributed and/or modified under the terms of the 
  * GNU General Public License version 2 as published by the Free Software 
@@ -111,11 +111,11 @@ class ProcessBase :
 		// Note: Other errors (FD stuff failed / execution failed) cannot 
 		//       be returned here; you get them via procnotify(). 
 		pid_t StartProcess(
-			const ProcPath &path,
-			const ProcArgs &args,
-			const ProcMisc &misc=ProcMisc(),
-			const ProcFDs &pfds=ProcFDs(),
-			const ProcEnv &env=ProcEnv())
+			const ProcPath *path,
+			const ProcArgs *args,
+			const ProcMisc *misc=NULL,
+			const ProcFDs *pfds=NULL,
+			const ProcEnv *env=NULL)
 		{  return(procmanager()->StartProcess(this,path,args,misc,pfds,env));  }
 		
 		// TERM and then KILL a process. 

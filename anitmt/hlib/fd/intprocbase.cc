@@ -3,7 +3,7 @@
  * 
  * Implementation of subclasses of the class InternalProcessManager. 
  *
- * Copyright (c) 2001--2002 by Wolfgang Wieser (wwieser@gmx.de) 
+ * Copyright (c) 2001--2004 by Wolfgang Wieser (wwieser@gmx.de) 
  * 
  * This file may be distributed and/or modified under the terms of the 
  * GNU General Public License version 2 as published by the Free Software 
@@ -238,22 +238,22 @@ int InternalProcessBase::ProcFDs::Add(int ofd,int dfd)
 
 
 // Return value: 0 -> OK; -1 -> LMalloc() failed. 
-int InternalProcessBase::ProcFDs::Copy(const ProcFDs &pfds)
+int InternalProcessBase::ProcFDs::Copy(const ProcFDs *pfds)
 {
 	ourfd=(int*)LFree(ourfd);
 	destfd=NULL;
 	dim=0; n=0;
 	
-	if(pfds.n)
+	if(pfds->n)
 	{
-		int *newp=(int*)LMalloc(2*pfds.n*sizeof(int));
+		int *newp=(int*)LMalloc(2*pfds->n*sizeof(int));
 		if(!newp)  return(-1);
-		n=pfds.n;
+		n=pfds->n;
 		dim=n;
 		ourfd=newp;
 		destfd=newp+dim;
-		memcpy(ourfd,pfds.ourfd,n*sizeof(int));
-		memcpy(destfd,pfds.destfd,n*sizeof(int));
+		memcpy(ourfd,pfds->ourfd,n*sizeof(int));
+		memcpy(destfd,pfds->destfd,n*sizeof(int));
 	}
 	return(0);
 }

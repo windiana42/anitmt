@@ -1,11 +1,11 @@
 /*
  * hlib_id1.c
  *
- * Copyright (c) 2002 by Wolfgang Wieser (wwieser@gmx.de) 
+ * Copyright (c) 2002--2004 by Wolfgang Wieser (wwieser@gmx.de) 
  * 
  * This file may be distributed and/or modified under the terms of the 
- * GNU Lesser General Public License version 2.1 as published by the 
- * Free Software Foundation. (See COPYING.LGPL for details.)
+ * GNU General Public License version 2 as published by the Free Software 
+ * Foundation. (See COPYING.GPL for details.)
  * 
  * This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
  * WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
@@ -36,7 +36,7 @@ static void _SetSize(char *str,char id,int val)
 const char *HLIB_GetConfigString()
 {
 	static char str[]=  /* NON-const! */
-		"hlib version " VERSION " (c) 1999--2002 by Wolfgang Wieser\n"
+		"hlib version " VERSION " (c) 1999--2004 by Wolfgang Wieser\n"
 		"date: " HLIB_BUILD_DATE "\n"
 		"build:  " HLIB_BUILD_SYSTEM "\n"
 		"host:   " HLIB_HOST_SYSTEM "\n"

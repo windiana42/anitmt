@@ -3,11 +3,11 @@
  * 
  * Header def for growing buffer class. 
  * 
- * Copyright (c) 2001--2002 by Wolfgang Wieser (wwieser@gmx.de) 
+ * Copyright (c) 2001--2004 by Wolfgang Wieser (wwieser@gmx.de) 
  * 
  * This file may be distributed and/or modified under the terms of the 
- * GNU Lesser General Public License version 2.1 as published by the 
- * Free Software Foundation. (See COPYING.LGPL for details.)
+ * GNU General Public License version 2 as published by the Free Software 
+ * Foundation. (See COPYING.GPL for details.)
  * 
  * This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
  * WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
@@ -37,7 +37,7 @@
 
 class GrowBuffer
 {
-	private:
+	protected:
 		char *_str;
 		size_t _size;  // length of reserved memory region
 		size_t _len;
@@ -119,12 +119,15 @@ class GrowBuffer
 		int set(const char *buf,size_t len);
 		
 		// Append passed string to the buffer: 
+		// append0() will NOT append the trailing '\0'. 
 		// Return value: 
 		//   0 -> OK
 		//  -1 -> allocation failed (only if buffer had to be 
 		//        enlarged)
 		int append(const char *str)
 			{  return(append(str,str ? (strlen(str)+1) : 0));  }
+		int append0(const char *str)
+			{  return(append(str,str ? strlen(str) : 0));  }
 		int append(const char *buf,size_t len);
 };
 

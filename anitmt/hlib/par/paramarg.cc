@@ -3,11 +3,11 @@
  * 
  * Basic parameter argument as read in by parameter sources. 
  * 
- * Copyright (c) 2001 -- 2002 by Wolfgang Wieser (wwieser@gmx.de) 
+ * Copyright (c) 2001 -- 2004 by Wolfgang Wieser (wwieser@gmx.de) 
  * 
  * This file may be distributed and/or modified under the terms of the 
- * GNU Lesser General Public License version 2.1 as published by the 
- * Free Software Foundation. (See COPYING.LGPL for details.)
+ * GNU General Public License version 2 as published by the Free Software 
+ * Foundation. (See COPYING.GPL for details.)
  * 
  * This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
  * WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
@@ -117,6 +117,7 @@ ParamArg::ParamArg(const char *cmd_arg,int argnum,int *failflag) :
 			value=strchr(a,'=');
 			if(value)
 			{
+				assmode='=';
 				const char *tst=value-1;
 				namelen=value-name;
 				++value;
@@ -168,6 +169,7 @@ ParamArg::ParamArg(const char *par,const RefString &_file,int _line,
 		while(*n && *n!='=' && *n!=':')  ++n;
 		if(*n)  // n='='
 		{
+			assmode='=';
 			value=n+1;
 			--n;
 			if(n<name)
@@ -211,17 +213,16 @@ ParamArg::ParamArg(const char *par,const RefString &_file,int _line,
 		const char *nameend=name+namelen;
 		for(const char *n=name; n<nameend; n++)
 		{
-			if(*n=='#')
-			{
-				if(n==name)
-				{  name=NULL;  namelen=0;  value=NULL;  break;  }
-				--n;
-				while(n>name && is_trim(*n))  --n;
-				if(!is_trim(*n))  ++n;
-				namelen=n-name;
-				value=NULL;
-				break;
-			}
+			if(*n!='#')  continue;
+			if(n==name)
+			{  name=NULL;  namelen=0;  value=NULL;  assmode='\0';  break;  }
+			--n;
+			while(n>name && is_trim(*n))  --n;
+			if(!is_trim(*n))  ++n;
+			namelen=n-name;
+			value=NULL;
+			assmode='\0';
+			break;
 		}
 	}
 	
@@ -259,6 +260,7 @@ ParamArg::ParamArg(const char *env_arg,int *failflag) :
 		if(!*nameend || nameend<=name)  break;
 		namelen=nameend-name;
 		value=nameend+1;
+		assmode='=';
 		// Remove blanks between NAME and '=': 
 		while(isspace(name[namelen]) && namelen>0)  --namelen;
 		//if(!namelen)  break;  <-- redundant
@@ -270,6 +272,7 @@ ParamArg::ParamArg(const char *env_arg,int *failflag) :
 	{
 		name=NULL;
 		value=NULL;
+		assmode='\0';
 	}
 	
 	pdone=0;

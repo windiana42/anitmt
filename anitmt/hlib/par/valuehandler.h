@@ -4,11 +4,11 @@
  * Header file containing value handler abstraction. 
  * This is the file to be included by the user. 
  * 
- * Copyright (c) 2001 -- 2002 by Wolfgang Wieser (wwieser@gmx.de) 
+ * Copyright (c) 2001 -- 2004 by Wolfgang Wieser (wwieser@gmx.de) 
  * 
  * This file may be distributed and/or modified under the terms of the 
- * GNU Lesser General Public License version 2.1 as published by the 
- * Free Software Foundation. (See COPYING.LGPL for details.)
+ * GNU General Public License version 2 as published by the Free Software 
+ * Foundation. (See COPYING.GPL for details.)
  * 
  * This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
  * WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
@@ -42,10 +42,10 @@ template<class T> class ValueHandlerT : ValueHandler
 			{  return(new T);  }
 		virtual void Free(ParamInfo *,T *val)
 			{  if(val)  delete val;  }
-		virtual int Copy(ParamInfo *pi,T *dest,T *src,int op)
+		virtual int Copy(ParamInfo *,T *dest,const T *src,int op)
 			{  if(op!=SOPCopy) return(-2); *dest = *src;  return(0);  }
 		virtual	ParParseState Parse(ParamInfo *pi,T *val,ParamArg *pa)=0;
-		virtual char *Print(ParamInfo *pi,T *val,char *dest,size_t len)=0;
+		virtual char *Print(ParamInfo *pi,const T *val,char *dest,size_t len)=0;
 		
 	private:
 		// All these wrappers...
@@ -53,11 +53,11 @@ template<class T> class ValueHandlerT : ValueHandler
 			{  return(Alloc(pi));  }
 		virtual void free(ParamInfo *pi,void *val)
 			{  Free(pi,(T*)val);  }
-		virtual int copy(ParamInfo *pi,void *dest,void *src,int op)
+		virtual int copy(ParamInfo *pi,void *dest,const void *src,int op)
 			{  return(Copy(pi,(T*)dest,(T*)src,op));  }
 		virtual	ParParseState parse(ParamInfo *pi,void *val,ParamArg *pa)
 			{  return(Parse(pi,(T*)val,pa));  }
-		virtual	char *print(ParamInfo *pi,T *val,char *dest,size_t len)
+		virtual	char *print(ParamInfo *pi,const void *val,char *dest,size_t len)
 			{  return(Print(pi,(T*)val,dest,len));  }
 };
 #endif  /* ParNeed_ValueHandlerT */
@@ -76,6 +76,7 @@ extern char *templ_val2str(long val,char *dest,size_t len);
 extern char *templ_val2str(int val,char *dest,size_t len);
 extern char *templ_val2str(unsigned long val,char *dest,size_t len);
 extern char *templ_val2str(unsigned int val,char *dest,size_t len);
+extern char *templ_val2str(float val,char *dest,size_t len);
 extern char *templ_val2str(double val,char *dest,size_t len);
 extern char *templ_val2str(bool val,char *dest,size_t len);
 
@@ -84,7 +85,7 @@ extern bool ValueInNextArg(ParamArg *arg);
 }  // end of namespace internal
 
 
-// Simple value handlers for simple types like int, long, double. 
+// Simple value handlers for simple types like int, long, float, double. 
 template<class T>struct SimpleValueHandler : ValueHandler
 {
 	SimpleValueHandler(int *failflag=NULL) : ValueHandler(failflag)  { }
@@ -96,11 +97,8 @@ template<class T>struct SimpleValueHandler : ValueHandler
 	ParParseState parse(ParamInfo *pi,void *val,ParamArg *arg)
 	{  return(internal::simple_parse(pi,(T*)val,arg));  }
 	
-	char *print(ParamInfo *,void *_val,char *dest,size_t len)
-	{
-		T val=*(T*)(_val);
-		return(internal::templ_val2str(val,dest,len));
-	}
+	char *print(ParamInfo *,const void *val,char *dest,size_t len)
+	{  return(internal::templ_val2str(*(T*)(val),dest,len));  }
 };
 
 
@@ -115,7 +113,7 @@ struct OptionValueHandler : ValueHandler
 	
 	ParParseState parse(ParamInfo *,void *val,ParamArg *pa);
 	
-	char *print(ParamInfo *pi,void *val,char *dest,size_t len);
+	char *print(ParamInfo *pi,const void *val,char *dest,size_t len);
 };
 
 
@@ -141,7 +139,7 @@ struct EnumValueHandler : ValueHandler
 	{  return(sizeof(int));  }   // need construction or destruction. 
 	
 	ParParseState parse(ParamInfo *pi,void *val,ParamArg *arg);
-	char *print(ParamInfo *,void *val,char *dest,size_t len);
+	char *print(ParamInfo *,const void *val,char *dest,size_t len);
 	
 	private:
 		const MapEntry *map;  // NULL or array; last elem with str=NULL. 
@@ -160,10 +158,10 @@ struct StringValueHandler : ValueHandler
 	// Note: SOPCopy -> copy string
 	//       SOPAdd ->  append string
 	//       SOPSub ->  prepend string
-	int copy(ParamInfo *,void *dest,void *src,int operation = PAR::SOPCopy);
+	int copy(ParamInfo *,void *dest,const void *src,int operation = PAR::SOPCopy);
 	
 	ParParseState parse(ParamInfo *pi,void *val,ParamArg *pa);
-	char *print(ParamInfo *pi,void *val,char *dest,size_t len);
+	char *print(ParamInfo *pi,const void *val,char *dest,size_t len);
 };
 
 
@@ -179,10 +177,10 @@ struct StringListValueHandler : ValueHandler
 	// Note: SOPCopy -> copy list
 	//       SOPAdd ->  append list
 	//       SOPSub ->  remove entries from list
-	int copy(ParamInfo *,void *dest,void *src,int operation = PAR::SOPCopy);
+	int copy(ParamInfo *,void *dest,const void *src,int operation = PAR::SOPCopy);
 	
 	ParParseState parse(ParamInfo *pi,void *val,ParamArg *pa);
-	char *print(ParamInfo *pi,void *val,char *dest,size_t len);
+	char *print(ParamInfo *pi,const void *val,char *dest,size_t len);
 };
 
 
@@ -195,6 +193,7 @@ extern ValueHandler *default_int_handler;
 extern ValueHandler *default_uint_handler;
 extern ValueHandler *default_long_handler;
 extern ValueHandler *default_ulong_handler;
+extern ValueHandler *default_float_handler;
 extern ValueHandler *default_double_handler;
 extern ValueHandler *default_switch_handler;
 extern ValueHandler *default_option_handler;

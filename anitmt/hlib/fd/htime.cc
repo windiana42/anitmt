@@ -3,7 +3,7 @@
  * 
  * Implementation of methods supporting class HTime. 
  * 
- * Copyright (c) 2001--2002 by Wolfgang Wieser (wwieser@gmx.de) 
+ * Copyright (c) 2001--2004 by Wolfgang Wieser (wwieser@gmx.de) 
  * 
  * This file may be distributed and/or modified under the terms of the 
  * GNU General Public License version 2 as published by the Free Software 
@@ -27,6 +27,9 @@ const int64_t HTime::round_delta[HTime::_tslast]=
 
 const double HTime::conv_factD[HTime::_tslast]=
 { 1.0, 1000.0, 1000000.0, 60000000.0, 3600000000.0, 86400000000.0 };
+
+// Static data: 
+HTime HTime::most_current(HTime::Curr);
 
 
 void HTime::_SetVal(long val,TimeSpec sp,timeval *tv)
@@ -85,35 +88,65 @@ void HTime::_SetValL(int64_t val,TimeSpec sp,timeval *tv)
 
 HTime &HTime::Add(long val,TimeSpec sp)
 {
-	timeval tmp;
-	_SetVal(val,sp,&tmp);
-	tv.tv_sec+=tmp.tv_sec;
-	tv.tv_usec+=tmp.tv_usec;
-	_Normalize(&tv);
+	if(!IsInvalid())
+	{
+		timeval tmp;
+		_SetVal(val,sp,&tmp);
+		tv.tv_sec+=tmp.tv_sec;
+		tv.tv_usec+=tmp.tv_usec;
+		_Normalize(&tv);
+	}
 	return(*this);
 }
 
 
 HTime &HTime::Sub(long val,TimeSpec sp)
 {
-	timeval tmp;
-	_SetVal(val,sp,&tmp);
-	tv.tv_sec-=tmp.tv_sec;
-	tv.tv_usec-=tmp.tv_usec;
-	_Normalize(&tv);
+	if(!IsInvalid())
+	{
+		timeval tmp;
+		_SetVal(val,sp,&tmp);
+		tv.tv_sec-=tmp.tv_sec;
+		tv.tv_usec-=tmp.tv_usec;
+		_Normalize(&tv);
+	}
 	return(*this);
 }
 
 
 int64_t HTime::_Delta(const HTime *endtime) const
 {
+	// May not be called if time is invalid. 
 	timeval tmp;
 	const timeval *end;
 	if(endtime)
 	{  end=&endtime->tv;  }
 	else
-	{  gettimeofday(&tmp,NULL);  end=&tmp;  }
+	{  do_gettimeofday(&tmp);  end=&tmp;  }
 	return(
 		(int64_t(end->tv_sec)*int64_t(1000000) + int64_t(end->tv_usec)) - 
 		(int64_t(  tv.tv_sec)*int64_t(1000000) + int64_t(  tv.tv_usec)) );
+}
+
+
+// This is msec_elapsed from misc/msecelapsed.c honoring do_gettimeofday(). 
+long HTime::my_msec_elapsed(const struct timeval *old)
+{
+	struct timeval current;
+	do_gettimeofday(&current);
+	return(
+		(current.tv_sec  - old->tv_sec )*1000L + 
+		(current.tv_usec - old->tv_usec)/1000L );
+}
+
+// This is msec_elapsed_r from misc/msecelapsedr.c honoring do_gettimeofday(). 
+long HTime::my_msec_elapsed_r(const struct timeval *old)
+{
+	struct timeval current;
+	long du;
+	do_gettimeofday(&current);
+	du = (current.tv_usec - old->tv_usec);
+	return(
+		(current.tv_sec  - old->tv_sec)*1000L + 
+		((du<0L) ? (du-500) : (du+500) )/1000L );
 }

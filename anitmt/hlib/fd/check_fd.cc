@@ -4,7 +4,7 @@
  * This is not a partof libhlib.a but a part of hlib distribution. 
  * This code is used to test some functionality in hlib. 
  * 
- * Copyright (c) 2002 by Wolfgang Wieser (wwieser@gmx.de) 
+ * Copyright (c) 2002--2004 by Wolfgang Wieser (wwieser@gmx.de) 
  * 
  * This file may be distributed and/or modified under the terms of the 
  * GNU General Public License version 2 as published by the Free Software 
@@ -322,10 +322,10 @@ int ProcTester::timernotify(TimerInfo *ti)
 			fprintf(stderr,"Forking for \"ls -l . > /dev/null\" in "
 				"parent dir, nice 19... ");
 			pid_t rv=StartProcess(
-				ProcPath("ls","/bin","/usr/bin",NULL),
-				ProcArgs("ls","-l",".",NULL),
-				pmisc,
-				pfd);
+				&ProcPath("ls","/bin","/usr/bin",NULL),
+				&ProcArgs("ls","-l",".",NULL),
+				&pmisc,
+				&pfd);
 			if(rv>0)
 			{
 				fprintf(stderr,"(pid=%ld)\n",long(pid=rv));
@@ -343,8 +343,8 @@ int ProcTester::timernotify(TimerInfo *ti)
 		{
 			fprintf(stderr,"Forking for \"sleep 1\"... ");
 			pid_t rv=StartProcess(
-				ProcPath("sleep","/bin","/usr/bin","/usr/local/bin",NULL),
-				ProcArgs("sleep","1",NULL));
+				&ProcPath("sleep","/bin","/usr/bin","/usr/local/bin",NULL),
+				&ProcArgs("sleep","1",NULL));
 			if(rv>0)
 			{
 				fprintf(stderr,"(pid=%ld)\n",long(pid=rv));
@@ -380,8 +380,8 @@ int ProcTester::timernotify(TimerInfo *ti)
 			// Start non-existing process: 
 			fprintf(stderr,"Forking for \"re41ly/n0n3xisTing/diR/fazz\"... ");
 			pid_t rv=StartProcess(
-				ProcPath("re41ly/n0n3xisTing/diR/fazz"),
-				ProcArgs("fazz",NULL));
+				&ProcPath("re41ly/n0n3xisTing/diR/fazz"),
+				&ProcArgs("fazz",NULL));
 			if(rv>0)
 			{
 				fprintf(stderr,"*** WUH?! pid=%ld (FAILURE!)\n",
@@ -401,8 +401,8 @@ int ProcTester::timernotify(TimerInfo *ti)
 			// Start failing process: 
 			fprintf(stderr,"Forking for \"test 10 -gt 20\"... ");
 			pid_t rv=StartProcess(
-				ProcPath("test","/bin","/usr/bin","/usr/local/bin",NULL),
-				ProcArgs("test","10","-gt","20",NULL));
+				&ProcPath("test","/bin","/usr/bin","/usr/local/bin",NULL),
+				&ProcArgs("test","10","-gt","20",NULL));
 			if(rv>0)
 			{
 				fprintf(stderr,"(pid=%ld)\n",long(pid=rv));
@@ -645,6 +645,57 @@ static int htime_test_diff()
 	return(0);
 }
 
+
+static int htime_test_div()
+{
+	fprintf(stderr,"  Testing HTime div... ");
+	int fail=0;
+	for(int dv=22; dv>=-22; dv--)
+	{
+		int ifail=0;
+		for(int _i=0; _i<100; _i++)
+		{
+			HTime t;
+			timeval tv;
+			tv.tv_sec=random()%2000000000L;
+			long _rr=random();
+			tv.tv_usec=_rr%1000000L;
+			if((_rr/1000000)%2)
+			{  tv.tv_sec=-tv.tv_sec;  }
+			
+			t.SetTimeval(&tv);
+			int64_t t0=t.GetL(HTime::usec);
+			t.Div(dv);
+			if(dv)
+			{
+				int64_t t1=t.GetL(HTime::usec);
+				int64_t expect=t0/int64_t(dv);
+				int64_t delta=t1-expect;
+				// I allow +- 2 usec (will actually make errors 
+				// of -1 usec for negative times). 
+				if(delta<(-2) || delta>2)
+				{
+					++ifail;
+					fprintf(stderr,"HTimeDiv: dv=%d; "
+						"get=%lld; expect=%lld; delta=%lld\n",
+						dv,t1,expect,expect-t1);
+				}
+			}
+			else
+			{
+				if(!t.IsInvalid())
+				{  ++ifail;  }
+			}
+		}
+		if(ifail)
+		{  fprintf(stderr,"HTimeDiv: dv=%d; fail=%d\n",dv,ifail);  }
+		fail+=ifail;
+	}
+	fprintf(stderr,fail ? "*** failed ***" : "passed\n");
+	return(fail ? 1 : 0);
+}
+
+
 static int check_htime()
 {
 	int fail=0;
@@ -652,6 +703,8 @@ static int check_htime()
 	
 	// Okay, first, the add / sub stress test
 	fail+=htime_test_diff();
+	
+	fail+=htime_test_div();
 	
 	// Other things are cuurently not tested. 
 	

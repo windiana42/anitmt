@@ -5,7 +5,7 @@
  * handling (greater numbers of) timeouts. It works in cooperation 
  * with TimeoutBase and requires FDManager. 
  * 
- * Copyright (c) 2002 by Wolfgang Wieser (wwieser@gmx.de) 
+ * Copyright (c) 2003 by Wolfgang Wieser (wwieser@gmx.de) 
  * 
  * This file may be distributed and/or modified under the terms of the 
  * GNU General Public License version 2 as published by the Free Software 
@@ -69,7 +69,7 @@ void TimeoutManager::SetFDBaseTimer(const HTime *current)
 			{  to_val=diff.Get(HTime::msec);  }
 		}
 	}
-	#warning THIS SHOULD BE THE FIRST ONE... // (...what did that want to tell me?)
+	//#warning THIS SHOULD BE THE FIRST ONE... // (...what did that want to tell me?)
 	long tleft=TimerLeft(tid);
 	if(tleft!=to_val)
 	{
@@ -266,7 +266,7 @@ TimeoutManager::TimeoutID TimeoutManager::InstallTimeout(TimeoutBase *tb,
 
 
 #if TESTING_CHECK
-#warning !! ESTING_CHECK switched on. This will slow down performance. !!
+#warning !! TESTING_CHECK switched on. This will slow down performance. !!
 #define _CheckTimeoutID(tb,tid) \
 	for(TNode *n=tb->to_list.first(); n; n=n->next) \
 	{  if((TimeoutID)n==tid)  goto _tc_found;  } \

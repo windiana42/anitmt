@@ -3,11 +3,11 @@
  * 
  * Implementation of central parameter manager. 
  * 
- * Copyright (c) 2001 -- 2002 by Wolfgang Wieser (wwieser@gmx.de) 
+ * Copyright (c) 2001 -- 2004 by Wolfgang Wieser (wwieser@gmx.de) 
  * 
  * This file may be distributed and/or modified under the terms of the 
- * GNU Lesser General Public License version 2.1 as published by the 
- * Free Software Foundation. (See COPYING.LGPL for details.)
+ * GNU General Public License version 2 as published by the Free Software 
+ * Foundation. (See COPYING.GPL for details.)
  * 
  * This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
  * WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
@@ -142,7 +142,7 @@ int ParameterManager::_SectHdlTraverseMoveUpLogic(int foundstart,
 //   and nend pointers are adjusted the way up. 
 // Return value: 
 //   0 -> parameter was accepted by a section handler
-//   1 -> like 1 but the param must be parsed now (section 
+//   1 -> like 0 but the param must be parsed now (section 
 //        handler added the param to the system). 
 //  <0 -> section handler returned that error value
 //   2 -> parameter was not accepted by any section handler 
@@ -184,7 +184,7 @@ int ParameterManager::FeedSectionHandlers(
 		assert(i);   // checked against topsect above. 
 	}
 	
-	return(1);
+	return(2);
 }
 
 

@@ -1,12 +1,17 @@
 HlibHeaders = hconfig.h hlib-config.h \
-	cpp/cplusplus.h cpp/refstring.h cpp/linkedlist.h cpp/refstrlist.h cpp/growbuffer.h \
+	cpp/cplusplus.h cpp/refstring.h cpp/linkedlist.h cpp/refstrlist.h \
+		cpp/refstrhash.h cpp/growbuffer.h cpp/defop.h cpp/orderedarray.h \
+		cpp/cdrecorder.h cpp/btree.h cpp/binsearch.h cpp/heap.h \
+		cpp/notifierlist.h \
 	fd/procbase.h fd/procmanager.h fd/fdmanager.h fd/htime.h fd/intprocbase.h fd/fdbase.h \
 		fd/fdfifobuf.h fd/fdcopybase.h fd/timeoutbase.h fd/timeoutmanager.h fd/searchpath.h \
 	par/cmdline.h par/parsource.h par/parintrnl.h par/paramarg.h par/parconsumer.h \
 		par/parconsumerovl.h par/parmanager.h par/sindentcout.h par/srccmd.h par/srcfile.h par/srcenv.h \
 		par/valhdl.h par/valuehandler.h par/parbase.h par/secthdl.h \
 	misc/prototypes.h misc/hlib.h misc/lmalloc.h \
-	crypto/base64.h
+	crypto/base64.h \
+	compress/base_cinfile.h compress/gzip_cinfile.h compress/bzip2_cinfile.h \
+		compress/pngwrite.h compress/pngread.h
 
 all: LinkHeaders
 opt: LinkHeaders

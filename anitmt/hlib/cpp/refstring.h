@@ -3,11 +3,11 @@
  * 
  * RefString, an allocate once & reference string. 
  * 
- * Copyright (c) 2001--2002 by Wolfgang Wieser (wwieser@gmx.de) 
+ * Copyright (c) 2001--2004 by Wolfgang Wieser (wwieser@gmx.de) 
  * 
  * This file may be distributed and/or modified under the terms of the 
- * GNU Lesser General Public License version 2.1 as published by the 
- * Free Software Foundation. (See COPYING.LGPL for details.)
+ * GNU General Public License version 2 as published by the Free Software 
+ * Foundation. (See COPYING.GPL for details.)
  * 
  * This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
  * WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
@@ -20,6 +20,10 @@
 #include "cplusplus.h"
 
 #include <string.h>
+
+#if HAVE_STDARG_H
+#  include <stdarg.h>
+#endif
 
 
 // How it works: Simply allocate a RefString on the stack and store 
@@ -173,8 +177,22 @@ class RefString
 		bool operator!=(const RefString &b) const
 			{  return(!operator==(b));  }
 		
+		// This works only for '\0'-terminated RefStrings: 
+		// operator== is always 0 and != always 1 if the 
+		// RefString is not '\0'-terminated. 
+		bool operator==(const char *b) const;
+		bool operator!=(const char *b) const
+			{  return(!operator==(b));  }
+		
+		// This returns true, if the passed string is actually 
+		// the same string because they share the same reference. 
+		bool IsSameRef(const RefString &b) const
+			{  return(b.ref==ref);  }
+		
 		// This is true if this is a NULL-ref: 
 		bool operator!() const  {  return(!ref);  }
+		// This is true if this is not a NULL-ref: 
+		operator bool() const  {  return(ref);  }
 		
 		// Simply dereference the string. This RefString will then 
 		// just contain a NULL pointer (str() will return NULL). 
@@ -230,6 +248,8 @@ class RefString
 		// size field. 
 		int sprintf(size_t maxlen,const char *fmt,...)
 			__attribute__ ((__format__ (__printf__, 3, 4)));
+		// Version for va_list: 
+		int vsprintf(size_t maxlen,const char *fmt,va_list ap);
 		
 		/*** STRING MANIPULATION ROUTINES ***/
 		// There are usually two versions of the functions: 

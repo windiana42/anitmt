@@ -4,11 +4,11 @@
  * Implementation of parameter source capable of reading in the 
  * parameters/arguments passed using the environment. 
  * 
- * Copyright (c) 2003 by Wolfgang Wieser (wwieser@gmx.de) 
+ * Copyright (c) 2003 --2004 by Wolfgang Wieser (wwieser@gmx.de) 
  * 
  * This file may be distributed and/or modified under the terms of the 
- * GNU Lesser General Public License version 2.1 as published by the 
- * Free Software Foundation. (See COPYING.LGPL for details.)
+ * GNU General Public License version 2 as published by the Free Software 
+ * Foundation. (See COPYING.GPL for details.)
  * 
  * This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
  * WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.

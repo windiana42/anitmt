@@ -4,7 +4,7 @@
  * Internal header containing class InternalProcessBase 
  * which is the base class for ProcessBase and ProcessManager. 
  * 
- * Copyright (c) 2001--2002 by Wolfgang Wieser (wwieser@gmx.de) 
+ * Copyright (c) 2001--2004 by Wolfgang Wieser (wwieser@gmx.de) 
  * 
  * This file may be distributed and/or modified under the terms of the 
  * GNU General Public License version 2 as published by the Free Software 
@@ -233,7 +233,7 @@ struct InternalProcessBase
 			~ProcFDs()  {  ourfd=(int*)LFree(ourfd); /* NOT FREE destfd = ourfd+dim */ }
 
 			// Return value: 0 -> OK; -1 -> LMalloc() failed. 
-			int Copy(const ProcFDs &pfds);
+			int Copy(const ProcFDs *pfds);
 
 			// ourfd: the FD value in the current procss 
 			// destfd: the FD value this fd shall have in the 

@@ -3,11 +3,11 @@
  *
  * Prototypes of all (non-member) functions of this directory. 
  *
- * Copyright (c) 1999--2002 by Wolfgang Wieser (wwieser@gmx.de) 
+ * Copyright (c) 1999--2004 by Wolfgang Wieser (wwieser@gmx.de) 
  * 
  * This file may be distributed and/or modified under the terms of the 
- * GNU Lesser General Public License version 2.1 as published by the 
- * Free Software Foundation. (See COPYING.LGPL for details.)
+ * GNU General Public License version 2 as published by the Free Software 
+ * Foundation. (See COPYING.GPL for details.)
  * 
  * This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
  * WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
@@ -35,6 +35,32 @@ extern char *prg_name;
 
 /* limitmalloc.c: */
   /* See lmalloc.h. */
+
+/* daemonize.c: */
+#define DAEMONIZE_CHDIR      0x01
+#define DAEMONIZE_CLOSE_IN   0x02
+#define DAEMONIZE_CLOSE_OUT  0x04
+#define DAEMONIZE_CLOSE_ERR  0x08
+#define DAEMONIZE_CLOSE    (DAEMONIZE_CLOSE_IN|DAEMONIZE_CLOSE_OUT|DAEMONIZE_CLOSE_ERR)
+  /* Detach from controlling terminal and make the process run in the 
+   * background as daemon. This function does a fork() and exits in the 
+   * parent thread; hence some errors are not visible to the parent. 
+   * flags is a bitwise OR of the following: 
+   *   DAEMONIZE_CHDIR  -> chdir to "/"
+   *   DAEMONIZE_CLOSE  -> bind stdin,out,err to /dev/null
+   *   DAEMONIZE_CLOSE_IN, DAEMONIZE_CLOSE_OUT, DAEMONIZE_CLOSE_ERR: 
+   *                       bind stdin,out,err to /dev/null, respectively 
+   * Return value: (See errno if != 0; all before forking unless stated 
+   *                differently.)
+   *   0 -> OK
+   *  -1 -> failed to fork()
+   *  -2 -> failed to setsid()  [after forking]
+   *  -3 -> failed to chdir("/")
+   * -4,-5 -> failed to open,close /dev/null 
+   * -6,-7,-8 -> failed close/dup2 on stdin,stdout,stderr
+   * BUGS: Gets fooled if DAEMONIZE_CLOSE is set and /dev/null is not 
+   *       the device we think it is. */
+  extern int Daemonize(int flags);
 
 /* checkmalloc.c: */
   /* returns ptr; exits with error, if ptr==NULL */
@@ -67,6 +93,10 @@ extern char *prg_name;
    */
   extern int GetTerminalSize(int fd,int *ret_row,int *ret_col);
   
+/* hexdump.c: */
+  /* NOT YET DOCUMENTED function for debugging; arguments may change. */
+  extern void WriteHexDump(FILE *out,const char *data,size_t len);
+
 /* hlib_id?.c: */
   /* Get version string ("hlib version xyz"): */
   extern const char *HLIB_GetVersionString();

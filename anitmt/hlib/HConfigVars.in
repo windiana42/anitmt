@@ -8,6 +8,7 @@ CXXFLAGS='@CXXFLAGS@'
 LDADD='@LDADD@'
 CC='@CC@'
 CXX='@CXX@'
+VERSION='@VERSION@'
 
 case "$1" in
 	"") ;;
@@ -16,6 +17,7 @@ case "$1" in
 	"LDADD")     echo "$LDADD" ;;
 	"CC")        echo "$CC" ;;
 	"CXX")       echo "$CXX" ;;
+	"VERSION")   echo "$VERSION" ;;
 	*)  echo "[unknown]" ;;
 esac
 

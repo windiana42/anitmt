@@ -3,11 +3,11 @@
  * 
  * Implementation of the parameter source class. 
  * 
- * Copyright (c) 2001 -- 2002 by Wolfgang Wieser (wwieser@gmx.de) 
+ * Copyright (c) 2001 -- 2004 by Wolfgang Wieser (wwieser@gmx.de) 
  * 
  * This file may be distributed and/or modified under the terms of the 
- * GNU Lesser General Public License version 2.1 as published by the 
- * Free Software Foundation. (See COPYING.LGPL for details.)
+ * GNU General Public License version 2 as published by the Free Software 
+ * Foundation. (See COPYING.GPL for details.)
  * 
  * This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
  * WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
@@ -36,11 +36,33 @@ namespace par
 int ParameterSource::FindCopyParseParam(ParamArg *pa,
 	ParamCopy **ret_pc,ParamInfo **ret_pi,Section *topsect)
 {
+	if(ret_pc)  *ret_pc=NULL;
+	
+	ParamInfo *pi=NULL;
+	int rv=LookupFeedParam(pa,&pi,topsect);
+	if(ret_pi)  *ret_pi=pi;
+	
+	if(rv==2)
+	{
+		// This will copy the param call error handler if necessary 
+		// and warn the user if it will be set more than once. 
+		// Then, parse the value, set the origin... and return !=NULL 
+		// if all that went okay. 
+		ParamCopy *pc=CopyParseParam(pi,pa);
+		if(!pc)  return(-4);
+		if(ret_pc)  *ret_pc=pc;
+	}
+	return(rv);
+}
+
+
+int ParameterSource::LookupFeedParam(ParamArg *pa,ParamInfo **ret_pi,
+	Section *topsect)
+{
 	// YOU SHOULD NOT use this function for ENV VAR parsing. 
 	// srcenv.cc has its own (primitive) routine skipping all the 
 	// section stuff. 
 	
-	if(ret_pc)  *ret_pc=NULL;
 	if(ret_pi)  *ret_pi=NULL;
 	if(pa->pdone)  return(0);  // correct. 
 	if(!topsect)  topsect=manager->TopSection();
@@ -56,6 +78,8 @@ int ParameterSource::FindCopyParseParam(ParamArg *pa,
 	Section *rsect;
 	const char *rend;
 	ParamInfo *pi=manager->FindParam(p_name,p_namelen,topsect,&rend,&rsect);
+	// Ask the source if the lookup was okay: 
+	pi=CheckLookupIsOkay(pa,pi);
 	if(!pi)
 	{
 		// So, the parameter could not be found. 
@@ -70,6 +94,8 @@ int ParameterSource::FindCopyParseParam(ParamArg *pa,
 				// Okay, section handler accepted it. 
 				// The param should exist now. 
 				pi=manager->FindParam(p_name,p_namelen,topsect,&rend,&rsect);
+				// Ask the source again if the lookup was okay: 
+				pi=CheckLookupIsOkay(pa,pi);
 			}
 		}
 	}
@@ -83,14 +109,6 @@ int ParameterSource::FindCopyParseParam(ParamArg *pa,
 	{  *ret_pi=pi;  }
 	if(is_switch && pi->ptype!=PTSwitch)
 	{  ParameterError(PETNotASwitch,pa,pi,topsect);  return(-3);  }
-	
-	// This will copy the param call error handler if necessary 
-	// and warn the user if it will be set more than once. 
-	// Then, parse the value, set the origin... and return !=NULL 
-	// if all that went okay. 
-	ParamCopy *pc=CopyParseParam(pi,pa);
-	if(!pc)  return(-4);
-	if(ret_pc)  *ret_pc=pc;
 	
 	return(2);
 }
@@ -115,6 +133,8 @@ PAR::ParamCopy *ParameterSource::CopyParseParam(ParamInfo *pi,ParamArg *pa)
 		{
 			// For Environment vars, we ifnore if they lack a value 
 			// and treat it as ####FIXME###
+			// However, this should not be handeled here but in the 
+			// env var par source. 
 		}
 		else
 		#endif
@@ -420,7 +440,7 @@ PAR::ParamCopy *ParameterSource::CopyParamCheck(
 	assert(pc);
 	
 	if(cps==CPSAlreadyCopied && 
-	   pa->assmode=='\0' &&  // '\0' -> `='
+	   (pa->assmode=='\0' || pa->assmode=='=') && 
 	   pc->porigin.otype!=ParamArg::_FromNowhere )
 	{  WarnAlreadySet(pa,pc);  }
 	

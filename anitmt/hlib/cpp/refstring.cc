@@ -3,13 +3,13 @@
  * 
  * Implementation of allocate once & reference string class RefString. 
  * This file contains only the RefString core implementation, other 
- * features are in other files. (See COPYING.LGPL for details.)
+ * features are in other files. 
  * 
- * Copyright (c) 2001--2002 by Wolfgang Wieser (wwieser@gmx.de) 
+ * Copyright (c) 2001--2004 by Wolfgang Wieser (wwieser@gmx.de) 
  * 
  * This file may be distributed and/or modified under the terms of the 
- * GNU Lesser General Public License version 2.1 as published by the 
- * Free Software Foundation. (See COPYING.LGPL for details.)
+ * GNU General Public License version 2 as published by the Free Software 
+ * Foundation. (See COPYING.GPL for details.)
  * 
  * This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
  * WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
@@ -158,6 +158,20 @@ bool RefString::operator==(const RefString &b) const
 	}
 	// '\0'-terminated string; no size flag. 
 	return(!strcmp(_str(),b._str()));
+}
+
+
+bool RefString::operator==(const char *b) const
+{
+	// If not '\0'-terminated, return 0: 
+	if(stype()==1)  return(false);
+	// First, the fast path: if it is the same pointer, 
+	// then also the same string: 
+	const char *a=str();
+	if(a==b)  return(true);
+	// The case that both were NULL was dealed with above. 
+	if(!a || !b)  return(false);
+	return(!strcmp(a,b));
 }
 
 

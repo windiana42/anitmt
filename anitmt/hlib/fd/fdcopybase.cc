@@ -4,7 +4,7 @@
  * Implementation of class FDCopyBase and other minor classes which 
  * are always needed if FDCopyBase is used. 
  * 
- * Copyright (c) 2002 by Wolfgang Wieser (wwieser@gmx.de) 
+ * Copyright (c) 2002--2003 by Wolfgang Wieser (wwieser@gmx.de) 
  * 
  * This file may be distributed and/or modified under the terms of the 
  * GNU General Public License version 2 as published by the Free Software 
@@ -42,8 +42,35 @@
 /**** FDCopyBase                                                           ****/
 
 
+inline void FDCopyBase::_DeleteDataHook(FDDataHook *h,PollID pollid)
+{
+	assert(h->gets_deleted);
+	
+	if(!h->lock_delete)
+	{
+		// Cancel dptr and delete FDDataHook: 
+		FDBase::PollFDDPtr(pollid,NULL);
+		delete h;
+	}
+	// Otherwise, actual deletion will be done lateron...
+}
+
+// Unlock the lock_delete flag: 
+inline void FDCopyBase::_Hook_DoUnlockDelete(FDDataHook *h,PollID pollid)
+{
+	assert(h->lock_delete);
+	
+	h->lock_delete=0;
+	if(h->gets_deleted)
+	{  _DeleteDataHook(h,pollid);  }
+}
+
+
 int FDCopyBase::fdnotify(FDManager::FDInfo *fdi)
 {
+	//fprintf(stderr,"--<FDCP:fdnotify>--<fd=%d, events=0x%x, revents=0x%x>--\n",
+	//	fdi->fd,int(fdi->events),int(fdi->revents));
+	
 	FDDataHook *h=(FDDataHook*)(fdi->dptr);
 	assert(h);   // It MUST be set. 
 	assert(!h->gets_deleted);
@@ -60,26 +87,34 @@ int FDCopyBase::fdnotify(FDManager::FDInfo *fdi)
 	
 	short remove_flags = (h->in.ctrl_ev | h->out.ctrl_ev);
 	
+	// Protect hook from deletion during virtual function call: 
+	assert(h->lock_delete==0);
+	h->lock_delete=1;
+	
 	if(/*!h->gets_deleted &&*/ h->in.pump)
 	{  _DoHandleFDNotify(fdi,h,h->in.pump);  }
 	if(!h->gets_deleted && h->out.pump)
 	{  _DoHandleFDNotify(fdi,h,h->out.pump);  }
 	
-	// Forward the call: 
-	remove_flags=~remove_flags;
-	fdi->revents&=remove_flags;
-	// If events rest...
+	// Forward the call if necessary. 
 	// (NOTE: I do not want to enter here for POLLWRNORM or such jokes.) 
 	// NOTE: POLLERR and POLLHUP are NOT passed if neither 
-	//       POLLIN or POLLOUT are still in the events. 
-	if((fdi->revents & (POLLIN | POLLOUT | POLLNVAL) ))
+	//       POLLIN or POLLOUT are still in the events (but were 
+	//       previously, i.e. they were handeled). 
+	int rv=0;
+	if( ((fdi->revents&~remove_flags) & (POLLIN | POLLOUT | POLLNVAL)) || 
+		!remove_flags )
 	{
-		fdi->events&=remove_flags;
+		fdi->revents&=~remove_flags;
+		fdi->events&=~remove_flags;
 		fdi->dptr=h->orig_dptr;
-		int rv=fdnotify2(fdi);
-		return(rv);
+		rv=fdnotify2(fdi);
 	}
-	return(0);
+	
+	// Unlock the protection: 
+	_Hook_DoUnlockDelete(h,fdi->pollid);
+	
+	return(rv);
 }
 
 
@@ -358,9 +393,9 @@ void FDCopyBase::_DetachFromFD(PollID pollid)
 		assert(!h->in.ctrl_ev && !h->out.ctrl_ev);
 	}
 	
-	// Cancel dptr and delete FDDataHook: 
-	FDBase::PollFDDPtr(pollid,NULL);
-	delete h;
+	// This does: reset FDManager's dptr and free the hook: 
+	// (only if !lock_delete)
+	_DeleteDataHook(h,pollid);
 }
 
 
@@ -556,11 +591,15 @@ FDCopyBase::FDDataHook::FDDataHook(int * /*failflag*/)
 	in.ctrl_ev=0;
 	out.ctrl_ev=0;
 	gets_deleted=0;
+	lock_delete=0;
 	orig_dptr=NULL;
 }
 
 FDCopyBase::FDDataHook::~FDDataHook()
 {
+	assert(gets_deleted);
+	assert(!lock_delete);
+	
 	in.pump=NULL;
 	out.pump=NULL;  // be sure...
 }

@@ -5,7 +5,7 @@
  * process (task) management which works in cooperation 
  * with classes derived from class ProcessBase. 
  *
- * Copyright (c) 2001--2002 by Wolfgang Wieser (wwieser@gmx.de) 
+ * Copyright (c) 2001--2004 by Wolfgang Wieser (wwieser@gmx.de) 
  * 
  * This file may be distributed and/or modified under the terms of the 
  * GNU General Public License version 2 as published by the Free Software 
@@ -133,11 +133,11 @@ class ProcessManager :
 		
 		// See class ProcessBase (procbase.h) for a description: 
 		pid_t StartProcess(ProcessBase *pb,
-			const ProcPath &path,
-			const ProcArgs &args,
-			const ProcMisc &misc,
-			const ProcFDs &pfds,
-			const ProcEnv &env);
+			const ProcPath *path,
+			const ProcArgs *args,
+			const ProcMisc *misc,
+			const ProcFDs *pfds,
+			const ProcEnv *env);
 		
 		// See class ProcessBase (procbase.h) for a description: 
 		int TermProcess(ProcessBase *pb,pid_t pid);

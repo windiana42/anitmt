@@ -4,11 +4,11 @@
  * Main header file containing class ParameterSource, the parameter 
  * source abstraction. 
  * 
- * Copyright (c) 2001 -- 2002 by Wolfgang Wieser (wwieser@gmx.de) 
+ * Copyright (c) 2001 -- 2004 by Wolfgang Wieser (wwieser@gmx.de) 
  * 
  * This file may be distributed and/or modified under the terms of the 
- * GNU Lesser General Public License version 2.1 as published by the 
- * Free Software Foundation. (See COPYING.LGPL for details.)
+ * GNU General Public License version 2 as published by the Free Software 
+ * Foundation. (See COPYING.GPL for details.)
  * 
  * This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
  * WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
@@ -205,6 +205,13 @@ class ParameterSource :
 			ParamInfo *pi,
 			Section *topsect);
 		
+		// This is called by LookupFeedParam() after FindParam() to 
+		// see if the lookup was okay. Must return ParamInfo if okay 
+		// (may be a different one than the passed one) and NULL if 
+		// not okay. 
+		virtual ParamInfo *CheckLookupIsOkay(ParamArg * /*arg*/,ParamInfo *pi)
+			{  return(pi);  }
+		
 		ParameterManager *manager;
 	public: _CPP_OPERATORS_FF
 		// Constructor automatically registers ParameterSource at 
@@ -260,7 +267,16 @@ class ParameterSource :
 		// [and the origin is set and the nspec counter increased]. 
 		ParamCopy *CopyParseParam(ParamInfo *pi,ParamArg *pa);
 		
-		// This function will loop up the param and call CopyParseParam() 
+		// This is actually the first half of FindCopyParseParam() below; 
+		// the second half is CopyParseParam() above. See these functions 
+		// for details. 
+		// Does lookup and section handler feeding (if necessary). 
+		// Return values: 
+		//    0,1,-1,2,-2,-3 but not -4; see FindCopyParseParam(). 
+		int LookupFeedParam(ParamArg *arg,ParamInfo **ret_pi,
+			Section *topsect=NULL);
+		
+		// This function will look up the param and call CopyParseParam() 
 		// on it and/or pass it to the apropriate SectionHandler. 
 		// THIS IS THE PREFERRED METHOD FOR PARAMETER SOURCES. 
 		// The ParamCopy is returned in *ret_pc (or NULL is returned if 

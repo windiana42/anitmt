@@ -1,8 +1,8 @@
-   #   #  #      ###  #####,        .###.   .###.   #### 
-   #   #  #       #    #   #        #  /#   #   #      # 
-   #####  #       #    ####.  ####  # / #   `####     #´ 
-   #   #  #       #    #   #        #/  #       #    #´  
-   #   #  #####  ###  #####´        `###´ # `###´ # #´   
+   #   #  #      ###  #####,           #    .###.   .###. 
+   #   #  #       #    #   #          ##    #  /#   #  /# 
+   #####  #       #    ####.  ####   # #    # / #   # / # 
+   #   #  #       #    #   #           #    #/  #   #/  # 
+   #   #  #####  ###  #####´          ### # `###´ # `###´ 
 
 This is HLIB. 
 
@@ -56,23 +56,11 @@ Aug 2002
 --------------------------------------------------------------------------------
 
 Q: What license is HLIB published under?
-A: HLIB has two parts: 
-   * One is published under the GNU General Public License version 2, 
-     see COPYING.GPL for details. 
-     This part is basically everything in the fd/ and crypto/ directories 
-     and some files in misc/. 
-   * The other part is published under the GNU Library General Public 
-     License, version 2.1, see COPYING.LGPL for details. 
-     This is the code in the directories cpp/ and par/ and some files 
-     in misc/. 
-   Please check the comment at the beginning of the source code file in 
-   question to see which license the file is published under. 
-
-   Note that the license distribution is not random; it is chosen in a 
-   way that you may use the parameter system and things like RefString, 
-   and the linked list under the terms of the LGPL but as soon as you 
-   use the real hlib core (fd and process manager, etc.) you must stick 
-   to really free GPL. 
+A: As of version 1.0 (and above) HLIB is put completely under the 
+   GNU General Public License version 2, see COPYING.GPL (bundeled with 
+   HLib) for details. 
+   Each (nontrivial) source file has a small license info in the comment 
+   at the beginnning. 
 
 Q: Why is it called HLIB?
 A: `LIB' stands for `library' and `H' is just the next letter after 

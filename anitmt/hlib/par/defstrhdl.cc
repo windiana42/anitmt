@@ -3,11 +3,11 @@
  * 
  * Implementation of default string value handler. 
  * 
- * Copyright (c) 2001 -- 2002 by Wolfgang Wieser (wwieser@gmx.de) 
+ * Copyright (c) 2001--2004 by Wolfgang Wieser (wwieser@gmx.de) 
  * 
  * This file may be distributed and/or modified under the terms of the 
- * GNU Lesser General Public License version 2.1 as published by the 
- * Free Software Foundation. (See COPYING.LGPL for details.)
+ * GNU General Public License version 2 as published by the Free Software 
+ * Foundation. (See COPYING.GPL for details.)
  * 
  * This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
  * WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
@@ -55,7 +55,8 @@ void StringValueHandler::free(ParamInfo *,void *valptr)
 }
 
 
-int StringValueHandler::copy(ParamInfo *,void *_dest,void *_src,int operation)
+int StringValueHandler::copy(ParamInfo *,void *_dest,const void *_src,
+	int operation)
 {
 	RefString *dest=(RefString*)_dest;
 	RefString *src=(RefString*)_src;
@@ -86,7 +87,7 @@ int StringValueHandler::copy(ParamInfo *,void *_dest,void *_src,int operation)
 }
 
 
-PAR::ParParseState StringValueHandler::parse(ParamInfo *,void *valptr,
+PAR::ParParseState StringValueHandler::parse(ParamInfo *pi,void *valptr,
 	ParamArg *arg)
 {
 	const char *value=arg->value;
@@ -101,14 +102,27 @@ PAR::ParParseState StringValueHandler::parse(ParamInfo *,void *valptr,
 		}
 	}
 	
-	if(!value)
-	{  return(PAR::PPSValOmitted);  }
+	PAR::ParParseState rv=PAR::PPSSuccess;
 	
-	// skip whitespace
 	const char *p=value;
-	while(isspace(*p))  ++p;
-	if(!(*p) || (arg->origin.otype==ParamArg::FromFile && *p=='#'))
-	{  return(PAR::PPSValOmitted);  }
+	
+	if(!p)
+	{  rv=PAR::PPSValOmitted;  }
+	else
+	{
+		// skip whitespace
+		while(isspace(*p))  ++p;
+		if(!(*p) || (arg->origin.otype==ParamArg::FromFile && *p=='#'))
+		{  rv=PAR::PPSValOmitted;  }
+	}
+	if(rv!=PAR::PPSSuccess)
+	{
+		if(rv==PAR::PPSValOmitted && pi->ptype==PAR::PTOptPar)
+		{
+			return(PAR::PPSSuccess);
+		}
+		return(rv);
+	}
 	
 	// Check length of whitespace at the end of the string: 
 	const char *pend=p+strlen(p);
@@ -130,75 +144,84 @@ PAR::ParParseState StringValueHandler::parse(ParamInfo *,void *valptr,
 	// The rest of the algorithm will modify that trimmed version and 
 	// convert it to the string we will actually store. 
 	
-	PAR::ParParseState rv=PAR::PPSSuccess;
 	
 	// How it works: 
 	// First, the string is trimmed (all whitespace at the beginning 
 	// and the end gets deleted). 
 	// If no char is left, this is an error (specify empty strings 
 	// as ""). 
-	// * Then, it is taken as it is, if the first character is not `"'. 
-	// * If the first char is `"', then everything between the first 
-	//   and the second `"' is taken as string. If ``\\'' or ``\"'' 
-	//   is encountered, it is replaced by `\' and `"' respectively 
-	//   (with ``\"'' not counting as parsing end). All other excapes 
-	//   STAY UNCHANGED. 
-	#warning could support string auto-concatenation...
+	// Then the string is parsed. If a `"' appears, the closing `"' is 
+	// looked for. If a `"' appears in between, this part is treated 
+	// correctly and the `"' removed 
+	// ( '-this="blah blah"' -> '-this=blah blah' )
+	// If ``\\'', ``\"'' or ``\ '' is encountered, it is replaced by 
+	// `\', `"', ` '  respectively (with neither of them counting as 
+	// parsing end). 
+	// All other excapes STAY UNCHANGED. 
 	
-	if(*tmp=='\"')
+	// Note: This parser is very tolerant. Maybe too tolerant. 
+	// It won't even generate PAR::PPSGarbageEnd. 
+	
+	int in_quot=0;
+	int saw_quote=0;
+	// Parse it (changing tmp)
+	char *dest=tmp;
+	char *src=tmp;
+	for(;;src++)
 	{
-		// Parse it (changing tmp)
-		char *dest=tmp;
-		char *src=tmp+1;
-		for(; *src; src++)
+		if(*src=='\\')
 		{
-			if(*src=='\\')
-			{
-				if(src[1]=='\\' || src[1]=='\"')
-				{  *(dest++)=*(++src);  }
-				else
-				{  *(dest++)=*src;  }
-			}
-			else if(*src=='\"')
-			{  *dest='\0';  break;  }
+			if(src[1]=='\\' || src[1]=='\"' || src[1]==' ')
+			{  *(dest++)=*(++src);  }
 			else
 			{  *(dest++)=*src;  }
 		}
-		if(*dest)
+		else if(*src=='\"')
+		{
+			in_quot=(in_quot ? 0 : 1);
+			saw_quote=1;
+		}
+		else if(*src=='\0')
+		{
+			if(in_quot)
+			{  rv=PAR::PPSArgUnterminated;  }
+			*dest='\0';
+			break;
+		}
+		else if(!in_quot && *src=='#' && 
+			arg->origin.otype==ParamArg::FromFile)
 		{
 			*dest='\0';
-			if(!rv)
-			{  rv=PAR::PPSArgUnterminated;  }
+			break;
 		}
-		else if(src[1])
+		else if(isspace(*src))
 		{
-			// src[1] is the char after the terminating `"'. 
-			// Check if the rest of the line is a comment: 
-			for(++src; *src; src++)
+			if(in_quot)
+			{  *(dest++)=*src;  }
+			else if(!saw_quote)
 			{
-				if(*src=='#' && arg->origin.otype==ParamArg::FromFile)
-				{  break;  }
-				if(!isspace(*src))
-				{
-					if(!rv)
-					{  rv=PAR::PPSGarbageEnd;  }
-					break;
-				}
+				// Chomp spaces unless we did not yet see a quote. 
+				*(dest++)=*src;
 			}
 		}
+		else
+		{  *(dest++)=*src;  }
 	}
-	else
+	if(*dest)
 	{
-		// Well, we take the complete string. 
-		// Unless, of course, there is a comment at the end: 
-		if(arg->origin.otype==ParamArg::FromFile)
-		{
-			for(char *c=tmp; *c; c++)
-			{
-				if(*c=='#')
-				{  *c='\0';  break;  }
-			}
-		}
+		*dest='\0';
+		if(!rv)
+		{  rv=PAR::PPSArgUnterminated;  }
+	}
+	else if(!saw_quote && rv<=0)
+	{
+		// Cut away whitespace at the end: 
+		--dest;
+		while(dest>=tmp && isspace(*dest))  --dest;
+		if(dest<tmp)
+		{  rv=PAR::PPSValOmitted;  }
+		else
+		{  *(++dest)='\0';  }
 	}
 	
 	// Assign value: 
@@ -206,13 +229,18 @@ PAR::ParParseState StringValueHandler::parse(ParamInfo *,void *valptr,
 	int arv=0;
 	switch(arg->assmode)
 	{
-		case '\0':  arv=str->set(tmp);  break;
+		//OLD assmode '\0' should not happen (no value!) I think... 
+		//OLD case '\0':  assert(0);  rv=PAR::PPSIllegalAssMode;  break;
+		case '\0':  // fall through
+		case '=':   arv=str->set(tmp);  break;
 		case '+':   arv=str->append(tmp);  break;
 		case '-':   arv=str->prepend(tmp);  break;
 		default:  rv=PAR::PPSIllegalAssMode;  break;
 	}
 	if(arv && rv<=0)
 	{  rv=PAR::PPSAssFailed;  }
+	
+	//fprintf(stderr,"STRING PARSED=<%s>, rv=%d\n",str->str(),rv);
 	
 	// Important: free string again: 
 	tmp=(char*)LFree(tmp);
@@ -221,7 +249,7 @@ PAR::ParParseState StringValueHandler::parse(ParamInfo *,void *valptr,
 }
 
 
-char *StringValueHandler::print(ParamInfo *,void *valptr,
+char *StringValueHandler::print(ParamInfo *,const void *valptr,
 	char *dest,size_t len)
 {
 	RefString *str=(RefString*)valptr;

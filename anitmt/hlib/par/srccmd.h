@@ -4,11 +4,11 @@
  * Header file containing parameter source capable of reading in the 
  * parameters/arguments passed on the command line. 
  * 
- * Copyright (c) 2001 -- 2002 by Wolfgang Wieser (wwieser@gmx.de) 
+ * Copyright (c) 2001 -- 2004 by Wolfgang Wieser (wwieser@gmx.de) 
  * 
  * This file may be distributed and/or modified under the terms of the 
- * GNU Lesser General Public License version 2.1 as published by the 
- * Free Software Foundation. (See COPYING.LGPL for details.)
+ * GNU General Public License version 2 as published by the Free Software 
+ * Foundation. (See COPYING.GPL for details.)
  * 
  * This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
  * WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
@@ -53,9 +53,12 @@ class ParameterSource_CmdLine : public ParameterSource
 			const Section *sect,
 			const char *arg);
 		
+		// [overriding a virtual:]
+		virtual ParamInfo *CheckLookupIsOkay(ParamArg *arg,ParamInfo *pi);
+		
 	public:  _CPP_OPERATORS_FF
 		ParameterSource_CmdLine(ParameterManager *manager,int *failflag=NULL);
-		~ParameterSource_CmdLine();
+		virtual ~ParameterSource_CmdLine();
 		
 		// This counts the number of special info query options 
 		// like --help and --version. If this is non-zero after 

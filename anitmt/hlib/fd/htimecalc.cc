@@ -19,44 +19,105 @@
 
 // NOTE on sec and usec values: 
 // True value is always sec+usec/1000000. 
-// However, used is ALWAYS in range 0...999999; NEVER negative. 
+// However, usec is ALWAYS in range 0...999999; NEVER negative. 
 
 
 HTime HTime::operator-(const HTime &start) const
 {
-	HTime r;
+	HTime r(Invalid);
 	
-	r.tv.tv_sec= tv.tv_sec- start.tv.tv_sec;
-	r.tv.tv_usec=tv.tv_usec-start.tv.tv_usec;
-	_Normalize(&r.tv);
+	if(!IsInvalid() && !start.IsInvalid())
+	{
+		r.tv.tv_sec= tv.tv_sec- start.tv.tv_sec;
+		r.tv.tv_usec=tv.tv_usec-start.tv.tv_usec;
+		_Normalize(&r.tv);
+	}
 	
 	return(r);
 }
 
 HTime &HTime::operator-=(const HTime &start)
 {
-	tv.tv_sec-= start.tv.tv_sec;
-	tv.tv_usec-=start.tv.tv_usec;
-	_Normalize(&tv);
+	if(!IsInvalid())
+	{
+		if(start.IsInvalid())
+		{  SetInvalid();  }
+		else
+		{
+			tv.tv_sec-= start.tv.tv_sec;
+			tv.tv_usec-=start.tv.tv_usec;
+			_Normalize(&tv);
+		}
+	}
 	return(*this);
 }
 
 
 HTime HTime::operator+(const HTime &start) const
 {
-	HTime r;
+	HTime r(Invalid);
 	
-	r.tv.tv_sec= tv.tv_sec+ start.tv.tv_sec;
-	r.tv.tv_usec=tv.tv_usec+start.tv.tv_usec;
-	_Normalize(&r.tv);
+	if(!IsInvalid() && !start.IsInvalid())
+	{
+		r.tv.tv_sec= tv.tv_sec+ start.tv.tv_sec;
+		r.tv.tv_usec=tv.tv_usec+start.tv.tv_usec;
+		_Normalize(&r.tv);
+	}
 	
 	return(r);
 }
 
 HTime &HTime::operator+=(const HTime &start)
 {
-	tv.tv_sec+= start.tv.tv_sec;
-	tv.tv_usec+=start.tv.tv_usec;
-	_Normalize(&tv);
+	if(!IsInvalid())
+	{
+		if(start.IsInvalid())
+		{  SetInvalid();  }
+		else
+		{
+			tv.tv_sec+= start.tv.tv_sec;
+			tv.tv_usec+=start.tv.tv_usec;
+			_Normalize(&tv);
+		}
+	}
+	return(*this);
+}
+
+
+HTime &HTime::operator-()
+{
+	if(!IsInvalid())
+	{
+		tv.tv_sec=-tv.tv_sec;
+		tv.tv_usec=-tv.tv_usec;
+		_Normalize(&tv);
+	}
+	return(*this);
+}
+
+
+HTime &HTime::Div(int fact)
+{
+	if(!IsInvalid())
+	{
+		if(!fact)
+		{  SetInvalid();  }
+		else
+		{
+			if(fact<0)
+			{
+				tv.tv_sec=-tv.tv_sec;
+				tv.tv_usec=-tv.tv_usec;
+				_Normalize(&tv);
+				fact=-fact;
+			}
+			
+			// This may overflow if fact is large 
+			// (around 2000 on 32bit systems). 
+			tv.tv_usec=((tv.tv_sec%fact)*1000000+tv.tv_usec)/fact;
+			tv.tv_sec/=fact;
+			_Normalize(&tv);
+		}
+	}
 	return(*this);
 }

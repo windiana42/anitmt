@@ -4,11 +4,11 @@
  * Implementation of parameter source capable of reading in the 
  * parameters/arguments passed on the command line. 
  * 
- * Copyright (c) 2001 -- 2002 by Wolfgang Wieser (wwieser@gmx.de) 
+ * Copyright (c) 2001 -- 2004 by Wolfgang Wieser (wwieser@gmx.de) 
  * 
  * This file may be distributed and/or modified under the terms of the 
- * GNU Lesser General Public License version 2.1 as published by the 
- * Free Software Foundation. (See COPYING.LGPL for details.)
+ * GNU General Public License version 2 as published by the Free Software 
+ * Foundation. (See COPYING.GPL for details.)
  * 
  * This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
  * WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
@@ -152,6 +152,24 @@ int ParameterSource_CmdLine::ReadCmdLine(ParamArg *pa_array,int argc,
 	LFree(sdstack);
 	
 	return(errors);
+}
+
+
+PAR::ParamInfo *ParameterSource_CmdLine::CheckLookupIsOkay(ParamArg *pa,
+	ParamInfo *pi)
+{
+	bool is_ok=0;
+	// Need additional checks so that we do not recognize "verbose" 
+	// as option (instead of "-verbose" and "--verbose"). 
+	switch(pa->atype)
+	{
+		case ParamArg::Option:      is_ok=1;  break;
+		case ParamArg::Assignment:  is_ok=1;  break;  // Or exclude PTOption?
+		case ParamArg::Filename:    is_ok=0;  break;
+		case ParamArg::Unknown:     is_ok=0;  break;
+		default:  is_ok=0;  break;  // huh?
+	}
+	return(is_ok ? pi : NULL);
 }
 
 

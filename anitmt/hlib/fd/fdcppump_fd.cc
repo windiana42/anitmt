@@ -4,7 +4,7 @@
  * Implementation of class FDCopyPump_FD2FD which works in 
  * cooperation with class FDCopyBase (and thus FDManager). 
  * 
- * Copyright (c) 2002 by Wolfgang Wieser (wwieser@gmx.de) 
+ * Copyright (c) 2002--2004 by Wolfgang Wieser (wwieser@gmx.de) 
  * 
  * This file may be distributed and/or modified under the terms of the 
  * GNU General Public License version 2 as published by the Free Software 
@@ -97,7 +97,13 @@ int FDCopyPump_FD2FD::_ReadInData(int fd,FDCopyIO_FD *cpio,HTime *fdtime)
 		
 		if(!reached_limit || size_t(rd)<want_max)  // limit not reached
 		{
-			//#### send progress info
+			// Not the last read(). 
+			// Send progress info. 
+			ProgressInfo pi;
+			pi.pump=this;
+			pi.fdtime=fdtime;
+			pi.moved_bytes=-ssize_t(rd);  // <0, it's ssize_t
+			_CallCPProgress(&pi);
 			return(0);
 		}
 		// If we're here -> (read) limit reached. 
@@ -146,7 +152,12 @@ int FDCopyPump_FD2FD::_WriteOutData(int fd,FDCopyIO_FD *cpio,HTime *fdtime)
 		if(!flushing || fifo.BufUse())  // limit not reached
 		{
 			// Surely not the last write. 
-			//#### send progress info
+			// Send progress info. 
+			ProgressInfo pi;
+			pi.pump=this;
+			pi.fdtime=fdtime;
+			pi.moved_bytes=wr;  // >0
+			_CallCPProgress(&pi);
 			return(0);
 		}
 		// If we're here -> writing done.
@@ -174,11 +185,11 @@ int FDCopyPump_FD2FD::HandleFDNotify(FDManager::FDInfo *fdi)
 	{  cpio=(FDCopyIO_FD*)src;  dir=-1;  our_ev=POLLIN;  }
 	if(fdi->pollid==((FDCopyIO_FD*)dest)->pollid)
 	{  cpio=(FDCopyIO_FD*)dest;  dir=+1;  our_ev=POLLOUT;  }
-	// If this assert fails, then there is some intrnal error. 
+	// If this assert fails, then there is some internal error. 
 	// We are getting fdnotify() for a PolLFD which we do not know. 
 	// Happy bug hunting!!
 	assert(cpio);
-	if(!cpio)  return(0);  // Wwill never kick in becasue of assert above. 
+	if(!cpio)  return(0);  // Will never kick in becasue of assert above. 
 	
 	if(IsStopped(dir))
 	{
@@ -379,7 +390,7 @@ int FDCopyPump_FD2FD::_StartJob()
 	curr_writing=0;
 	
 	// Mark us and the FDCopIO classes active: 
-	(int)state|=PS_Active;
+	state|=PS_Active;
 	is_dead=0;  // be sure...
 	flushing=0;
 	persistent_sc=FDCopyPump::SCNone;
@@ -414,9 +425,9 @@ int FDCopyPump_FD2FD::_StopContJob(ControlCommand cc,int do_stop)
 	{  return(1);  }  // already the case
 	
 	if(do_stop)
-	{  (int)state|=flag;  }
+	{  state|=flag;  }
 	else
-	{  (int)state&=~flag;  }
+	{  state&=~flag;  }
 	
 	// This will do all the events stuff for us: 
 	_ReDecidePollEvents();
@@ -551,7 +562,7 @@ int FDCopyPump_FD2FD::_FinishJob(int dir,CopyInfo cpi)
 		}
 		#endif
 		
-		(int)persistent_sc|=cpi.scode;
+		persistent_sc|=cpi.scode;
 		cpi.scode=persistent_sc;
 		assert(!(cpi.scode & SCFinal));
 		
@@ -565,8 +576,8 @@ int FDCopyPump_FD2FD::_FinishJob(int dir,CopyInfo cpi)
 	
 	int rv=(cpi.scode & SCError) ? (-1) : (+1);
 	
-	(int)cpi.scode|=SCFinal;
-	(int)cpi.scode|=persistent_sc;
+	cpi.scode|=SCFinal;
+	cpi.scode|=persistent_sc;
 	_CallCPNotify(&cpi);
 	
 	// We get deleted (unless persistent) as soon as we're 

@@ -1,9 +1,4 @@
-If you are looking for the GNU General Public License, 
-  please see COPYING.GPL.
-If you are looking for the GNU Lesser General Public License,
-  please see COPYING.LGPL.
+HLib may be copied under the terms of the 
+GNU General Public License, Version 2. 
 
-Each source code file contains a comment at the beginning which tells 
-you under which license you may use / distribute it. 
-If nothing is specified, the license defaults to GPL, i.e. COPYING.GPL. 
-See also README in this directory. 
+See COPYING.GPL for details. 
