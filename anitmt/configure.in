@@ -156,7 +156,6 @@ AC_CONFIG_FILES([ Makefile
 	anitmt-calc/output/pov/Makefile
 	anitmt-calc/output/raw/Makefile
 	anitmt-view/Makefile
-	anitmt-view/parser/Makefile
 	lib/Makefile
 	lib/flex/Makefile
 	lib/message/Makefile
