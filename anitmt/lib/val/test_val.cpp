@@ -197,7 +197,7 @@ int main()
 	else
 	{
 		va*=mc;
-		vb*=2;
+		vb*=2.0;
 		if(va != vb)
 		{  cerr << "\n*** ERROR in Matrix*Vector (2).\n";  }
 		else
@@ -396,9 +396,9 @@ int main()
 		m5x10=m5x10*m10x10;
 		
 		#if 1
-		#warning "********************************************"
-		#warning "** GCC will get ICE with this code...     **"
-		#warning "********************************************"
+		#warning "*********************************************"
+		#warning "** GCC <3.3 will get ICE with this code... **"
+		#warning "*********************************************"
 		V5=m5x10*V1;
 		V1*=m10x10;
 		#else
