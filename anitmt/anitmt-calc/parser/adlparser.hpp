@@ -9,6 +9,7 @@
 #include <FlexLexer.h>
 
 #include "support.hpp"
+#include "input.hpp"
 
 //-----------------------------------------------------------------------------
 /*
@@ -32,7 +33,8 @@ namespace anitmt {
 	class EXParser : public EX { public: EXParser(const string msg) : EX(msg) {} };
 
         //! Parser for the adl format
-	class ADLParser {
+	class ADLParser 
+	{
 		/* FIXME: The internal parser routines are private stuff now, 
 		   but for parser extensions it may make sense to make it protected! */
 	private:
@@ -71,6 +73,22 @@ namespace anitmt {
 		  should merge it's information into */
 		void ParseTree(Prop_Tree_Node *pt);
 	};
+
+  
+  //! Input Interface for reading ADL files
+  class ADL_Input : public Input_Interface
+  {
+    std::string filename;
+  public:
+    //! create animation tree structure
+    virtual void create_structure();
+    //! create explicite references 
+    virtual void insert_expl_ref(); 
+    //! insert concrete values for properties
+    virtual void insert_values(); 
+
+    ADL_Input( std::string filename );
+  };
 }
 //-----------------------------------------------------------------------------
 

@@ -1,4 +1,6 @@
 #include "adlparser.hpp"
+
+#include <fstream>
 //-----------------------------------------------------------------------------
 using namespace values;
 
@@ -135,4 +137,28 @@ void anitmt::ADLParser::ParseTree(Prop_Tree_Node *pt) {
 	fl.GetNext();
 	while (fl.tok() != END_OF_FILE) ParseEntry(pt);
 }
+
+//! create animation tree structure
+void anitmt::ADL_Input::create_structure()
+{
+  ifstream in( filename.c_str() );
+  ADLParser p( in, cout, true);	
+  p.ParseTree( ani );		// !!! shouldn't insert values yet !!!
+}
+
+//! create explicite references 
+void anitmt::ADL_Input::insert_expl_ref()
+{
+				// !!! should read/insert explicite references 
+}
+
+//! insert concrete values for properties
+void anitmt::ADL_Input::insert_values()
+{
+				// !!! should read/insert property values !!! 
+}
+
+anitmt::ADL_Input::ADL_Input( std::string file ) : filename(file) {}
+
+
 //-----------------------------------------------------------------------------
