@@ -33,6 +33,12 @@
 // Bottom limit for write size (buffer will be twice as large) 
 #define MinWriteSize 4096
 
+// FIXME:
+// TODO: 
+//  - rewrite some parts (just a reminder for me)
+//  - #warning (or something) telling you the frame number 
+//    (at the end of the code after the #include)
+//  - #warning for undefined scalars (and define scalar=0)
 
 namespace 
 {
@@ -41,7 +47,9 @@ namespace
 	const int _declare_str_len=strlen(_declare_str);
 	
 	const char *_undefined_str="undefined";
-	const char *_undefined_cmt_str="  // undefined!";
+	const char *_undefined_cmt_str="  // undefined!";  // FIXME: not needed any more?
+	const char *_warning_scal_str="#warning \"Scalar";
+	const char *_is_undefined_str="is undefined\"";
 	
 	const char *_active_str="active";
 	const char *_trans_str="trans";
@@ -93,9 +101,6 @@ char *Frame_Dump::Node::_Dump_Scalar2Str(char *d,char *dend,Frame_Dump::Context 
 	if((dend-d)<(ctx->ndigits+_declare_str_len+str_len+48))
 	{  std::cerr << "Internal error in fdump.cpp:" << __LINE__ << std::endl;  abort();  }
 	
-	++ctx->nscalars;
-	for(char *s=str; *s; s++)
-	{  *(d++)=*s;  }
 	Scalar_Component_Interface *scl=cif.CVScalar();
 	std::pair<bool,values::Scalar> ret=scl->get_value(ctx->t);
 	
@@ -104,11 +109,21 @@ char *Frame_Dump::Node::_Dump_Scalar2Str(char *d,char *dend,Frame_Dump::Context 
 	{  ctx->msgrep->verbose(4) << "scalar: " << scl->get_name() << 
 		(defined ? "" : "UNDEFINED");  }
 	
+	++ctx->nscalars;
 	if(defined)
-	{  d=Double2Str(d,ret.second,ctx->ndigits);  }
+	{
+		for(char *s=str; *s; s++)
+		{  *(d++)=*s;  }
+		d=Double2Str(d,ret.second,ctx->ndigits);
+		*(d++)=';';
+	}
 	else
 	{
-		for(const char *s=_undefined_str; *s; s++)
+		for(char *s=_warning_scal_str; *s; s++)
+		{  *(d++)=*s;  }
+		for(char *s=str+8; *s; s++)
+		{  *(d++)=*s;  }
+		for(const char *s=_is_undefined_str; *s; s++)
 		{  *(d++)=*s;  }
 		++ctx->undefined_scalars;
 	}
@@ -262,19 +277,20 @@ void Frame_Dump::_Write_Header(values::Scalar t,int frame)
 }
 
 
-void Frame_Dump::_Write_End()
+void Frame_Dump::_Write_End(int frame_no)
 {
 	if(!include_me.length())
 	{  return;  }
 	
 	size_t needbuf=
 		include_me.length()+
-		32;
+		32+256;
 	char tmp[needbuf+2];
 	snprintf(tmp,needbuf+1,
 		"\n#include \"%s\"\n"
+		"#render \"Frame %d parsed.\"\n"
 		"// eof\n",
-		include_me.c_str());
+		include_me.c_str(),frame_no);
 	size_t len=strlen(tmp);
 	assert(len<needbuf);
 	_Write2Buf(tmp,len);
@@ -401,7 +417,7 @@ int Frame_Dump::Write(const std::string &file,values::Scalar t,int frame)
 		_Check_Flush();
 		bufdest=n->write(bufdest,bufend,&ctx);
 	}
-	_Write_End();
+	_Write_End(frame);
 	_Force_Flush();
 	
 	outp.close();

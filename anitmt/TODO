@@ -23,6 +23,7 @@ Wolfgang:
   so that I can effectively test things). 
 - Clean up frame output code (better done when we implement the 
   new output concept). 
+- fixme in fdump.cpp
 - Parameter subsystem [...]
 - Message handler: automatic newline, etc.
 - funcgen parameter stuff

@@ -114,7 +114,7 @@ class Frame_Dump :
 		inline void _Force_Flush();
 		
 		void _Write_Header(values::Scalar t,int frame);
-		void _Write_End();
+		void _Write_End(int frame_no);
 		
 		void _Clear();
 	public:
