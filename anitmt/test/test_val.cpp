@@ -186,6 +186,7 @@ int main()
 	va=Vector(3.77,8.91,-13.1);
 	vb=va;
 	mc=mb*2;
+	cerr << mb << (mb*va);
 	if(mb*va != vb || mc*va != vb*2.0 || va*mc != vb*2.0)
 	{  cerr << "\n*** ERROR in Matrix*Vector (1).\n";  }
 	else
@@ -201,8 +202,8 @@ int main()
 	cerr << "Matrix*Matrix / invert test...";
 	for(int i=0; i<100; i++)
 	{
-		for(int c=0; c<3; c++)
-			for(int r=0; r<3; r++)
+		for(int c=0; c<4; c++)
+			for(int r=0; r<4; r++)
 				mc(c,r,rand()/1000.0);
 		
 		if(mc*mb != mc)
@@ -230,8 +231,8 @@ int main()
 	for(int i=0; i<100; i++)
 	{
 		Matrix mrp,mrm,mrn;
-		for(int c=0; c<3; c++)
-			for(int r=0; r<3; r++)
+		for(int c=0; c<4; c++)
+			for(int r=0; r<4; r++)
 			{
 				double ra=rand()/1000.0,rb=rand()/1000.0;
 				ma(c,r,ra);
