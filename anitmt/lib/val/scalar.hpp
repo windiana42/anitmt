@@ -18,6 +18,7 @@
 #define _NS_vect_scalar_HPP_ 1
 
 #include "support.hpp"
+#include "neutral.hpp"
 
 namespace vect
 {
