@@ -191,6 +191,10 @@ struct PAR  // This serves as a namespace and a base class.
 	struct SPHInfo  // SectionParameterHandler (parse()) info
 	{
 		ParamArg *arg;   // the parameter argument we're talking about
+		                 // when only the section without param 
+		                 // (e.g. "*section xyz") was specified, this is NULL...
+		const ParamArg::Origin *origin;  // ...so this is the origin if 
+		                 // needed for errors (normally just arg->origin)
 		Section *sect;   // section we're currently in (i.e. bot_sect
 		                 // or hierarchy above)
 		const char *nend;  // where the matched name ends, i.e. where 

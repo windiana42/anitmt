@@ -462,7 +462,7 @@ void ParameterSource::_RemoveParamCopy(ParamCopy *pc,SectionNode *sn)
 	{  sn->pclist.dequeue(pc);  }
 	#if TESTING
 	else
-	{  fprintf(stderr,"Strange: Could not file section node for "
+	{  fprintf(stderr,"Strange: Could not find section node for "
 		"section %p (%p) %s\n",pc->info->section,pc,
 		pc->info->section ? pc->info->section->name : "<NULL>");  }
 	#endif

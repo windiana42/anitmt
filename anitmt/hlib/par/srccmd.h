@@ -26,6 +26,33 @@ namespace par
 
 class ParameterSource_CmdLine : public ParameterSource
 {
+	public:
+		enum PreprocessorErrcode
+		{
+			// errors (>0)
+			PPUnknownSection=1,       // "-blah-{" -> section `blah' unknown
+			PPTooManyEndStatements    // "-}" occured too often
+		};
+		
+	protected:
+		// (Called by the parse function.)
+		// This notifies you of cmd line preprocessor errors. 
+		// ppe -> tells you which error/warning was encountered; 
+		//        NOTE: ppe>0 -> errors; ppe<0 -> warnings
+		// pos -> current position; do not free pos->origin but copy 
+		//        it if you need it lateron. 
+		// sect -> current section pointer (all arg names in files are 
+		//        relative to this section). 
+		// arg -> this is normally NULL. 
+		//        For PPUnknownSection this contains the secion name 
+		//          which was not found. 
+		// Return value: ignored; return 0. 
+		virtual int PreprocessorError(
+			PreprocessorErrcode ppe,
+			const ParamArg::Origin *pos,
+			const Section *sect,
+			const char *arg);
+		
 	public:  _CPP_OPERATORS_FF
 		ParameterSource_CmdLine(ParameterManager *manager,int *failflag=NULL);
 		~ParameterSource_CmdLine();

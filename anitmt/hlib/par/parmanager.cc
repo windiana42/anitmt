@@ -47,7 +47,7 @@ static inline int ABS(int x)
 {  return((x<0) ? (-x) : x);  }
 
 
-int ParameterManager::_CountParams(Section *top)
+int ParameterManager::_CountParams(const Section *top)
 {
 	int num=0;
 	for(ParamInfo *pi=top->pilist.first(); pi; pi=pi->next)
@@ -161,6 +161,7 @@ int ParameterManager::FeedSectionHandlers(
 			// Okay, the section has a section handler. 
 			SPHInfo info;
 			info.arg=pa;
+			info.origin=&pa->origin;
 			info.sect=sect;
 			info.nend=nend;
 			info.bot_sect=bot_sect;
@@ -303,11 +304,11 @@ int ParameterManager::AddSpecialHelp(ParameterConsumer *pc,SpecialHelpItem *shi)
 // The full section name does neither have a leading nor a 
 // trailing `-'. 
 // Return value: length of the complete name. 
-size_t ParameterManager::FullSectionName(Section *s,char *dest,size_t len)
+size_t ParameterManager::FullSectionName(const Section *s,char *dest,size_t len)
 {
 	if(!s)  return(0);
 	size_t needlen=0;
-	for(Section *u=s; u->up; u=u->up)
+	for(const Section *u=s; u->up; u=u->up)
 	{  needlen+=strlen(u->name)+1;  }   /* +1 for the `-' */
 	if(needlen)  --needlen;
 	if(len)
@@ -316,7 +317,7 @@ size_t ParameterManager::FullSectionName(Section *s,char *dest,size_t len)
 	{
 		dest+=needlen;
 		*dest='\0';  // important: string termination 
-		for(Section *u=s; u->up; u=u->up)
+		for(const Section *u=s; u->up; u=u->up)
 		{
 			if(u!=s)  *(--dest)='-';
 			size_t cp=strlen(u->name);
@@ -334,25 +335,25 @@ size_t ParameterManager::FullSectionName(Section *s,char *dest,size_t len)
 // length (without '\0' at the end!) is returned. 
 // The full parameter name does not have a leading `-'. 
 // Return value: length of the name. 
-size_t ParameterManager::FullParamName(ParamInfo *pi,char *dest,size_t len,
-	int with_synp)
+size_t ParameterManager::FullParamName(const ParamInfo *pi,char *dest,
+	size_t len,int with_synp)
 {
+	char *d0=dest;
 	if(!pi)  return(0);
 	size_t sectlen=FullSectionName(pi->section,dest,len);
-	// Get size for name: synpos[0] is too large by 1 char 
-	//                    but that is `-' here. 
+	// Get size for name: synpos[0] is too large by 1 char (that is `-'). 
 	#warning UNTESTED!!! TEST FullParamName(...,with_synp=1)
-	size_t namelen=with_synp ? (strlen(pi->name)+1) : ABS(*pi->synpos);
+	size_t namelen=with_synp ? (strlen(pi->name)) : (ABS(*pi->synpos)-1);
 	assert(namelen);
-	if(!pi->section->up)  // if the param is in the top section, we 
-	{  --namelen;  }      // dont need the leading `-'. 
 	size_t needlen=namelen+sectlen;
+	if(pi->section->up)   // If the param is not in the top section, we 
+	{  ++needlen;  }      // do need the leading `-'. 
 	if(len>needlen)  // NOT >= because of '\0' at the end. 
 	{
 		dest+=sectlen;
 		if(pi->section->up)  *(dest++)='-';
 		strncpy(dest,pi->name,namelen);
-		dest[namelen]='\0';
+		dest[namelen]='\0';   // CORRECT (at least for non-topsect params)
 	}
 	else if(len)
 	{  *dest='\0';  }
@@ -412,6 +413,13 @@ PAR::ParamInfo *ParameterManager::AddParam(ParameterConsumer *pc,
 	return(pi);
 }
 
+
+// Tell the ParameterSources that the parameter pc in section s is deleted. 
+inline void ParameterManager::_DelParamNotifySources(Section *s,ParamInfo *pi)
+{
+	for(ParameterSource *psrc=psrclist.first(); psrc; psrc=psrc->next)
+	{  psrc->ParamGetsDeleted(s,pi);  }
+}
 
 // Tell parameter sources and delete: 
 inline void ParameterManager::_DelParam(Section *s,ParamInfo *pi)
@@ -515,7 +523,7 @@ PAR::Section *ParameterManager::RegisterSection(ParameterConsumer *pc,
 
 
 PAR::Section *ParameterManager::FindSection(const char *name,Section *top,
-	int tell_section_handler)
+	const ParamArg::Origin *tell_section_handler)
 {
 	if(!top)  top=&topsect;
 	if(!name)  return(top);
@@ -544,6 +552,7 @@ PAR::Section *ParameterManager::FindSection(const char *name,Section *top,
 			{
 				SPHInfo pinfo;
 				pinfo.arg=NULL;
+				pinfo.origin=tell_section_handler;
 				pinfo.sect=sect;
 				pinfo.nend=end;
 				pinfo.bot_sect=bot_sect;
@@ -844,13 +853,6 @@ inline void ParameterManager::_FreeSection(Section *s)
 	delete s;  // will free the name
 }
 
-// Tell the ParameterSources that the parameter pc in section s is deleted. 
-inline void ParameterManager::_DelParamNotifySources(Section *s,ParamInfo *pi)
-{
-	for(ParameterSource *psrc=psrclist.first(); psrc; psrc=psrc->next)
-	{  psrc->ParamGetsDeleted(s,pi);  }
-}
-
 void ParameterManager::_ZapParams(Section *s,ParameterConsumer *pc)
 {
 	for(ParamInfo *_pi=s->pilist.first(); _pi; )
@@ -900,6 +902,10 @@ ParameterManager::ParameterManager(int * /*failflag*/) :
 	highlight_opt_end=NULL;
 	highlight_sect_start=NULL;
 	highlight_sect_end=NULL;
+
+	cerr_printf_func=NULL;
+	cwarn_printf_func=NULL;
+	cinfo_printf_func=NULL;
 	
 	// static global manager: 
 	//#if TESTING

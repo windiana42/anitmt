@@ -34,16 +34,17 @@ void ParameterConsumer::CheckParamError(ParamInfo *pi)
 	
 	if(pi->spectype==STAtLeastOnce ||
 	   (pi->spectype==STExactlyOnce && !pi->nspec))
-	{  fprintf(stderr,"%s: required %s `%s´ not specified.\n",
+	{  parmanager()->cerr_printf("%s: required %s `%s´ not specified.\n",
 		prg_name,ParamTypeString(pi->ptype),tmp);  }
 	else if(pi->spectype==STExactlyOnce)
-	{  fprintf(stderr,"%s: required %s `%s´ must be specified exactly once.\n",
-		prg_name,ParamTypeString(pi->ptype),tmp);  }
+	{  parmanager()->cerr_printf("%s: required %s `%s´ must be specified "
+		"exactly once.\n",prg_name,ParamTypeString(pi->ptype),tmp);  }
 	else if(pi->spectype==STMaxOnce)
-	{  fprintf(stderr,"%s: optional %s `%s´ may not be specified more than "
-		"once.\n",prg_name,ParamTypeString(pi->ptype),tmp);  }
+	{  parmanager()->cerr_printf("%s: optional %s `%s´ may not be "
+		"specified more than once.\n",
+		prg_name,ParamTypeString(pi->ptype),tmp);  }
 	else
-	{  fprintf(stderr,"%s: %s `%s´: illegal spectype %d\n",
+	{  parmanager()->cerr_printf("%s: %s `%s´: illegal spectype %d\n",
 		prg_name,ParamTypeString(pi->ptype),tmp,pi->spectype);  abort();  }
 }
 

@@ -53,16 +53,16 @@ class SectionParameterHandler : public PAR
 		//               the sections the section handler is attached to. 
 		//   SPHInfo* -> Various info: 
 		//     See parintrnl.h for more info. 
-		//     NOTE: SHPInfo::arg is non-NULL in the regular case when 
+		//     NOTE: SPHInfo::arg is non-NULL in the regular case when 
 		//           parse() is called due to an unknown parameter. 
 		//           However, e.g. in the file param source, you can 
 		//           specify `#section xyz´, so the parameter in that 
 		//           section can never be handeled correctly by any section 
 		//           handler section `xyz´ could not be found. So, in this 
-		//           case, parse() is called with SHPInfo::arg=NULL. The 
-		//           section handler can the register the section `xyz' and 
+		//           case, parse() is called with SPHInfo::arg=NULL. The 
+		//           section handler can then register the section `xyz' and 
 		//           return 0 so that the section in question is no longer 
-		//           unknown. (Note that SHPInfo::top_name is always set.)
+		//           unknown. (Note that SPHInfo::top_name is always set.)
 		//     NOTE: The pairs nend/sect, bot_sect/bot_nend, top_sect/top_nend 
 		//           always correspond to each other. HOWEVER, sect does not 
 		//           have to equal the first arg to parse(). sect is moved 

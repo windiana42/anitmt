@@ -31,7 +31,7 @@ int ParameterSource::OverrideError(ParamCopy * /*thiscopy*/,
 	if(rv==-1)  return(0);  // allocation failure
 	
 	#warning waiting to get implemented. 
-	fprintf(stderr,"Override error: %d (%d)\n",rv,operation);
+	parmanager()->cerr_printf("Override error: %d (%d)\n",rv,operation);
 	
 	return(0);
 }
@@ -80,7 +80,8 @@ int ParameterSource::ValueParseError(
 	}
 	
 	RefString ostr=arg->origin.OriginStr();
-	fprintf(stderr,"%s: %s`%.*s´ in %s: %s\n",
+	(parmanager()->*(pps<0 ? &ParameterManager::cwarn_printf : &ParameterManager::cerr_printf))(
+		"%s: %s`%.*s´ in %s: %s\n",
 		prg_name,pps<0 ? "warning: " : "",
 		int(arg->namelen),arg->name,
 		ostr.str(),
@@ -96,7 +97,8 @@ int ParameterSource::WarnAlreadySet(
 {
 	RefString ostr=arg->origin.OriginStr();
 	RefString pstr=pc->porigin.OriginStr();
-	fprintf(stderr,"%s: warning: `%.*s´ in %s previously set in %s\n",
+	parmanager()->cwarn_printf(
+		"%s: warning: `%.*s´ in %s previously set in %s\n",
 		prg_name,
 		int(arg->namelen),arg->name,
 		ostr.str(),pstr.str());
@@ -159,7 +161,7 @@ int ParameterSource::ParamCopyError(
 	if(cps==ParameterSource::CPSCopyingFailed)
 	{  add_str=_cprv_str(cprv);  }
 	
-	fprintf(stderr,"%s: copying parameter `%s´: %s%s\n",
+	parmanager()->cerr_printf("%s: copying parameter `%s´: %s%s\n",
 		prg_name,tmp,err_str,add_str);
 	
 	return(0);
@@ -177,15 +179,22 @@ int ParameterSource::ParameterError(
 	ParameterErrorType pet,
 	ParamArg *arg,
 	ParamInfo * /*pi*/,
-	Section * /*topsect*/)
+	Section *topsect)
 {
 	const char *pet_str = 
 		(pet<0 || pet>=_PETLast) ? _three_qm : pet_error_str[pet];
 	
+	size_t slen=manager->FullSectionName(topsect,NULL,0);
+	char sname[slen+1];
+	manager->FullSectionName(topsect,sname,slen+1);
+	
 	RefString ostr=arg->origin.OriginStr();
-	fprintf(stderr,"%s: `%.*s´ in %s: %s\n",
+	parmanager()->cerr_printf("%s: `%.*s'%s%s%s in %s: %s\n",
 		prg_name,
 		int(arg->namelen),arg->name,
+		slen ? " (section `" : "",
+		slen ? sname : "",
+		slen ? "´)" : "",
 		ostr.str(),
 		pet_str);
 	

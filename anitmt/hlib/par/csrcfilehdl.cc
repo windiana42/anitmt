@@ -26,11 +26,11 @@ static const char *_three_qm="???";
 int ParameterSource_File::FailedFileOp(const char *path,int line,int op)
 {
 	if(op==0)
-	{  fprintf(stderr,"%s: failed to open \"%s\": %s\n",
+	{  parmanager()->cerr_printf("%s: failed to open \"%s\": %s\n",
 		prg_name,path,strerror(errno));  }
 	else
 	{
-		fprintf(stderr,"%s: while reading in %s:%d: %s\n",
+		parmanager()->cerr_printf("%s: while reading in %s:%d: %s\n",
 		prg_name,path,line,
 			(op==2) ? strerror(errno) : 
 			/* op=-1,1,3: */ "memory allocation failed");
@@ -48,10 +48,10 @@ static const struct pp_info
 {
 	{ ParameterSource_File::PreprocessorErrcode(0),        "success" },
 	// errors: 
-	{ ParameterSource_File::PPArgOmitted,                  "required argument omitted" },
-	{ ParameterSource_File::PPIncludeNestedTooOften,       "include nested too deeply" },
 	{ ParameterSource_File::PPUnknownSection,              "unknown section" },
 	{ ParameterSource_File::PPTooManyEndStatements,        "too many *end statements" },
+	{ ParameterSource_File::PPArgOmitted,                  "required argument omitted" },
+	{ ParameterSource_File::PPIncludeNestedTooOften,       "include nested too deeply" },
 	{ ParameterSource_File::PPUnterminatedString,          "unterminated string" },
 	{ ParameterSource_File::PPIllegalPPCommand,            "illegal preprocessor command" },
 	// warnings: 
@@ -74,10 +74,16 @@ int ParameterSource_File::PreprocessorError(
 		{  err_str=_pp_info[i].str;  break;  }
 	}
 	
-	fprintf(stderr,"%s: in %s%s%s: %s%s%s%s\n",
+	size_t slen=manager->FullSectionName(sect,NULL,0);
+	char sname[slen+1];
+	manager->FullSectionName(sect,sname,slen+1);
+	
+	(parmanager()->*(ppe<0 ? &ParameterManager::cwarn_printf : &ParameterManager::cerr_printf))(
+		"%s: in %s%s%s%s: %s%s%s%s\n",
 		prg_name,pos->OriginStr().str(),
-		sect->name ? ", section " : "",
-		sect->name ? sect->name : "",
+		slen ? ", section `" : "",
+		slen ? sname : "",
+		slen ? "´" : "",
 		(ppe<0) ? "warning: " : "",
 		err_str,
 		arg ? " - " : "",arg ? arg : "");

@@ -33,10 +33,10 @@ class ParameterSource_File : public ParameterSource
 			PPWarningIgnoringInclude=-100,  // allow_recursion=-1 and #include found
 			PPWarningIgnoringGarbageAtEol,  // e.g. `*end blah'
 			// errors (>0)
-			PPArgOmitted=1,          // *section, *include without arg
-			PPIncludeNestedTooOften, // allow_recursion exceeded
-			PPUnknownSection,        // *section blah -> `blah' unknown
+			PPUnknownSection=1,      // *section blah -> `blah' unknown
 			PPTooManyEndStatements,  // *end occured too often
+			PPArgOmitted,            // *section, *include without arg
+			PPIncludeNestedTooOften, // allow_recursion exceeded
 			PPUnterminatedString,    // <- after *section, *include...
 			PPIllegalPPCommand       // e.g. *sgrfzz
 		};

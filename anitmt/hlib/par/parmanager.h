@@ -19,6 +19,7 @@
 
 #include "valhdl.h"
 #include <string.h>
+#include <stdarg.h>
 
 class RefStrList;
 
@@ -48,7 +49,7 @@ class ParameterManager : public PAR
 		void _ZapParams(Section *s,ParameterConsumer *pc=NULL);
 		void _ClearSections(ParameterConsumer *pc);
 		void _ClearSection(Section *s,ParameterConsumer *pc=NULL);
-		int _CountParams(Section *top);
+		int _CountParams(const Section *top);
 		inline void _DelParam(Section *s,ParamInfo *pi);  // del and tell par sources
 		int _RecursiveCheckParams(Section *sect);
 		void _SectionHandlerDetachRecursive(SectionParameterHandler *sph,Section *sect);
@@ -78,6 +79,11 @@ class ParameterManager : public PAR
 		// NULL to disable (default). 
 		const char *highlight_opt_start,*highlight_opt_end;
 		const char *highlight_sect_start,*highlight_sect_end;
+		
+		// Console print function pointers (SeeSetConsolePrintfFunction()): 
+		int (*cerr_printf_func)(const char *fmt,va_list ap);
+		int (*cwarn_printf_func)(const char *fmt,va_list ap);
+		int (*cinfo_printf_func)(const char *fmt,va_list ap);
 		
 		// This version info must be free'd via free() (NOT LFree()). 
 		// Note that this function returns NULL on malloc() failure. 
@@ -118,15 +124,16 @@ class ParameterManager : public PAR
 		// Returns the section with the specified name(s) or NULL 
 		// if it does not exist (leading `-' in name are skipped). 
 		// The name is referring to a section below *top. 
-		// tell_section_handler: Normally 0 as the section parameter 
+		// tell_section_handler: Normally NULL as the section parameter 
 		//   handler does not (have to) know of section lookups. If this 
-		//   is set to 1, the section handler gets called if the section 
-		//   is not found. This is the case if e.g. in a file parameter 
-		//   source a `#section´ statement is found, because subsequent 
-		//   params will not have the section name in the parameter name. 
-		//   Only set to 1 if you know what you are doing. 
+		//   is set to a valid origin of the section spec, the section 
+		//   handler gets called if the section is not found. This is 
+		//   the case if e.g. in a file parameter source a `#section´ 
+		//   statement is found, because subsequent params will not 
+		//   have the section name in the parameter name. 
+		//   Only set non-NULL if you know what you are doing. 
 		Section *FindSection(const char *name,Section *top=NULL,
-			int tell_section_handler=0);
+			const ParamArg::Origin *tell_section_handler=NULL);
 		// Returns the top section: 
 		Section *TopSection()  {  return(&topsect);  }
 		
@@ -155,7 +162,7 @@ class ParameterManager : public PAR
 		// The full section name does neither have a leading nor a 
 		// trailing `-'. 
 		// Return value: length of the complete name. 
-		size_t FullSectionName(Section *s,char *dest,size_t len);
+		size_t FullSectionName(const Section *s,char *dest,size_t len);
 		
 		// Stores the full parameter name including all sections in dest 
 		// of size len (actually len-1 bytes + '\0'). In case len is too 
@@ -164,12 +171,12 @@ class ParameterManager : public PAR
 		// The full parameter name does not have a leading `-'. 
 		// with_syns: include synonymes?
 		// Return value: length of the name. 
-		size_t FullParamName(ParamInfo *pi,char *dest,size_t len,
+		size_t FullParamName(const ParamInfo *pi,char *dest,size_t len,
 			int with_syns=0);
 		
 		// These are used primarily by ParameterSource: 
 		// Counts the number of parameters in and below *top. 
-		int CountParams(Section *top=NULL)
+		int CountParams(const Section *top=NULL)
 			{  return(_CountParams(top ? top : &topsect));  }
 		
 		// Description: See ParameterConsumer. 
@@ -259,6 +266,23 @@ class ParameterManager : public PAR
 		void SetHighlightStrings(
 			const char *highlight_opt_start,const char *highlight_opt_end,
 			const char *highlight_sect_start,const char *highlight_sect_end);
+		
+		// These functions are called by all the console message 
+		// implementations of the entire parameter system. 
+		// (Not by bug traps and debug info, of course, but for 
+		// regular error reporting, etc.) 
+		// They default to fprintf(stderr,...) and fprintf(stdout,...). 
+		int cerr_printf(const char *fmt,...) __attribute__ ((__format__ (__printf__, 2, 3)));;
+		int cwarn_printf(const char *fmt,...) __attribute__ ((__format__ (__printf__, 2, 3)));;
+		int cinfo_printf(const char *fmt,...) __attribute__ ((__format__ (__printf__, 2, 3)));;
+		// You can change the implementation using two function 
+		// pointers: 
+		void SetConsolePrintfFunction(
+			int (*_cerr_printf)(const char *fmt,va_list ap),
+			int (*_cwarn_printf)(const char *fmt,va_list ap),
+			int (*_cinfo_printf)(const char *fmt,va_list ap))
+		{  cerr_printf_func=_cerr_printf;  cwarn_printf_func=_cwarn_printf;
+		   cinfo_printf_func=_cinfo_printf;  }
 };
 
 }  // namespace end 

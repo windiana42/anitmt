@@ -117,6 +117,14 @@ int ParameterSource_File::_ReadFile(const char *_file,int allow_recursion)
 	int errors=0;
 	int *lineno_ptr=&origin.opos;
 	
+	// Section depth stack: 
+	// Stores number of sections we went down at the last "section" 
+	// command. 
+	int *sdstack=NULL;   // array of size [sds_dim]
+	int sds_dim=0;  // stack size
+	int sds_top=-1;  // top index sdstack[sds_top]
+	int ignore_above=-2;  // ignore params in non-existant sections
+	
 	for(;;)
 	{
 		int rls=_ReadLine(fp,lineno_ptr);
@@ -210,20 +218,42 @@ int ParameterSource_File::_ReadFile(const char *_file,int allow_recursion)
 				// Go to subsection with specified name: 
 				// This must be an immediate subsection of the current 
 				// section (newsect->up==curr_sect). 
-				#warning also allow deeper subsections
+				ParamArg::Origin origin(ParamArg::FromFile,file,*lineno_ptr);
 				Section *down=manager->FindSection(sname,curr_sect,
-					/*tell_section_handler=*/1);
+					/*tell_section_handler=*/&origin);
 				if(!down)
-				{  PreprocessorError(PPUnknownSection,&origin,
-					curr_sect,sname);  ++errors;  }
-				else
 				{
-					if(down->up==curr_sect)
-					{  curr_sect=down;  }
-					else
-					{  PreprocessorError(PPUnknownSection,&origin,
-						curr_sect,sname);  ++errors;  }
+					PreprocessorError(PPUnknownSection,&origin,
+						curr_sect,sname);
+					++errors;
+					if(ignore_above==-2)  ignore_above=sds_top;
 				}
+				// Alyways put it on the stack because that is more 
+				// user-friendly (aviod error for too many "*end" 
+				// statements because of misspelled section name. 
+				// Check subsection depth: 
+				int depth=0;
+				if(down)
+				{
+					Section *si=down;
+					for(; si && si!=curr_sect; si=si->up,depth++);
+					assert(si && depth>0);  // Otherwise: down not below curr_sect. 
+				}
+				if(sds_top+1>=sds_dim)  // need to realloc stack
+				{
+					sds_dim+=16;
+					int *oldptr=sdstack;
+					sdstack=(int*)LRealloc(sdstack,sds_dim*sizeof(int));
+					if(!sdstack)
+					{
+						sdstack=oldptr;  sds_dim-=16;
+						errors=-1;  // alloc failure
+						break;
+					}
+				}
+				sdstack[++sds_top]=depth;  // "push"
+				if(down)
+				{  curr_sect=down;  }
 			}
 		}
 		else if(stype==3)  // end
@@ -236,15 +266,24 @@ int ParameterSource_File::_ReadFile(const char *_file,int allow_recursion)
 			// Process end statement: 
 			// We must go one section up but not beyond the file top 
 			// section (file_top_sect)
-			#warning also allow deeper subsections
-			for(int i=0; i<1; i++)
+			if(sds_top<0)
+			{
+				too_many_ends:;
+				PreprocessorError(PPTooManyEndStatements,&origin,
+					curr_sect,NULL);
+				++errors;
+				ignore_above=-2;
+				continue;
+			}
+			for(int depth=sdstack[sds_top--]; depth; depth--)
 			{
 				if(curr_sect==file_top_sect)
-				{   PreprocessorError(PPTooManyEndStatements,&origin,
-					curr_sect,NULL);  ++errors;  break;  }
+				{  goto too_many_ends;  }
 				curr_sect=curr_sect->up;
 				assert(curr_sect);
 			}
+			if(ignore_above!=-2 && sds_top<=ignore_above)
+			{  ignore_above=-2;  }
 		}
 		else  // stype==-1
 		{
@@ -257,6 +296,10 @@ int ParameterSource_File::_ReadFile(const char *_file,int allow_recursion)
 		
 		// Nothing more to do if that was a pp command: 
 		if(stype)  continue;
+		
+		// Ignore params in unknown sections to prevents lots 
+		// of unecessary errors. 
+		if(ignore_above!=-2)  continue;
 		
 		// Check for comments: 
 		if(*line=='#')  continue;
@@ -273,6 +316,8 @@ int ParameterSource_File::_ReadFile(const char *_file,int allow_recursion)
 		if(rv<0)
 		{  ++errors;  }
 	}
+	
+	LFree(sdstack);
 	
 	fclose(fp);
 	return(errors);
