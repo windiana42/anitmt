@@ -338,7 +338,8 @@ AC_MSG_NOTICE([DBGCXXFLAGS = $DBGCXXFLAGS])
 
 
 # Finally write files: 
-AC_CONFIG_FILES([include/Makefile \
+AC_CONFIG_FILES([ \
+	include/Makefile \
 	include/hlib/Makefile \
 	cpp/Makefile \
 	fd/Makefile \
@@ -346,6 +347,8 @@ AC_CONFIG_FILES([include/Makefile \
 	misc/Makefile \
 	crypto/Makefile \
 	Makefile])
+echo "$srcdir/HConfigVars"
+AC_CONFIG_FILES([$srcdir/HConfigVars],[chmod ug+x "$srcdir/HConfigVars"])
 
 # Finally do it: 
 AC_OUTPUT
