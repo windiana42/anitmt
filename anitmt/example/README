@@ -1,5 +1,11 @@
-+ test:    stupid test example
-+ myrobot: moving robots (scalar animation)
-+ circles: rotating circles with anitmt in the middle
++ test/:    stupid test example
++ myrobot/: moving robots (scalar animation)
++ circles/: rotating circles with anitmt in the middle
+(anitmt in the middle is switched off by default, as it needs a lot of time to render)
 
 mpeg.par:  example parameter file for mpeg2encode
+
+make_examples: In order to render all example animations you can run the make_examples script
+(this may take some hours)
+clean_examples: Attention! removes all rendered files in the animation directories of the examples
+
