@@ -24,7 +24,9 @@ void Error(const char *fmt,...)
 {
 	va_list ap;
 	va_start(ap,fmt);
+	fprintf(stderr,"\33[1;31m");
 	vfprintf(stderr,fmt,ap);
+	fprintf(stderr,"\33[00m");
 	va_end(ap);
 }
 
@@ -32,7 +34,9 @@ void Warning(const char *fmt,...)
 {
 	va_list ap;
 	va_start(ap,fmt);
+	fprintf(stderr,"\33[0;31m");
 	vfprintf(stderr,fmt,ap);
+	fprintf(stderr,"\33[00m");
 	va_end(ap);
 }
 
@@ -40,7 +44,23 @@ void Verbose(const char *fmt,...)
 {
 	va_list ap;
 	va_start(ap,fmt);
+	fprintf(stdout,"\33[0;34m");
 	vfprintf(stdout,fmt,ap);
+	fprintf(stdout,"\33[00m");
+	va_end(ap);
+	fflush(stdout);
+}
+
+void VerboseSpecial(const char *fmt,...)
+{
+	// NOTE: VerboseSpecial() adds a newline by itself because of 
+	//       the green beackground...
+	va_list ap;
+	va_start(ap,fmt);
+	//fprintf(stdout,"\33[0;42m");   // <-- green background
+	fprintf(stdout,"\33[1;34m");   // <-- bold blue 
+	vfprintf(stdout,fmt,ap);
+	fprintf(stdout,"\33[00m\n");
 	va_end(ap);
 	fflush(stdout);
 }

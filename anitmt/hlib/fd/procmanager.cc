@@ -137,15 +137,15 @@ pid_t ProcessManager::StartProcess(ProcessBase *pb,
 	const ProcFDs &_pfds,
 	const ProcEnv &env)
 {
-	fprintf(stderr,"ABOUT TO START:");
-	for(int ii=0; args.args[ii]; ii++)
-	{  fprintf(stderr," `%s´",args.args[ii]);  }
-	fprintf(stderr,"<<<\n");
+	//fprintf(stderr,"ABOUT TO START:");
+	//for(int ii=0; args.args[ii]; ii++)
+	//{  fprintf(stderr," `%s´",args.args[ii]);  }
+	//fprintf(stderr,"<<<\n");
 	
 	if(!pb)  return(0);
 	
 	if(limitproc>=0 && nproc>=limitproc)
-	{  return(-8);  }
+	{  return(SPS_ProcessLimitExceeded);  }
 	
 	int flags=misc.pflags;
 	{
@@ -154,20 +154,20 @@ pid_t ProcessManager::StartProcess(ProcessBase *pb,
 			ProcessBase::PF_OnlyKillOwner | 
 			ProcessBase::PF_TermOnDestroy );
 		if(flags!=oflags)
-		{  return(-2);  }
+		{  return(SPS_IllegalFlags);  }
 	}
 	
 	// Check args and envp and path allocation: 
-	if(path.freearray==2)  return(-3);
-	if(args.freearray==2)  return(-4);
-	if(args.freearray==3)  return(-12);
-	if(env.freearray==2)   return(-5);
+	if(path.freearray==2)  return(SPS_PathAllocFailed);
+	if(args.freearray==2)  return(SPS_ArgAllocFailed);
+	if(args.freearray==3)  return(SPS_ArgListError);
+	if(env.freearray==2)   return(SPS_EvnAllocFailed);
 	
 	
 	// Search for binary: 
 	char *binpath=NULL;
 	if(!path.path)
-	{  return(-6);  }
+	{  return(SPS_AccessFailed);  }
 	#warning CHROOT NOT SUPPORTED HERE!!!
 	if(path.path[0]!='/' &&  // not an absolute path 
 	   (path.searchpath || path.plist))
@@ -183,14 +183,14 @@ pid_t ProcessManager::StartProcess(ProcessBase *pb,
 		if(path.plist)
 			for(const RefStrList::Node *n=path.plist->first(); n; n=n->next)
 			{
-				if(n->stype()!=0)  return(-11);  
+				if(n->stype()!=0)  return(SPS_SearchPathError);  
 				size_t tmp=n->len();
 				if(maxlen<tmp)  maxlen=tmp;
 			}
 		
 		// We need 2 bytes more: one for a `/' and one for a \0. 
 		binpath=(char*)LMalloc(strlen(path.path)+maxlen+2);
-		if(!binpath)  return(-1);
+		if(!binpath)  return(SPS_LMallocFailed);
 		if(path.searchpath)
 			for(int i=0; path.searchpath[i]; i++)
 			{
@@ -205,13 +205,13 @@ pid_t ProcessManager::StartProcess(ProcessBase *pb,
 			}
 		
 		LFree(binpath);
-		return(-6);
+		return(SPS_AccessFailed);
 		found:;
 	}
 	else 
 	{
 		if(access(path.path,X_OK))
-		{  return(-6);  }
+		{  return(SPS_AccessFailed);  }
 		binpath=(char*)path.path;
 	}
 	
@@ -225,7 +225,7 @@ pid_t ProcessManager::StartProcess(ProcessBase *pb,
 		{
 			n=NEW<Node>();
 			if(!n)
-			{  retval=-1;  goto doreturn1;  }
+			{  retval=SPS_LMallocFailed;  goto doreturn1;  }
 			n->pb=pb;
 			n->flags=flags;
 		}
@@ -233,7 +233,7 @@ pid_t ProcessManager::StartProcess(ProcessBase *pb,
 		// Copy _pfds: 
 		ProcFDs pfds;
 		if(pfds.Copy(_pfds))
-		{  retval=-1;  goto doreturn2;  }
+		{  retval=SPS_LMallocFailed;  goto doreturn2;  }
 		
 		// Now, do the hard part: 
 		// Aquire pipe for execution failure detection. 
@@ -243,18 +243,18 @@ pid_t ProcessManager::StartProcess(ProcessBase *pb,
 			{  rv=pipe(pipefds);  }
 			while(rv<0 && errno==EINTR);
 			if(rv)
-			{  retval=-9;  goto doreturn2;  }
+			{  retval=SPS_PipeFailed;  goto doreturn2;  }
 		}
 		// Write end of pipe must close on exec: 
 		if(fcntl(pipefds[1],F_SETFD,FD_CLOEXEC))
-		{  retval=-10;  goto doreturn3;  }
+		{  retval=SPS_FcntlPipeFailed;  goto doreturn3;  }
 		// Set non-blocking flag on read side: 
 		if(SetNonblocking(pipefds[0]))
-		{  retval=-10;  goto doreturn3;  }
+		{  retval=SPS_FcntlPipeFailed;  goto doreturn3;  }
 		// read on pipefds[0], write on pipefds[1] 
 		// Allocate poll node: 
 		if(PollFD(pipefds[0],0))  // return value >0 should never happen here
-		{  retval=-1;  goto doreturn3;  }
+		{  retval=SPS_LMallocFailed;  goto doreturn3;  }
 		
 		// Really fork...
 		pid_t pid;
@@ -262,7 +262,7 @@ pid_t ProcessManager::StartProcess(ProcessBase *pb,
 		{  pid=fork();  }    // ``Point of no return'' 
 		while(pid<0 && errno==EINTR);
 		if(pid<0)
-		{  retval=-7;  goto doreturn3;  }
+		{  retval=SPS_ForkFailed;  goto doreturn3;  }
 		if(pid>0)  // parent thread
 		{
 			// Close write end of pipe:
@@ -392,6 +392,12 @@ pid_t ProcessManager::StartProcess(ProcessBase *pb,
 			#warning ignore nice errors?
 			if(nice(misc.pniceval))
 			{  _ChildExit(pipefds[1],PSNiceFailed,errno);  }  // exit child's thread 
+		}
+		if(misc.call_setsid)
+		{
+			pid_t rv=setsid();
+			if(rv==-1 && misc.call_setsid!=2)
+			{  _ChildExit(pipefds[1],PSSetSidFailed,errno);  }  // exit child's thread 
 		}
 		if((misc.useflags & ProcMisc::UseGID))
 		{
@@ -731,8 +737,8 @@ void ProcessManager::_FillProcStatus(Node *n,ProcStatus *ps,
 	
 	ps->endtime=sig->time;   // when the signal was caught
 	// Set according to rusage info which is also more exactly. 
-	//ps->utime_seconds=double(sig->info.si_stime)/double(CLOCKS_PER_SEC);
-	//ps->stime_seconds=double(sig->info.si_utime)/double(CLOCKS_PER_SEC);
+	//ps->utime_seconds=double(sig->info.si_utime)/double(CLOCKS_PER_SEC);
+	//ps->stime_seconds=double(sig->info.si_stime)/double(CLOCKS_PER_SEC);
 	ps->pid=sig->info.si_pid;
 	ps->uid=sig->info.si_uid;
 	ps->sigcode=sig->info.si_code;

@@ -48,7 +48,7 @@ int TaskSourceFactory_Local::_CheckFramePattern(const char *name,RefString *s)
 	}  while(0);
 	if(!ptr)
 	{
-		Error("Invalid %s frame pattern \"%s\".\n",name,s->str());
+		Error("Local: Invalid %s frame pattern \"%s\".\n",name,s->str());
 		return(1);
 	}
 	return(0);
@@ -65,7 +65,7 @@ int TaskSourceFactory_Local::FinalInit()
 		oformat=component_db()->FindImageFormatByName(oformat_string.str());
 		#warning NEED -list-imgfmt TO LIST IMAGE FORMATS. 
 		if(!oformat)
-		{  Error("Image (output) format \"%s\" not recognized.\n",
+		{  Error("Local: Image (output) format \"%s\" not recognized.\n",
 			oformat_string.str());  ++failed;  }
 		oformat_string.set(NULL);
 	}
@@ -81,7 +81,7 @@ int TaskSourceFactory_Local::FinalInit()
 	rdesc=component_db()->FindRenderDescByName(rdesc_string.str());
 	if(!rdesc)
 	{
-		Error("Unknown render DESC named \"%s\".\n",rdesc_string.str());
+		Error("Local: Unknown render DESC named \"%s\".\n",rdesc_string.str());
 		++failed;
 	}
 	
@@ -116,8 +116,11 @@ int TaskSourceFactory_Local::FinalInit()
 	
 	if(!failed)
 	{
-		Verbose("Local task source: jump=%d; nframes=%d; startframe=%d\n",
-			fjump,nframes,startframe);
+		char nf_tmp[24];
+		if(nframes>=0)  snprintf(nf_tmp,24,"%d",nframes);
+		else  strcpy(nf_tmp,"[unlimited]");
+		Verbose("Local task source: jump: %d; nframes: %s; startframe: %d%s\n",
+			fjump,nf_tmp,startframe,cont_flag ? " [cont]" : "");
 		Verbose("  Renderer: %s (%s driver); output format: %s (%d bpp)\n",
 			rdesc->name.str(),rdesc->dfactory->DriverName(),
 			oformat->name,oformat->bitspp);
@@ -147,21 +150,29 @@ int TaskSourceFactory_Local::CheckParams()
 		height=strtol(ptr,&end,0);
 		if(end<=ptr || *end)  valid=0;
 		if(!valid || width<=0 || height<=0)
-		{  Error("Illegal size spec \"%s\".\n",size_string.str());
+		{  Error("Local: Illegal size spec \"%s\".\n",size_string.str());
 			++failed;  }
 	}
 	
 	if(!fjump)
 	{
 		fjump=1;
-		Warning("Illegal frame jump value 0 corrected to 1.\n");
+		Warning("Local: Illegal frame jump value 0 corrected to 1.\n");
 	}
 	
-	if(nframes<0)
+	if(nframes<0 && fjump<0)
 	{
-		Error("Illegal value for nframes=%d\n",nframes);
+		Error("Local: Cannot use unlimited nframes value (nframes not specified\n"
+			"Local:   or negative value) combined with reverse jumps (%d).\n",
+			fjump);
 		++failed;
 	}
+	
+	if(response_delay<0)
+	{  response_delay=0;  }
+	
+	if(response_delay)
+	{  Warning("Local: You set resonse delay %ld msec.\n",response_delay);  }
 	
 	return(failed ? 1 : 0);
 }
@@ -174,8 +185,14 @@ int TaskSourceFactory_Local::_RegisterParams()
 	
 	AddParam("fjump|j","frame jump value; use negative values to "
 		"process last frames first",&fjump);
-	AddParam("nframes|n","number of frames to process",&nframes);
+	AddParam("nframes|n","number of frames to process; if you do not "
+		"specify or use negative value -> unlimited (as long as input "
+		"files exist)",&nframes);
 	AddParam("startframe|f0","first frame to process",&startframe);
+	
+	AddParam("continue|cont","continue; don't render frames which have "
+		"already been rendered (i.e. image exists and is newer than input)",
+		&cont_flag);
 	
 	AddParam("size|s","size (WWWxHHH) of created images",&size_string);
 	
@@ -187,8 +204,13 @@ int TaskSourceFactory_Local::_RegisterParams()
 	AddParam("oformat","image output format (must be supported by "
 		"render/filter driver)",&oformat_string);
 	
-	AddParam("renderer|rd","renderer to use (render DESC name)\n",
+	AddParam("renderer|rd","renderer to use (render DESC name)",
 		&rdesc_string);
+	AddParam("rargs","additional args to be passed to the renderer",
+		&radd_args);
+	
+	AddParam("response-delay","local task source response delay in msec; "
+		"mainly useful in debugging",&response_delay);
 	
 	return(add_failed ? (-1) : 0);
 }
@@ -217,9 +239,10 @@ TaskSourceFactory_Local::TaskSourceFactory_Local(
 	outp_frame_pattern(failflag),
 	size_string(failflag),
 	oformat_string(failflag),
-	rdesc_string(failflag)
+	rdesc_string(failflag),
+	radd_args(failflag)
 {
-	nframes=0;
+	nframes=-1;  // unlimited
 	startframe=0;
 	fjump=1;
 	
@@ -227,6 +250,10 @@ TaskSourceFactory_Local::TaskSourceFactory_Local(
 	height=240;
 	
 	oformat=NULL;
+	rdesc=NULL;
+	
+	cont_flag=false;
+	response_delay=0;
 	
 	int failed=0;
 	

@@ -90,6 +90,7 @@ TaskParams::TaskParams(int *failflag=NULL) :
 	dtype=DTNone;
 	
 	niceval=NoNice;
+	call_setsid=false;
 	timeout=-1;
 };
 
@@ -124,7 +125,8 @@ TaskStructBase::~TaskStructBase()
 /******************************************************************************/
 
 TaskDriver::PInfo::PInfo(int *failflag) : 
-	args(failflag)
+	args(failflag),
+	tes(failflag)
 {
 	pid=-1;
 	tsb=NULL;
@@ -139,4 +141,55 @@ TaskDriver::PInfo::~PInfo()
 	tsb=NULL;
 	tp=NULL;
 	ctsk=NULL;
+}
+
+
+/******************************************************************************/
+
+const char *TaskExecutionStatus::JK_String(int jk_value)
+{
+	switch(jk_value)
+	{
+		case JK_UserInterrupt:  return("user interrupt");
+		// JK_ServerError: rendview does not want to go on for what reason ever
+		case JK_ServerError:  return("rendview error");
+		case JK_FailedToExec:  return("failed to start job");
+		case JK_InternalError:  return("internal error");
+	}
+	return("???");
+}
+
+const char *TaskExecutionStatus::StatusString()
+{
+	static char tmp[64];
+	switch(status)
+	{
+		case TTR_Unset:  return("unspecified");
+		case TTR_Success:  return("success");
+		case TTR_Timeout:  return("timeout");
+		case TTR_ExecFailed:
+			snprintf(tmp,64,"execution failed: %s",JK_String(signal));
+			return(tmp);
+		case TTR_RunFail:
+			snprintf(tmp,64,"failed: job exited with non-zero code %d",signal);
+			return(tmp);
+		case TTR_ATerm:
+			snprintf(tmp,64,"job (abnormally) killed by signal %d",signal);
+			return(tmp);
+		case TTR_JobTerm:
+			snprintf(tmp,64,"job killed by rendview: %s",JK_String(signal));
+			return(tmp);
+		// default: see below
+	}
+	return("???");
+}
+
+TaskExecutionStatus::TaskExecutionStatus(int * /*failflag*/) : 
+	starttime(HTime::Null),
+	endtime(HTime::Null),
+	utime(HTime::Null),
+	stime(HTime::Null)
+{
+	status=TTR_Unset;
+	signal=0;
 }

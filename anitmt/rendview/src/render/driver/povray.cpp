@@ -17,6 +17,7 @@
 #include "povray.hpp"
 
 #include <tsource/taskfile.hpp>
+#include <tsource/tasksource.hpp>
 
 #include <assert.h>
 
@@ -32,38 +33,52 @@ int POVRayDriver::ProcessError(ProcessErrorInfo *pei)
 		i.e. POVRayDriver::ProcessError() should call a function on higher level \
 		unless the error is really POVRay-specific. 
 	
+	char _frame_no_str[24];
+	if(pei->pinfo && pei->pinfo->ctsk && pei->pinfo->ctsk->frame_no>=0)
+	{  snprintf(_frame_no_str,24,"%d",pei->pinfo->ctsk->frame_no);  }
+	else
+	{  strcpy(_frame_no_str,"???");  }
+	
 	//const RenderTaskParams *rtp=(const RenderTaskParams*)pei->pinfo->tp;
 	const RenderTask *rt=(const RenderTask *)pei->pinfo->tsb;
 	
+	const char *tmp=NULL;
+	const char *errno_str=NULL;
 	switch(pei->reason)
 	{
 		// *** verbose messages: ***
 		case PEI_Starting:
 			if(!settings()->verbose)  break;
-			Verbose("POV: Starting POVRay.\n");
+			Verbose("POV: Starting POVRay [frame %s].\n",_frame_no_str);
 			print_cmd=2;
 			break;
 		case PEI_StartSuccess:
+			if(!settings()->verbose)  break;
+			Verbose("POV: Forked to launch POVRay...\n");
+			break;
 		case PEI_ExecSuccess:
 			if(!settings()->verbose)  break;
-			Verbose("POV: POVRay started successfully.\n");
+			Verbose("POV: POVRay started successfully [frame %s].\n",
+				_frame_no_str);
 			break;
 		case PEI_RunSuccess:
 			if(!settings()->verbose)  break;
-			Verbose("POV: POVRay terminated successfully.\n");
+			Verbose("POV: POVRay terminated successfully [frame %s].\n",
+				_frame_no_str);
 			break;
 		
 		// *** warning/error messages (as you like to define it): ***
 		case PEI_Timeout:
-			Error("POV: POVRay exceeded time limit (%ld s).\n",
-				(pei->pinfo->tp->timeout+500)/1000);
+			Error("POV: POVRay [frame %s] exceeded time limit (%ld s).\n",
+				_frame_no_str,(pei->pinfo->tp->timeout+500)/1000);
 			print_cmd=1;
 			break;
 		
 		// *** error messages: ***
 		case PEI_StartFailed:
-			Error("POV: Failed to start POVRay. Probably binary not found. "
-				"(FIXME: need details!!)\n");
+			Error("POV: Failed to start POVRay [frame %s].\n",_frame_no_str);
+			tmp=StartProcessErrorString(pei,&errno_str);
+			Error("POV:   Error: %s%s\n",tmp,errno_str ? errno_str : "");
 			Error("POV:   Binary: %s\n",rt->rdesc->binpath.str());
 			Error("POV:   Search path:");
 			for(const RefStrList::Node *i=component_db()->GetBinSearchPath(
@@ -75,13 +90,11 @@ int POVRayDriver::ProcessError(ProcessErrorInfo *pei)
 				"contains absolute path\n");  }
 			break;
 		case PEI_ExecFailed:
-			Error("POV: Failed to execute POVRay. (FIXME: need details!!)\n");
-			Error("POV:   code: %d %d %d (%s)\n",
-				pei->ps->action,pei->ps->detail,pei->ps->estatus,
-				strerror(pei->ps->estatus));
+			Error("POV: Failed to execute POVRay [frame %s].\n",_frame_no_str);
+			Error("POV:   Failure: %s\n",PSFailedErrorString(pei));
 			break;
 		case PEI_RunFailed:
-			Error("POV: POVRay execution failed.\n");
+			Error("POV: POVRay [frame %s] execution failed.\n",_frame_no_str);
 			Error("POV:   Failure: ");
 			switch(pei->ps->detail)
 			{
@@ -91,7 +104,7 @@ int POVRayDriver::ProcessError(ProcessErrorInfo *pei)
 					print_cmd=1;
 					break;
 				case PSKilled:
-					Error("Killed by signal %s (pid %ld)\n",
+					Error("Killed by signal %d (pid %ld)\n",
 						pei->ps->estatus,long(pei->pinfo->pid));
 					break;
 				case PSDumped:
@@ -117,7 +130,7 @@ int POVRayDriver::ProcessError(ProcessErrorInfo *pei)
 	}
 	else if(print_cmd==2)
 	{
-		Verbose("POV:  Command:");
+		Verbose("POV:   Command:");
 		for(const RefStrList::Node *i=pei->pinfo->args.first(); i; i=i->next)
 		{  Verbose(" %s",i->str());  }
 		Verbose("\n");
@@ -209,11 +222,23 @@ int POVRayDriver::Execute(
 	if(rtp && rtp->wdir)   pmisc.wdir(rtp->wdir);
 	// niceval set by TaskDriver. 
 	
+	// Fiddle around with the FDs if needed: 
+	ProcessBase::ProcFDs sp_f;
+	if(rtp)
+	{
+		int fail=0;
+		if(rtp->stdin_fd>=0)   fail|=sp_f.Add(rtp->stdin_fd, 0);
+		if(rtp->stdout_fd>=0)  fail|=sp_f.Add(rtp->stdout_fd,1);
+		if(rtp->stderr_fd>=0)  fail|=sp_f.Add(rtp->stderr_fd,2);
+		if(fail)  return(-1);
+	}
+	
 	// Okay, construct the command line: 
 	ProcessBase::ProcPath sp_p(
 		rt->rdesc->binpath,
 		component_db()->GetBinSearchPath(rt->dtype));
-	ProcessBase::ProcFDs sp_f;
+	
+	// Yeah... and pass standard environment: 
 	ProcessBase::ProcEnv sp_e;
 	int rv=RenderDriver::StartProcess(rt,rtp,&sp_p,&args,&pmisc,&sp_f,&sp_e);
 	

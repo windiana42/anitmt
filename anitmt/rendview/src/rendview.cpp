@@ -18,6 +18,9 @@
 #include "taskmanager.hpp"
 #include "tsource/tsfactory.hpp"
 
+// These are only needed for srandom()...
+#include <time.h>
+#include <unistd.h>
 
 char *prg_name=NULL;
 
@@ -26,6 +29,8 @@ static const char *fti="Failed to initialize %s.\n";
 
 static int MAIN(int argc,char **argv,char **envp)
 {
+	srandom(time(NULL)*getpid());
+	
 	Verbose("Setting up managers: [FD] ");
 	FDManager *fdman=NEW<FDManager>();
 	if(!fdman)
@@ -56,12 +61,21 @@ static int MAIN(int argc,char **argv,char **envp)
 		NULL,         // package name
 		"rendview");  // program name
 	parman->AdditionalHelpText(
-		"Rendview is a utility to render (and postprocess) animations. "
+		"RendView is a utility to render (and postprocess) animations. "
 		"While the actual rendering is done by some render application "
 		"like e.g. POVRay and the real animation logic is computed by a "
 		"animation calculator like aniTMT, rendview can be used to "
-		"have the render program actually generate the frames calculated "
-		"[and later create a film of them].");
+		"have the render program actually generate the frames calculated. "
+		"RendView has sopthistcated job control and allows you to start "
+		"several processes in parallel as well as only processing "
+		"changed/not-yet-done frames.\n"
+		"NOTE: Pressig ^C (SIGINT) on the terminal will tell RendView to "
+		"start no more processes and wait for all current jobs to "
+		"exit; pressing ^C twice will kill all jobs. In either way "
+		"rendview exits cleanly. Pressing ^C three times makes "
+		"RendView abort. SIGTERM acts like two ^C.");
+		// ...as well as only rendering changed frames or resuming operation
+		// ...and later create a film of them...
 	
 	Verbose("[CDB] ");
 	ComponentDataBase *cdb=NEW1<ComponentDataBase>(parman);
@@ -188,9 +202,11 @@ int main(int argc,char **argv,char **envp)
 	
 	if(lmu.curr_used || lmu.used_chunks)
 	{
+		fprintf(stderr,"\33[1;31m");
 		fprintf(stderr,"%s: YOU PROBABLY FOUND A MEMORY LEAK IN %s.\n"
 			"%s: PLEASE FIND OUT HOW TO REPRODUCE IT AND REPORT THIS BUG TO THE AUTHOR\n",
 			prg_name,prg_name,prg_name);
+		fprintf(stderr,"\33[00m");
 	}
 	
 	return(rv);

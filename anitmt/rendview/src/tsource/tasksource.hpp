@@ -39,10 +39,16 @@ struct CompleteTask : LinkedListBase<CompleteTask>
 		ToBeFiltered
 	} state;
 	
+	// Returns string representation of State: 
+	static const char *StateString(State s);
+	
 	// If this CompleteTask is currently processed, td is a pointer to 
 	//    the TaskDriver which is currently processing the task. 
 	// If the CompleteTask currently is NOT processed, this is NULL. 
 	TaskDriver *td;
+	
+	// Frame number (only used for user output). 
+	int frame_no;
 	
 	// Allocated for CompleteTask and freed by destructor ~CompleteTask(). 
 	RenderTask *rt;   // or NULL 
@@ -52,6 +58,10 @@ struct CompleteTask : LinkedListBase<CompleteTask>
 	// Set up to be NULL by task source. 
 	RenderTaskParams *rtp;   // or NULL
 	FilterTaskParams *ftp;   // or NULL
+	
+	// Render and filter task execution status: 
+	TaskExecutionStatus rtes;
+	TaskExecutionStatus ftes;
 	
 	// FIXME: MISSING: what to do with result files?? [or in TaskFile]
 	

@@ -93,30 +93,3 @@ long long HTime::_Delta(const HTime *endtime) const
 		(((long long)tv.tv_sec)*1000000LL+((long long)tv.tv_usec)) );
 }
 
-
-HTime HTime::operator-(const HTime &start)
-{
-	HTime r;
-	
-	#warning check me...
-	r.tv.tv_sec= tv.tv_sec- start.tv.tv_sec;
-	r.tv.tv_usec=tv.tv_usec-start.tv.tv_usec;
-	if(r.tv.tv_usec<0 && r.tv.tv_sec>=0)
-	{  --r.tv.tv_sec;  r.tv.tv_usec+=1000000;  }
-	if(r.tv.tv_usec>=0 && r.tv.tv_sec<0)
-	{  ++r.tv.tv_sec;  r.tv.tv_usec-=1000000;  }
-	
-	return(r);
-}
-
-HTime &HTime::operator-=(const HTime &start)
-{
-	tv.tv_sec-= start.tv.tv_sec;
-	tv.tv_usec-=start.tv.tv_usec;
-	if(tv.tv_usec<0 && tv.tv_sec>=0)
-	{  --tv.tv_sec;  tv.tv_usec+=1000000;  }
-	if(tv.tv_usec>=0 && tv.tv_sec<0)
-	{  ++tv.tv_sec;  tv.tv_usec-=1000000;  }
-	
-	return(*this);
-}

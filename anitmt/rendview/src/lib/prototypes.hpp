@@ -21,6 +21,7 @@
 void Error(const char *fmt,...);
 void Warning(const char *fmt,...);
 void Verbose(const char *fmt,...);
+void VerboseSpecial(const char *fmt,...);
 
 // Returns number of CPUs; assumes one CPU is detection fails. 
 int GetNumberOfCPUs();

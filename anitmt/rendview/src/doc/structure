@@ -19,6 +19,7 @@ LLB = LinkedListBase<>
  | TaskDriverType dtype;                 |
  | RefStrList add_args;                  |
  | int niceval;                          |
+ | int call_setsid;                      |
  | long timeout;                         |
  | RefString crdir;                      |
  | RefString wdir;                       |

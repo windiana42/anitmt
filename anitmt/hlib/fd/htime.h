@@ -22,6 +22,8 @@
 
 #include <sys/time.h>
 
+#warning !!!!! HTime is bugged for times (delta) < 0. REWRITE !!!!!
+
 // timeval and time_t replacement 
 class HTime
 {
@@ -29,6 +31,7 @@ class HTime
 		enum TimeSpec
 		{  usec=0,msec,seconds,minutes,hours,days,_tslast  };
 		enum _CurrentTime { Curr };
+		enum _NullTime { Null };
 	private:
 		timeval tv;
 		static const long long conv_fact[];
@@ -46,6 +49,7 @@ class HTime
 	public:  _CPP_OPERATORS
 		HTime()  { }
 		HTime(_CurrentTime)  {  SetCurr();  }
+		HTime(_NullTime)  {  tv.tv_sec=0;  tv.tv_usec=0;  }
 		~HTime()  { }
 		
 		// Copy: 
@@ -85,6 +89,10 @@ class HTime
 		// Calc time differences: (*this = endtime)
 		HTime operator-(const HTime &start);
 		HTime &operator-=(const HTime &start);
+		
+		// Add time differences: 
+		HTime operator+(const HTime &start);
+		HTime &operator+=(const HTime &start);
 		
 		// To compare time values: 
 		inline int operator==(const HTime &h) const

@@ -49,6 +49,13 @@ class TaskSourceFactory_Local :
 		RefString rdesc_string;
 		const RenderDesc *rdesc;
 		
+		// Additional args for the renderer: 
+		RefStrList radd_args;
+		
+		// Passed -continue?
+		bool cont_flag;
+		long response_delay;
+		
 		int _CheckFramePattern(const char *name,RefString *s);
 		
 		int _RegisterParams();

@@ -63,6 +63,7 @@ struct InternalProcessBase
 		PSChrootFailed,    // chdir(); chroot(".") failed [chroot dir]
 		PSChdirFailed,     // chdor() failed [working dir]
 		PSNiceFailed,      // nice() failed
+		PSSetSidFailed,    // setsid() failed (and failure not ignored)
 		PSSetGidFailed,    // setgid() failed
 		PSSetUidFailed,    // setuid() failed
 		PSFunctionFailed,  // user-supplied function returned error
@@ -102,6 +103,24 @@ struct InternalProcessBase
 		               // (Only !=this if AlwaysNotify is set.)
 		// ** NOTE that uid_t is unsigned so that you must check 
 		//    if(uid!=uid_t(-1)) and NOT if(uid<0). 
+	};
+	
+	// Error return values of StartProcess(): 
+	enum // StartProcessStatus
+	{
+		// VALUES MUST ALL BE NEGATIVE!
+		SPS_LMallocFailed=-1,
+		SPS_IllegalFlags=-2,
+		SPS_PathAllocFailed=-3,
+		SPS_ArgAllocFailed=-4,
+		SPS_EvnAllocFailed=-5,
+		SPS_AccessFailed=-6,   // access(X_OK) failed; program not found
+		SPS_ForkFailed=-7,
+		SPS_ProcessLimitExceeded=-8,
+		SPS_PipeFailed=-9,   // pipe(2) failed
+		SPS_FcntlPipeFailed=-10,  // fcntl(2) on pipe failed
+		SPS_SearchPathError=-11,
+		SPS_ArgListError=-12
 	};
 	
 	// Used as arguments to StartProcess: 
@@ -215,10 +234,11 @@ struct InternalProcessBase
 			enum { UseNice=0x1, UseUID=0x2, UseGID=0x4 };
 			int useflags;  // OR of the enum above 
 
-			// These settings are listed in the way they are set 
+			// These settings are listed in the order they are set 
 			// after fork() and before execve(): 
 			const char *pcrdir;  // change root directory (chdir(), chroot()) [not copied]
 			const char *pwdir;   // working directory (chdir()) [not copied]
+			int call_setsid;     // call setsid() (0 -> no; 1 -> yes; 2 -> allow fail)
 			int pniceval;        // nice value (nice())
 			gid_t pgid;          // gid (setgid())
 			uid_t puid;          // uid (setuid())
@@ -230,7 +250,7 @@ struct InternalProcessBase
 			ProcMisc(const ProcMisc &)  { }  // don't copy
 			void operator=(const ProcMisc &)  { }
 		public:  _CPP_OPERATORS
-			ProcMisc()  {  pflags=0; pcrdir=NULL; pwdir=NULL; 
+			ProcMisc()  {  pflags=0; pcrdir=NULL; pwdir=NULL; call_setsid=0;
 				pfuncarg=NULL; pfuncptr=NULL; useflags=0;  }
 			~ProcMisc()  { }
 			
@@ -250,6 +270,9 @@ struct InternalProcessBase
 			// Set UID and GID: 
 			ProcMisc *uid(uid_t _uid)  {  puid=_uid;  useflags|=UseUID;  return(this);  }
 			ProcMisc *gid(gid_t _gid)  {  pgid=_gid;  useflags|=UseGID;  return(this);  }
+			
+			// call setsid() (0 -> no; 1 -> yes; 2 -> allow fail)
+			ProcMisc *setsid(int y)  {  call_setsid=y;  return(this);  }
 			
 			// Set function to be called before the execve() call in the 
 			// child's thread. funcarg is passed to func as an argument. 

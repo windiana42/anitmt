@@ -76,10 +76,25 @@ TaskSource::~TaskSource()
 
 /******************************************************************************/
 
-CompleteTask::CompleteTask(int * /*failflag*/) : 
-	LinkedListBase<CompleteTask>()
+const char *CompleteTask::StateString(State s)
+{
+	switch(s)
+	{
+		case TaskDone:  return("done");
+		case ToBeRendered:  return("to be rendered");
+		case ToBeFiltered:  return("to be filtered");
+		// default: see below
+	}
+	return("???");
+}
+
+CompleteTask::CompleteTask(int * failflag) : 
+	LinkedListBase<CompleteTask>(),
+	rtes(failflag),
+	ftes(failflag)
 {
 	state=TaskDone;  // okay. 
+	frame_no=-1;
 	td=NULL;
 	rt=NULL;   ft=NULL;
 	ftp=NULL;  ftp=NULL;

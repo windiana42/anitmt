@@ -77,7 +77,8 @@ void TaskSourceConsumer::_TSWriteError_GetTask(const TSNotifyInfo *ni)
 			Verbose("TS: %s to retrieve task.\n",wfts);
 			break;
 		case GTSGotTask:
-			Verbose("TS: Okay, got task from task source.\n");
+			Verbose("TS: Okay, got task [frame %d] from task source.\n",
+				ni->ctsk->frame_no);
 			#warning more info?
 			break;
 		case GTSAllocFailed:

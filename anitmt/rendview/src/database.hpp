@@ -94,6 +94,7 @@ class ComponentDataBase :
 			const char *name,TaskDriverType _dtype);
 		TaskSourceFactory *_FindSourceFactoryByName(const char *name);
 		
+		int _RegisterParams();
 		int _RegisterParams(TaskDriverType dtype);
 		int _RegisterDescParams(TaskDriverType dtype,RF_DescBase *d);
 		void _RegisterRenderDescParams(RenderDesc *rd);

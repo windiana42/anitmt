@@ -356,21 +356,39 @@ int ComponentDataBase::parse(const Section *s,PAR::SPHInfo *info)
 int ComponentDataBase::PrintSpecialHelp(RefStrList *dest,
 	const SpecialHelpItem *shi)
 {
-	assert(shi->item_id>=0 && shi->item_id<_DTLast);
-	
-	RefString tmp;
-	tmp.sprintf(0,"List of available %s drivers:",
-		DTypeString((TaskDriverType)shi->item_id));
-	dest->append(tmp);
-	
-	for(const TaskDriverFactory *i=ift[shi->item_id].drivers.first(); i; 
-		i=ift[shi->item_id].drivers.next(i))
+	if(shi->item_id>=0 && shi->item_id<_DTLast)
 	{
-		tmp.sprintf(0,"\r2+:%s:",i->DriverName());
+		// List render / filter drivers: 
+		
+		RefString tmp;
+		tmp.sprintf(0,"List of available %s drivers:",
+			DTypeString((TaskDriverType)shi->item_id));
 		dest->append(tmp);
-		tmp.sprintf(0,"\r4:  %s",i->DriverDesc());
-		dest->append(tmp);
+		
+		for(const TaskDriverFactory *i=ift[shi->item_id].drivers.first(); i; 
+			i=ift[shi->item_id].drivers.next(i))
+		{
+			tmp.sprintf(0,"\r2+:%s:",i->DriverName());
+			dest->append(tmp);
+			tmp.sprintf(0,"\r4:  %s",i->DriverDesc());
+			dest->append(tmp);
+		}
 	}
+	else if(shi->item_id==-1)
+	{
+		// List image formats:
+		RefString tmp;
+		tmp.set("List of knwon image formats:");  dest->append(tmp);
+		tmp.set("\r2:name  bpp  ext");  dest->append(tmp);
+		
+		for(const ImageFormat *i=iflist.first(); i; i=i->next)
+		{
+			tmp.sprintf(0,"\r2:%-4s  %3d  %-3s",
+				i->name,i->bitspp,i->file_extension);
+			dest->append(tmp);
+		}
+	}
+	else assert(0);
 	
 	return(0);
 }
@@ -551,10 +569,6 @@ void ComponentDataBase::_RegisterFilterDescParams(FilterDesc *fd)
 
 int ComponentDataBase::_RegisterParams(TaskDriverType dtype)
 {
-	// First all those in the top section: 
-	if(SetSection(NULL))
-	{  return(-1);  }
-	
 	InfoPerType *dti=&ift[dtype];
 	StaticInfoPerType *sdti=&static_ift[dtype];
 	
@@ -577,21 +591,39 @@ int ComponentDataBase::_RegisterParams(TaskDriverType dtype)
 	// Parameters which are the same for render and filter: 
 	AddParam("searchpath","search path for program binary",&dti->searchpath);
 	
-	// May add a special function here which adds parameters 
-	// which are special (not common) for render/filter:
-	//switch(dtype)
-	//{
-	//	case DTRender:  _RegisterParams_Render();  break;
-	//	case DTFilter:  _RegisterParams_Filter();  break;
-	//	default:  assert(0);  break;
-	//}
-	
 	// As section parameter handler, the database subscribes at 
 	// rd and fd sections. 
 	if(SectionParameterHandler::Attach(dti->i_section))
 	{  ++add_failed;  }
 	
 	return(add_failed ? (-1) : 0);
+}
+
+
+int ComponentDataBase::_RegisterParams()
+{
+	int failed=0;
+	
+	// First all those in the top section: 
+	if(SetSection(NULL))
+	{  return(-1);  }
+	
+	// insert some params for top section...
+	
+	if(_RegisterParams(DTRender))  ++failed;
+	if(_RegisterParams(DTFilter))  ++failed;
+	
+	// Special option to list image formats: 
+	SpecialHelpItem shi;
+	static const char *_list_imgfmt_opt_str="list-imgfmt";
+	static const char *_list_imgfmt_dest_str="list known image formats";
+	shi.optname=_list_imgfmt_opt_str;
+	shi.descr=_list_imgfmt_dest_str;
+	shi.item_id=-1;
+	AddSpecialHelp(&shi);
+	
+	if(add_failed)  ++failed;
+	return(failed);
 }
 
 
@@ -618,8 +650,8 @@ ComponentDataBase::ComponentDataBase(par::ParameterManager *pman,int *failflag) 
 	// Okay, now all that parameter stuff: 
 	if(!failed)
 	{
-		if(_RegisterParams(DTRender))  ++failed;
-		if(_RegisterParams(DTFilter))  ++failed;
+		if(_RegisterParams())
+		{  ++failed;  }
 	}
 	
 	if(failflag)

@@ -66,11 +66,17 @@ class TaskManager :
 			int maxjobs;
 			// Nice value or NoNiceValSpec
 			int niceval;
+			// Call setsid() (recommended): 
+			bool call_setsid;
 			// Change nice value by +-1 
 			bool nice_jitter;
 			// Execution timeout or -1: 
 			long timeout;
 		} prm[_DTLast];
+		
+		// What to do with renderer FDs: 
+		bool mute_renderer,quiet_renderer;
+		int dev_null_fd;  // or -1
 		
 		// Number of running tasks: 
 		int running_jobs[_DTLast];
@@ -88,7 +94,8 @@ class TaskManager :
 		int abort_on_signal : 1;  // abort on next SIGINT/SIGTERM
 		int schedule_quit : 3;  // 1 -> exit(0); 2 -> exit(1)
 		int schedule_quit_after : 3;  // 1 -> exit(0); 2 -> exit(1)
-		int kill_task_and_quit_now : 3;  // 0,1,2
+		int kill_tasks_and_quit_now : 1;  // 0,1
+		int sched_kill_tasks : 3;  // 0,1,2
 		
 		// State flags (A): 
 		int connected_to_tsource : 1;
@@ -98,7 +105,7 @@ class TaskManager :
 		int ts_done_all_first : 1;
 		
 		// Padding bits: 
-		int _pad : 16;
+		int _pad : 15;
 		
 		// State flags (B): 
 		TSAction pending_action;
@@ -116,6 +123,8 @@ class TaskManager :
 		void _TS_GetOrDoneTask();
 		
 		inline bool _ProcessedTask(const CompleteTask *ctsk);
+		bool _RenderedTask(const CompleteTask *ctsk);
+		bool _FilteredTask(const CompleteTask *ctsk);
 		
 		bool _TS_CanDo_DoneTask(CompleteTask **special_done=NULL);
 		bool _TS_CanDo_GetTask(bool can_done);
@@ -131,11 +140,16 @@ class TaskManager :
 		
 		// These are called by _schedule(): 
 		int _StartProcessing();   // actually starts things 
-		int _LaunchJobForTask(CompleteTask *ctsk);
-		void _HandleFailedJob(CompleteTask *ctsk);
+		int _LaunchJobForTask(CompleteTask *ctsk,TaskDriver **ret_td);
+		void _HandleFailedJob(CompleteTask *ctsk,TaskDriver *td);
 		
 		// Do some things with new tasks (set up state & TaskParams): 
 		int _DealWithNewTask(CompleteTask *ctsk);
+		
+		void _PrintTaskExecStatus(TaskExecutionStatus *tes);
+		void _DoPrintTaskExecuted(TaskParams *tsb,const char *binpath,
+			bool not_processed);
+		void _PrintDoneInfo(CompleteTask *ctsk);
 		
 		// Initialisation of parameter stuff: 
 		int _SetUpParams();

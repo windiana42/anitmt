@@ -80,20 +80,28 @@ class ProcessBase :
 		//       process. 
 		// env: environment to be passed to the process. 
 		// Return value: 
-		//    >0 -> PID of the started process 
-		//    -1 -> LMalloc() failed 
-		//    -2 -> illegal flags set 
-		//    -3 -> path allocation failed (during ProcPath::ProcPath(..))
-		//    -4 -> args allocation failed (during ProcArgs::ProcArgs(..))
-		//    -5 -> env allocation failed (during ProcEnv::ProcEnv(..))
-		//    -6 -> access(X_OK) not successful for (search)path: 
-		//          program to execute not found. 
-		//    -7 -> fork() failed (errno is set) 
-		//    -8 -> process limit exceeded (see ProcManager::LimitProcesses())
-		//    -9 -> pipe() failed (errno is set)
-		//   -10 -> fcntl() on pipe failed (errno is set)
-		//   -11 -> searchpath contains non-'\0'-terminated RefString 
-		//   -12 -> arg list contains non-'\0'-terminated RefString
+		//   >0 -> PID of the started process 
+		//   <0 -> error code: 
+		//     SPS_LMallocFailed        -> LMalloc() failed 
+		//     SPS_IllegalFlags         -> illegal flags set 
+		//     SPS_PathAllocFailed      -> path allocation failed 
+		//                                 (during ProcPath::ProcPath(..))
+		//     SPS_ArgAllocFailed       -> args allocation failed 
+		//                                 (during ProcArgs::ProcArgs(..))
+		//     SPS_EvnAllocFailed       -> env allocation failed 
+		//                                 (during ProcEnv::ProcEnv(..))
+		//     SPS_AccesFailed          -> access(X_OK) not successful for 
+		//                                 (search)path: program to execute 
+		//                                 not found. 
+		//     SPS_ForkFailed           -> fork() failed (errno is set) 
+		//     SPS_ProcessLimitExceeded -> process limit exceeded (see 
+		//                                 (ProcManager::LimitProcesses())
+		//     SPS_PipeFailed           -> failed (errno is set)
+		//     SPS_FcntlPipeFailed      -> fcntl() on pipe failed (errno is set)
+		//     SPS_SearchPathError      -> searchpath contains non-'\0'-
+		//                                 terminated RefString 
+		//     SPS_ArgListError         -> arg list contains non-'\0'-
+		//                                 terminated RefString
 		// Note: Other errors (FD stuff failed / execution failed) cannot 
 		//       be returned here; you get them via procnotify(). 
 		pid_t StartProcess(

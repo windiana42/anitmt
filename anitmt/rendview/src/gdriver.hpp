@@ -26,6 +26,57 @@ enum TaskDriverType
 	_DTLast
 };
 
+enum TaskTerminationReason
+{
+	TTR_Unset=-1,  // not yet filled in
+	TTR_Success=0,
+	TTR_Timeout,
+	TTR_ExecFailed,  // error in StartProcess or until execve()
+	TTR_RunFail,  // job exits with non-zero code
+	TTR_ATerm,    // abnormal termination (killed / dumped)
+	TTR_JobTerm   // rendview killed the job (see signal for more info)
+};
+
+enum
+{
+	// no symbol may be 0!
+	//-- for TTR_JobTerm --
+	JK_UserInterrupt=1,    // e.g. user pressed ^C. 
+	JK_ServerError,        // rendview does not want to go on for what 
+	                       // reason ever
+	//-- for TTR_ExecFailed--
+	JK_FailedToExec,    // failed to exec job because access(X_OK) / execve failed
+	JK_InternalError    // any other reason
+};
+
+struct TaskExecutionStatus
+{
+	TaskTerminationReason status;
+	// signal has lots of meanings: 
+	// normally: 0
+	// TTR_ATerm -> signal which caused termination
+	// TTR_RunFail -> exit status (non-zero)
+	// TTR_JobTerm, TTR_ExecFailed -> one of the JK_* values from above
+	int signal;
+	
+	// This is for more statistics if supported 
+	// (filled in _before_ IAmDone())
+	HTime starttime;   // when process was started
+	HTime endtime;     // when SIGCHLD was caught
+	HTime utime;       // time spent in user mode
+	HTime stime;       // time spend in system mode
+	
+	// Return string representation of status (reason, signal): 
+	const char *StatusString();
+	// Return string representation of JK_* - value: 
+	static const char *JK_String(int jk_value);
+	
+	_CPP_OPERATORS_FF
+	TaskExecutionStatus(int *failflag=NULL);
+	~TaskExecutionStatus() {}
+};
+
+
 // Returns string representation of TaskDriverType: 
 extern char *DTypeString(TaskDriverType dt);
 
@@ -40,6 +91,7 @@ struct TaskParams
 	
 	RefStrList add_args;   // additional cmd line args
 	int niceval;        // nice value (process priority) (or NoNice)
+	int call_setsid;    // call setsid() (recommended)
 	long timeout;       // render timeout; -1 for none
 	RefString crdir;    // chroot() to this dir before chdir to wdir. 
 	RefString wdir;     // directory to chdir into before starting the renderer
@@ -145,6 +197,9 @@ class TaskDriver :
 			// Where the TaskStructBase comes from: 
 			CompleteTask *ctsk;
 			
+			// Okay, now success / failure info: 
+			TaskExecutionStatus tes;
+			
 			_CPP_OPERATORS_FF
 			PInfo(int *failflag=NULL);
 			~PInfo();
@@ -175,6 +230,8 @@ class TaskDriver :
 			const TaskDriver::PInfo *pinfo;
 			// As passed to procnotify() or NULL: 
 			const ProcStatus *ps;
+			// Only used for PEI_StartFailed [because then ps=NULL]: 
+			int errno_val;  // value of errno; else 0
 		};
 	private:
 		enum ExecStatus
@@ -201,8 +258,18 @@ class TaskDriver :
 		// Inform mamager about state change: 
 		inline void _StateChanged();
 		
+		void _FillInStatistics(const ProcStatus *ps);
+		
+		// May also be used by TaskManager: 
+		// reason_detail: one of the JK_* - values
+		int KillProcess(TaskTerminationReason reason,int reason_detail);
+		
+		// Used by PSFailedErrorString(): 
+		const char *_ExecFailedError_SyscallName(PSDetail x);
+		
 		// Notify driver level using virtual ProcessError(): 
-		int _SendProcessError(ProcessErrorType pet,const ProcStatus *ps=NULL);
+		int _SendProcessError(ProcessErrorType pet,
+			const ProcStatus *ps=NULL,int errno_val=0);
 	protected:
 		// Pointer to associated factory. 
 		TaskDriverFactory *f;
@@ -235,11 +302,20 @@ class TaskDriver :
 		int timernotify(TimerInfo *ti);
 		void procnotify(const ProcStatus *ps);
 		
+		// Can be used to get error code string returned by StartProcess. 
+		// Returns error string (static data); if errno-string (or special 
+		// code string) should also be written, the corresponding strerror() 
+		// value is in error_str (otherwise NULL). 
+		const char *StartProcessErrorString(ProcessErrorInfo *pei,
+			const char **error_str);
+		// Print error when ProcessBase::PSFailed occurs. 
+		const char *PSFailedErrorString(ProcessErrorInfo *pei);
+		
 		// Downcall:
 		// gets called on error or to notify driver of things (for 
 		// verbose messages). 
 		// Return value: currently ignored; use 0. 
-		virtual int ProcessError(ProcessErrorInfo *pei) HL_PureVirt(0)
+		virtual int ProcessError(ProcessErrorInfo *) HL_PureVirt(0)
 		
 	public:  _CPP_OPERATORS_FF
 		// Driver name copied into RefString. 

@@ -50,14 +50,17 @@ const char *HTime::PrintTime(int local=1,int with_msec=0)
 
 const char *HTime::PrintElapsed()
 {
-	long sec=tv.tv_sec;
-	int msec=(tv.tv_usec+500)/1000;
+	long sec=(tv.tv_sec<0) ? (-tv.tv_sec) : tv.tv_sec;
+	int msec=(((tv.tv_usec<0) ? (-tv.tv_usec) : tv.tv_usec)+500)/1000;
 	if(msec>=1000)
 	{  ++sec;  msec-=1000;  }
 	
 	static char tmp[32];
 	char *ptr=tmp;
 	char *end=tmp+32;
+	
+	if(tv.tv_sec<0 || tv.tv_usec<0)
+	{  *(ptr++)='-';  }
 	
 	long hours=(sec/3600);
 	if(hours>48)
