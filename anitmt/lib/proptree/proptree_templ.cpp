@@ -54,7 +54,7 @@ namespace proptree
   // **************************************************************************
 
   template< class Provider_Type, class NT >
-  Node_Factory<Provider_Type,NT>::node_return_type 
+  typename Node_Factory<Provider_Type,NT>::node_return_type 
   Node_Factory<Provider_Type,NT>::
   create( std::string name, tree_info *info, message::Message_Consultant *msg )
     const
@@ -64,7 +64,7 @@ namespace proptree
   }
 
   template< class Provider_Type, class NT >
-  Node_Factory<Provider_Type,NT>::node_return_type 
+  typename Node_Factory<Provider_Type,NT>::node_return_type 
   Node_Factory<Provider_Type,NT>::cast( Prop_Tree_Node *prop ) const
   {
     return node_return_type(dynamic_cast<Provider_Type*>(prop), prop);

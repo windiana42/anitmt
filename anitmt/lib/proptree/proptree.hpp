@@ -193,9 +193,11 @@ namespace proptree
   template< class Provider_Type, class NT >
   class Node_Factory : public Basic_Node_Factory<Provider_Type> {
   public:
-    virtual node_return_type create( std::string name, tree_info *info,
-				      message::Message_Consultant *msg ) const;
-    virtual node_return_type cast( Prop_Tree_Node * ) const;
+    virtual typename Node_Factory<Provider_Type, NT>::node_return_type create( 
+	std::string name, tree_info *info,
+	message::Message_Consultant *msg ) const;
+    virtual typename Node_Factory<Provider_Type, NT>::node_return_type cast( 
+	Prop_Tree_Node * ) const;
   };
 
   /*

@@ -820,7 +820,7 @@ namespace solve
       {
 	// solve by running calc for each result
 	RES res = initial_result();
-	operands_type::iterator op;
+	typename operands_type::iterator op;
 	for( op = operands.begin(); op != operands.end(); ++op )
 	{
 	  if( !(*op)->is_solved_in_try(info) ) 
@@ -839,7 +839,7 @@ namespace solve
       {
 	// solve by running calc for each result
 	RES res = initial_result();
-	operands_type::iterator op;
+	typename operands_type::iterator op;
 	for( op = operands.begin(); op != operands.end(); ++op )
 	{
 	  if( !(*op)->is_solved() ) 
@@ -868,7 +868,7 @@ namespace solve
       just_solving = true;
 
       // find solved operand
-      operands_type::iterator op 
+      typename operands_type::iterator op 
 	= operands.find( static_cast<Operand<OP>*>(const_cast<void*>(ID)) );
       assert( (*op)->is_solved_in_try(info) );
       OP val = (*op)->get_value( info );
@@ -891,7 +891,7 @@ namespace solve
     else
     {
       // find solved operand
-      operands_type::iterator op 
+      typename operands_type::iterator op 
 	= operands.find( static_cast<Operand<OP>*>(const_cast<void*>(ID)) );
       assert( (*op)->is_solved_in_try(info) );
       OP val = (*op)->get_value( info );
@@ -924,8 +924,7 @@ namespace solve
   template< class OP, class RES >
   void Basic_Multi_Operand_Operator<OP,RES>::disconnect( const void *ID )
   {
-
-    operands_type::iterator op;
+    typename operands_type::iterator op;
     for( op = operands.begin(); op != operands.end(); ++op )
       if( (*op) != ID )
 	(*op)->rm_listener(this);
