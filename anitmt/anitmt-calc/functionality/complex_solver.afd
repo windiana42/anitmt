@@ -1,0 +1,117 @@
+/*****************************************************************************/
+/**   Complex solver definitions                                            **/
+/*****************************************************************************/
+/**									    **/
+/** Author: Martin Trautmann, Manuel Moser				    **/
+/**									    **/
+/** EMail:   martintrautmann@gmx.de					    **/
+/**									    **/
+/** License: GPL - free and without any warranty - read COPYING             **/
+/**									    **/
+/** Package: AniTMT							    **/
+/**									    **/
+/** Date: 20.2.2002							    **/
+/**									    **/
+/*****************************************************************************/
+
+avoid_recursion adl_complex_solvers;	// avoid recursion of this file
+
+include declaration "base_func.afd";
+include declaration "solver.afd";
+include header "sp_curve.hpp";
+
+solvers 
+{
+  test_solver ()
+  {
+    provide
+    {
+      int cooler_wert() 
+      {
+	return 3;
+      }
+    }
+  }
+  bezier_solver( vector p1, vector p2, vector p3, vector p4, scalar length )
+  {
+    declarations
+    {
+      bezier_curve *bezier;
+    }
+    init constraints 
+    {
+      length >= 0;
+    }
+    init
+    {
+      test_solver test;
+    }
+    events
+    {
+      condition p1 & p2 & p3 & p4
+      {
+	test_run 
+	{
+	  bezier = new bezier_curve( p1(), p2(), p3(), p4() );
+	  scalar len = bezier->length;
+	  //[ [ test length = len ]];
+	  //[ [ test length = bezier.get_length() ]];
+	}
+	reset
+	{
+	  delete bezier;
+	}
+      }
+      condition length
+      {
+	test_run
+	{
+	  //if( [ [ may_reject ]] )
+	    return false;
+	}
+      }
+    }
+    provide
+    {
+      vector get_pos ( stretch s ) 
+        requires p1,p2,p3,p4, test.cooler_wert
+      {
+	int t = test->cooler_wert();
+	return bezier->get_pos( s );
+      }
+    }
+  }
+  accel_solver( scalar s, scalar t, scalar a, scalar v0, scalar ve )
+  {
+    operands
+    {
+      type scalar
+      {
+	at; 
+	v0_ve; vt; 
+	ve2; v02; prod; as;
+      }
+    }
+    init
+    {
+      // ve = v0 + a * t
+      product_solver ( at, a, t );	// at = a * t
+      sum_solver( ve, v0, at );		// ve = v0 + at
+
+      // v0 = s/t - 0.5*a*t
+      v0 = s/t - 0.5 * a * t;
+      
+      // s = 0.5 * (v0 + ve) * t;
+      sum_solver( v0_ve, v0, ve );	// v0_ve = v0 + ve
+      product_solver( vt, v0_ve, t );	// vt = v0ve * t
+      product_solver( s, 0.5, vt );	// s = 0.5 * vt
+
+      // ve^2 = v0^2 + 2*a*s
+      product_solver( as, a, s );	// as = a * s;
+      product_solver( prod, 2, as );	// prod = 2 * as
+      square_solver( ve2, ve );		// ve2 = ve^2
+      square_solver( v02, v0 );		// v02 = v0^2
+      sum_solver( ve2, v02, prod );	// ve2 = v02 + prod
+    }
+  }
+}
