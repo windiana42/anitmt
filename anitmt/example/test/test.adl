@@ -43,6 +43,8 @@ scene testscene {
     linear {
       end_time 23; // autoset from ini file doesn't work
     }
+    test {
+    }
   }
 /*
   scalar testval2 {

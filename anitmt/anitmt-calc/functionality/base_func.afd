@@ -22,6 +22,8 @@ base_types{
   string = values::String;
   boolean = bool;
   cpp_scalar = double;
+  cpp_string = std::string;
+  cpp_char_ptr = char*;
 
   neutral0 = values::Neutral0;		// neutral element for addition
   neutral1 = values::Neutral1;		// neutral element for multiplication

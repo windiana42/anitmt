@@ -467,3 +467,102 @@ node else extends scalar_base provides scalar_else_vsa{
   }
 }
 
+
+// +------+
+// | test |
+// +------+
+
+// switching between scalar functions (container for then and else)
+node test extends scalar_subfunction provides scalar_vsa {
+  
+  properties {
+    type scalar {
+      ret_value;
+      ret_slope;
+      ret_acceleration;
+    }
+    type flag {
+      f1;f2;f3;f4;f5;f6;f7;f8;f9;f10;
+      f11;f12;f13;f14;f15;f16;f17;f18;f19;f20;
+    }
+    type scalar {
+      s1;s2;s3;s4;s5;s6;s7;s8;s9;
+    }
+    type vector {
+      v1;v2;v3;v4;v5;v6;v7;v8;v9;
+    }
+    type matrix {
+      m1;m2;m3;m4;m5;m6;m7;m8;m9;
+    }
+    type string {
+      str1;str2;str3;str4;str5;str6;str7;str8;str9;
+    }
+  }
+  
+  common {
+    solvers {
+      f1 = true;
+      s1 = 1;
+      v1 = to_vector( 1,2,3 );
+      m1 = mat_rotate_x( 3.141 / 3 );
+      str1 = "string";
+      f2 = f1 == true;			// true
+      f3 = f2 == false;			// false
+      f4 = s1 == 1;			// true
+      f5 = s1 == 2;			// false
+      f6 = v1 == to_vector( s1,2,3 );	// true
+      f7 = v1 == to_vector( 1,s1,3 );	// false
+      f8 = m1 == mat_rotate_x( 3.141000000001 / 3 );// true
+      f9 = m1 == mat_rotate_y( 3.141 / 3 );	// false
+      s2 = get_element( v1, 2 );	// 3
+      s3 = get_element( m1, 1, 1 );	// m[1][1]
+      v2 = get_rotate_component( m1 ); // <pi/3,0,0>
+      m2 = mat_translate_x(3) * mat_rotate_z(2) * mat_scale_y(4) * m1;
+      v3 = m2 * to_vector(1,0,0);
+      v4 = m2 * to_vector(0,1,0);
+      v5 = m2 * to_vector(0,0,1);
+      v6 = get_rotate_component( m2 );
+      v7 = get_translate_component( m2 );
+      v8 = get_scale_component( m2 );
+      m3 = mat_translate_z( get_element(v7,2) ) * 
+           mat_translate_y( get_element(v7,1) ) *
+           mat_translate_x( get_element(v7,0) ) *
+           mat_rotate_z( get_element(v6,2) ) * 
+           mat_rotate_y( get_element(v6,1) ) *
+           mat_rotate_x( get_element(v6,0) ) *
+           mat_scale_z( get_element(v8,2) ) * 
+           mat_scale_y( get_element(v8,1) ) *
+           mat_scale_x( get_element(v8,0) ); // m3 = m2
+      m4 = mat_translate( v7 ) * 
+           mat_rotate( v6 ) * 
+           mat_scale( v8 );		// m4 = m3 = m2
+      f10 = m2 == m3 || m3 == m4;	// true
+      f11 = !f10;			// false
+      f12 = !s1;			// false
+      f13 = !v1;			// false
+      f14 = !m1;			// false
+      f15 = !s1;			// false
+      f16 = !false;			// true
+      f17 = !0;				// true
+      f18 = !to_vector(0,0,0);		// true
+      f19 = !mat_translate_x(0);		// true
+      f20 = !"";			// true
+      v9 = vec_translate( to_vector(1,2,3), 5, 2 );
+					// <6,6,6>
+    }
+  }
+
+  // result functions using the scalar subfunctions
+  // MM: Using the boolean type, may not work in the moment
+  provide scalar_vsa {
+    resulting value ( time t ) requires ret_value { 
+      [[ return_prop ret_value]];
+    } 
+    resulting slope ( time t ) requires ret_slope { 
+      [[ return_prop ret_slope]];
+    } 
+    resulting acceleration ( time t ) requires ret_acceleration { 
+      [[ return_prop ret_acceleration]];
+    } 
+  }
+}

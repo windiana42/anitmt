@@ -298,10 +298,11 @@ Vector<3> get_scale_component(const Matrix<4,4> &mat)
 	Vector<3> x(1,0,0);
 	Vector<3> y(0,1,0);
 	Vector<3> z(0,0,1);
+	Vector<3> trans = get_translate_component( mat );
 
-	x = mat * x;
-	y = mat * y;
-	z = mat * z;
+	x = mat * x - trans;
+	y = mat * y - trans;
+	z = mat * z - trans;
 
 	return(Vector<3>(x.abs(),y.abs(),z.abs()));
 }
@@ -342,7 +343,7 @@ Vector<3> get_rotate_component(const Matrix<4,4> &mat)
 	/**/y_rot.rotate_x(-x_angle);
 
 	// (vector::operator==() uses epsilon)
-	/**/assert( x_rot == x );assert( y_rot == y * (y_rot*y) );
+	/**/assert( x_rot == x * (x_rot*x) );assert( y_rot == y * (y_rot*y) );
 
 	return(Vector<3>(x_angle,y_angle,z_angle));
 }  

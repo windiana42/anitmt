@@ -134,7 +134,9 @@ namespace funcgen
     virtual std::string get_child( std::string child_type, int n ) = 0;
     virtual std::string reference_concat_string() = 0;
     virtual std::string operator_class_name( std::string name ) = 0;
-
+    virtual std::string operand_from_bool( bool flag ) = 0;
+    virtual std::string operand_from_scalar( double val ) = 0;
+    virtual std::string operand_from_string( std::string ) = 0;
     Code_Translator( code_gen_info * );
     virtual ~Code_Translator(){}
   };

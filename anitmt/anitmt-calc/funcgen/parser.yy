@@ -64,7 +64,7 @@ namespace funcgen
 %token TAFD_ERROR 
 // multi character operators
 %token TAFD_IS_EQUAL TAFD_NOT_EQUAL TAFD_MORE_EQUAL TAFD_LESS_EQUAL 
-%token TAFD_NS_CONCAT
+%token TAFD_AND TAFD_OR TAFD_NS_CONCAT
 // special tokens
 %token TAFD_CODE
 // type tokens
@@ -81,11 +81,11 @@ namespace funcgen
 %type <u.boolean> opt_serial
 %type <string> opt_second_identifier
 %type <string> opt_fail_bool_var
-%type <u.exp> bool_op_expression
 %type <u.exp> op_expression
 %type <u.exp> op_expression_list
-%type <string> Cxx_type_identifier_element
 %type <string> Cxx_type_identifier
+%type <string> Cxx_type_identifier_base
+%type <string> Cxx_type_identifier_element
 %type <string> Cxx_type_identifier_list
 %type <string> Cxx_identifier
 %type <string> Cxx_complex_identifier
@@ -98,6 +98,7 @@ namespace funcgen
 //********************
 // normal precedences
 %left '?' ':'
+%left TAFD_AND TAFD_OR
 %nonassoc '<' '>' TAFD_IS_EQUAL TAFD_NOT_EQUAL TAFD_MORE_EQUAL TAFD_LESS_EQUAL 
 %left '+' '-'
 %left '*' '/'
@@ -256,7 +257,11 @@ operator_version_name:
 						  $$ = $1 + ">="; }
   | TAFD_IDENTIFIER TAFD_LESS_EQUAL		{ check_id_operator(info,$1);
 						  $$ = $1 + "<="; }
-    // ... when adding operators see [bool_]op_expression ...
+  | TAFD_IDENTIFIER TAFD_AND			{ check_id_operator(info,$1);
+						  $$ = $1 + "&&"; }
+  | TAFD_IDENTIFIER TAFD_OR			{ check_id_operator(info,$1);
+						  $$ = $1 + "||"; }
+    // ... when adding operators see op_expression ...
 ;
 operator_parameter_type_list: /*optional*/
   | TAFD_IDENTIFIER		{ add_operator_function_parameter(info,$1);}
@@ -310,6 +315,7 @@ properties_declaration:
 ;
 property_types: /*optional*/
   | property_types property_type
+;
 property_type:
     TAFD_type TAFD_IDENTIFIER 
       { node_start_property_type( info, $2 ); }
@@ -338,6 +344,7 @@ operands_declaration:
 ;
 operand_types: /*optional*/
   | operand_types operand_type
+;
 operand_type:
     TAFD_type TAFD_IDENTIFIER 
       { node_start_operand_type( info, $2 ); }
@@ -384,7 +391,7 @@ constraint_statements: /*optional*/
   | constraint_statements constraint_statement
 ;
 constraint_statement:
-    bool_op_expression ';'		{ node_solve_constraint( info, $1 ); }
+    op_expression ';'			{ node_solve_constraint( info, $1 ); }
 ;
 solvers_declaration:
     TAFD_solvers '{' solver_statements '}'
@@ -433,7 +440,7 @@ action_statement:
       { node_add_action_parameter_ref( info ); }
 		  property_reference ',' 
       { node_add_action_parameter_ref( info ); }// store second parameter
-		  bool_op_expression ')' ';'
+		  op_expression ')' ';'
       { node_add_action_parameter_exp( info, $12 ); 
 	node_finish_action( info ); }
 /*| TAFD_IDENTIFIER '(' priority_level ',' 
@@ -559,45 +566,48 @@ opt_second_identifier: /*optional*/ { $$ = ""; }
 opt_fail_bool_var: /*optional*/     { $$ = ""; }
   | ',' TAFD_IDENTIFIER 	    { $$ = $2; }
 ;    
-bool_op_expression:
-    op_expression	 			{$$ = bool_expr($1);}
-  | '!' bool_op_expression 			{$$ = bool_expr("!",$2);}
-  | '(' bool_op_expression ')'		  	{$$ = bool_expr($2);}
+op_expression:
+    property_reference			  	{$$ = expr_from_ref(info);}
+  | TAFD_SCALAR				  	{$$ = expr_scalar(info,$1);}
+  | TAFD_QSTRING			  	{$$ = expr_string(info,$1);}
+  | '(' op_expression ')'		  	{$$ = expr($2);}
+  | '-' op_expression 			  	{$$ = expr("-",$2);}
+  | op_expression '+' op_expression	  	{$$ = expr($1,"+",$3);}
+  | op_expression '-' op_expression	  	{$$ = expr($1,"-",$3);}
+  | op_expression '*' op_expression	  	{$$ = expr($1,"*",$3);}
+  | op_expression '/' op_expression	  	{$$ = expr($1,"/",$3);}
+  | TAFD_IDENTIFIER '(' ')'		  	{$$ = expr_function($1);}
+  | TAFD_IDENTIFIER '(' op_expression_list ')'	{$$ = expr_function($1,$3);}
+    // boolean results
+  | TAFD_true				  	{$$ = expr_bool(info,true);}
+  | TAFD_false					{$$ = expr_bool(info,false);}
+  | '!' op_expression				{$$ = expr("!",$2);}
+  | op_expression '>' op_expression		{$$ = bool_expr($1,">",$3);}
+  | op_expression '<' op_expression		{$$ = bool_expr($1,"<",$3);}
   | op_expression TAFD_IS_EQUAL op_expression	{$$ = bool_expr($1,"==",$3);}
   | op_expression TAFD_NOT_EQUAL op_expression  {$$ = bool_expr($1,"!=",$3);}
   | op_expression TAFD_MORE_EQUAL op_expression {$$ = bool_expr($1,">=",$3);}
   | op_expression TAFD_LESS_EQUAL op_expression {$$ = bool_expr($1,"<=",$3);}
-  | op_expression '>' op_expression		{$$ = bool_expr($1,">",$3);}
-  | op_expression '<' op_expression		{$$ = bool_expr($1,"<",$3);}
+  | op_expression TAFD_AND op_expression	{$$ = bool_expr($1,"&&",$3);}
+  | op_expression TAFD_OR op_expression		{$$ = bool_expr($1,"||",$3);}
     // ... when adding operators see operator_version_name ...
-;
-op_expression:
-    property_reference			  {$$ = expr_from_ref(info);}
-  | TAFD_SCALAR				  {$$ = expr_scalar($1);}
-  | '(' op_expression ')'		  {$$ = expr($2);}
-  | '!' op_expression 			  {$$ = expr("!",$2);}
-  | '-' op_expression 			  {$$ = expr("-",$2);}
-  | op_expression '+' op_expression	  {$$ = expr($1,"+",$3);}
-  | op_expression '-' op_expression	  {$$ = expr($1,"-",$3);}
-  | op_expression '*' op_expression	  {$$ = expr($1,"*",$3);}
-  | op_expression '/' op_expression	  {$$ = expr($1,"/",$3);}
-    // ... when adding operators see operator_version_name ...
-  | TAFD_IDENTIFIER '(' ')'		  {$$ = expr_function($1);}
-  | TAFD_IDENTIFIER '(' op_expression_list ')'
-					  {$$ = expr_function($1,$3);}
 ;
 op_expression_list: 
     op_expression				  {$$ = expr($1);}
   | op_expression_list ',' op_expression	  {$$ = expr($1,",",$3);}
 ;
+Cxx_type_identifier: /* C++ Type Identifier like values::Scalar */
+    Cxx_type_identifier_base			  {$$ = $1;}
+  | Cxx_type_identifier_base '*'		  {$$ = $1 + "*";}
+;
+Cxx_type_identifier_base:
+    Cxx_type_identifier_element			  {$$ = $1;}
+  | Cxx_type_identifier_base TAFD_NS_CONCAT Cxx_type_identifier_element 
+      %prec NS_CONCAT				  {$$ = $1 + "::" + $3;}
+;
 Cxx_type_identifier_element:
     TAFD_IDENTIFIER				  {$$ = $1;}
   | TAFD_IDENTIFIER '<'Cxx_type_identifier_list'>'{$$ = $1 + "<" + $3 + ">";}
-;
-Cxx_type_identifier: /* C++ Type Identifier like values::Scalar */
-    Cxx_type_identifier_element			  {$$ = $1;}
-  | Cxx_type_identifier TAFD_NS_CONCAT Cxx_type_identifier_element 
-      %prec NS_CONCAT				  {$$ = $1 + "::" + $3;}
 ;
 Cxx_type_identifier_list: 
     Cxx_type_identifier				  {$$ = $1;}
@@ -610,10 +620,10 @@ Cxx_identifier:
 						  {$$ = $1 + "::" + $3;}
 ;
 Cxx_complex_identifier: /* C++ Identifier like values::value.x->y.z */
-    Cxx_identifier					{$$ = $1}
-  | Cxx_complex_identifier '.' TAFD_IDENTIFIER		{$$ = $1 + "." + $3}
+    Cxx_identifier					{$$ = $1;}
+  | Cxx_complex_identifier '.' TAFD_IDENTIFIER		{$$ = $1 + "." + $3;}
   | Cxx_complex_identifier TAFD_PT_CONCAT TAFD_IDENTIFIER %prec ID_CONCAT  
-							{$$ = $1 + "->" + $3}
+							{$$ = $1 + "->" + $3;}
 ;
 Cxx_expression:
     Cxx_complex_identifier		  {$$ = $1;}

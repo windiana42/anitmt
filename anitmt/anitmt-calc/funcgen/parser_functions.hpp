@@ -202,14 +202,16 @@ namespace funcgen
   Expression *bool_expr( const std::string &op, Expression *exp );
   Expression *bool_expr( Expression *exp );
   Expression *expr_from_ref( void *info );
-  Expression *expr_scalar( double val );
-  Expression *expr_string( std::string str );
+  Expression *expr_bool( void *info, bool flag );
+  Expression *expr_scalar( void *info, double val );
+  Expression *expr_string( void *info, std::string str );
   Expression *expr( Expression *exp1, const std::string &op,Expression *exp2 );
   Expression *expr( const std::string &op, Expression *exp );
   Expression *expr( Expression *exp );
   Expression *expr_function(const std::string &name);
   Expression *expr_function(const std::string &name, 
 			    Expression *par );
+  Expression *expr_array( Expression *exp1, Expression *exp2 );
 
   void ref_prop_or_op( void *info, const std::string &name );
   void ref_node_prop( void *info, const std::string &prop);

@@ -7,5 +7,13 @@ functionality.cpp
 functionality.hpp
 object.cpp
 object.hpp
+object_base.cpp
+object_base.hpp
 scalar.cpp
 scalar.hpp
+scalar_base.cpp
+scalar_base.hpp
+scene_base.cpp
+scene_base.hpp
+solver.cpp
+solver.hpp

@@ -1228,17 +1228,34 @@ namespace funcgen
     node->current_reference.clear();
     return res;
   }
-  Expression *expr_scalar( double val )
+  Expression *expr_bool( void *info, bool flag )
   {
+    afd_info *I=static_cast<afd_info*>(info);
+    //message::Message_Reporter &msg = I->msg;
+    Code_Translator *translator = I->afd->translator;
+
     Expression *res = new Expression();
-    std::string str; str += val;
-    res->append( str );
+    res->append( translator->operand_from_bool( flag ) );
     return res;
   }
-  Expression *expr_string( std::string str )
+  Expression *expr_scalar( void *info, double val )
   {
+    afd_info *I=static_cast<afd_info*>(info);
+    //message::Message_Reporter &msg = I->msg;
+    Code_Translator *translator = I->afd->translator;
+
     Expression *res = new Expression();
-    res->append( str );
+    res->append( translator->operand_from_scalar( val ) );
+    return res;
+  }
+  Expression *expr_string( void *info, std::string str )
+  {
+    afd_info *I=static_cast<afd_info*>(info);
+    //message::Message_Reporter &msg = I->msg;
+    Code_Translator *translator = I->afd->translator;
+
+    Expression *res = new Expression();
+    res->append( translator->operand_from_string( str ) ); 
     return res;
   }
   Expression *expr( Expression *exp1, 
@@ -1285,6 +1302,15 @@ namespace funcgen
     res->append(par);
     delete par;
     res->append(")");
+    return res;
+  }
+  Expression *expr_array( Expression *exp1, Expression *exp2 )
+  {
+    Expression *res = exp1;
+    res->append("[");
+    res->append(exp2);
+    delete exp2;
+    res->append("]");
     return res;
   }
 

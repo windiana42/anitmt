@@ -92,6 +92,8 @@ qstring_err 	(\"([^\"\n]|\\\")*)
 "!="	  { tok_pos(); return TAFD_NOT_EQUAL; }
 ">="	  { tok_pos(); return TAFD_MORE_EQUAL; }
 "<="	  { tok_pos(); return TAFD_LESS_EQUAL; }
+"&&"	  { tok_pos(); return TAFD_AND; }
+"||"	  { tok_pos(); return TAFD_OR; }
 
 "::"	  { tok_pos(); return TAFD_NS_CONCAT; }
 

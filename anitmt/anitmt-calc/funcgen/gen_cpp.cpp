@@ -289,6 +289,18 @@ namespace funcgen
   {
     return prefix_operator_class_name + name;
   }
+  std::string Cpp_Code_Translator::operand_from_bool( bool flag )
+  {
+    return std::string("solve::const_op( values::Flag( ") + (flag?"true":"false") + " ), get_consultant() )";
+  }
+  std::string Cpp_Code_Translator::operand_from_scalar( double val )
+  {
+    return std::string("solve::const_op( values::Scalar( ") + val + " ), get_consultant() )";
+  }
+  std::string Cpp_Code_Translator::operand_from_string( std::string str )
+  {
+    return std::string("solve::const_op( values::String( \"") + str + "\" ), get_consultant() )";
+  }
 
   Cpp_Code_Translator::Cpp_Code_Translator( code_gen_info *info )
     : Code_Translator(info), prefix_priority_label("_pl_"),
