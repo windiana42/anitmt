@@ -36,7 +36,11 @@
 #include "config.h"
 
 #ifdef __CYGWIN__
+#define __rtems__
 #include <sys/signal.h>
+struct timeval;
+#define ProcMan_USE_LESS_SIGINFO_T 
+#define DONT_USE_MALLOC_USABLE_SIZE
 #endif
 
 

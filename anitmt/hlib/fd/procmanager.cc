@@ -637,6 +637,7 @@ void ProcessManager::_AddToProcStatus(ProcStatus *ps,
 }
 
 
+#ifndef ProcMan_USE_LESS_SIGINFO_T
 // Return value: 1 -> ignore signal
 int ProcessManager::_CheckSigInfo(const SigInfo *sig)
 {
@@ -727,7 +728,7 @@ void ProcessManager::_FillProcStatus(Node *n,ProcStatus *ps,
 	ps->uid=sig->info.si_uid;
 	ps->sigcode=sig->info.si_code;
 }
-
+#endif  /* ProcMan_USE_LESS_SIGINFO_T */
 
 // Calls a wait3() to check for all exited children. 
 void ProcessManager::_ZombieCheck()
@@ -744,7 +745,7 @@ void ProcessManager::_ZombieCheck()
 		//fprintf(stderr,"SIGCHILD: %d (%s)\n",pid,strerror(errno));
 		if(pid<=0)  break;  // pid=0 means: no child exited. 
 		
-		#if TESTING
+		#if !defined(ProcMan_USE_LESS_SIGINFO_T) && TESTING
 		// This means that the found process was not reported by a 
 		// SIGCHILD or that the signal was not yet delivered to us. 
 		fprintf(stderr,"Hep.. _ZombieCheck() found child %d.\n",pid);
@@ -795,6 +796,7 @@ int ProcessManager::signotify(const SigInfo *sig)
 	if(sig->info.si_signo!=SIGCHLD)
 	{  return(0);  }
 	
+	#ifndef ProcMan_USE_LESS_SIGINFO_T
 	pdebug("SIGNOTIFY(pid=%d)\n",sig->info.si_pid);
 	
 	if(_CheckSigInfo(sig))
@@ -861,6 +863,10 @@ int ProcessManager::signotify(const SigInfo *sig)
 	// be more dead processes than signals.)
 	if(!SigPending(SIGCHLD))
 	{  _ScheduleZombieCheck();  }
+	
+	#else  /* ProcMan_USE_LESS_SIGINFO_T */
+	_ZombieCheck();
+	#endif	
 	
 	return(0);
 }

@@ -108,7 +108,7 @@ static inline PAR::ParParseState templ_str2val(unsigned int *val,
 {
 	errno=0;
 	*val=strtoul(arg,endptr,/*base=*/0);
-	if(errno==ERANGE || *val>ulong(UINT_MAX))
+	if(errno==ERANGE || *val>(unsigned long)(UINT_MAX))
 	{  return(PAR::PPSValOORange);  }
 	return(PAR::PPSSuccess);
 }

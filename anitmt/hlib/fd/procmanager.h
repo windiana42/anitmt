@@ -87,8 +87,10 @@ class ProcessManager :
 		void _CheckExecFailure(Node *n,ProcStatus *ps,int estatus);
 		void _AddToProcStatus(ProcStatus *ps,struct rusage *rus);
 		void _FillProcStatus(Node *n,ProcStatus *ps,int pid,int status,struct rusage *rus);
+		#ifndef ProcMan_USE_LESS_SIGINFO_T
 		void _FillProcStatus(Node *n,ProcStatus *ps,const SigInfo *sig);
 		int _CheckSigInfo(const SigInfo *sig);
+		#endif
 		
 		void _ZombieCheck();
 		int _TermProcess(Node *n);

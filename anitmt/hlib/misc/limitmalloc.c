@@ -16,38 +16,55 @@
  */
 
 #include <hlib/prototypes.h>
+#include <malloc.h>
+#include <string.h>
 
 /* Enable allocation debugging (check if LFree() gets pointers 
  * actually obtained by LMalloc, etc). For that purpose, an array 
  * of pointers is held. For simplicity, this array is of fixed size 
  * and has as many elements as you specify here. 
  */
-#define AllocDebugging 16384
+#if !defined(HLIB_SIZE_OPT) || (defined(HLIB_SIZE_OPT) && HLIB_SIZE_OPT==0)
+# define AllocDebugging 16384
+#else
+# define AllocDebugging 0
+#endif
 
-static size_t malloc_limit=0;   /* 0 -> unlimited */
-static size_t curr_size=0;   /* current amount of malloc()ed memory */
-static size_t max_size=0;    /* max amount used */
+/* NOTE: If you are not using GNU libc and/or do not have 
+ * malloc_usable_size(), then define this. Each allocated block 
+ * will then be assumed tobe of size 1, i.e. we're actually counting 
+ * the number of *calls* to LMalloc()/LRealloc()/LFree().  
+ */ 
+#ifdef DONT_USE_MALLOC_USABLE_SIZE
+#warning Not using malloc_usable_size; allocation debugging counting calls only
+#define malloc_usable_size(x) 1
+#endif
 
-static int real_failures=0;
-static int limit_failures=0;
 
+static struct LMallocUsage lmu=
+{
+	alloc_limit: 0,
+	curr_used: 0,
+	max_used: 0,
+	malloc_calls: 0,
+	realloc_calls: 0,
+	free_calls: 0,
+	used_chunks: 0,
+	real_failures: 0,
+	limit_failures: 0
+};
 
-/* Returns amount of currently allocated memory: */
-size_t LMallocCurrentUsage()
-{  return(curr_size);  }
-
-/* Returns max amount of allocated memory: */
-size_t LMallocMaxUsage()
-{  return(max_size);  }
 
 /* Set the limit: maximum amount of memory to aquire using LMalloc(). */
 void LMallocSetLimit(size_t limit)
-{  malloc_limit=limit;  }
-size_t LMallocGetLimit()
-{  return(malloc_limit);  }
+{  lmu.alloc_limit=limit;  }
 
-int LMallocRequestsFailed(int flag)
-{  return(flag ? real_failures : limit_failures);  }
+/* Get the LMallocUsage content: */
+void LMallocGetUsage(struct LMallocUsage *dest)
+{
+	if(dest)
+	{  memcpy(dest,&lmu,sizeof(lmu));  }
+}
 
 
 /* In case someone (me) does some #define hacks for debugging purposes: */
@@ -79,20 +96,22 @@ void *LMalloc(size_t size)
 	void *ptr;
 	if(!size)
 	{  return(NULL);  }
-	if(malloc_limit)
+	if(lmu.alloc_limit)
 	{
-		if(curr_size+size>malloc_limit)
-		{  ++limit_failures;  return(NULL);  }
+		if(lmu.curr_used+size>lmu.alloc_limit)
+		{  ++lmu.limit_failures;  return(NULL);  }
 	}
+	++lmu.malloc_calls;
+	++lmu.used_chunks;
 	ptr=malloc(size);
 	if(ptr)
 	{
-		curr_size+=malloc_usable_size(ptr);
-		if(max_size<curr_size)
-		{  max_size=curr_size;  }
+		lmu.curr_used+=malloc_usable_size(ptr);
+		if(lmu.max_used<lmu.curr_used)
+		{  lmu.max_used=lmu.curr_used;  }
 	}
 	else
-	{  ++real_failures;  }
+	{  ++lmu.real_failures;  }
 	//fprintf(stderr,"malloc(%u)=%p\n",size,ptr);
 	DebugAlloc(ptr);   /* only if AllocDebugging */
 	return(ptr);
@@ -105,11 +124,13 @@ void *LFree(void *ptr)
 	if(ptr)
 	{
 		size_t size=malloc_usable_size(ptr);
-		if(curr_size>=size)
-		{  curr_size-=size;  }
+		if(lmu.curr_used>=size)
+		{  lmu.curr_used-=size;  }
 		else  /* should never happen... */
-		{  curr_size=0;  }
+		{  lmu.curr_used=0;  }
 		free(ptr);
+		++lmu.free_calls;
+		--lmu.used_chunks;
 	}
 	return(NULL);
 }
@@ -127,30 +148,31 @@ void *LRealloc(void *ptr,size_t size)
 	{  return(LFree(ptr));  }
 	
 	oldsize=malloc_usable_size(ptr);
-	if(curr_size>=oldsize)
-	{  curr_size-=oldsize;  }
+	if(lmu.curr_used>=oldsize)
+	{  lmu.curr_used-=oldsize;  }
 	else  /* should never happen... */
-	{  curr_size=0;  }
+	{  lmu.curr_used=0;  }
 	
-	if(malloc_limit)
+	if(lmu.alloc_limit)
 	{
-		if(curr_size+size>malloc_limit)
+		if(lmu.curr_used+size>lmu.alloc_limit)
 		{
-			curr_size+=oldsize;
-			if(max_size<curr_size)
-			{  max_size=curr_size;  }
-			++limit_failures;
+			lmu.curr_used+=oldsize;
+			if(lmu.max_used<lmu.curr_used)
+			{  lmu.max_used=lmu.curr_used;  }
+			++lmu.limit_failures;
 			return(NULL);
 		}
 	}
 	
+	++lmu.realloc_calls;
 	ptr=realloc(ptr,size);
 	if(ptr)
-	{  curr_size+=malloc_usable_size(ptr);  }
+	{  lmu.curr_used+=malloc_usable_size(ptr);  }
 	else  /* since a failed realloc() did not free its block. */
-	{  ++real_failures;  curr_size+=oldsize;  }
-	if(max_size<curr_size)
-	{  max_size=curr_size;  }
+	{  ++lmu.real_failures;  lmu.curr_used+=oldsize;  }
+	if(lmu.max_used<lmu.curr_used)
+	{  lmu.max_used=lmu.curr_used;  }
 	DebugRealloc(_old_ptr,ptr);   /* only if AllocDebugging */
 	return(ptr);
 }

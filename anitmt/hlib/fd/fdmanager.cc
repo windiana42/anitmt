@@ -159,13 +159,16 @@ void FDBase::_MsecLeftChanged(
 		{  sh_timer_dirty=1;  fdmanager()->TimeoutChange();  }
 		return;
 	}
-	if(!sh_timer || sh_timer->msec_left>i->msec_left)
-	{  sh_timer=i;  fdmanager()->TimeoutChange();  }
+	if(i->msec_val>=0)  // Not for disabled timers: 
+	{
+		if(!sh_timer || sh_timer->msec_left>i->msec_left)
+		{  sh_timer=i;  fdmanager()->TimeoutChange();  }
+	}
 	
 	#if TESTING_CHECK
 	// Check if sh_timer really is the shortest timer node: 
 	// If we reach here, sh_timer_dirty=0. 
-	if((!sh_timer && timers) || (sh_timer && !timers))
+	if((sh_timer && !timers))
 	{
 		fprintf(stderr,"FD:%d: OOPS: BUG! sh_timer=%p, timers=%p\n",
 			__LINE__,sh_timer,timers);
@@ -174,6 +177,7 @@ void FDBase::_MsecLeftChanged(
 	// If we reach here, sh_timer!=NULL. 
 	for(FDManager::TimerNode *ii=timers; ii; ii=ii->next)
 	{
+		if(ii->msec_left<0)  continue;
 		if(ii->msec_left<sh_timer->msec_left)
 		{
 			fprintf(stderr,"FD:%d: OOPS: BUG! sh_timer->msec_left=%ld, "
@@ -1173,11 +1177,12 @@ FDManager::FDManager(int *failflag=NULL) :
 	sigemptyset(&prev_sigset);
 	
 	struct sigaction sact;
+	memset(&sact,0,sizeof(sact));
 	sact.sa_handler=NULL;  // we use sa_sigaction
 	sact.sa_sigaction=&_fd_sig_handler;
 	sigfillset(&sact.sa_mask);  // block all signals during signal handler execution
 	sact.sa_flags=SA_SIGINFO;   // do NOT add SA_RESTART here. 
-	sact.sa_restorer=NULL;
+	//sact.sa_restorer=NULL;
 	for(int i=0; _fd_signals[i]>-10000; i++)
 	{
 		if(sigaction(_fd_signals[i],&sact,NULL))
@@ -1233,11 +1238,16 @@ FDManager::~FDManager()
 	
 	// Cleanup global manager: 
 	struct sigaction sact;
+	memset(&sact,0,sizeof(sact));
+	#ifdef __CYGWIN__
+	sact.sa_handler=(__typeof__(sact.sa_handler))SIG_DFL;
+	#else
 	sact.sa_handler=SIG_DFL;  // default handler
+	#endif
 	sact.sa_sigaction=NULL;
 	sigemptyset(&sact.sa_mask);
 	sact.sa_flags=0;
-	sact.sa_restorer=NULL;
+	//sact.sa_restorer=NULL;
 	for(int i=0; _fd_signals[i]>-10000; i++)
 	{
 		if(sigaction(_fd_signals[i],&sact,NULL))

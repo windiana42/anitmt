@@ -228,6 +228,7 @@ int SimpleIndentConsoleOutput::operator()(const char *str,...)
 
 int SimpleIndentConsoleOutput::_GetTermCols(int fd)
 {
+#ifdef TIOCGWINSZ
 	// Use ioctl: 
 	struct winsize wsz;
 	if(ioctl(fd,TIOCGWINSZ,&wsz))
@@ -237,6 +238,9 @@ int SimpleIndentConsoleOutput::_GetTermCols(int fd)
 	if(cols>1024)  cols=1024;
 	if(cols<10)    cols=10;
 	return(cols);
+#else
+	return(80);
+#endif
 }
 
 

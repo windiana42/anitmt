@@ -132,7 +132,7 @@ struct PAR  // This serves as a namespace and a base class.
 		private:
 			// Never use one of these (assignment & copy constructor): 
 			ParamInfo(const ParamInfo &) : LinkedListBase<ParamInfo>() {}
-			ParamInfo &operator=(const ParamInfo &)  {}
+			void operator=(const ParamInfo &)  {}
 	};
 	
 	struct Section : LinkedListBase<Section>

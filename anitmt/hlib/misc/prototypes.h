@@ -32,13 +32,22 @@
 extern char *prg_name;
 
 /* limitmalloc.c: */
-  size_t LMallocCurrentUsage();  /* Returns currently used amount of memory */
-  size_t LMallocMaxUsage();      /* Returns the max. used amount of memory */
-  void LMallocSetLimit(size_t limit);  /* Sets memory usage limit (0 -> no limit) */
-  size_t LMallocGetLimit();      /* Returns current mem usage limit */
-  /* Returns number of failed memory allocation requests due to real 
-   * malloc() failure (if flag=1) or due to exceeded limit (flag=0) */
-  int LMallocRequestsFailed(int flag);
+  struct LMallocUsage
+  {
+	size_t alloc_limit;    /* current limit; 0 for unlimited */
+	size_t curr_used;      /* amount of currently used memory */
+	size_t max_used;       /* max amount of mem used */
+	size_t malloc_calls;   /* number of calls to LMalloc()... */
+	size_t realloc_calls;  /* ...LRealloc(),... */
+	size_t free_calls;     /* ...and LFree(). */
+	int used_chunks;  /* incremented for alloc and decremented for free */
+	int real_failures;   /* how often allocation failed due to real failures */
+	int limit_failures;  /* how often allocation failed due to alloc limit */
+  };
+  /* Get the LMallocUsage; pass a pointer where to store the values: */
+  void LMallocGetUsage(struct LMallocUsage *dest);
+  /* Limit feature: Sets memory usage limit (0 -> no limit) */
+  void LMallocSetLimit(size_t limit);
   /* These functions allocate/reallocate/free memory using 
    * malloc()/realloc()/free(). More memory than set with LMallocSetLimit() 
    * cannote be allocated. LFree() is needed to keep internal statistics 

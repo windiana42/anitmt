@@ -17,7 +17,7 @@
 #include <hlib/prototypes.h>
 
 /* Maps the values in range 0...63 to base64 chars. */
-static unsigned char *_base64_encode=
+static const unsigned char *_base64_encode=(unsigned char *)
 	"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 	"abcdefghijklmnopqrstuvwxyz"
 	"0123456789+/";

@@ -15,6 +15,7 @@
 #include <hlib/prototypes.h>
 
 #include <signal.h>
+#include <string.h>
 
 /* Installs signal handler shandler for signal sig. 
  * Returns 0, if all went ok and -1 if sigaction() failed
