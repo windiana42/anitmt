@@ -114,7 +114,7 @@ static int MAIN(int argc,char **argv,char **envp)
 		"bg in bash) makes them continue all again.\n"
 		"NOTE: COLORED OUTPUT is automatically switched off for non-ttys "
 		"but you can manually force it off/on using --nocolor/--color."
-		"\n\n** LDR is in experimental state **"
+		"\n\n** LDR is in experimental state (required files are not yet transferred) **"
 		"\n\nExamples:\n"
 		"# rendview --rdfile=/dir/to/renderers.par -l-rd=povray3.5 "
 		"-l-n=240 -l-f0=10 -l-size=320x200 -l-oformat=ppm -l-cont "
@@ -133,6 +133,7 @@ static int MAIN(int argc,char **argv,char **envp)
 			rv_oparams.console_blue_start,rv_oparams.console_blue_end,
 			rv_oparams.console_red_start,rv_oparams.console_red_end);
 	}
+	parman->SetConsolePrintfFunction(&vaError,&vaWarning,NULL);
 		
 		Verbose(BasicInit,"[CDB] ");
 		cdb=NEW1<ComponentDataBase>(parman);

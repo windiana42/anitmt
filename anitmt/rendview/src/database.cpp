@@ -354,12 +354,18 @@ int ComponentDataBase::parse(const Section *s,PAR::SPHInfo *info)
 		xnamelen=info->name_end-xname;
 		if(info->name_end<=info->nend || illegal)
 		{
-			#warning fixme: cannot report <SOMEWHERE> as location...
-			Error("in <SOMEWHERE - FIXME>: Illegal %s name \"%.*s\".\n",
+			Error("%s: in %s: illegal %s name \"%.*s\".\n",
+				prg_name,info->origin->OriginStr().str(),
 				DTypeString(dt),
 				info->name_end>xname ? info->name_end-xname : 10,xname);
 			return(-1);
 		}
+	}
+	if(xnamelen==4 && !strncmp(xname,"none",xnamelen))
+	{
+		Error("Cannot add %s description \"%.*s\" (reserved name).\n",
+			DTypeString(dt),int(xnamelen),xname);
+		return(-1);
 	}
 	// Okay, now we have the new name. 
 	Verbose(BasicInit,"Adding new %s description \"%.*s\".\n",

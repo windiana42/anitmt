@@ -1372,28 +1372,27 @@ int TaskSourceFactory_Local::parse(const Section * /*s*/,PAR::SPHInfo *info)
 	}
 	else
 	{
-Error("*** Please check that code if it does what we want. ***\n");
-assert(0);
-		
 		// Okay, there was a `#section xyz´ ot sth like that. 
 		int illegal=0;
+		int saw_colon=0;
 		for(const char *c=info->nend; c<info->name_end; c++)
 		{
 			//if(*c=='-' || isspace(*c))
-			if(!isdigit(*c) && *c!=':')
+			if(*c==':')
+			{  ++saw_colon;  }
+			else if(!isdigit(*c))
 			{  ++illegal;  break;  }
 		}
+		if(saw_colon!=1)  ++illegal;
 		xname=info->nend;
 		xnamelen=info->name_end-xname;
-		/*if(info->name_end<=info->nend || illegal)
+		if(info->name_end<=info->nend || illegal)
 		{
-			#warning fixme: cannot report <SOMEWHERE> as location...
-			Error("In <SOMEWHERE - FIXME>: %s \"%.*s\".\n",
-				ipfss,
+			Error("%s: in %s: illegal per-frame section spec \"%.*s\".\n",
+				prg_name,info->origin->OriginStr().str(),
 				info->name_end>xname ? info->name_end-xname : 10,xname);
 			return(-1);
-		}*/
-		return(1);
+		}
 	}
 	
 	int fail_req=0;
@@ -1433,7 +1432,7 @@ assert(0);
 		fi_list.append(new_fi);  // sorted lateron
 	}
 	
-	Verbose(0,"Adding new per-frame block %d:%d (last frame: %d).\n",
+	Verbose(DBG,"Adding new per-frame block %d:%d (last frame: %d).\n",
 		new_fi->first_frame_no,new_fi->nframes,
 		new_fi->first_frame_no+new_fi->nframes);
 	

@@ -97,41 +97,62 @@ void InitRVOutputParams(int &argc,char **argv,char ** /*envp*/)
 }
 
 
-void Error(const char *fmt,...)
+static inline int _vaError(const char *fmt,va_list ap)
 {
-	va_list ap;
-	va_start(ap,fmt);
 	if(rv_oparams.enable_color_stderr)
 	{  fprintf(stderr,rv_oparams.console_Red_start);  }
-	vfprintf(stderr,fmt,ap);
+	int rv=vfprintf(stderr,fmt,ap);
 	if(rv_oparams.enable_color_stderr)
 	{  fprintf(stderr,rv_oparams.console_Red_end);  }
-	va_end(ap);
+	return(rv);
 }
+int vaError(const char *fmt,va_list ap)
+{  return(_vaError(fmt,ap));  }
 
-void Warning(const char *fmt,...)
+static inline int _vaWarning(const char *fmt,va_list ap)
 {
-	va_list ap;
-	va_start(ap,fmt);
 	if(rv_oparams.enable_color_stderr)
 	{  fprintf(stderr,rv_oparams.console_red_start);  }
-	vfprintf(stderr,fmt,ap);
+	int rv=vfprintf(stderr,fmt,ap);
 	if(rv_oparams.enable_color_stderr)
 	{  fprintf(stderr,rv_oparams.console_red_end);  }
-	va_end(ap);
+	return(rv);
 }
+int vaWarning(const char *fmt,va_list ap)
+{  return(_vaWarning(fmt,ap));  }
 
-void _Verbose(const char *fmt,...)
+
+int Error(const char *fmt,...)
 {
 	va_list ap;
 	va_start(ap,fmt);
-	if(rv_oparams.enable_color_stdout)
+	int rv=_vaError(fmt,ap);
+	va_end(ap);
+	return(rv);
+}
+
+int Warning(const char *fmt,...)
+{
+	va_list ap;
+	va_start(ap,fmt);
+	int rv=_vaWarning(fmt,ap);
+	va_end(ap);
+	return(rv);
+}
+
+int _Verbose(int vspec,const char *fmt,...)
+{
+	va_list ap;
+	va_start(ap,fmt);
+	bool is_debug=(vspec & (VERBOSE_DBG|VERBOSE_DBGV));
+	if(rv_oparams.enable_color_stdout && !is_debug)
 	{  fprintf(stdout,rv_oparams.console_blue_start);  }
-	vfprintf(stdout,fmt,ap);
-	if(rv_oparams.enable_color_stdout)
+	int rv=vfprintf(stdout,fmt,ap);
+	if(rv_oparams.enable_color_stdout && !is_debug)
 	{  fprintf(stdout,rv_oparams.console_blue_end);  }
 	va_end(ap);
 	fflush(stdout);
+	return(rv);
 }
 
 void VerboseSpecial(const char *fmt,...)

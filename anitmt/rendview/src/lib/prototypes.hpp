@@ -32,6 +32,8 @@
 
 #include "config.h"
 
+#include <stdarg.h>
+
 
 // NOTE: There are two types of assert() calls: 
 // assert():      general bug trap 
@@ -62,7 +64,7 @@ struct RVOutputParams
 
 enum
 {
-	VERBOSE_BasicInit = 0x00000001,   // basic init at startup (managers, ...)
+	VERBOSE_BasicInit = 0x01000001,   // basic init at startup (managers, ...)
 	VERBOSE_MiscInfo =  0x00000002,   // misc info like number of CPUs. 
 	VERBOSE_TDI =       0x00000004,   // TaskDriver init info (start processing/end)
 	VERBOSE_TDR =       0x00000008,   // TaskDriver runtime info (kill/start...)
@@ -83,10 +85,13 @@ extern  RVOutputParams rv_oparams;
 // Set them up: 
 extern void InitRVOutputParams(int &argc,char **argv,char **envp);
 
-extern void Error(const char *fmt,...)    __attribute__ ((__format__ (__printf__, 1, 2)));
-extern void Warning(const char *fmt,...)  __attribute__ ((__format__ (__printf__, 1, 2)));
-extern void _Verbose(const char *fmt,...) __attribute__ ((__format__ (__printf__, 1, 2)));
+extern int Error(const char *fmt,...)    __attribute__ ((__format__ (__printf__, 1, 2)));
+extern int Warning(const char *fmt,...)  __attribute__ ((__format__ (__printf__, 1, 2)));
+extern int _Verbose(int vspec,const char *fmt,...) __attribute__ ((__format__ (__printf__, 2, 3)));
 extern void VerboseSpecial(const char *fmt,...) __attribute__ ((__format__ (__printf__, 1, 2)));
+
+extern int vaError(const char *fmt,va_list ap);
+extern int vaWarning(const char *fmt,va_list ap);
 
 #define IsVerbose(vspec) (rv_oparams.vlevel_field & VERBOSE_##vspec)
 
@@ -94,7 +99,7 @@ extern void VerboseSpecial(const char *fmt,...) __attribute__ ((__format__ (__pr
 #define Verbose(vspec,fmt...)  \
 	do { \
 		if(IsVerbose(vspec)) \
-		{  _Verbose(fmt);  } \
+		{  _Verbose(VERBOSE_##vspec,fmt);  } \
 	} while(0)
 
 // Returns number of CPUs; assumes one CPU and warn if detection fails. 
