@@ -1,15 +1,19 @@
 *************************************************
-**     Vector library -- brief description     **
+**     Value library -- brief description      **
 **                                             **
 ** Copyright (c) 2000--2001 by Wolfgang Wieser **
 ** Bugs, suggestions to wwieser@gmx.de         **
 *************************************************
+
+*FIXME THIS DOCU NEEDS WORK SINCE THE Library now uses templates*
 
 Content: 
  0. Introduction
  1. class Scalar
  2. class Vector
  3. class Matrix
+ 4. class Flag
+ 5. class String
 
 --------------------------------------------------------------------------------
 
@@ -59,7 +63,7 @@ Operators:
       * Both the operators == and != are implemented. 
       * The logical not (operator!()) returns true (1), if the 
         scalar is 0. 
-      * All comparisons use the global value values::epsilon: 
+      * All comparisons use the global value vect::epsilon: 
         If two scalars a and b should be compared, they are considered 
         equal, if  fabs(a-b)<=epsilon . 
         NOTE that this might not be what you want, if you are comparing 
@@ -78,9 +82,7 @@ Operators:
 2. VECTOR
 ~~~~~~~~~~
 
-Vector implements a three-dimensional (row) vector. 
-Vector::get_type() returns Valtype::vector 
-(of type enum Valtype::Types). 
+Vector<R> implements a R-dimensional (row) vector. 
 
 Constructors: 
   * Vecror()       constructs a null vector. 
@@ -106,7 +108,7 @@ Operators:
   > Comparison:
       * Vectors can be compared to other vectors. 
       * Both operator!= and operator== are implemented. 
-      * The operators use values::epsilon (see Scalar/Comparison). 
+      * The operators use vect::epsilon (see Scalar/Comparison). 
       * Operator!() returns true (1) if the vector *this is the null vector. 
         Alternatively, you can use the method is_null(). 
   > Arithmetics: 
@@ -168,23 +170,16 @@ Functions:
          d is the value to be added to the vector component indexed xyz 
          (in range 0...2 with no range check). 
          v.trans(d,xyz) or trans(v,d,xyz) is like adding d to v[xyz]. 
-       * The functions transX(), transY() and transZ() are specialisations 
-         of trans(), setting the argument xyz to 0, 1 and 2 respectively. 
-         Both methods and friends are available. 
   > Scalation: 
        * As for translation, there are also functions to scale the vector. 
          Both methods and friends are available (see the introduction on 
          the difference between them). 
          The method scale(double f,int xyz) takes two arguments: 
          xyz selects the component to multiply with f. 
-       * The functions scaleX(), scaleY(), scaleZ() are specialisations 
-         of scale() setting xyz to 0, 1 and 2 respectively. 
   > Mirror: 
        * The mirror function mirror(int xyz) (available as member and as 
          friend) changes the sign of the component indexed by xyz (in range 
          0...2 with no range check). 
-       * mirrorX(), mirrorY(), mirrorZ() are specialisations of the function 
-         above. 
        * The method mirror(void) changes the sign of all components (like 
          unary operator-). 
   > Rotation:
@@ -209,9 +204,7 @@ Functions:
 3. MATRIX
 ~~~~~~~~~~
 
-Matrix implements a 3x3-matrix. 
-Matrix::get_type() returns Valtype::matrix 
-(of type enum Valtype::Types). 
+Matrix<C,R> implements a RxC-matrix. 
 
 Constructors: 
   * Matrix()               constructs an identity-matrix. 
@@ -242,12 +235,12 @@ Operators:
         is the new value for the component. 
   > Comparison:
       * You can compare a matrix to another one. The matrices are simply 
-        compared component-wise with respect to values::epsilon. 
+        compared component-wise with respect to vect::epsilon. 
       * Both operator== and operator!= are implemented. 
       * operator!() and is_ident() return true, if the matrix is the 
-        identity matrix (with respect to values::epsilon). 
+        identity matrix (with respect to vect::epsilon). 
       * is_null() returns true if the matrix is the null-matrix (with 
-        respecto to values::epsilon). 
+        respecto to vect::epsilon). 
   > Arthmetics: 
       * Matrices can be added to and subtracted from matrices. 
         This is done by adding/subtracting the element of one matrix to/from 
@@ -316,3 +309,18 @@ Functions:
 	translation as vector, that is done to a vector when being multipied 
 	with the Matrix m
 	To reproduce the effet of m, scale, then rotate and finally translate
+
+
+4. FLAG
+~~~~~~~
+
+Flag implements a simple bool true/false value. 
+
+
+5. STRING
+~~~~~~~~~
+
+String implements a simple string and is publically derived 
+from std::string to be easy to use with all the STL string 
+operations. 
+

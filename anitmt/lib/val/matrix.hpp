@@ -1,240 +1,259 @@
 /*
  * matrix.hpp
- *
- * Header file containing a matrix template. 
- *
- * Copyright (c) 2000--2001 by Wolfgang Wieser
- * Bugs, suggestions to wwieser@gmx.de. 
- *
- * Permission to use, copy, modify, and distribute this software and its
- * documentation for any purpose and without fee is hereby granted,
- * provided that the above copyright notice appear in all copies and that
- * both that copyright notice and this permission notice appear in
- * supporting documentation.
  * 
- * This file is provided AS IS with no warranties of any kind.  The author
- * shall have no liability with respect to the infringement of copyrights,
- * trade secrets or any patents by this file or any part thereof.  In no
- * event will the author be liable for any lost revenue or profits or
- * other special, indirect and consequential damages.
+ * Matrix template; header for matrix value type. 
  * 
- * This program is distributed in the hope that it will be 
- * useful, but WITHOUT ANY WARRANTY; without even the 
- * implied warranty of MERCHANTABILITY or FITNESS _mFOR A PARTICULAR
- * PURPOSE.
+ * Copyright (c) 2001 by Wolfgang Wieser (wwieser@gmx.de) 
  * 
- * See the GNU General Public License for details.
- * If you have not received a copy of the GNU General Public License,
- * write to the 
- * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * This file may be distributed and/or modified under the terms of the 
+ * GNU General Public License version 2 as published by the Free Software 
+ * Foundation. 
  * 
- * Revision History:
- *   Dec 2000   started writing
- *
+ * This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
+ * WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
+ * 
  */
 
+#ifndef _NS_vect_matrix_HPP_
+#define _NS_vect_matrix_HPP_ 1
 
-#ifndef __vect_matrix_hpp__
-#define __vect_matrix_hpp__
-
-// NOTE: You should gain speed if you apply loop unrolling 
-//       here (gcc -funroll-loops). 
-
-#include "vect.hpp"
-
-
-// Ugly macros increase readability and reduce amount of source. 
-#define _mFOR(_c_,_r_)  \
-	for(int _c_=0; _c_<C; _c_++) \
-		for(int _r_=0; _r_<R; _r_++)
-#define _mFORN(_c_,_r_)  \
-	for(int _c_=0; _c_<N; _c_++) \
-		for(int _r_=0; _r_<N; _r_++)
-
+#include "vector.hpp"
 
 namespace vect
 {
 
-// Internal: 
-namespace internal
-{
-	// Suffix 2 for two-dim array (matrix). 
-	extern std::ostream& stream_write_array2(std::ostream& s,const double *x,int c,int r);
-	
-	// Multiplication of two matrices: 
-	extern void matrix_mul(
-		      double *rm,int rc,int rr, 
-		const double *am,int ac,int ar, 
-		const double *bm,int bc,int br) throw(vect::EX_Matrix_Illegal_Mult);
-	extern void matrix_mul(
-		      double *rm,int rc,int rr, 
-		const double *bm,int bc,int br) throw(vect::EX_Matrix_Illegal_Mult);
-	
-	// Inversion of a matrix: 
-	extern void matrix_invert(        // THIS MODIFIES m!!
-		      double *rm,int rc,int rr, 
-		      double *m, int c, int r)  throw(vect::EX_Matrix_Illegal_Invert);
-	extern void matrix_invert_copy(   // Does not modify m. 
-		      double *rm,int rc,int rr, 
-		const double *m, int c, int r)  throw(vect::EX_Matrix_Illegal_Invert);
-	extern void matrix_invert_copy(   // Returns inverted matrix in m. 
-		      double *m,int c,int r)  throw(vect::EX_Matrix_Illegal_Invert);
-}
-
-
-// used by matrix::operator[]. 
-template<int R> class matrix_column
+template<int C=4,int R=4>class Matrix
 {
 	private:
-		double *x;
+		internal_vect::matrix<C,R> x;
+		enum NoInit { noinit };
+		// This constructor is fast as it does no initialisation: 
+		Matrix(NoInit) : x() {}
 	public:
-		matrix_column(double *_x) : x(_x)  {}
+		enum NullMat { null };
+		enum IdentMat { ident };
+		enum MatRotX { matrotx };
+		enum MatRotY { matroty };
+		enum MatRotZ { matrotz };
+		enum MatScale { matscale };
+		enum MatTrans { mattrans };
 		
-		// Returns the value indexed with r in the column represented 
-		// by *this. 
-		// NO RANGE CHECK IS PER_mFORMED ON r. 
-		double operator[](int r) const  {  return(x[r]);  }
+		// Copy constructor: 
+		Matrix(const Matrix<C,R> &m) : x(m.x)  {}
+		//Matrix(const internal_vect::matrix<C,R> &m) : x(m)  {}
+		// These generate an initialized identity matrix. 
+		Matrix()         : x(0)  {}
+		Matrix(IdentMat) : x(0)  {}
+		// This generates an initialized null matrix. 
+		Matrix(NullMat) : x()  {  x.set_null(); }
+		
+		// You may (of couse) use these functions but the non-member 
+		// functions below (MrotateX(),...) are more convenient. 
+		// * These are only available for 4x4 matrices in combination 
+		// * with 3d vectors. 
+		Matrix(enum MatRotX,double angle);
+		Matrix(enum MatRotY,double angle);
+		Matrix(enum MatRotZ,double angle);
+		Matrix(enum MatScale,double fact,int idx);  // idx unchecked. 
+		Matrix(enum MatScale,const Vector<3> &v);
+		Matrix(enum MatTrans,double delta,int idx);  // idx unchecked. 
+		Matrix(enum MatTrans,const Vector<3> &v);
+		
+		// Assignment operator 
+		Matrix<C,R> &operator=(const Matrix<C,R> &m)  {  x=m.x;  return(*this);  }
+		
+		//operator internal_vect::matrix<C,R>() const  {  return(x);  }
+		
+		/************************************/
+		/* COLUMNS -> c -> ``X coordinate'' */
+		/* ROWS    -> r -> ``Y coordinate'' */
+		/* ORDER: ALWAYS c,r  ( -> x,y)     */
+		/************************************/
+		
+		// This returns the i-th column of the vector; use a second index 
+		// operator to get a single value. 
+		// Using Matrix mat, you can access every element by calling 
+		//   double val=mat[c][r];
+		// FOR SPEED INCREASE, NO RANGE CHECK IS PERFORMED ON c, r. 
+		internal_vect::matrix_column<R> operator[](int c)  {  return(x[c]);  }
+		
+		// Set an element of the matrix: c is the column index, r the row index. 
+		// NO RANGE CHECK IS PERFORMED ON c,r. 
+		// Returns *this. 
+		Matrix<C,R> &operator()(int c,int r,double val)
+		{  x(c,r,val);  return(*this); }
+		
+		// Multiplication/Division of a matrix and/by a scalar: 
+		// (Divides/multiplies every element of the matrix.) 
+		template<int c,int r>friend Matrix<c,r> operator*(const Matrix<c,r> &a,Scalar b);
+		template<int c,int r>friend Matrix<c,r> operator*(Scalar a,const Matrix<c,r> &b);
+		template<int c,int r>friend Matrix<c,r> operator/(const Matrix<c,r> &a,Scalar b);
+		
+		// Multiplication/Division of a matrix and/by a scalar changing *this 
+		// and returning it. 
+		Matrix<C,R> &operator*=(Scalar b)  {  x.mul(b);  return(*this);  }
+		Matrix<C,R> &operator/=(Scalar b)  {  x.div(b);  return(*this);  }
+		
+		// Multiplication of a matrix and a vector: 
+		// (Vector::operator*=(Matrix) is also available.)
+		template<int c,int r>friend Vector<r> operator*(const Matrix<c,r> &a,const Vector<c> &b);
+		template<int c,int r>friend Vector<r> operator*(const Vector<c> &a,const Matrix<c,r> &b);
+		// Special versions: 
+		friend Vector<3> operator*(const Matrix<4,4> &a,const Vector<3> &b);
+		friend Vector<3> operator*(const Vector<3> &a,const Matrix<4,4> &b);
+		
+		// Multiplication of a matrix and a matrix: 
+		template<int M,int L,int N>friend Matrix<L,M> operator*(
+			const Matrix<N,L> &a,const Matrix<N,M> &b);
+		// Version changing *this and returning it: 
+		// (only for quadratic matrices -> use of <C,C> instead of <C,R>)
+		Matrix<C,C> &operator*=(const Matrix<C,C> &b)
+			{  x.mul(b.x);  return(*this);  }
+		
+		// Friend needed for vector * matrix calculation. 
+		// This returns void for speed increase. 
+		template<int N>friend void operator*=(Vector<N> &v,const Matrix<N,N> &m);
+		// Special version: 
+		friend void operator*=(Vector<3> &v,const Matrix<4,4> &m);
+		
+		// Addition/Subtraction of two matrices (element-by-elemnt). 
+		template<int c,int r>friend Matrix<c,r> operator+(const Matrix<c,r> &a,const Matrix<c,r> &b);
+		template<int c,int r>friend Matrix<c,r> operator-(const Matrix<c,r> &a,const Matrix<c,r> &b);
+		Matrix<C,R> &operator+=(const Matrix<C,R> &b)  {  x.add(b.x);  return(*this);  }
+		Matrix<C,R> &operator-=(const Matrix<C,R> &b)  {  x.sub(b.x);  return(*this);  }
+		
+		// Unary operators: 
+		Matrix<C,R> operator+() const {  return(*this);  } 
+		Matrix<C,R> operator-() const {  Matrix<C,R> r(noinit);  r.x.neg(x);   return(r);  }
+		
+		// Operators comparing matrices (are using epsilon): 
+		template<int c,int r>friend bool operator==(const Matrix<c,r> &,const Matrix<c,r> &);
+		template<int c,int r>friend bool operator!=(const Matrix<c,r> &,const Matrix<c,r> &);
+		
+		// Returns 1, if this matrix is the identity-matrix (uses epsilon). 
+		bool operator!() const {  return(x.is_ident(epsilon));  }
+		bool is_ident()  const {  return(x.is_ident(epsilon));  }
+		
+		// Returns 1, if this matrix is the null-matrix (uses epsilon). 
+		bool is_null() const {  return(x.is_null(epsilon));  }
+		
+		// These functions calculate the inverse matrix. 
+		Matrix<C,R> &invert()  {  x.invert();  return(*this);  }
+		template<int c,int r>friend Matrix<c,r> invert(const Matrix<c,r> &m);
+		
+		// Print matrix to stream: 
+		template<int c,int r>friend ostream& operator<<(ostream& s,const Matrix<c,r> &m);
 };
 
+template<int C,int R>inline Matrix<C,R> operator*(const Matrix<C,R> &a,Scalar b)
+{  Matrix<C,R> r(Matrix<C,R>::noinit);  r.x.mul(a.x,b);  return(r);  }
+template<int C,int R>inline Matrix<C,R> operator*(Scalar a,const Matrix<C,R> &b)
+{  Matrix<C,R> r(Matrix<C,R>::noinit);  r.x.mul(b.x,a);  return(r);  }
+template<int C,int R>inline Matrix<C,R> operator/(const Matrix<C,R> &a,Scalar b)
+{  Matrix<C,R> r(Matrix<C,R>::noinit);  r.x.div(a.x,b);  return(r);  }
 
-// C: number of columns, R: number of rows. 
-template<int C,int R> class matrix
-{
-	private:
-		double x[C][R];
-	public:
-		// Damn function which returns a pointer to the first element of x. 
-		// It is needed as long as I do not succeed in making the functions 
-		// which use it friends of matrix. 
-		// Either I am too stupid for this or the compiler too pedantic or 
-		// C++ does not allow me to do this. ($@#&%>3*!!!)
-		double *_get_ptr()  const  {  return((double*)(x[0]));  }
-		
-		// Constructor which generates an uninitialized matrix: 
-		matrix()     { }
-		// Constructor which generates the identity-matrix: 
-		//   1 0 0 
-		//   0 1 0
-		//   0 0 1
-		matrix(int)  {  _mFOR(c,r)  x[c][r] = (c==r) ? 1.0 : 0.0;  }
-		// Copy-constructor: 
-		matrix(const matrix<C,R> &m)  {  _mFOR(c,r)  x[c][r]=m.x[c][r];  }
-		
-		// Assignment operator: 
-		matrix<C,R> &operator=(const matrix<C,R> &m)
-			{  _mFOR(c,r) x[c][r]=m.x[c][r];  return(*this);  }
-		
-		// Set this to a null-matrix / to a identity-matrix. 
-		void set_null()   {  _mFOR(c,r)  x[c][r]=0.0;  }
-		void set_ident()  {  _mFOR(c,r)  x[c][r] = (c==r) ? 1.0 : 0.0;  }
-		
-		// Get matrix_column indexed c: 
-		// Do not use matrix_column in your code; only use its 
-		// operator[] to be able to access any element of the matrix: 
-		//   matrix<3,3> mat;
-		//   double val = mat[c][r];
-		// NO RANGE CHECK IS PER_mFORMED ON c. 
-		matrix_column<R> operator[](int c)
-			{  return(matrix_column<R>(x[c]));  }
-		
-		// Set an element of the matrix: 
-		// NO RANGE CHECK IS PER_mFORMED ON c,r. 
-		matrix<C,R> &operator()(int c,int r,double val)
-			{  x[c][r]=val;  return(*this); }
-		
-		/**************************************************************/
-		/* Functions which can be applied to non-initialized matrices */
-		/* as they overwrite the content of *this:                    */
-		
-		matrix<C,R> &mul(const matrix<C,R> &a,double b)
-			{            _mFOR(c,r)  x[c][r]=a.x[c][r]*b;  return(*this);  }
-		matrix<C,R> &div(const matrix<C,R> &a,double b)
-			{  b=1.0/b;  _mFOR(c,r)  x[c][r]=a.x[c][r]*b;  return(*this);  }
-		
-		matrix<C,R> &add(const matrix<C,R> &a,const matrix<C,R> &b)
-			{  _mFOR(c,r)  x[c][r]=a.x[c][r]+b.x[c][r];  return(*this);  }
-		matrix<C,R> &sub(const matrix<C,R> &a,const matrix<C,R> &b)
-			{  _mFOR(c,r)  x[c][r]=a.x[c][r]-b.x[c][r];  return(*this);  }
-		
-		matrix<C,R> &neg(const matrix<C,R> &a)
-			{  _mFOR(c,r)  x[c][r]=-a.x[c][r];  return(*this);  }
-		
-		// Inverts the matrix m and stores the inverted matrix in *this. 
-		// NOTE: Only quadratic matrices may be inverted; if C!=R, 
-		//       EX_Matrix_Illegal_Invert is thrown. 
-		// (The identity-matrix initialisation is important.) 
-		matrix<C,R> &invert(const matrix<C,R> &m)
-			{  set_ident();  internal::matrix_invert_copy(x[0],C,R,m.x[0],C,R);
-			   return(*this);  }
-		
-		/**************************************************************/
-		/* Functions taking *this as argument a and overwriting *this */
-		/* with the result:                                           */
-		
-		matrix<C,R> &mul(double b)
-			{            _mFOR(c,r)  x[c][r]*=b;  return(*this);  }
-		matrix<C,R> &div(double b)
-			{  b=1.0/b;  _mFOR(c,r)  x[c][r]*=b;  return(*this);  }
-		
-		matrix<C,R> &add(const matrix<C,R> &b)
-			{  _mFOR(c,r)  x[c][r]+=b.x[c][r];  return(*this);  }
-		matrix<C,R> &sub(const matrix<C,R> &b)
-			{  _mFOR(c,r)  x[c][r]-=b.x[c][r];  return(*this);  }
-		
-		matrix<C,R> &neg()
-			{  _mFOR(c,r)  x[c][r]*=-1.0;  return(*this);  }
-		
-		// NOTE: This function will throw EX_Matrix_Illegal_Mult, if C!=R. 
-		// There is also a more general multiplication function available; 
-		// see below. 
-		matrix<C,R> &mul(const matrix<C,R> &b)
-			{  internal::matrix_mul(x[0],C,R,b.x[0],C,R);  return(*this);  }
-		
-		// Inverts the matrix *this. 
-		// NOTE: Only quadratic matrices may be inverted; if C!=R, 
-		//       EX_Matrix_Illegal_Invert is thrown. 
-		matrix<C,R> &invert()
-			{  internal::matrix_invert_copy(x[0],C,R);  return(*this);  }
-		
-		// Function to multiply the vector v with matrix m, storing the 
-		// resulting vector in r. 
- 		friend void mult<>(vector<R> &r,const matrix<C,R> &m,const vector<C> &v);
-		friend void mult(vector<3> &r,const matrix<4,4> &m,const vector<3> &v);
-		
-		friend std::ostream& operator<< <>(std::ostream &s,const matrix<C,R> &m);
-		
-		// Comparing matrices: 
-		// Returns 1, if a is equal to *this (or each component pair does not 
-		// differ more than epsilon). 
-		int compare_to(const matrix<C,R> &a,double epsilon) const 
-			{  _mFOR(c,r)  if(fabs(x[c][r]-a.x[c][r])>epsilon) return(0);  return(1);  }
-		
-		// Returns 1, if this is a null-matrix (no component > epsilon). 
-		int is_null(double epsilon) const 
-			{  _mFOR(c,r)  if(fabs(x[c][r])>epsilon) return(0);  return(1);  }
-		
-		// Returns 1, if this is an identity-matrix. 
-		int is_ident(double epsilon) const  {
-			_mFOR(c,r)
-				if(fabs((c==r) ? (x[c][r]-1.0) : (x[c][r])) > epsilon)
-					return(0);
-			return(1);
-		}
-};
+template<int C,int R>inline Vector<R> operator*(const Matrix<C,R> &m,const Vector<C> &v)
+{  Vector<R> r(Vector<R>::noinit);  internal_vect::mult(r.x,m.x,v.x);  return(r);  }
+template<int C,int R>inline Vector<R> operator*(const Vector<C> &v,const Matrix<C,R> &m)
+{  Vector<R> r(Vector<R>::noinit);  internal_vect::mult(r.x,m.x,v.x);  return(r);  }
+// Special versions: 
+inline Vector<3> operator*(const Matrix<4,4> &m,const Vector<3> &v)
+{  Vector<3> r(Vector<3>::noinit);  internal_vect::mult(r.x,m.x,v.x);  return(r);  }
+inline Vector<3> operator*(const Vector<3> &v,const Matrix<4,4> &m)
+{  Vector<3> r(Vector<3>::noinit);  internal_vect::mult(r.x,m.x,v.x);  return(r);  }
+
+template<int C,int R>inline Matrix<C,R> operator+(const Matrix<C,R> &a,const Matrix<C,R> &b)
+{  Matrix<C,R> r(Matrix<C,R>::noinit);  r.x.add(a.x,b.x);   return(r);  }
+template<int C,int R>inline Matrix<C,R> operator-(const Matrix<C,R> &a,const Matrix<C,R> &b)
+{  Matrix<C,R> r(Matrix<C,R>::noinit);  r.x.sub(a.x,b.x);   return(r);  }
+
+// This one must use a temporary: (returns void for speed increase) 
+template<int N>inline void operator*=(Vector<N> &v,const Matrix<N,N> &m)
+{  Vector<N> tmp(Vector<N>::noinit); internal_vect::mult(tmp.x,m.x,v.x);  v=tmp;  }
+// Special version:
+inline void operator*=(Vector<3> &v,const Matrix<4,4> &m)
+{  Vector<3> tmp(Vector<3>::noinit); internal_vect::mult(tmp.x,m.x,v.x);  v=tmp;  }
+
+template<int M,int L,int N>inline Matrix<L,M> operator*(
+	const Matrix<N,L> &a,const Matrix<N,M> &b)
+{  Matrix<L,M> r(Matrix<L,M>::noinit);  internal_vect::mult(r.x,a.x,b.x);  return(r);  }
 
 
-// Function to multiply the two matrices a and b storing the result in r. 
-template<int M,int L,int N> inline 
-	void mult(matrix<L,M> &r,const matrix<N,L> &a,const matrix<N,M> &b)
-	{  internal::matrix_mul(r._get_ptr(),L,M,a._get_ptr(),N,L,b._get_ptr(),N,M);  }
+template<int C,int R>inline bool operator==(const Matrix<C,R> &a,const Matrix<C,R> &b)
+{  return(a.x.compare_to(b.x,epsilon));  }
+template<int C,int R>inline bool operator!=(const Matrix<C,R> &a,const Matrix<C,R> &b)
+{  return(!a.x.compare_to(b.x,epsilon));  }
 
-template<int C,int R> inline 
-	std::ostream& operator<<(std::ostream &s,const matrix<C,R> &m)
-	{  return(internal::stream_write_array2(s,m.x[0],C,R));  }
+template<int C,int R>inline Matrix<C,R> invert(const Matrix<C,R> &m)
+{  Matrix<C,R> r(Matrix<C,R>::noinit);  r.x.invert(m.x);  return(r);  }
 
-}  /* end of namespace */
+template<int C,int R>inline ostream& operator<<(ostream& s,const Matrix<C,R> &m)
+{  return(internal_vect::operator<<(s,m.x));  }
 
-#undef _mFOR
-#undef _mFORN
+// **** Constructing matrices: ****
+// THIS IS ONLY AVAILABLE FOR 4x4 MATRICES: 
+// Scalation (?) matrices: 
+inline Matrix<4,4> MscaleX(double fact)  {  return(Matrix<4,4>(Matrix<4,4>::matscale,fact,0));  }
+inline Matrix<4,4> MscaleY(double fact)  {  return(Matrix<4,4>(Matrix<4,4>::matscale,fact,1));  }
+inline Matrix<4,4> MscaleZ(double fact)  {  return(Matrix<4,4>(Matrix<4,4>::matscale,fact,2));  }
+inline Matrix<4,4> Mscale(const Vector<3> &v)  {  return(Matrix<4,4>(Matrix<4,4>::matscale,v));  }
+// Translation matrices: 
+inline Matrix<4,4> MtranslateX(double d)  {  return(Matrix<4,4>(Matrix<4,4>::mattrans,d,0));  }
+inline Matrix<4,4> MtranslateY(double d)  {  return(Matrix<4,4>(Matrix<4,4>::mattrans,d,1));  }
+inline Matrix<4,4> MtranslateZ(double d)  {  return(Matrix<4,4>(Matrix<4,4>::mattrans,d,2));  }
+inline Matrix<4,4> Mtranslate(const Vector<3> &v)  {  return(Matrix<4,4>(Matrix<4,4>::mattrans,v));  }
+// Rotation matrices: 
+inline Matrix<4,4> MrotateX(double angle)  {  return(Matrix<4,4>(Matrix<4,4>::matrotx,angle));  }
+inline Matrix<4,4> MrotateY(double angle)  {  return(Matrix<4,4>(Matrix<4,4>::matroty,angle));  }
+inline Matrix<4,4> MrotateZ(double angle)  {  return(Matrix<4,4>(Matrix<4,4>::matrotz,angle));  }
+// Rotates around x,y and z in this order; angles stored in v: 
+inline Matrix<4,4> Mrotate(const Vector<3> &v)
+	{  return(MrotateX(v[0])*MrotateY(v[1])*MrotateZ(v[2]));  }
 
-#endif  /* __vect_matrix_hpp__ */
+
+/** FUNCTIONS FOR 3d VECTORS AND 4x4 MATRICES: **/
+//! rotates a specified angle around v 
+extern Matrix<4,4> Mrotate_around(const Vector<3> &v,double angle);
+//! rotates a vector to another
+extern Matrix<4,4> Mrotate_vect_vect(const Vector<3> &from,const Vector<3> &to);
+/*! rotates a vector to another by using a sperical rotation with the
+    horizontal plane defined by the normal vector "up" */
+extern Matrix<4,4> Mrotate_vect_vect_up(const Vector<3> &from,
+	const Vector<3> &to,const Vector<3> &up);
+/*! rotates a vector pair to another
+    the first vectors of each pair will mach exactly afterwards but the second
+    may differ in the angle to the first one. They will be in the same plane
+    then. */
+extern Matrix<4,4> Mrotate_pair_pair(
+	const Vector<3> &vect1f,const Vector<3> &vect1u,
+	const Vector<3> &vect2f,const Vector<3> &vect2u);
+/*! spherical rotation with the horizontal plane defined through
+    the normal vector up and the front vector 
+    the x-coordinate of angles is used for the rotation around front
+    the y-coordinate of angles is used for the rotation around up
+    and the z-coordiante specifies the angle to go up from the plane */
+extern Matrix<4,4> Mrotate_spherical_pair(
+	const Vector<3> &front,const Vector<3> &up,const Vector<3> &angles);
+
+//! Get the rotation from v1 to v2 around axis 
+extern double get_rotation_around(
+	const Vector<3> &v1,const Vector<3> &v2,const Vector<3> &axis);
+
+/*! returns a vector which tells the resulting scalation of an x,y and z 
+    vector when being multipied with Matrix m.
+    To reproduce the effect of m: scale, then rotate and finally translate */
+extern Vector<3> get_scale_component(const Matrix<4,4> &mat);
+/*! returns a vector representing the rotation around the x, y and finally 
+    the z axis that are done to a vector when being multiplied with the 
+    Matrix m.
+    To reproduce the effect of m: scale, then rotate and finally translate */
+extern Vector<3> get_rotate_component(const Matrix<4,4> &mat);
+/*! returns the position independant
+    translation as vector, that is done to a vector when being multipied
+    with the Matrix m
+    To reproduce the effect of m: scale, then rotate and finally translate */
+extern Vector<3> get_translate_component(const Matrix<4,4> &mat);
+
+}  // namespace end 
+
+#endif  /* _NS_vect_vector_HPP_ */

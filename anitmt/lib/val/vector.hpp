@@ -1,211 +1,262 @@
 /*
  * vector.hpp
- *
- * Header file containing a vector template. 
- *
- * This is a part of the aniTMT animation project. 
  * 
- * Copyright (c) 2000--2001 by Wolfgang Wieser
- * Bugs, suggestions to wwieser@gmx.de. 
+ * Vector template; header for vector value type. 
  * 
- * Permission to use, copy, modify, and distribute this software and its
- * documentation for any purpose and without fee is hereby granted,
- * provided that the above copyright notice appear in all copies and that
- * both that copyright notice and this permission notice appear in
- * supporting documentation.
+ * Copyright (c) 2001 by Wolfgang Wieser (wwieser@gmx.de) 
  * 
- * This file is provided AS IS with no warranties of any kind.  The author
- * shall have no liability with respect to the infringement of copyrights,
- * trade secrets or any patents by this file or any part thereof.  In no
- * event will the author be liable for any lost revenue or profits or
- * other special, indirect and consequential damages.
+ * This file may be distributed and/or modified under the terms of the 
+ * GNU General Public License version 2 as published by the Free Software 
+ * Foundation. 
  * 
- * This program is distributed in the hope that it will be 
- * useful, but WITHOUT ANY WARRANTY; without even the 
- * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
- * PURPOSE.
+ * This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
+ * WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  * 
- * See the GNU General Public License for details.
- * If you have not received a copy of the GNU General Public License,
- * write to the 
- * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- * 
- * Revision History:
- *   Dec 2000   started writing
- *
  */
 
-#ifndef __vect_vector_hpp__
-#define __vect_vector_hpp__
+#ifndef _NS_vect_vector_HPP_
+#define _NS_vect_vector_HPP_ 1
 
-// NOTE: You should gain speed if you apply loop unrolling 
-//       here (gcc -funroll-loops). 
-
-#include "vect.hpp"
-
-
-// Ugly macros increase readability and reduce amount of source. 
-#define _vFOR(_i_)  for(int _i_=0; _i_<N; _i_++)
-#define _vFORP(_p_) for(double *_p_=x; _p_<&x[N]; _p_++)
-#define _vFORCP(_p_) for(const double *_p_=x; _p_<&x[N]; _p_++)
+#include "internals.hpp"
+#include "scalar.hpp"
 
 namespace vect
 {
 
-// Internal: 
-namespace internal
-{
-	// Suffix 1 for one-dim array (vector). 
-	extern std::ostream& stream_write_array1(std::ostream& s,const double *x,int n);
-}
+template<int N> Vector<N> cross(const Vector<N> &a,const Vector<N> &b);
 
-template<int N> class vector
+template<int N=3>class Vector
 {
 	private:
-		double x[N];
+		internal_vect::vector<N> x;
+		enum NoInit { noinit };
+		// This constructor is fast as it does no initialisation: 
+		Vector(NoInit) : x() {}
+ 
 	public:
-		// Damn function which returns a pointer to the first element of x. 
-		// It is needed as long as I do not succeed in making the functions 
-		// which use it friends of matrix. 
-		// Either I am too stupid for this or the compiler too pedantic or 
-		// C++ does not allow me to do this. 
-		double *_get_ptr()  const  {  return((double*)x);  }
+		// Copy constructors: 
+		Vector(const Vector<N> &v) : x(v.x)  {}
+		Vector(const internal_vect::vector<3> &v) : x(v)  {}
+		// This generates a vector initialized to 0. 
+		Vector() : x(0)  {}
+		// If you use these constructors with the wrong number of args you 
+		// will get a linker error. 
+		Vector(double u,double v);   // 2d only
+		Vector(double x,double y,double z);  // 3d only
+		Vector(double x,double y,double z,double a);  // 4d only
+		Vector(double x,double y,double z,double a,double b);  // 5d only
 		
-		// Constructor which generates an uninitialized vector: 
-		vector()     { }
-		// Constructor for a null-vector: 
-		vector(int)  {  _vFORP(p)  *p=0.0;  }
-		// Copy-constructor: 
-		vector(const vector<N> &v)  {  _vFOR(i) x[i]=v.x[i];  }
+		// Assignment operator 
+		Vector<N> &operator=(const Vector<N> &v)  {  x=v.x;  return(*this);  }
 		
-		// Assignment operator: 
-		vector<N> &operator=(const vector<N> &v)
-			{  _vFOR(i) x[i]=v.x[i];  return(*this);  }
+		//operator internal_vect::vector<N>() const  {  return(x);  }
 		
 		// This returns the i-th row value of the vector. 
 		// For a 3d-vector, i must be in range 0...2. 
-		// _vFOR SPEED INCREASE, NO RANGE CHECK IS PER_vFORMED ON i. 
+		// FOR SPEED INCREASE, NO RANGE CHECK IS PERFORMED ON i. 
 		double operator[](int i)  const  {  return(x[i]);  }
 		
 		// This sets the i-th row value of the vector. 
-		// _vFOR SPEED INCREASE, NO RANGE CHECK IS PER_vFORMED ON i. 
+		// FOR SPEED INCREASE, NO RANGE CHECK IS PERFORMED ON i. 
 		// Return value is *this. 
-		vector<N> &operator()(int i,double a)  {  x[i]=a;  return(*this);  }
+		Vector<N> &operator()(int i,double a)  {  x(i,a);  return(*this);  }
 		
-		// Functions that return the length of the vector (abs()) and 
-		// the square of the length (abs2(); faster as no sqrt() is needed). 
-		double abs2()  const  {  double s=0.0;  _vFORCP(p) s+=(*p)*(*p);  return(s);  }
-		double abs()   const  {  return(sqrt(abs2()));  }
+		// (These versions aviod unecessray initialisations/copying.) 
+		// Addition/Subtraction of two vectors: 
+		template<int n>friend Vector<n> operator+(const Vector<n> &a,const Vector<n> &b);
+		template<int n>friend Vector<n> operator-(const Vector<n> &a,const Vector<n> &b);
 		
-		/****************************************************************/
-		/* Functions which can be applied to non-initialized vectors as */
-		/* they overwrite the content of *this:                         */
+		// Multiplication/Division of a vector by a Scalar: 
+		template<int n>friend Vector<n> operator*(const Vector<n> &a,Scalar b);
+		template<int n>friend Vector<n> operator*(Scalar a,const Vector<n> &b);
+		template<int n>friend Vector<n> operator/(const Vector<n> &a,Scalar b);
 		
-		// Basic operations: 
-		vector<N> &add(const vector<N> &a,const vector<N> &b)
-			{  _vFOR(i)  x[i]=a.x[i]+b.x[i];  return(*this);  }
-		vector<N> &sub(const vector<N> &a,const vector<N> &b)
-			{  _vFOR(i)  x[i]=a.x[i]-b.x[i];  return(*this);  }
-		vector<N> &mul(const vector<N> &a,double b)
-			{  _vFOR(i)  x[i]=a.x[i]*b;  return(*this);  }
-		vector<N> &div(const vector<N> &a,double b)
-			{  b=1.0/b;  _vFOR(i)  x[i]=a.x[i]*b;  return(*this);  }
+		Vector<N> &operator+=(const Vector<N> &b)  {  x.add(b.x);  return(*this);  }
+		Vector<N> &operator-=(const Vector<N> &b)  {  x.sub(b.x);  return(*this);  }
+		Vector<N> &operator*=(Scalar b) 		   {  x.mul(b);    return(*this);  }
+		Vector<N> &operator/=(Scalar b) 		   {  x.div(b);    return(*this);  }
 		
-		vector<N> &vector_mul(const vector<N> &a,const vector<N> &b);
+		// SCALAR multiplication:
+		template<int n>friend Scalar operator*(const Vector<n> &a,const Vector<n> &b);
+		template<int n>friend Scalar dot(const Vector<n> &a,const Vector<n> &b);
 		
-		// (Stretches vector v so that it gets the length 1; result stored 
-		// in *this and returned.)
-		vector<N> &normalize(const vector<N> &v)
-			{  return(div(v,v.abs()));  }
+		// VECTOR multiplication: (3d vectors only, linker error for others)
+		friend Vector<N> cross(const Vector<N> &a,const Vector<N> &b);
+		// (Member function not faster than non-member friend.)
+  		Vector<N> &cross(const Vector<N> &b);
 		
-		// Changes the sign of every element:
-		vector<N> &neg(const vector<N> &a)
-			{  _vFOR(i)  x[i]=-a.x[i];  return(*this);  }
+		// Multiplication of a vector with a matrix (resulting in a vector). 
+		// This returns void for speed increase. 
+		template<int n>friend void operator*=(Vector<n> &v,const Matrix<n,n> &b);
+		// Special version: 
+		friend void operator*=(Vector<3> &v,const Matrix<4,4> &b);
 		
-		// Translation (copies vector, adds value delta to component 
-		// with index n). 
-		vector<N> &trans(const vector<N> &v,double delta,int n)
-			{  _vFOR(i)  x[i]=v.x[i];  x[n]+=delta;  return(*this);  }
+		// Multiplication of matrix and vector: 
+		template<int C,int R>friend Vector<R> operator*(const Matrix<C,R> &a,const Vector<C> &b);
+		template<int C,int R>friend Vector<R> operator*(const Vector<C> &a,const Matrix<C,R> &b);
+		// Special versions: 
+		friend Vector<3> operator*(const Matrix<4,4> &a,const Vector<3> &b);
+		friend Vector<3> operator*(const Vector<3> &a,const Matrix<4,4> &b);
 		
-		// Scale vector (copies vector, then multiplies value f to 
-		// component with index n). 
-		vector<N> &scale(const vector<N> &v,double f,int n)
-			{  _vFOR(i)  x[i]=v.x[i];  x[n]*=f;  return(*this);  }
+		// Unary operators: 
+		Vector<N> operator+() const  {  return(*this);  }
+		Vector<N> operator-() const  {  Vector<N> r(noinit);  r.x.neg(x);  return(r);  }
 		
-		// Mirror functions; just swaps the sign of the n-th component. 
-		// NO RANGE CHECK IS PER_vFORMED ON n. 
-		vector<N> &mirror(const vector<N> &v,int n)
-			{  _vFOR(i)  x[i]=v.x[i];  x[n]=-v.x[n];  return(*this);  }
+		// Operators comparing vectors (are using epsilon): 
+		template<int n>friend bool operator==(const Vector<n> &,const Vector<n> &);
+		template<int n>friend bool operator!=(const Vector<n> &,const Vector<n> &);
 		
-		/****************************************************************/
-		/* Functions taking *this as argument a and overwriting *this   */
-		/* with the result:                                             */
-		vector<N> &add(const vector<N> &b)
-			{  _vFOR(i)  x[i]+=b.x[i];  return(*this);  }
-		vector<N> &sub(const vector<N> &b)
-			{  _vFOR(i)  x[i]-=b.x[i];  return(*this);  }
-		vector<N> &mul(double b)
-			{  _vFORP(p)  (*p)*=b;  return(*this);  }
-		vector<N> &div(double b)
-			{  b=1.0/b;  _vFORP(p)  (*p)*=b;  return(*this);  }
-		vector<N> &normalize()
-			{  return(div(abs()));  }
+		// Returns 1, if this vector is the null-vector (or if no component 
+		// is larger than epsilon). 
+		bool operator!() const {  return(x.is_null(epsilon));  }
+		bool is_null() const {  return(x.is_null(epsilon));  }
 		
-		// Changes the sign of every element:
-		vector<N> &neg()
-			{  _vFORP(p)  *p=-(*p);  return(*this);  }
+		// Return vector length and its square (the latter is faster): 
+		// (Use abs(Vector) if you want a Scalar as return value.) 
+		double abs()   const  {  return(x.abs());   }
+		double abs2()  const  {  return(x.abs2());  }
 		
-		// Translation (adds value delta to component with index n). 
-		vector<N> &trans(double delta,int n)
-			{  x[n]+=delta;  return(*this);  }
+		// Stretches vector to length 1: 
+		Vector<N> &normalize()  {  x.normalize();  return(*this);  }
+		template<int n>friend Vector<n> normalize(const Vector<n> &v);
 		
-		// Scale vector (multiplies value f to component with index n). 
-		vector<N> &scale(double f,int n)
-			{  x[n]*=f;  return(*this);  }
+		// Computes the angle between the two passed vectors; the returned 
+		// value is in range 0...PI. 
+		template<int n>friend Scalar angle(const Vector<n> &a,const Vector<n> &b);
+		inline Scalar angle(const Vector<N> &b) const  {  return(vect::angle(*this,b));  }
 		
-		// Mirror functions; just swaps the sign of the n-th component. 
-		// NO RANGE CHECK IS PER_vFORMED ON n. 
-		vector<N> &mirror(int n)
-			{  x[n]=-x[n];  return(*this);  }
+		// Member rotation functions; result overwrites *this. 
+		// Faster than the non-member functions. 
+		// (ONLY AVAILABLE FOR 3d VECTORS.)
+		Vector<N> &rotateX(double theta);
+		Vector<N> &rotateY(double theta);
+		Vector<N> &rotateZ(double theta);
+		// There are also non-member rotation functions defined below. 
 		
-		/****************************************************************/
+		// Translation functions: 
+		// int xyz: x=0, y=1, z=2, ... no range check. 
+		// Member (modifying *this) and non-member version: 
+		Vector<N> &trans(double d,int xyz)  {  x.trans(d,xyz);  return(*this);  }
+		template<int n>friend Vector<n> trans(const Vector<n> &v,double delta,int xyz);
 		
-		friend std::ostream& operator<< <>(std::ostream &s,const vector<N> &v);
+		// Scalation functions: 
+		// int xyz: x=0, y=1, z=2, ... no range check. 
+		// Member (modifying *this) and non-member version: 
+		Vector<N> &scale(double f,int xyz)  {  x.scale(f,xyz);  return(*this);  }
+		template<int n>friend Vector<n> scale(const Vector<n> &v,double factor,int xyz);
 		
-		// Returns 1, if a is equal to *this (or each component pair does not 
-		// differ more than epsilon). 
-		int compare_to(const vector<N> &a,double epsilon) const 
-			{  _vFOR(i)  if(fabs(x[i]-a.x[i])>epsilon) return(0);  return(1);  }
+		// Mirror functions: 
+		// int xyz: x=0, y=1, z=2, ... no range check. 
+		// Member (modifying *this) and non-member version: 
+		Vector<N> &mirror(int xyz)  {  x.mirror(xyz);  return(*this);  }
+		template<int n>friend Vector<n> mirror(const Vector<n> &v,int xyz);
+		// Apply mirror to all components (works like unary operator-): 
+		Vector<N> &mirror()         {  x.neg();   return(*this);  }
+		template<int n>friend Vector<n> mirror(const Vector<n> &v);
 		
-		// Returns 1, if this is a null-vector (no component > epsilon). 
-		int is_null(double epsilon) const 
-			{  _vFORCP(p)  if(fabs(*p)>epsilon) return(0);  return(1);  }
+		// Conversion: spherical <-> rectangular coordinates: 
+		//           r,phi,theta <-> x,y,z  (in this order)
+		// Result overwrites *this; there are also non-member functions 
+		// available (below) which are slower. 
+		// (ONLY AVAILABLE FOR 3d VECTORS.)
+		Vector<N> &to_spherical();
+		Vector<N> &to_rectangular();
+		
+		// Print vector to stream: 
+		template<int n>friend ostream& operator<<(ostream& s,const Vector<n> &v);
 };
 
-// Scalar multiplication of two vectors. 
-template<int N> inline double scalar_mul(const vector<N> &a,const vector<N> &b)
-{  double r=0.0;  _vFOR(i) r+=a[i]*b[i];  return(r);  }
+template<int N>inline Vector<N> operator+(const Vector<N> &a,const Vector<N> &b)
+	{  Vector<N> r(Vector<N>::noinit);  r.x.add(a.x,b.x);   return(r);  }
+template<int N>inline Vector<N> operator-(const Vector<N> &a,const Vector<N> &b)
+	{  Vector<N> r(Vector<N>::noinit);  r.x.sub(a.x,b.x);   return(r);  }
 
-// Calculates the angle between the two specified vectors. 
-// The returned value is in range 0...PI. 
-template<int N> inline double angle(const vector<N> &a,const vector<N> &b)
-{  return(acos(scalar_mul(a,b)/sqrt(a.abs2()*b.abs2())));  }
+// Multiplication/Division of a vector by a Scalar: 
+template<int N>inline Vector<N> operator*(const Vector<N> &a,Scalar b)
+	{  Vector<N> r(Vector<N>::noinit);  r.x.mul(a.x,b);   return(r);  }
+template<int N>inline Vector<N> operator*(Scalar a,const Vector<N> &b)
+	{  Vector<N> r(Vector<N>::noinit);  r.x.mul(b.x,a);   return(r);  }
+template<int N>inline Vector<N> operator/(const Vector<N> &a,Scalar b)
+	{  Vector<N> r(Vector<N>::noinit);  r.x.div(a.x,b);   return(r);  }
 
-// Vector multiplication is currently only implemented for 3d-vectors. 
-inline vector<3> &vector<3>::vector_mul(const vector<3> &a,const vector<3> &b)
-{
-	x[0] = a.x[1]*b.x[2] - a.x[2]*b.x[1];
-	x[1] = a.x[2]*b.x[0] - a.x[0]*b.x[2];
-	x[2] = a.x[0]*b.x[1] - a.x[1]*b.x[0];
-	return(*this);
-}
-		
-template<int N> inline std::ostream& operator<<(std::ostream &s,const vector<N> &v)
-{  return(internal::stream_write_array1(s,v.x,N));  }
+// SCALAR multiplication:
+template<int N>inline Scalar operator*(const Vector<N> &a,const Vector<N> &b)
+	{  return(Scalar(internal_vect::scalar_mul(a.x,b.x)));  }
+template<int N>inline Scalar dot(const Vector<N> &a,const Vector<N> &b)
+	{  return(Scalar(internal_vect::scalar_mul(a.x,b.x)));  }
 
-}  /* end of namespace */
+// Computes the square of the length of the specified vector: 
+template<int N>inline Scalar abs2(const Vector<N> &v)  {  return(Scalar(v.abs2()));  }
+// Computes length of vector: 
+template<int N>inline Scalar abs(const Vector<N> &v)  {  return(Scalar(v.abs()));  }
 
-#undef _vFOR
-#undef _vFORP
+// (using epsilon)
+template<int N>inline bool operator==(const Vector<N> &a,const Vector<N> &b)
+	{  return(a.x.compare_to(b.x,epsilon));  }
+template<int N>inline bool operator!=(const Vector<N> &a,const Vector<N> &b)
+	{  return(!a.x.compare_to(b.x,epsilon));  }
+template<int N>inline bool operator<(const Vector<N> &a,const Vector<N> &b)
+	{  return(abs2(a) < abs2(b));  }
+template<int N>inline bool operator>(const Vector<N> &a,const Vector<N> &b)
+	{  return(abs2(a) > abs2(b));  }
+template<int N>inline bool operator<=(const Vector<N> &a,const Vector<N> &b)
+	{  return(abs2(a) <= abs2(b));  }
+template<int N>inline bool operator>=(const Vector<N> &a,const Vector<N> &b)
+	{  return(abs2(a) >= abs2(b));  }
 
-#endif  /* __vect_vector_hpp__ */
+// Computes the angle between the two passed vectors; the returned 
+// value is in range 0...PI. 
+template<int N>inline Scalar angle(const Vector<N> &a,const Vector<N> &b)
+	{  return(internal_vect::angle(a.x,b.x));  }
+
+template<int N>inline Vector<N> normalize(const Vector<N> &v)
+	{  Vector<N> r(Vector<N>::noinit);  r.x.normalize(v.x);  return(r);  }
+
+// Non-member translation functions: 
+template<int N>inline Vector<N> trans(const Vector<N> &v,double delta,int xyz)
+	{  Vector<N> r(Vector<N>::noinit);  r.x.trans(v.x,delta,xyz);  return(r);  }
+
+// Non-member scalation functions: 
+template<int N>inline Vector<N> scale(const Vector<N> &v,double factor,int xyz)
+	{  Vector<N> r(Vector<N>::noinit);  r.x.scale(v.x,factor,xyz);  return(r);  }
+
+// Mirror functions: 
+// x=0, y=1, z=2, no range check. 
+template<int N>inline Vector<N> mirror(const Vector<N> &v,int xyz)
+	{  Vector<N> r(Vector<N>::noinit);  r.x.mirror(v.x,xyz);  return(r);  }
+// apply mirror to all components
+template<int N>inline Vector<N> mirror(const Vector<N> &v)
+	{  Vector<N> r(Vector<N>::noinit);  r.x.neg(v.x);  return(r);  }
+
+template<int N>inline ostream& operator<<(ostream& s,const Vector<N> &v)
+{  return(internal_vect::operator<<(s,v.x));  }
+
+// VECTOR CONSTRUCTION: 
+inline Vector<2>::Vector(double _0,double _1) : x(/*no init*/)
+	{  x(0,_0);  x(1,_1);  }
+inline Vector<3>::Vector(double _0,double _1,double _2) : x(/*no init*/)
+	{  x(0,_0);  x(1,_1);  x(2,_2);  }
+inline Vector<4>::Vector(double _0,double _1,double _2,double _3) : x(/*no init*/)
+	{  x(0,_0);  x(1,_1);  x(2,_2);  x(3,_3);  }
+inline Vector<5>::Vector(double _0,double _1,double _2,double _3,double _4) : x(/*no init*/)
+	{  x(0,_0);  x(1,_1);  x(2,_2);  x(3,_3);  x(4,_4);  }
+
+/** FUNCTIONS FOR 3d VECTORS: **/
+
+inline Vector<3> cross(const Vector<3> &a,const Vector<3> &b)
+	{  Vector<3> r(Vector<3>::noinit);  r.x.vector_mul(a.x,b.x);  return(r);  }
+inline Vector<3> &Vector<3>::cross(const Vector<3> &b)
+	{  Vector<3> tmp(vect::cross(*this,b));  this->operator=(tmp);  return(*this);  }
+
+// Rotation functions. 
+extern Vector<3> rotateX(const Vector<3> &v,double theta);
+extern Vector<3> rotateY(const Vector<3> &v,double theta);
+extern Vector<3> rotateZ(const Vector<3> &v,double theta);
+
+// Conversion functions
+extern Vector<3> to_spherical(const Vector<3> &v);
+extern Vector<3> to_rectangular(const Vector<3> &v);
+
+}  // namespace end 
+
+#endif  /* _NS_vect_vector_HPP_ */
