@@ -1,10 +1,31 @@
 REQUIREMENTS
 ------------
 
-when you don't have a generated parser from a tar ball you need:
-- flex++
-- bison ( version 1.28 and 1.35 are known to work. 
-          Some versions in between like 1.33 definitely do NOT work )
+To build AniTMT, you need: 
+
+* gcc:
+  I recommend using the newest gcc version. 
+  AniTMT currently will not build with gcc-3.1 (some minor issue being worked 
+  on by us). 
+  Building AniTMT using gcc-3.0 or above is generally a good idea since 
+  these versions have a lot of template bugs fixed which were present in 
+  earlier versions. (Note flex++ below, too.)
+  However, AniTMT will currently also build using gcc-2.95.x (preferrably 
+  2.95.3 or above). 
+
+If you don't have a generated parser from a tar ball you need: 
+
+* bison: 
+  Version 1.28 and 1.35 are known to work. 
+  Some versions in between like 1.33 definitely do NOT work. 
+
+* flex++:
+  Ugh. If you are using gcc-3.0 or above, you will get into trouble 
+  when using flex-2.54a or earlier versions. 
+  Sadly, a new version was not yet released (although the problem 
+  has been there since the early days of a more standard conform 
+  STL in gcc-3)
+
 
 BUILDING ANITMT
 ---------------
