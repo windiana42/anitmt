@@ -295,16 +295,24 @@ namespace values
   inline Vector cross(const Vector &a,const Vector &b)
     {  Vector r(Vector::noinit);  r.x.vector_mul(a.x,b.x);   return(r);  }
 
+  // Computes the square of the length of the specified vector: 
+  inline Scalar abs2(Vector v)  {  return(Scalar(v.abs2()));  }
+  // Computes length of vector: 
+  inline Scalar abs(Vector v)  {  return(Scalar(v.abs()));  }
+
   // (using epsilon)
   inline bool operator==(const Vector &a,const Vector &b)
     {  return(a.x.compare_to(b.x,epsilon));  }
   inline bool operator!=(const Vector &a,const Vector &b)
     {  return(!a.x.compare_to(b.x,epsilon));  }
-
-  // Computes the square of the length of the specified vector: 
-  inline Scalar abs2(Vector v)  {  return(Scalar(v.abs2()));  }
-  // Computes length of vector: 
-  inline Scalar abs(Vector v)  {  return(Scalar(v.abs()));  }
+  inline bool operator<(const Vector &a,const Vector &b)
+    {  return(abs2(a) < abs2(b));  }
+  inline bool operator>(const Vector &a,const Vector &b)
+    {  return(abs2(a) > abs2(b));  }
+  inline bool operator<=(const Vector &a,const Vector &b)
+    {  return(abs2(a) <= abs2(b));  }
+  inline bool operator>=(const Vector &a,const Vector &b)
+    {  return(abs2(a) >= abs2(b));  }
 
   // Computes the angle between the two passed vectors; the returned 
   // value is in range 0...PI. 
