@@ -55,6 +55,7 @@ int main(int argc,char **argv,char **envp)
     Stream_Message_Handler msg_handler(cerr,cout,cout);
     Message_Manager manager(&msg_handler);
     Message_Consultant default_msg_consultant(&manager, 0);
+    Message_Reporter msg(&default_msg_consultant);
 
     // commandline handler of libpar (params.hpp)
     Command_Line cmd(argc,argv,envp);
@@ -86,14 +87,25 @@ int main(int argc,char **argv,char **envp)
     input_type input;
 
     for(stringlist::iterator i=adlfiles.begin(); i!=adlfiles.end(); i++)
-      {
-	input.push_back( new ADL_Input( *i, &ani, &default_msg_consultant ) );
-      }
+    {
+      input.push_back( new ADL_Input( *i, &ani, &default_msg_consultant ) );
+    }
+
+    msg.verbose() << "read structure...";
 
     // for all input interfaces
     for( input_type::iterator i = input.begin(); i != input.end(); i++ )
     {
       (*i)->create_structure(); // let create tree node structure
+    }
+
+    if( msg.get_num_errors() > 0 )
+    {
+      msg.vindent_set(0);
+      msg.verbose() << "abort because of errors";
+      msg.verbose() << "  errors: " << msg.get_num_errors()
+		    << "  warnings: " << msg.get_num_warnings();
+      return -6;
     }
 
     ani.hierarchy_final_init();	// finish structure initialization
@@ -105,10 +117,30 @@ int main(int argc,char **argv,char **envp)
       (*i)->insert_expl_ref(); // insert user references between properties
     }
 
+    if( msg.get_num_errors() > 0 )
+    {
+      msg.vindent_set(0);
+      msg.verbose() << "abort because of errors";
+      msg.verbose() << "  errors: " << msg.get_num_errors()
+		    << "  warnings: " << msg.get_num_warnings();
+      return -6;
+    }
+
+    msg.verbose() << "inserting values...";
+
     // for all input interfaces
     for( input_type::iterator i = input.begin(); i != input.end(); i++ )
     {
       (*i)->insert_values();	// insert concrete values for properties
+    }
+
+    if( msg.get_num_errors() > 0 )
+    {
+      msg.vindent_set(0);
+      msg.verbose() << "abort because of errors";
+      msg.verbose() << "  errors: " << msg.get_num_errors()
+		    << "  warnings: " << msg.get_num_warnings();
+      return -6;
     }
 
     output->check_components(); // needs filename property
@@ -118,6 +150,16 @@ int main(int argc,char **argv,char **envp)
     save_filled("filled.out", &ani);
 
     output->process_results();
+
+    if( msg.get_num_errors() > 0 )
+    {
+      msg.vindent_set(0);
+      msg.verbose() << "abort because of errors";
+      msg.verbose() << "  errors: " << msg.get_num_errors()
+		    << "  warnings: " << msg.get_num_warnings();
+      return -6;
+    }
+
     /**/    
   }
   catch( EX e )

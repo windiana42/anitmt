@@ -51,7 +51,8 @@ namespace anitmt
     }
 
     adlparser_info::adlparser_info( message::Message_Consultant *consultant )
-      : msg(consultant), lexer(new adlparser_FlexLexer(&cin)), pass(pass1),
+      : old_positions(10), max_old_positions(10),
+	msg(consultant), lexer(new adlparser_FlexLexer(&cin)), pass(pass1),
 	res_reference( this ), res_property( this ),
 	lexer_uses_file_stream( false )
     {

@@ -8,6 +8,11 @@
 #include <error.hpp>		// for old throw exceptions
 #include <save_filled.hpp>
 
+namespace anitmt{
+  namespace adlparser{
+    extern int yydebug;
+  }
+}
 int main( int argc, char *argv[] )
 {
   std::string infile = "";
@@ -29,26 +34,57 @@ int main( int argc, char *argv[] )
   if( argc > 3 )
     outfile2 = argv[2];
 
+  if( argc > 4 )
+    if( !strcmp(argv[3],"-d") )
+      anitmt::adlparser::yydebug = 1; // output debugging information
+
   anitmt::make_all_nodes_available();
 
   message::Message_Source_Identifier main_msg_id(0);
   message::Stream_Message_Handler handler(cerr,cout,cout);
   message::Message_Manager manager( &handler );
   message::Message_Consultant main_consultant( &manager, main_msg_id );
+  message::Message_Reporter msg(&main_consultant);
 
   anitmt::Animation ani("test", &manager);
 
-
   try
   {
+    msg.verbose() << "parsing pass 1...";
     anitmt::adlparser::parse_adl( &ani, &main_consultant, infile, 
 				  anitmt::adlparser::pass1 );
+    if( msg.get_num_errors() > 0 )
+    {
+      msg.verbose() << "  Errors: " << msg.get_num_errors()
+		    << "  Warnings: " << msg.get_num_warnings();
+      msg.clear_num_messages();
+    }
+    msg.verbose() << "finish hierarchy...";
     ani.hierarchy_final_init();
+    if( msg.get_num_errors() > 0 )
+    {
+      msg.verbose() << "  Errors: " << msg.get_num_errors()
+		    << "  Warnings: " << msg.get_num_warnings();
+      msg.clear_num_messages();
+    }
+    msg.verbose() << "parsing pass 2...";
     anitmt::adlparser::parse_adl( &ani, &main_consultant, infile, 
 				  anitmt::adlparser::pass2 );
+    if( msg.get_num_errors() > 0 )
+    {
+      msg.verbose() << "  Errors: " << msg.get_num_errors()
+		    << "  Warnings: " << msg.get_num_warnings();
+      msg.clear_num_messages();
+    }
     anitmt::save_filled( outfile1, &ani );
     ani.pri_sys.invoke_all_Actions();
     anitmt::save_filled( outfile2, &ani );
+    if( msg.get_num_errors() > 0 )
+    {
+      msg.verbose() << "  Errors: " << msg.get_num_errors()
+		    << "  Warnings: " << msg.get_num_warnings();
+      msg.clear_num_messages();
+    }
   } 
   catch( anitmt::EX e ) 
   {

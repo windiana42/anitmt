@@ -33,6 +33,9 @@ namespace anitmt
   {
     message::Message_Consultant default_msg_consultant;
     Animation ani;
+    
+    bool is_errors();
+    void report_error_state();
   public:
     //! handles input formats 
     Input_Manager      input;	

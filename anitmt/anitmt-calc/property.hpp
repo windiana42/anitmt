@@ -64,7 +64,7 @@ namespace anitmt
     std::string name;		// property name
     Prop_Tree_Node *node;	// tree node the property belongs to
     message::Abstract_Position *pos;
-				// position where it is defined (by user)
+				// last position where it is defined (by user)
 
     values::Valtype::Types type;
 

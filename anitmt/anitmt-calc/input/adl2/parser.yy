@@ -31,16 +31,15 @@
 #include "adlparser.hpp"
 
 #include "parser_functions.hpp"	// help functions for the parser
-
-#define YYPARSE_PARAM info	// parameter to the parser (yyparser(void*))
-#define YYLEX_PARAM info	// parameter to the lexer
-#define YYLEX_PARAM_TYPE (parser_info&)	// -> yylex(parser_info &info)
+				// including nessessary defines 
 
   // open namespaces
   namespace anitmt
   {
     namespace adlparser
     {
+
+#define MAX_OLD_POSITIONS 	10
 
 %}
 
@@ -54,7 +53,9 @@
 // Tokens
 //********
 
-%token TOK_INVALID_ID TOK_ERROR TOK_DUMMY
+%token TOK_INVALID_ID TOK_ERROR 
+// tokens in dummy expression (without semantic)
+%token TOK_DUMMY_OPERAND TOK_DUMMY_OPERATOR
 // multi character operators
 %token TOK_IS_EQUAL TOK_NOT_EQUAL TOK_MORE_EQUAL TOK_LESS_EQUAL 
 // functions
@@ -109,23 +110,35 @@
 // !! value to operand conversion must be last !!
 %nonassoc OP_CONVERTION 
 
+// special precedences for simplified cases
+%left left_associated
+%left right_associated
+
+%nonassoc lower_precedence
+%nonassoc higher_precedence
+
 //****************
 // Parser Rules
 //****************
 %%
 tree_node_block: /* empty */
   | tree_node_block statement
+  | error			{ yyerrok; /* error recovery */ }
 ;
     
 statement: 
     child_declaration
-  | flag_statement ';'	  
-  | scalar_statement ';'	 
-  | vector_statement ';'
-  | matrix_statement ';'
-  | string_statement ';'
+  | flag_statement expect_semicolon
+  | scalar_statement expect_semicolon	 
+  | vector_statement expect_semicolon
+  | matrix_statement expect_semicolon
+  | string_statement expect_semicolon
   | error ';'			{ yyerrok; /* error recovery */ }
 ;
+
+expect_semicolon:
+    ';'
+  | error	{ yyerr(info,2) << "semicolon expected"; yyerrok; }
   
 child_declaration: 
     TOK_IDENTIFIER '{'			{ change_current_child(info,$1); } 
@@ -141,7 +154,7 @@ flag_statement:
 any_flag_exp:      
     flag_exp		{ $<flag()>$ = $1; }
   | op_flag_exp		{ $<meta_op_flag(info)>$ = $1(); }
-  | TOK_DUMMY		{ $$; }
+  | dummy_exp		{ $$; }
 ;
 
 scalar_statement: 
@@ -151,7 +164,7 @@ scalar_statement:
 any_scalar_exp:      
     scalar_exp		{ $<scalar()>$ = $1; }
   | op_scalar_exp	{ $<meta_op_scalar(info)>$ = $1(); }
-  | TOK_DUMMY		{ $$; }
+  | dummy_exp		{ $$; }
 ;
  
 vector_statement: 
@@ -161,7 +174,7 @@ vector_statement:
 any_vector_exp:      
     vector_exp		{ $<vector()>$ = $1; }
   | op_vector_exp	{ $<meta_op_vector(info)>$ = $1(); }
-  | TOK_DUMMY		{ $$; }
+  | dummy_exp		{ $$; }
 ;
  
 matrix_statement: 
@@ -171,7 +184,7 @@ matrix_statement:
 any_matrix_exp:      
     matrix_exp		{ $<matrix()>$ = $1; }
   | op_matrix_exp	{ $<meta_op_matrix(info)>$ = $1(); }
-  | TOK_DUMMY		{ $$; }
+  | dummy_exp		{ $$; }
 ;
  
 string_statement: 
@@ -181,13 +194,13 @@ string_statement:
 any_string_exp:      
     string_exp		{ $<string()>$ = $1; }
   | op_string_exp	{ $<meta_op_string(info)>$ = $1(); }
-  | TOK_DUMMY		{ $$; }
+  | dummy_exp		{ $$; }
 ;
  
 
 flag_exp: 
-    '(' TOK_FLAG ')'		{ $$ = $2; }
-  | TOK_FLAG			{ $$ = $1; }
+    '(' TOK_FLAG ')'				{ $$ = $2; }
+  | TOK_FLAG					{ $$ = $1; }
 ;
 
 scalar_exp: 
@@ -212,19 +225,19 @@ vector_exp:
 ;
 
 matrix_exp: 
-    '(' TOK_MATRIX ')'		{ $$ = $2; }
-  | TOK_MATRIX			{ $$ = $1; }
+    '(' TOK_MATRIX ')'				{ $$ = $2; }
+  | TOK_MATRIX					{ $$ = $1; }
 ;
 
 string_exp: 
-    '(' TOK_STRING ')'		{ $$ = $2; }
-  | TOK_STRING			{ $$ = $1; }
+    '(' TOK_STRING ')'				{ $$ = $2; }
+  | TOK_STRING					{ $$ = $1; }
 ;
 
 op_flag_exp: 
-    '(' TOK_OP_FLAG ')'		{$$ = $2;}
-  | TOK_PROP_FLAG		{$$ = $1;}
-  | TOK_OP_FLAG			{$$ = $1;}
+    '(' TOK_OP_FLAG ')'				{$$ = $2;}
+  | TOK_PROP_FLAG				{$$ = $1;}
+  | TOK_OP_FLAG					{$$ = $1;}
 
 ;
 
@@ -246,7 +259,7 @@ op_scalar_exp:
 op_vector_exp: 
     op_vector_exp '+' op_vector_exp		{ $$ = $1() + $3(); } 
   | '<' op_scalar_exp ',' op_scalar_exp ',' op_scalar_exp '>' 
-      { /*$$ = values::Vector( $2, $4, $6 ); not supported yet*/ 
+      { /*$$ = combine_Vector( $2, $4, $6 ); not supported yet*/ 
 	yyerr(info) << "vector creation from operands not supported yet!";
 	assert(0); }
   | '(' TOK_OP_VECTOR ')'			{ $$ = $2; }
@@ -255,15 +268,23 @@ op_vector_exp:
 ;
 
 op_matrix_exp: 
-    '(' TOK_OP_MATRIX ')'	{$$ = $2;}
-  | TOK_PROP_MATRIX		{$$ = $1;}
-  | TOK_OP_MATRIX		{$$ = $1;}
+    '(' TOK_OP_MATRIX ')'			{$$ = $2;}
+  | TOK_PROP_MATRIX				{$$ = $1;}
+  | TOK_OP_MATRIX				{$$ = $1;}
 ;
 
 op_string_exp: 
-    '(' TOK_OP_STRING ')'	{$$ = $2;}
-  | TOK_PROP_STRING		{$$ = $1;}
-  | TOK_OP_STRING		{$$ = $1;}
+    '(' TOK_OP_STRING ')'			{$$ = $2;}
+  | TOK_PROP_STRING				{$$ = $1;}
+  | TOK_OP_STRING				{$$ = $1;}
+;
+
+dummy_exp:
+    dummy_exp TOK_DUMMY_OPERATOR dummy_exp %prec left_associated
+  | TOK_DUMMY_OPERAND '(' dummy_exp ')'
+  | '(' dummy_exp ')'
+  | TOK_DUMMY_OPERAND
+  | error 		{ yyerr(info,2) << "operator expected"; yyerrok; }
 ;
 
 %%
@@ -271,6 +292,7 @@ op_string_exp:
 		   std::string filename, pass_type pass )
     {
       adlparser_info info(c);
+      info.set_max_old_positions(MAX_OLD_POSITIONS);
       info.id_resolver = &info.res_property;
       
       info.open_file( filename );

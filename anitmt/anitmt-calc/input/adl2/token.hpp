@@ -107,6 +107,8 @@ namespace anitmt
 	//std::string *std_string; // might be useful for anything
 	//double dval;
       }u;
+      // used by constructor and operator=
+      friend inline void _internal_assign( Token &dest, const Token &src );
     public:
       //*********************************************************************
       // Token member funktions

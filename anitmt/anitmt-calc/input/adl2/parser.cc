@@ -6,31 +6,36 @@
 
 #define	TOK_INVALID_ID	257
 #define	TOK_ERROR	258
-#define	TOK_DUMMY	259
-#define	TOK_IS_EQUAL	260
-#define	TOK_NOT_EQUAL	261
-#define	TOK_MORE_EQUAL	262
-#define	TOK_LESS_EQUAL	263
-#define	TOK_FUNC_SIN	264
-#define	TOK_FUNC_SQRT	265
-#define	TOK_IDENTIFIER	266
-#define	TOK_FLAG	267
-#define	TOK_SCALAR	268
-#define	TOK_VECTOR	269
-#define	TOK_MATRIX	270
-#define	TOK_STRING	271
-#define	TOK_OP_FLAG	272
-#define	TOK_OP_SCALAR	273
-#define	TOK_OP_VECTOR	274
-#define	TOK_OP_MATRIX	275
-#define	TOK_OP_STRING	276
-#define	TOK_PROP_FLAG	277
-#define	TOK_PROP_SCALAR	278
-#define	TOK_PROP_VECTOR	279
-#define	TOK_PROP_MATRIX	280
-#define	TOK_PROP_STRING	281
-#define	UMINUS	282
-#define	OP_CONVERTION	283
+#define	TOK_DUMMY_OPERAND	259
+#define	TOK_DUMMY_OPERATOR	260
+#define	TOK_IS_EQUAL	261
+#define	TOK_NOT_EQUAL	262
+#define	TOK_MORE_EQUAL	263
+#define	TOK_LESS_EQUAL	264
+#define	TOK_FUNC_SIN	265
+#define	TOK_FUNC_SQRT	266
+#define	TOK_IDENTIFIER	267
+#define	TOK_FLAG	268
+#define	TOK_SCALAR	269
+#define	TOK_VECTOR	270
+#define	TOK_MATRIX	271
+#define	TOK_STRING	272
+#define	TOK_OP_FLAG	273
+#define	TOK_OP_SCALAR	274
+#define	TOK_OP_VECTOR	275
+#define	TOK_OP_MATRIX	276
+#define	TOK_OP_STRING	277
+#define	TOK_PROP_FLAG	278
+#define	TOK_PROP_SCALAR	279
+#define	TOK_PROP_VECTOR	280
+#define	TOK_PROP_MATRIX	281
+#define	TOK_PROP_STRING	282
+#define	UMINUS	283
+#define	OP_CONVERTION	284
+#define	left_associated	285
+#define	right_associated	286
+#define	lower_precedence	287
+#define	higher_precedence	288
 
 #line 19 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
 
@@ -48,16 +53,15 @@
 #include "adlparser.hpp"
 
 #include "parser_functions.hpp"	// help functions for the parser
-
-#define YYPARSE_PARAM info	// parameter to the parser (yyparser(void*))
-#define YYLEX_PARAM info	// parameter to the lexer
-#define YYLEX_PARAM_TYPE (parser_info&)	// -> yylex(parser_info &info)
+				// including nessessary defines 
 
   // open namespaces
   namespace anitmt
   {
     namespace adlparser
     {
+
+#define MAX_OLD_POSITIONS 	10
 
 #include <stdio.h>
 
@@ -69,26 +73,26 @@
 
 
 
-#define	YYFINAL		161
+#define	YYFINAL		176
 #define	YYFLAG		-32768
-#define	YYNTBASE	42
+#define	YYNTBASE	47
 
-#define YYTRANSLATE(x) ((unsigned)(x) <= 283 ? yytranslate[x] : 72)
+#define YYTRANSLATE(x) ((unsigned)(x) <= 288 ? yytranslate[x] : 79)
 
 static const char yytranslate[] = {     0,
      2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
      2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
      2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-     2,     2,     2,     2,     2,     2,     2,     2,     2,    37,
-    38,    30,    28,    40,    29,     2,    31,     2,     2,     2,
-     2,     2,     2,     2,     2,     2,     2,     2,    34,    39,
-     2,    41,     2,     2,     2,     2,     2,     2,     2,     2,
+     2,     2,     2,     2,     2,     2,     2,     2,     2,    42,
+    43,    31,    29,    45,    30,     2,    32,     2,     2,     2,
+     2,     2,     2,     2,     2,     2,     2,     2,    39,    44,
+     2,    46,     2,     2,     2,     2,     2,     2,     2,     2,
      2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
      2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
      2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
      2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
      2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-     2,     2,    35,     2,    36,     2,     2,     2,     2,     2,
+     2,     2,    40,     2,    41,     2,     2,     2,     2,     2,
      2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
      2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
      2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
@@ -104,63 +108,68 @@ static const char yytranslate[] = {     0,
      2,     2,     2,     2,     2,     1,     3,     4,     5,     6,
      7,     8,     9,    10,    11,    12,    13,    14,    15,    16,
     17,    18,    19,    20,    21,    22,    23,    24,    25,    26,
-    27,    32,    33
+    27,    28,    33,    34,    35,    36,    37,    38
 };
 
 #if YYDEBUG != 0
 static const short yyprhs[] = {     0,
-     0,     1,     4,     6,     9,    12,    15,    18,    21,    24,
-    25,    31,    32,    39,    40,    44,    46,    48,    50,    51,
-    55,    57,    59,    61,    62,    66,    68,    70,    72,    73,
-    77,    79,    81,    83,    84,    88,    90,    92,    94,    98,
-   100,   104,   108,   112,   116,   119,   122,   126,   131,   136,
-   138,   142,   150,   154,   156,   160,   162,   166,   168,   172,
-   174,   176,   180,   184,   188,   192,   195,   198,   202,   207,
-   209,   211,   213,   217,   225,   229,   231,   233,   237,   239,
-   241,   245,   247
+     0,     1,     4,     6,     8,    11,    14,    17,    20,    23,
+    26,    28,    30,    31,    37,    38,    45,    46,    50,    52,
+    54,    56,    57,    61,    63,    65,    67,    68,    72,    74,
+    76,    78,    79,    83,    85,    87,    89,    90,    94,    96,
+    98,   100,   104,   106,   110,   114,   118,   122,   125,   128,
+   132,   137,   142,   144,   148,   156,   160,   162,   166,   168,
+   172,   174,   178,   180,   182,   186,   190,   194,   198,   201,
+   204,   208,   213,   215,   217,   219,   223,   231,   235,   237,
+   239,   243,   245,   247,   251,   253,   255,   259,   264,   268,
+   270
 };
 
 static const short yyrhs[] = {    -1,
-    42,    43,     0,    44,     0,    47,    34,     0,    50,    34,
-     0,    53,    34,     0,    56,    34,     0,    59,    34,     0,
-     1,    34,     0,     0,    12,    35,    45,    42,    36,     0,
-     0,    12,    12,    35,    46,    42,    36,     0,     0,    23,
-    48,    49,     0,    62,     0,    67,     0,     5,     0,     0,
-    24,    51,    52,     0,    63,     0,    68,     0,     5,     0,
-     0,    25,    54,    55,     0,    64,     0,    69,     0,     5,
-     0,     0,    26,    57,    58,     0,    65,     0,    70,     0,
-     5,     0,     0,    27,    60,    61,     0,    66,     0,    71,
-     0,     5,     0,    37,    13,    38,     0,    13,     0,    63,
-    28,    63,     0,    63,    29,    63,     0,    63,    30,    63,
-     0,    63,    31,    63,     0,    29,    63,     0,    28,    63,
-     0,    37,    63,    38,     0,    10,    37,    63,    38,     0,
-    11,    37,    63,    38,     0,    14,     0,    64,    28,    64,
-     0,    39,    63,    40,    63,    40,    63,    41,     0,    37,
-    64,    38,     0,    15,     0,    37,    16,    38,     0,    16,
-     0,    37,    17,    38,     0,    17,     0,    37,    18,    38,
-     0,    23,     0,    18,     0,    68,    28,    68,     0,    68,
-    29,    68,     0,    68,    30,    68,     0,    68,    31,    68,
-     0,    29,    68,     0,    28,    68,     0,    37,    68,    38,
-     0,    11,    37,    68,    38,     0,    63,     0,    24,     0,
-    19,     0,    69,    28,    69,     0,    39,    68,    40,    68,
-    40,    68,    41,     0,    37,    20,    38,     0,    25,     0,
-    20,     0,    37,    21,    38,     0,    26,     0,    21,     0,
-    37,    22,    38,     0,    27,     0,    22,     0
+    47,    48,     0,     1,     0,    50,     0,    53,    49,     0,
+    56,    49,     0,    59,    49,     0,    62,    49,     0,    65,
+    49,     0,     1,    39,     0,    39,     0,     1,     0,     0,
+    13,    40,    51,    47,    41,     0,     0,    13,    13,    40,
+    52,    47,    41,     0,     0,    24,    54,    55,     0,    68,
+     0,    73,     0,    78,     0,     0,    25,    57,    58,     0,
+    69,     0,    74,     0,    78,     0,     0,    26,    60,    61,
+     0,    70,     0,    75,     0,    78,     0,     0,    27,    63,
+    64,     0,    71,     0,    76,     0,    78,     0,     0,    28,
+    66,    67,     0,    72,     0,    77,     0,    78,     0,    42,
+    14,    43,     0,    14,     0,    69,    29,    69,     0,    69,
+    30,    69,     0,    69,    31,    69,     0,    69,    32,    69,
+     0,    30,    69,     0,    29,    69,     0,    42,    69,    43,
+     0,    11,    42,    69,    43,     0,    12,    42,    69,    43,
+     0,    15,     0,    70,    29,    70,     0,    44,    69,    45,
+    69,    45,    69,    46,     0,    42,    70,    43,     0,    16,
+     0,    42,    17,    43,     0,    17,     0,    42,    18,    43,
+     0,    18,     0,    42,    19,    43,     0,    24,     0,    19,
+     0,    74,    29,    74,     0,    74,    30,    74,     0,    74,
+    31,    74,     0,    74,    32,    74,     0,    30,    74,     0,
+    29,    74,     0,    42,    74,    43,     0,    12,    42,    74,
+    43,     0,    69,     0,    25,     0,    20,     0,    75,    29,
+    75,     0,    44,    74,    45,    74,    45,    74,    46,     0,
+    42,    21,    43,     0,    26,     0,    21,     0,    42,    22,
+    43,     0,    27,     0,    22,     0,    42,    23,    43,     0,
+    28,     0,    23,     0,    78,     6,    78,     0,     5,    42,
+    78,    43,     0,    42,    78,    43,     0,     5,     0,     1,
+     0
 };
 
 #endif
 
 #if YYDEBUG != 0
 static const short yyrline[] = { 0,
-   116,   117,   120,   122,   123,   124,   125,   126,   127,   130,
-   132,   133,   134,   137,   139,   141,   143,   144,   147,   149,
-   151,   153,   154,   157,   159,   161,   163,   164,   167,   169,
-   171,   173,   174,   177,   179,   181,   183,   184,   188,   190,
-   193,   195,   196,   197,   198,   199,   200,   201,   202,   203,
-   206,   208,   210,   211,   214,   216,   219,   221,   224,   226,
-   227,   231,   233,   234,   235,   236,   237,   238,   239,   240,
-   242,   243,   246,   248,   252,   253,   254,   257,   259,   260,
-   263,   265,   266
+   124,   125,   126,   129,   131,   132,   133,   134,   135,   136,
+   139,   141,   143,   145,   146,   147,   150,   152,   154,   156,
+   157,   160,   162,   164,   166,   167,   170,   172,   174,   176,
+   177,   180,   182,   184,   186,   187,   190,   192,   194,   196,
+   197,   201,   203,   206,   208,   209,   210,   211,   212,   213,
+   214,   215,   216,   219,   221,   223,   224,   227,   229,   232,
+   234,   237,   239,   240,   244,   246,   247,   248,   249,   250,
+   251,   252,   253,   255,   256,   259,   261,   265,   266,   267,
+   270,   272,   273,   276,   278,   279,   282,   284,   285,   286,
+   287
 };
 #endif
 
@@ -168,154 +177,178 @@ static const short yyrline[] = { 0,
 #if YYDEBUG != 0 || defined (YYERROR_VERBOSE)
 
 static const char * const yytname[] = {   "$","error","$undefined.","TOK_INVALID_ID",
-"TOK_ERROR","TOK_DUMMY","TOK_IS_EQUAL","TOK_NOT_EQUAL","TOK_MORE_EQUAL","TOK_LESS_EQUAL",
-"TOK_FUNC_SIN","TOK_FUNC_SQRT","TOK_IDENTIFIER","TOK_FLAG","TOK_SCALAR","TOK_VECTOR",
-"TOK_MATRIX","TOK_STRING","TOK_OP_FLAG","TOK_OP_SCALAR","TOK_OP_VECTOR","TOK_OP_MATRIX",
-"TOK_OP_STRING","TOK_PROP_FLAG","TOK_PROP_SCALAR","TOK_PROP_VECTOR","TOK_PROP_MATRIX",
-"TOK_PROP_STRING","'+'","'-'","'*'","'/'","UMINUS","OP_CONVERTION","';'","'{'",
-"'}'","'('","')'","'<'","','","'>'","tree_node_block","statement","child_declaration",
-"@1","@2","flag_statement","@3","any_flag_exp","scalar_statement","@4","any_scalar_exp",
+"TOK_ERROR","TOK_DUMMY_OPERAND","TOK_DUMMY_OPERATOR","TOK_IS_EQUAL","TOK_NOT_EQUAL",
+"TOK_MORE_EQUAL","TOK_LESS_EQUAL","TOK_FUNC_SIN","TOK_FUNC_SQRT","TOK_IDENTIFIER",
+"TOK_FLAG","TOK_SCALAR","TOK_VECTOR","TOK_MATRIX","TOK_STRING","TOK_OP_FLAG",
+"TOK_OP_SCALAR","TOK_OP_VECTOR","TOK_OP_MATRIX","TOK_OP_STRING","TOK_PROP_FLAG",
+"TOK_PROP_SCALAR","TOK_PROP_VECTOR","TOK_PROP_MATRIX","TOK_PROP_STRING","'+'",
+"'-'","'*'","'/'","UMINUS","OP_CONVERTION","left_associated","right_associated",
+"lower_precedence","higher_precedence","';'","'{'","'}'","'('","')'","'<'","','",
+"'>'","tree_node_block","statement","expect_semicolon","child_declaration","@1",
+"@2","flag_statement","@3","any_flag_exp","scalar_statement","@4","any_scalar_exp",
 "vector_statement","@5","any_vector_exp","matrix_statement","@6","any_matrix_exp",
 "string_statement","@7","any_string_exp","flag_exp","scalar_exp","vector_exp",
 "matrix_exp","string_exp","op_flag_exp","op_scalar_exp","op_vector_exp","op_matrix_exp",
-"op_string_exp", NULL
+"op_string_exp","dummy_exp", NULL
 };
 #endif
 
 static const short yyr1[] = {     0,
-    42,    42,    43,    43,    43,    43,    43,    43,    43,    45,
-    44,    46,    44,    48,    47,    49,    49,    49,    51,    50,
-    52,    52,    52,    54,    53,    55,    55,    55,    57,    56,
-    58,    58,    58,    60,    59,    61,    61,    61,    62,    62,
-    63,    63,    63,    63,    63,    63,    63,    63,    63,    63,
-    64,    64,    64,    64,    65,    65,    66,    66,    67,    67,
-    67,    68,    68,    68,    68,    68,    68,    68,    68,    68,
-    68,    68,    69,    69,    69,    69,    69,    70,    70,    70,
-    71,    71,    71
+    47,    47,    47,    48,    48,    48,    48,    48,    48,    48,
+    49,    49,    51,    50,    52,    50,    54,    53,    55,    55,
+    55,    57,    56,    58,    58,    58,    60,    59,    61,    61,
+    61,    63,    62,    64,    64,    64,    66,    65,    67,    67,
+    67,    68,    68,    69,    69,    69,    69,    69,    69,    69,
+    69,    69,    69,    70,    70,    70,    70,    71,    71,    72,
+    72,    73,    73,    73,    74,    74,    74,    74,    74,    74,
+    74,    74,    74,    74,    74,    75,    75,    75,    75,    75,
+    76,    76,    76,    77,    77,    77,    78,    78,    78,    78,
+    78
 };
 
 static const short yyr2[] = {     0,
-     0,     2,     1,     2,     2,     2,     2,     2,     2,     0,
-     5,     0,     6,     0,     3,     1,     1,     1,     0,     3,
-     1,     1,     1,     0,     3,     1,     1,     1,     0,     3,
-     1,     1,     1,     0,     3,     1,     1,     1,     3,     1,
-     3,     3,     3,     3,     2,     2,     3,     4,     4,     1,
-     3,     7,     3,     1,     3,     1,     3,     1,     3,     1,
-     1,     3,     3,     3,     3,     2,     2,     3,     4,     1,
-     1,     1,     3,     7,     3,     1,     1,     3,     1,     1,
-     3,     1,     1
+     0,     2,     1,     1,     2,     2,     2,     2,     2,     2,
+     1,     1,     0,     5,     0,     6,     0,     3,     1,     1,
+     1,     0,     3,     1,     1,     1,     0,     3,     1,     1,
+     1,     0,     3,     1,     1,     1,     0,     3,     1,     1,
+     1,     3,     1,     3,     3,     3,     3,     2,     2,     3,
+     4,     4,     1,     3,     7,     3,     1,     3,     1,     3,
+     1,     3,     1,     1,     3,     3,     3,     3,     2,     2,
+     3,     4,     1,     1,     1,     3,     7,     3,     1,     1,
+     3,     1,     1,     3,     1,     1,     3,     4,     3,     1,
+     1
 };
 
-static const short yydefact[] = {     1,
-     0,     0,     0,    14,    19,    24,    29,    34,     2,     3,
-     0,     0,     0,     0,     0,     9,     0,    10,     0,     0,
-     0,     0,     0,     4,     5,     6,     7,     8,    12,     1,
-    18,    40,    61,    60,     0,    15,    16,    17,    23,     0,
-     0,    50,    72,    71,     0,     0,     0,    20,    70,    22,
-    28,    54,    77,    76,     0,     0,    25,    26,    27,    33,
-    56,    80,    79,     0,    30,    31,    32,    38,    58,    83,
-    82,     0,    35,    36,    37,     1,     0,     0,     0,     0,
-     0,    46,    67,    45,    66,    70,     0,     0,     0,     0,
-     0,     0,     0,     0,     0,     0,     0,     0,     0,    70,
-     0,     0,     0,     0,     0,     0,     0,     0,    11,    39,
-    59,     0,     0,     0,     0,     0,    70,     0,    47,    68,
-    41,    42,    43,    44,    70,    62,    63,    64,    65,    75,
-     0,    53,     0,     0,    51,     0,     0,    73,    55,    78,
-    57,    81,    13,     0,    46,    45,     0,    48,    49,    69,
-     0,     0,     0,     0,     0,     0,     0,    52,    74,     0,
-     0
+static const short yydefact[] = {     0,
+     3,     0,     0,     0,    17,    22,    27,    32,    37,     2,
+     4,     0,     0,     0,     0,     0,    10,     0,    13,     0,
+     0,     0,     0,     0,    12,    11,     5,     6,     7,     8,
+     9,    15,     0,    91,    90,    43,    64,    63,     0,    18,
+    19,    20,    21,     0,     0,    53,    75,    74,     0,     0,
+     0,    23,    73,    25,    26,    57,    80,    79,     0,     0,
+    28,    29,    30,    31,    59,    83,    82,     0,    33,    34,
+    35,    36,    61,    86,    85,     0,    38,    39,    40,    41,
+     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
+     0,    49,    70,    48,    69,    73,     0,     0,     0,     0,
+     0,     0,     0,     0,     0,     0,     0,     0,     0,    73,
+     0,     0,     0,     0,     0,     0,     0,     0,    14,     0,
+    42,    62,    89,    87,     0,     0,     0,     0,     0,    73,
+     0,    50,    71,    44,    45,    46,    47,    73,    65,    66,
+    67,    68,    78,     0,    56,     0,     0,     0,    54,     0,
+     0,    76,    58,    81,    60,    84,    16,    88,     0,    49,
+    48,     0,    51,    52,    72,     0,     0,     0,     0,     0,
+     0,     0,    55,    77,     0,     0
 };
 
-static const short yydefgoto[] = {     1,
-     9,    10,    30,    76,    11,    19,    36,    12,    20,    48,
-    13,    21,    57,    14,    22,    65,    15,    23,    73,    37,
-   125,    99,    66,    74,    38,   101,    59,    67,    75
+static const short yydefgoto[] = {     2,
+    10,    27,    11,    33,    81,    12,    20,    40,    13,    21,
+    52,    14,    22,    61,    15,    23,    69,    16,    24,    77,
+    41,   138,   109,    70,    78,    42,    97,    63,    71,    79,
+    87
 };
 
-static const short yypact[] = {-32768,
-   125,   -31,    45,-32768,-32768,-32768,-32768,-32768,-32768,-32768,
-   -25,     8,    12,    22,    24,-32768,    31,-32768,     0,    99,
-    -1,    34,   102,-32768,-32768,-32768,-32768,-32768,-32768,-32768,
--32768,-32768,-32768,-32768,    -6,-32768,-32768,-32768,-32768,   -22,
-    47,-32768,-32768,-32768,   143,   143,   143,-32768,    48,   210,
--32768,-32768,-32768,-32768,    25,   143,-32768,    57,    63,-32768,
--32768,-32768,-32768,    -5,-32768,-32768,-32768,-32768,-32768,-32768,
--32768,    89,-32768,-32768,-32768,-32768,     5,    21,    60,   145,
-   143,-32768,-32768,-32768,-32768,    61,   176,   145,   145,   145,
-   145,   143,   143,   143,   143,    70,    28,   145,   -18,    72,
-    23,    28,   121,    77,    78,    79,    82,    69,-32768,-32768,
--32768,    85,   145,   145,   145,   180,    92,   191,-32768,-32768,
-    -9,    -9,-32768,-32768,-32768,    18,    18,-32768,-32768,-32768,
-   155,-32768,   145,   143,-32768,   111,   143,-32768,-32768,-32768,
--32768,-32768,-32768,   145,-32768,-32768,   195,-32768,-32768,-32768,
-   159,   163,   206,   145,   143,    59,   135,-32768,-32768,    97,
--32768
+static const short yypact[] = {   193,
+-32768,   201,   -23,    59,-32768,-32768,-32768,-32768,-32768,-32768,
+-32768,    17,    17,    17,    17,    17,-32768,   -18,-32768,    56,
+    92,     9,    89,    22,-32768,-32768,-32768,-32768,-32768,-32768,
+-32768,-32768,   126,-32768,   -22,-32768,-32768,-32768,    54,-32768,
+-32768,-32768,    28,    -1,     6,-32768,-32768,-32768,   180,   180,
+    92,-32768,    23,   147,    28,-32768,-32768,-32768,    10,   180,
+-32768,    38,    45,    28,-32768,-32768,-32768,   118,-32768,-32768,
+-32768,    28,-32768,-32768,-32768,   119,-32768,-32768,-32768,    28,
+   126,   144,   124,    57,    58,   124,     3,   124,   169,   180,
+   180,-32768,-32768,-32768,-32768,    62,   241,   169,   169,   169,
+   169,   180,   180,   180,   180,    65,    16,   169,   -10,    20,
+   212,    47,   209,    66,    67,    75,    85,   162,-32768,    36,
+-32768,-32768,-32768,    28,    60,   169,   169,   169,   256,    93,
+   260,-32768,-32768,   -19,   -19,-32768,-32768,-32768,    12,    12,
+-32768,-32768,-32768,   229,-32768,   169,   180,    47,-32768,   111,
+   180,-32768,-32768,-32768,-32768,-32768,-32768,-32768,   169,-32768,
+-32768,   264,-32768,-32768,-32768,   233,   237,   279,   169,   180,
+   202,   208,-32768,-32768,   138,-32768
 };
 
-static const short yypgoto[] = {   -29,
+static const short yypgoto[] = {   -32,
+-32768,   299,-32768,-32768,-32768,-32768,-32768,-32768,-32768,-32768,
 -32768,-32768,-32768,-32768,-32768,-32768,-32768,-32768,-32768,-32768,
--32768,-32768,-32768,-32768,-32768,-32768,-32768,-32768,-32768,-32768,
-   -12,   -19,-32768,-32768,-32768,   -20,    30,-32768,-32768
+-32768,   -13,   -20,-32768,-32768,-32768,   -21,    30,-32768,-32768,
+   -17
 };
 
 
-#define	YYLAST		244
+#define	YYLAST		322
 
 
-static const short yytable[] = {    50,
-    77,    58,    16,    51,    31,     2,    78,    49,    24,   102,
-   104,    79,    32,    52,    80,   105,     3,    33,    53,   132,
-    90,    91,    34,    54,    83,    85,    87,     4,     5,     6,
-     7,     8,    82,    84,    86,    55,    35,    56,    60,    52,
-   109,    25,    52,   100,    96,    26,   108,    94,    95,    61,
-    92,    93,    94,    95,    62,    27,    17,    28,   110,    63,
-   118,    97,   134,    98,    97,    29,    98,   116,   117,     2,
-    64,   126,   127,   128,   129,   121,   122,   123,   124,    18,
-     3,   -21,   135,    81,   102,   131,    88,    89,    90,    91,
-   103,     4,     5,     6,     7,     8,   161,   111,   119,   158,
-   145,   146,   147,    39,   143,   106,    68,   130,    40,    41,
-   107,   133,    42,   152,   139,   140,   141,    43,    69,   142,
-   151,   144,    44,    70,   160,     2,    45,    46,    71,   149,
-    96,   153,   138,     0,   157,    47,     3,     0,    72,     0,
-    53,   156,     0,     0,     0,    54,     0,     4,     5,     6,
-     7,     8,    40,    41,    40,   112,    42,   136,    42,   137,
-     0,    43,    92,    93,    94,    95,    44,     0,     0,     0,
-    45,    46,   113,   114,     0,   159,     0,     0,     0,    47,
-     0,   115,    88,    89,    90,    91,    88,    89,    90,    91,
-    92,    93,    94,    95,   133,     0,     0,     0,   154,     0,
-     0,     0,   155,    92,    93,    94,    95,    88,    89,    90,
-    91,     0,     0,   120,     0,     0,     0,   148,    92,    93,
-    94,    95,    88,    89,    90,    91,     0,     0,   150,     0,
-     0,     0,   119,    88,    89,    90,    91,    92,    93,    94,
-    95,     0,     0,   149
+static const short yytable[] = {    54,
+    82,    62,    43,    55,    64,    72,    80,    53,    88,    34,
+    34,   100,   101,    35,    35,    17,    34,    25,   112,    83,
+    35,    32,    34,   -24,    56,    56,    35,    93,    95,    57,
+   106,    56,   145,    88,    58,    92,    94,    96,   111,    73,
+    89,    88,   104,   105,    74,   123,   110,    90,   118,    75,
+    59,   107,    60,   108,    34,    26,    34,   107,    35,   108,
+    35,   -24,    56,    76,   146,   120,   112,    84,   131,    36,
+   124,    18,    85,   113,    37,   129,   130,    96,   158,    38,
+   139,   140,   141,   142,   134,   135,   136,   137,   148,    34,
+   108,   149,    34,    35,   144,    86,    35,    39,    19,   121,
+   122,   159,    44,    45,   132,    65,    46,   143,   153,   154,
+    66,    47,   160,   161,   162,    67,    48,   155,    34,    34,
+    49,    50,    35,    35,    34,   167,     1,   156,    35,   111,
+    68,   106,   166,    51,   114,   164,   116,   176,    -1,   115,
+     0,   117,   152,     0,     3,   168,     0,     0,   172,    -1,
+    -1,    -1,    -1,    -1,     0,   171,     4,     0,     0,    86,
+    86,     0,     3,     0,     0,    86,    -1,     5,     6,     7,
+     8,     9,     0,     0,     4,   102,   103,   104,   105,    44,
+   125,     0,     0,    46,   119,     5,     6,     7,     8,     9,
+    44,    45,    -1,     1,    46,     0,     0,   126,   127,    47,
+   175,     3,   157,     0,    48,    -1,     0,     0,    49,    50,
+   128,     0,     0,     4,     0,     0,    -1,    -1,    -1,    -1,
+    -1,    91,     0,     0,     5,     6,     7,     8,     9,    57,
+    98,    99,   100,   101,    58,     0,   102,   103,   104,   105,
+   102,   103,   104,   105,     0,     0,     0,   173,     0,     0,
+   150,     0,   151,   174,     0,     0,   147,    98,    99,   100,
+   101,    98,    99,   100,   101,   102,   103,   104,   105,   102,
+   103,   104,   105,   146,     0,     0,     0,   169,     0,     0,
+     0,   170,     0,   133,    98,    99,   100,   101,   102,   103,
+   104,   105,    98,    99,   100,   101,     0,     0,   163,     0,
+     0,     0,   165,     0,     0,     0,   132,    98,    99,   100,
+   101,    28,    29,    30,    31,     0,     0,     0,     0,     0,
+     0,   164
 };
 
-static const short yycheck[] = {    20,
-    30,    21,    34,     5,     5,     1,    13,    20,    34,    28,
-    16,    18,    13,    15,    37,    21,    12,    18,    20,    38,
-    30,    31,    23,    25,    45,    46,    47,    23,    24,    25,
-    26,    27,    45,    46,    47,    37,    37,    39,     5,    15,
-    36,    34,    15,    56,    20,    34,    76,    30,    31,    16,
-    28,    29,    30,    31,    21,    34,    12,    34,    38,    26,
-    81,    37,    40,    39,    37,    35,    39,    80,    81,     1,
-    37,    92,    93,    94,    95,    88,    89,    90,    91,    35,
-    12,    34,   102,    37,    28,    98,    28,    29,    30,    31,
-    28,    23,    24,    25,    26,    27,     0,    38,    38,    41,
-   113,   114,   115,     5,    36,    17,     5,    38,    10,    11,
-    22,    40,    14,   134,    38,    38,    38,    19,    17,    38,
-   133,    37,    24,    22,     0,     1,    28,    29,    27,    38,
-    20,   144,   103,    -1,   155,    37,    12,    -1,    37,    -1,
-    20,   154,    -1,    -1,    -1,    25,    -1,    23,    24,    25,
-    26,    27,    10,    11,    10,    11,    14,    37,    14,    39,
-    -1,    19,    28,    29,    30,    31,    24,    -1,    -1,    -1,
-    28,    29,    28,    29,    -1,    41,    -1,    -1,    -1,    37,
-    -1,    37,    28,    29,    30,    31,    28,    29,    30,    31,
-    28,    29,    30,    31,    40,    -1,    -1,    -1,    40,    -1,
-    -1,    -1,    40,    28,    29,    30,    31,    28,    29,    30,
-    31,    -1,    -1,    38,    -1,    -1,    -1,    38,    28,    29,
-    30,    31,    28,    29,    30,    31,    -1,    -1,    38,    -1,
-    -1,    -1,    38,    28,    29,    30,    31,    28,    29,    30,
-    31,    -1,    -1,    38
+static const short yycheck[] = {    21,
+    33,    22,    20,    21,    22,    23,    24,    21,     6,     1,
+     1,    31,    32,     5,     5,    39,     1,     1,    29,    42,
+     5,    40,     1,     1,    16,    16,     5,    49,    50,    21,
+    21,    16,    43,     6,    26,    49,    50,    51,    60,    18,
+    42,     6,    31,    32,    23,    43,    60,    42,    81,    28,
+    42,    42,    44,    44,     1,    39,     1,    42,     5,    44,
+     5,    39,    16,    42,    45,    83,    29,    14,    90,    14,
+    88,    13,    19,    29,    19,    89,    90,    91,    43,    24,
+   102,   103,   104,   105,    98,    99,   100,   101,    42,     1,
+    44,   112,     1,     5,   108,    42,     5,    42,    40,    43,
+    43,    42,    11,    12,    43,    17,    15,    43,    43,    43,
+    22,    20,   126,   127,   128,    27,    25,    43,     1,     1,
+    29,    30,     5,     5,     1,   147,     1,    43,     5,   151,
+    42,    21,   146,    42,    17,    43,    18,     0,    13,    22,
+    -1,    23,   113,    -1,     1,   159,    -1,    -1,   170,    24,
+    25,    26,    27,    28,    -1,   169,    13,    -1,    -1,    42,
+    42,    -1,     1,    -1,    -1,    42,    41,    24,    25,    26,
+    27,    28,    -1,    -1,    13,    29,    30,    31,    32,    11,
+    12,    -1,    -1,    15,    41,    24,    25,    26,    27,    28,
+    11,    12,     0,     1,    15,    -1,    -1,    29,    30,    20,
+     0,     1,    41,    -1,    25,    13,    -1,    -1,    29,    30,
+    42,    -1,    -1,    13,    -1,    -1,    24,    25,    26,    27,
+    28,    42,    -1,    -1,    24,    25,    26,    27,    28,    21,
+    29,    30,    31,    32,    26,    -1,    29,    30,    31,    32,
+    29,    30,    31,    32,    -1,    -1,    -1,    46,    -1,    -1,
+    42,    -1,    44,    46,    -1,    -1,    45,    29,    30,    31,
+    32,    29,    30,    31,    32,    29,    30,    31,    32,    29,
+    30,    31,    32,    45,    -1,    -1,    -1,    45,    -1,    -1,
+    -1,    45,    -1,    43,    29,    30,    31,    32,    29,    30,
+    31,    32,    29,    30,    31,    32,    -1,    -1,    43,    -1,
+    -1,    -1,    43,    -1,    -1,    -1,    43,    29,    30,    31,
+    32,    13,    14,    15,    16,    -1,    -1,    -1,    -1,    -1,
+    -1,    43
 };
 #define YYPURE 1
 
@@ -873,307 +906,319 @@ yyreduce:
 
   switch (yyn) {
 
-case 9:
-#line 127 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
+case 3:
+#line 126 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
 { yyerrok; /* error recovery */ ;
     break;}
 case 10:
-#line 131 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
-{ change_current_child(info,yyvsp[-1].identifier()); ;
-    break;}
-case 11:
-#line 132 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
-{ change_to_parent(info); ;
+#line 136 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
+{ yyerrok; /* error recovery */ ;
     break;}
 case 12:
-#line 133 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
-{ change_current_child(info,yyvsp[-2].identifier(),yyvsp[-1].identifier());;
+#line 141 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
+{ yyerr(info,2) << "semicolon expected"; yyerrok; ;
     break;}
 case 13:
-#line 134 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
-{ change_to_parent(info); ;
+#line 144 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
+{ change_current_child(info,yyvsp[-1].identifier()); ;
     break;}
 case 14:
-#line 138 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
-{ prop_declaration_start(yyvsp[0].prop_flag(),info); ;
+#line 145 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
+{ change_to_parent(info); ;
     break;}
 case 15:
-#line 139 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
-{ flag_prop_declaration_finish(yyvsp[-2].prop_flag(),yyvsp[0].tok(),info); ;
+#line 146 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
+{ change_current_child(info,yyvsp[-2].identifier(),yyvsp[-1].identifier());;
     break;}
 case 16:
-#line 142 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
-{ yyval.flag() = yyvsp[0].flag(); ;
+#line 147 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
+{ change_to_parent(info); ;
     break;}
 case 17:
-#line 143 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
-{ yyval.meta_op_flag(info) = yyvsp[0].meta_op_flag(info)(); ;
+#line 151 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
+{ prop_declaration_start(yyvsp[0].prop_flag(),info); ;
     break;}
 case 18:
-#line 144 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
-{ yyval.tok(); ;
+#line 152 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
+{ flag_prop_declaration_finish(yyvsp[-2].prop_flag(),yyvsp[0].tok(),info); ;
     break;}
 case 19:
-#line 148 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
-{ prop_declaration_start(yyvsp[0].prop_scalar(),info); ;
-    break;}
-case 20:
-#line 149 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
-{ scalar_prop_declaration_finish(yyvsp[-2].prop_scalar(),yyvsp[0].tok(),info); ;
-    break;}
-case 21:
-#line 152 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
-{ yyval.scalar() = yyvsp[0].scalar(); ;
-    break;}
-case 22:
-#line 153 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
-{ yyval.meta_op_scalar(info) = yyvsp[0].meta_op_scalar(info)(); ;
-    break;}
-case 23:
-#line 154 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
-{ yyval.tok(); ;
-    break;}
-case 24:
-#line 158 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
-{ prop_declaration_start(yyvsp[0].prop_vector(),info); ;
-    break;}
-case 25:
-#line 159 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
-{ vector_prop_declaration_finish(yyvsp[-2].prop_vector(),yyvsp[0].tok(),info); ;
-    break;}
-case 26:
-#line 162 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
-{ yyval.vector() = yyvsp[0].vector(); ;
-    break;}
-case 27:
-#line 163 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
-{ yyval.meta_op_vector(info) = yyvsp[0].meta_op_vector(info)(); ;
-    break;}
-case 28:
-#line 164 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
-{ yyval.tok(); ;
-    break;}
-case 29:
-#line 168 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
-{ prop_declaration_start(yyvsp[0].prop_matrix(),info); ;
-    break;}
-case 30:
-#line 169 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
-{ matrix_prop_declaration_finish(yyvsp[-2].prop_matrix(),yyvsp[0].tok(),info); ;
-    break;}
-case 31:
-#line 172 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
-{ yyval.matrix() = yyvsp[0].matrix(); ;
-    break;}
-case 32:
-#line 173 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
-{ yyval.meta_op_matrix(info) = yyvsp[0].meta_op_matrix(info)(); ;
-    break;}
-case 33:
-#line 174 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
-{ yyval.tok(); ;
-    break;}
-case 34:
-#line 178 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
-{ prop_declaration_start(yyvsp[0].prop_string(),info); ;
-    break;}
-case 35:
-#line 179 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
-{ string_prop_declaration_finish(yyvsp[-2].prop_string(),yyvsp[0].tok(),info); ;
-    break;}
-case 36:
-#line 182 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
-{ yyval.string() = yyvsp[0].string(); ;
-    break;}
-case 37:
-#line 183 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
-{ yyval.meta_op_string(info) = yyvsp[0].meta_op_string(info)(); ;
-    break;}
-case 38:
-#line 184 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
-{ yyval.tok(); ;
-    break;}
-case 39:
-#line 189 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
-{ yyval.flag() = yyvsp[-1].flag(); ;
-    break;}
-case 40:
-#line 190 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
+#line 155 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
 { yyval.flag() = yyvsp[0].flag(); ;
     break;}
-case 41:
-#line 194 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
-{ yyval.scalar() = yyvsp[-2].scalar() + yyvsp[0].scalar(); ;
+case 20:
+#line 156 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
+{ yyval.meta_op_flag(info) = yyvsp[0].meta_op_flag(info)(); ;
     break;}
-case 42:
-#line 195 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
-{ yyval.scalar() = yyvsp[-2].scalar() - yyvsp[0].scalar(); ;
+case 21:
+#line 157 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
+{ yyval.tok(); ;
     break;}
-case 43:
-#line 196 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
-{ yyval.scalar() = yyvsp[-2].scalar() * yyvsp[0].scalar(); ;
+case 22:
+#line 161 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
+{ prop_declaration_start(yyvsp[0].prop_scalar(),info); ;
     break;}
-case 44:
-#line 197 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
-{ yyval.scalar() = yyvsp[-2].scalar() / yyvsp[0].scalar(); ;
+case 23:
+#line 162 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
+{ scalar_prop_declaration_finish(yyvsp[-2].prop_scalar(),yyvsp[0].tok(),info); ;
     break;}
-case 45:
-#line 198 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
-{ yyval.scalar() = -yyvsp[0].scalar(); ;
-    break;}
-case 46:
-#line 199 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
+case 24:
+#line 165 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
 { yyval.scalar() = yyvsp[0].scalar(); ;
     break;}
-case 47:
-#line 200 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
-{ yyval.scalar() = yyvsp[-1].scalar(); ;
-    break;}
-case 48:
-#line 201 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
-{ yyval.scalar() = sin(yyvsp[-1].scalar()); ;
-    break;}
-case 49:
-#line 202 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
-{ yyval.scalar() = sqrt(yyvsp[-1].scalar()); ;
-    break;}
-case 50:
-#line 203 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
-{ yyval.scalar() = yyvsp[0].scalar(); ;
-    break;}
-case 51:
-#line 207 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
-{ yyval.vector() = yyvsp[-2].vector() + yyvsp[0].vector(); ;
-    break;}
-case 52:
-#line 209 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
-{ yyval.vector() = values::Vector( yyvsp[-5].scalar(), yyvsp[-3].scalar(), yyvsp[-1].scalar() ); ;
-    break;}
-case 53:
-#line 210 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
-{ yyval.vector() = yyvsp[-1].vector(); ;
-    break;}
-case 54:
-#line 211 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
-{ yyval.vector() = yyvsp[0].vector(); ;
-    break;}
-case 55:
-#line 215 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
-{ yyval.matrix() = yyvsp[-1].matrix(); ;
-    break;}
-case 56:
-#line 216 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
-{ yyval.matrix() = yyvsp[0].matrix(); ;
-    break;}
-case 57:
-#line 220 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
-{ yyval.string() = yyvsp[-1].string(); ;
-    break;}
-case 58:
-#line 221 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
-{ yyval.string() = yyvsp[0].string(); ;
-    break;}
-case 59:
-#line 225 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
-{yyval.meta_op_flag(info) = yyvsp[-1].op_flag(info);;
-    break;}
-case 60:
-#line 226 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
-{yyval.meta_op_flag(info) = yyvsp[0].prop_flag();;
-    break;}
-case 61:
-#line 227 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
-{yyval.meta_op_flag(info) = yyvsp[0].op_flag(info);;
-    break;}
-case 62:
-#line 232 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
-{ yyval.meta_op_scalar(info) = yyvsp[-2].meta_op_scalar(info)() + yyvsp[0].meta_op_scalar(info)(); ;
-    break;}
-case 63:
-#line 233 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
-{ yyval.meta_op_scalar(info) = yyvsp[-2].meta_op_scalar(info)() - yyvsp[0].meta_op_scalar(info)(); ;
-    break;}
-case 64:
-#line 234 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
-{ yyval.meta_op_scalar(info) = yyvsp[-2].meta_op_scalar(info)() * yyvsp[0].meta_op_scalar(info)(); ;
-    break;}
-case 65:
-#line 235 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
-{ yyval.meta_op_scalar(info) = yyvsp[-2].meta_op_scalar(info)() / yyvsp[0].meta_op_scalar(info)(); ;
-    break;}
-case 66:
-#line 236 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
-{ yyval.meta_op_scalar(info) = -yyvsp[0].meta_op_scalar(info)(); ;
-    break;}
-case 67:
-#line 237 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
+case 25:
+#line 166 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
 { yyval.meta_op_scalar(info) = yyvsp[0].meta_op_scalar(info)(); ;
     break;}
-case 68:
+case 26:
+#line 167 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
+{ yyval.tok(); ;
+    break;}
+case 27:
+#line 171 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
+{ prop_declaration_start(yyvsp[0].prop_vector(),info); ;
+    break;}
+case 28:
+#line 172 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
+{ vector_prop_declaration_finish(yyvsp[-2].prop_vector(),yyvsp[0].tok(),info); ;
+    break;}
+case 29:
+#line 175 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
+{ yyval.vector() = yyvsp[0].vector(); ;
+    break;}
+case 30:
+#line 176 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
+{ yyval.meta_op_vector(info) = yyvsp[0].meta_op_vector(info)(); ;
+    break;}
+case 31:
+#line 177 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
+{ yyval.tok(); ;
+    break;}
+case 32:
+#line 181 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
+{ prop_declaration_start(yyvsp[0].prop_matrix(),info); ;
+    break;}
+case 33:
+#line 182 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
+{ matrix_prop_declaration_finish(yyvsp[-2].prop_matrix(),yyvsp[0].tok(),info); ;
+    break;}
+case 34:
+#line 185 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
+{ yyval.matrix() = yyvsp[0].matrix(); ;
+    break;}
+case 35:
+#line 186 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
+{ yyval.meta_op_matrix(info) = yyvsp[0].meta_op_matrix(info)(); ;
+    break;}
+case 36:
+#line 187 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
+{ yyval.tok(); ;
+    break;}
+case 37:
+#line 191 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
+{ prop_declaration_start(yyvsp[0].prop_string(),info); ;
+    break;}
+case 38:
+#line 192 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
+{ string_prop_declaration_finish(yyvsp[-2].prop_string(),yyvsp[0].tok(),info); ;
+    break;}
+case 39:
+#line 195 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
+{ yyval.string() = yyvsp[0].string(); ;
+    break;}
+case 40:
+#line 196 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
+{ yyval.meta_op_string(info) = yyvsp[0].meta_op_string(info)(); ;
+    break;}
+case 41:
+#line 197 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
+{ yyval.tok(); ;
+    break;}
+case 42:
+#line 202 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
+{ yyval.flag() = yyvsp[-1].flag(); ;
+    break;}
+case 43:
+#line 203 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
+{ yyval.flag() = yyvsp[0].flag(); ;
+    break;}
+case 44:
+#line 207 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
+{ yyval.scalar() = yyvsp[-2].scalar() + yyvsp[0].scalar(); ;
+    break;}
+case 45:
+#line 208 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
+{ yyval.scalar() = yyvsp[-2].scalar() - yyvsp[0].scalar(); ;
+    break;}
+case 46:
+#line 209 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
+{ yyval.scalar() = yyvsp[-2].scalar() * yyvsp[0].scalar(); ;
+    break;}
+case 47:
+#line 210 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
+{ yyval.scalar() = yyvsp[-2].scalar() / yyvsp[0].scalar(); ;
+    break;}
+case 48:
+#line 211 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
+{ yyval.scalar() = -yyvsp[0].scalar(); ;
+    break;}
+case 49:
+#line 212 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
+{ yyval.scalar() = yyvsp[0].scalar(); ;
+    break;}
+case 50:
+#line 213 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
+{ yyval.scalar() = yyvsp[-1].scalar(); ;
+    break;}
+case 51:
+#line 214 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
+{ yyval.scalar() = sin(yyvsp[-1].scalar()); ;
+    break;}
+case 52:
+#line 215 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
+{ yyval.scalar() = sqrt(yyvsp[-1].scalar()); ;
+    break;}
+case 53:
+#line 216 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
+{ yyval.scalar() = yyvsp[0].scalar(); ;
+    break;}
+case 54:
+#line 220 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
+{ yyval.vector() = yyvsp[-2].vector() + yyvsp[0].vector(); ;
+    break;}
+case 55:
+#line 222 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
+{ yyval.vector() = values::Vector( yyvsp[-5].scalar(), yyvsp[-3].scalar(), yyvsp[-1].scalar() ); ;
+    break;}
+case 56:
+#line 223 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
+{ yyval.vector() = yyvsp[-1].vector(); ;
+    break;}
+case 57:
+#line 224 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
+{ yyval.vector() = yyvsp[0].vector(); ;
+    break;}
+case 58:
+#line 228 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
+{ yyval.matrix() = yyvsp[-1].matrix(); ;
+    break;}
+case 59:
+#line 229 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
+{ yyval.matrix() = yyvsp[0].matrix(); ;
+    break;}
+case 60:
+#line 233 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
+{ yyval.string() = yyvsp[-1].string(); ;
+    break;}
+case 61:
+#line 234 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
+{ yyval.string() = yyvsp[0].string(); ;
+    break;}
+case 62:
 #line 238 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
-{ yyval.meta_op_scalar(info) = yyvsp[-1].meta_op_scalar(info)(); ;
+{yyval.meta_op_flag(info) = yyvsp[-1].op_flag(info);;
+    break;}
+case 63:
+#line 239 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
+{yyval.meta_op_flag(info) = yyvsp[0].prop_flag();;
+    break;}
+case 64:
+#line 240 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
+{yyval.meta_op_flag(info) = yyvsp[0].op_flag(info);;
+    break;}
+case 65:
+#line 245 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
+{ yyval.meta_op_scalar(info) = yyvsp[-2].meta_op_scalar(info)() + yyvsp[0].meta_op_scalar(info)(); ;
+    break;}
+case 66:
+#line 246 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
+{ yyval.meta_op_scalar(info) = yyvsp[-2].meta_op_scalar(info)() - yyvsp[0].meta_op_scalar(info)(); ;
+    break;}
+case 67:
+#line 247 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
+{ yyval.meta_op_scalar(info) = yyvsp[-2].meta_op_scalar(info)() * yyvsp[0].meta_op_scalar(info)(); ;
+    break;}
+case 68:
+#line 248 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
+{ yyval.meta_op_scalar(info) = yyvsp[-2].meta_op_scalar(info)() / yyvsp[0].meta_op_scalar(info)(); ;
     break;}
 case 69:
-#line 239 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
-{ yyval.meta_op_scalar(info) = sqrt(yyvsp[-1].meta_op_scalar(info)()); ;
+#line 249 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
+{ yyval.meta_op_scalar(info) = -yyvsp[0].meta_op_scalar(info)(); ;
     break;}
 case 70:
-#line 241 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
-{yyval.meta_op_scalar(info) = solve::const_op(yyvsp[0].scalar(),msg_consultant(info));;
+#line 250 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
+{ yyval.meta_op_scalar(info) = yyvsp[0].meta_op_scalar(info)(); ;
     break;}
 case 71:
-#line 242 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
-{ yyval.meta_op_scalar(info) = yyvsp[0].prop_scalar(); ;
+#line 251 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
+{ yyval.meta_op_scalar(info) = yyvsp[-1].meta_op_scalar(info)(); ;
     break;}
 case 72:
-#line 243 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
-{ yyval.meta_op_scalar(info) = yyvsp[0].op_scalar(info); ;
+#line 252 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
+{ yyval.meta_op_scalar(info) = sqrt(yyvsp[-1].meta_op_scalar(info)()); ;
     break;}
 case 73:
-#line 247 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
-{ yyval.meta_op_vector(info) = yyvsp[-2].meta_op_vector(info)() + yyvsp[0].meta_op_vector(info)(); ;
+#line 254 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
+{yyval.meta_op_scalar(info) = solve::const_op(yyvsp[0].scalar(),msg_consultant(info));;
     break;}
 case 74:
-#line 249 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
-{ /*$$ = values::Vector( $2, $4, $6 ); not supported yet*/ 
+#line 255 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
+{ yyval.meta_op_scalar(info) = yyvsp[0].prop_scalar(); ;
+    break;}
+case 75:
+#line 256 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
+{ yyval.meta_op_scalar(info) = yyvsp[0].op_scalar(info); ;
+    break;}
+case 76:
+#line 260 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
+{ yyval.meta_op_vector(info) = yyvsp[-2].meta_op_vector(info)() + yyvsp[0].meta_op_vector(info)(); ;
+    break;}
+case 77:
+#line 262 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
+{ /*$$ = combine_Vector( $2, $4, $6 ); not supported yet*/ 
 	yyerr(info) << "vector creation from operands not supported yet!";
 	assert(0); ;
     break;}
-case 75:
-#line 252 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
+case 78:
+#line 265 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
 { yyval.meta_op_vector(info) = yyvsp[-1].op_vector(info); ;
     break;}
-case 76:
-#line 253 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
+case 79:
+#line 266 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
 { yyval.meta_op_vector(info) = yyvsp[0].prop_vector(); ;
     break;}
-case 77:
-#line 254 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
+case 80:
+#line 267 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
 { yyval.meta_op_vector(info) = yyvsp[0].op_vector(info); ;
     break;}
-case 78:
-#line 258 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
+case 81:
+#line 271 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
 {yyval.meta_op_matrix(info) = yyvsp[-1].op_matrix(info);;
     break;}
-case 79:
-#line 259 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
+case 82:
+#line 272 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
 {yyval.meta_op_matrix(info) = yyvsp[0].prop_matrix();;
     break;}
-case 80:
-#line 260 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
+case 83:
+#line 273 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
 {yyval.meta_op_matrix(info) = yyvsp[0].op_matrix(info);;
     break;}
-case 81:
-#line 264 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
+case 84:
+#line 277 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
 {yyval.meta_op_string(info) = yyvsp[-1].op_string(info);;
     break;}
-case 82:
-#line 265 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
+case 85:
+#line 278 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
 {yyval.meta_op_string(info) = yyvsp[0].prop_string();;
     break;}
-case 83:
-#line 266 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
+case 86:
+#line 279 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
 {yyval.meta_op_string(info) = yyvsp[0].op_string(info);;
+    break;}
+case 91:
+#line 287 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
+{ yyerr(info,2) << "operator expected"; yyerrok; ;
     break;}
 }
    /* the action file gets copied in in place of this dollarsign */
@@ -1401,12 +1446,13 @@ yyerrhandle:
 #endif    
   return 1;
 }
-#line 269 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
+#line 290 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/input/adl2/./parser.yy"
 
     int parse_adl( Prop_Tree_Node *node, message::Message_Consultant *c, 
 		   std::string filename, pass_type pass )
     {
       adlparser_info info(c);
+      info.set_max_old_positions(MAX_OLD_POSITIONS);
       info.id_resolver = &info.res_property;
       
       info.open_file( filename );

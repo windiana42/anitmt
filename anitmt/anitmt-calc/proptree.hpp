@@ -60,6 +60,9 @@ namespace anitmt{
     std::string type;		// type of this node
     std::string name;		// name for reference
 
+    message::Abstract_Position *pos;
+				// last position where it is defined (by user)
+
     // properties
     typedef std::map< std::string, Property* > properties_type;
     properties_type properties;
@@ -94,6 +97,9 @@ namespace anitmt{
     virtual std::string	get_name();	// return name
     virtual std::string get_type();	// return type
 
+    //! sets position where this tree node is defined by user
+    inline void set_position( message::Abstract_Position* );
+
     //* property access
     Property *get_property( std::string name );	
 				// return property (0 = unknown name)
@@ -115,6 +121,8 @@ namespace anitmt{
     //Prop_Tree_Node* get_child( int n );	
 
     //* child access
+
+    //! returns child with name, or 0 for unknown name
     Prop_Tree_Node *get_child( std::string name );
 				// return child with name
     std::list<Prop_Tree_Node*> get_all_children();

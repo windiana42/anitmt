@@ -26,13 +26,13 @@ namespace message
   Message_Manager::Message_Manager( Message_Handler *h )
     : handler(h) {}
 
+  //**************************************************************
+  // Message consultant
+
   Message_Consultant::Message_Consultant( Message_Manager *mgr, 
 					  Message_Source_Identifier source )
     : manager(mgr), verbose_level(2), warnings(true), 
       msg_source(source), vindent(0) {}
-
-  //**************************************************************
-  // Message consultant
 
   void Message_Consultant::message( Message_Type mtype,
 				    const Abstract_Position *pos, 
@@ -50,7 +50,8 @@ namespace message
 	  {  i_message+="  ";  }
       }
     i_message+=message;
-    manager->message( mtype, pos, position_detail, i_message, msg_source, noend );
+    manager->message( mtype, pos, position_detail, i_message, msg_source, 
+		      noend );
   }
 
   //**************************************************************

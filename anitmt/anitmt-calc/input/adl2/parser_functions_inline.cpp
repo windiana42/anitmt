@@ -12,8 +12,8 @@
 /**									    **/
 /*****************************************************************************/
 
-#ifndef __anitmt_input_parser_functions_inlineimplementation
-#define __anitmt_input_parser_functions_inlineimplementation
+#ifndef __inlineimplementation_anitmt_input_parser_functions__
+#define __inlineimplementation_anitmt_input_parser_functions__
 
 #include "parser_functions.hpp"
 
@@ -38,25 +38,36 @@ namespace anitmt
     // interfaces to messages
     //*************************
 
-    inline message::Message_Stream yyerr( void* vinfo )
+    inline message::Message_Stream yyerr( void* vinfo, int back )
     {
       adlparser_info *info = static_cast<adlparser_info*>(vinfo);
       
+      message::Abstract_Position *pos = 0;
+      if( back >= 0 )		// shall I report an old position?
+	pos = info->get_old_pos(back);
+      if( !pos )		// still no position set
+	pos = info->get_pos();	// use current position
       message::Message_Stream msg(message::noinit);
-      info->msg.error( &info->file_pos ).copy_to(msg);
+      info->msg.error( pos ).copy_to(msg);
       return msg;
     }
 
-    inline message::Message_Stream yywarn( void* vinfo )
+    inline message::Message_Stream yywarn( void* vinfo, int back )
     {
       adlparser_info *info = static_cast<adlparser_info*>(vinfo);
 
+      message::Abstract_Position *pos = 0;
+      if( back >= 0 )		// shall I report an old position?
+	pos = info->get_old_pos(back);
+      if( !pos )		// still no position set
+	pos = info->get_pos();	// use current position
+
       message::Message_Stream msg(message::noinit);
-      info->msg.warn( &info->file_pos ).copy_to(msg);
+      info->msg.warn( pos ).copy_to(msg);
       return msg;
     }
 
-    inline message::Message_Stream yyverbose( void* vinfo, 
+    inline message::Message_Stream yyverbose( void* vinfo, int back, 
 					      bool with_position, 
 					      int vlevel, int detail )
     {
@@ -64,7 +75,15 @@ namespace anitmt
 
       message::Message_Stream msg(message::noinit);
       if( with_position )
-	info->msg.verbose( vlevel, &info->file_pos, detail ).copy_to(msg);
+      {
+	message::Abstract_Position *pos = 0;
+	if( back >= 0 )		// shall I report an old position?
+	  pos = info->get_old_pos(back);
+	if( !pos )		// still no position set
+	  pos = info->get_pos();	// use current position
+
+	info->msg.verbose( vlevel, pos, detail ).copy_to(msg);
+      }
       else
 	info->msg.verbose( vlevel, message::GLOB::no_position, detail ).
 	  copy_to(msg);
@@ -244,6 +263,13 @@ namespace anitmt
       default:
 	assert(0);
       }
+    }
+
+    //! sets the position of a Property in the adl source
+    inline void set_node_pos( void *vptr_info )
+    {
+      adlparser_info *info = static_cast<adlparser_info*>(vptr_info);
+      info->get_current_tree_node()->set_position( info->file_pos.duplicate());
     }
 
     // tells the lexer to resolve identifiers as properties

@@ -305,7 +305,7 @@ namespace anitmt{
   Prop_Tree_Node::Prop_Tree_Node( std::string t, std::string n, Animation *a ) 
     : message::Message_Reporter( a->msg.get_consultant() ),
       parent(0), prev(0), next(0), first_child(0), last_child(0),
-      type(t), name(n), ani(a) {}
+      type(t), name(n), pos(message::GLOB::no_position), ani(a) {}
 
   Prop_Tree_Node::~Prop_Tree_Node() {}
 

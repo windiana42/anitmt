@@ -35,8 +35,12 @@
 					    bool with_position=true, 
 					    int vlevel=1, int detail=2 );
 
-  // !! should be called in any rule !!
+  // !! one of the following defines should be called in any rule !!
+  // increase file position according to yyleng
 #define inc_col() ( info->file_pos.inc_column( yyleng ) )
+  // increase file position and store begin and end position
+#define tok_pos() ( {info->store_pos(); info->file_pos.inc_column( yyleng ); \
+		    info->store_pos();} )
 
 %}
 
@@ -47,11 +51,15 @@
 
 %x ML_COMMENT DUMMY_STATEMENT
 
-id	[a-zA-Z_][a-zA_Z0-9_]*(\.[a-zA-Z_][a-zA_Z0-9_]*)*
-scal	(([0-9]+)|([0-9]*\.[0-9]+)([eE][-+]?[0-9]+)?)
-qstring \"([^\"\n]|\\\")*\"
-qstring_err \"([^\"\n]|\\\")*
+id	([a-zA-Z_][a-zA_Z0-9_]*(\.[a-zA-Z_][a-zA_Z0-9_]*)*)
+integer ([0-9]+)
+float   ((({integer}\.)|([0-9]*\.[0-9]+))([eE][-+]?{integer})?)
+scal	({integer}|{float})
+qstring (\"([^\"\n]|\\\")*\")
+qstring_err (\"([^\"\n]|\\\")*)
 
+operator ([\+\-\*\/]|"=="|"!="|"<="|">=")
+operand  ({scal}|{qstring}|{id})
 %%
 %{
 #undef YY_NO_PUSH_STATE 
@@ -66,34 +74,41 @@ qstring_err \"([^\"\n]|\\\")*
 <ML_COMMENT>\n     { info->file_pos.inc_line(); }
 <ML_COMMENT>[^\n]* { inc_col(); /* ingore multiline comment */ }
 
-<DUMMY_STATEMENT>";"     { unput(';'); BEGIN INITIAL; return TOK_DUMMY; }
-<DUMMY_STATEMENT>\n	 { info->file_pos.inc_line(); }
-<DUMMY_STATEMENT>[^;\n]* { inc_col(); }
+<DUMMY_STATEMENT>{
+  " "	  	{ inc_col(); }    
+  "\t"	  	{ info->file_pos.tab_inc_column(); } 
+  "\n"	  	{ info->file_pos.inc_line(); }
+  "\r"	  	{ ; /*ignore DOS specific line end*/ }
+  ";"   	{ BEGIN INITIAL; tok_pos(); return yytext[0]; }
+  {operand}  	{ tok_pos(); return TOK_DUMMY_OPERAND; }
+  {operator}	{ tok_pos(); return TOK_DUMMY_OPERATOR; }
+  .	   	{ tok_pos(); return yytext[0]; }
+}
 
 " "+	  { inc_col(); }    
 "\t"	  { info->file_pos.tab_inc_column(); } 
 "\n"	  { info->file_pos.inc_line(); }
-"\r"	  ; /*ignore DOS specific line end*/
+"\r"	  { ; /*ignore DOS specific line end*/ }
 
-{scal}	  { inc_col(); yylval->scalar() = atof(yytext); return TOK_SCALAR; }
-{qstring} { inc_col(); yylval->string() = strip_quotes(yytext); 
-	    return TOK_STRING; }
-{qstring_err} { inc_col(); 
-		llerr(info) << "unterminated string"; return TOK_ERROR; }
+{scal}	      { tok_pos(); yylval->scalar() = atof(yytext);return TOK_SCALAR; }
+{qstring}     { tok_pos(); yylval->string() = strip_quotes(yytext); 
+	        return TOK_STRING; }
+{qstring_err} { llerr(info) << "unterminated string"; tok_pos();
+		return TOK_ERROR; }
 
-"=="	  { inc_col(); return TOK_IS_EQUAL; } /* multi character operators */
-"!="	  { inc_col(); return TOK_NOT_EQUAL; }
-">="	  { inc_col(); return TOK_MORE_EQUAL; }
-"<="	  { inc_col(); return TOK_LESS_EQUAL; }
+"=="	  { tok_pos(); return TOK_IS_EQUAL; } /* multi character operators */
+"!="	  { tok_pos(); return TOK_NOT_EQUAL; }
+">="	  { tok_pos(); return TOK_MORE_EQUAL; }
+"<="	  { tok_pos(); return TOK_LESS_EQUAL; }
 
-sin	  { inc_col(); return TOK_FUNC_SIN; } /* sin() function keyword */
-sqrt	  { inc_col(); return TOK_FUNC_SQRT; } /* sqrt() function keyword */
+sin	  { tok_pos(); return TOK_FUNC_SIN; } /* sin() function keyword */
+sqrt	  { tok_pos(); return TOK_FUNC_SQRT; } /* sqrt() function keyword */
 
-{id}	  { inc_col(); Token tok = get_identifier(yytext,info);
+{id}	  { tok_pos(); Token tok = get_identifier(yytext,info);
 	    *yylval = tok; return tok.get_type(); } /* identifiers */
 
 
-.	{ inc_col(); return yytext[0]; }	/* one charater tokens */
+.	{ tok_pos(); return yytext[0]; }	/* one charater tokens */
 %%
 // asks all id_resolver defined in info, whether they may resolve the 
 // identifier. In case they don't it returns TOK_INVALID_ID 
@@ -121,6 +136,9 @@ std::string strip_quotes( std::string text )
 //*************************
 // interfaces to messages
 //*************************
+
+#undef tok_pos
+#undef inc_col
 
 inline message::Message_Stream llerr( adlparser_info *info )
 { 

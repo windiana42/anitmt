@@ -15,6 +15,8 @@
 #ifndef _lib_Message_HPP_
 #define _lib_Message_HPP_
 
+#include <map>
+
 namespace message
 {
   class Abstract_Position;
@@ -101,7 +103,8 @@ namespace message
   class Message_Source_Identifier {
   public:
     int origin_id;  //! who sent the message (core, ADL parser...)
-    int id;         //! may be used to discriminate between different ADL parsers, etc.
+    int id;         /*! may be used to discriminate between different 
+		      ADL parsers, etc. */
     Message_Source_Identifier( int origin ) : origin_id(origin),id(-1) {}
     //!!! could be implemented with hierarchical id system !!!
     //    (could also add pointer to attach higher-level custom objects)
@@ -140,11 +143,18 @@ namespace message
 
   //**************************************************************
   // Message managing classes
+  //**************************************************************
+
+  //*****************
+  // Message_Manager
 
   //! Central message manager to deliver all messages to one handler
   class Message_Manager {
     Message_Handler *handler;
+    std::map<Message_Type,int> num_messages;
   public:
+    inline int get_num_messages( Message_Type type );
+    inline void clear_num_messages();
     inline void message( Message_Type mtype,
 			 const Abstract_Position *pos, int position_detail, 
 			 const std::string &message,
@@ -152,6 +162,9 @@ namespace message
 			 bool no_end );
     Message_Manager( Message_Handler *handler );
   };
+
+  //********************
+  // Message_Consultant
 
   /*! Consults message reporters whether messages should be passed to the 
     manager. Therefore it stores some settings. It also attaches a message
@@ -169,6 +182,9 @@ namespace message
     inline void set_msg_source( Message_Source_Identifier source );
     inline void set_verbose_level( int level );
     inline void set_warnings( bool warn );
+
+    inline int get_num_messages( Message_Type type );
+    inline void clear_num_messages();
 
     void message( Message_Type mtype, 
 		  const Abstract_Position *pos, int position_detail, 
@@ -257,6 +273,11 @@ namespace message
     inline Message_Stream verbose ( int min_verbose_level = 1,
 				    const Abstract_Position *pos = 0, 
 				    int position_detail = 2 );
+
+    inline int get_num_errors();
+    inline int get_num_warnings();
+    inline int get_num_verboses();
+    inline void clear_num_messages();
 
     //! Functions to change the verbose indent level of this 
     //! consultant: 

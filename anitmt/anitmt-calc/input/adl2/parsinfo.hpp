@@ -71,7 +71,8 @@ namespace anitmt
     class adlparser_info
     {
       std::stack<Prop_Tree_Node*> tree_node;  // tree_node for the parser
-
+      std::deque<message::Abstract_Position*> old_positions;
+      unsigned max_old_positions;
     public:
       adlparser_info( message::Message_Consultant *consultant );
       ~adlparser_info();
@@ -108,6 +109,14 @@ namespace anitmt
       inline void set_new_tree_node( Prop_Tree_Node *node );
       inline void tree_node_done();
 
+      //! store position for later access
+      inline void store_pos();
+      //! get current position (must be deleted!)
+      inline message::Abstract_Position *get_pos();
+      //! get stored position n (n=0: last) (must be deleted!)
+      inline message::Abstract_Position *get_old_pos( unsigned n );
+      //! set maximum number of stored positions
+      inline void set_max_old_positions( unsigned n );
     };
 
   }

@@ -21,16 +21,50 @@ namespace message
 {
   //**************************************************************
   // Message managing classes
+  //**************************************************************
+
+  //*****************
+  // Message_Manager
 
   inline void Message_Manager::message( Message_Type mtype,
 					const Abstract_Position *pos, 
 					int position_detail, 
 					const std::string &message,
-					const Message_Source_Identifier &source,
+					const 
+					Message_Source_Identifier &source,
 					bool noend )
   {
-    Message_Handler::Message msg(mtype,pos,position_detail,message,source,noend);
+    num_messages[mtype]++;
+    Message_Handler::Message msg( mtype,pos,position_detail,
+				  message,source,noend );
     handler->message( msg );
+  }
+
+  inline int Message_Manager::get_num_messages( Message_Type type )
+  {
+    return num_messages[type];
+  }
+
+  inline void Message_Manager::clear_num_messages()
+  {
+    std::map<Message_Type,int>::iterator i;
+    for( i = num_messages.begin(); i != num_messages.end(); i++ )
+    {
+      i->second = 0;
+    }
+  }
+
+  //********************
+  // Message_Consultant
+
+  inline int Message_Consultant::get_num_messages( Message_Type type )
+  {
+    return manager->get_num_messages( type );
+  }
+
+  inline void Message_Consultant::clear_num_messages()
+  {
+    manager->clear_num_messages();
   }
 
   int Message_Consultant::get_verbose_level() 
@@ -73,6 +107,10 @@ namespace message
 
   //**************************************************************
   // Message streams
+  //**************************************************************
+
+  //****************
+  // Message_Stream
 
   template<class T> 
   inline Message_Stream& Message_Stream::operator<<(const T &v)
@@ -185,6 +223,26 @@ namespace message
     Message_Stream ret( MT_Verbose, pos, position_detail, 
 			consultant, consultant->is_verbose(min_verbose_level));
     return ret;
+  }
+
+  inline int Message_Reporter::get_num_errors()
+  {
+    return consultant->get_num_messages(MT_Error);
+  }
+
+  inline int Message_Reporter::get_num_warnings()
+  {
+    return consultant->get_num_messages(MT_Warning);
+  }
+
+  inline int Message_Reporter::get_num_verboses()
+  {
+    return consultant->get_num_messages(MT_Verbose);
+  }
+  
+  inline void Message_Reporter::clear_num_messages()
+  {
+    consultant->clear_num_messages();
   }
 
   inline int Message_Reporter::vindent(int delta)

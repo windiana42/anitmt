@@ -25,6 +25,13 @@ namespace anitmt{
   // Prop_Tree_Node: provides tree structure for property groups
   //************************************************************
 
+  inline void Prop_Tree_Node::set_position( message::Abstract_Position* p ) 
+  { 
+    if( (pos != 0) && (pos != message::GLOB::no_position) )
+      delete pos;
+    pos = p; 
+  }
+
   inline void Prop_Tree_Node::add_property( std::string name, Property *prop )
   {
     //prop->set_name(name);
