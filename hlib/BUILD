@@ -1,5 +1,5 @@
 Build instructions for HLIB:
-===========================
+============================
 
 
 A) If you got hlib via CVS: 
@@ -9,6 +9,13 @@ Okay, first, you will have to generate the configure script, the Makefile.in
 files and config.h.in. For that you need GNU autoconf and GNU automake. 
 
 bash# aclocal && autoconf && autoheader && automake
+
+In case some files are not found, try using 
+
+bash# automake -a
+
+to have them added automatically. Then re-run the above sequence again 
+to be sure. 
 
 If that fails, make sure you are using recent versions of automake and 
 autoconf. (I'm using autoconf-2.59, automake-1.7.9)
