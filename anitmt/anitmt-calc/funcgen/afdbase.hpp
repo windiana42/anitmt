@@ -23,8 +23,12 @@
 #include <list>
 #include <stack>
 
+#include "base_operators.hpp"
+
 namespace funcgen
 {
+  const int max_include_depth = 30;
+
   class Header_Files;
   class Priority_List;
   class Basic_Type;
@@ -147,12 +151,16 @@ namespace funcgen
   class Operator_Declaration
   {
   public:
+    bool don_t_create_code;	// ... from this operator declaration
+
     message::File_Position *pos;
     std::string operator_name;
     std::string operator_base_type_name;
+    //! information object about the base operator
+    const Basic_Operator *basic_operator; 
 
     std::map< std::string, Function_Code > function_code;     // name->code
-    std::map< std::string, std::list<std::string> > versions; // name->types
+    std::list< std::list<std::string> > versions; // [name,ret,op1,op2,...]*
     Function_Code *current_function; 
     std::list<std::string> *current_version;
   };
@@ -407,6 +415,9 @@ namespace funcgen
     typedef std::map<std::string, Tree_Node_Type> nodes_type;
     nodes_type nodes;
     Tree_Node_Type *current_node;
+
+    int include_depth;
+    std::set<std::string> avoid_recursion_of;
 
     AFD_Root( Code_Translator *translator );
     void print() const;		// print, just for debug purposes

@@ -98,7 +98,7 @@ namespace functionality
   //   _serial_container_scalar_component
 
   _container_scalar_component::node_factories_type _container_scalar_component::node_factories;
-  void _container_scalar_component::add_node_factory( std::string name, proptree::Basic_Node_Factory<_pt_scalar_component>* nf )
+  void _container_scalar_component::add_node_factory( std::string name, proptree::Basic_Node_Factory< _pt_scalar_component >* nf )
   {
     node_factories[name] = nf;
   }
@@ -109,8 +109,8 @@ namespace functionality
     node_factories_type::iterator i;
     i = node_factories.find(type);
     if( i == node_factories.end() ) return already_obj;
-    proptree::Basic_Node_Factory<_pt_scalar_component>* &nf = i->second;
-    proptree::Basic_Node_Factory<_pt_scalar_component>::node_return_type node;
+    proptree::Basic_Node_Factory< _pt_scalar_component >* &nf = i->second;
+    proptree::Basic_Node_Factory< _pt_scalar_component >::node_return_type node;
     if( already_obj != 0 ) 
       node = nf->cast(already_obj);
     else
@@ -150,7 +150,7 @@ namespace functionality
   //   _serial_container_scalar_vsa
 
   _serial_container_scalar_vsa::node_factories_type _serial_container_scalar_vsa::node_factories;
-  void _serial_container_scalar_vsa::add_node_factory( std::string name, proptree::Basic_Node_Factory<_pt_scalar_vsa>* nf )
+  void _serial_container_scalar_vsa::add_node_factory( std::string name, proptree::Basic_Node_Factory< _pt_scalar_vsa >* nf )
   {
     node_factories[name] = nf;
   }
@@ -162,8 +162,8 @@ namespace functionality
     node_factories_type::iterator i;
     i = node_factories.find(type);
     if( i == node_factories.end() ) return already_obj;
-    proptree::Basic_Node_Factory<_pt_scalar_vsa>* &nf = i->second;
-    proptree::Basic_Node_Factory<_pt_scalar_vsa>::node_return_type node;
+    proptree::Basic_Node_Factory< _pt_scalar_vsa >* &nf = i->second;
+    proptree::Basic_Node_Factory< _pt_scalar_vsa >::node_return_type node;
     if( already_obj != 0 ) 
       node = nf->cast(already_obj);
     else
@@ -182,7 +182,7 @@ namespace functionality
     return node.second;                      // return general prop tree node pointer
   }
 
-  std::pair<bool,acceleration> _serial_container_scalar_vsa::_rf_scalar_vsa_acceleration_time( time _par_ )
+  std::pair< bool,acceleration > _serial_container_scalar_vsa::_rf_scalar_vsa_acceleration_time( time _par_ )
   {
     elements_type::iterator i;
     for( i = elements.begin(); i != elements.end(); ++i )
@@ -201,12 +201,12 @@ namespace functionality
       }
     }
     // undefined range
-    std::pair<bool,acceleration> ret; 
+    std::pair< bool,acceleration > ret; 
     ret.first = false;
     return ret;
   }
 
-  std::pair<bool,slope> _serial_container_scalar_vsa::_rf_scalar_vsa_slope_time( time _par_ )
+  std::pair< bool,slope > _serial_container_scalar_vsa::_rf_scalar_vsa_slope_time( time _par_ )
   {
     elements_type::iterator i;
     for( i = elements.begin(); i != elements.end(); ++i )
@@ -225,12 +225,12 @@ namespace functionality
       }
     }
     // undefined range
-    std::pair<bool,slope> ret; 
+    std::pair< bool,slope > ret; 
     ret.first = false;
     return ret;
   }
 
-  std::pair<bool,value> _serial_container_scalar_vsa::_rf_scalar_vsa_value_time( time _par_ )
+  std::pair< bool,value > _serial_container_scalar_vsa::_rf_scalar_vsa_value_time( time _par_ )
   {
     elements_type::iterator i;
     for( i = elements.begin(); i != elements.end(); ++i )
@@ -249,7 +249,7 @@ namespace functionality
       }
     }
     // undefined range
-    std::pair<bool,value> ret; 
+    std::pair< bool,value > ret; 
     ret.first = false;
     return ret;
   }
@@ -375,9 +375,9 @@ namespace functionality
   }
 
   // ** result functions **
-  std::pair<bool,value> node_scalar::_rf_scalar_component_value_time( time t )
+  std::pair< bool,value > node_scalar::_rf_scalar_component_value_time( time t )
   {
-    std::pair<bool,value> no_res;
+    std::pair< bool,value > no_res;
     no_res.first = false;
     bool did_any_result_fail;
     bool did_result_fail;
@@ -389,15 +389,15 @@ namespace functionality
       error() << "required child container wasn't solved";
       return no_res;
     }
-    // *** user code following... line:126 ***
+    // *** user code following... line:127 ***
                                                                          
       return(_cn_scalar_vsa._rf_scalar_vsa_value_time( t ));
     
   }
 
-  std::pair<bool,acceleration> node_scalar::_rf_scalar_vsa_acceleration_time( time t )
+  std::pair< bool,acceleration > node_scalar::_rf_scalar_vsa_acceleration_time( time t )
   {
-    std::pair<bool,acceleration> no_res;
+    std::pair< bool,acceleration > no_res;
     no_res.first = false;
     bool did_any_result_fail;
     bool did_result_fail;
@@ -409,15 +409,15 @@ namespace functionality
       error() << "required child container wasn't solved";
       return no_res;
     }
-    // *** user code following... line:119 ***
+    // *** user code following... line:120 ***
                                                                                         
       return(_cn_scalar_vsa._rf_scalar_vsa_acceleration_time( t ));
     
   }
 
-  std::pair<bool,slope> node_scalar::_rf_scalar_vsa_slope_time( time t )
+  std::pair< bool,slope > node_scalar::_rf_scalar_vsa_slope_time( time t )
   {
-    std::pair<bool,slope> no_res;
+    std::pair< bool,slope > no_res;
     no_res.first = false;
     bool did_any_result_fail;
     bool did_result_fail;
@@ -429,15 +429,15 @@ namespace functionality
       error() << "required child container wasn't solved";
       return no_res;
     }
-    // *** user code following... line:116 ***
+    // *** user code following... line:117 ***
                                                                           
       return(_cn_scalar_vsa._rf_scalar_vsa_slope_time( t ));
     
   }
 
-  std::pair<bool,value> node_scalar::_rf_scalar_vsa_value_time( time t )
+  std::pair< bool,value > node_scalar::_rf_scalar_vsa_value_time( time t )
   {
-    std::pair<bool,value> no_res;
+    std::pair< bool,value > no_res;
     no_res.first = false;
     bool did_any_result_fail;
     bool did_result_fail;
@@ -449,7 +449,7 @@ namespace functionality
       error() << "required child container wasn't solved";
       return no_res;
     }
-    // *** user code following... line:113 ***
+    // *** user code following... line:114 ***
                                                                            
       return(_cn_scalar_vsa._rf_scalar_vsa_value_time( t ));
     

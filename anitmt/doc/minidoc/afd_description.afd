@@ -14,6 +14,8 @@
 /**									    **/
 /*****************************************************************************/
 
+avoid_recursion <unique_identifier>;	// avoid recursion of this file
+
 include declaration "<afdfile>";
 include header "<hppfile>";
 

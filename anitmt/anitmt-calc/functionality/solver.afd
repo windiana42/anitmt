@@ -1,8 +1,112 @@
+avoid_recursion __adl_solver_declarations__;
 
+include declaration "base_func.afd";
 include header "val/val.hpp";
 
 operators
 {
+  // *********************
+  // not
+  // *********************
+  one_operand_operator not
+  {
+    calc_result( val ) 
+    {
+      return !val;
+    }
+    versions
+    {
+      boolean operator!( boolean );
+      boolean operator!( scalar );
+      boolean operator!( vector );
+      boolean operator!( matrix );
+      boolean operator!( string );
+    }
+  }
+
+  // *********************
+  // negative
+  // *********************
+  one_operand_operator negative
+  {
+    calc_result( val ) 
+    {
+      return -val;
+    }
+    versions
+    {
+      scalar operator-( scalar );
+      vector operator-( vector );
+      matrix operator-( matrix );
+    }
+  }
+
+  // *********************
+  // abs
+  // *********************
+  one_operand_operator abs
+  {
+    calc_result( val ) 
+    {
+      return abs(val);
+    }
+    versions
+    {
+      scalar abs( scalar );
+      scalar abs( vector );
+    }
+  }
+
+  // *********************
+  // sqrt
+  // *********************
+  one_operand_operator sqrt
+  {
+    calc_result( val ) 
+    {
+      return sqrt(val);
+    }
+    is_operand_ok( op, info )
+    {
+      // value under square root must be positive
+      if( op < 0 )
+      {
+	if( !info->is_trial_run() )
+	error() << "cannot calculate square root of " << op;
+	return false;
+      }
+      return true;
+    }
+    versions
+    {
+      scalar sqrt( scalar );
+    }
+  }
+
+  // *********************
+  // plus_minus
+  // *********************
+  one_operand_dual_solution_operator plus_minus
+  {
+    calc_result1( val ) 
+    {
+      return val;
+    }
+    calc_result2( val ) 
+    {
+      return -val;
+    }
+    versions
+    {
+      scalar plus_minus( scalar );
+      vector plus_minus( vector );
+      matrix plus_minus( matrix );
+    }
+  }
+
+  // *********************
+  // normalize
+  // *********************
   one_operand_operator normalize
   {
     calc_result( vect ) 
@@ -11,9 +115,86 @@ operators
     }
     versions
     {
-      scalar normalize( vector );
+      vector normalize( vector );
     }
   }
+
+  // *********************
+  // add
+  // *********************
+  two_operands_operator add
+  {
+    calc_result( op1, op2 )
+    {
+      return op1 + op2;
+    }
+    versions
+    {
+      scalar operator+( scalar, scalar );
+      vector operator+( vector, vector );
+      matrix operator+( matrix, matrix );
+      string operator+( string, string );
+    }
+  }
+
+  // *********************
+  // sub
+  // *********************
+  two_operands_operator sub
+  {
+    calc_result( op1, op2 )
+    {
+      return op1 - op2;
+    }
+    versions
+    {
+      scalar operator-( scalar, scalar );
+      vector operator-( vector, vector );
+      matrix operator-( matrix, matrix );
+    }
+  }
+
+  // *********************
+  // mul
+  // *********************
+  two_operands_operator mul
+  {
+    calc_result( op1, op2 )
+    {
+      return op1 * op2;
+    }
+    is_operand1_enough( op )
+    {
+      return !op;
+    }
+    is_operand2_enough( op )
+    {
+      return !op;
+    }
+    calc_result_from_op1( op )
+    {
+      return T_Result();		// return 0 in result Type
+    }
+    calc_result_from_op2( op )
+    {
+      return T_Result();		// return 0 in result Type
+    }
+    versions
+    {
+      scalar operator*( scalar, scalar );
+      vector operator*( scalar, vector );
+      matrix operator*( scalar, matrix );
+
+      scalar operator*( vector, vector );
+      scalar dot      ( vector, vector ); // dot product
+
+      matrix operator*( matrix, matrix );
+      vector operator*( matrix, vector );
+    }
+  }
+  // *********************
+  // divide
+  // *********************
   two_operands_operator divide
   {
     calc_result( op1, op2 )
@@ -22,20 +203,144 @@ operators
     }
     is_operand1_enough(op1)
     {
-      return op1 == 0;
+      return op1 == T_Operand1();	//!!! replace by zero type
     }
-    are_operands_ok( op1, op2 )
+    calc_result_from_op1( op )
     {
-      return (op1 == 0) == (op2 == 0);	// both zero or both not zero
+      return T_Result();		// return 0 in result Type
+    }
+    are_operands_ok( op1, op2, i )
+    {
+      return (op1 == T_Operand1()) == (op2 == T_Operand2());	
+					// both zero or both not zero
     }
     are_operands_enough( op1, op2 )
     {
-      return op2 != 0;
+      return (op2 != T_Operand2());
     }
     versions
     {
       scalar operator/( scalar, scalar );
       vector operator/( vector, scalar );
+      vector operator/( scalar, vector );
+      matrix operator/( matrix, scalar );
+      matrix operator/( scalar, matrix );      
     }
   }
+
+  // *********************
+  // equal
+  // *********************
+  two_operands_operator equal
+  {
+    calc_result( op1, op2 )
+    {
+      return op1 == op2;
+    }
+    versions
+    {
+      boolean operator==( boolean, boolean );
+      boolean operator==( scalar, scalar );
+      boolean operator==( vector, vector );
+      boolean operator==( matrix, matrix );
+      boolean operator==( string, string );
+    }
+  }
+
+  // *********************
+  // not_equal
+  // *********************
+  two_operands_operator not_equal
+  {
+    calc_result( op1, op2 )
+    {
+      return op1 != op2;
+    }
+    versions
+    {
+      boolean operator!=( boolean, boolean );
+      boolean operator!=( scalar, scalar );
+      boolean operator!=( vector, vector );
+      boolean operator!=( matrix, matrix );
+      boolean operator!=( string, string );
+    }
+  }
+
+  // *********************
+  // less
+  // *********************
+  two_operands_operator less
+  {
+    calc_result( op1, op2 )
+    {
+      return op1 < op2;
+    }
+    versions
+    {
+      boolean operator<( boolean, boolean );
+      boolean operator<( scalar, scalar );
+      boolean operator<( vector, vector );
+      boolean operator<( matrix, matrix );
+      boolean operator<( string, string );
+    }
+  }
+
+  // *********************
+  // greater
+  // *********************
+  two_operands_operator greater
+  {
+    calc_result( op1, op2 )
+    {
+      return op1 > op2;
+    }
+    versions
+    {
+      boolean operator>( boolean, boolean );
+      boolean operator>( scalar, scalar );
+      boolean operator>( vector, vector );
+      boolean operator>( matrix, matrix );
+      boolean operator>( string, string );
+    }
+  }
+
+  // *********************
+  // less_equal
+  // *********************
+  two_operands_operator less_equal
+  {
+    calc_result( op1, op2 )
+    {
+      return op1 <= op2;
+    }
+    versions
+    {
+      boolean operator<=( boolean, boolean );
+      boolean operator<=( scalar, scalar );
+      boolean operator<=( vector, vector );
+      boolean operator<=( matrix, matrix );
+      boolean operator<=( string, string );
+    }
+  }
+
+  // *********************
+  // greater_equal
+  // *********************
+  two_operands_operator greater_equal
+  {
+    calc_result( op1, op2 )
+    {
+      return op1 >= op2;
+    }
+    versions
+    {
+      boolean operator>=( boolean, boolean );
+      boolean operator>=( scalar, scalar );
+      boolean operator>=( vector, vector );
+      boolean operator>=( matrix, matrix );
+      boolean operator>=( string, string );
+    }
+  }
+
+
 }

@@ -13,8 +13,9 @@ funcgen_SOURCES=	gen_code.hpp gen_code.cpp gen_cpp.cpp gen_cpp.hpp \
 			parser_functions.hpp parser_functions.cpp \
 			parser_functions_inline.cpp \
 			parsinfo.hpp parsinfo.cpp parsinfo_inline.cpp \
-			funcgen.cpp stdextend.hpp stdextend.cpp \
-			base_operators.hpp base_operators.cpp
+			stdextend.hpp stdextend.cpp \
+			base_operators.hpp base_operators.cpp \
+			funcgen.cpp
 
 funcgen_LDADD=		../../lib/message/libmessage.a ../../hlib/libhlib.a 
 

@@ -6,7 +6,7 @@
 /*****************************************************************************/
 ///////////////////////////////////////////////////////////////////////////////
 
-
+avoid_recursion __adl_basic_functionality__;
 
 // ****************************************************************************
 // ****************************************************************************
@@ -16,9 +16,11 @@
 
 base_types{
   flag   = values::Flag;
-  vector = values::Vector;
   scalar = values::Scalar;
+  vector = values::Vector;
+  matrix = values::Matrix;
   string = values::String;
+  boolean = bool;
 
   time = scalar;
   value = scalar;

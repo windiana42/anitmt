@@ -1,5 +1,4 @@
 include declaration "object_base.afd";
-include declaration "solver.afd";
 //include declaration "base_func.afd";
 
 // ****************************************************************************
@@ -95,7 +94,9 @@ abstract node object_subfunc_base provides object_state
       sum_solver( end_length, length, start_length );
       sum_solver( end_speed, diff_speed, start_speed );
       sum_solver( end_pos, diff_pos, start_pos );
-      equal_solver( start_dir, direction );
+      //equal_solver( start_dir, direction );
+      start_dir = normalize( direction );
+      direction = normalize( start_dir );
       equal_solver( end_dir, direction );
       
       length = abs( diff_pos );

@@ -25,6 +25,7 @@
 #include <solve/operator.hpp>
 #include <solve/reference.hpp>
 #include <message/message.hpp>
+#include <functionality/solver.hpp>
 
 #include "token.hpp"
 #include "parsinfo.hpp"

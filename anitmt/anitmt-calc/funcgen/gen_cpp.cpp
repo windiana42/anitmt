@@ -15,6 +15,7 @@
 #include "gen_cpp.hpp"
 
 #include <fstream>
+#include <bitset>
 
 #include "stdextend.hpp"
 
@@ -107,7 +108,7 @@ namespace funcgen
   }
   std::string Cpp_Code_Translator::start_return_prop( std::string return_type )
   {
-    return "return std::pair<bool," + base_type(return_type) + ">(true,";
+    return "return std::pair< bool," + base_type(return_type) + " >(true,";
   }
   std::string Cpp_Code_Translator::finish_return_prop( std::string )
   {
@@ -115,7 +116,7 @@ namespace funcgen
   }
   std::string Cpp_Code_Translator::start_return( std::string return_type )
   {
-    return "return std::pair<bool," + base_type(return_type) + ">(true,";
+    return "return std::pair< bool," + base_type(return_type) + " >(true,";
   }
   std::string Cpp_Code_Translator::finish_return( std::string )
   {
@@ -168,11 +169,11 @@ namespace funcgen
       return "proptree::String_Property";
 
     // this shouldn't happen in the current specification    
-    return "proptree::Type_Property<"+name+">";
+    return "proptree::Type_Property< "+name+" >";
   }
   std::string Cpp_Code_Translator::operand_type( std::string name )
   {
-    return "solve::Operand<"+name+">";
+    return "solve::Operand< "+name+" >";
   }
   std::string Cpp_Code_Translator::container( std::string prov_type ) 
   {
@@ -266,6 +267,10 @@ namespace funcgen
   {
     return "->";
   }
+  std::string Cpp_Code_Translator::operator_class_name( std::string name )
+  {
+    return prefix_operator_class_name + name;
+  }
 
   Cpp_Code_Translator::Cpp_Code_Translator( code_gen_info *info )
     : Code_Translator(info), prefix_priority_label("_pl_"),
@@ -275,7 +280,8 @@ namespace funcgen
       prefix_is_avail("_av_"), prefix_param_range("_pr_"), 
       prefix_container_type("_container_"), 
       prefix_serial_container_type("_serial_container_"), 
-      prefix_container_name("_cn_")
+      prefix_container_name("_cn_"),
+      prefix_operator_class_name("_oc_")
   {}
 
   // ****************************************
@@ -298,6 +304,7 @@ namespace funcgen
     *decl << "#include <list>" << std::endl;
     *decl << "#include <string>" << std::endl;
     *decl << "#include <map>" << std::endl;
+    *decl << "#include <math.h>" << std::endl;
     *decl << std::endl;
     *decl << "#include <message/message.hpp>" << std::endl;
     *decl << "#include <val/val.hpp>" << std::endl;
@@ -318,7 +325,7 @@ namespace funcgen
     {
       *decl << "#include \"" << *i << "\""<< std::endl;
     }
-    *decl << "namespace functionality" << std::endl;
+    *decl << "namespace " << info->namespace_name << std::endl;
     *decl << "{" << std::endl;
 
     *impl << "// ********************************************" << std::endl;
@@ -491,18 +498,18 @@ namespace funcgen
       for( j  = provider_type.result_types.begin(); 
 	   j != provider_type.result_types.end(); ++j )
       {
-	*decl << "    virtual std::pair<bool," 
-	      << translator.base_type(j->return_type) << "> "
+	*decl << "    virtual std::pair< bool," 
+	      << translator.base_type(j->return_type) << " > "
 	      << translator.result_function_decl( provides, j->return_type, 
 						  j->parameter_type )
 	      << " = 0;" << std::endl;
 	if( provider_type.serial )	// is serial provider type?
 	{			// ... create start/end-parameter operands
-	  *decl << "    solve::Operand<" << j->parameter_type << "> " 
+	  *decl << "    solve::Operand< " << j->parameter_type << " > " 
 		<< translator.start_param( provides, j->return_type, 
 					   j->parameter_type )
 		<< ";" << std::endl
-		<< "    solve::Operand<" << j->parameter_type << "> " 
+		<< "    solve::Operand< " << j->parameter_type << " > " 
 		<< translator.end_param( provides, j->return_type, 
 					 j->parameter_type )
 		<< ";" << std::endl;
@@ -615,14 +622,14 @@ namespace funcgen
 		<< std::endl;
 	}
 	*decl << "    typedef std::map<std::string, "
-	      << "proptree::Basic_Node_Factory<"
-	      << translator.provider_type(provides) <<">*> "
+	      << "proptree::Basic_Node_Factory< "
+	      << translator.provider_type(provides) <<" >*> "
 	      << "node_factories_type;" << std::endl
 	      << "    static node_factories_type node_factories;" << std::endl
 	      << "  public:" << std::endl
 	      << "    static void add_node_factory( std::string name, "
-	      << "proptree::Basic_Node_Factory<"
-	      << translator.provider_type(provides) <<">* );" << std::endl
+	      << "proptree::Basic_Node_Factory< "
+	      << translator.provider_type(provides) <<" >* );" << std::endl
 	      << "    proptree::Prop_Tree_Node *add_child( std::string type, "
 	      << "std::string name, proptree::tree_info *info, "
 	      << "message::Message_Consultant *msg, "
@@ -637,8 +644,8 @@ namespace funcgen
 	      << "  void "
 	      << translator.serial_container( provides ) << "::"
 	      << "add_node_factory( std::string name, "
-	      << "proptree::Basic_Node_Factory<"
-	      << translator.provider_type(provides) <<">* nf )" << std::endl
+	      << "proptree::Basic_Node_Factory< "
+	      << translator.provider_type(provides) <<" >* nf )" << std::endl
 	      << "  {" << std::endl
 	      << "    node_factories[name] = nf;" << std::endl
 	      << "  }" << std::endl
@@ -654,11 +661,11 @@ namespace funcgen
 	      << "    i = node_factories.find(type);" << std::endl
 	      << "    if( i == node_factories.end() ) return already_obj;"
 	      << std::endl
-	      << "    proptree::Basic_Node_Factory<"
-	      << translator.provider_type(provides) <<">* &nf = i->second;"
+	      << "    proptree::Basic_Node_Factory< "
+	      << translator.provider_type(provides) <<" >* &nf = i->second;"
 	      << std::endl
-	      << "    proptree::Basic_Node_Factory<"
-	      << translator.provider_type(provides) <<">::node_return_type "
+	      << "    proptree::Basic_Node_Factory< "
+	      << translator.provider_type(provides) <<" >::node_return_type "
 	      << "node;" << std::endl
 	      << "    if( already_obj != 0 ) " << std::endl
 	      << "      node = nf->cast(already_obj);" << std::endl
@@ -693,14 +700,14 @@ namespace funcgen
 	for( j  = provider_type.result_types.begin(); 
 	     j != provider_type.result_types.end(); ++j )
 	{
-	  *decl << "    virtual std::pair<bool," 
-		<< translator.base_type(j->return_type) << "> " 
+	  *decl << "    virtual std::pair< bool," 
+		<< translator.base_type(j->return_type) << " > " 
 		<< translator.result_function_decl( provides, j->return_type, 
 						    j->parameter_type )
 		<< ";" << std::endl;
 
-	  *impl << "  std::pair<bool," << translator.base_type(j->return_type)
-		<< "> " << translator.serial_container( provides ) << "::"
+	  *impl << "  std::pair< bool," << translator.base_type(j->return_type)
+		<< " > " << translator.serial_container( provides ) << "::"
 		<< translator.result_function_impl( provides, j->return_type, 
 						    j->parameter_type,"_par_" )
 		<< std::endl
@@ -733,8 +740,8 @@ namespace funcgen
 		<< "      }" << std::endl
 		<< "    }" << std::endl
 		<< "    // undefined range" << std::endl
-		<< "    std::pair<bool," 
-		<< translator.base_type(j->return_type) << "> ret; " 
+		<< "    std::pair< bool," 
+		<< translator.base_type(j->return_type) << " > ret; " 
 		<< std::endl
 		<< "    ret.first = false;" << std::endl
 		<< "    return ret;" << std::endl
@@ -848,14 +855,14 @@ namespace funcgen
 	      << "    bool min1; // minimal one element" << std::endl
 	      << "    elements_type elements;" << std::endl
 	      << "    typedef std::map<std::string, "
-	      << "proptree::Basic_Node_Factory<"
-	      << translator.provider_type(provides) <<">*> "
+	      << "proptree::Basic_Node_Factory< "
+	      << translator.provider_type(provides) <<" >*> "
 	      << "node_factories_type;" << std::endl
 	      << "    static node_factories_type node_factories;" << std::endl
 	      << "  public:" << std::endl
 	      << "    static void add_node_factory( std::string name, "
-	      << "proptree::Basic_Node_Factory<"
-	      << translator.provider_type(provides) <<">* );" << std::endl
+	      << "proptree::Basic_Node_Factory< "
+	      << translator.provider_type(provides) <<" >* );" << std::endl
 	      << "    proptree::Prop_Tree_Node *add_child( std::string type, "
 	      << "std::string name, proptree::tree_info *info, "
 	      << "message::Message_Consultant *msg, "
@@ -870,8 +877,8 @@ namespace funcgen
 	      << "  void "
 	      << translator.container( provides ) << "::"
 	      << "add_node_factory( std::string name, "
-	      << "proptree::Basic_Node_Factory<"
-	      << translator.provider_type(provides) <<">* nf )" << std::endl
+	      << "proptree::Basic_Node_Factory< "
+	      << translator.provider_type(provides) <<" >* nf )" << std::endl
 	      << "  {" << std::endl
 	      << "    node_factories[name] = nf;" << std::endl
 	      << "  }" << std::endl
@@ -886,11 +893,11 @@ namespace funcgen
 	      << "    i = node_factories.find(type);" << std::endl
 	      << "    if( i == node_factories.end() ) return already_obj;"
 	      << std::endl
-	      << "    proptree::Basic_Node_Factory<"
-	      << translator.provider_type(provides) <<">* &nf = i->second;"
+	      << "    proptree::Basic_Node_Factory< "
+	      << translator.provider_type(provides) <<" >* &nf = i->second;"
 	      << std::endl
-	      << "    proptree::Basic_Node_Factory<"
-	      << translator.provider_type(provides) <<">::node_return_type "
+	      << "    proptree::Basic_Node_Factory< "
+	      << translator.provider_type(provides) <<" >::node_return_type "
 	      << "node;" << std::endl
 	      << "    if( already_obj != 0 ) " << std::endl
 	      << "      node = nf->cast(already_obj);" << std::endl
@@ -1043,26 +1050,259 @@ namespace funcgen
     }
   }
 
+  std::string get_type_name( type t )
+  {
+    switch( t )
+    {
+    case none:		return "void";
+    case boolean:	return "bool";
+    case result:	return "T_Result";
+    case operand:	return "const T_Operand1 &"; // user alias
+    case operand1:	return "const T_Operand1 &";
+    case operand2:	return "const T_Operand2 &";
+    case operand3:	return "const T_Operand3 &";
+    case info:		return "solve::Solve_Run_Info*";
+    }
+    assert(0);
+    return "";
+  }
+
+  // *******************************************
   void Cpp_Code_Generator::generate_operators()
   {
     *decl << "  // ********************" << std::endl;
+    *decl << "  // ********************" << std::endl;
     *decl << "  // operator declartions" << std::endl;
     *decl << "  // ********************" << std::endl;
+    *decl << "  // ********************" << std::endl;
+    *decl << std::endl;
+    *decl << "}" << std::endl;
+    *decl << "namespace solve" << std::endl;
+    *decl << "{" << std::endl;
     *decl << std::endl;
 
-    *impl << "  // ***********************" << std::endl;
-    *impl << "  // ***********************" << std::endl;
-    *impl << "  // operator implementation" << std::endl;
-    *impl << "  // ***********************" << std::endl;
-    *impl << "  // ***********************" << std::endl;
-    *impl << std::endl;
-
+    int i; bool first;
     AFD_Root::operator_declarations_type::iterator op;
     for( op = afd->operator_declarations.begin();
-	 op != afd->operator_declarations.begin(); ++op )
+	 op != afd->operator_declarations.end(); ++op )
     {
+      const std::string &op_name = op->first;
+      const Operator_Declaration &op_decl = op->second;
+      int op_decl_operands = op_decl.basic_operator->get_num_operands();
 
+      if( op_decl.don_t_create_code ) continue;
+
+      // ************************
+      // generate operator class
+      
+      *decl << "  // *******************************************" << std::endl;
+      *decl << "  // " << op_decl.operator_base_type_name << " " << op_name 
+	    << std::endl;
+      *decl << "  // *******************************************" << std::endl;
+      *decl << std::endl;
+
+      *decl << "  template< class T_Result";
+      for( i=1; i <= op_decl_operands; ++i )
+      {
+	*decl << ", class T_Operand" << i;
+      }
+      *decl << " >" << std::endl;
+      *decl << "  class " << translator.operator_class_name(op_name)
+	    << std::endl;
+      *decl << "    : public solve::" 
+	    << op_decl.basic_operator->get_real_name()
+	    << "< T_Result";
+      for( i=1; i <= op_decl_operands; ++i )
+      {
+	*decl << ", T_Operand" << i;
+      }
+      *decl << " >" << std::endl;
+      *decl << "  {" << std::endl;
+      *decl << "  public:" << std::endl;
+      *decl << "    " << translator.operator_class_name(op_name) 
+	    << "( ";
+      for( i=1; i <= op_decl_operands; ++i )
+      {
+	*decl << (i>1?", ":"") 
+	      << "solve::Operand< T_Operand" << i << " > &operand"<< i;
+      }
+      *decl << " )" << std::endl;
+      *decl << "      : solve::" << op_decl.basic_operator->get_real_name()
+	    << "< T_Result";
+      for( i=1; i <= op_decl_operands; ++i )
+      {
+	*decl << ", T_Operand" << i;
+      }
+      *decl << " > " << std::endl;
+      *decl << "        ( ";
+      for( i=1; i <= op_decl_operands; ++i )
+      {
+	*decl << (i>1?", ":"") << "operand"<< i;
+      }
+      *decl << " )" << std::endl;
+      *decl << "    {" << std::endl;
+      *decl << "      init();" << std::endl;
+      *decl << "    }" << std::endl;
+      *decl << "  private:" << std::endl;
+
+      // *******************
+      // generate functions
+      
+      // check whether all required functions were specified...
+      const std::list<std::string> &required_function_list
+	= op_decl.basic_operator->get_required_functions();
+      std::set<std::string> required_functions( required_function_list.begin(),
+						required_function_list.end() );
+      std::set<std::string>::iterator r;
+
+      std::map< std::string, Function_Code >::const_iterator f;
+      for( f  = op_decl.function_code.begin(); 
+	   f != op_decl.function_code.end(); ++f )
+      {
+	const std::string   &function_name = f->first;
+	const Function_Code &function_code = f->second;
+
+	assert( op_decl.basic_operator->is_function( function_name ) );
+	if( (r = required_functions.find( function_name ))
+	    != required_functions.end() ) // is function required?
+	{
+	  required_functions.erase(r); // not required any more...
+	}
+	  
+	const std::list<type> &types 
+	  = op_decl.basic_operator->get_types( function_name );
+	assert( !types.empty() );
+	std::list<type>::const_iterator t = types.begin();
+	
+	*decl << "    virtual " << get_type_name( *t ) << " " << function_name
+	      << "( ";
+	first = true;
+	std::list<std::string>::const_iterator param_name;	
+	for(++t, param_name = function_code.parameter_names.begin(); 
+	    t != types.end(); ++t, ++param_name )
+	{
+	  if( param_name == function_code.parameter_names.end() )
+	  {
+	    info->msg.error(function_code.pos) 
+	      << "too view parameters for function " << function_name
+	      << message::nl 
+	      << op_decl.basic_operator->
+	      get_function_specification( function_name );
+	    break;
+	  }
+	  *decl << (first?first=false,"":", ") << get_type_name(*t) << " " << *param_name;
+	}
+	*decl << " )" << std::endl;
+
+	*decl << "    { // user code: ";function_code.pos->write2stream(*decl,2);
+	*decl << std::endl;
+	for( i=0; i< function_code.start_src_column; i++ )
+	  *decl << " ";
+	*decl << function_code.code << std::endl;
+	*decl << "    }" << std::endl;
+      }
+      if( !required_functions.empty() )
+      {
+	for( r=required_functions.begin(); r!=required_functions.end(); ++r )
+	{
+	  info->msg.error(op_decl.pos) 
+	    << "essential function " << *r << " has to be implemented"
+	    << message::nl 
+	    << op_decl.basic_operator->get_function_specification(*r);
+	}
+      }
+      *decl << "  };" << std::endl;
+      *decl << std::endl;
+
+      // *******************
+      // generate versions
+
+      std::list< std::list<std::string> >::const_iterator v;
+      for( v = op_decl.versions.begin(); v != op_decl.versions.end(); ++v )
+      {
+	const std::list<std::string> &version_types = *v;
+	assert( version_types.size() >= 2 ); // return type and name
+
+	// generate all combinations of parameters as operand and constant
+	// num_comb holds the operand/constant flags (0: constant, 1:operand)
+	// num_comb = 0 is omitted, as one operand is required
+	assert( op_decl_operands <= 31 ); // int bits have to be enough
+	unsigned max_comb = 1 << op_decl_operands;
+	for( unsigned num_comb = 1; num_comb < max_comb; ++num_comb )
+	{
+	  std::bitset<32> combination(num_comb);
+	  int first_operand = -1; // index of first non constant operand
+	  for( i=1; i <= op_decl_operands; ++i )
+	    if( combination[i-1] )
+	    {
+	      first_operand = i;
+	      break;
+	    }
+
+	  std::list<std::string>::const_iterator vt = version_types.begin();
+	  const std::string &version_name = *vt; ++vt;
+	  std::string version_type = info->namespace_name + "::" + *vt;
+	  *decl << "  inline solve::Operand< " << version_type
+		<< " >& " << std::endl
+		<< "  " << version_name << "( ";
+	  for( i=1, ++vt; i <= op_decl_operands; ++i, ++vt )
+	  {
+	    if( vt == version_types.end() )
+	    {
+	      info->msg.error(op_decl.pos) 
+		<< "too few operands in version declaration " 
+		<< version_name << ", " << op_decl_operands << " expected";
+	      break;
+	    }
+	    version_type = info->namespace_name + "::" + *vt;
+	    *decl << (i>1?", ":"") 
+		  << ( combination[i-1]? // operand(1) or constant(0) ?
+		       "solve::Operand< " + version_type + " > &":
+		       "const " + version_type + " &" )
+		  << " operand"<< i;
+	  }
+	  if( vt != version_types.end() )
+	  {
+	    info->msg.error(op_decl.pos) 
+	      << "too many of operands in version declaration " 
+	      << version_name << ", " << op_decl_operands << " expected";
+	  }
+
+	  *decl << " )" << std::endl;
+	  *decl << "  {" << std::endl;
+	  *decl << "    return (new "
+		<< translator.operator_class_name(op_name) << "< ";
+	  first = true;
+	  for( vt = ++version_types.begin(); vt != version_types.end(); ++vt )
+	  {
+	    version_type = info->namespace_name + "::" + *vt;
+	    *decl << (first?first=false,"":", ")
+		  << version_type;
+	  }
+	  *decl << " >( ";
+	  for( i=1; i <= op_decl_operands; ++i )
+	  {
+	    *decl << (i>1?", ":"");
+	    if( combination[i-1] )
+	    {
+	      *decl << "operand" << i;
+	    }
+	    else
+	    {
+	      *decl << "solve::const_op( operand" << i 
+		    << ", operand" << first_operand << ".get_consultant() )";
+	    }
+	  }
+	  *decl << " ) )->get_result();" << std::endl;
+	  *decl << "  }" << std::endl;
+	  *decl << std::endl;
+	}
+      }
     }
+    *decl << "}" << std::endl;
+    *decl << "namespace " << info->namespace_name << std::endl;
+    *decl << "{" << std::endl;
+    *decl << std::endl;
   }
 
   void Cpp_Code_Generator::generate_nodes()
@@ -1366,8 +1606,8 @@ namespace funcgen
 	{
 	  const Result_Type &res_type = o->first;
 	  const Result_Code &res_code = o->second;
-	  *decl << "    virtual std::pair<bool," 
-		<< translator.base_type(res_type.return_type) << "> "
+	  *decl << "    virtual std::pair< bool," 
+		<< translator.base_type(res_type.return_type) << " > "
 		<< translator.result_function_decl( provides,
 						    res_type.return_type, 
 						    res_type.parameter_type )
@@ -1384,8 +1624,8 @@ namespace funcgen
 	    continue;
 	  }
 
-	  *impl << "  std::pair<bool," 
-		<< translator.base_type(res_type.return_type) << "> "
+	  *impl << "  std::pair< bool," 
+		<< translator.base_type(res_type.return_type) << " > "
 		<< translator.node_type( node_name ) << "::"
 		<< translator.result_function_impl( provides,
 						    res_type.return_type, 
@@ -1393,8 +1633,8 @@ namespace funcgen
 						    res_code.parameter )
 		<< std::endl
 		<< "  {" << std::endl
-		<< "    std::pair<bool," 
-		<< translator.base_type(res_type.return_type) << "> no_res;"
+		<< "    std::pair< bool," 
+		<< translator.base_type(res_type.return_type) << " > no_res;"
 		<< std::endl
 		<< "    no_res.first = false;" << std::endl
 		<< "    bool did_any_result_fail;" << std::endl

@@ -50,11 +50,11 @@ namespace funcgen
 //********
 
 // keywords
-%token TAFD_include TAFD_declaration TAFD_header TAFD_priority_list 
-%token TAFD_base_types TAFD_serial TAFD_type TAFD_abstract TAFD_node 
-%token TAFD_provides TAFD_extends TAFD_properties TAFD_aliases TAFD_operands 
-%token TAFD_common TAFD_constraints TAFD_solvers TAFD_actions TAFD_push 
-%token TAFD_default TAFD_contains TAFD_max1 TAFD_min1 TAFD_provide 
+%token TAFD_include TAFD_declaration TAFD_header TAFD_avoid_recursion 
+%token TAFD_priority_list TAFD_base_types TAFD_serial TAFD_type TAFD_abstract 
+%token TAFD_node TAFD_provides TAFD_extends TAFD_properties TAFD_aliases 
+%token TAFD_operands TAFD_common TAFD_constraints TAFD_solvers TAFD_actions 
+%token TAFD_push TAFD_default TAFD_contains TAFD_max1 TAFD_min1 TAFD_provide 
 %token TAFD_resulting TAFD_requires TAFD_this TAFD_prev TAFD_next TAFD_first 
 %token TAFD_last TAFD_parent TAFD_child TAFD_first_child TAFD_last_child 
 %token TAFD_start_param TAFD_end_param TAFD_true TAFD_false
@@ -117,6 +117,7 @@ statements:
 statement:
     include_declaration
   | include_header
+  | avoid_recursion
   | priority_list_declaration
   | base_types_declaration
   | type_declaration
@@ -128,7 +129,11 @@ include_declaration:
 					{ include_declaration( info, $3 ); }
 ;
 include_header:
-    TAFD_include TAFD_header TAFD_QSTRING ';' { include_header( info, $3 ); }
+    TAFD_include TAFD_header TAFD_QSTRING ';'	{ include_header( info, $3 ); }
+;
+avoid_recursion:
+    TAFD_avoid_recursion TAFD_IDENTIFIER ';'	
+	{ if( avoid_recursion(info,$2) ) return 0; /* return if last file */ }
 ;
 priority_list_declaration:
     TAFD_priority_list '{' priority_list_statements '}'
@@ -221,12 +226,16 @@ operator_version_statements: /*optional*/
   | operator_version_statements operator_version_statement
 ;
 operator_version_statement:
-    TAFD_IDENTIFIER operator_version_name  { start_operator_version(info,$1,$2); }
-      '(' operator_parameter_type_list ')' ';'
+    TAFD_IDENTIFIER operator_version_name  
+					{ start_operator_version(info,$1,$2); }
+      '(' operator_version_type_list ')' ';'
+					{ finish_operator_version(info); }
 				
 ;
 operator_version_name:
     TAFD_IDENTIFIER				{ $$ = $1; }
+  | TAFD_IDENTIFIER '!'				{ check_id_operator(info,$1);
+						  $$ = $1 + '!'; }
   | TAFD_IDENTIFIER '+'				{ check_id_operator(info,$1);
 						  $$ = $1 + '+'; }
   | TAFD_IDENTIFIER '-'				{ check_id_operator(info,$1);
@@ -240,13 +249,13 @@ operator_version_name:
   | TAFD_IDENTIFIER '>'				{ check_id_operator(info,$1);
 						  $$ = $1 + '>'; }
   | TAFD_IDENTIFIER TAFD_IS_EQUAL		{ check_id_operator(info,$1);
-						  $$ = $1 + TAFD_IS_EQUAL; }
+						  $$ = $1 + "=="; }
   | TAFD_IDENTIFIER TAFD_NOT_EQUAL		{ check_id_operator(info,$1);
-						  $$ = $1 + TAFD_NOT_EQUAL; }
+						  $$ = $1 + "!="; }
   | TAFD_IDENTIFIER TAFD_MORE_EQUAL		{ check_id_operator(info,$1);
-						  $$ = $1 + TAFD_MORE_EQUAL; }
+						  $$ = $1 + ">="; }
   | TAFD_IDENTIFIER TAFD_LESS_EQUAL		{ check_id_operator(info,$1);
-						  $$ = $1 + TAFD_LESS_EQUAL; }
+						  $$ = $1 + "<="; }
     // ... when adding operators see [bool_]op_expression ...
 ;
 operator_parameter_type_list: /*optional*/
@@ -256,7 +265,7 @@ operator_parameter_type_list: /*optional*/
 ;
 operator_version_type_list: /*optional*/
   | TAFD_IDENTIFIER		{ add_operator_version_parameter(info,$1);}
-  | operator_parameter_type_list ',' TAFD_IDENTIFIER	
+  | operator_version_type_list ',' TAFD_IDENTIFIER	
 				{ add_operator_version_parameter(info,$3);}
 ;
 node_declaration:
@@ -542,7 +551,9 @@ opt_fail_bool_var: /*optional*/     { $$ = ""; }
   | ',' TAFD_IDENTIFIER 	    { $$ = $2; }
 ;    
 bool_op_expression:
-    op_expression TAFD_IS_EQUAL op_expression	{$$ = bool_expr($1,"==",$3);}
+    '!' bool_op_expression 			{$$ = bool_expr("!",$2);}
+  | '(' bool_op_expression ')'		  	{$$ = bool_expr($2);}
+  | op_expression TAFD_IS_EQUAL op_expression	{$$ = bool_expr($1,"==",$3);}
   | op_expression TAFD_NOT_EQUAL op_expression  {$$ = bool_expr($1,"!=",$3);}
   | op_expression TAFD_MORE_EQUAL op_expression {$$ = bool_expr($1,">=",$3);}
   | op_expression TAFD_LESS_EQUAL op_expression {$$ = bool_expr($1,"<=",$3);}
@@ -554,6 +565,8 @@ op_expression:
     property_reference			  {$$ = expr_from_ref(info);}
   | TAFD_SCALAR				  {$$ = expr_scalar($1);}
   | '(' op_expression ')'		  {$$ = expr($2);}
+  | '!' op_expression 			  {$$ = expr("!",$2);}
+  | '-' op_expression 			  {$$ = expr("-",$2);}
   | op_expression '+' op_expression	  {$$ = expr($1,"+",$3);}
   | op_expression '-' op_expression	  {$$ = expr($1,"-",$3);}
   | op_expression '*' op_expression	  {$$ = expr($1,"*",$3);}

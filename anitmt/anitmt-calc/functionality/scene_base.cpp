@@ -62,7 +62,7 @@ namespace functionality
   //   _serial_container_scene_type
 
   _container_scene_type::node_factories_type _container_scene_type::node_factories;
-  void _container_scene_type::add_node_factory( std::string name, proptree::Basic_Node_Factory<_pt_scene_type>* nf )
+  void _container_scene_type::add_node_factory( std::string name, proptree::Basic_Node_Factory< _pt_scene_type >* nf )
   {
     node_factories[name] = nf;
   }
@@ -73,8 +73,8 @@ namespace functionality
     node_factories_type::iterator i;
     i = node_factories.find(type);
     if( i == node_factories.end() ) return already_obj;
-    proptree::Basic_Node_Factory<_pt_scene_type>* &nf = i->second;
-    proptree::Basic_Node_Factory<_pt_scene_type>::node_return_type node;
+    proptree::Basic_Node_Factory< _pt_scene_type >* &nf = i->second;
+    proptree::Basic_Node_Factory< _pt_scene_type >::node_return_type node;
     if( already_obj != 0 ) 
       node = nf->cast(already_obj);
     else

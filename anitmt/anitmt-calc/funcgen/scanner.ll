@@ -98,6 +98,7 @@ qstring_err 	(\"([^\"\n]|\\\")*)
 include		{ tok_pos(); return TAFD_include; }
 declaration	{ tok_pos(); return TAFD_declaration; }
 header		{ tok_pos(); return TAFD_header; }
+avoid_recursion	{ tok_pos(); return TAFD_avoid_recursion; }
 priority_list	{ tok_pos(); return TAFD_priority_list; }
 base_types	{ tok_pos(); return TAFD_base_types; }
 serial		{ tok_pos(); return TAFD_serial; }

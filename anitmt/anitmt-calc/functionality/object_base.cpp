@@ -206,7 +206,7 @@ namespace functionality
   //   _serial_container_object_component
 
   _container_object_component::node_factories_type _container_object_component::node_factories;
-  void _container_object_component::add_node_factory( std::string name, proptree::Basic_Node_Factory<_pt_object_component>* nf )
+  void _container_object_component::add_node_factory( std::string name, proptree::Basic_Node_Factory< _pt_object_component >* nf )
   {
     node_factories[name] = nf;
   }
@@ -217,8 +217,8 @@ namespace functionality
     node_factories_type::iterator i;
     i = node_factories.find(type);
     if( i == node_factories.end() ) return already_obj;
-    proptree::Basic_Node_Factory<_pt_object_component>* &nf = i->second;
-    proptree::Basic_Node_Factory<_pt_object_component>::node_return_type node;
+    proptree::Basic_Node_Factory< _pt_object_component >* &nf = i->second;
+    proptree::Basic_Node_Factory< _pt_object_component >::node_return_type node;
     if( already_obj != 0 ) 
       node = nf->cast(already_obj);
     else
@@ -258,7 +258,7 @@ namespace functionality
   //   _serial_container_object_state
 
   _serial_container_object_state::node_factories_type _serial_container_object_state::node_factories;
-  void _serial_container_object_state::add_node_factory( std::string name, proptree::Basic_Node_Factory<_pt_object_state>* nf )
+  void _serial_container_object_state::add_node_factory( std::string name, proptree::Basic_Node_Factory< _pt_object_state >* nf )
   {
     node_factories[name] = nf;
   }
@@ -270,8 +270,8 @@ namespace functionality
     node_factories_type::iterator i;
     i = node_factories.find(type);
     if( i == node_factories.end() ) return already_obj;
-    proptree::Basic_Node_Factory<_pt_object_state>* &nf = i->second;
-    proptree::Basic_Node_Factory<_pt_object_state>::node_return_type node;
+    proptree::Basic_Node_Factory< _pt_object_state >* &nf = i->second;
+    proptree::Basic_Node_Factory< _pt_object_state >::node_return_type node;
     if( already_obj != 0 ) 
       node = nf->cast(already_obj);
     else
@@ -300,7 +300,7 @@ namespace functionality
     return node.second;                      // return general prop tree node pointer
   }
 
-  std::pair<bool,acceleration> _serial_container_object_state::_rf_object_state_acceleration_stretch( stretch _par_ )
+  std::pair< bool,acceleration > _serial_container_object_state::_rf_object_state_acceleration_stretch( stretch _par_ )
   {
     elements_type::iterator i;
     for( i = elements.begin(); i != elements.end(); ++i )
@@ -319,12 +319,12 @@ namespace functionality
       }
     }
     // undefined range
-    std::pair<bool,acceleration> ret; 
+    std::pair< bool,acceleration > ret; 
     ret.first = false;
     return ret;
   }
 
-  std::pair<bool,acceleration> _serial_container_object_state::_rf_object_state_acceleration_time( time _par_ )
+  std::pair< bool,acceleration > _serial_container_object_state::_rf_object_state_acceleration_time( time _par_ )
   {
     elements_type::iterator i;
     for( i = elements.begin(); i != elements.end(); ++i )
@@ -343,12 +343,12 @@ namespace functionality
       }
     }
     // undefined range
-    std::pair<bool,acceleration> ret; 
+    std::pair< bool,acceleration > ret; 
     ret.first = false;
     return ret;
   }
 
-  std::pair<bool,direction> _serial_container_object_state::_rf_object_state_direction_stretch( stretch _par_ )
+  std::pair< bool,direction > _serial_container_object_state::_rf_object_state_direction_stretch( stretch _par_ )
   {
     elements_type::iterator i;
     for( i = elements.begin(); i != elements.end(); ++i )
@@ -367,12 +367,12 @@ namespace functionality
       }
     }
     // undefined range
-    std::pair<bool,direction> ret; 
+    std::pair< bool,direction > ret; 
     ret.first = false;
     return ret;
   }
 
-  std::pair<bool,direction> _serial_container_object_state::_rf_object_state_direction_time( time _par_ )
+  std::pair< bool,direction > _serial_container_object_state::_rf_object_state_direction_time( time _par_ )
   {
     elements_type::iterator i;
     for( i = elements.begin(); i != elements.end(); ++i )
@@ -391,12 +391,12 @@ namespace functionality
       }
     }
     // undefined range
-    std::pair<bool,direction> ret; 
+    std::pair< bool,direction > ret; 
     ret.first = false;
     return ret;
   }
 
-  std::pair<bool,front> _serial_container_object_state::_rf_object_state_front_stretch( stretch _par_ )
+  std::pair< bool,front > _serial_container_object_state::_rf_object_state_front_stretch( stretch _par_ )
   {
     elements_type::iterator i;
     for( i = elements.begin(); i != elements.end(); ++i )
@@ -415,12 +415,12 @@ namespace functionality
       }
     }
     // undefined range
-    std::pair<bool,front> ret; 
+    std::pair< bool,front > ret; 
     ret.first = false;
     return ret;
   }
 
-  std::pair<bool,front> _serial_container_object_state::_rf_object_state_front_time( time _par_ )
+  std::pair< bool,front > _serial_container_object_state::_rf_object_state_front_time( time _par_ )
   {
     elements_type::iterator i;
     for( i = elements.begin(); i != elements.end(); ++i )
@@ -439,12 +439,12 @@ namespace functionality
       }
     }
     // undefined range
-    std::pair<bool,front> ret; 
+    std::pair< bool,front > ret; 
     ret.first = false;
     return ret;
   }
 
-  std::pair<bool,position> _serial_container_object_state::_rf_object_state_position_stretch( stretch _par_ )
+  std::pair< bool,position > _serial_container_object_state::_rf_object_state_position_stretch( stretch _par_ )
   {
     elements_type::iterator i;
     for( i = elements.begin(); i != elements.end(); ++i )
@@ -463,12 +463,12 @@ namespace functionality
       }
     }
     // undefined range
-    std::pair<bool,position> ret; 
+    std::pair< bool,position > ret; 
     ret.first = false;
     return ret;
   }
 
-  std::pair<bool,position> _serial_container_object_state::_rf_object_state_position_time( time _par_ )
+  std::pair< bool,position > _serial_container_object_state::_rf_object_state_position_time( time _par_ )
   {
     elements_type::iterator i;
     for( i = elements.begin(); i != elements.end(); ++i )
@@ -487,12 +487,12 @@ namespace functionality
       }
     }
     // undefined range
-    std::pair<bool,position> ret; 
+    std::pair< bool,position > ret; 
     ret.first = false;
     return ret;
   }
 
-  std::pair<bool,speed> _serial_container_object_state::_rf_object_state_speed_stretch( stretch _par_ )
+  std::pair< bool,speed > _serial_container_object_state::_rf_object_state_speed_stretch( stretch _par_ )
   {
     elements_type::iterator i;
     for( i = elements.begin(); i != elements.end(); ++i )
@@ -511,12 +511,12 @@ namespace functionality
       }
     }
     // undefined range
-    std::pair<bool,speed> ret; 
+    std::pair< bool,speed > ret; 
     ret.first = false;
     return ret;
   }
 
-  std::pair<bool,speed> _serial_container_object_state::_rf_object_state_speed_time( time _par_ )
+  std::pair< bool,speed > _serial_container_object_state::_rf_object_state_speed_time( time _par_ )
   {
     elements_type::iterator i;
     for( i = elements.begin(); i != elements.end(); ++i )
@@ -535,12 +535,12 @@ namespace functionality
       }
     }
     // undefined range
-    std::pair<bool,speed> ret; 
+    std::pair< bool,speed > ret; 
     ret.first = false;
     return ret;
   }
 
-  std::pair<bool,stretch> _serial_container_object_state::_rf_object_state_stretch_time( time _par_ )
+  std::pair< bool,stretch > _serial_container_object_state::_rf_object_state_stretch_time( time _par_ )
   {
     elements_type::iterator i;
     for( i = elements.begin(); i != elements.end(); ++i )
@@ -559,12 +559,12 @@ namespace functionality
       }
     }
     // undefined range
-    std::pair<bool,stretch> ret; 
+    std::pair< bool,stretch > ret; 
     ret.first = false;
     return ret;
   }
 
-  std::pair<bool,up_vector> _serial_container_object_state::_rf_object_state_up_vector_stretch( stretch _par_ )
+  std::pair< bool,up_vector > _serial_container_object_state::_rf_object_state_up_vector_stretch( stretch _par_ )
   {
     elements_type::iterator i;
     for( i = elements.begin(); i != elements.end(); ++i )
@@ -583,12 +583,12 @@ namespace functionality
       }
     }
     // undefined range
-    std::pair<bool,up_vector> ret; 
+    std::pair< bool,up_vector > ret; 
     ret.first = false;
     return ret;
   }
 
-  std::pair<bool,up_vector> _serial_container_object_state::_rf_object_state_up_vector_time( time _par_ )
+  std::pair< bool,up_vector > _serial_container_object_state::_rf_object_state_up_vector_time( time _par_ )
   {
     elements_type::iterator i;
     for( i = elements.begin(); i != elements.end(); ++i )
@@ -607,7 +607,7 @@ namespace functionality
       }
     }
     // undefined range
-    std::pair<bool,up_vector> ret; 
+    std::pair< bool,up_vector > ret; 
     ret.first = false;
     return ret;
   }
@@ -693,7 +693,7 @@ namespace functionality
   //   _serial_container_timing
 
   _serial_container_timing::node_factories_type _serial_container_timing::node_factories;
-  void _serial_container_timing::add_node_factory( std::string name, proptree::Basic_Node_Factory<_pt_timing>* nf )
+  void _serial_container_timing::add_node_factory( std::string name, proptree::Basic_Node_Factory< _pt_timing >* nf )
   {
     node_factories[name] = nf;
   }
@@ -705,8 +705,8 @@ namespace functionality
     node_factories_type::iterator i;
     i = node_factories.find(type);
     if( i == node_factories.end() ) return already_obj;
-    proptree::Basic_Node_Factory<_pt_timing>* &nf = i->second;
-    proptree::Basic_Node_Factory<_pt_timing>::node_return_type node;
+    proptree::Basic_Node_Factory< _pt_timing >* &nf = i->second;
+    proptree::Basic_Node_Factory< _pt_timing >::node_return_type node;
     if( already_obj != 0 ) 
       node = nf->cast(already_obj);
     else
@@ -727,7 +727,7 @@ namespace functionality
     return node.second;                      // return general prop tree node pointer
   }
 
-  std::pair<bool,acceleration> _serial_container_timing::_rf_timing_acceleration_stretch( stretch _par_ )
+  std::pair< bool,acceleration > _serial_container_timing::_rf_timing_acceleration_stretch( stretch _par_ )
   {
     elements_type::iterator i;
     for( i = elements.begin(); i != elements.end(); ++i )
@@ -746,12 +746,12 @@ namespace functionality
       }
     }
     // undefined range
-    std::pair<bool,acceleration> ret; 
+    std::pair< bool,acceleration > ret; 
     ret.first = false;
     return ret;
   }
 
-  std::pair<bool,acceleration> _serial_container_timing::_rf_timing_acceleration_time( time _par_ )
+  std::pair< bool,acceleration > _serial_container_timing::_rf_timing_acceleration_time( time _par_ )
   {
     elements_type::iterator i;
     for( i = elements.begin(); i != elements.end(); ++i )
@@ -770,12 +770,12 @@ namespace functionality
       }
     }
     // undefined range
-    std::pair<bool,acceleration> ret; 
+    std::pair< bool,acceleration > ret; 
     ret.first = false;
     return ret;
   }
 
-  std::pair<bool,speed> _serial_container_timing::_rf_timing_speed_stretch( stretch _par_ )
+  std::pair< bool,speed > _serial_container_timing::_rf_timing_speed_stretch( stretch _par_ )
   {
     elements_type::iterator i;
     for( i = elements.begin(); i != elements.end(); ++i )
@@ -794,12 +794,12 @@ namespace functionality
       }
     }
     // undefined range
-    std::pair<bool,speed> ret; 
+    std::pair< bool,speed > ret; 
     ret.first = false;
     return ret;
   }
 
-  std::pair<bool,speed> _serial_container_timing::_rf_timing_speed_time( time _par_ )
+  std::pair< bool,speed > _serial_container_timing::_rf_timing_speed_time( time _par_ )
   {
     elements_type::iterator i;
     for( i = elements.begin(); i != elements.end(); ++i )
@@ -818,12 +818,12 @@ namespace functionality
       }
     }
     // undefined range
-    std::pair<bool,speed> ret; 
+    std::pair< bool,speed > ret; 
     ret.first = false;
     return ret;
   }
 
-  std::pair<bool,stretch> _serial_container_timing::_rf_timing_stretch_time( time _par_ )
+  std::pair< bool,stretch > _serial_container_timing::_rf_timing_stretch_time( time _par_ )
   {
     elements_type::iterator i;
     for( i = elements.begin(); i != elements.end(); ++i )
@@ -842,7 +842,7 @@ namespace functionality
       }
     }
     // undefined range
-    std::pair<bool,stretch> ret; 
+    std::pair< bool,stretch > ret; 
     ret.first = false;
     return ret;
   }
@@ -896,7 +896,7 @@ namespace functionality
   //   _serial_container_track
 
   _serial_container_track::node_factories_type _serial_container_track::node_factories;
-  void _serial_container_track::add_node_factory( std::string name, proptree::Basic_Node_Factory<_pt_track>* nf )
+  void _serial_container_track::add_node_factory( std::string name, proptree::Basic_Node_Factory< _pt_track >* nf )
   {
     node_factories[name] = nf;
   }
@@ -908,8 +908,8 @@ namespace functionality
     node_factories_type::iterator i;
     i = node_factories.find(type);
     if( i == node_factories.end() ) return already_obj;
-    proptree::Basic_Node_Factory<_pt_track>* &nf = i->second;
-    proptree::Basic_Node_Factory<_pt_track>::node_return_type node;
+    proptree::Basic_Node_Factory< _pt_track >* &nf = i->second;
+    proptree::Basic_Node_Factory< _pt_track >::node_return_type node;
     if( already_obj != 0 ) 
       node = nf->cast(already_obj);
     else
@@ -927,7 +927,7 @@ namespace functionality
     return node.second;                      // return general prop tree node pointer
   }
 
-  std::pair<bool,direction> _serial_container_track::_rf_track_direction_stretch( stretch _par_ )
+  std::pair< bool,direction > _serial_container_track::_rf_track_direction_stretch( stretch _par_ )
   {
     elements_type::iterator i;
     for( i = elements.begin(); i != elements.end(); ++i )
@@ -946,12 +946,12 @@ namespace functionality
       }
     }
     // undefined range
-    std::pair<bool,direction> ret; 
+    std::pair< bool,direction > ret; 
     ret.first = false;
     return ret;
   }
 
-  std::pair<bool,position> _serial_container_track::_rf_track_position_stretch( stretch _par_ )
+  std::pair< bool,position > _serial_container_track::_rf_track_position_stretch( stretch _par_ )
   {
     elements_type::iterator i;
     for( i = elements.begin(); i != elements.end(); ++i )
@@ -970,7 +970,7 @@ namespace functionality
       }
     }
     // undefined range
-    std::pair<bool,position> ret; 
+    std::pair< bool,position > ret; 
     ret.first = false;
     return ret;
   }
@@ -1144,9 +1144,9 @@ namespace functionality
   }
 
   // ** result functions **
-  std::pair<bool,front> node_object::_rf_object_component_front_time( time t )
+  std::pair< bool,front > node_object::_rf_object_component_front_time( time t )
   {
-    std::pair<bool,front> no_res;
+    std::pair< bool,front > no_res;
     no_res.first = false;
     bool did_any_result_fail;
     bool did_result_fail;
@@ -1158,15 +1158,15 @@ namespace functionality
       error() << "required child container wasn't solved";
       return no_res;
     }
-    // *** user code following... line:104 ***
+    // *** user code following... line:105 ***
       
       return(_cn_object_state._rf_object_state_front_time( t ));
     
   }
 
-  std::pair<bool,position> node_object::_rf_object_component_position_time( time t )
+  std::pair< bool,position > node_object::_rf_object_component_position_time( time t )
   {
-    std::pair<bool,position> no_res;
+    std::pair< bool,position > no_res;
     no_res.first = false;
     bool did_any_result_fail;
     bool did_result_fail;
@@ -1178,15 +1178,15 @@ namespace functionality
       error() << "required child container wasn't solved";
       return no_res;
     }
-    // *** user code following... line:99 ***
+    // *** user code following... line:100 ***
       
       return(_cn_object_state._rf_object_state_position_time( t ));
     
   }
 
-  std::pair<bool,rotation> node_object::_rf_object_component_rotation_time( time t )
+  std::pair< bool,rotation > node_object::_rf_object_component_rotation_time( time t )
   {
-    std::pair<bool,rotation> no_res;
+    std::pair< bool,rotation > no_res;
     no_res.first = false;
     bool did_any_result_fail;
     bool did_result_fail;
@@ -1204,19 +1204,19 @@ namespace functionality
       error() << "required child container wasn't solved";
       return no_res;
     }
-    // *** user code following... line:89 ***
+    // *** user code following... line:90 ***
       
       vector dest_front = extract_status( _cn_object_state._rf_object_state_front_time( t ), did_result_fail, did_any_result_fail );
       vector dest_up_vector = extract_status( _cn_object_state._rf_object_state_up_vector_time( t ), did_result_fail, did_any_result_fail );
       vector rotate = Vrotate_pair_pair( _op_front(), _op_up_vector(), 
            dest_front, dest_up_vector );
-      return std::pair<bool,rotation>(true,rotate );
+      return std::pair< bool,rotation >(true,rotate );
     
   }
 
-  std::pair<bool,speed> node_object::_rf_object_component_speed_time( time t )
+  std::pair< bool,speed > node_object::_rf_object_component_speed_time( time t )
   {
-    std::pair<bool,speed> no_res;
+    std::pair< bool,speed > no_res;
     no_res.first = false;
     bool did_any_result_fail;
     bool did_result_fail;
@@ -1228,15 +1228,15 @@ namespace functionality
       error() << "required child container wasn't solved";
       return no_res;
     }
-    // *** user code following... line:114 ***
+    // *** user code following... line:115 ***
       
       return(_cn_object_state._rf_object_state_speed_time( t ));
     
   }
 
-  std::pair<bool,translation> node_object::_rf_object_component_translation_time( time t )
+  std::pair< bool,translation > node_object::_rf_object_component_translation_time( time t )
   {
-    std::pair<bool,translation> no_res;
+    std::pair< bool,translation > no_res;
     no_res.first = false;
     bool did_any_result_fail;
     bool did_result_fail;
@@ -1254,17 +1254,17 @@ namespace functionality
       error() << "required child container wasn't solved";
       return no_res;
     }
-    // *** user code following... line:81 ***
+    // *** user code following... line:82 ***
       
       vector position = extract_status( _cn_object_state._rf_object_state_position_time( t ), did_result_fail, did_any_result_fail );
       vector translate = position - _op_center();
-      return std::pair<bool,translation>(true,translate );
+      return std::pair< bool,translation >(true,translate );
     
   }
 
-  std::pair<bool,up_vector> node_object::_rf_object_component_up_vector_time( time t )
+  std::pair< bool,up_vector > node_object::_rf_object_component_up_vector_time( time t )
   {
-    std::pair<bool,up_vector> no_res;
+    std::pair< bool,up_vector > no_res;
     no_res.first = false;
     bool did_any_result_fail;
     bool did_result_fail;
@@ -1276,15 +1276,15 @@ namespace functionality
       error() << "required child container wasn't solved";
       return no_res;
     }
-    // *** user code following... line:109 ***
+    // *** user code following... line:110 ***
       
       return(_cn_object_state._rf_object_state_up_vector_time( t ));
     
   }
 
-  std::pair<bool,acceleration> node_object::_rf_object_state_acceleration_stretch( stretch s )
+  std::pair< bool,acceleration > node_object::_rf_object_state_acceleration_stretch( stretch s )
   {
-    std::pair<bool,acceleration> no_res;
+    std::pair< bool,acceleration > no_res;
     no_res.first = false;
     bool did_any_result_fail;
     bool did_result_fail;
@@ -1296,15 +1296,15 @@ namespace functionality
       error() << "required child container wasn't solved";
       return no_res;
     }
-    // *** user code following... line:165 ***
+    // *** user code following... line:166 ***
       
       return(_cn_object_state._rf_object_state_acceleration_stretch( s ));
     
   }
 
-  std::pair<bool,acceleration> node_object::_rf_object_state_acceleration_time( time t )
+  std::pair< bool,acceleration > node_object::_rf_object_state_acceleration_time( time t )
   {
-    std::pair<bool,acceleration> no_res;
+    std::pair< bool,acceleration > no_res;
     no_res.first = false;
     bool did_any_result_fail;
     bool did_result_fail;
@@ -1316,15 +1316,15 @@ namespace functionality
       error() << "required child container wasn't solved";
       return no_res;
     }
-    // *** user code following... line:160 ***
+    // *** user code following... line:161 ***
       
       return(_cn_object_state._rf_object_state_acceleration_time( t ));
     
   }
 
-  std::pair<bool,direction> node_object::_rf_object_state_direction_stretch( stretch s )
+  std::pair< bool,direction > node_object::_rf_object_state_direction_stretch( stretch s )
   {
-    std::pair<bool,direction> no_res;
+    std::pair< bool,direction > no_res;
     no_res.first = false;
     bool did_any_result_fail;
     bool did_result_fail;
@@ -1336,15 +1336,15 @@ namespace functionality
       error() << "required child container wasn't solved";
       return no_res;
     }
-    // *** user code following... line:139 ***
+    // *** user code following... line:140 ***
       
       return(_cn_object_state._rf_object_state_direction_stretch( s ));
     
   }
 
-  std::pair<bool,direction> node_object::_rf_object_state_direction_time( time t )
+  std::pair< bool,direction > node_object::_rf_object_state_direction_time( time t )
   {
-    std::pair<bool,direction> no_res;
+    std::pair< bool,direction > no_res;
     no_res.first = false;
     bool did_any_result_fail;
     bool did_result_fail;
@@ -1356,15 +1356,15 @@ namespace functionality
       error() << "required child container wasn't solved";
       return no_res;
     }
-    // *** user code following... line:134 ***
+    // *** user code following... line:135 ***
       
       return(_cn_object_state._rf_object_state_direction_time( t ));
     
   }
 
-  std::pair<bool,front> node_object::_rf_object_state_front_stretch( stretch s )
+  std::pair< bool,front > node_object::_rf_object_state_front_stretch( stretch s )
   {
-    std::pair<bool,front> no_res;
+    std::pair< bool,front > no_res;
     no_res.first = false;
     bool did_any_result_fail;
     bool did_result_fail;
@@ -1376,15 +1376,15 @@ namespace functionality
       error() << "required child container wasn't solved";
       return no_res;
     }
-    // *** user code following... line:176 ***
+    // *** user code following... line:177 ***
       
       return(_cn_object_state._rf_object_state_front_stretch( s ));
     
   }
 
-  std::pair<bool,front> node_object::_rf_object_state_front_time( time t )
+  std::pair< bool,front > node_object::_rf_object_state_front_time( time t )
   {
-    std::pair<bool,front> no_res;
+    std::pair< bool,front > no_res;
     no_res.first = false;
     bool did_any_result_fail;
     bool did_result_fail;
@@ -1396,15 +1396,15 @@ namespace functionality
       error() << "required child container wasn't solved";
       return no_res;
     }
-    // *** user code following... line:171 ***
+    // *** user code following... line:172 ***
       
       return(_cn_object_state._rf_object_state_front_time( t ));
     
   }
 
-  std::pair<bool,position> node_object::_rf_object_state_position_stretch( stretch s )
+  std::pair< bool,position > node_object::_rf_object_state_position_stretch( stretch s )
   {
-    std::pair<bool,position> no_res;
+    std::pair< bool,position > no_res;
     no_res.first = false;
     bool did_any_result_fail;
     bool did_result_fail;
@@ -1416,15 +1416,15 @@ namespace functionality
       error() << "required child container wasn't solved";
       return no_res;
     }
-    // *** user code following... line:129 ***
+    // *** user code following... line:130 ***
       
       return(_cn_object_state._rf_object_state_position_stretch( s ));
     
   }
 
-  std::pair<bool,position> node_object::_rf_object_state_position_time( time t )
+  std::pair< bool,position > node_object::_rf_object_state_position_time( time t )
   {
-    std::pair<bool,position> no_res;
+    std::pair< bool,position > no_res;
     no_res.first = false;
     bool did_any_result_fail;
     bool did_result_fail;
@@ -1436,15 +1436,15 @@ namespace functionality
       error() << "required child container wasn't solved";
       return no_res;
     }
-    // *** user code following... line:124 ***
+    // *** user code following... line:125 ***
       
       return(_cn_object_state._rf_object_state_position_time( t ));
     
   }
 
-  std::pair<bool,speed> node_object::_rf_object_state_speed_stretch( stretch s )
+  std::pair< bool,speed > node_object::_rf_object_state_speed_stretch( stretch s )
   {
-    std::pair<bool,speed> no_res;
+    std::pair< bool,speed > no_res;
     no_res.first = false;
     bool did_any_result_fail;
     bool did_result_fail;
@@ -1456,15 +1456,15 @@ namespace functionality
       error() << "required child container wasn't solved";
       return no_res;
     }
-    // *** user code following... line:155 ***
+    // *** user code following... line:156 ***
       
       return(_cn_object_state._rf_object_state_speed_stretch( s ));
     
   }
 
-  std::pair<bool,speed> node_object::_rf_object_state_speed_time( time t )
+  std::pair< bool,speed > node_object::_rf_object_state_speed_time( time t )
   {
-    std::pair<bool,speed> no_res;
+    std::pair< bool,speed > no_res;
     no_res.first = false;
     bool did_any_result_fail;
     bool did_result_fail;
@@ -1476,15 +1476,15 @@ namespace functionality
       error() << "required child container wasn't solved";
       return no_res;
     }
-    // *** user code following... line:150 ***
+    // *** user code following... line:151 ***
       
       return(_cn_object_state._rf_object_state_speed_time( t ));
     
   }
 
-  std::pair<bool,stretch> node_object::_rf_object_state_stretch_time( time t )
+  std::pair< bool,stretch > node_object::_rf_object_state_stretch_time( time t )
   {
-    std::pair<bool,stretch> no_res;
+    std::pair< bool,stretch > no_res;
     no_res.first = false;
     bool did_any_result_fail;
     bool did_result_fail;
@@ -1496,15 +1496,15 @@ namespace functionality
       error() << "required child container wasn't solved";
       return no_res;
     }
-    // *** user code following... line:145 ***
+    // *** user code following... line:146 ***
       
       return(_cn_object_state._rf_object_state_stretch_time( t ));
     
   }
 
-  std::pair<bool,up_vector> node_object::_rf_object_state_up_vector_stretch( stretch s )
+  std::pair< bool,up_vector > node_object::_rf_object_state_up_vector_stretch( stretch s )
   {
-    std::pair<bool,up_vector> no_res;
+    std::pair< bool,up_vector > no_res;
     no_res.first = false;
     bool did_any_result_fail;
     bool did_result_fail;
@@ -1516,15 +1516,15 @@ namespace functionality
       error() << "required child container wasn't solved";
       return no_res;
     }
-    // *** user code following... line:186 ***
+    // *** user code following... line:187 ***
       
       return(_cn_object_state._rf_object_state_up_vector_stretch( s ));
     
   }
 
-  std::pair<bool,up_vector> node_object::_rf_object_state_up_vector_time( time t )
+  std::pair< bool,up_vector > node_object::_rf_object_state_up_vector_time( time t )
   {
-    std::pair<bool,up_vector> no_res;
+    std::pair< bool,up_vector > no_res;
     no_res.first = false;
     bool did_any_result_fail;
     bool did_result_fail;
@@ -1536,7 +1536,7 @@ namespace functionality
       error() << "required child container wasn't solved";
       return no_res;
     }
-    // *** user code following... line:181 ***
+    // *** user code following... line:182 ***
       
       return(_cn_object_state._rf_object_state_up_vector_time( t ));
     

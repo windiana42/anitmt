@@ -87,6 +87,16 @@ namespace funcgen
   {
     afd_info *info = static_cast<afd_info*>(infoptr);
     AFD_Root *afd = info->afd;
+
+    // determine recursion depth
+    if( afd->include_depth >= max_include_depth )
+    {
+      info->msg.error() << "maximum include depth " << max_include_depth 
+			<< " reached";
+      return;
+    }
+    ++afd->include_depth;
+
     const code_gen_info *code_info = afd->translator->get_info();
     afd->don_t_create_code.push(true);
     std::string::size_type p = file.rfind('.');
@@ -134,8 +144,26 @@ namespace funcgen
   void include_header( void *info, const std::string &file )
   {
     AFD_Root *afd = static_cast<afd_info*>(info)->afd;
-    afd->header_files.add_header( file );
+    if( !afd->don_t_create_code.top() )
+      afd->header_files.add_header( file );
   }
+
+  bool avoid_recursion( void *infoptr, const std::string &unique_id )
+  {
+    afd_info *info = static_cast<afd_info*>(info);
+    AFD_Root *afd = info->afd;
+    if( afd->avoid_recursion_of.find( unique_id )
+	!= afd->avoid_recursion_of.end() )
+    {
+      // avoid recursion by closing file
+      finished_file(info); if( info->close_file() ) return true;
+    }
+    else
+    {
+      afd->avoid_recursion_of.insert( unique_id );
+    }
+    return false;
+  }  
 
   void priority_list_defined( void *info )
   {
@@ -230,8 +258,15 @@ namespace funcgen
     }
     else
     {
+      // insert new operator declaration with name
       afd->current_operator_declaration = &afd->operator_declarations[name];
+      // initialize it
+      afd->current_operator_declaration->don_t_create_code 
+	= afd->don_t_create_code.top();
+
       afd->current_operator_declaration->pos = info->file_pos.duplicate();
+      afd->current_operator_declaration->basic_operator 
+	= &available_operators.get_operator( type );
       afd->current_operator_declaration->operator_name = name;
       afd->current_operator_declaration->operator_base_type_name = type;
     }
@@ -286,7 +321,8 @@ namespace funcgen
   {	       
     /* everything is done by copy_code_line() */
   }
-  void add_operator_function_parameter( void *infoptr, const std::string &name )
+  void add_operator_function_parameter( void *infoptr, 
+					const std::string &name )
   {
     afd_info *info = static_cast<afd_info*>(infoptr);
     AFD_Root *afd = info->afd;
@@ -310,8 +346,13 @@ namespace funcgen
 
     if( afd->current_operator_declaration )
     {
+      afd->current_operator_declaration->versions
+	.push_back(std::list<std::string>());
       afd->current_operator_declaration->current_version =
-	&afd->current_operator_declaration->versions[name];
+	&(afd->current_operator_declaration->versions.back());
+
+      afd->current_operator_declaration->current_version
+	->push_back( name );
       afd->current_operator_declaration->current_version
 	->push_back( ret_type );
     }
@@ -327,6 +368,28 @@ namespace funcgen
       if( afd->current_operator_declaration->current_version )
       {
 	afd->current_operator_declaration->current_version->push_back( name );
+      }
+    }
+  }
+  void finish_operator_version( void *infoptr )
+  {
+    afd_info *info = static_cast<afd_info*>(infoptr);
+    AFD_Root *afd = info->afd;
+    message::Message_Reporter &msg = info->msg;
+
+    if( afd->current_operator_declaration )
+    {
+      if( afd->current_operator_declaration->current_version )
+      {
+	int num_operands = afd->current_operator_declaration
+	  ->basic_operator->get_num_operands();
+	if( int(afd->current_operator_declaration->current_version->size())
+	    != num_operands + 2 )
+	{
+	  msg.error() << "wrong number of operand type parameters, " 
+		      << num_operands << " expected";
+	  msg.error(afd->current_operator_declaration->pos) << "see here";
+	}
       }
     }
   }
@@ -1139,6 +1202,24 @@ namespace funcgen
     delete exp2;
     return res;
   }
+  Expression *bool_expr( const std::string &op, 
+			 Expression *exp )
+  {
+    Expression *res = new Expression;
+    res->append(op);
+    res->append(exp);
+    delete exp;
+    return res;
+  }
+  Expression *bool_expr( Expression *exp )
+  {
+    Expression *res = new Expression;
+    res->append("(");
+    res->append(exp);
+    res->append(")");
+    delete exp;
+    return res;
+  }
   Expression *expr_from_ref( void *info )
   {
     Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;
@@ -1168,6 +1249,15 @@ namespace funcgen
     res->append(op);
     res->append(exp2);
     delete exp2;
+    return res;
+  }
+  Expression *expr( const std::string &op, 
+		    Expression *exp )
+  {
+    Expression *res = new Expression;
+    res->append(op);
+    res->append(exp);
+    delete exp;
     return res;
   }
   Expression *expr( Expression *exp )

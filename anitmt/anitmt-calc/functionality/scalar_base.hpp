@@ -13,6 +13,7 @@
 #include <list>
 #include <string>
 #include <map>
+#include <math.h>
 
 #include <message/message.hpp>
 #include <val/val.hpp>
@@ -22,6 +23,8 @@
 #include <proptree/property.hpp>
 #include <proptree/proptree.hpp>
 
+#include "base_func.hpp"
+#include "solver.hpp"
 #include "base_func.hpp"
 namespace functionality
 {
@@ -51,7 +54,7 @@ namespace functionality
     void set_next_scalar_component( _pt_scalar_component* );
 
     // ** result functions **
-    virtual std::pair<bool,value> _rf_scalar_component_value_time( time ) = 0;
+    virtual std::pair< bool,value > _rf_scalar_component_value_time( time ) = 0;
     // ** is result availible **
     solve::Operand<bool> _av_scalar_component_value_time_is_avail;
     // ** init functions **
@@ -77,15 +80,15 @@ namespace functionality
     void set_next_scalar_vsa( _pt_scalar_vsa* );
 
     // ** result functions **
-    virtual std::pair<bool,acceleration> _rf_scalar_vsa_acceleration_time( time ) = 0;
-    solve::Operand<time> _pr_scalar_vsa_acceleration_time_start_param;
-    solve::Operand<time> _pr_scalar_vsa_acceleration_time_end_param;
-    virtual std::pair<bool,slope> _rf_scalar_vsa_slope_time( time ) = 0;
-    solve::Operand<time> _pr_scalar_vsa_slope_time_start_param;
-    solve::Operand<time> _pr_scalar_vsa_slope_time_end_param;
-    virtual std::pair<bool,value> _rf_scalar_vsa_value_time( time ) = 0;
-    solve::Operand<time> _pr_scalar_vsa_value_time_start_param;
-    solve::Operand<time> _pr_scalar_vsa_value_time_end_param;
+    virtual std::pair< bool,acceleration > _rf_scalar_vsa_acceleration_time( time ) = 0;
+    solve::Operand< time > _pr_scalar_vsa_acceleration_time_start_param;
+    solve::Operand< time > _pr_scalar_vsa_acceleration_time_end_param;
+    virtual std::pair< bool,slope > _rf_scalar_vsa_slope_time( time ) = 0;
+    solve::Operand< time > _pr_scalar_vsa_slope_time_start_param;
+    solve::Operand< time > _pr_scalar_vsa_slope_time_end_param;
+    virtual std::pair< bool,value > _rf_scalar_vsa_value_time( time ) = 0;
+    solve::Operand< time > _pr_scalar_vsa_value_time_start_param;
+    solve::Operand< time > _pr_scalar_vsa_value_time_end_param;
     // ** is result availible **
     solve::Operand<bool> _av_scalar_vsa_acceleration_time_is_avail;
     solve::Operand<bool> _av_scalar_vsa_slope_time_is_avail;
@@ -110,10 +113,10 @@ namespace functionality
     bool max1; // maximal one element
     bool min1; // minimal one element
     elements_type elements;
-    typedef std::map<std::string, proptree::Basic_Node_Factory<_pt_scalar_component>*> node_factories_type;
+    typedef std::map<std::string, proptree::Basic_Node_Factory< _pt_scalar_component >*> node_factories_type;
     static node_factories_type node_factories;
   public:
-    static void add_node_factory( std::string name, proptree::Basic_Node_Factory<_pt_scalar_component>* );
+    static void add_node_factory( std::string name, proptree::Basic_Node_Factory< _pt_scalar_component >* );
     proptree::Prop_Tree_Node *add_child( std::string type, std::string name, proptree::tree_info *info, message::Message_Consultant *msg, proptree::Prop_Tree_Node *already_obj );
     // ** result functions **
     elements_type::iterator elements_begin(); 
@@ -138,15 +141,15 @@ namespace functionality
     solve::Multi_And_Operator *avail_operator_acceleration_time;
     solve::Multi_And_Operator *avail_operator_slope_time;
     solve::Multi_And_Operator *avail_operator_value_time;
-    typedef std::map<std::string, proptree::Basic_Node_Factory<_pt_scalar_vsa>*> node_factories_type;
+    typedef std::map<std::string, proptree::Basic_Node_Factory< _pt_scalar_vsa >*> node_factories_type;
     static node_factories_type node_factories;
   public:
-    static void add_node_factory( std::string name, proptree::Basic_Node_Factory<_pt_scalar_vsa>* );
+    static void add_node_factory( std::string name, proptree::Basic_Node_Factory< _pt_scalar_vsa >* );
     proptree::Prop_Tree_Node *add_child( std::string type, std::string name, proptree::tree_info *info, message::Message_Consultant *msg, proptree::Prop_Tree_Node *already_obj );
     // ** result functions **
-    virtual std::pair<bool,acceleration> _rf_scalar_vsa_acceleration_time( time );
-    virtual std::pair<bool,slope> _rf_scalar_vsa_slope_time( time );
-    virtual std::pair<bool,value> _rf_scalar_vsa_value_time( time );
+    virtual std::pair< bool,acceleration > _rf_scalar_vsa_acceleration_time( time );
+    virtual std::pair< bool,slope > _rf_scalar_vsa_slope_time( time );
+    virtual std::pair< bool,value > _rf_scalar_vsa_value_time( time );
     // ** is result availible **
     solve::Operand<bool> _av_scalar_vsa_acceleration_time_is_avail;
     solve::Operand<bool> _av_scalar_vsa_slope_time_is_avail;
@@ -164,6 +167,20 @@ namespace functionality
     void hierarchy_final_init();
   };
 
+
+  // ********************
+  // ********************
+  // operator declartions
+  // ********************
+  // ********************
+
+}
+namespace solve
+{
+
+}
+namespace functionality
+{
 
   // ***************************
   // tree node type declarations
@@ -204,10 +221,10 @@ namespace functionality
     virtual void common_init();
 
     // ** result functions **
-    virtual std::pair<bool,value> _rf_scalar_component_value_time( time );
-    virtual std::pair<bool,acceleration> _rf_scalar_vsa_acceleration_time( time );
-    virtual std::pair<bool,slope> _rf_scalar_vsa_slope_time( time );
-    virtual std::pair<bool,value> _rf_scalar_vsa_value_time( time );
+    virtual std::pair< bool,value > _rf_scalar_component_value_time( time );
+    virtual std::pair< bool,acceleration > _rf_scalar_vsa_acceleration_time( time );
+    virtual std::pair< bool,slope > _rf_scalar_vsa_slope_time( time );
+    virtual std::pair< bool,value > _rf_scalar_vsa_value_time( time );
 
     // ** infrastructure functions **
     static void make_availible();

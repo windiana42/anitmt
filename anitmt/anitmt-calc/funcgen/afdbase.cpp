@@ -696,7 +696,8 @@ namespace funcgen
   }
 
   AFD_Root::AFD_Root( Code_Translator *trans )
-    : translator(trans), priority_list_defined(false), write_priority_list(false)
+    : translator(trans), priority_list_defined(false), 
+      write_priority_list(false), include_depth(0)
   {
     don_t_create_code.push( false );
   }

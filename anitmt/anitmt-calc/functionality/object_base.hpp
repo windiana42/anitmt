@@ -13,6 +13,7 @@
 #include <list>
 #include <string>
 #include <map>
+#include <math.h>
 
 #include <message/message.hpp>
 #include <val/val.hpp>
@@ -22,6 +23,8 @@
 #include <proptree/property.hpp>
 #include <proptree/proptree.hpp>
 
+#include "base_func.hpp"
+#include "solver.hpp"
 #include "base_func.hpp"
 namespace functionality
 {
@@ -51,12 +54,12 @@ namespace functionality
     void set_next_object_component( _pt_object_component* );
 
     // ** result functions **
-    virtual std::pair<bool,front> _rf_object_component_front_time( time ) = 0;
-    virtual std::pair<bool,position> _rf_object_component_position_time( time ) = 0;
-    virtual std::pair<bool,rotation> _rf_object_component_rotation_time( time ) = 0;
-    virtual std::pair<bool,speed> _rf_object_component_speed_time( time ) = 0;
-    virtual std::pair<bool,translation> _rf_object_component_translation_time( time ) = 0;
-    virtual std::pair<bool,up_vector> _rf_object_component_up_vector_time( time ) = 0;
+    virtual std::pair< bool,front > _rf_object_component_front_time( time ) = 0;
+    virtual std::pair< bool,position > _rf_object_component_position_time( time ) = 0;
+    virtual std::pair< bool,rotation > _rf_object_component_rotation_time( time ) = 0;
+    virtual std::pair< bool,speed > _rf_object_component_speed_time( time ) = 0;
+    virtual std::pair< bool,translation > _rf_object_component_translation_time( time ) = 0;
+    virtual std::pair< bool,up_vector > _rf_object_component_up_vector_time( time ) = 0;
     // ** is result availible **
     solve::Operand<bool> _av_object_component_front_time_is_avail;
     solve::Operand<bool> _av_object_component_position_time_is_avail;
@@ -87,45 +90,45 @@ namespace functionality
     void set_next_object_state( _pt_object_state* );
 
     // ** result functions **
-    virtual std::pair<bool,acceleration> _rf_object_state_acceleration_stretch( stretch ) = 0;
-    solve::Operand<stretch> _pr_object_state_acceleration_stretch_start_param;
-    solve::Operand<stretch> _pr_object_state_acceleration_stretch_end_param;
-    virtual std::pair<bool,acceleration> _rf_object_state_acceleration_time( time ) = 0;
-    solve::Operand<time> _pr_object_state_acceleration_time_start_param;
-    solve::Operand<time> _pr_object_state_acceleration_time_end_param;
-    virtual std::pair<bool,direction> _rf_object_state_direction_stretch( stretch ) = 0;
-    solve::Operand<stretch> _pr_object_state_direction_stretch_start_param;
-    solve::Operand<stretch> _pr_object_state_direction_stretch_end_param;
-    virtual std::pair<bool,direction> _rf_object_state_direction_time( time ) = 0;
-    solve::Operand<time> _pr_object_state_direction_time_start_param;
-    solve::Operand<time> _pr_object_state_direction_time_end_param;
-    virtual std::pair<bool,front> _rf_object_state_front_stretch( stretch ) = 0;
-    solve::Operand<stretch> _pr_object_state_front_stretch_start_param;
-    solve::Operand<stretch> _pr_object_state_front_stretch_end_param;
-    virtual std::pair<bool,front> _rf_object_state_front_time( time ) = 0;
-    solve::Operand<time> _pr_object_state_front_time_start_param;
-    solve::Operand<time> _pr_object_state_front_time_end_param;
-    virtual std::pair<bool,position> _rf_object_state_position_stretch( stretch ) = 0;
-    solve::Operand<stretch> _pr_object_state_position_stretch_start_param;
-    solve::Operand<stretch> _pr_object_state_position_stretch_end_param;
-    virtual std::pair<bool,position> _rf_object_state_position_time( time ) = 0;
-    solve::Operand<time> _pr_object_state_position_time_start_param;
-    solve::Operand<time> _pr_object_state_position_time_end_param;
-    virtual std::pair<bool,speed> _rf_object_state_speed_stretch( stretch ) = 0;
-    solve::Operand<stretch> _pr_object_state_speed_stretch_start_param;
-    solve::Operand<stretch> _pr_object_state_speed_stretch_end_param;
-    virtual std::pair<bool,speed> _rf_object_state_speed_time( time ) = 0;
-    solve::Operand<time> _pr_object_state_speed_time_start_param;
-    solve::Operand<time> _pr_object_state_speed_time_end_param;
-    virtual std::pair<bool,stretch> _rf_object_state_stretch_time( time ) = 0;
-    solve::Operand<time> _pr_object_state_stretch_time_start_param;
-    solve::Operand<time> _pr_object_state_stretch_time_end_param;
-    virtual std::pair<bool,up_vector> _rf_object_state_up_vector_stretch( stretch ) = 0;
-    solve::Operand<stretch> _pr_object_state_up_vector_stretch_start_param;
-    solve::Operand<stretch> _pr_object_state_up_vector_stretch_end_param;
-    virtual std::pair<bool,up_vector> _rf_object_state_up_vector_time( time ) = 0;
-    solve::Operand<time> _pr_object_state_up_vector_time_start_param;
-    solve::Operand<time> _pr_object_state_up_vector_time_end_param;
+    virtual std::pair< bool,acceleration > _rf_object_state_acceleration_stretch( stretch ) = 0;
+    solve::Operand< stretch > _pr_object_state_acceleration_stretch_start_param;
+    solve::Operand< stretch > _pr_object_state_acceleration_stretch_end_param;
+    virtual std::pair< bool,acceleration > _rf_object_state_acceleration_time( time ) = 0;
+    solve::Operand< time > _pr_object_state_acceleration_time_start_param;
+    solve::Operand< time > _pr_object_state_acceleration_time_end_param;
+    virtual std::pair< bool,direction > _rf_object_state_direction_stretch( stretch ) = 0;
+    solve::Operand< stretch > _pr_object_state_direction_stretch_start_param;
+    solve::Operand< stretch > _pr_object_state_direction_stretch_end_param;
+    virtual std::pair< bool,direction > _rf_object_state_direction_time( time ) = 0;
+    solve::Operand< time > _pr_object_state_direction_time_start_param;
+    solve::Operand< time > _pr_object_state_direction_time_end_param;
+    virtual std::pair< bool,front > _rf_object_state_front_stretch( stretch ) = 0;
+    solve::Operand< stretch > _pr_object_state_front_stretch_start_param;
+    solve::Operand< stretch > _pr_object_state_front_stretch_end_param;
+    virtual std::pair< bool,front > _rf_object_state_front_time( time ) = 0;
+    solve::Operand< time > _pr_object_state_front_time_start_param;
+    solve::Operand< time > _pr_object_state_front_time_end_param;
+    virtual std::pair< bool,position > _rf_object_state_position_stretch( stretch ) = 0;
+    solve::Operand< stretch > _pr_object_state_position_stretch_start_param;
+    solve::Operand< stretch > _pr_object_state_position_stretch_end_param;
+    virtual std::pair< bool,position > _rf_object_state_position_time( time ) = 0;
+    solve::Operand< time > _pr_object_state_position_time_start_param;
+    solve::Operand< time > _pr_object_state_position_time_end_param;
+    virtual std::pair< bool,speed > _rf_object_state_speed_stretch( stretch ) = 0;
+    solve::Operand< stretch > _pr_object_state_speed_stretch_start_param;
+    solve::Operand< stretch > _pr_object_state_speed_stretch_end_param;
+    virtual std::pair< bool,speed > _rf_object_state_speed_time( time ) = 0;
+    solve::Operand< time > _pr_object_state_speed_time_start_param;
+    solve::Operand< time > _pr_object_state_speed_time_end_param;
+    virtual std::pair< bool,stretch > _rf_object_state_stretch_time( time ) = 0;
+    solve::Operand< time > _pr_object_state_stretch_time_start_param;
+    solve::Operand< time > _pr_object_state_stretch_time_end_param;
+    virtual std::pair< bool,up_vector > _rf_object_state_up_vector_stretch( stretch ) = 0;
+    solve::Operand< stretch > _pr_object_state_up_vector_stretch_start_param;
+    solve::Operand< stretch > _pr_object_state_up_vector_stretch_end_param;
+    virtual std::pair< bool,up_vector > _rf_object_state_up_vector_time( time ) = 0;
+    solve::Operand< time > _pr_object_state_up_vector_time_start_param;
+    solve::Operand< time > _pr_object_state_up_vector_time_end_param;
     // ** is result availible **
     solve::Operand<bool> _av_object_state_acceleration_stretch_is_avail;
     solve::Operand<bool> _av_object_state_acceleration_time_is_avail;
@@ -163,21 +166,21 @@ namespace functionality
     void set_next_timing( _pt_timing* );
 
     // ** result functions **
-    virtual std::pair<bool,acceleration> _rf_timing_acceleration_stretch( stretch ) = 0;
-    solve::Operand<stretch> _pr_timing_acceleration_stretch_start_param;
-    solve::Operand<stretch> _pr_timing_acceleration_stretch_end_param;
-    virtual std::pair<bool,acceleration> _rf_timing_acceleration_time( time ) = 0;
-    solve::Operand<time> _pr_timing_acceleration_time_start_param;
-    solve::Operand<time> _pr_timing_acceleration_time_end_param;
-    virtual std::pair<bool,speed> _rf_timing_speed_stretch( stretch ) = 0;
-    solve::Operand<stretch> _pr_timing_speed_stretch_start_param;
-    solve::Operand<stretch> _pr_timing_speed_stretch_end_param;
-    virtual std::pair<bool,speed> _rf_timing_speed_time( time ) = 0;
-    solve::Operand<time> _pr_timing_speed_time_start_param;
-    solve::Operand<time> _pr_timing_speed_time_end_param;
-    virtual std::pair<bool,stretch> _rf_timing_stretch_time( time ) = 0;
-    solve::Operand<time> _pr_timing_stretch_time_start_param;
-    solve::Operand<time> _pr_timing_stretch_time_end_param;
+    virtual std::pair< bool,acceleration > _rf_timing_acceleration_stretch( stretch ) = 0;
+    solve::Operand< stretch > _pr_timing_acceleration_stretch_start_param;
+    solve::Operand< stretch > _pr_timing_acceleration_stretch_end_param;
+    virtual std::pair< bool,acceleration > _rf_timing_acceleration_time( time ) = 0;
+    solve::Operand< time > _pr_timing_acceleration_time_start_param;
+    solve::Operand< time > _pr_timing_acceleration_time_end_param;
+    virtual std::pair< bool,speed > _rf_timing_speed_stretch( stretch ) = 0;
+    solve::Operand< stretch > _pr_timing_speed_stretch_start_param;
+    solve::Operand< stretch > _pr_timing_speed_stretch_end_param;
+    virtual std::pair< bool,speed > _rf_timing_speed_time( time ) = 0;
+    solve::Operand< time > _pr_timing_speed_time_start_param;
+    solve::Operand< time > _pr_timing_speed_time_end_param;
+    virtual std::pair< bool,stretch > _rf_timing_stretch_time( time ) = 0;
+    solve::Operand< time > _pr_timing_stretch_time_start_param;
+    solve::Operand< time > _pr_timing_stretch_time_end_param;
     // ** is result availible **
     solve::Operand<bool> _av_timing_acceleration_stretch_is_avail;
     solve::Operand<bool> _av_timing_acceleration_time_is_avail;
@@ -207,12 +210,12 @@ namespace functionality
     void set_next_track( _pt_track* );
 
     // ** result functions **
-    virtual std::pair<bool,direction> _rf_track_direction_stretch( stretch ) = 0;
-    solve::Operand<stretch> _pr_track_direction_stretch_start_param;
-    solve::Operand<stretch> _pr_track_direction_stretch_end_param;
-    virtual std::pair<bool,position> _rf_track_position_stretch( stretch ) = 0;
-    solve::Operand<stretch> _pr_track_position_stretch_start_param;
-    solve::Operand<stretch> _pr_track_position_stretch_end_param;
+    virtual std::pair< bool,direction > _rf_track_direction_stretch( stretch ) = 0;
+    solve::Operand< stretch > _pr_track_direction_stretch_start_param;
+    solve::Operand< stretch > _pr_track_direction_stretch_end_param;
+    virtual std::pair< bool,position > _rf_track_position_stretch( stretch ) = 0;
+    solve::Operand< stretch > _pr_track_position_stretch_start_param;
+    solve::Operand< stretch > _pr_track_position_stretch_end_param;
     // ** is result availible **
     solve::Operand<bool> _av_track_direction_stretch_is_avail;
     solve::Operand<bool> _av_track_position_stretch_is_avail;
@@ -236,10 +239,10 @@ namespace functionality
     bool max1; // maximal one element
     bool min1; // minimal one element
     elements_type elements;
-    typedef std::map<std::string, proptree::Basic_Node_Factory<_pt_object_component>*> node_factories_type;
+    typedef std::map<std::string, proptree::Basic_Node_Factory< _pt_object_component >*> node_factories_type;
     static node_factories_type node_factories;
   public:
-    static void add_node_factory( std::string name, proptree::Basic_Node_Factory<_pt_object_component>* );
+    static void add_node_factory( std::string name, proptree::Basic_Node_Factory< _pt_object_component >* );
     proptree::Prop_Tree_Node *add_child( std::string type, std::string name, proptree::tree_info *info, message::Message_Consultant *msg, proptree::Prop_Tree_Node *already_obj );
     // ** result functions **
     elements_type::iterator elements_begin(); 
@@ -274,25 +277,25 @@ namespace functionality
     solve::Multi_And_Operator *avail_operator_stretch_time;
     solve::Multi_And_Operator *avail_operator_up_vector_stretch;
     solve::Multi_And_Operator *avail_operator_up_vector_time;
-    typedef std::map<std::string, proptree::Basic_Node_Factory<_pt_object_state>*> node_factories_type;
+    typedef std::map<std::string, proptree::Basic_Node_Factory< _pt_object_state >*> node_factories_type;
     static node_factories_type node_factories;
   public:
-    static void add_node_factory( std::string name, proptree::Basic_Node_Factory<_pt_object_state>* );
+    static void add_node_factory( std::string name, proptree::Basic_Node_Factory< _pt_object_state >* );
     proptree::Prop_Tree_Node *add_child( std::string type, std::string name, proptree::tree_info *info, message::Message_Consultant *msg, proptree::Prop_Tree_Node *already_obj );
     // ** result functions **
-    virtual std::pair<bool,acceleration> _rf_object_state_acceleration_stretch( stretch );
-    virtual std::pair<bool,acceleration> _rf_object_state_acceleration_time( time );
-    virtual std::pair<bool,direction> _rf_object_state_direction_stretch( stretch );
-    virtual std::pair<bool,direction> _rf_object_state_direction_time( time );
-    virtual std::pair<bool,front> _rf_object_state_front_stretch( stretch );
-    virtual std::pair<bool,front> _rf_object_state_front_time( time );
-    virtual std::pair<bool,position> _rf_object_state_position_stretch( stretch );
-    virtual std::pair<bool,position> _rf_object_state_position_time( time );
-    virtual std::pair<bool,speed> _rf_object_state_speed_stretch( stretch );
-    virtual std::pair<bool,speed> _rf_object_state_speed_time( time );
-    virtual std::pair<bool,stretch> _rf_object_state_stretch_time( time );
-    virtual std::pair<bool,up_vector> _rf_object_state_up_vector_stretch( stretch );
-    virtual std::pair<bool,up_vector> _rf_object_state_up_vector_time( time );
+    virtual std::pair< bool,acceleration > _rf_object_state_acceleration_stretch( stretch );
+    virtual std::pair< bool,acceleration > _rf_object_state_acceleration_time( time );
+    virtual std::pair< bool,direction > _rf_object_state_direction_stretch( stretch );
+    virtual std::pair< bool,direction > _rf_object_state_direction_time( time );
+    virtual std::pair< bool,front > _rf_object_state_front_stretch( stretch );
+    virtual std::pair< bool,front > _rf_object_state_front_time( time );
+    virtual std::pair< bool,position > _rf_object_state_position_stretch( stretch );
+    virtual std::pair< bool,position > _rf_object_state_position_time( time );
+    virtual std::pair< bool,speed > _rf_object_state_speed_stretch( stretch );
+    virtual std::pair< bool,speed > _rf_object_state_speed_time( time );
+    virtual std::pair< bool,stretch > _rf_object_state_stretch_time( time );
+    virtual std::pair< bool,up_vector > _rf_object_state_up_vector_stretch( stretch );
+    virtual std::pair< bool,up_vector > _rf_object_state_up_vector_time( time );
     // ** is result availible **
     solve::Operand<bool> _av_object_state_acceleration_stretch_is_avail;
     solve::Operand<bool> _av_object_state_acceleration_time_is_avail;
@@ -333,17 +336,17 @@ namespace functionality
     solve::Multi_And_Operator *avail_operator_speed_stretch;
     solve::Multi_And_Operator *avail_operator_speed_time;
     solve::Multi_And_Operator *avail_operator_stretch_time;
-    typedef std::map<std::string, proptree::Basic_Node_Factory<_pt_timing>*> node_factories_type;
+    typedef std::map<std::string, proptree::Basic_Node_Factory< _pt_timing >*> node_factories_type;
     static node_factories_type node_factories;
   public:
-    static void add_node_factory( std::string name, proptree::Basic_Node_Factory<_pt_timing>* );
+    static void add_node_factory( std::string name, proptree::Basic_Node_Factory< _pt_timing >* );
     proptree::Prop_Tree_Node *add_child( std::string type, std::string name, proptree::tree_info *info, message::Message_Consultant *msg, proptree::Prop_Tree_Node *already_obj );
     // ** result functions **
-    virtual std::pair<bool,acceleration> _rf_timing_acceleration_stretch( stretch );
-    virtual std::pair<bool,acceleration> _rf_timing_acceleration_time( time );
-    virtual std::pair<bool,speed> _rf_timing_speed_stretch( stretch );
-    virtual std::pair<bool,speed> _rf_timing_speed_time( time );
-    virtual std::pair<bool,stretch> _rf_timing_stretch_time( time );
+    virtual std::pair< bool,acceleration > _rf_timing_acceleration_stretch( stretch );
+    virtual std::pair< bool,acceleration > _rf_timing_acceleration_time( time );
+    virtual std::pair< bool,speed > _rf_timing_speed_stretch( stretch );
+    virtual std::pair< bool,speed > _rf_timing_speed_time( time );
+    virtual std::pair< bool,stretch > _rf_timing_stretch_time( time );
     // ** is result availible **
     solve::Operand<bool> _av_timing_acceleration_stretch_is_avail;
     solve::Operand<bool> _av_timing_acceleration_time_is_avail;
@@ -373,14 +376,14 @@ namespace functionality
     elements_type elements;
     solve::Multi_And_Operator *avail_operator_direction_stretch;
     solve::Multi_And_Operator *avail_operator_position_stretch;
-    typedef std::map<std::string, proptree::Basic_Node_Factory<_pt_track>*> node_factories_type;
+    typedef std::map<std::string, proptree::Basic_Node_Factory< _pt_track >*> node_factories_type;
     static node_factories_type node_factories;
   public:
-    static void add_node_factory( std::string name, proptree::Basic_Node_Factory<_pt_track>* );
+    static void add_node_factory( std::string name, proptree::Basic_Node_Factory< _pt_track >* );
     proptree::Prop_Tree_Node *add_child( std::string type, std::string name, proptree::tree_info *info, message::Message_Consultant *msg, proptree::Prop_Tree_Node *already_obj );
     // ** result functions **
-    virtual std::pair<bool,direction> _rf_track_direction_stretch( stretch );
-    virtual std::pair<bool,position> _rf_track_position_stretch( stretch );
+    virtual std::pair< bool,direction > _rf_track_direction_stretch( stretch );
+    virtual std::pair< bool,position > _rf_track_position_stretch( stretch );
     // ** is result availible **
     solve::Operand<bool> _av_track_direction_stretch_is_avail;
     solve::Operand<bool> _av_track_position_stretch_is_avail;
@@ -397,6 +400,20 @@ namespace functionality
     void hierarchy_final_init();
   };
 
+
+  // ********************
+  // ********************
+  // operator declartions
+  // ********************
+  // ********************
+
+}
+namespace solve
+{
+
+}
+namespace functionality
+{
 
   // ***************************
   // tree node type declarations
@@ -431,25 +448,25 @@ namespace functionality
     virtual void common_init();
 
     // ** result functions **
-    virtual std::pair<bool,front> _rf_object_component_front_time( time );
-    virtual std::pair<bool,position> _rf_object_component_position_time( time );
-    virtual std::pair<bool,rotation> _rf_object_component_rotation_time( time );
-    virtual std::pair<bool,speed> _rf_object_component_speed_time( time );
-    virtual std::pair<bool,translation> _rf_object_component_translation_time( time );
-    virtual std::pair<bool,up_vector> _rf_object_component_up_vector_time( time );
-    virtual std::pair<bool,acceleration> _rf_object_state_acceleration_stretch( stretch );
-    virtual std::pair<bool,acceleration> _rf_object_state_acceleration_time( time );
-    virtual std::pair<bool,direction> _rf_object_state_direction_stretch( stretch );
-    virtual std::pair<bool,direction> _rf_object_state_direction_time( time );
-    virtual std::pair<bool,front> _rf_object_state_front_stretch( stretch );
-    virtual std::pair<bool,front> _rf_object_state_front_time( time );
-    virtual std::pair<bool,position> _rf_object_state_position_stretch( stretch );
-    virtual std::pair<bool,position> _rf_object_state_position_time( time );
-    virtual std::pair<bool,speed> _rf_object_state_speed_stretch( stretch );
-    virtual std::pair<bool,speed> _rf_object_state_speed_time( time );
-    virtual std::pair<bool,stretch> _rf_object_state_stretch_time( time );
-    virtual std::pair<bool,up_vector> _rf_object_state_up_vector_stretch( stretch );
-    virtual std::pair<bool,up_vector> _rf_object_state_up_vector_time( time );
+    virtual std::pair< bool,front > _rf_object_component_front_time( time );
+    virtual std::pair< bool,position > _rf_object_component_position_time( time );
+    virtual std::pair< bool,rotation > _rf_object_component_rotation_time( time );
+    virtual std::pair< bool,speed > _rf_object_component_speed_time( time );
+    virtual std::pair< bool,translation > _rf_object_component_translation_time( time );
+    virtual std::pair< bool,up_vector > _rf_object_component_up_vector_time( time );
+    virtual std::pair< bool,acceleration > _rf_object_state_acceleration_stretch( stretch );
+    virtual std::pair< bool,acceleration > _rf_object_state_acceleration_time( time );
+    virtual std::pair< bool,direction > _rf_object_state_direction_stretch( stretch );
+    virtual std::pair< bool,direction > _rf_object_state_direction_time( time );
+    virtual std::pair< bool,front > _rf_object_state_front_stretch( stretch );
+    virtual std::pair< bool,front > _rf_object_state_front_time( time );
+    virtual std::pair< bool,position > _rf_object_state_position_stretch( stretch );
+    virtual std::pair< bool,position > _rf_object_state_position_time( time );
+    virtual std::pair< bool,speed > _rf_object_state_speed_stretch( stretch );
+    virtual std::pair< bool,speed > _rf_object_state_speed_time( time );
+    virtual std::pair< bool,stretch > _rf_object_state_stretch_time( time );
+    virtual std::pair< bool,up_vector > _rf_object_state_up_vector_stretch( stretch );
+    virtual std::pair< bool,up_vector > _rf_object_state_up_vector_time( time );
 
     // ** infrastructure functions **
     static void make_availible();

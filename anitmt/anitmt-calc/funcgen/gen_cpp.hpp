@@ -37,6 +37,7 @@ namespace funcgen
     std::string prefix_container_type; //! prefix for container types
     std::string prefix_serial_container_type; //! prefix for serial containers
     std::string prefix_container_name; //! prefix for container names
+    std::string prefix_operator_class_name; //! prefix for operator classes
   public:
     virtual std::string open_block();
     virtual std::string close_block();
@@ -108,6 +109,7 @@ namespace funcgen
     virtual std::string last_child();
     virtual std::string get_child( int n );
     virtual std::string reference_concat_string();
+    virtual std::string operator_class_name( std::string name );
 
     Cpp_Code_Translator(code_gen_info *);
   };

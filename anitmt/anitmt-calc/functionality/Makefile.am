@@ -2,19 +2,20 @@
 INCLUDES=		-I$(top_srcdir)/lib -I$(srcdir)
 
 noinst_LIBRARIES=	libfunctionality.a
-BUILT_SOURCES=		base_func.hpp base_func.cpp \
+BUILT_SOURCES=		solver.hpp solver.cpp \
+			base_func.hpp base_func.cpp \
 			scene_base.hpp scene_base.cpp \
 			scalar_base.hpp scalar_base.cpp \
 			scalar.hpp scalar.cpp \
 			object_base.hpp object_base.cpp \
 			object.hpp object.cpp 
-libfunctionality_a_SOURCES= base_func.afd base_func.hpp base_func.cpp \
+libfunctionality_a_SOURCES= solver.afd solver.hpp solver.cpp \
+			base_func.afd base_func.hpp base_func.cpp \
 			scene_base.afd scene_base.hpp scene_base.cpp \
 			scalar_base.afd scalar_base.hpp scalar_base.cpp \
 			scalar.afd scalar.hpp scalar.cpp \
 			object_base.afd object_base.hpp object_base.cpp \
 			object.afd object.hpp object.cpp \
-			solver.afd solver.hpp solver.cpp \
 			make_avail.cpp make_avail.hpp
 
 check_PROGRAMS=		test_functionality

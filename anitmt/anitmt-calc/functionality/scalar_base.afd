@@ -17,6 +17,7 @@
 
 
 include declaration "base_func.afd";
+include declaration "solver.afd";
 
 
 // ****************************************************************************

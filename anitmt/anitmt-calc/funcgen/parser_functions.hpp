@@ -86,6 +86,7 @@ namespace funcgen
 
   void include_declaration( void *info, const std::string &file );
   void include_header( void *info, const std::string &file );
+  bool avoid_recursion( void *info, const std::string &unique_id );
   void priority_list_defined( void *info );
   void priority_label_add( void *info, std::string label );
   void declare_base_type( void *info, const std::string &name, 
@@ -109,6 +110,7 @@ namespace funcgen
   void start_operator_version( void *info, const std::string &ret_type,
 			     const std::string &name );
   void add_operator_version_parameter( void *info, const std::string &name );
+  void finish_operator_version( void *infoptr );
 
   void start_node_declaration( void *info, bool abstract,
 			       const std::string &name );
@@ -195,15 +197,15 @@ namespace funcgen
   void res_ref_return_fail( void *info );
   void res_ref_return_if_fail( void *info );
 
-  Expression *bool_expr( Expression *exp1, 
-			 const std::string &op, 
+  Expression *bool_expr( Expression *exp1, const std::string &op, 
 			 Expression *exp2 );
+  Expression *bool_expr( const std::string &op, Expression *exp );
+  Expression *bool_expr( Expression *exp );
   Expression *expr_from_ref( void *info );
   Expression *expr_scalar( double val );
   Expression *expr_string( std::string str );
-  Expression *expr( Expression *exp1, 
-		    const std::string &op, 
-		    Expression *exp2 );
+  Expression *expr( Expression *exp1, const std::string &op,Expression *exp2 );
+  Expression *expr( const std::string &op, Expression *exp );
   Expression *expr( Expression *exp );
   Expression *expr_function(const std::string &name);
   Expression *expr_function(const std::string &name, 

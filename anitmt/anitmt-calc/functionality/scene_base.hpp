@@ -13,6 +13,7 @@
 #include <list>
 #include <string>
 #include <map>
+#include <math.h>
 
 #include <message/message.hpp>
 #include <val/val.hpp>
@@ -24,8 +25,11 @@
 
 #include "scalar_base.hpp"
 #include "base_func.hpp"
+#include "solver.hpp"
+#include "base_func.hpp"
 #include "object_base.hpp"
 #include "base_func.hpp"
+#include "solver.hpp"
 namespace functionality
 {
   // **********************
@@ -75,10 +79,10 @@ namespace functionality
     bool max1; // maximal one element
     bool min1; // minimal one element
     elements_type elements;
-    typedef std::map<std::string, proptree::Basic_Node_Factory<_pt_scene_type>*> node_factories_type;
+    typedef std::map<std::string, proptree::Basic_Node_Factory< _pt_scene_type >*> node_factories_type;
     static node_factories_type node_factories;
   public:
-    static void add_node_factory( std::string name, proptree::Basic_Node_Factory<_pt_scene_type>* );
+    static void add_node_factory( std::string name, proptree::Basic_Node_Factory< _pt_scene_type >* );
     proptree::Prop_Tree_Node *add_child( std::string type, std::string name, proptree::tree_info *info, message::Message_Consultant *msg, proptree::Prop_Tree_Node *already_obj );
     // ** result functions **
     elements_type::iterator elements_begin(); 
@@ -92,6 +96,20 @@ namespace functionality
     void hierarchy_final_init();
   };
 
+
+  // ********************
+  // ********************
+  // operator declartions
+  // ********************
+  // ********************
+
+}
+namespace solve
+{
+
+}
+namespace functionality
+{
 
   // ***************************
   // tree node type declarations

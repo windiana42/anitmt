@@ -16,6 +16,22 @@
 
 namespace funcgen
 {
+  std::string type_to_string( type t )
+  {
+    switch( t )
+    {
+    case none:		return "none";
+    case boolean:	return "boolean";
+    case result:	return "result";
+    case operand:	return "operand";
+    case operand1:	return "operand1";
+    case operand2:	return "operand2";
+    case operand3:	return "operand3";
+    case info:		return "info";
+    }
+    assert(0);
+    return "";
+  }
 
   bool Basic_Operator::is_function( std::string function ) const
   {
@@ -23,10 +39,11 @@ namespace funcgen
   }
 
   //! get parameter types of function (first is return type)
-  const std::list<type> &Basic_Operator::get_types
-  ( std::string function ) 
+  const std::list<type> &Basic_Operator::get_types 
+  ( std::string function ) const
   {
-    return functions[function];
+    Basic_Operator *new_this = const_cast<Basic_Operator*>(this);
+    return new_this->functions[function];
   }
   const std::list<std::string> &Basic_Operator::get_required_functions()
     const
@@ -38,6 +55,16 @@ namespace funcgen
   {
     return real_name;
   }
+  int Basic_Operator::get_num_operands() const
+  {
+    return num_operands;
+  }
+  std::string Basic_Operator::get_function_specification( std::string 
+							  function ) const
+  {
+    Basic_Operator *new_this = const_cast<Basic_Operator*>(this);
+    return new_this->function_specification[function];
+  }
 
   void Basic_Operator::add_1_arg_fun( type return_type, std::string name, 
 				 type arg1 )
@@ -45,6 +72,9 @@ namespace funcgen
     std::list<type> &args = functions[name];
     args.push_back( return_type );
     args.push_back( arg1 );
+    function_specification[name] 
+      = type_to_string(return_type) + " " 
+      + name + "( " + type_to_string(arg1) + " )";
   }
   void Basic_Operator::add_2_arg_fun( type return_type, std::string name, 
 				 type arg1, type arg2 )
@@ -53,6 +83,9 @@ namespace funcgen
     args.push_back( return_type );
     args.push_back( arg1 );
     args.push_back( arg2 );
+    function_specification[name] 
+      = type_to_string(return_type) + " " + name + "( " 
+      + type_to_string(arg1) + ", " + type_to_string(arg2) + " )";
   }
   void Basic_Operator::add_3_arg_fun( type return_type, std::string name, 
 				 type arg1, type arg2, type arg3 )
@@ -62,6 +95,9 @@ namespace funcgen
     args.push_back( arg1 );
     args.push_back( arg2 );
     args.push_back( arg3 );
+    function_specification[name] 
+      = type_to_string(return_type) + " " + name + "( " + type_to_string(arg1)
+      + ", " + type_to_string(arg2) + ", " + type_to_string(arg3) + " )";
   }
   void Basic_Operator::add_4_arg_fun( type return_type, std::string name, 
 				 type arg1, type arg2, type arg3, type arg4 )
@@ -72,6 +108,10 @@ namespace funcgen
     args.push_back( arg2 );
     args.push_back( arg3 );
     args.push_back( arg4 );
+    function_specification[name] 
+      = type_to_string(return_type) + " " + name + "( " + type_to_string(arg1)
+      + ", " + type_to_string(arg2) + ", " + type_to_string(arg3) + ", " 
+      + type_to_string(arg4) + " )";
   }
 
   bool Available_Basic_Operators::is_operator( std::string operator_name ) 
@@ -89,14 +129,29 @@ namespace funcgen
     {
       Basic_Operator &cur_operator = basic_operators["one_operand_operator"];
       cur_operator.real_name = "Basic_Operator_for_1_Operand";
+      cur_operator.num_operands = 1;
       cur_operator.add_2_arg_fun( boolean, "is_operand_ok", operand, info );
       cur_operator.add_1_arg_fun( boolean, "is_operand_enough", operand );
       cur_operator.add_1_arg_fun( result, "calc_result", operand );
       cur_operator.required_functions.push_back("calc_result");
     }
     {
+      Basic_Operator &cur_operator 
+	= basic_operators["one_operand_dual_solution_operator"];
+      cur_operator.real_name = "Basic_Dual_Solution_Operator_for_1_Operand";
+      cur_operator.num_operands = 1;
+      cur_operator.add_2_arg_fun( boolean, "is_operand_ok", operand, info );
+      cur_operator.add_1_arg_fun( boolean, "is_operand_enough1", operand );
+      cur_operator.add_1_arg_fun( boolean, "is_operand_enough2", operand );
+      cur_operator.add_1_arg_fun( result, "calc_result1", operand );
+      cur_operator.add_1_arg_fun( result, "calc_result2", operand );
+      cur_operator.required_functions.push_back("calc_result1");
+      cur_operator.required_functions.push_back("calc_result2");
+    }
+    {
       Basic_Operator &cur_operator = basic_operators["two_operands_operator"];
       cur_operator.real_name = "Basic_Operator_for_2_Operands";
+      cur_operator.num_operands = 2;
       cur_operator.add_2_arg_fun( result, "calc_result", operand1, operand2 );
       cur_operator.add_2_arg_fun( boolean, "is_operand1_ok", operand1, info );
       cur_operator.add_2_arg_fun( boolean, "is_operand2_ok", operand2, info );

@@ -29,10 +29,10 @@ namespace solve
     if( op.is_solved() ) return const_op( true, op.get_consultant() );
     return (new Is_Solved_Operator( op, op.get_consultant() ))->get_result();
   }
-
-  //**********************************************
+  /* see solver.afd
+  // *********************************************
   // Not_Operator: operator for inverting operand
-  //**********************************************
+  // *********************************************
 
   // ! Operator for operand expression trees
   inline Operand<bool>& operator!( Operand<bool> &op ) 
@@ -63,10 +63,9 @@ namespace solve
   {
     return (new Not_Operator<bool,values::String>( op ))->get_result();
   }
-
-  //*****************************************************
+  // ****************************************************
   // Negative_Operator: operator for negative of operand 
-  //*****************************************************
+  // ****************************************************
 
   // - Operator for operand expression trees
   inline Operand<values::Scalar>& operator-( Operand<values::Scalar> &op ) 
@@ -81,9 +80,9 @@ namespace solve
       ->get_result();
   }
 
-  //*************************************************************************
+  // ************************************************************************
   // Abs_Operator: operator for calculating the absolute value of an operand 
-  //*************************************************************************
+  // ************************************************************************
 
   // abs Operator for operand expression trees
   inline Operand<values::Scalar>& abs( Operand<values::Scalar> &op ) 
@@ -98,9 +97,9 @@ namespace solve
       ->get_result();
   }
 
-  //*************************************************************************
+  // ************************************************************************
   // Sqrt_Operator: operator for calculating the sqare root of an operand 
-  //*************************************************************************
+  // ************************************************************************
 
   // sqrt function for operand expression trees
   inline Operand<values::Scalar>& sqrt( Operand<values::Scalar> &op ) 
@@ -109,9 +108,9 @@ namespace solve
       ->get_result();
   }
 
-  //***************************************************************************
+  // **************************************************************************
   // Plus_Minus_Operator: result is either the positive or the negative operand
-  //***************************************************************************
+  // **************************************************************************
 
   //! +- Operator for operand expression trees (+-scalar)
   inline Operand<values::Scalar>& plus_minus( Operand<values::Scalar> &op ) 
@@ -127,9 +126,9 @@ namespace solve
       ->get_result();
   }
 
-  //**********************************************************************
+  // *********************************************************************
   // Add_Operator: operator for adding 2 operands of different types
-  //**********************************************************************
+  // *********************************************************************
 
   // scalar + scalar
   inline Operand<values::Scalar>& 
@@ -191,9 +190,9 @@ namespace solve
 	    ( const_op(op1,op2.get_consultant()), op2 ))->get_result();
   }
 
-  //**********************************************************************
+  // *********************************************************************
   // Sub_Operator: operator for subing 2 operands of different types
-  //**********************************************************************
+  // *********************************************************************
 
   // scalar - scalar
   inline Operand<values::Scalar>& 
@@ -235,9 +234,9 @@ namespace solve
 	    ( const_op(op1,op2.get_consultant()), op2 ))->get_result();
   }
 
-  //**********************************************************************
+  // *********************************************************************
   // Mul_Operator: operator for muling 2 operands of different types
-  //**********************************************************************
+  // *********************************************************************
 
   // scalar * scalar
   inline Operand<values::Scalar>& 
@@ -339,9 +338,9 @@ namespace solve
 	    ( const_op(op1,op2.get_consultant()), op2 ))->get_result();
   }
 
-  //**********************************************************************
+  // *********************************************************************
   // Div_Operator: operator for diving 2 operands of different types
-  //**********************************************************************
+  // *********************************************************************
 
   // scalar / scalar
   inline Operand<values::Scalar>& 
@@ -383,9 +382,9 @@ namespace solve
 	    ( const_op(op1,op2.get_consultant()), op2 ))->get_result();
   }
 
-  //***************************************************
+  // **************************************************
   // Equal_Operator: operator for comparing 2 operands
-  //***************************************************
+  // **************************************************
 
   // bool == bool
   inline Operand<bool>& operator==( Operand<bool> &op1, Operand<bool> &op2 ) 
@@ -483,9 +482,9 @@ namespace solve
 	    ( const_op(op1,op2.get_consultant()), op2 ))->get_result();
   }
 
-  //***************************************************
+  // **************************************************
   // Unequal_Operator: operator for comparing 2 operands
-  //***************************************************
+  // **************************************************
 
   // bool != bool
   inline Operand<bool>& operator!=( Operand<bool> &op1, Operand<bool> &op2 ) 
@@ -583,9 +582,9 @@ namespace solve
 	    ( const_op(op1,op2.get_consultant()), op2 ))->get_result();
   }
 
-  //***************************************************
+  // **************************************************
   // Less_Operator: operator for comparing 2 operands
-  //***************************************************
+  // **************************************************
 
   // scalar < scalar
   inline Operand<bool>&
@@ -647,9 +646,9 @@ namespace solve
 	    ( const_op(op1,op2.get_consultant()), op2 ))->get_result();
   }
 
-  //***************************************************
+  // **************************************************
   // Greater_Operator: operator for comparing 2 operands
-  //***************************************************
+  // **************************************************
 
   // scalar > scalar
   inline Operand<bool>&
@@ -711,9 +710,9 @@ namespace solve
 	    ( const_op(op1,op2.get_consultant()), op2 ))->get_result();
   }
 
-  //******************************************************
+  // *****************************************************
   // Not_Greater_Operator: operator for comparing 2 operands
-  //******************************************************
+  // *****************************************************
 
   // scalar <= scalar
   inline Operand<bool>&
@@ -775,9 +774,9 @@ namespace solve
 	    ( const_op(op1,op2.get_consultant()), op2 ))->get_result();
   }
 
-  //******************************************************
+  // *****************************************************
   // Not_Less_Operator: operator for comparing 2 operands
-  //******************************************************
+  // *****************************************************
 
   // scalar >= scalar
   inline Operand<bool>&
@@ -837,8 +836,8 @@ namespace solve
   {
     return (new Not_Less_Operator<bool,values::String,values::String>
 	    ( const_op(op1,op2.get_consultant()), op2 ))->get_result();
-  }
-
+  } 
+  */
 }
 
 #endif

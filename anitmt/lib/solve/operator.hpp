@@ -79,7 +79,8 @@ namespace solve
   //********************************************************************
 
   /*! Base class for expression tree operators, that have two possible results
-    from one operand*/
+    from one operand
+    name in afd: one_operand_dual_solution_operator*/
   template<class T_Result, class T_Operand>
   class Basic_Dual_Solution_Operator_for_1_Operand 
     : public Operand_Listener, public message::Message_Reporter
@@ -136,7 +137,7 @@ namespace solve
 
   /*! Base class for expression tree operators, that calculate the result
     from two operands
-    name in afd: two_operand_operator */
+    name in afd: two_operands_operator */
   template<class T_Result, class T_Op1, class T_Op2>
   class Basic_Operator_for_2_Operands
     : public Operand_Listener, public message::Message_Reporter
@@ -320,18 +321,16 @@ namespace solve
 //** Normal Calculation Operators
 //**********************************************
 //**********************************************
-
-  //**********************************************
+  /* see solver.afd 
+  // *********************************************
   // Not_Operator: operator for inverting operand
-  //**********************************************
+  // *********************************************
 
   template<class T_Result, class T_Operand>
   class Not_Operator
     : public Basic_Operator_for_1_Operand<T_Result, T_Operand> 
   {
   private:
-    /*! has to calculate the result when both is_operand_ok and 
-      is_operand_enough  return true */
     virtual T_Result calc_result( const T_Operand &value ); 
 
   public:
@@ -345,17 +344,17 @@ namespace solve
   inline Operand<bool>& operator!( Operand<values::Matrix> &op );
   inline Operand<bool>& operator!( Operand<values::String> &op );
 
-  //*****************************************************
+  // ****************************************************
   // Negative_Operator: operator for negative of operand 
-  //*****************************************************
+  // ****************************************************
 
   template<class T_Result, class T_Operand>
   class Negative_Operator
     : public Basic_Operator_for_1_Operand<T_Result, T_Operand> 
   {
   private:
-    /*! has to calculate the result when both is_operand_ok and 
-      is_operand_enough  return true */
+    / *! has to calculate the result when both is_operand_ok and 
+      is_operand_enough  return true * /
     virtual T_Result calc_result( const T_Operand &value ); 
 
   public:
@@ -366,17 +365,17 @@ namespace solve
   inline Operand<values::Scalar>& operator-( Operand<values::Scalar> &op );
   inline Operand<values::Vector>& operator-( Operand<values::Vector> &op );
 
-  //*************************************************************************
+  // ************************************************************************
   // Abs_Operator: operator for calculating the absolute value of an operand 
-  //*************************************************************************
+  // ************************************************************************
 
   template<class T_Result, class T_Operand>
   class Abs_Operator
     : public Basic_Operator_for_1_Operand<T_Result, T_Operand> 
   {
   private:
-    /*! has to calculate the result when both is_operand_ok and 
-      is_operand_enough  return true */
+    / *! has to calculate the result when both is_operand_ok and 
+      is_operand_enough  return true * /
     virtual T_Result calc_result( const T_Operand &value ); 
 
   public:
@@ -387,17 +386,17 @@ namespace solve
   inline Operand<values::Scalar>& abs( Operand<values::Scalar> &op );
   inline Operand<values::Scalar>& abs( Operand<values::Vector> &op );
 
-  //*************************************************************************
+  // ************************************************************************
   // Sqrt_Operator: operator for calculating the square root of an operand 
-  //*************************************************************************
+  // ************************************************************************
 
   template<class T_Result, class T_Operand>
   class Sqrt_Operator
     : public Basic_Operator_for_1_Operand<T_Result, T_Operand> 
   {
   private:
-    /*! has to calculate the result when both is_operand_ok and 
-      is_operand_enough  return true */
+    / *! has to calculate the result when both is_operand_ok and 
+      is_operand_enough  return true * /
     virtual T_Result calc_result( const T_Operand &value ); 
 
     //! is operand ok, or should it be rejected
@@ -410,21 +409,21 @@ namespace solve
   // sqrt function for operand expression trees
   inline Operand<values::Scalar>& sqrt( Operand<values::Scalar> &op );
 
-  //***************************************************************************
+  // **************************************************************************
   // Plus_Minus_Operator: result is either the positive or the negative operand
-  //***************************************************************************
+  // **************************************************************************
 
   template<class T_Result, class T_Operand>
   class Plus_Minus_Operator
     : public Basic_Dual_Solution_Operator_for_1_Operand<T_Result, T_Operand> 
   {
   private:
-    /*! has to calculate the result when both is_operand_ok and 
-      is_operand_enough1 return true */
+    / *! has to calculate the result when both is_operand_ok and 
+      is_operand_enough1 return true * /
     virtual T_Result calc_result1( const T_Operand &value ); 
 
-    /*! has to calculate the result when both is_operand_ok and 
-      is_operand_enough2 return true */
+    / *! has to calculate the result when both is_operand_ok and 
+      is_operand_enough2 return true * /
     virtual T_Result calc_result2( const T_Operand &value ); 
 
   public:
@@ -436,24 +435,24 @@ namespace solve
   //! +- Operator for operand expression trees (+-vector)
   inline Operand<values::Vector>& plus_minus( Operand<values::Vector> &op );
 
-  //**********************************************************************
+  // *********************************************************************
   // Add_Operator: operator for adding 2 operands of different types
-  //**********************************************************************
+  // *********************************************************************
 
   template<class T_Result, class T_Op1, class T_Op2>
   class Add_Operator
     : public Basic_Operator_for_2_Operands<T_Result, T_Op1, T_Op2> 
   {
   private:
-    /*! has to calculate the result when both is_operand_ok and 
-      is_operand_enough  return true */
+    / *! has to calculate the result when both is_operand_ok and 
+      is_operand_enough  return true * /
     virtual T_Result calc_result( const T_Op1 &value1, const T_Op2 &value2 ); 
 
   public:
     Add_Operator( Operand<T_Op1> &operand1, Operand<T_Op2> &operand2 );
   };
 
-  //**********
+  // *********
   // Operators
 
   // scalar + scalar
@@ -480,24 +479,24 @@ namespace solve
   inline Operand<values::String>& 
   operator+( const values::String &op1, Operand<values::String> &op2 );
 
-  //**********************************************************************
+  // *********************************************************************
   // Sub_Operator: operator for subtracting 2 operands of different types
-  //**********************************************************************
+  // *********************************************************************
 
   template<class T_Result, class T_Op1, class T_Op2>
   class Sub_Operator
     : public Basic_Operator_for_2_Operands<T_Result, T_Op1, T_Op2> 
   {
   private:
-    /*! has to calculate the result when both is_operand_ok and 
-      is_operand_enough  return true */
+    / *! has to calculate the result when both is_operand_ok and 
+      is_operand_enough  return true * /
     virtual T_Result calc_result( const T_Op1 &value1, const T_Op2 &value2 ); 
 
   public:
     Sub_Operator( Operand<T_Op1> &operand1, Operand<T_Op2> &operand2 );
   };
 
-  //**********
+  // *********
   // Operators
 
   // scalar - scalar
@@ -516,9 +515,9 @@ namespace solve
   inline Operand<values::Vector>& 
   operator-( const values::Vector &op1, Operand<values::Vector> &op2 );
 
-  //**********************************************************************
+  // *********************************************************************
   // Mul_Operator: operator for multiplying 2 operands of different types
-  //**********************************************************************
+  // *********************************************************************
 
   // !!! Mul Operator might not work with some types !!!
 
@@ -527,25 +526,25 @@ namespace solve
     : public Basic_Operator_for_2_Operands<T_Result, T_Op1, T_Op2> 
   {
   private:
-    /*! has to calculate the result when both is_operand_ok and 
-      is_operand_enough  return true */
+    / *! has to calculate the result when both is_operand_ok and 
+      is_operand_enough  return true * /
     virtual T_Result calc_result( const T_Op1 &value1, const T_Op2 &value2 ); 
 
     //! can result be calculated only with operand1
-    virtual bool is_operand1_enough( const T_Op1 &/*val*/ );
+    virtual bool is_operand1_enough( const T_Op1 &/ *val* / );
     //! can result be calculated only with operand2
-    virtual bool is_operand2_enough( const T_Op2 &/*val*/ );
-    /*! has to calculate result only with operand1 when is_operand1_enough 
-      returns true */
+    virtual bool is_operand2_enough( const T_Op2 &/ *val* / );
+    / *! has to calculate result only with operand1 when is_operand1_enough 
+      returns true * /
     virtual T_Result calc_result_from_op1( const T_Op1 &value1 );
-    /*! has to calculate result only with operand2 when is_operand2_enough 
-      returns true */
+    / *! has to calculate result only with operand2 when is_operand2_enough 
+      returns true * /
     virtual T_Result calc_result_from_op2( const T_Op2 &value2 );
   public:
     Mul_Operator( Operand<T_Op1> &operand1, Operand<T_Op2> &operand2 );
   };
 
-  //**********
+  // *********
   // Operators
 
   // scalar * scalar
@@ -588,21 +587,21 @@ namespace solve
   inline Operand<values::Vector>& 
   operator*( const values::Matrix &op1, Operand<values::Vector> &op2 );
 
-  //**********************************************************************
+  // *********************************************************************
   // Div_Operator: operator for dividing 2 operands of different types
-  //**********************************************************************
+  // *********************************************************************
 
   template<class T_Result, class T_Op1, class T_Op2>
   class Div_Operator
     : public Basic_Operator_for_2_Operands<T_Result, T_Op1, T_Op2> 
   {
   private:
-    /*! has to calculate the result when both is_operand_ok and 
-      is_operand_enough  return true */
+    / *! has to calculate the result when both is_operand_ok and 
+      is_operand_enough  return true * /
     virtual T_Result calc_result( const T_Op1 &value1, const T_Op2 &value2 ); 
 
     //! can result be calculated only with operand1
-    virtual bool is_operand1_enough( const T_Op1 &/*val*/ ); 
+    virtual bool is_operand1_enough( const T_Op1 &/ *val* / ); 
     //! are both operands ok, or should one be rejected
     virtual bool are_operands_ok( const T_Op1 &test_value1, 
 				  const T_Op2 &test_value2,
@@ -610,14 +609,14 @@ namespace solve
     //! can result be calculated? operand won't be rejected when this is false
     virtual bool are_operands_enough( const T_Op1 &test_value1, 
 				      const T_Op2 &test_value2 );
-    /*! has to calculate result only with operand1 when is_operand1_enough 
-      returns true */
+    / *! has to calculate result only with operand1 when is_operand1_enough 
+      returns true * /
     virtual T_Result calc_result_from_op1( const T_Op1 &value1 );
   public:
     Div_Operator( Operand<T_Op1> &operand1, Operand<T_Op2> &operand2 );
   };
 
-  //**********
+  // *********
   // Operators
 
   // scalar / scalar
@@ -636,24 +635,24 @@ namespace solve
   inline Operand<values::Vector>& 
   operator/( const values::Vector &op1, Operand<values::Scalar> &op2 );
 
-  //***************************************************
+  // **************************************************
   // Equal_Operator: operator for comparing 2 operands 
-  //***************************************************
+  // **************************************************
 
   template<class T_Result, class T_Op1, class T_Op2>
   class Equal_Operator
     : public Basic_Operator_for_2_Operands<T_Result, T_Op1, T_Op2> 
   {
   private:
-    /*! has to calculate the result when both is_operand_ok and 
-      is_operand_enough  return true */
+    / *! has to calculate the result when both is_operand_ok and 
+      is_operand_enough  return true * /
     virtual T_Result calc_result( const T_Op1 &value1, const T_Op2 &value2 ); 
 
   public:
     Equal_Operator( Operand<T_Op1> &operand1, Operand<T_Op2> &operand2 );
   };
 
-  //**********
+  // *********
   // Operators
 
   // bool == bool
@@ -696,24 +695,24 @@ namespace solve
   inline Operand<bool>&
   operator==( const values::String &op1, Operand<values::String> &op2 );
 
-  //***************************************************
+  // **************************************************
   // Unequal_Operator: operator for comparing 2 operands 
-  //***************************************************
+  // **************************************************
 
   template<class T_Result, class T_Op1, class T_Op2>
   class Unequal_Operator
     : public Basic_Operator_for_2_Operands<T_Result, T_Op1, T_Op2> 
   {
   private:
-    /*! has to calculate the result when both is_operand_ok and 
-      is_operand_enough  return true */
+    / *! has to calculate the result when both is_operand_ok and 
+      is_operand_enough  return true * /
     virtual T_Result calc_result( const T_Op1 &value1, const T_Op2 &value2 ); 
 
   public:
     Unequal_Operator( Operand<T_Op1> &operand1, Operand<T_Op2> &operand2 );
   };
 
-  //**********
+  // *********
   // Operators
 
   // bool != bool
@@ -756,24 +755,24 @@ namespace solve
   inline Operand<bool>&
   operator!=( const values::String &op1, Operand<values::String> &op2 );
 
-  //***************************************************
+  // **************************************************
   // Less_Operator: operator for comparing 2 operands 
-  //***************************************************
+  // **************************************************
 
   template<class T_Result, class T_Op1, class T_Op2>
   class Less_Operator
     : public Basic_Operator_for_2_Operands<T_Result, T_Op1, T_Op2> 
   {
   private:
-    /*! has to calculate the result when both is_operand_ok and 
-      is_operand_enough  return true */
+    / *! has to calculate the result when both is_operand_ok and 
+      is_operand_enough  return true * /
     virtual T_Result calc_result( const T_Op1 &value1, const T_Op2 &value2 ); 
 
   public:
     Less_Operator( Operand<T_Op1> &operand1, Operand<T_Op2> &operand2 );
   };
 
-  //**********
+  // *********
   // Operators
 
   // scalar < scalar
@@ -800,24 +799,24 @@ namespace solve
   inline Operand<bool>&
   operator<( const values::String &op1, Operand<values::String> &op2 );
 
-  //***************************************************
+  // **************************************************
   // Greater_Operator: operator for comparing 2 operands 
-  //***************************************************
+  // **************************************************
 
   template<class T_Result, class T_Op1, class T_Op2>
   class Greater_Operator
     : public Basic_Operator_for_2_Operands<T_Result, T_Op1, T_Op2> 
   {
   private:
-    /*! has to calculate the result when both is_operand_ok and 
-      is_operand_enough  return true */
+    / *! has to calculate the result when both is_operand_ok and 
+      is_operand_enough  return true * /
     virtual T_Result calc_result( const T_Op1 &value1, const T_Op2 &value2 ); 
 
   public:
     Greater_Operator( Operand<T_Op1> &operand1, Operand<T_Op2> &operand2 );
   };
 
-  //**********
+  // *********
   // Operators
 
   // scalar > scalar
@@ -844,24 +843,24 @@ namespace solve
   inline Operand<bool>&
   operator>( const values::String &op1, Operand<values::String> &op2 );
 
-  //***************************************************
+  // **************************************************
   // Not_Greater_Operator: operator for comparing 2 operands 
-  //***************************************************
+  // **************************************************
 
   template<class T_Result, class T_Op1, class T_Op2>
   class Not_Greater_Operator
     : public Basic_Operator_for_2_Operands<T_Result, T_Op1, T_Op2> 
   {
   private:
-    /*! has to calculate the result when both is_operand_ok and 
-      is_operand_enough  return true */
+    / *! has to calculate the result when both is_operand_ok and 
+      is_operand_enough  return true * /
     virtual T_Result calc_result( const T_Op1 &value1, const T_Op2 &value2 ); 
 
   public:
     Not_Greater_Operator( Operand<T_Op1> &operand1, Operand<T_Op2> &operand2 );
   };
 
-  //**********
+  // *********
   // Operators
 
   // scalar <= scalar
@@ -888,24 +887,24 @@ namespace solve
   inline Operand<bool>&
   operator<=( const values::String &op1, Operand<values::String> &op2 );
 
-  //***************************************************
+  // **************************************************
   // Not_Less_Operator: operator for comparing 2 operands 
-  //***************************************************
+  // **************************************************
 
   template<class T_Result, class T_Op1, class T_Op2>
   class Not_Less_Operator
     : public Basic_Operator_for_2_Operands<T_Result, T_Op1, T_Op2> 
   {
   private:
-    /*! has to calculate the result when both is_operand_ok and 
-      is_operand_enough  return true */
+    / *! has to calculate the result when both is_operand_ok and 
+      is_operand_enough  return true * /
     virtual T_Result calc_result( const T_Op1 &value1, const T_Op2 &value2 ); 
 
   public:
     Not_Less_Operator( Operand<T_Op1> &operand1, Operand<T_Op2> &operand2 );
   };
 
-  //**********
+  // *********
   // Operators
 
   // scalar >= scalar
@@ -931,10 +930,11 @@ namespace solve
   operator>=( Operand<values::String> &op1, const values::String &op2 );
   inline Operand<bool>&
   operator>=( const values::String &op1, Operand<values::String> &op2 );
+  */
 
-  //***************
+  // **************
   // test function
-  //***************
+  // **************
   int operator_test();
 }
 

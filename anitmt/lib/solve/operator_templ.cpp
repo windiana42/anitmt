@@ -540,10 +540,10 @@ namespace solve
 //** Normal Calculation Operators
 //**********************************************
 //**********************************************
-
-  //**********************************************
+  /* see solver.afd
+  // *********************************************
   // Not_Operator: operator for inverting operand
-  //**********************************************
+  // *********************************************
 
   template<class T_Result, class T_Operand>
   T_Result Not_Operator<T_Result,T_Operand>
@@ -560,9 +560,9 @@ namespace solve
     init(); 
   }
 
-  //**********************************************
+  // *********************************************
   // Negative_Operator: operator for inverting operand
-  //**********************************************
+  // *********************************************
 
   template<class T_Result, class T_Operand>
   T_Result Negative_Operator<T_Result,T_Operand>
@@ -579,9 +579,9 @@ namespace solve
     init();
   }
 
-  //*************************************************************************
+  // ************************************************************************
   // Abs_Operator: operator for calculating the absolute value of an operand 
-  //*************************************************************************
+  // ************************************************************************
 
   template<class T_Result, class T_Operand>
   T_Result Abs_Operator<T_Result,T_Operand>
@@ -598,9 +598,9 @@ namespace solve
     init();
   }
 
-  //*************************************************************************
+  // ************************************************************************
   // Sqrt_Operator: operator for calculating the sqare root of an operand 
-  //*************************************************************************
+  // ************************************************************************
 
   template<class T_Result, class T_Operand>
   T_Result Sqrt_Operator<T_Result,T_Operand>
@@ -631,9 +631,9 @@ namespace solve
     init();
   }
 
-  //***************************************************************************
+  // **************************************************************************
   // Plus_Minus_Operator: result is either the positive or the negative operand
-  //***************************************************************************
+  // **************************************************************************
 
   template<class T_Result, class T_Operand>
   T_Result Plus_Minus_Operator<T_Result,T_Operand>
@@ -657,9 +657,9 @@ namespace solve
     init();
   }
 
-  //**********************************************************************
+  // *********************************************************************
   // Add_Operator: operator for adding 2 operands of different types
-  //**********************************************************************
+  // *********************************************************************
 
   template<class T_Result, class T_Op1, class T_Op2>
   T_Result Add_Operator<T_Result,T_Op1,T_Op2>
@@ -678,9 +678,9 @@ namespace solve
   }
 
 
-  //**********************************************************************
+  // *********************************************************************
   // Sub_Operator: operator for subtracting 2 operands of different types
-  //**********************************************************************
+  // *********************************************************************
 
   template<class T_Result, class T_Op1, class T_Op2>
   T_Result Sub_Operator<T_Result,T_Op1,T_Op2>
@@ -698,9 +698,9 @@ namespace solve
     init();
   }
 
-  //**********************************************************************
+  // *********************************************************************
   // Mul_Operator: operator for multiplying 2 operands of different types
-  //**********************************************************************
+  // *********************************************************************
 
   template<class T_Result, class T_Op1, class T_Op2>
   T_Result Mul_Operator<T_Result,T_Op1,T_Op2>
@@ -748,9 +748,9 @@ namespace solve
     init();
   }
 
-  //**********************************************************************
+  // *********************************************************************
   // Div_Operator: operator for dividing 2 operands of different types
-  //**********************************************************************
+  // *********************************************************************
 
   template<class T_Result, class T_Op1, class T_Op2>
   T_Result Div_Operator<T_Result,T_Op1,T_Op2>
@@ -789,8 +789,8 @@ namespace solve
     return !!value2; 
   }
 
-  /*! has to calculate result only with operand1 when is_operand1_enough 
-    returns true */
+  / *! has to calculate result only with operand1 when is_operand1_enough 
+    returns true * /
   template<class T_Result, class T_Op1, class T_Op2>
   T_Result Div_Operator<T_Result,T_Op1,T_Op2>
   ::calc_result_from_op1( const T_Op1 &value1 ) 
@@ -808,9 +808,9 @@ namespace solve
     init();
   }
 
-  //***************************************************
+  // **************************************************
   // Equal_Operator: operator for comparing 2 operands 
-  //***************************************************
+  // **************************************************
 
   template<class T_Result, class T_Op1, class T_Op2>
   T_Result Equal_Operator<T_Result,T_Op1,T_Op2>
@@ -828,9 +828,9 @@ namespace solve
     init();
   }
 
-  //***************************************************
+  // **************************************************
   // Unequal_Operator: operator for comparing 2 operands 
-  //***************************************************
+  // **************************************************
 
   template<class T_Result, class T_Op1, class T_Op2>
   T_Result Unequal_Operator<T_Result,T_Op1,T_Op2>
@@ -848,9 +848,9 @@ namespace solve
     init();
   }
 
-  //***************************************************
+  // **************************************************
   // Less_Operator: operator for comparing 2 operands 
-  //***************************************************
+  // **************************************************
 
   template<class T_Result, class T_Op1, class T_Op2>
   T_Result Less_Operator<T_Result,T_Op1,T_Op2>
@@ -868,9 +868,9 @@ namespace solve
     init();
   }
 
-  //***************************************************
+  // **************************************************
   // Greater_Operator: operator for comparing 2 operands 
-  //***************************************************
+  // **************************************************
 
   template<class T_Result, class T_Op1, class T_Op2>
   T_Result Greater_Operator<T_Result,T_Op1,T_Op2>
@@ -888,9 +888,9 @@ namespace solve
     init();
   }
 
-  //*********************************************************
+  // ********************************************************
   // Not_Greater_Operator: operator for comparing 2 operands 
-  //*********************************************************
+  // ********************************************************
 
   template<class T_Result, class T_Op1, class T_Op2>
   T_Result Not_Greater_Operator<T_Result,T_Op1,T_Op2>
@@ -908,9 +908,9 @@ namespace solve
     init();
   }
 
-  //*********************************************************
+  // ********************************************************
   // Not_Less_Operator: operator for comparing 2 operands 
-  //*********************************************************
+  // ********************************************************
 
   template<class T_Result, class T_Op1, class T_Op2>
   T_Result Not_Less_Operator<T_Result,T_Op1,T_Op2>
@@ -927,7 +927,7 @@ namespace solve
   {
     init();
   }
-
+  */
 }
 
 #endif

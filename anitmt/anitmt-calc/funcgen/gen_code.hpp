@@ -130,6 +130,7 @@ namespace funcgen
     virtual std::string last_child() = 0;
     virtual std::string get_child( int n ) = 0;
     virtual std::string reference_concat_string() = 0;
+    virtual std::string operator_class_name( std::string name ) = 0;
 
     Code_Translator( code_gen_info * );
     virtual ~Code_Translator(){}
