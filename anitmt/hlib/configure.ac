@@ -1,7 +1,7 @@
 # Process this file with autoconf to produce a configure script.
 # If you have trouble, use the latest versions. 
 # Things work well with autoconf-2.53 and automake-1.6. 
-AC_INIT(hlib,0.9.7,[<see apropriate header file>])
+AC_INIT(hlib,0.9.8,[<see apropriate header file>])
 
 # Check system: 
 # Compute the canonical build-system type variable, $build, 

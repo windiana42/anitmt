@@ -173,12 +173,12 @@ class HTime
 		// with_msec: include msec spec
 		// Returns static buffer. 
 		// (No trailing '\n', of course...)
-		const char *PrintTime(int local=1,int with_msec=0);
+		const char *PrintTime(int local=1,int with_msec=0) const;
 		
 		// This is useful to print elapsed times: 
 		// (You may use operator-() to calc elapsed time.) 
 		// Returns static buffer. 
-		const char *PrintElapsed();
+		const char *PrintElapsed() const;
 		
 		// This is special functionality as used e.g. by TimeoutManager. 
 		// SetInvalid() sets an invalid time (currently usec=-2000000 

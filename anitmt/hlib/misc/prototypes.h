@@ -18,7 +18,8 @@
 #define _HLIB_MISC_PROTOTYPES_H_ 1
 
 /* include config */
-#include <hlib/hconfig.h>
+/*#include <hlib/hconfig.h>  <--- done by <hlib/lmalloc.h> */
+#include <hlib/lmalloc.h>
 
 
 /* some forward decls: */
@@ -33,30 +34,7 @@ struct timeval;
 extern char *prg_name;
 
 /* limitmalloc.c: */
-  struct LMallocUsage
-  {
-	size_t alloc_limit;    /* current limit; 0 for unlimited */
-	size_t curr_used;      /* amount of currently used memory */
-	size_t max_used;       /* max amount of mem used */
-	size_t malloc_calls;   /* number of calls to LMalloc()... */
-	size_t realloc_calls;  /* ...LRealloc(),... */
-	size_t free_calls;     /* ...and LFree(). */
-	int used_chunks;  /* incremented for alloc and decremented for free */
-	int real_failures;   /* how often allocation failed due to real failures */
-	int limit_failures;  /* how often allocation failed due to alloc limit */
-  };
-  /* Get the LMallocUsage; pass a pointer where to store the values: */
-  void LMallocGetUsage(struct LMallocUsage *dest);
-  /* Limit feature: Sets memory usage limit (0 -> no limit) */
-  void LMallocSetLimit(size_t limit);
-  /* These functions allocate/reallocate/free memory using 
-   * malloc()/realloc()/free(). More memory than set with LMallocSetLimit() 
-   * cannote be allocated. LFree() is needed to keep internal statistics 
-   * about the amount of memory currently malloc()ed right. 
-   */
-  extern void *LMalloc(size_t size);
-  extern void *LRealloc(void *ptr,size_t size);
-  extern void *LFree(void *ptr);
+  /* See lmalloc.h. */
 
 /* checkmalloc.c: */
   /* returns ptr; exits with error, if ptr==NULL */

@@ -15,7 +15,7 @@ libmisc_a_SOURCES = \
 		getprgname.c \
 		gettermsize.c \
 		getloadavg.c \
-	prototypes.h hlib.h 
+	prototypes.h hlib.h lmalloc.h
 
 check_PROGRAMS = check_misc
 check_misc_SOURCES = check_misc.cc

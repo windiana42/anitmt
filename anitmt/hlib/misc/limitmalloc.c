@@ -15,7 +15,7 @@
  * 
  */
 
-#include <hlib/prototypes.h>
+#include <hlib/lmalloc.h>
 
 #if !defined(HLIB_DONT_USE_MALLOC_USABLE_SIZE)
 #include <malloc.h>
@@ -212,7 +212,7 @@ static void DebugRealloc(void *oldptr,void *newptr)
 	int i=0;
 	for(; i<nalloc; i++)
 	{  if(oldptr==allocptr[i])  goto found;  }
-	fprintf(stderr,"Realloc: Never allocated: %p (%d)     **************\n",
+	fprintf(stderr,"Realloc: Not allocated: %p (%d)     **************\n",
 		oldptr,nalloc);
 	BUGACTION
 	return;
@@ -225,7 +225,7 @@ static void DebugFree(void *ptr)
 	if(!ptr)  return;
 	for(; i<nalloc; i++)
 	{  if(ptr==allocptr[i])  goto found;  }
-	fprintf(stderr,"Free: Never allocated: %p (%d)      **************\n",
+	fprintf(stderr,"Free: Not allocated: %p (%d)      **************\n",
 		ptr,nalloc);
 	BUGACTION
 	return;

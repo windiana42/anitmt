@@ -92,6 +92,7 @@ class FDBase
 {
 	friend class FDManager;
 	friend class FDManager::FDBList;
+	friend class FDCopyManager;
 	public:
 		typedef FDManager::SigInfo SigInfo;
 		typedef FDManager::FDInfo FDInfo;

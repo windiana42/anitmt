@@ -21,7 +21,7 @@ void *CheckMalloc(void *ptr)
 	if(!ptr)
 	{
 		fprintf(stderr,"%s: malloc() failed.\n",prg_name);
-		abort();   // helps in debugging 
+		abort();   /* Helps in debugging. */
 		exit(1);
 	}
 	return(ptr);

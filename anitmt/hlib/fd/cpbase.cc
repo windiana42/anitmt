@@ -66,7 +66,7 @@ FDCopyManager::CopyRequest::CopyRequest(int * /*failflag*/)
 {
 	srcfd=destfd=-1;
 	srcbuf=destbuf=NULL;
-	len=0;
+	len=srclen=destlen=0;
 	
 	req_timeout=-1;
 	read_timeout=-1;
@@ -74,6 +74,8 @@ FDCopyManager::CopyRequest::CopyRequest(int * /*failflag*/)
 	
 	dptr=NULL;
 	progress_mask=PAQuery;
+	
+	recv_fdnotify=0;
 	
 	iobufsize=FDCopyManager::default_iobufsize;
 	low_read_thresh=-1;
