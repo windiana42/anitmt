@@ -46,7 +46,7 @@
 %option prefix="funcgen_"
 %pointer	// define yytext as pointer (variable length)
 
-%x ML_COMMENT COPY_CODE
+%x ML_COMMENT COPY_CODE CC_COMMENT
 
 id		([a-zA-Z_][a-zA-Z0-9_]*)
 integer 	([0-9]+)
@@ -69,12 +69,12 @@ qstring_err 	(\"([^\"\n]|\\\")*)
 <ML_COMMENT>"/*" 	{ inc_col(); yy_push_state(ML_COMMENT); /*nested?*/ } 
 <ML_COMMENT>\n         	{ info->file_pos.inc_line(); }
 <ML_COMMENT>\r        	{ ; /*ignore DOS specific line end*/ }
-<ML_COMMENT>[^\n\*]* 	{ inc_col(); /* ingore multiline comment */ }
+<ML_COMMENT>[^\n\*/]+ 	{ inc_col(); /* ingore multiline comment */ }
 <ML_COMMENT>[^\n\*]*\n 	{ info->file_pos.inc_line(); /*optimized*/ }
 <ML_COMMENT>.	 	{ inc_col(); /* single '*' would fail otherwise */ }
 <ML_COMMENT><<EOF>>	{ llerr(info) << "unexpected end of file within "
-			    << "comment"; 
-			  finished_file(info); 
+				      << "comment"; 
+		  	  finished_file(info); 
 			  if( info->close_file() ) return 0; }
 
 " "+	  { inc_col(); }    
@@ -171,12 +171,28 @@ reset		{ tok_pos(); return TAFD_reset; }
 		  else
 		  { inc_col(); copy_code_line( info, yytext, yyleng ); }
                 }
+<COPY_CODE>[^\n\t\[{}/]+  {inc_col(); copy_code_line( info, yytext, yyleng ); }
+<COPY_CODE>[^\n\[{}/]+"\n" {info->file_pos.inc_line(); 
+			   copy_code_line( info, yytext,yyleng ); }
+<COPY_CODE>"//".*\n { info->file_pos.inc_line(); 
+		      copy_code_line( info, yytext,yyleng ); }
 <COPY_CODE>"[["	{ tok_pos(); code_block_escape(info); yy_pop_state(); 
 		  return TAFD_BB_left; }
-<COPY_CODE>\[   { inc_col(); copy_code_line( info, yytext, yyleng ); }
-<COPY_CODE>[^\n\t\[{}]+   {inc_col(); copy_code_line( info, yytext, yyleng ); }
-<COPY_CODE>[^\n\[{}]+"\n" {info->file_pos.inc_line(); 
-			   copy_code_line( info, yytext,yyleng ); }
+<COPY_CODE>"/*"	{ inc_col(); yy_push_state(CC_COMMENT); 
+		  copy_code_line( info, yytext,yyleng ); }
+<COPY_CODE>.    { inc_col(); copy_code_line( info, yytext, yyleng ); }
+
+<CC_COMMENT>"*/" 	{ inc_col(); yy_pop_state(); 
+			  copy_code_line( info, yytext, yyleng ); }
+<CC_COMMENT>\r        	{ ; /*ignore DOS specific line end*/ }
+<CC_COMMENT>[^\n\*]+ 	{ inc_col(); copy_code_line( info, yytext, yyleng ); }
+<CC_COMMENT>[^\n\*]*\n  { info->file_pos.inc_line();
+			   copy_code_line( info, yytext, yyleng ); }
+<CC_COMMENT>.	 	{ inc_col(); copy_code_line( info, yytext, yyleng ); }
+<CC_COMMENT><<EOF>>	{ llerr(info) << "unexpected end of file within "
+				      << "comment";
+			  finished_file(info); 
+			  if( info->close_file() ) return 0; }
 
 <<EOF>>		{ finished_file(info); if( info->close_file() ) return 0; }
 

@@ -15,11 +15,12 @@
 #ifndef __AniTMT_Animation__
 #define __AniTMT_Animation__
 
+#include <functionality/scene_base.hpp>
+
 #include <param/param.hpp>
 // !!! parameter system should be changed
 #include <par/params.hpp>
 
-#include <functionality/scene_base.hpp>
 #include <val/val.hpp>
 #include <solve/priority.hpp>
 #include <proptree/property.hpp>

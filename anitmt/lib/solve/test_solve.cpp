@@ -1,5 +1,6 @@
 #include <iostream>
 
+#include <functionality/solver.hpp>
 #include <message/message.hpp>
 
 #include "operand.hpp"
@@ -8,8 +9,6 @@
 #include "priority.hpp"
 #include "constraint.hpp"
 #include "reference.hpp"
-
-#include <functionality/solver.hpp>
 
 using namespace std;
 

@@ -19,12 +19,15 @@
 
 #include "funcgen.hpp"
 
+#include <config.h>
 
 namespace funcgen
 {
   int parse_afd( AFD_Root *afd, message::Message_Consultant *c, 
 		 std::string filename );
+#ifdef YYDEBUG
   extern int yydebug;
+#endif
 }
 
 
@@ -70,7 +73,9 @@ int main(int argc, char *argv[], char *envp[])
   {  exit(1);  }
   
   // Okay, here we go...
+#ifdef YYDEBUG
   funcgen::yydebug=fgpar.yydebug;
+#endif
   
   #if 0
   std::cout << "Infile: " << fgpar.in_file << std::endl;

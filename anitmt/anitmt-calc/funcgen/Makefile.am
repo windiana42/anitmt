@@ -1,5 +1,6 @@
 # Makefile.am for parser of anitmt adl - animation description language 
-INCLUDES=		-I$(top_srcdir)/lib -I$(top_srcdir)/lib/flex -I$(top_builddir)/hlib/include 
+INCLUDES=		-I$(top_srcdir)/lib -I$(top_srcdir)/lib/flex \
+			-I$(top_builddir)/hlib/include -I$(top_srcdir)
 
 bin_PROGRAMS=		funcgen
 CXXFLAGS =		@CXXFLAGS@ -Wno-non-template-friend -ftemplate-depth-30

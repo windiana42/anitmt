@@ -12,9 +12,9 @@
 /**									    **/
 /*****************************************************************************/
 
-#include "animation.hpp"
-
 #include <functionality/make_avail.hpp>
+
+#include "animation.hpp"
 
 #include "anitmt.hpp"
 

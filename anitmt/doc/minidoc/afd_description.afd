@@ -1,25 +1,25 @@
 /*****************************************************************************/
 /**   Specification of the AFD language                                     **/
 /*****************************************************************************/
-/**									    **/
-/** Author: Martin Trautmann, Manuel Moser				    **/
-/**									    **/
-/** EMail:   martintrautmann@gmx.de					    **/
-/**									    **/
+/**                                                                         **/
+/** Author: Martin Trautmann, Manuel Moser                                  **/
+/**                                                                         **/
+/** EMail:   martintrautmann@gmx.de                                         **/
+/**                                                                         **/
 /** License: GPL - free and without any warranty - read COPYING             **/
-/**									    **/
-/** Package: AniTMT							    **/
-/**									    **/
-/** Date: 20.2.2002							    **/
-/**									    **/
+/**                                                                         **/
+/** Package: AniTMT                                                         **/
+/**                                                                         **/
+/** Date: 20.2.2002                                                         **/
+/**                                                                         **/
 /*****************************************************************************/
 
-avoid_recursion <unique_identifier>;	// avoid recursion of this file
+avoid_recursion <unique_identifier>;    // avoid recursion of this file
 
 include declaration "<afdfile>";
 include header "<hppfile>";
 
-priority_list {				// declare priority level names
+priority_list {                         // declare priority level names
   highest_priority;
   lowest_level;
   push1;
@@ -158,16 +158,16 @@ base_types {
        return <cpp_expression>
        return child.<ProviderType>.<ReturnType>(<ParameterType> <Parameter>) 
        return this.[<ProviderType>.]<ReturnType>(<ParameterType> <Parameter>)
-       return_fail			// return undefined
-       return_if_fail			// return if one function call failed
+       return_fail                      // return undefined
+       return_if_fail                   // return if one function call failed
        ...
 <<<< in doubled square brackets("[[   ]]") 
 
       // availible variables in C++ code:
-       did_any_result_fail		// true: one previous result function
-					// call failed
-					// set to false to reinitalize
-       did_result_fail			// default fail_bool_var
+       did_any_result_fail              // true: one previous result function
+                                        // call failed
+                                        // set to false to reinitalize
+       did_result_fail                  // default fail_bool_var
       >
     }
     ...
@@ -254,12 +254,12 @@ solvers /*todo*/
 {
   <SolverName> ( <Type> <OperandName>, ... )
   {
-    operands				// local operands
+    operands                            // local operands
     {
       type <Type> 
       {
-	<OperandName>;  
-	...
+        <OperandName>;  
+        ...
       }
       <Type> <OperandName>; 
       ...
@@ -269,53 +269,70 @@ solvers /*todo*/
       <C++ClassType> <ObjectName>,...;
       ...
     }
-    init
+    init_operands
     {
-      <SolverName> [ <SolverInstanceName> ]( <OperandName>, ... );
-      <OperandName> = <operand_expression>;
-//      <ObjectName>.[<SubObjectName>.]*<FunctionName>( <cpp_expression>,... ); //???
-      //				                   |
-      //				   no operands (not solved?)
-      ...
+      constraints
+      {
+        <operand_boolexpression>;
+        ...
+      }
+      solvers
+      {
+        <SolverName> [ <SolverInstanceName> ]( <OperandName>, ... );
+        <OperandName> = <operand_expression>;
+        ...
+      }
+    }
+    init_code
+    {
+      <C++ Code initializing the <ObjectName>s>
     }
     events
     {
       condition <OperandName> & <OperandName> & ... 
       {
-	test_run 
-	{ 
-	  <C++ code> including... 
-	  return <true/false>; or 
-	  [[ test <OperandName> = <cpp_expression> ]];
-	}
-	[ final { <C++ code> } ] // useful?
-	[ reset { <C++ code> } ]
+        test_run 
+        { 
+          <C++ code> including... 
+          return <true/false>; or 
+          [[ test <OperandName> = <cpp_expression>; ]]
+          [[ try_reject <OperandName>, ...; ]]  
+          if( [[ is_operand_solved_by_this_solver ]] ) ...;
+          if( [[ is_solved_in_try(<OperandName>) ]] ) ...;
+          if( [[ is_just_solved(<OperandName>) ]] ) ...;
+        }
+        [ final { <C++ code> } ] // useful?
+        [ reset { <C++ code> } ]
       }
       ...
       group
       {
-	condition <OperandName> & <OperandName> & ... 
-	{
-	  test_run 
-	  { 
-	    <C++ code> including... 
-	    return <true/false>; or 
-	    [[ test <OperandName> = <cpp_expression> ]];
-	  }
-	  [ final { <C++ code> } ] // useful?
-	  [ reset { <C++ code> } ]
-	}
-	...
-	// Operation is invoked by one operand being solved. 
-	// if condition is mached and it's testrun was never executed:
-	//     run testrun
-	// if condition is mached, it's testrun was already executed 
-	//   and one of the operands invoked the operation:
-	//     reset and clear all marks for executed testruns and invoke again
-	[ reset { } ]
+        condition <OperandName> & <OperandName> & ... 
+        {
+          test_run 
+          { 
+            <C++ code> including... 
+            return <true/false>; or  
+            [[ test <OperandName> = <cpp_expression>; ]]
+            [[ try_reject <OperandName>, ...; ]]  
+            if( [[ is_operand_solved_by_this_solver ]] ) ...;
+            if( [[ is_solved_in_try(<OperandName>) ]] ) ...;
+            if( [[ is_just_solved(<OperandName>) ]] ) ...;
+          }
+          [ final { <C++ code> } ] // useful?
+          [ reset { <C++ code> } ]
+        }
+        ...
+        // Operation is invoked by one operand being solved. 
+        // if condition is mached and it's testrun was never executed:
+        //     run testrun
+        // if condition is mached, it's testrun was already executed 
+        //   and one of the operands invoked the operation:
+        //     reset and clear all marks for executed testruns and invoke again
+        [ reset { } ]
 
-	//!! attention: group reset which is caused by a member condition 
-	//   within it's test run may cause an infinite loop !!
+        //!! attention: group reset which is caused by a member condition 
+        //   within it's test run may cause an infinite loop !!
       }
 
       ...
@@ -324,9 +341,9 @@ solvers /*todo*/
     {
       <ReturnType> <FunctionName> ( <Type> <Variable>,... ) 
         [ requires <OperandName> | this.<FunctionName> 
-	  | <SolverInstanceName>.<FunctionName> , ... ]
+          | <SolverInstanceName>.<FunctionName> , ... ]
       {
-	<C++ code returning value, using <Variable>s and <ObjectName>s>
+        <C++ code returning value, using <Variable>s and <ObjectName>s>
       }
       ...
     }

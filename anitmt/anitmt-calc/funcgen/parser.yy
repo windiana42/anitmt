@@ -30,6 +30,8 @@
 				// including nessessary defines 
 #include "stdextend.hpp"
 
+// include config switches like YYDEBUG
+#include <config.h>
 
 #define MAX_OLD_POSITIONS 	10
 

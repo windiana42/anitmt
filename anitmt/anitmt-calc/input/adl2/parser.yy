@@ -34,6 +34,9 @@
 #include <iostream>
 #include <string>
 
+// include config switches like YYDEBUG
+#include <config.h>
+
   // open namespaces
   namespace anitmt
   {

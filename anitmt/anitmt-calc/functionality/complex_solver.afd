@@ -20,6 +20,8 @@ include declaration "base_func.afd";
 include declaration "solver.afd";
 include header "sp_curve.hpp";
 
+/* test /*nested*/ */
+
 solvers 
 {
   test_solver ()
@@ -66,7 +68,11 @@ solvers
       {
 	test_run
 	{
-	  //if( [ [ may_reject ]] )
+	  /*
+	  if( ![[ is_solved_in_try p1 ]] && ![[ is_solved_in_try p2 ]] &&
+	      ![[ is_solved_in_try p1 ]] && ![[ is_solved_in_try p2 ]] &&
+	       [[ may_reject ]] ) 
+          */
 	    return false;
 	}
       }
