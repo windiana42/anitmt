@@ -124,10 +124,15 @@ class RefStrList
 		// both match str="ABC". 
 		// Returns NULL if not found. 
 		// Passing str=NULL will find the first NULL-reference. 
-		const Node *find(const char *str);
+		const Node *find(const char *str) const;
 		
 		// Counts the elements in the list: 
 		int count() const  {  return(list.count());  }
+		
+		// Exactly compare the string lists, i.e. compare first 
+		// element to first element of *b, second to second, etc. 
+		// Return value: 1 -> equal; 0 -> not equal 
+		bool exact_compare(const RefStrList *b) const;
 };
 
 #endif  /* _HLIB_StringList_H_ */

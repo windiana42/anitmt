@@ -20,7 +20,7 @@
 #include <string.h>
 
 
-const RefStrList::Node *RefStrList::find(const char *str)
+const RefStrList::Node *RefStrList::find(const char *str) const
 {
 	if(!str)
 	{  // Find first NULL-ref: 
@@ -33,7 +33,7 @@ const RefStrList::Node *RefStrList::find(const char *str)
 	else
 	{
 		size_t str_len=strlen(str);
-		for(Node *n=list.first(); n; n=n->next)
+		for(const Node *n=list.first(); n; n=n->next)
 		{
 			int t=n->stype();
 			if(t<0)  continue;
@@ -52,6 +52,17 @@ const RefStrList::Node *RefStrList::find(const char *str)
 		}
 	}
 	return(NULL);
+}
+
+
+// Retval: true -> equal
+bool RefStrList::exact_compare(const RefStrList *b) const
+{
+	if(!b)  return(0);
+	const Node *i=list.first(),*j=b->list.first();
+	for(; i && j; i=i->next,j=j->next)
+	{  if((*i)!=(*j))  return(0);  }
+	return(!(i || j));
 }
 
 
