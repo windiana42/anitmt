@@ -23,7 +23,6 @@
 */
   
 namespace anitmt {
-	class Prop_Tree_Node;
 	class EXParser : public EX { public: EXParser(const string msg) : EX(msg) {} };
 
         //! Parser for the adl format
