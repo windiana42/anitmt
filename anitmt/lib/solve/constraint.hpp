@@ -15,20 +15,9 @@
 #ifndef __Solve_Constraint__
 #define __Solve_Constraint__
 
-#include "error.hpp"
 #include "operand.hpp"
 
 namespace solve{
-
-  //************
-  // Exceptions:
-  //************
-
-  class EX_Constraint_Initially_Failed : public EX 
-  {
-  public:
-    EX_Constraint_Initially_Failed() : EX( "constraint initially failed" ) {}
-  };
 
   //***************************************************************************
   // Constraint_Checker: assures that operands in expression trees are conform

@@ -27,31 +27,10 @@ namespace solve
   class Solve_Run_Info;
 }
 
-//!!! should be removed
-#include "error.hpp"
-
 #include <list>
 
 namespace solve
 {
-  //************
-  // Exceptions:
-  //************
-
-  /* replaced by new message system
-  class EX_property_collision : public EX 
-  {
-  public:
-    EX_property_collision() : EX( "property collision" ) {}
-  };
-
-  class EX_solver_is_not_connected : public EX 
-  {
-  public:
-    EX_solver_is_not_connected() : EX( "solver is not connected" ) {}
-  };
-  */
-
   //*********************************************************
   // Solve_Problem_Handler: handles problems in solve system
   //*********************************************************

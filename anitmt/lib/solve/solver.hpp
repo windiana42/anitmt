@@ -16,7 +16,6 @@
 #define __Solve_Solver__
 
 #include <val/val.hpp>
-#include "error.hpp"
 #include "operand.hpp"
 
 namespace solve

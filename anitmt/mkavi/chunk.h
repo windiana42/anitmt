@@ -15,6 +15,7 @@
  *
  */
 
+#include <string.h>
 
 #ifndef CHUNK_INCLUDED
 #define CHUNK_INCLUDED

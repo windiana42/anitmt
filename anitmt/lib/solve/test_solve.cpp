@@ -9,8 +9,6 @@
 #include "constraint.hpp"
 #include "reference.hpp"
 
-#include "error.hpp"
-
 using namespace std;
 
 namespace solve {
@@ -383,7 +381,7 @@ namespace solve {
 	  }
 	}
       }
-      catch( EX )
+      catch( ... )
       {
 	cout << "  sqrt(x(=-4)) rejected with exception. OK" << endl;
 	if( op.is_solved() )
@@ -713,7 +711,7 @@ namespace solve {
 	  cout << "  constraint( x(=1) == 2) rejected. OK" << endl;
 	}
       }
-      catch( EX )
+      catch( ... )
       {
 	cout << "  constraint( x(=1) == 2) rejected. OK" << endl;
       }
@@ -758,7 +756,7 @@ namespace solve {
 	  }
 	}
       }
-      catch( EX )
+      catch( ... )
       {
 	cerr << "!!Error: why was +-sqrt(x(=25)) rejected with "
 	  "exception?!!";
@@ -813,7 +811,7 @@ namespace solve {
 	  }
 	}
       }
-      catch( EX )
+      catch( ... )
       {
 	cerr << "!!Error: why was +-sqrt(x(=25))(<0) rejected with "
 	  "exception?!!";
@@ -868,7 +866,7 @@ namespace solve {
 	  }
 	}
       }
-      catch( EX )
+      catch( ... )
       {
 	cerr << "!!Error: why was +-sqrt(x(=25)) (>0) rejected with "
 	  "exception?!!";
@@ -923,7 +921,7 @@ namespace solve {
 	  }
 	}
       }
-      catch( EX )
+      catch( ... )
       {
 	cerr << "!!Error: why was +-(5 +-x(=2))(<=3) rejected with "
 	  "exception?!!";
@@ -982,7 +980,7 @@ namespace solve {
 	  }
 	}
       }
-      catch( EX )
+      catch( ... )
       {
 	cerr << "!!Error: why was +-(5 +-x(=2))(<=3),(+-x<0) rejected with "
 	  "exception?!!";
@@ -2164,8 +2162,8 @@ namespace solve {
 	cout << errors << " Errors occured" << endl;
       return errors;
     }
-    catch( EX e ){
-      cout << "Fatal Error: " << e.get_name() << endl;
+    catch( ... ){
+      cout << "Fatal Error! " << endl;
       return -1;
     }
   }

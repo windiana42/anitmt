@@ -52,7 +52,7 @@ namespace solve
     {
       if( op.get_value() == false )
       {
-	throw EX_Constraint_Initially_Failed();
+	op.error() << "value is initially not conform to constraint";
       }
     }
   }

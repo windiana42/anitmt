@@ -16,24 +16,12 @@
 #define __Solve_Operator__
 
 #include <val/val.hpp>
-//!!! should be replaced with:
-//#include <message/message.hpp>
-#include "error.hpp"
+#include <message/message.hpp>
 
 #include "operand.hpp"
 
 namespace solve
 {
-  //************
-  // Exceptions:
-  //************
-
-  class EX_Initial_Operand_Not_Valid : public EX 
-  {
-  public:
-    EX_Initial_Operand_Not_Valid() : EX( "initial operand not valid" ) {}
-  };
-  
   //***************************************************************
   // Basic_Operator_for_1_Operand: one parameter Operator
   //***************************************************************

@@ -1,6 +1,9 @@
+.deps
 Makefile
 Makefile.in
-config.status
-config.log
+aclocal.m4
+anitmt-0.1.9.tar.gz
 config.cache
-.deps
+config.log
+config.status
+configure
