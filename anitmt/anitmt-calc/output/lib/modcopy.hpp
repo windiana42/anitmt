@@ -27,6 +27,7 @@
 #include <string>
 
 #include <message/message.hpp>
+#include <sys/types.h>
 
 namespace output_io
 {

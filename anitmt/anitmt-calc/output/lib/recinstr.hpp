@@ -27,6 +27,7 @@
 
 #include <list>
 #include <message/message.hpp>
+#include <sys/types.h>
 
 #include "binstr.hpp"
 #include "searchpath.hpp"

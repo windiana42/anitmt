@@ -1043,6 +1043,28 @@ namespace funcgen
     }
   }
 
+  void Cpp_Code_Generator::generate_operators()
+  {
+    *decl << "  // ********************" << std::endl;
+    *decl << "  // operator declartions" << std::endl;
+    *decl << "  // ********************" << std::endl;
+    *decl << std::endl;
+
+    *impl << "  // ***********************" << std::endl;
+    *impl << "  // ***********************" << std::endl;
+    *impl << "  // operator implementation" << std::endl;
+    *impl << "  // ***********************" << std::endl;
+    *impl << "  // ***********************" << std::endl;
+    *impl << std::endl;
+
+    operator_declarations_type::iterator op;
+    for( op = afd->operator_declarations.begin();
+	 op != afd->operator_declarations.begin(); ++op )
+    {
+
+    }
+  }
+
   void Cpp_Code_Generator::generate_nodes()
   {
     *decl << "  // ***************************" << std::endl
@@ -1620,6 +1642,7 @@ namespace funcgen
     generate_priority_list();
     generate_base_types();
     generate_types();
+    generate_operators();
     generate_nodes();
     generate_footer();
   }

@@ -127,6 +127,7 @@ namespace funcgen
     void generate_priority_list();
     void generate_base_types();
     void generate_types();
+    void generate_operators();
     void generate_nodes();
   public:
     Cpp_Code_Translator *get_translator();
