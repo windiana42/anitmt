@@ -117,7 +117,7 @@ class BasicParser :
 	public:
 		//! You should call SetConfig() after construction. 
 		BasicParser();
-		~BasicParser();
+		virtual ~BasicParser();
 };
 
 //! Used to glue the calls of yylex() and yyinput() to the 

@@ -282,11 +282,11 @@ class File_Parser :
 			
 			// Print warnings on unused objects/scalars
 			// Returns number of unused things. 
-			int Warn_Unused(ostream &os);
+			int Warn_Unused(std::ostream &os);
 			
 			AValue_List()  {  first=last=NULL;  }
 			~AValue_List()  {  Clear();  }
-			private: int _Warn_Unused(ostream &os,tokID type);
+			private: int _Warn_Unused(std::ostream &os,tokID type);
 		};
 		
 		Modification_Copy *mcopy;
@@ -334,9 +334,9 @@ class File_Parser :
 		void Put_Back_Tok(Find_String::RV *rv);
 		void Consumed(size_t n,int nlines);
 		
-		ostream &Error_Header()
+		std::ostream &Error_Header()
 			{  return(Recursive_Input_Stream::Error_Header(cerr,cc.line));  }
-		ostream &Error_Header(int line)
+		std::ostream &Error_Header(int line)
 			{  return(Recursive_Input_Stream::Error_Header(cerr,line));  }
 
 		AValue_List av_list;
@@ -356,7 +356,7 @@ class File_Parser :
 		void Comment_Cutout(Position *start,Position *end);
 		
 		int verbose;
-		ostream &vout;  // verbose stream
+		std::ostream &vout;  // verbose stream
 	public:
 		File_Parser();
 		~File_Parser();

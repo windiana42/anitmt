@@ -120,7 +120,7 @@ namespace message
     return *this; 
   }
 
-  template<class T> inline Message_Stream& Message_Stream::operator<<(T v)
+  template<class T> inline Message_Stream& Message_Stream::operator<<=(T v)
   {
     if( enabled ) 
       msg_stream << v; 

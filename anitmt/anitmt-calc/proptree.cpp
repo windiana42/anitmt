@@ -317,53 +317,53 @@ namespace anitmt{
   {
     int errors = 0;
 
-    message::Stream_Message_Handler msg_handler(cerr,cout,cout);
+    message::Stream_Message_Handler msg_handler(std::cerr,std::cout,std::cout);
     message::Message_Manager manager(&msg_handler);
 
-    cout << endl;
-    cout << "-----------------" << endl;
-    cout << "Tree Node Test..." << endl;
-    cout << "-----------------" << endl;
+    std::cout << std::endl;
+    std::cout << "-----------------" << std::endl;
+    std::cout << "Tree Node Test..." << std::endl;
+    std::cout << "-----------------" << std::endl;
 
-    cout << " Node name initialization..." << endl;
+    std::cout << " Node name initialization..." << std::endl;
     make_all_nodes_available();
     
-    cout << " Building data hierarchy..." << endl;
-    cout << "  ani dummy_name" << endl;
+    std::cout << " Building data hierarchy..." << std::endl;
+    std::cout << "  ani dummy_name" << std::endl;
     Animation *ani = new Animation("dummy_name", &manager);
-    cout << "    scene testscene" << endl;
+    std::cout << "    scene testscene" << std::endl;
     Prop_Tree_Node *tscene = ani->add_child( "scene", "testscene" );
-    cout << "      scalar testval" << endl;
+    std::cout << "      scalar testval" << std::endl;
     Prop_Tree_Node *tscalar = tscene ->add_child( "scalar", "testval" );
-    cout << "        linear testlinear1" << endl;
+    std::cout << "        linear testlinear1" << std::endl;
     Prop_Tree_Node *tlinear1 = tscalar->add_child( "linear", "testlinear1" );
-    cout << "        linear testlinear2" << endl;
+    std::cout << "        linear testlinear2" << std::endl;
     Prop_Tree_Node *tlinear2 = tscalar->add_child( "linear", "testlinear2" );
     
-    cout << " Setting values..." << endl;
-    cout << "  scene.filename = \"test.scene\"" << endl;
+    std::cout << " Setting values..." << std::endl;
+    std::cout << "  scene.filename = \"test.scene\"" << std::endl;
     tscene->set_property( "filename", values::String("test.scene") );
     
-    cout << "  testlinear1.starttime  = 0" << endl;
+    std::cout << "  testlinear1.starttime  = 0" << std::endl;
     tlinear1->set_property( "starttime",  values::Scalar(0) );
-    cout << "  testlinear1.endtime    = 3" << endl;
+    std::cout << "  testlinear1.endtime    = 3" << std::endl;
     tlinear1->set_property( "endtime",    values::Scalar(3) );
-    cout << "  testlinear1.endvalue   = 2" << endl;
+    std::cout << "  testlinear1.endvalue   = 2" << std::endl;
     tlinear1->set_property( "endvalue",   values::Scalar(2) );
-    cout << "  testlinear1.difference = 1" << endl;
+    std::cout << "  testlinear1.difference = 1" << std::endl;
     tlinear1->set_property( "difference", values::Scalar(1) );
-    cout << "  testlinear2.endtime    = 10" << endl;
+    std::cout << "  testlinear2.endtime    = 10" << std::endl;
     tlinear2->set_property( "endtime",    values::Scalar(10) );
-    cout << "  testlinear2.endvalue   = 1" << endl;
+    std::cout << "  testlinear2.endvalue   = 1" << std::endl;
     tlinear2->set_property( "endvalue",   values::Scalar(1) );
     
-    cout << " Save pre results..." << endl;
+    std::cout << " Save pre results..." << std::endl;
     save_filled( "test_pre.out", ani );
 
-    cout << " Run actions..." << endl;
+    std::cout << " Run actions..." << std::endl;
     ani->pri_sys.invoke_all_Actions(); // invoke actions
 
-    cout << " Save final results..." << endl;
+    std::cout << " Save final results..." << std::endl;
     save_filled( "test.out", ani );
 
     return errors;

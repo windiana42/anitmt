@@ -226,7 +226,7 @@ namespace message
     //! Pick up message (two versions: one for const refs; one for 
     //! copied objects)
     template<class T> inline Message_Stream &operator<<(const T &v);
-    template<class T> inline Message_Stream &operator<<(T v);
+    template<class T> inline Message_Stream &operator<<=(T v);
     //! This is used to end messaged using noend. For obvious 
     //! reason, thid returns void. 
     inline void operator<<(_NoEnd v);

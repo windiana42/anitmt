@@ -52,7 +52,7 @@ int main(int argc,char **argv,char **envp)
     */
     // This is QnD, I know... but it seems that anitmt.*
     // will someday make all this code here superfluous ?! - OK
-    Stream_Message_Handler msg_handler(cerr,cout,cout);
+    Stream_Message_Handler msg_handler(std::cerr,std::cout,std::cout);
     Message_Manager manager(&msg_handler);
     Message_Consultant default_msg_consultant(&manager, 0);
     Message_Reporter msg(&default_msg_consultant);
@@ -79,7 +79,7 @@ int main(int argc,char **argv,char **envp)
     stringlist adlfiles = ani.param.adl();
     if( adlfiles.is_empty() )
     {
-      cerr << "Error: no animation descriptions specified" << endl;
+      std::cerr << "Error: no animation descriptions specified" << std::endl;
       return -3;
     }
 
@@ -164,7 +164,7 @@ int main(int argc,char **argv,char **envp)
   }
   catch( EX e )
   {
-    cout << "Error: " << e.get_name() << endl;
+    std::cout << "Error: " << e.get_name() << std::endl;
     return -1;
   }
   return 0;

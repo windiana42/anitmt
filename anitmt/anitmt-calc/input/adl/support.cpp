@@ -31,7 +31,7 @@ const TokenTableEntry TokenTable[]= {
 	{END_OF_FILE,			"end of file"			},
 	{0, 0}
 };
-string NameOfToken(const int tok) {
+std::string NameOfToken(const int tok) {
 	const TokenTableEntry *lp=TokenTable;
 	while (lp->index) {
 		if (lp->index==tok) return lp->desc;
@@ -41,14 +41,14 @@ string NameOfToken(const int tok) {
 }
 
 //-----------------------------------------------------------------------------
-VADLFlexLexer::VADLFlexLexer(const string _fn,
+VADLFlexLexer::VADLFlexLexer(const std::string _fn,
 			     istream *is,
 			     message::Message_Consultant *c) :
 	ADLFlexLexer(is, &cerr), //FIXME
 	message::Message_Reporter(c),
 	fn(_fn) {}
 
-void VADLFlexLexer::Warning(const string msg) {
+void VADLFlexLexer::Warning(const std::string msg) {
 	warn(new File_Position(fn, yylineno))
 		<< "ADL-Scanner: " << msg;
 }

@@ -53,7 +53,7 @@ namespace anitmt
       values::Scalar t = f / ani->param.fps();
       
       std::string filename = dir + basename + str_num + extension;
-      ofstream out( filename.c_str() );
+      std::ofstream out( filename.c_str() );
 
       out << "time " << t << ";" << std::endl;
       for( scene = scenes.begin(); scene != scenes.end(); ++scene )
@@ -77,7 +77,7 @@ namespace anitmt
 	  if( ret.first )
 	    out << "    val " << ret.second.get_value() << ";" << std::endl;
 	  else
-	    out << "    val <undefined>;" << endl;
+	    out << "    val <undefined>;" << std::endl;
 	  
 	  out << "  }" << std::endl;
 	}
@@ -98,7 +98,7 @@ namespace anitmt
 	  if( ret.first )
 	  {
 	    out << "    matrix " << ret.second.get_matrix()<< ";" << std::endl;
-	    out << "    // equals: " << endl;
+	    out << "    // equals: " << std::endl;
 	    out << "    scale "     << ret.second.get_scale() 
 		<< ";" << std::endl;
 	    out << "    translate " << ret.second.get_translate()
@@ -107,7 +107,7 @@ namespace anitmt
 		<< ";" << std::endl;
 	  }
 	  else
-	    out << "    val <undefined>;" << endl;
+	    out << "    val <undefined>;" << std::endl;
 	  
 	  out << "  }" << std::endl;
 	}

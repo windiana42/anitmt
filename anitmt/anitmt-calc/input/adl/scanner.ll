@@ -41,7 +41,7 @@
 \"[^"\n]*\"			{	/*" this hyphen brings the
                                           emacs colorizer back into
                                           normal mode :)*/
-	((VADLFlexLexer*)this)->yylval.str=string(yytext+1).substr(0, yyleng-2);
+	((VADLFlexLexer*)this)->yylval.str=std::string(yytext+1).substr(0, yyleng-2);
 	return (STRING);
 }
 [+-]?[[:digit:]]+(\.[[:digit:]]+([eE][+-]?[[:digit:]]+)?)? {
@@ -50,7 +50,7 @@
 }
 
 <<EOF>>	return (END_OF_FILE);
-.	((VADLFlexLexer*)this)->Warning(string("Invalid character: ")+yytext);
+.	((VADLFlexLexer*)this)->Warning(std::string("Invalid character: ")+yytext);
 
 
 %%

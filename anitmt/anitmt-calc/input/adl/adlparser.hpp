@@ -30,7 +30,7 @@
 */
   
 namespace anitmt {
-	class EXParser : public EX { public: EXParser(const string msg) : EX(msg) {} };
+	class EXParser : public EX { public: EXParser(const std::string msg) : EX(msg) {} };
 
         //! Parser for the adl format
 	class ADLParser : public message::Message_Reporter {
@@ -50,9 +50,9 @@ namespace anitmt {
 		  should merge it's information into */
 		void ParseTree(Prop_Tree_Node *pt);
 	private:
-		void report_error(const string msg);
+		void report_error(const std::string msg);
 		VADLFlexLexer fl;
-		const string fn;
+		const std::string fn;
 		
 		//! Indention for verbose parsing mode
 		unsigned ind;

@@ -59,7 +59,7 @@ String anitmt::ADLParser::ParseString() {
 	return ret;
 }
 
-void anitmt::ADLParser::report_error(const string msg) {
+void anitmt::ADLParser::report_error(const std::string msg) {
 		error(new File_Position(fn, fl.lineno())) << msg;
 		throw EXParser(msg);
 }
@@ -84,7 +84,7 @@ void anitmt::ADLParser::ConsumeToken(const int tok) {
 void anitmt::ADLParser::ParseProperty(Prop_Tree_Node *pt) {
 	PARSER_DS("PROPERTY", "name="+fl.yylval.str);
 	// Save name of property
-	string name=fl.yylval.str; fl.GetNext();
+	std::string name=fl.yylval.str; fl.GetNext();
 
 	// Get value and insert it:
 	switch (fl.tok()) {
@@ -99,9 +99,9 @@ void anitmt::ADLParser::ParseProperty(Prop_Tree_Node *pt) {
 }
 
 void anitmt::ADLParser::ParseNode(Prop_Tree_Node *pt) {
-	string type=fl.yylval.str; fl.GetNext();
+	std::string type=fl.yylval.str; fl.GetNext();
         // Ok, current token must be the name of the node or "{"
-	string name("dummy_name");
+	std::string name("dummy_name");
 	switch (fl.tok()) {
 	case OP_SECTION:
 		break;
@@ -154,7 +154,7 @@ void anitmt::ADLParser::ParseTree(Prop_Tree_Node *pt) {
 //! create animation tree structure
 void anitmt::ADL_Input::create_structure()
 {
-	ifstream in(filename.c_str());
+	std::ifstream in(filename.c_str());
 	ADLParser p(filename, in, c);	
 	p.ParseTree(ani ); // !!! shouldn't insert values yet !!!
 }

@@ -57,7 +57,7 @@ class Pov_Output :
 		std::list<Dump_Node> dn_list;
 		
 		int verbose()  {  return(ani->param.verbose());  }
-		ostream &vout;  // verbose stream
+		std::ostream &vout;  // verbose stream
 	public:
 		//! init interface (ex: check if scene file exists)
 		virtual void init() throw( EX );

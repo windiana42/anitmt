@@ -64,14 +64,14 @@ class Frame_Dump
 			int ndigits;
 			
 			int verbose;
-			ostream *vout;
+			std::ostream *vout;
 			
 			int nscalars;
 			int nobjects,active_objects;
 			int undefined_scalars;
 			int undefined_objects;
 			
-			Context(double t,int ndigits,int _verbose,ostream &_vout);
+			Context(double t,int ndigits,int _verbose,std::ostream &_vout);
 			~Context() { }
 		};
 		struct Node 
@@ -119,14 +119,14 @@ class Frame_Dump
 		void _Write_End();
 		
 		int verbose;
-		ostream *_vout;  // verbose stream
-		ostream &vout()  {  return(*_vout);  }
+		std::ostream *_vout;  // verbose stream
+		std::ostream &vout()  {  return(*_vout);  }
 	public:
 		Frame_Dump(anitmt::Animation *ani,anitmt::Ani_Scene *scene);
 		~Frame_Dump();
 		
 		// Set verbosity level and verbose stream. 
-		void Set_Verbose(int verbose,ostream &vout);
+		void Set_Verbose(int verbose,std::ostream &vout);
 		
 		// include_me is the path to be put into the #include statement 
 		// at the end of the frame. 

@@ -51,7 +51,7 @@ namespace anitmt{
     Return<Return_Type> *prev, *next;
 
     // friend functions for the according container class
-    friend Contain_Return<Return_Type>;
+    friend class Contain_Return<Return_Type>;
     void set_prev( Return<Return_Type> *prev );
     void set_next( Return<Return_Type> *next );
     // initializes the connection to next/previous node
@@ -124,11 +124,12 @@ namespace anitmt{
   template <class Element_Type>
   class Contain
   {
+  private:
     bool essential_child, unique_child;
     int num_children;
-
-  protected:
+  public:
     typedef std::list< Element_Type * > content_type;
+  protected:
     content_type content;
   public:
     //! returns content elements

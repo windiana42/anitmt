@@ -47,6 +47,13 @@ namespace anitmt{
     // error messages (for future use)
     enum child_err{ AC_no_err=0, AC_unique_child_err,
 		    AC_child_type_rejected };	// for child creation
+
+    // abstract child factory:
+    class Child_Factory
+    {
+    public:
+      virtual Prop_Tree_Node *create( std::string name, Animation* ani ) = 0;
+    };
   private:
 
     // navigation in tree
@@ -70,13 +77,6 @@ namespace anitmt{
     // children
     virtual bool try_add_child( Prop_Tree_Node *node ) = 0;
 				
-    // abstract child factory:
-    class Child_Factory
-    {
-    public:
-      virtual Prop_Tree_Node *create( std::string name, Animation* ani ) = 0;
-    };
-
     // map of child fatories associated to a name as string 
     typedef std::map< std::string, Child_Factory* > child_factory_type;
     static child_factory_type child_factory;

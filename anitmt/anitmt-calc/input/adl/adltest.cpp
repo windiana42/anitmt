@@ -15,12 +15,12 @@ using namespace message;
 
 
 void ScannerTest(Message_Consultant *c) {
-	VADLFlexLexer l(string("stdin"), &cin, c);
+	VADLFlexLexer l(std::string("stdin"), &cin, c);
 	l.set_debug(true);
 	l.yylval.num=0; 
 	int tok;
 	while ((tok=l.yylex()) != END_OF_FILE) {
-		cout << "String value: " << l.yylval.str << '\n'
+		std::cout << "String value: " << l.yylval.str << '\n'
 		     << "Number value: " << l.yylval.num << '\n';
 	}
 }
@@ -28,27 +28,27 @@ void ScannerTest(Message_Consultant *c) {
 void ParserTest(Message_Consultant *c) {
 	try {
 		make_all_nodes_available();
-		ADLParser p(string("stdin"), cin, c);
+		ADLParser p(std::string("stdin"), cin, c);
 		
-		Stream_Message_Handler msg_handler(cerr,cout,cout);
+		Stream_Message_Handler msg_handler(std::cerr,std::cout,std::cout);
 		Message_Manager msg_manager( &msg_handler );
 		Animation *ani=new Animation("dummy_name", &msg_manager);
 		p.ParseTree(ani);
 		ani->pri_sys.invoke_all_Actions();
-		cerr << "Using \"save_filled\" to save values...\n";
+		std::cerr << "Using \"save_filled\" to save values...\n";
 		save_filled("adltest.out", ani);
 	}
 	catch (EX &e) {
-		cerr << "Error: " << e.get_name() << '\n';
+		std::cerr << "Error: " << e.get_name() << '\n';
 	}
 	catch (...) {
-		cerr << "Error: UNKNOWN EXCEPTION!!\n";
+		std::cerr << "Error: UNKNOWN EXCEPTION!!\n";
 	}
 }
 
 int main() {
 	// Copied from testmessage.cpp
-	Stream_Message_Handler handler(cerr,cout,cout);
+	Stream_Message_Handler handler(std::cerr,std::cout,std::cout);
 	Message_Manager manager(&handler);
 	Message_Consultant c(&manager, 0);
 #ifdef SCANNER_TEST

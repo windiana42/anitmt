@@ -53,12 +53,13 @@
 #ifndef __FLEX_LEXER_H
 // Never included before - need to define base class.
 #define __FLEX_LEXER_H
-#include <iostream.h>
+#include <iostream>
 
 extern "C++" {
 
   //-- changed by Martin Trautmann
 #include "flexlexer_global.h"
+  using namespace std;		/* since this flex version isn't up to date */
   //-- end of change 1
 
 struct yy_buffer_state;
