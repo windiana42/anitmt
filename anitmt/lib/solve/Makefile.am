@@ -9,6 +9,7 @@ libsolve_a_SOURCES= 	operand.hpp operand.cpp operand_inline.cpp \
 			constraint.hpp constraint.cpp \
 			priority.hpp priority.cpp priority_templ.cpp \
 			caller.hpp caller.cpp \
+			reference.hpp reference.cpp reference_templ.cpp \
 			error.hpp error.cpp # should be replaced by libmessage
 check_PROGRAMS=		test_solve
 test_solve_SOURCES=	test_solve.cpp

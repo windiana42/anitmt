@@ -147,9 +147,23 @@ namespace anitmt{
     Prop_Tree_Node *add_child( std::string type, std::string name )
       throw( EX_child_type_unknown, EX_child_type_rejected );
 				// add child of type with name
-    virtual Prop_Tree_Node *get_referenced_node( std::string ref );
+    virtual Prop_Tree_Node *get_referenced_node( std::string ref, 
+						 char separator='.' );
 				// returns node by interpreting the hierachical
  				// reference string. 
+    virtual Property *get_referenced_property( std::string ref, 
+					       char separator='.' );
+				// returns property by interpreting the 
+ 				// hierachical reference string. 
+
+    //**************************
+    // constructors / destructor
+
+    Prop_Tree_Node( std::string type, std::string name, Animation *ani );
+    virtual ~Prop_Tree_Node();
+
+    //************************************
+    // Don't call the following functions!
 
     static void add_child_factory( std::string name, Child_Factory* fac )
       throw( EX_child_type_already_defined );
@@ -157,12 +171,6 @@ namespace anitmt{
 
     //! function that is called after hierarchy was set up for each node
     void hierarchy_final_init();
-
-    //**************************
-    // constructors / destructor
-
-    Prop_Tree_Node( std::string type, std::string name, Animation *ani );
-    virtual ~Prop_Tree_Node();
 
   };
 

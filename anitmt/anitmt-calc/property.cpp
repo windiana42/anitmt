@@ -22,10 +22,31 @@ namespace anitmt
   // Property: container for property values
   //****************************************
 
+  //***********
+  // modifiers
+  
+  // tells the property where it occurs in user's inputs
+  void Property::set_input_position( message::Abstact_Position *p )
+  {
+    if( pos != 0 )
+      ;//!!! warn that there is already another position
+    pos = p;
+  }
+  
+  //******************
+  // access functions
+  
+  std::string			Property::get_name() { return name; }
+  Prop_Tree_Node*		Property::get_node() { return node; }	
+  message::Abstract_Position*	Property::get_position() { return pos; }
+  values::Valtype::Types	Property::get_type() { return type; }
+
   //************************
   // Constructor/Destructor
 
-  Property::Property() {}
+  Property::Property( std::string n, Prop_Tree_Node *nod, 
+		      values::Valtype::Types t ) 
+    : name(n), node(nod), pos(0), type(t) {}
 
   //***********
   // operators
@@ -39,21 +60,36 @@ namespace anitmt
   // Scalar_Property: container for scalar property values
   //******************************************************
   
-  // implicite convertion to double
-  Scalar_Property::operator double() const throw( EX_property_not_solved )
-  { 
-    if( !is_solved() )
-      throw EX_property_not_solved();
-    return get_value(); 
-  }
+  Scalar_Property::Scalar_Property( std::string name, Prop_Tree_Node *node )
+    : Type_Property<values::Scalar>( name, node, values::Valtype::scalar );
+
+  //******************************************************
+  // Vector_Property: container for vector property values
+  //******************************************************
   
-  // implicite convertion to values::Vector
-  Vector_Property::operator values::Vector() const 
-    throw( EX_property_not_solved )
-  { 
-    if( !is_solved() )
-      throw EX_property_not_solved();
-    return get_value(); 
-  }
+  Vector_Property::Vector_Property( std::string name, Prop_Tree_Node *node )
+    : Type_Property<values::Vector>( name, node, values::Valtype::vector );
+    
+  //******************************************************
+  // Matrix_Property: container for matrix property values
+  //******************************************************
+  
+  Matrix_Property::Matrix_Property( std::string name, Prop_Tree_Node *node )
+    : Type_Property<values::Matrix>( name, node, values::Valtype::matrix );
+    
+  //******************************************************
+  // String_Property: container for string property values
+  //******************************************************
+  
+  String_Property::String_Property( std::string name, Prop_Tree_Node *node )
+    : Type_Property<values::String>( name, node, values::Valtype::string );
+    
+  //******************************************************
+  // Flag_Property: container for flag property values
+  //******************************************************
+  
+  Flag_Property::Flag_Property( std::string name, Prop_Tree_Node *node )
+    : Type_Property<values::Flag>( name, node, values::Valtype::flag );
+    
   
 }

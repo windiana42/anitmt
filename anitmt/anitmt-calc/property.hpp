@@ -10,6 +10,8 @@
 /**									    **/
 /** Package: AniTMT							    **/
 /**									    **/
+/** Requirements: libval, libmessage, libsolve				    **/
+/**									    **/
 /*****************************************************************************/
 
 #ifndef __AniTMT_Property__
@@ -30,6 +32,7 @@ namespace anitmt
 #include <iostream>
 
 #include <val/val.hpp>
+#include <message/message.hpp>
 #include <solve/operand.hpp>
 
 #include "error.hpp"
@@ -55,19 +58,42 @@ namespace anitmt
 
   class Property 
   {
-    std::string name;
-    //Prop_Tree_Node *node;	// tree node the property belongs to
-    //Input_Position *pos;
+    std::string name;		// property name
+    Prop_Tree_Node *node;	// tree node the property belongs to
+    message::Abstact_Position *pos;
+				// position where it is defined (by user)
 
     values::Valtype::Types type;
-  protected:
   public:
+    //***********
+    // modifiers
+
+    // tells the property where it occurs in user's inputs
+    void set_input_position( message::Abstact_Position *pos );
+
+    //******************
+    // access functions
+
+    inline std::string			get_name() { return name; }
+    inline Prop_Tree_Node*		get_node() { return node; }	
+    inline message::Abstract_Position*	get_position() { return pos; }
+    inline values::Valtype::Types	get_type() { return type; }
+
+    //************************
+    // usage member functions
+
+    // implemented by Type_Property
     virtual std::ostream &write2stream( std::ostream& ) = 0;
 
-    Property( /*std::string name, Prop_Tree_Node *node, Input_Position *pos,
-		values::Valtype::Types type*/ );
     virtual ~Property() {}
+  protected:
+    // Create Type_Property objects instead!
+    Property( std::string name, Prop_Tree_Node *node, 
+	      values::Valtype::Types type );
   };
+
+  //***********
+  // operators
 
   std::ostream &operator << ( std::ostream&, Property & );
 
@@ -78,17 +104,32 @@ namespace anitmt
 					  public solve::Operand<T>
   {
   public:	
-    //!! shouldn't be convertable as Operand<> has its own operators !!
-    //!! user operator() to convert to type instead !!
+    //******************
+    // member operators
+
+    //!! shouldn't be convertable to type as baseclass Operand<> has its own 
+    //!! operators !! use operator() to convert to type instead !!
     // operator T() const	  // implicite convertion to type (like get()) 
     //   throw( EX_property_not_solved );
+
+    //************************
+    // usage member functions
 
     // connects another operand as a solution source
     solve::Operand<T>& operator=( solve::Operand<T> &src ) throw(EX)
     { return static_cast<solve::Operand<T>&>(*this) = src; }
 
     virtual std::ostream &write2stream( std::ostream& );
+
+    //*************
+    // constructor
+
+    Type_Property( std::string name, Prop_Tree_Node *node, 
+		   values::Valtype::Types type );
   };
+
+  //***********
+  // operators
 
   //  template<class T>
   //  std::ostream &operator<<( std::ostream &os, const Type_Property<T> &s );
@@ -99,8 +140,10 @@ namespace anitmt
   class Scalar_Property : public Type_Property<values::Scalar>
   {
   public:
-    operator double() const	// implicite convertion to Scalar
-      throw( EX_property_not_solved );
+    //*************
+    // constructor
+
+    Scalar_Property( std::string name, Prop_Tree_Node *node );
   };
 
   //******************************************************
@@ -109,8 +152,22 @@ namespace anitmt
   class Vector_Property : public Type_Property<values::Vector>
   {
   public:
-    operator values::Vector() const	// implicite convertion to Vector
-      throw( EX_property_not_solved );
+    //*************
+    // constructor
+
+    Vector_Property( std::string name, Prop_Tree_Node *node );
+  };
+
+  //******************************************************
+  // Matrix_Property: container for matrix property values
+  //******************************************************
+  class Matrix_Property : public Type_Property<values::Matrix>
+  {
+  public:
+    //*************
+    // constructor
+
+    Matrix_Property( std::string name, Prop_Tree_Node *node );
   };
 
   //******************************************************
@@ -119,6 +176,10 @@ namespace anitmt
   class String_Property : public Type_Property<values::String>
   {
   public:
+    //*************
+    // constructor
+
+    String_Property( std::string name, Prop_Tree_Node *node );
   };
 
   //**************************************************
@@ -127,6 +188,10 @@ namespace anitmt
   class Flag_Property : public Type_Property<values::Flag>
   {
   public:
+    //*************
+    // constructor
+
+    Flag_Property( std::string name, Prop_Tree_Node *node );
   };
 
 }

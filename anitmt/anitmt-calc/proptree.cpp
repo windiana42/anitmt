@@ -84,25 +84,6 @@ namespace anitmt{
     return ret;
   }
 
-  // returns next part before a dot or the end of string
-  // !!! reference argument will be reduced by part that is returned
-  inline std::string get_next_part( std::string &str ){
-    std::string::size_type i = str.find('.');
-    if( i == std::string::npos ) // dot not found -> i = eos
-      {
-	std::string ret = str;  // return whole string
-	str = "";		// empty
-	return ret;
-      }
-    else
-      {
-	std::string ret = str.substr( 0, i ); 
-				// return string before dot
-	str = str.substr( i+1 );// erase part to return 
-	return ret;
-      }    
-  }
-
   // add child of type with name
   Prop_Tree_Node *Prop_Tree_Node::add_child( std::string type, 
 					     std::string name ) 
@@ -138,12 +119,55 @@ namespace anitmt{
     return node;
   }
 
-  // find node according to referencing string
-  Prop_Tree_Node *Prop_Tree_Node::get_referenced_node( std::string ref ){
+  // returns next part before a given separator or the end of string
+  // !! reference argument will be reduced by part that is returned
+  inline std::string get_next_part( std::string &str, char separator ){
+    std::string::size_type i = str.find( separator );
+    if( i == std::string::npos ) // separator not found -> i = eos
+      {
+	std::string ret = str;  // return whole string
+	str = "";		// empty
+	return ret;
+      }
+    else
+      {
+	std::string ret = str.substr( 0, i ); 
+				// return string before separator
+	str = str.substr( i+1 );// erase part to return 
+	return ret;
+      }    
+  }
 
+
+  // returns next part before a given separator or the end of string
+  // !! reference argument will be reduced by part that is returned
+  inline std::string get_last_part( std::string &str, char separator ){
+    std::string::size_type i = str.rfind( separator );
+    if( i == std::string::npos ) // separator not found -> i = eos
+      {
+	std::string ret = str;  // return whole string
+	str = "";		// empty
+	return ret;
+      }
+    else
+      {
+	std::string ret = str.substr( i+1 ); 
+				// return string after separator
+	str = str.substr( 0, i );// erase part to return 
+	return ret;
+      }    
+  }
+
+
+  // find node according to referencing string
+  Prop_Tree_Node *Prop_Tree_Node::get_referenced_node( std::string ref,
+						       char separator='.' )
+  {
     Prop_Tree_Node *cur = this;
     std::string part;
-    while( (part = get_next_part(ref)) != "" ){
+    // ref is always reduced by part
+    while( (part = get_next_part(ref,separator)) != "" ){
+      // interprete part
       if( part == "parent" )
 	{
 	  cur = cur->parent;
@@ -165,16 +189,40 @@ namespace anitmt{
 	    throw EX_invalid_reference();
 	  continue;
 	}
-
-      Prop_Tree_Node *test = get_child( part );
+      // part is no keyword -> assume it being child name
+      Prop_Tree_Node *test = cur->get_child( part );
       if( test != 0 )
-	{
-	  cur = test;
-	  continue;
-	}
+      {
+	cur = test;
+	continue;
+      }
+      else			// automatic search
+      {
+	// if no match of part -> try to go on with parent level
+	cur = cur->parent;
+	if( cur == 0 )
+	  throw EX_invalid_reference();
+	continue;
+      }
 
       throw EX_invalid_reference();
     }
+  }
+
+
+  // find node according to referencing string
+  Property *Prop_Tree_Node::get_referenced_property( std::string ref,
+							   char separator='.' )
+  {
+    // reduce ref by last part and save it as the name of the property
+    std::string property_name = get_last_part( ref, separator );
+    Prop_Tree_Node *node = get_referenced_node( ref, separator );
+    Property *prop = node->get_property( property_name );
+
+    if( prop == 0 )
+      throw EX_invalid_reference();
+
+    return prop;
   }
 
   // adds a factory object for class generation
