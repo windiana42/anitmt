@@ -54,10 +54,10 @@ namespace funcgen
 %token TAFD_priority_list TAFD_base_types TAFD_serial TAFD_type TAFD_abstract 
 %token TAFD_node TAFD_provides TAFD_extends TAFD_properties TAFD_aliases 
 %token TAFD_operands TAFD_common TAFD_constraints TAFD_solvers TAFD_actions 
-%token TAFD_push TAFD_default TAFD_contains TAFD_max1 TAFD_min1 TAFD_provide 
-%token TAFD_resulting TAFD_requires TAFD_this TAFD_prev TAFD_next TAFD_first 
-%token TAFD_last TAFD_parent TAFD_child TAFD_first_child TAFD_last_child 
-%token TAFD_start_param TAFD_end_param TAFD_true TAFD_false
+%token TAFD_push TAFD_condition_push TAFD_default TAFD_contains TAFD_max1 
+%token TAFD_min1 TAFD_provide TAFD_resulting TAFD_requires TAFD_this TAFD_prev 
+%token TAFD_next TAFD_first TAFD_last TAFD_parent TAFD_child TAFD_first_child 
+%token TAFD_last_child TAFD_start_param TAFD_end_param TAFD_true TAFD_false
 %token TAFD_return TAFD_return_prop TAFD_return_fail TAFD_return_if_fail 
 %token TAFD_operators TAFD_versions TAFD_BB_left TAFD_PT_CONCAT
 // lexer error
@@ -426,6 +426,15 @@ action_statement:
       { node_add_action_parameter_ref( info ); }
 		  property_reference ')' ';'  
       { node_add_action_parameter_ref( info ); // store second parameter
+	node_finish_action( info ); }
+  | TAFD_condition_push '(' priority_level ',' 
+      { node_start_action( info, "condition_push", $3 ); }
+	          property_reference ','  
+      { node_add_action_parameter_ref( info ); }
+		  property_reference ',' 
+      { node_add_action_parameter_ref( info ); }// store second parameter
+		  bool_op_expression ')' ';'
+      { node_add_action_parameter_exp( info, $12 ); 
 	node_finish_action( info ); }
 /*| TAFD_IDENTIFIER '(' priority_level ',' 
       { node_start_action( info, $1, $3 ); }

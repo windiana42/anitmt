@@ -115,6 +115,7 @@ constraints	{ tok_pos(); return TAFD_constraints; }
 solvers		{ tok_pos(); return TAFD_solvers; }
 actions		{ tok_pos(); return TAFD_actions; }
 push		{ tok_pos(); return TAFD_push; }
+condition_push	{ tok_pos(); return TAFD_condition_push; }
 default		{ tok_pos(); return TAFD_default; }
 contains	{ tok_pos(); return TAFD_contains; }
 max1		{ tok_pos(); return TAFD_max1; }

@@ -107,6 +107,36 @@ namespace solve
     return true;
   }
 
+
+  // establishes push connection to property of foreign tree node
+  // ( returnvalue false means: unknown property )
+  template<class T>
+  bool establish_Push_Connection( Priority_System *sys, 
+				  Priority_System::level_type level,
+				  proptree::Prop_Tree_Node *src_node, 
+				  std::string src_prop,
+				  Operand<T> &dest ) {
+  
+    if( !dest_node ) return false;
+
+#ifdef __DEBUG__
+    std::cout << "try to establish push" << std::endl;
+#endif
+    Operand<T> *src
+      = dynamic_cast< Operand<T>* >
+      ( dest_node->get_property( src_prop ) );
+
+    if( !src ) return false;
+
+    establish_Push_Connection( sys, level, *src, dest );
+
+#ifdef __DEBUG__
+    std::cout << "push established on level " << level << std::endl;
+#endif
+
+    return true;
+  }
+
   // establishes push connection to property of foreign tree node
   // ( returnvalue false means: unknown property )
   template<class T>
@@ -156,6 +186,125 @@ namespace solve
 
     return true;
   }
+
+  // ***************
+  // Condition Push
+  // ***************
+
+  // establishes push connection to property of foreign tree node
+  // ( returnvalue false means: unknown property )
+  template<class T>
+  bool establish_Condition_Push_Connection( Priority_System *sys, 
+					    Priority_System::level_type level,
+					    Operand<T> &src, 
+					    proptree::Prop_Tree_Node 
+					    *dest_node,
+					    std::string dest_prop,
+					    Operand<bool> &condition ) 
+  {
+    if( !dest_node ) return false;
+
+#ifdef __DEBUG__
+    std::cout << "try to establish push" << std::endl;
+#endif
+    Operand<T> *dest 
+      = dynamic_cast< Operand<T>* >
+      ( dest_node->get_property( dest_prop ) );
+
+    if( !dest ) return false;
+
+    establish_Condition_Push_Connection( sys, level, src, *dest, condition );
+
+#ifdef __DEBUG__
+    std::cout << "push established on level " << level << std::endl;
+#endif
+
+    return true;
+  }
+
+
+  // establishes push connection to property of foreign tree node
+  // ( returnvalue false means: unknown property )
+  template<class T>
+  bool establish_Condition_Push_Connection( Priority_System *sys, 
+					    Priority_System::level_type level,
+					    proptree::Prop_Tree_Node *src_node,
+					    std::string src_prop,
+					    Operand<T> &dest,
+					    Operand<bool> &condition ) 
+  {  
+    if( !dest_node ) return false;
+
+#ifdef __DEBUG__
+    std::cout << "try to establish push" << std::endl;
+#endif
+    Operand<T> *src
+      = dynamic_cast< Operand<T>* >
+      ( dest_node->get_property( src_prop ) );
+
+    if( !src ) return false;
+
+    establish_Condition_Push_Connection( sys, level, *src, dest, condition );
+
+#ifdef __DEBUG__
+    std::cout << "push established on level " << level << std::endl;
+#endif
+
+    return true;
+  }
+
+  // establishes push connection to property of foreign tree node
+  // ( returnvalue false means: unknown property )
+  template<class T>
+  bool establish_Condition_Push_Connection( Priority_System *sys, 
+					    Priority_System::level_type level,
+					    Operand<T> &src, 
+					    proptree::Property *dest_prop,
+					    Operand<bool> &condition ) 
+  {
+#ifdef __DEBUG__
+    std::cout << "try to establish push" << std::endl;
+#endif
+    Operand<T> *dest 
+      = dynamic_cast< Operand<T>* >( dest_prop );
+
+    if( !dest ) return false;
+
+    establish_Condition_Push_Connection( sys, level, src, *dest, condition );
+
+#ifdef __DEBUG__
+    std::cout << "push established on level " << level << std::endl;
+#endif
+
+    return true;
+  }
+
+  // establishes push connection to property of foreign tree node
+  // ( returnvalue false means: unknown property )
+  template<class T>
+  bool establish_Condition_Push_Connection( Priority_System *sys, 
+					    Priority_System::level_type level,
+					    proptree::Property *src_prop, 
+					    Operand<T> &dest,
+					    Operand<bool> &condition ) 
+  {
+#ifdef __DEBUG__
+    std::cout << "try to establish push" << std::endl;
+#endif
+    Operand<T> *src 
+      = dynamic_cast< Operand<T>* >( src_prop );
+
+    if( !src ) return false;
+
+    establish_Condition_Push_Connection( sys, level, *src, dest, condition );
+
+#ifdef __DEBUG__
+    std::cout << "push established on level " << level << std::endl;
+#endif
+
+    return true;
+  }
+
   template<class T>
   bool equal_solver( Operand<T> &a, proptree::Property *prop )
   {

@@ -60,6 +60,12 @@ namespace funcgen
 			 "info->priority_system,")
 	+ priority_label( priority );
     }
+    if( action == "condition_push" )
+    {
+      return std::string("solve::establish_Condition_Push_Connection( "
+			 "info->priority_system,")
+	+ priority_label( priority );
+    }
     if( action == "default" )
     {
       return std::string("solve::establish_Default_Value( "

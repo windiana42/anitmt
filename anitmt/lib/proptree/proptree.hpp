@@ -220,6 +220,35 @@ namespace solve
 				  Operand<T> &src, 
 				  proptree::Prop_Tree_Node   *dest_node,
 				  std::string dest_prop );
+
+  // establishes push connection to operand of foreign tree node
+  // ( returnvalue false means: unknown operand )
+  template<class T>
+  bool establish_Push_Connection( Priority_System *sys, 
+				  Priority_System::level_type level,
+				  proptree::Prop_Tree_Node   *src_node,
+				  Operand<T> &dest, 
+				  std::string dest_prop );
+
+  // establishes push connection to operand of foreign tree node
+  // ( returnvalue false means: unknown operand )
+  template<class T>
+  bool establish_Condition_Push_Connection( Priority_System *sys, 
+					    Priority_System::level_type level,
+					    Operand<T> &src, 
+					    proptree::Prop_Tree_Node
+					    *dest_node,
+					    std::string dest_prop );
+
+  // establishes push connection to operand of foreign tree node
+  // ( returnvalue false means: unknown operand )
+  template<class T>
+  bool establish_Condition_Push_Connection( Priority_System *sys, 
+					    Priority_System::level_type level,
+					    proptree::Prop_Tree_Node
+					    *src_node,
+					    Operand<T> &dest, 
+					    std::string dest_prop );
   
   //!! implement!
   template<class T>

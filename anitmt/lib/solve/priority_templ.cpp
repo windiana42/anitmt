@@ -142,6 +142,47 @@ namespace solve{
   template<class T>
   Push_Connection<T>::~Push_Connection() {}
 
+  //***************************************************************************
+  // Conditioned_Push<T>: establishes push, when condition is solved and true
+  //***************************************************************************
+
+  //**********
+  // functions
+
+  template<class T>
+  void Condition_Push<T>::do_it() 
+  {
+    assert( condition.is_solved() );
+
+    if( condition() == true )
+    {
+      establish_Push_Connection( priority_system, priority_level, 
+				 source, destination );
+    }
+  }
+  
+  //**************************
+  // constructors / destructor
+
+  template<class T>
+  Condition_Push<T>::Condition_Push( Priority_System *sys, 
+				     Priority_System::level_type level,
+				     Operand<T> &src, Operand<T> &dest,
+				     Operand<bool> &cond ) 
+    : Priority_Action( sys, level ), 
+      source(src), destination(dest), condition(cond)
+  {
+    if( condition.is_solved() )
+      do_it();
+    else
+    {
+#ifdef __DEBUG__
+      std::cout << "insert condition push caller!" << std::endl;
+#endif
+      insert_Caller_at_Operand( condition );
+    }
+  }
+
   /*
   // force compilation of Specializations:
   void all_priority_specializations() {

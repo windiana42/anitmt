@@ -25,7 +25,6 @@
 include declaration "base_func.afd";
 include declaration "scalar_base.afd";
 
-
 // ****************************************************************************
 // ****************************************************************************
 // ** node definitions
@@ -54,6 +53,8 @@ abstract node scalar_subfunction extends scalar_base provides scalar_vsa {
   }
 
 }
+
+
 
 // +--------+
 // | change |
@@ -279,5 +280,79 @@ node accelerated extends scalar_subfunction provides scalar_vsa {
   }
 }
 
+// ****************************************************************************
+// ****************************************************************************
+// ** Just for Fun ähhh Test
+// ****************************************************************************
+// ****************************************************************************
 
+// +----------+
+// | separator |
+// +----------+
+
+// separator value
+node separator extends scalar_subfunction {
+  
+  // special properties for separator
+  properties{
+    type scalar {    
+      condition;
+    }
+  }
+  
+  common {
+    solvers {
+      // setting result function parameters
+      equal_solver( start_time, scalar_vsa.value(time).start_param );
+      equal_solver( end_time  , scalar_vsa.value(time).end_param   );
+      equal_solver( start_time, scalar_vsa.slope(time).start_param );
+      equal_solver( end_time  , scalar_vsa.slope(time).end_param   );
+      equal_solver( start_time, scalar_vsa.acceleration(time).start_param );
+      equal_solver( end_time  , scalar_vsa.acceleration(time).end_param   );
+
+      // solvers for separator
+    }
+    
+    actions {
+      default( default_duration, duration, 0 );
+      default( default_state, start_value, 0 );
+    }
+  }
+
+  common {
+    actions {
+      // times, forward and backward
+      condition_push( push_time_fw, start_time, scalar_vsa.next.start_time,
+	condition > 0 );
+      condition_push( push_time_bw, end_time, scalar_vsa.prev.end_time,
+	condition > 0 );
+      // values, forward and backward
+      condition_push( push_state_fw, start_value, scalar_vsa.next.start_value,
+	condition > 0 );
+      condition_push( push_state_bw, end_value, scalar_vsa.prev.end_value,
+	condition > 0 );
+      // slopes, forward and backward
+      condition_push( push_speed_fw, start_slope, scalar_vsa.next.start_slope,
+	condition > 0 );
+      condition_push( push_speed_bw, end_slope, scalar_vsa.prev.end_slope,
+	condition > 0 );
+    }
+  }
+
+  // result functions for separator
+  provide scalar_vsa {
+    resulting value( time t ) requires start_value
+    {
+      [[ return_prop start_value ]];
+    }
+    resulting slope( time t ) 
+    {
+      [[ return_prop start_slope ]];
+    }
+    resulting acceleration( time t ) 
+    {
+      [[ return 0 ]];
+    }
+  }
+}
 

@@ -56,18 +56,20 @@ namespace solve{
   // Priority_Action: interface for Actions in the priority system 
   //**************************************************************
 
-  class Priority_Action {
+  class Priority_Action 
+  {
+  private:
+    friend class Action_Caller;
+    void place_Action();
+    virtual void do_it() = 0;
+
     typedef std::list< Action_Caller* > callers_type;
     callers_type callers;
-
+  protected:
     Priority_System *priority_system;
     Priority_System::level_type priority_level;
     
 
-    friend class Action_Caller;
-    void place_Action();
-    virtual void do_it() = 0;
-  protected:
     friend class Action_Caller_Inserter;
     void insert_Caller_at_Operand( Basic_Operand &op );
   public:
@@ -160,10 +162,41 @@ namespace solve{
   inline void establish_Push_Connection( Priority_System *sys, 
 					 Priority_System::level_type level,
 					 Operand<T> &src, 
-					 Operand<T> &dest ) {
+					 Operand<T> &dest ) 
+  {
     new Push_Connection<T>( sys, level, src, dest );
   }
 
+  //***************************************************************************
+  // Conditioned_Push<T>: establishes push, when condition is solved and true
+  //***************************************************************************
+
+  template<class T>
+  class Condition_Push : public Priority_Action 
+  {
+    Operand<T> &source;
+    Operand<T> &destination;
+    Operand<bool> &condition;
+  public:
+    virtual void do_it();
+    Condition_Push( Priority_System *sys, Priority_System::level_type level,
+		    Operand<T> &src, Operand<T> &dest, 
+		    Operand<bool> &condition );
+  };
+
+  
+  // establishes condition push connection 
+  template<class T>
+  inline void establish_Condition_Push_Connection( Priority_System *sys, 
+						   Priority_System::level_type
+						   level,
+						   Operand<T> &src, 
+						   Operand<T> &dest,
+						   Operand<bool> &condition ) 
+  {
+    new Condition_Push<T>( sys, level, src, dest, condition );
+  }
+  
   //***************
   // test function
   //***************
