@@ -32,26 +32,46 @@ cd $origdir # just in case of srcdir/builddir being relative pathes
 rm $builddir/$DIR/__TMP_ANI_DIR__ $builddir/$DIR/__TMP_INI__.ini
 
 cd $builddir/$DIR/$ANI_DIR/ || exit 1
-$srcdir/../utils/render -w 200 -h 150 || exit -1
+$srcdir/../utils/render -w 192 -h 144 || exit -1
 $builddir/../utils/tga2avi/tga2avi -f 5 -e 150 -o film-raw.avi || exit -2
 $builddir/../utils/mkavi/mkavi -f 5 -e 150 -o film-cram.avi || exit -3
 cd $origdir # just in case of srcdir/builddir being relative pathes
 
-#cd myrobot/
-#../../anitmt-calc/anitmt-calc myrobot_small.ini
-#cd ani/
-#../../../utils/render -w 400 -h 300 || exit -4
-#../../../utils/tga2avi/tga2avi -f 1 -e 14 || exit -5
-#../../../utils/mkavi/mkavi -f 1 -e 14 -o film-cram.avi || exit -6
-#cd ../../
+# ================ Example: myrobot ====================================
+DIR=myrobot
+ANI_DIR=ani
+INI=autocheck_myrobot.ini
 
-#cd circles/
-#../../anitmt-calc/anitmt-calc circles_small.ini
-#cd ani/
-#../../../utils/render -w 96 -h 72 || exit -7
-#../../../utils/tga2avi/tga2avi -f 1 -e 14 || exit -8
-#../../../utils/mkavi/mkavi -f 1 -e 14 -o film-cram.avi || exit -9
-#cd ../../
+echo "ani_dir=$builddir/$DIR/$ANI_DIR/" > $builddir/$DIR/__TMP_ANI_DIR__
+cat $srcdir/$DIR/$INI $builddir/$DIR/__TMP_ANI_DIR__ > $builddir/$DIR/__TMP_INI__.ini
+cd $srcdir/$DIR/ || exit 1
+$builddir/../anitmt-calc/anitmt-calc $builddir/$DIR/__TMP_INI__.ini
+cd $origdir # just in case of srcdir/builddir being relative pathes
+rm $builddir/$DIR/__TMP_ANI_DIR__ $builddir/$DIR/__TMP_INI__.ini
+
+cd $builddir/$DIR/$ANI_DIR/ || exit 1
+$srcdir/../utils/render -w 400 -h 300 || exit -4
+$builddir/../utils/tga2avi/tga2avi -f 1 -e 14 -o film-raw.avi || exit -5
+$builddir/../utils/mkavi/mkavi -f 1 -e 14 -o film-cram.avi || exit -6
+cd $origdir # just in case of srcdir/builddir being relative pathes
+
+# ================ Example: circles ====================================
+DIR=circles
+ANI_DIR=ani
+INI=autocheck_circles.ini
+
+echo "ani_dir=$builddir/$DIR/$ANI_DIR/" > $builddir/$DIR/__TMP_ANI_DIR__
+cat $srcdir/$DIR/$INI $builddir/$DIR/__TMP_ANI_DIR__ > $builddir/$DIR/__TMP_INI__.ini
+cd $srcdir/$DIR/ || exit 1
+$builddir/../anitmt-calc/anitmt-calc $builddir/$DIR/__TMP_INI__.ini
+cd $origdir # just in case of srcdir/builddir being relative pathes
+rm $builddir/$DIR/__TMP_ANI_DIR__ $builddir/$DIR/__TMP_INI__.ini
+
+cd $builddir/$DIR/$ANI_DIR/ || exit 1
+$srcdir/../utils/render -w 96 -h 72 || exit -7
+$builddir/../utils/tga2avi/tga2avi -f 1 -e 14 -o film-raw.avi || exit -8
+$builddir/../utils/mkavi/mkavi -f 1 -e 14 -o film-cram.avi || exit -9
+cd $origdir # just in case of srcdir/builddir being relative pathes
 
 cd $builddir
 #$srcdir/clean_examples || exit 1
