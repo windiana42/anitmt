@@ -81,13 +81,6 @@ template<int C,int R> class matrix
 	private:
 		double x[C][R];
 	public:
-		// Damn function which returns a pointer to the first element of x. 
-		// It is needed as long as I do not succeed in making the functions 
-		// which use it friends of matrix. 
-		// Either I am too stupid for this or the compiler too pedantic or 
-		// C++ does not allow me to do this. ($@#&%>3*!!!)
-		double *_get_ptr()  const  {  return((double*)(x[0]));  }
-		
 		// Constructor which generates an uninitialized matrix: 
 		matrix()     { }
 		// Constructor which generates the identity-matrix: 
@@ -176,10 +169,14 @@ template<int C,int R> class matrix
 		
 		// Function to multiply the vector v with matrix m, storing the 
 		// resulting vector in r. 
-		friend void mult<>(vector<R> &r,const matrix<C,R> &m,const vector<C> &v);
+		template<int c,int r>friend void mult(vector<r> &r,const matrix<c,r> &m,const vector<c> &v);
 		friend void mult(vector<3> &r,const matrix<4,4> &m,const vector<3> &v);
 		
-		friend ostream& operator<< <>(ostream &s,const matrix<C,R> &m);
+		// Matrix multiplication friend: 
+		template<int M,int L,int N>friend void mult(matrix<L,M> &r,
+			const matrix<N,L> &a,const matrix<N,M> &b);
+		
+		template<int c,int r>friend ostream& operator<<(ostream &s,const matrix<c,r> &m);
 		
 		// Comparing matrices: 
 		// Returns 1, if a is equal to *this (or each component pair does not 
@@ -204,7 +201,7 @@ template<int C,int R> class matrix
 // Function to multiply the two matrices a and b storing the result in r. 
 template<int M,int L,int N> inline 
 	void mult(matrix<L,M> &r,const matrix<N,L> &a,const matrix<N,M> &b)
-	{  internal::matrix_mul(r._get_ptr(),L,M,a._get_ptr(),N,L,b._get_ptr(),N,M);  }
+	{  internal::matrix_mul(r.x[0],L,M,a.x[0],N,L,b.x[0],N,M);  }
 
 template<int C,int R> inline 
 	ostream& operator<<(ostream &s,const matrix<C,R> &m)

@@ -42,13 +42,6 @@ template<int N> class vector
 	private:
 		double x[N];
 	public:
-		// Damn function which returns a pointer to the first element of x. 
-		// It is needed as long as I do not succeed in making the functions 
-		// which use it friends of matrix. 
-		// Either I am too stupid for this or the compiler too pedantic or 
-		// C++ does not allow me to do this. 
-		double *_get_ptr()  const  {  return((double*)x);  }
-		
 		// Constructor which generates an uninitialized vector: 
 		vector()     { }
 		// Constructor for a null-vector: 
@@ -148,7 +141,10 @@ template<int N> class vector
 		
 		/****************************************************************/
 		
-		friend ostream& operator<< <>(ostream &s,const vector<N> &v);
+		template<int n>friend ostream& operator<<(ostream &s,const vector<n> &v);
+		
+		template<int c,int r>friend void mult(vector<r> &r,const matrix<c,r> &m,const vector<c> &v);
+		friend void mult(vector<3> &r,const matrix<4,4> &m,const vector<3> &v);
 		
 		// Returns 1, if a is equal to *this (or each component pair does not 
 		// differ more than epsilon). 

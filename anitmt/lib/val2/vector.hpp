@@ -25,7 +25,7 @@ namespace vect
 
 template<int N> Vector<N> cross(const Vector<N> &a,const Vector<N> &b);
 
-template<int N>class Vector
+template<int N=3>class Vector
 {
 	private:
 		internal_vect::vector<N> x;

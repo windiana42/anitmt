@@ -74,11 +74,11 @@ namespace internal_vect
 // vector in r. 
 template<int C,int R> inline 
 	void mult(vector<R> &r,const matrix<C,R> &m,const vector<C> &v)
-	{  internal::matrix_mul_vect(r._get_ptr(),R,m.x[0],C,R,v._get_ptr(),C);  }
+	{  internal::matrix_mul_vect(r.x,R,m.x[0],C,R,v.x,C);  }
 
 // Special functions: 
 inline void mult(vector<3> &r,const matrix<4,4> &m,const vector<3> &v)
-{  internal::matrix_mul_vect343(r._get_ptr(),m.x[0],v._get_ptr());  }
+{  internal::matrix_mul_vect343(r.x,m.x[0],v.x);  }
 
 } /* end of namespace internal_vect */
 

@@ -22,7 +22,7 @@
 namespace vect
 {
 
-template<int C,int R>class Matrix
+template<int C=4,int R=4>class Matrix
 {
 	private:
 		internal_vect::matrix<C,R> x;
