@@ -11,8 +11,8 @@ if test "${gccvers/" *"/}" = "gcc" ; then
   gccvers="${gccvers/"*version "/}"
   echo "$gccvers"
   if test "${gccvers:0:1}" -lt 3 ; then 
-    echo "Sorry, you need at least gcc 3.0 to compile anitmt. All previous versions"
-    echo "have bugs dealing with templates."
+    echo "** Sorry, you need at least gcc 3.0 to compile anitmt.     **"
+    echo "** All previous versions have bugs dealing with templates. **"
     exit 1
   fi
 fi
