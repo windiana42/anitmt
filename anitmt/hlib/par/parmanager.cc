@@ -757,6 +757,16 @@ void ParameterManager::SetLicenseInfo(
 	author_str=author_output;
 }
 
+void ParameterManager::SetHighlightStrings(
+	const char *_highlight_opt_start,const char *_highlight_opt_end,
+	const char *_highlight_sect_start,const char *_highlight_sect_end)
+{
+	highlight_opt_start=_highlight_opt_start;
+	highlight_opt_end=_highlight_opt_end;
+	highlight_sect_start=_highlight_sect_start;
+	highlight_sect_end=_highlight_sect_end;
+}
+
 
 // ret_str (may be NULL): returns till where the sections were found; 
 // if **ret_str='\0', all sections were found. 
@@ -885,6 +895,11 @@ ParameterManager::ParameterManager(int * /*failflag*/) :
 	add_help_text=NULL;
 	author_str=NULL;
 	license_str=NULL;
+	
+	highlight_opt_start=NULL;
+	highlight_opt_end=NULL;
+	highlight_sect_start=NULL;
+	highlight_sect_end=NULL;
 	
 	// static global manager: 
 	//#if TESTING

@@ -63,6 +63,9 @@ class ParameterManager : public PAR
 		// when (-1 or +1); see SectionParameterHandler. 
 		int _PrintSectionManagerHelp(SectionParameterHandler *sph,Section *sect,
 			int when,SimpleIndentConsoleOutput &sico);
+		// Helper for PrintHelp(): 
+		void _PrintStdHelpLine(SimpleIndentConsoleOutput &sico,
+			const char *opt,const char *msg);
 	protected:
 		const char *version_string;   // All these strings are not 
 		const char *package_name;     // copied and initialized 
@@ -70,6 +73,11 @@ class ParameterManager : public PAR
 		const char *add_help_text;
 		const char *author_str;
 		const char *license_str;
+		
+		// Highlight strings (switching color on the console or so). 
+		// NULL to disable (default). 
+		const char *highlight_opt_start,*highlight_opt_end;
+		const char *highlight_sect_start,*highlight_sect_end;
 		
 		// This version info must be free'd via free() (NOT LFree()). 
 		// Note that this function returns NULL on malloc() failure. 
@@ -246,6 +254,11 @@ class ParameterManager : public PAR
 		// Refer to ParameterConsumer::AddParam() on help text format. 
 		void AdditionalHelpText(const char *str)
 			{  add_help_text=str;  }
+		// Set highlighting strings: These can be used to highlight 
+		// (change color on console) the help text; use NULL to disable. 
+		void SetHighlightStrings(
+			const char *highlight_opt_start,const char *highlight_opt_end,
+			const char *highlight_sect_start,const char *highlight_sect_end);
 };
 
 }  // namespace end 

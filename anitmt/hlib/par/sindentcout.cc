@@ -55,8 +55,7 @@ void SimpleIndentConsoleOutput::SetFile(FILE *_out)
 }
 
 
-void SimpleIndentConsoleOutput::Puts(const char *str,
-	int _indent)
+void SimpleIndentConsoleOutput::Puts(const char *str,int _indent)
 {
 	if(_indent>=0)
 	{  SetIndent(_indent);  }
@@ -128,7 +127,7 @@ void SimpleIndentConsoleOutput::Puts(const char *str,
 				bufuse=lpos=0;
 				ignspc=(*spc!='\n');
 			}
-			else
+			else if(*spc)
 			{
 				buf[bufuse++]=' ';
 				++lpos;   // lpos<columns here. 

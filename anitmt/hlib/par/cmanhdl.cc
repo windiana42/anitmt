@@ -50,7 +50,14 @@ void ParameterManager::_HelpPrintSectionHeader(Section *top,
 	size_t tmplen=FullSectionName(top,NULL,0)+1;
 	char tmp[tmplen];
 	FullSectionName(top,tmp,tmplen);
-	sico("-%s (section): ",tmp);
+	
+	if(highlight_sect_start)
+	{  sico.Puts0(highlight_sect_start);  }
+	sico("-%s",tmp);
+	if(highlight_sect_end)
+	{  sico.Puts0(highlight_sect_end);  }
+	sico(" (section): ");
+	
 	int indent=sico.GetIndent();
 	if(top->helptext)
 	{
@@ -66,7 +73,14 @@ void ParameterManager::_HelpPrintParamInfo(ParamInfo *pi,
 	SimpleIndentConsoleOutput &sico)
 {
 	if(pi->skip_in_help)  return;
-	sico("-%s (%s): ",pi->name,ParamTypeString(pi->ptype));
+	
+	if(highlight_opt_start)
+	{  sico.Puts0(highlight_opt_start);  }
+	sico("-%s",pi->name);
+	if(highlight_opt_end)
+	{  sico.Puts0(highlight_opt_end);  }
+	sico(" (%s): ",ParamTypeString(pi->ptype));
+	
 	int indent=sico.GetIndent();
 	sico.SetIndent(indent+4);
 	sico("%s\n",pi->helptext);
@@ -113,6 +127,18 @@ void ParameterManager::_RecursivePrintHelp(Section *top,
 }
 
 
+void ParameterManager::_PrintStdHelpLine(SimpleIndentConsoleOutput &sico,
+	const char *opt,const char *msg)
+{
+	sico("  ");
+	if(highlight_opt_start)
+	{  sico.Puts0(highlight_opt_start);  }
+	sico("-%s",opt);
+	if(highlight_opt_end)
+	{  sico.Puts0(highlight_opt_end);  }
+	sico(": %s\n",msg);
+}
+
 int ParameterManager::PrintHelp(Section *top,FILE *out)
 {
 	SimpleIndentConsoleOutput sico;
@@ -123,21 +149,28 @@ int ParameterManager::PrintHelp(Section *top,FILE *out)
 		char *version_info=_GenVersionInfo();
 		if(version_info)
 		{
+			// This could still be made a bit more fancy. 
+			if(highlight_sect_start)
+			{  sico.Puts0(highlight_sect_start);  }
 			sico("** This is %s **\n\n",version_info);
+			if(highlight_sect_end)
+			{  sico.Puts0(highlight_sect_end);  }
 			free(version_info);
 		}
 		
-		sico("Standard query options:\n"
-		     "  --version: print version string\n");
+		sico("Standard query options:\n");
+		_PrintStdHelpLine(sico,"-version","print version string");
 		
 		if(author_str)
-		{  sico("  --author:  print author (and bug report info)\n");  }
+		{  _PrintStdHelpLine(sico,
+			"-author"," print author (and bug report info)");  }
 		if(license_str)
-		{  sico("  --license: print license\n");  }
+		{  _PrintStdHelpLine(sico,"-license","print license");  }
 		
-		sico("  --help:    print this help\n");
+		_PrintStdHelpLine(sico,"-help","   print this help");
 		if(!topsect.sub.is_empty())
-		{  sico("  --section-help: print help for specified section only\n");  }
+		{  _PrintStdHelpLine(sico,
+			"-section-help","print help for specified section only");  }
 		
 		// Write out special help options: 
 		int header=0;
@@ -152,7 +185,7 @@ int ParameterManager::PrintHelp(Section *top,FILE *out)
 					header=1;
 				}
 				
-				sico("-%s: %s\n",shi->optname,shi->descr);
+				_PrintStdHelpLine(sico,shi->optname,shi->descr);
 			}
 		}
 		if(header)
