@@ -15,6 +15,7 @@
 // ****************************************************************************
 // ****************************************************************************
 
+avoid_recursion __adl_scene_basic_functionality__;
 
 include declaration "scalar_base.afd";
 //include declaration "vector_base.afd";
