@@ -1,4 +1,4 @@
-INCLUDES = 		-I$(srcdir)/../../lib/ -I.. 
+INCLUDES = 		-I$(srcdir)/../../lib/ -I$(srcdir)/.. 
 SUBDIRS = 		adl
 CXXFLAGS = 		@CXXFLAGS@ -Wno-non-template-friend
 noinst_LIBRARIES =	libinput.a

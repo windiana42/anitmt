@@ -1,0 +1,56 @@
+/*****************************************************************************/
+/** AniTMT -- A program for creating foto-realistic animations		    **/
+/*****************************************************************************/
+/**									    **/
+/** Authors: Martin Trautmann, Manuel Moser, Jan Theofel		    **/
+/**									    **/
+/** Website: http://www.anitmt.org       				    **/
+/** EMail:   anitmt@theofel.de						    **/
+/**									    **/
+/** License: GPL - free and without any warranty - read COPYING             **/
+/**									    **/
+/*****************************************************************************/
+
+You can use this program for free and give copies to friends but 
+WE DON'T GIVE ANY WARRANTY FOR ANY DAMAGE THAT MAY BE CAUSED BY THIS PROGRAM.
+Please read COPYING for details.
+
+And please read the documentations on the homepage:
+http://www.anitmt.org/      
+
+Read INSTALL for details on compilation.
+
+In order to make an animation you have to create a pov scene, an adl
+animation script and an ini options file. In the ini file the
+animations scripts and the render directory have to be specified. Make
+sure that the render directory already exists. To start the
+calculation run: 
+
+anitmt-calc inifile.ini 
+
+To render the animation with povray run:
+
+anitmt-view 
+
+If the povray executable is not reachable with the path or if you want
+to render only some frames run :
+
+anitmt-view --help
+
+If you don't like to use the -a or -A option to create the avi film,
+change to the render directory and use tga2avi (unkompressed avis) or
+mkavi (little compressed avis). You get some info about this with:
+
+tga2avi --help
+mkavi --help
+
+If you have any questions feel free to send us a mail:
+anitmt@theofel.de
+
+We are glad about any kind of feetback.
+
+Have Fun
+
+Jan Theofel
+Manuel Moser
+Martin Trautmann

@@ -9,11 +9,11 @@ libadlparser_a_SOURCES=	scanner.ll support.hpp support.cpp \
 
 adltest_SOURCES=	adltest.cpp
 adltest_LDADD=		libadlparser.a \
-			$(top_srcdir)/anitmt-calc/libanitmt.a \
-			$(top_srcdir)/lib/val/libval.a \
-			$(top_srcdir)/lib/par/libpar.a \
-			$(top_srcdir)/lib/solve/libsolve.a \
-			$(top_srcdir)/lib/message/libmessage.a -lfl
+			../../libanitmt.a \
+			../../../lib/val/libval.a \
+			../../../lib/par/libpar.a \
+			../../../lib/solve/libsolve.a \
+			../../../lib/message/libmessage.a -lfl
 
 YLWRAP  = 		$(top_srcdir)/ylwrap
 

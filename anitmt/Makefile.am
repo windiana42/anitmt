@@ -1,1 +1,1 @@
-SUBDIRS=lib anitmt-calc anitmt-view test
+SUBDIRS = lib anitmt-calc anitmt-view test

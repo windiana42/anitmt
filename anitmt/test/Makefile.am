@@ -1,9 +1,9 @@
 EXTRA_DIST=.cvsignore
 INCLUDES=-I$(top_srcdir)/lib/
-check_PROGRAMS=test_utl test_val test_par 
+check_PROGRAMS = test_utl test_val test_par 
 test_utl_SOURCES = 	test_utl.cpp
-test_utl_LDADD=$(top_srcdir)/lib/utl/libutl.a
+test_utl_LDADD = 	../lib/utl/libutl.a
 test_val_SOURCES = 	test_val.cpp
-test_val_LDADD=$(top_srcdir)/lib/val/libval.a
+test_val_LDADD = 	../lib/val/libval.a
 test_par_SOURCES = 	test_par.cpp
-test_par_LDADD=$(top_srcdir)/lib/par/libpar.a $(top_srcdir)/lib/val/libval.a
+test_par_LDADD = 	../lib/par/libpar.a ../lib/val/libval.a

@@ -1,4 +1,4 @@
-INCLUDES = 		-I$(srcdir)/../../lib/ -I.. 
+INCLUDES = 		-I$(srcdir)/../../lib/ -I$(srcdir)/.. 
 SUBDIRS = 		lib raw pov
 noinst_LIBRARIES =	liboutput.a
 CXXFLAGS = 		@CXXFLAGS@ -Wno-non-template-friend

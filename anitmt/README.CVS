@@ -1,0 +1,44 @@
+CVS ISSUES
+----------
+
+To update the sources from the CVS repository, call the following 
+command from the anitmt source dir top: 
+(Referring to the BUILD file, this would be /home/me/source/anitmt.)
+
+   /home/me/source/anitmt# cvs update -dP
+
+Then, follow the points 1, 4, 5 and 6 described in BUILD. 
+You may leave out step 5 (checks): 
+
+   /home/me/source/anitmt# aclocal && automake 
+   /home/me/source/anitmt# cd ../anitmt-build
+   /home/me/source/anitmt-build# make
+ [ /home/me/source/anitmt-build# make check ]
+   /home/me/source/anitmt-build# su
+   Password: 
+   /home/me/source/anitmt-build# make install
+
+If building fails, you should do a `make clean' in the build 
+directory and call make again (before going on to steps 5 and 6). 
+
+   /home/me/source/anitmt-build# make clean
+   /home/me/source/anitmt-build# make
+
+If that does not help, consider to completely re-build anitmt. 
+If you used a separate build directory (as recommended), simply 
+delete all files in it and go on with step 3 in BUILD: 
+
+   /home/me/source/anitmt-build# rm -rf *
+   /home/me/source/anitmt-build# ../anitmt/configure 
+   ...(see BUILD)...
+
+If you compiled anitmt in the source dir, doing a `make distclean' 
+should help. But consider using a separate build dir the next time!
+
+If you still get errors preventing you from compiling anitmt, 
+send us a bug report. 
+Feel free to include some flames it it makes you feel better :p
+See BUGS for more info about reporting bugs. 
+
+Have fun, 
+-- the anitmt team
