@@ -1,0 +1,7 @@
+AC_INIT(anitmt-calc/anitmt.cpp)
+AM_INIT_AUTOMAKE(anitmt, 0.1.9)
+AC_PROG_CC
+AC_PROG_CXX
+AC_PROG_INSTALL
+AC_PROG_RANLIB
+AC_OUTPUT(Makefile anitmt-calc/Makefile lib/Makefile lib/val/Makefile lib/utl/Makefile lib/include/Makefile test/Makefile)
