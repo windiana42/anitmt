@@ -1,7 +1,7 @@
 *************************************************
 **     Value library -- brief description      **
 **                                             **
-** Copyright (c) 2000--2001 by Wolfgang Wieser **
+** Copyright (c) 2000--2002 by Wolfgang Wieser **
 ** Bugs, suggestions to wwieser@gmx.de         **
 *************************************************
 
@@ -49,7 +49,7 @@ and compare them against Neutral0. (Scalar 0.0 the null vector and the
 null matrix correspond to Neutral0.) 
 
 You can construct scalars and matrices with type Neutral1 and compare them 
-against Neutral1. (Scalar 1.0 and the identity matrix  correspond to 
+against Neutral1. (Scalar 1.0 and the identity matrix correspond to 
 Neutral1.)
 
 
@@ -64,10 +64,13 @@ Constructors:
   * Scalar(double s)  constructs a scalar containing the value i. 
   * Scalar()          constructs a scalar set up to 0.0 .
   * The copy constructor is implemented. 
+  * Scalar(Neutral0 &)  constructs a scalar with value 0.0. 
+  * Scalar(Neutral1 &)  constructs a scalar with value 1.0. 
 
 Operators:
   > Assignment: 
       * The assignment operator is implemented (operator=)
+      * You may assign Neutal0 / Neutral1 resulting in scalar 0.0 / 1.0. 
   > Conversion:
       * A Scalar is implicitly converted to a double by 
         operator double(). 
@@ -84,6 +87,8 @@ Operators:
         NOTE that this might not be what you want, if you are comparing 
              two really big values as their difference will almost 
              certainly be larger than epsilon. 
+      * You may compare against Neutral0 / Neutral1 to check for 0.0 / 1.0 
+        (using epsilon). 
   > Arithmetics: 
       * Operators for +=, -=, *= and /= are implemented taking a 
         double as their argument. 
@@ -103,10 +108,12 @@ Constructors:
   * Vecror()       constructs a null vector. 
   * Vector(x,y,z)  constructs a vector set up to x,y,z. 
   * The copy constructor is implemented. 
+  * Vector(Neutral0 &)  constructs a null vector. 
 
 Operators:
   > Assignment: 
-      * The assignment operator is implemented (operator=)
+      * The assignment operator is implemented (operator=). 
+      * Assigning Neutral0 results in a null-vector. 
   > Conversion:
       * There is no implicit conversion implemented. 
   > Access/Modification:
@@ -115,17 +122,15 @@ Operators:
         the x component, 2 to the z component. 
         NOTE: For speed increase, there is no range check performed 
               on the argument. 
-      * The elements of the vector can not be set via operator[]. 
-        To set an element, use operator()(i,val). 
-        The first argument (integer type) specifies the element index 
-        of the component to be modified (0 -> x .. 2 -> z), the second 
-        argument is the new value for the component. 
+        Operator[] returns a reference allowing you to change the 
+        values stored in the vector. 
   > Comparison:
       * Vectors can be compared to other vectors. 
       * Both operator!= and operator== are implemented. 
       * The operators use vect::epsilon (see Scalar/Comparison). 
       * Operator!() returns true (1) if the vector *this is the null vector. 
         Alternatively, you can use the method is_null(). 
+      * Instead of is_null(), you can also compare to Neutral0. 
   > Arithmetics: 
       * Vectors can be added to and subtracted from vectors. 
         Both operator+/operator- and operator+=/operator-= are implemented. 
@@ -158,6 +163,9 @@ Operators:
         is written as <x,y,z> (povray notation). [MIGHT BE CHANGED]
 
 Functions: 
+  > General:
+       * dimension() returns the dimenson of the vector (that's the 
+         argument passed to the template; normally 3). 
   > Length: 
        * Method abs() returns the length of the vector *this as a double, 
          abs2() returns the square of its length (which is much faster as 
@@ -219,35 +227,35 @@ Functions:
 4. MATRIX
 ~~~~~~~~~~
 
-Matrix<C,R> implements a RxC-matrix. 
+Matrix<R,C> implements a RxC-matrix. 
 
 Constructors: 
   * Matrix()               constructs an identity-matrix. 
   * Matrix(Matrix::ident)  also sets up an identity-matrix. 
   * Matrix(Matrix::null)   constructs a null-matrix (all elements 0). 
   * The copy constructor is implemented. 
+  * Matrix(Neutral0 &)     constructs null-matrix. 
+  * Matrix(Neutral1 &)     constructs identity-matrix. 
 
 Operators: 
   > Assignment:
-      * The assignment operator is implemented (operator=)
+      * The assignment operator is implemented (operator=). 
+      * May assign Neutral0 / Neutral1 for null / identity matrix. 
   > Conversion:
       * There is no implicit conversion implemented. 
   > Access/Modification:
       * The elements of the matrix can be accessed via 2x operator[]. 
-        Matrix::operator[](int c) returns the matrix column indexed c 
-        as a vect::matrix_column<3>; its operator[](int r) returns the 
-        double value in row r in the column. 
-        The passed column/row index must be in range 0...2; there is no 
+        Matrix::operator[](int r) returns the matrix row indexed r 
+        as a vect::matrix_row<C>; its operator[](int c) returns the 
+        double value in column c in the row. 
+        The passed row/column index must be in range 0...R/C; there is no 
         range check performed. 
-        Example: mat[0][2] returns the element of mat at column 0 and 
-                 row 2. 
-        NOTE: THE FIRST ARGUMENT IS THE COLUMN (X-direction), THE SECOND 
-              ONE IS THE ROW (Y-direction). 
-      * The elements of the vector can not be set via operator[]. 
-        To set an element, use operator()(c,r,val). 
-        The first argument specifies the column index, the second one 
-        the row index of the component to be modified, the third argument 
-        is the new value for the component. 
+        Example: mat[2][0] returns the element of mat at row 2 and 
+                 column 0. 
+        NOTE: THE FIRST ARGUMENT IS THE ROW (Y-direction), THE SECOND 
+              ONE IS THE COLUMN (X-direction) (convention in maths). 
+      * The elements of the vector can be set via two operator[]s 
+        because the matrix_row::operator[] returns a reference. 
   > Comparison:
       * You can compare a matrix to another one. The matrices are simply 
         compared component-wise with respect to vect::epsilon. 
@@ -256,6 +264,10 @@ Operators:
         identity matrix (with respect to vect::epsilon). 
       * is_null() returns true if the matrix is the null-matrix (with 
         respecto to vect::epsilon). 
+      * is_ident() checks if it is the identity matrix. 
+      * Instead of is_null() / is_ident() you can also co compare the 
+        matrix to Neutral0 / Neutral1. All these comparisons respect 
+        vect::epsilon. 
   > Arthmetics: 
       * Matrices can be added to and subtracted from matrices. 
         This is done by adding/subtracting the element of one matrix to/from 
@@ -308,24 +320,24 @@ Functions:
         around the specified vector. angle is the rotation angle. 
       * Mrotate_vect_vect(Vector from,to) rotates the first vector to 
         the second and returns the rotation matrix which can do that. 
-	(may be done in different ways...)
+        (may be done in different ways...)
       * Mrotate_vect_vect_up(Vector from,to,up) rotates the first vector 
         to the second by first rotating around up vector (third arg)
       * Mrotate_pair_pair(Vector from_front,from_up,to_front,to_up) 
-	rotates the first vector pair to the second
+        rotates the first vector pair to the second
       * Mrotate_spherical_pair(Vector front,up,angles) the components of angles
-	specify the rotation angles around front-, up- and cross(front,up)-axis
+        specify the rotation angles around front-, up- and cross(front,up)-axis
       * get_scale_component(Matrix m) returns a vector which tells the resulting
         scalation of an x,y and z vector when multipied with Matrix m.
-	To reproduce the effet of m, scale, then rotate and finally translate
-      * get_rotate_component(Matrix m) returns a vector representing the
-	rotation around the x, y and finally the z axis that are done to a 
+        To reproduce the effet of m, scale, then rotate and finally translate
+      * get_rotation_component(Matrix m) returns a vector representing the
+        rotation around the x, y and finally the z axis that are done to a 
         vector when being multiplied with the Matrix m.
-	To reproduce the effet of m, scale, then rotate and finally translate
+        To reproduce the effet of m, scale, then rotate and finally translate
       * get_translate_component(Matrix m) returns the position independant 
-	translation as vector, that is done to a vector when being multipied 
-	with the Matrix m
-	To reproduce the effet of m, scale, then rotate and finally translate
+        translation as vector, that is done to a vector when being multipied 
+        with the Matrix m
+        To reproduce the effet of m, scale, then rotate and finally translate
 
 
 5. FLAG

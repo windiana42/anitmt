@@ -3,7 +3,7 @@
  * 
  * Implementation of non-inline matrix functions. 
  * 
- * Copyright (c) 2001 by Wolfgang Wieser (wwieser@gmx.de) 
+ * Copyright (c) 2001--2002 by Wolfgang Wieser (wwieser@gmx.de) 
  * 
  * This file may be distributed and/or modified under the terms of the 
  * GNU General Public License version 2 as published by the Free Software 
@@ -25,48 +25,48 @@ Matrix<4,4>::Matrix(enum MatRotX,double angle) : x(0)
 {
 	double sina=sin(angle);
 	double cosa=cos(angle);
-	x(1,1, cosa);  x(2,1,-sina);
-	x(1,2, sina);  x(2,2, cosa);
+	x[1][1]=cosa;  x[1][2]=-sina;
+	x[2][1]=sina;  x[2][2]= cosa;
 }
 
 Matrix<4,4>::Matrix(enum MatRotY,double angle) : x(0)
 {
 	double sina=sin(angle);
 	double cosa=cos(angle);
-	x(0,0, cosa);  x(2,0, sina);
-	x(0,2,-sina);  x(2,2, cosa);
+	x[0][0]= cosa;  x[0][2]= sina;
+	x[2][0]=-sina;  x[2][2]= cosa;
 }
 
 Matrix<4,4>::Matrix(enum MatRotZ,double angle) : x(0)
 {
 	double sina=sin(angle);
 	double cosa=cos(angle);
-	x(0,0, cosa);  x(1,0,-sina);
-	x(0,1, sina);  x(1,1, cosa);
+	x[0][0]= cosa;  x[0][1]=-sina;
+	x[1][0]= sina;  x[1][1]= cosa;
 }
 
 Matrix<4,4>::Matrix(enum MatScale,double fact,int idx) : x(0)
 {
-	x(idx,idx,fact);
+	x[idx][idx]=fact;
 }
 
 Matrix<4,4>::Matrix(enum MatScale,const Vector<3> &v) : x(0)
 {
-	x(0,0,v[0]);
-	x(1,1,v[1]);
-	x(2,2,v[2]);
+	x[0][0]=v[0];
+	x[1][1]=v[1];
+	x[2][2]=v[2];
 }
 
 Matrix<4,4>::Matrix(enum MatTrans,double delta,int idx) : x(0)
 {
-	x(3,idx,delta);
+	x[idx][3]=delta;
 }
 
 Matrix<4,4>::Matrix(enum MatTrans,const Vector<3> &v) : x(0)
 {
-	x(3,0,v[0]);
-	x(3,1,v[1]);
-	x(3,2,v[2]);
+	x[0][3]=v[0];
+	x[1][3]=v[1];
+	x[2][3]=v[2];
 }
 #endif
 
@@ -286,6 +286,8 @@ Matrix<4,4> Mrotate_spherical_pair(
 //! returns the scale factors of each axis as vector, caused by Matrix
 Vector<3> get_scale_component(const Matrix<4,4> &mat)
 {
+	#warning make faster...
+	
 	Vector<3> x(1,0,0);
 	Vector<3> y(0,1,0);
 	Vector<3> z(0,0,1);

@@ -3,7 +3,7 @@
  * 
  * Support routines needed by the value library. 
  * 
- * Copyright (c) 2001 by Wolfgang Wieser (wwieser@gmx.de) 
+ * Copyright (c) 2001--2002 by Wolfgang Wieser (wwieser@gmx.de) 
  * 
  * This file may be distributed and/or modified under the terms of the 
  * GNU General Public License version 2 as published by the Free Software 
@@ -40,7 +40,7 @@ class Neutral1;   // multiplication neutral
 class Flag;
 class Scalar;
 template<int N> class Vector;
-template<int C,int R> class Matrix;
+template<int R,int C> class Matrix;
 class String;
 
 }  // namespace end 

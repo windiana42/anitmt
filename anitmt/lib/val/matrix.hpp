@@ -3,7 +3,7 @@
  * 
  * Matrix template; header for matrix value type. 
  * 
- * Copyright (c) 2001 by Wolfgang Wieser (wwieser@gmx.de) 
+ * Copyright (c) 2001--2002 by Wolfgang Wieser (wwieser@gmx.de) 
  * 
  * This file may be distributed and/or modified under the terms of the 
  * GNU General Public License version 2 as published by the Free Software 
@@ -32,13 +32,13 @@
 namespace vect
 {
 
-template<int C=4,int R=4>class Matrix
+template<int R=4,int C=4>class Matrix
 {
 	private:
 #ifdef GCC_HACK
 public: // work around for the template friend problem
 #endif
-		internal_vect::matrix<C,R> x;
+		internal_vect::matrix<R,C> x;
 		enum NoInit { noinit };
 		// This constructor is fast as it does no initialisation: 
 		Matrix(NoInit) : x() {}
@@ -52,8 +52,8 @@ public: // work around for the template friend problem
 		enum MatTrans { mattrans };
 		
 		// Copy constructor: 
-		Matrix(const Matrix<C,R> &m) : x(m.x)  {}
-		//Matrix(const internal_vect::matrix<C,R> &m) : x(m)  {}
+		Matrix(const Matrix<R,C> &m) : x(m.x)  {}
+		//Matrix(const internal_vect::matrix<R,C> &m) : x(m)  {}
 		// These generate an initialized identity matrix. 
 		Matrix()         : x(0)  {}
 		Matrix(IdentMat) : x(0)  {}
@@ -76,53 +76,49 @@ public: // work around for the template friend problem
 		Matrix(enum MatTrans,const Vector<3> &v);
 		
 		// Assignment operator 
-		Matrix<C,R> &operator=(const Matrix<C,R> &m)  {  x=m.x;  return(*this);  }
-		Matrix<C,R> &operator=(NullMat)    {  x.set_null();   return(*this);  }
-		Matrix<C,R> &operator=(IdentMat)   {  x.set_ident();  return(*this);  }
-		Matrix<C,R> &operator=(Neutral0)  {  x.set_null();   return(*this);  }
-		Matrix<C,R> &operator=(Neutral1)  {  x.set_ident();  return(*this);  }
+		Matrix<R,C> &operator=(const Matrix<R,C> &m)  {  x=m.x;  return(*this);  }
+		Matrix<R,C> &operator=(NullMat)    {  x.set_null();   return(*this);  }
+		Matrix<R,C> &operator=(IdentMat)   {  x.set_ident();  return(*this);  }
+		Matrix<R,C> &operator=(Neutral0)  {  x.set_null();   return(*this);  }
+		Matrix<R,C> &operator=(Neutral1)  {  x.set_ident();  return(*this);  }
 		
 		~Matrix()  {}
 		
-		//operator internal_vect::matrix<C,R>() const  {  return(x);  }
+		//operator internal_vect::matrix<R,C>() const  {  return(x);  }
 		
 		/************************************/
-		/* COLUMNS -> c -> ``X coordinate'' */
 		/* ROWS    -> r -> ``Y coordinate'' */
-		/* ORDER: ALWAYS c,r  ( -> x,y)     */
+		/* COLUMNS -> c -> ``X coordinate'' */
+		/* ORDER: ALWAYS r,c  ( -> y,x)     */
 		/************************************/
 		
-		// This returns the i-th column of the vector; use a second index 
+		// This returns the i-th row of the matrix; use a second index 
 		// operator to get a single value. 
 		// Using Matrix mat, you can access every element by calling 
-		//   double val=mat[c][r];
-		// FOR SPEED INCREASE, NO RANGE CHECK IS PERFORMED ON c, r. 
-		internal_vect::matrix_column<R> operator[](int c)  {  return(x[c]);  }
-		
-		// Set an element of the matrix: c is the column index, r the row index. 
-		// NO RANGE CHECK IS PERFORMED ON c,r. 
-		// Returns *this. 
-		Matrix<C,R> &operator()(int c,int r,double val)
-		{  x(c,r,val);  return(*this); }
+		//   double val=mat[r][c];
+		// ...and modify them using 
+		//   mat[r][c]=val;
+		// FOR SPEED INCREASE, NO RANGE CHECK IS PERFORMED ON r, c. 
+		internal_vect::matrix_row<C> operator[](int r)  {  return(x[r]);  }
 		
 		// Multiplication/Division of a matrix and/by a scalar: 
 		// (Divides/multiplies every element of the matrix.) 
 		#ifndef GCC_HACK
-		template<int c,int r>friend Matrix<c,r> operator*(const Matrix<c,r> &a,Scalar b);
-		template<int c,int r>friend Matrix<c,r> operator*(Scalar a,const Matrix<c,r> &b);
-		template<int c,int r>friend Matrix<c,r> operator/(const Matrix<c,r> &a,Scalar b);
+		template<int r,int c>friend Matrix<r,c> operator*(const Matrix<r,c> &a,Scalar b);
+		template<int r,int c>friend Matrix<r,c> operator*(Scalar a,const Matrix<r,c> &b);
+		template<int r,int c>friend Matrix<r,c> operator/(const Matrix<r,c> &a,Scalar b);
 		#endif
 		
 		// Multiplication/Division of a matrix and/by a scalar changing *this 
 		// and returning it. 
-		Matrix<C,R> &operator*=(Scalar b)  {  x.mul(b);  return(*this);  }
-		Matrix<C,R> &operator/=(Scalar b)  {  x.div(b);  return(*this);  }
+		Matrix<R,C> &operator*=(Scalar b)  {  x.mul(b);  return(*this);  }
+		Matrix<R,C> &operator/=(Scalar b)  {  x.div(b);  return(*this);  }
 		
 		// Multiplication of a matrix and a vector: 
 		// (Vector::operator*=(Matrix) is also available.)
 		#ifndef GCC_HACK
-		template<int c,int r>friend Vector<r> operator*(const Matrix<c,r> &a,const Vector<c> &b);
-		template<int c,int r>friend Vector<r> operator*(const Vector<c> &a,const Matrix<c,r> &b);
+		template<int r,int c>friend Vector<r> operator*(const Matrix<r,c> &a,const Vector<c> &b);
+		template<int r,int c>friend Vector<r> operator*(const Vector<c> &a,const Matrix<r,c> &b);
 		// Special versions: 
 		friend Vector<3> operator*(const Matrix<4,4> &a,const Vector<3> &b);
 		friend Vector<3> operator*(const Vector<3> &a,const Matrix<4,4> &b);
@@ -130,12 +126,12 @@ public: // work around for the template friend problem
 		
 		#ifndef GCC_HACK
 		// Multiplication of a matrix and a matrix: 
-		template<int M,int L,int N>friend Matrix<L,M> operator*(
-			const Matrix<N,L> &a,const Matrix<N,M> &b);
+		template<int M,int L,int N>friend Matrix<M,L> operator*(
+			const Matrix<L,N> &a,const Matrix<M,N> &b);
 		#endif
 		// Version changing *this and returning it: 
-		// (only for quadratic matrices -> use of <C,C> instead of <C,R>)
-		Matrix<C,C> &operator*=(const Matrix<C,C> &b)
+		// (only for quadratic matrices -> use of <R,R> instead of <R,C>)
+		Matrix<R,R> &operator*=(const Matrix<R,R> &b)
 			{  x.mul(b.x);  return(*this);  }
 		
 		// Friend needed for vector * matrix calculation. 
@@ -148,20 +144,20 @@ public: // work around for the template friend problem
 		
 		#ifndef GCC_HACK
 		// Addition/Subtraction of two matrices (element-by-elemnt). 
-		template<int c,int r>friend Matrix<c,r> operator+(const Matrix<c,r> &a,const Matrix<c,r> &b);
-		template<int c,int r>friend Matrix<c,r> operator-(const Matrix<c,r> &a,const Matrix<c,r> &b);
+		template<int r,int c>friend Matrix<r,c> operator+(const Matrix<r,c> &a,const Matrix<r,c> &b);
+		template<int r,int c>friend Matrix<r,c> operator-(const Matrix<r,c> &a,const Matrix<r,c> &b);
 		#endif
-		Matrix<C,R> &operator+=(const Matrix<C,R> &b)  {  x.add(b.x);  return(*this);  }
-		Matrix<C,R> &operator-=(const Matrix<C,R> &b)  {  x.sub(b.x);  return(*this);  }
+		Matrix<R,C> &operator+=(const Matrix<R,C> &b)  {  x.add(b.x);  return(*this);  }
+		Matrix<R,C> &operator-=(const Matrix<R,C> &b)  {  x.sub(b.x);  return(*this);  }
 		
 		// Unary operators: 
-		Matrix<C,R> operator+() const {  return(*this);  } 
-		Matrix<C,R> operator-() const {  Matrix<C,R> r(noinit);  r.x.neg(x);   return(r);  }
+		Matrix<R,C> operator+() const {  return(*this);  } 
+		Matrix<R,C> operator-() const {  Matrix<R,C> r(noinit);  r.x.neg(x);   return(r);  }
 		
 		#ifndef GCC_HACK
 		// Operators comparing matrices (are using epsilon): 
-		template<int c,int r>friend bool operator==(const Matrix<c,r> &,const Matrix<c,r> &);
-		template<int c,int r>friend bool operator!=(const Matrix<c,r> &,const Matrix<c,r> &);
+		template<int r,int c>friend bool operator==(const Matrix<r,c> &,const Matrix<r,c> &);
+		template<int r,int c>friend bool operator!=(const Matrix<r,c> &,const Matrix<r,c> &);
 		#endif
 		
 		// Returns 1, if this matrix is the identity-matrix (uses epsilon). 
@@ -174,18 +170,18 @@ public: // work around for the template friend problem
 		// Neutral compare functions (also using epsilon): 
 		// Neutral0: compare against null matrix
 		// Neutral1: compare against identity matrix
-		// non-member: operator==/!=(const Matrix<c,r> &,Neutral[01])
-		// non-member: operator==/!=(Neutral[01],const Matrix<c,r> &)
+		// non-member: operator==/!=(const Matrix<r,c> &,Neutral[01])
+		// non-member: operator==/!=(Neutral[01],const Matrix<r,c> &)
 		
 		// These functions calculate the inverse matrix. 
-		Matrix<C,R> &invert()  {  x.invert();  return(*this);  }
+		Matrix<R,R> &invert()  {  x.invert();  return(*this);  }
 		#ifndef GCC_HACK
-		template<int c,int r>friend Matrix<c,r> invert(const Matrix<c,r> &m);
+		template<int N>friend Matrix<N,N> invert(const Matrix<N,N> &m);
 		#endif
 		
 		#ifndef GCC_HACK
 		// Print matrix to stream: 
-		template<int c,int r>friend ostream& operator<<(ostream& s,const Matrix<c,r> &m);
+		template<int r,int c>friend ostream& operator<<(ostream& s,const Matrix<r,c> &m);
 		#endif
 };
 
@@ -194,61 +190,61 @@ inline Matrix<4,4>::Matrix(enum MatRotX,double angle) : x(0)
 {
 	double sina=sin(angle);
 	double cosa=cos(angle);
-	x(1,1, cosa);  x(2,1,-sina);
-	x(1,2, sina);  x(2,2, cosa);
+	x[1][1]=cosa;  x[1][2]=-sina;
+	x[2][1]=sina;  x[2][2]= cosa;
 }
 
 inline Matrix<4,4>::Matrix(enum MatRotY,double angle) : x(0)
 {
 	double sina=sin(angle);
 	double cosa=cos(angle);
-	x(0,0, cosa);  x(2,0, sina);
-	x(0,2,-sina);  x(2,2, cosa);
+	x[0][0]= cosa;  x[0][2]= sina;
+	x[2][0]=-sina;  x[2][2]= cosa;
 }
 
 inline Matrix<4,4>::Matrix(enum MatRotZ,double angle) : x(0)
 {
 	double sina=sin(angle);
 	double cosa=cos(angle);
-	x(0,0, cosa);  x(1,0,-sina);
-	x(0,1, sina);  x(1,1, cosa);
+	x[0][0]= cosa;  x[0][1]=-sina;
+	x[1][0]= sina;  x[1][1]= cosa;
 }
 
 inline Matrix<4,4>::Matrix(enum MatScale,double fact,int idx) : x(0)
 {
-	x(idx,idx,fact);
+	x[idx][idx]=fact;
 }
 
 inline Matrix<4,4>::Matrix(enum MatScale,const Vector<3> &v) : x(0)
 {
-	x(0,0,v[0]);
-	x(1,1,v[1]);
-	x(2,2,v[2]);
+	x[0][0]=v[0];
+	x[1][1]=v[1];
+	x[2][2]=v[2];
 }
 
 inline Matrix<4,4>::Matrix(enum MatTrans,double delta,int idx) : x(0)
 {
-	x(3,idx,delta);
+	x[idx][3]=delta;
 }
 
 inline Matrix<4,4>::Matrix(enum MatTrans,const Vector<3> &v) : x(0)
 {
-	x(3,0,v[0]);
-	x(3,1,v[1]);
-	x(3,2,v[2]);
+	x[0][3]=v[0];
+	x[1][3]=v[1];
+	x[2][3]=v[2];
 }
 #endif
 
-template<int C,int R>inline Matrix<C,R> operator*(const Matrix<C,R> &a,Scalar b)
-{  Matrix<C,R> r(Matrix<C,R>::noinit);  r.x.mul(a.x,b);  return(r);  }
-template<int C,int R>inline Matrix<C,R> operator*(Scalar a,const Matrix<C,R> &b)
-{  Matrix<C,R> r(Matrix<C,R>::noinit);  r.x.mul(b.x,a);  return(r);  }
-template<int C,int R>inline Matrix<C,R> operator/(const Matrix<C,R> &a,Scalar b)
-{  Matrix<C,R> r(Matrix<C,R>::noinit);  r.x.div(a.x,b);  return(r);  }
+template<int R,int C>inline Matrix<R,C> operator*(const Matrix<R,C> &a,Scalar b)
+{  Matrix<R,C> r(Matrix<R,C>::noinit);  r.x.mul(a.x,b);  return(r);  }
+template<int R,int C>inline Matrix<R,C> operator*(Scalar a,const Matrix<R,C> &b)
+{  Matrix<R,C> r(Matrix<R,C>::noinit);  r.x.mul(b.x,a);  return(r);  }
+template<int R,int C>inline Matrix<R,C> operator/(const Matrix<R,C> &a,Scalar b)
+{  Matrix<R,C> r(Matrix<R,C>::noinit);  r.x.div(a.x,b);  return(r);  }
 
-template<int C,int R>inline Vector<R> operator*(const Matrix<C,R> &m,const Vector<C> &v)
+template<int R,int C>inline Vector<R> operator*(const Matrix<R,C> &m,const Vector<C> &v)
 {  Vector<R> r(Vector<R>::noinit);  internal_vect::mult(r.x,m.x,v.x);  return(r);  }
-template<int C,int R>inline Vector<R> operator*(const Vector<C> &v,const Matrix<C,R> &m)
+template<int R,int C>inline Vector<R> operator*(const Vector<C> &v,const Matrix<R,C> &m)
 {  Vector<R> r(Vector<R>::noinit);  internal_vect::mult(r.x,m.x,v.x);  return(r);  }
 // Special versions: 
 inline Vector<3> operator*(const Matrix<4,4> &m,const Vector<3> &v)
@@ -256,10 +252,10 @@ inline Vector<3> operator*(const Matrix<4,4> &m,const Vector<3> &v)
 inline Vector<3> operator*(const Vector<3> &v,const Matrix<4,4> &m)
 {  Vector<3> r(Vector<3>::noinit);  internal_vect::mult(r.x,m.x,v.x);  return(r);  }
 
-template<int C,int R>inline Matrix<C,R> operator+(const Matrix<C,R> &a,const Matrix<C,R> &b)
-{  Matrix<C,R> r(Matrix<C,R>::noinit);  r.x.add(a.x,b.x);   return(r);  }
-template<int C,int R>inline Matrix<C,R> operator-(const Matrix<C,R> &a,const Matrix<C,R> &b)
-{  Matrix<C,R> r(Matrix<C,R>::noinit);  r.x.sub(a.x,b.x);   return(r);  }
+template<int R,int C>inline Matrix<R,C> operator+(const Matrix<R,C> &a,const Matrix<R,C> &b)
+{  Matrix<R,C> r(Matrix<R,C>::noinit);  r.x.add(a.x,b.x);   return(r);  }
+template<int R,int C>inline Matrix<R,C> operator-(const Matrix<R,C> &a,const Matrix<R,C> &b)
+{  Matrix<R,C> r(Matrix<R,C>::noinit);  r.x.sub(a.x,b.x);   return(r);  }
 
 // This one must use a temporary: (returns void for speed increase) 
 template<int N>inline void operator*=(Vector<N> &v,const Matrix<N,N> &m)
@@ -268,41 +264,41 @@ template<int N>inline void operator*=(Vector<N> &v,const Matrix<N,N> &m)
 inline void operator*=(Vector<3> &v,const Matrix<4,4> &m)
 {  Vector<3> tmp(Vector<3>::noinit); internal_vect::mult(tmp.x,m.x,v.x);  v=tmp;  }
 
-template<int M,int L,int N>inline Matrix<L,M> operator*(
-	const Matrix<N,L> &a,const Matrix<N,M> &b)
-{  Matrix<L,M> r(Matrix<L,M>::noinit);  internal_vect::mult(r.x,a.x,b.x);  return(r);  }
+template<int M,int L,int N>inline Matrix<M,L> operator*(
+	const Matrix<L,N> &a,const Matrix<M,N> &b)
+{  Matrix<M,L> r(Matrix<M,L>::noinit);  internal_vect::mult(r.x,a.x,b.x);  return(r);  }
 
 
-template<int C,int R>inline bool operator==(const Matrix<C,R> &a,const Matrix<C,R> &b)
+template<int R,int C>inline bool operator==(const Matrix<R,C> &a,const Matrix<R,C> &b)
 {  return(a.x.compare_to(b.x,epsilon));  }
-template<int C,int R>inline bool operator!=(const Matrix<C,R> &a,const Matrix<C,R> &b)
+template<int R,int C>inline bool operator!=(const Matrix<R,C> &a,const Matrix<R,C> &b)
 {  return(!a.x.compare_to(b.x,epsilon));  }
 
 // Neutral compare functions (also using epsilon): 
 // Neutral0: compare against null matrix
 // Neutral1: compare against identity matrix
-template<int C,int R>inline bool operator==(const Matrix<C,R> &a,Neutral0)
+template<int R,int C>inline bool operator==(const Matrix<R,C> &a,Neutral0)
 {  return(a.is_null());  }
-template<int C,int R>inline bool operator==(const Matrix<C,R> &a,Neutral1)
+template<int R,int C>inline bool operator==(const Matrix<R,C> &a,Neutral1)
 {  return(a.is_ident());  }
-template<int C,int R>inline bool operator==(Neutral0,const Matrix<C,R> &a)
+template<int R,int C>inline bool operator==(Neutral0,const Matrix<R,C> &a)
 {  return(a.is_null());  }
-template<int C,int R>inline bool operator==(Neutral1,const Matrix<C,R> &a)
+template<int R,int C>inline bool operator==(Neutral1,const Matrix<R,C> &a)
 {  return(a.is_ident());  }
-template<int C,int R>inline bool operator!=(const Matrix<C,R> &a,Neutral0)
+template<int R,int C>inline bool operator!=(const Matrix<R,C> &a,Neutral0)
 {  return(!a.is_null());  }
-template<int C,int R>inline bool operator!=(const Matrix<C,R> &a,Neutral1)
+template<int R,int C>inline bool operator!=(const Matrix<R,C> &a,Neutral1)
 {  return(!a.is_ident());  }
-template<int C,int R>inline bool operator!=(Neutral0,const Matrix<C,R> &a)
+template<int R,int C>inline bool operator!=(Neutral0,const Matrix<R,C> &a)
 {  return(!a.is_null());  }
-template<int C,int R>inline bool operator!=(Neutral1,const Matrix<C,R> &a)
+template<int R,int C>inline bool operator!=(Neutral1,const Matrix<R,C> &a)
 {  return(!a.is_ident());  }
 
 
-template<int C,int R>inline Matrix<C,R> invert(const Matrix<C,R> &m)
-{  Matrix<C,R> r(Matrix<C,R>::noinit);  r.x.invert(m.x);  return(r);  }
+template<int N>inline Matrix<N,N> invert(const Matrix<N,N> &m)
+{  Matrix<N,N> r(Matrix<N,N>::noinit);  r.x.invert(m.x);  return(r);  }
 
-template<int C,int R>inline ostream& operator<<(ostream& s,const Matrix<C,R> &m)
+template<int R,int C>inline ostream& operator<<(ostream& s,const Matrix<R,C> &m)
 {  return(internal_vect::operator<<(s,m.x));  }
 
 // **** Constructing matrices: ****

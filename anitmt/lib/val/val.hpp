@@ -4,8 +4,8 @@
  * This file offers basic data classes 
  * (Flag, Scalar, Vector, Matrix, String). 
  * 
- * Copyright (c) 2001 by Wolfgang Wieser   (wwieser@gmx.de) 
- *                   and Martin Trautmann  (martintrautmann@gmx.de)
+ * Copyright (c) 2001--2002 by Wolfgang Wieser   (wwieser@gmx.de) 
+ *                         and Martin Trautmann  (martintrautmann@gmx.de)
  * Report bugs and suggestions to wwieser@gmx.de .
  * 
  * This file may be distributed and/or modified under the terms of the 

@@ -3,7 +3,7 @@
  * 
  * Header for the flag value type. 
  * 
- * Copyright (c) 2001 by Wolfgang Wieser (wwieser@gmx.de) 
+ * Copyright (c) 2001--2002 by Wolfgang Wieser (wwieser@gmx.de) 
  * 
  * This file may be distributed and/or modified under the terms of the 
  * GNU General Public License version 2 as published by the Free Software 

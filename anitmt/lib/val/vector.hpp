@@ -3,7 +3,7 @@
  * 
  * Vector template; header for vector value type. 
  * 
- * Copyright (c) 2001 by Wolfgang Wieser (wwieser@gmx.de) 
+ * Copyright (c) 2001--2002 by Wolfgang Wieser (wwieser@gmx.de) 
  * 
  * This file may be distributed and/or modified under the terms of the 
  * GNU General Public License version 2 as published by the Free Software 
@@ -61,12 +61,9 @@ public: // work around for the template friend problem
 		// This returns the i-th row value of the vector. 
 		// For a 3d-vector, i must be in range 0...2. 
 		// FOR SPEED INCREASE, NO RANGE CHECK IS PERFORMED ON i. 
-		double operator[](int i)  const  {  return(x[i]);  }
-		
-		// This sets the i-th row value of the vector. 
-		// FOR SPEED INCREASE, NO RANGE CHECK IS PERFORMED ON i. 
-		// Return value is *this. 
-		Vector<N> &operator()(int i,double a)  {  x(i,a);  return(*this);  }
+		// Returns a reference to allow for modification. 
+		double &operator[](int i)         {  return(x[i]);  }  // Returning ref
+		double  operator[](int i)  const  {  return(x[i]);  }  // Returning copy
 		
 		// (These versions aviod unecessray initialisations/copying.) 
 		// Addition/Subtraction of two vectors: 
@@ -99,8 +96,8 @@ public: // work around for the template friend problem
 		friend void operator*=(Vector<3> &v,const Matrix<4,4> &b);
 		
 		// Multiplication of matrix and vector: 
-		template<int C,int R>friend Vector<R> operator*(const Matrix<C,R> &a,const Vector<C> &b);
-		template<int C,int R>friend Vector<R> operator*(const Vector<C> &a,const Matrix<C,R> &b);
+		template<int R,int C>friend Vector<R> operator*(const Matrix<R,C> &a,const Vector<C> &b);
+		template<int R,int C>friend Vector<R> operator*(const Vector<C> &a,const Matrix<R,C> &b);
 		// Special versions: 
 		friend Vector<3> operator*(const Matrix<4,4> &a,const Vector<3> &b);
 		friend Vector<3> operator*(const Vector<3> &a,const Matrix<4,4> &b);
@@ -254,13 +251,13 @@ template<int N>inline ostream& operator<<(ostream& s,const Vector<N> &v)
 
 // VECTOR CONSTRUCTION: 
 inline Vector<2>::Vector(double _0,double _1) : x(/*no init*/)
-	{  x(0,_0);  x(1,_1);  }
+	{  x[0]=_0;  x[1]=_1;  }
 inline Vector<3>::Vector(double _0,double _1,double _2) : x(/*no init*/)
-	{  x(0,_0);  x(1,_1);  x(2,_2);  }
+	{  x[0]=_0;  x[1]=_1;  x[2]=_2;  }
 inline Vector<4>::Vector(double _0,double _1,double _2,double _3) : x(/*no init*/)
-	{  x(0,_0);  x(1,_1);  x(2,_2);  x(3,_3);  }
+	{  x[0]=_0;  x[1]=_1;  x[2]=_2;  x[3]=_3;  }
 inline Vector<5>::Vector(double _0,double _1,double _2,double _3,double _4) : x(/*no init*/)
-	{  x(0,_0);  x(1,_1);  x(2,_2);  x(3,_3);  x(4,_4);  }
+	{  x[0]=_0;  x[1]=_1;  x[2]=_2;  x[3]=_3;  x[4]=_4;  }
 
 /** FUNCTIONS FOR 3d VECTORS: **/
 

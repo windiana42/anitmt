@@ -5,7 +5,7 @@
  * Have a look at vector.hpp as this will probably be what you are 
  * looking for. 
  * 
- * Copyright (c) 2000--2001 by Wolfgang Wieser (wwieser@gmx.de) 
+ * Copyright (c) 2000--2002 by Wolfgang Wieser (wwieser@gmx.de) 
  * 
  * This file may be distributed and/or modified under the terms of the 
  * GNU General Public License version 2 as published by the Free Software 
@@ -59,12 +59,9 @@ template<int N> class vector
 		// This returns the i-th row value of the vector. 
 		// For a 3d-vector, i must be in range 0...2. 
 		// _vFOR SPEED INCREASE, NO RANGE CHECK IS PER_vFORMED ON i. 
-		double operator[](int i)  const  {  return(x[i]);  }
-		
-		// This sets the i-th row value of the vector. 
-		// _vFOR SPEED INCREASE, NO RANGE CHECK IS PER_vFORMED ON i. 
-		// Return value is *this. 
-		vector<N> &operator()(int i,double a)  {  x[i]=a;  return(*this);  }
+		// Returns reference allowing you to set values using []. 
+		double &operator[](int i)         {  return(x[i]);  }   // returning ref
+		double  operator[](int i)  const  {  return(x[i]);  }   // returning copy
 		
 		// Functions that return the length of the vector (abs()) and 
 		// the square of the length (abs2(); faster as no sqrt() is needed). 
@@ -146,7 +143,7 @@ template<int N> class vector
 		
 		template<int n>friend ostream& operator<<(ostream &s,const vector<n> &v);
 		
-		template<int c,int r>friend void mult(vector<r> &r,const matrix<c,r> &m,const vector<c> &v);
+		template<int r,int c>friend void mult(vector<r> &r,const matrix<r,c> &m,const vector<c> &v);
 		friend void mult(vector<3> &r,const matrix<4,4> &m,const vector<3> &v);
 		
 		// Returns 1, if a is equal to *this (or each component pair does not 

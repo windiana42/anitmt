@@ -3,7 +3,7 @@
  *
  * Routines to test value library. 
  *
- * Copyright (c) 2000--2001 by Wolfgang Wieser. 
+ * Copyright (c) 2000--2002 by Wolfgang Wieser. 
  *
  * This is a top-secret file..\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b
  * Use this file for anything you want.
@@ -175,10 +175,11 @@ int main()
 	
 	Matrix ma,mb(Matrix::ident),mc(Matrix::null),md;
 	
-	ma(2,0,5.0)(2,2,7.0);
+	ma[0][2]=5.0;
+	ma[2][2]=7.0;
 	cerr << ma;
-	cerr << "idx:" << ma[0][0] << "," << ma[1][0] << "," 
-	               << ma[2][0] << "," << ma[2][2] << "\n";
+	cerr << "idx:" << ma[0][0] << "," << ma[0][1] << "," 
+	               << ma[0][2] << "," << ma[2][2] << "\n";
 	
 	cerr << "ident? (should be 1,0) " << !mb << "," << !ma << "\n";
 	cerr << "null? (should be 1,0) " << mc.is_null() << "," << mb.is_null() << "\n";
@@ -206,9 +207,9 @@ int main()
 	cerr << "Matrix*Matrix / invert test...";
 	for(int i=0; i<100; i++)
 	{
-		for(int c=0; c<4; c++)
-			for(int r=0; r<4; r++)
-				mc(c,r,rand()/1000.0);
+		for(int r=0; r<4; r++)
+			for(int c=0; c<4; c++)
+				mc[r][c]=rand()/1000.0;
 		
 		if(mc*mb != mc)
 		{  cerr << "\n*** ERROR in Matrix*Matrix (1).\n";  }
@@ -239,11 +240,11 @@ int main()
 			for(int r=0; r<4; r++)
 			{
 				double ra=rand()/1000.0,rb=rand()/1000.0;
-				ma(c,r,ra);
-				mb(c,r,rb);
-				mrp(c,r,ra+rb);
-				mrm(c,r,ra-rb);
-				mrn(c,r,-ra);
+				ma[r][c]=ra;
+				mb[r][c]=rb;
+				mrp[r][c]=ra+rb;
+				mrm[r][c]=ra-rb;
+				mrn[r][c]=-ra;
 			}
 		md=ma;
 		mc=ma+mb;
