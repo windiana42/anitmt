@@ -1,0 +1,315 @@
+include declaration "base_func.afd";
+
+// ****************************************************************************
+// ****************************************************************************
+// ** node definitions
+// ****************************************************************************
+// ****************************************************************************
+
+// ****************************************************************************
+// ** object nodes
+// ****************************************************************************
+
+// ******************
+// object anitmtion
+// ******************
+
+abstract node object_subfunc_base provides object_state
+{
+  properties
+  {
+    type scalar
+    {
+      start_time;
+      start_length;
+      start_speed;
+      end_time;
+      end_length;
+      end_speed;
+      duration;
+      length;
+      diff_speed;	// difference of the speeds
+      up_norm_roll;	// rotation of the norm up arount the track
+    }
+    type vector
+    {
+      // track
+      start_pos;
+      start_dir;		// muss Länge=1 sein???
+      start_up_norm;
+      end_pos;
+      end_dir;
+      end_up_norm;
+      diff_pos;
+      direction;
+      // orientation
+      start_front;
+      start_up_vector;
+      end_front;
+      end_up_vector;
+    }
+  }
+  operands 
+  {
+    vector start_up_norm_try;
+  }
+  common
+  {
+    constraints
+    {
+      duration >= 0;
+      start_speed >= 0;
+      end_speed >= 0;
+    }
+    solvers
+    {
+      sum_solver( end_time, duration, start_time );
+      sum_solver( end_length, length, start_length );
+      sum_solver( end_speed, diff_speed, start_speed );
+      sum_solver( end_pos, diff_pos, start_pos );
+      equal_solver( start_dir, direction );
+      equal_solver( end_dir, direction );
+
+      // ********************
+      // start/end parameters
+      
+      //position
+      equal_solver( start_time, object_state.position(time).start_param );
+      equal_solver( end_time, object_state.position(time).end_param );
+      equal_solver( start_length, object_state.position(stretch).start_param );
+      equal_solver( end_length, object_state.position(stretch).end_param );
+      //direction
+      equal_solver( start_time, object_state.direction(time).start_param );
+      equal_solver( end_time, object_state.direction(time).end_param );
+      equal_solver( start_length, object_state.direction(stretch).start_param );
+      equal_solver( end_length, object_state.direction(stretch).end_param );
+      //stretch
+      equal_solver( start_time, object_state.stretch(time).start_param );
+      equal_solver( end_time, object_state.stretch(time).end_param );
+      //speed
+      equal_solver( start_time, object_state.speed(time).start_param );
+      equal_solver( end_time, object_state.speed(time).end_param );
+      equal_solver( start_length, object_state.speed(stretch).start_param );
+      equal_solver( end_length, object_state.speed(stretch).end_param );
+      //acceleration
+      equal_solver( start_time, object_state.acceleration(time).start_param );
+      equal_solver( end_time, object_state.acceleration(time).end_param );
+      equal_solver( start_length, object_state.acceleration(stretch).start_param );
+      equal_solver( end_length, object_state.acceleration(stretch).end_param );
+      //front
+      equal_solver( start_time, object_state.front(time).start_param );
+      equal_solver( end_time, object_state.front(time).end_param );
+      equal_solver( start_length, object_state.front(stretch).start_param );
+      equal_solver( end_length, object_state.front(stretch).end_param );
+      //up_vector
+      equal_solver( start_time, object_state.up_vector(time).start_param );
+      equal_solver( end_time, object_state.up_vector(time).end_param );
+      equal_solver( start_length, object_state.up_vector(stretch).start_param );
+      equal_solver( end_length, object_state.up_vector(stretch).end_param );
+    }
+    actions
+    {
+      push( 10, end_time, next.start_time );
+      push( 11, start_time, prev.end_time );
+      push( 12, end_length, next.start_length );
+      push( 13, start_length, prev.end_length );
+      push( 20, end_pos, next.start_pos );
+      push( 21, start_pos, prev.end_pos );
+      push( 30, end_dir, next.start_dir );
+      push( 31, start_dir, prev.end_dir );
+      push( 40, end_speed, next.start_speed );
+      push( 41, start_speed, prev.end_speed );
+
+      push( 50, end_up_norm, next.start_up_norm );
+      push( 51, start_up_norm, prev.end_up_norm );
+      push( 60, end_front, next.start_front );
+      push( 61, start_front, prev.end_front );
+      push( 70, end_up_vector, next.start_up_vector );
+      push( 71, start_up_vector, prev.end_up_vector );
+
+      default( 999, diff_speed, 0 );
+      default( 1500, up_norm_roll, 0 );
+      default( 2005, start_pos, vector(0,0,0) );
+      default( 2015, start_dir, vector(1,0,0) );
+
+      default( 2515, start_front, vector(1,0,0) );
+      default( 2525, start_up_vector, vector(0,1,0) );
+    }
+  }
+  first object_state {
+    actions {
+      default(  100, start_time, 0 );
+      default(  102, start_length, 0 );
+      default(  500, start_up_norm_try, vector(0,1,0) );
+      default( 1000, start_pos, vector(0,0,0) );
+    }
+  }
+}
+
+node move_straight extends object_subfunc_base 
+{
+  properties
+  {
+    scalar acceleration;
+  }
+  common
+  {
+    solvers
+    {
+      accel_solver(length, duration, acceleration, start_speed, end_speed);
+    }
+  }
+  provide object_state
+  {
+// track
+    resulting position( time _t ) 
+      requires	start_time, start_speed, acceleration, length,
+		start_pos, end_pos
+    {
+      scalar x,t,s;
+      t = (_t - [start_time]);		// local time
+      s = [start_speed] * t + 0.5 * [acceleration] * t * t;
+      if( [length] )
+        x = s / [length];		// relative stretch
+      else
+        x = 0;
+      vector pos = [start_pos] * (1-x) + [end_pos] * x; // linear interpolation
+      [return pos];
+    }
+    resulting position( stretch _s ) 
+      requires start_length, length, start_pos, end_pos
+    {
+      scalar x,s;
+      s = (_s - [start_length]);	// local stretch
+      if( [length] )
+        x = s / [length];		// relative stretch
+      else
+        x = 0;
+      vector pos = [start_pos] * (1-x) + [end_pos] * x; // linear interpolation
+      [return pos];
+    }
+    resulting direction( time _t ) 
+      requires start_dir
+    {
+      [return_prop start_dir];
+    }
+    resulting direction( stretch _s ) 
+      requires start_dir
+    {
+      [return_prop start_dir];
+    }
+// timing 
+    resulting stretch( time _t ) 
+      requires start_time, start_speed, acceleration
+    {
+      scalar x,t,s;
+      t = (_t - [start_time]);		// local time
+      s = [start_speed] * t + 0.5 * [acceleration] * t * t;
+      [return s];
+    }
+    resulting speed( time _t ) 
+      requires start_time, start_speed, acceleration
+    {
+      scalar t,v;
+      t = (_t - [start_time]);		// local time
+      v = [start_speed] + [acceleration] * t;
+      [return v];
+    }
+    resulting speed( stretch _s ) 
+      requires start_length, acceleration, start_speed
+    {
+      scalar s,v;
+      s = (_s - [start_length]);
+      v = sqrt( 2 * [acceleration] * s + [start_speed] );
+      [return v];
+    }
+    resulting acceleration( time _t ) 
+      requires acceleration
+    {
+      [return_prop acceleration];
+    }
+    resulting acceleration( stretch _s ) 
+      requires acceleration
+    {
+      [return_prop acceleration];
+    }
+// orientation on track
+    resulting front( time _t ) 
+      requires start_time, start_front, end_front, duration
+    {
+      scalar x,t;
+      t = (_t - [start_time]);		// local time
+      if( [duration] )
+        x = t / [duration];		// relative state
+      else
+        x = 0;
+      vector res = [start_front] * (1-x) + [end_front] * x;
+      [return res];
+    }
+    resulting front( stretch _s ) 
+      requires	start_length, acceleration, length, start_speed, duration,
+		start_front, end_front
+    {
+      scalar x,t,s,d;
+      s = (_s - [start_length]);
+      if( [acceleration] == 0 )		// is stretch proportional to time
+      {
+	if( [length] )
+	  x = s / [length];		// relative stretch
+	else
+	  x = 0;
+      }
+      else				// else calc time first
+      {
+	// t = (-v0 + sqrt(v0^2 - 2as)) / a
+	d = sqrt([start_speed]*[start_speed] - 2 * [acceleration] * s);
+	t = (- [start_speed] + d) / [acceleration];
+	if( [duration] )
+	  x = t / [duration];		// relative state
+        else
+          x = 0;
+      }
+      vector res = [start_front] * (1-x) + [end_front] * x;
+      [return res];
+    }
+    resulting up_vector( time _t ) 
+      requires start_time, start_up_vector, end_up_vector, duration
+    {
+      scalar x,t;
+      t = (_t - [start_time]);		// local time
+      if( [duration] )
+        x = t / [duration];		// relative state
+      else
+        x = 0;
+      vector res = [start_up_vector] * (1-x) + [end_up_vector] * x;
+      [return res];
+    }
+
+    resulting up_vector( stretch _s ) 
+      requires	start_length, acceleration, length, start_speed, duration,
+		start_up_vector, end_up_vector
+    {
+      scalar x,t,s,d;
+      s = (_s - [start_length]);
+      if( [acceleration] == 0 )		// is stretch proportional to time
+      {
+	if( [length] )
+	  x = s / [length];		// relative stretch
+	else
+	  x = 0;
+      }
+      else				// else calc time first
+      {
+	// t = (-v0 + sqrt(v0^2 - 2as)) / a
+	d = sqrt([start_speed]*[start_speed] - 2 * [acceleration] * s);
+	t = (- [start_speed] + d) / [acceleration];
+	if( [duration] )
+	  x = t / [duration];		// relative state
+        else
+          x = 0;
+      }
+      vector res = [start_up_vector] * (1-x) + [end_up_vector] * x;
+      [return res];
+    }
+  }
+}

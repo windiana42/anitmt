@@ -1,0 +1,238 @@
+include declaration "base_func.afd";
+
+// ****************************************************************************
+// ****************************************************************************
+// ** node definitions
+// ****************************************************************************
+// ****************************************************************************
+
+// ****************************************************************************
+// ** scalar nodes
+// ****************************************************************************
+
+// +--------------------+
+// | scalar_subfunction |
+// +--------------------+
+// Werte
+
+node scalar_subfunction extends scalar_base{
+}
+
+// +--------+
+// | change |   ????
+// +--------+
+// Werteinterpolationen
+
+// Gültige Subfunktionen:
+//   change; constant; linear; accelerated
+
+node change extends scalar_subfunction provides scalar_vsa {
+//  ...
+  contains {
+    min1 scalar_vsa ;
+  }
+  
+  first scalar_vsa {
+    actions {
+      default(100, start_time, 0 );
+      default(1000, start_value, 0 );
+    }
+  }
+
+  provide scalar_vsa {
+    resulting value( time t ) requires child.scalar_vsa.value (time) {
+      [return_res child.scalar_vsa.value (time t)];
+    }
+    resulting slope( time t ) requires child.scalar_vsa.slope (time) {
+      [return_res child.scalar_vsa.slope (time t)];
+    }
+    resulting acceleration( time t ) requires child.scalar_vsa.acceleration (time) {
+      [return_res child.scalar_vsa.acceleration (time t)];
+    }
+  }
+}
+
+// +----------+
+// | constant |
+// +----------+
+// keine Veränderung
+
+// Gültige Subfunktionen:
+//   keine!
+
+
+
+node constant extends scalar_subfunction provides scalar_vsa {
+//  ...
+
+  properties{
+    scalar value;
+  }
+
+  common {
+    solvers {
+      equal_solver( start_time, scalar_vsa.value(time).start_param );
+      equal_solver( end_time, scalar_vsa.value(time).end_param );
+      equal_solver( start_time, scalar_vsa.slope(time).start_param );
+      equal_solver( end_time, scalar_vsa.slope(time).end_param );
+      equal_solver( start_time, scalar_vsa.acceleration(time).start_param );
+      equal_solver( end_time, scalar_vsa.acceleration(time).end_param );
+
+      equal_solver( start_slope, end_slope );
+      equal_solver( start_slope, difference ); // set slopes to zero
+      equal_solver( value, start_value );
+      equal_solver( value, end_value );
+    }
+    actions {
+      default(2100, duration, 0 );
+      default(2200, start_value, 0 );
+    }
+  }
+
+  first scalar_vsa {
+    actions {
+      default(100, start_time, 0 );
+      default(1000, start_value, 0 );
+    }
+  }
+  
+  provide scalar_vsa {
+    resulting value( time t ) requires value
+    {
+      [return_prop value];
+    }
+    resulting slope( time t ) 
+    {
+      [return 0];
+    }
+    resulting acceleration( time t ) 
+    {
+      [return 0];
+    }
+  }
+}
+
+// +--------+
+// | linear |
+// +--------+
+// gleichmäßige Veränderung
+
+// Gültige Subfunktionen:
+//   keine!
+
+node linear extends scalar_subfunction provides scalar_vsa {
+//  ...
+
+  properties{
+    scalar slope;		// changing speed of value
+  }
+
+  common {
+    solvers {
+      equal_solver( start_time, scalar_vsa.value(time).start_param );
+      equal_solver( end_time, scalar_vsa.value(time).end_param );
+      equal_solver( start_time, scalar_vsa.slope(time).start_param );
+      equal_solver( end_time, scalar_vsa.slope(time).end_param );
+      equal_solver( start_time, scalar_vsa.acceleration(time).start_param );
+      equal_solver( end_time, scalar_vsa.acceleration(time).end_param );
+
+      product_solver( difference, slope, duration );
+      equal_solver( start_slope, slope );
+      equal_solver( end_slope,   slope );
+    }
+    actions {
+      default(2000, slope, 0 );
+      default(2100, duration, 0 );
+      default(2200, start_value, 0 );
+    }
+  }
+
+  first scalar_vsa {
+    actions {
+      default(100, start_time, 0 );
+      default(1000, start_value, 0 );
+    }
+  }
+  
+  provide scalar_vsa {
+    resulting value( time t ) requires start_value, start_time, slope
+    {
+      scalar res = [start_value] + (t - [start_time]) * [slope];
+      [return res];
+    }
+    resulting slope( time t ) requires slope
+    {
+      [return_prop slope];
+    }
+    resulting acceleration( time t ) 
+    {
+      [return 0];
+    }
+  }
+}
+
+
+// +-------------+
+// | accelerated |
+// +-------------+
+// accelerated value change
+
+// Gültige Subfunktionen:
+//   keine!
+
+node accelerated extends scalar_subfunction provides scalar_vsa {
+//  ...
+
+  properties{
+    scalar acceleration;
+  }
+
+  common {
+    solvers {
+      equal_solver( start_time, scalar_vsa.value(time).start_param );
+      equal_solver( end_time, scalar_vsa.value(time).end_param );
+      equal_solver( start_time, scalar_vsa.slope(time).start_param );
+      equal_solver( end_time, scalar_vsa.slope(time).end_param );
+      equal_solver( start_time, scalar_vsa.acceleration(time).start_param );
+      equal_solver( end_time, scalar_vsa.acceleration(time).end_param );
+
+      accel_solver(difference, duration, acceleration, start_slope, end_slope);
+    }
+    actions {
+      default(200,  acceleration, 0 );
+      default(2000, start_slope, 0 );
+      default(2100, duration, 0 );
+      default(2200, start_value, 0 );
+    }
+  }
+
+  first scalar_vsa {
+    actions {
+      default(100, start_time, 0 );
+      default(1000, start_value, 0 );
+    }
+  }
+  
+  provide scalar_vsa {
+    resulting value(time abs_t) requires start_value, start_time, start_slope,
+					 acceleration
+
+    {
+      scalar t = abs_t - [start_time];
+      scalar res = [start_value] + [start_slope]*t + 0.5*[acceleration]*t*t;
+      [return res];
+    }
+    resulting slope( time abs_t ) requires start_time, start_slope, 
+					   acceleration
+    {
+      scalar t = abs_t - [start_time];
+      scalar res = [start_slope] + [acceleration] * t;
+      [return res];
+    }
+    resulting acceleration( time t ) requires acceleration
+    {
+      [return_prop acceleration];
+    }
+  }
+}
+
