@@ -8,7 +8,7 @@ CXXFLAGS =		@CXXFLAGS@ -Wno-non-template-friend
 test_core_SOURCES =	test_core.cpp 
 test_core_LDADD =	libanitmt.a ../lib/val/libval.a ../lib/par/libpar.a 
 
-libanitmt_a_SOURCES = 	error.hpp error.cpp 
+libanitmt_a_SOURCES = 	error.hpp error.cpp \
 			tmttype.hpp tmttype.cpp tmttype_inline.hpp\
 			operand.cpp \
 			operand.hpp operand_templ.cpp operand_inline.cpp \
