@@ -42,5 +42,5 @@ $(srcdir)/scanner.cc:	$(srcdir)/scanner.ll $(srcdir)/tokens.h
 #-- Parser
 $(srcdir)/parser.cc $(srcdir)/tokens.h:	$(srcdir)/parser.yy 
 	$(SHELL) $(YLWRAP) "$(YACC)" $(srcdir)/parser.yy \
-	$(srcdir)/y.tab.c $(srcdir)/parser.cc \
-	$(srcdir)/y.tab.h $(srcdir)/tokens.h -- -d
+	y.tab.c $(srcdir)/parser.cc \
+	y.tab.h $(srcdir)/tokens.h -- -d
