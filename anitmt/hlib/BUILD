@@ -1,7 +1,7 @@
 Build instructions: 
 
 Do the standard GNU build routine: 
-bash# aclocal && autoconf && automake
+bash# aclocal && autoconf && autoheader && automake
 bash# ./configure
 bash# make
 (I recommend building in a separate build directory.) 
