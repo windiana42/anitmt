@@ -181,6 +181,7 @@ namespace funcgen
     std::string provider_type;	// type that all elements have to provide
     void print() const;		// print, just for debug purposes
 
+    Child_Container( bool max1, bool min1, std::string provider_type );
     //! just for set container
     bool operator<( const Child_Container &cc ) const;
   };

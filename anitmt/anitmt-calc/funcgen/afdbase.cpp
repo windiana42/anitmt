@@ -318,6 +318,11 @@ namespace funcgen
     std::cout << "    }" << std::endl;
   }
 
+  Child_Container::Child_Container( bool _max1, bool _min1, 
+				    std::string _provider_type )
+    : max1(_max1), min1(_min1), provider_type(_provider_type)
+  {}
+
   //! just for set container
   bool Child_Container::operator<( const Child_Container &cc ) const
   {

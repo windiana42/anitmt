@@ -341,7 +341,8 @@ namespace funcgen
   void node_contains( void *info, bool max1, bool min1, 
 		      const std::string &type )
   {
-    AFD_Manager *afd = static_cast<afd_info*>(info)->afd;
+    Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;
+    node->child_containers.insert( Child_Container( max1,min1,type ) );
   }
 
   void node_start_provide( void *info, const std::string &type )
