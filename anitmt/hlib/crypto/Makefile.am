@@ -1,11 +1,14 @@
+#work around (Martin)
+GMP_CHECK_LDADD =
+
 if HAVE_GMP
 RSA_SRC_C = rsa.cc primetable.cc gmpalloc.cc
 RSA_SRC_H = rsa.h primetable.h gmpalloc.h
-GMP_CHECK_LDADD = /usr/lib/libgmp.a
+#GMP_CHECK_LDADD = /usr/lib/libgmp.a
 else
 RSA_SRC_C = 
 RSA_SRC_H = 
-GMP_CHECK_LDADD = 
+#GMP_CHECK_LDADD = 
 endif
 
 INCLUDES = -I../include/

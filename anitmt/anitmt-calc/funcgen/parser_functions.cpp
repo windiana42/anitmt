@@ -2,7 +2,7 @@
 /**   This file offers functions and macros for the parser                  **/
 /*****************************************************************************/
 /**									    **/
-/** Author: Martin Trautmann						    **/
+/** Author:  Martin Trautmann						    **/
 /**									    **/
 /** EMail:   martintrautmann@gmx.de					    **/
 /**									    **/
@@ -20,6 +20,11 @@
 
 namespace funcgen
 {
+  // **********************************
+  // global objects for help functions
+
+  Available_Basic_Operators available_operators;
+
   // ******************************
   // functions used by the parser and lexer
   // ******************************
@@ -32,38 +37,16 @@ namespace funcgen
 
     //message::Message_Reporter &msg = I->msg;
     //Code_Translator *translator = I->afd->translator;
-    Tree_Node_Type *node = I->afd->current_node;
-    assert(node != 0);
-    Provided_Results *provided = node->current_provided_results;
-    if( provided )
-    {
-      Result_Code *res_code = provided->current_result_code;
+    Code *code = I->afd->current_code;
 
-      if( res_code )		// in valid result code?
-      {
-	res_code->start_src_line = I->file_pos.get_line();
-	res_code->start_src_column = I->file_pos.get_column();
-      }
+    if( code )
+    {
+      code->start_src_line = I->file_pos.get_line();
+      code->start_src_column = I->file_pos.get_column();
     }    
   }
   void finish_code_block( void *info )
   {
-    /*
-    afd_info *I=static_cast<afd_info*>(info);
-    message::Message_Reporter &msg = I->msg;
-    Code_Translator *translator = I->afd->translator;
-    Tree_Node_Type *node = I->afd->current_node;
-    assert(node != 0);
-    Provided_Results *provided = node->current_provided_results;
-    if( provided )
-    {
-      Result_Code *res_code = provided->current_result_code;
-
-      if( res_code )		// in valid result code?
-      {
-      }
-    } 
-    */   
   }
   void continue_code_mode( void *info )
   {
@@ -74,19 +57,14 @@ namespace funcgen
   void copy_code_line( afd_info *info, char *line, int len ) 
   {
     //message::Message_Reporter &msg = info->msg;
-    Tree_Node_Type *node = info->afd->current_node;
-    assert(node != 0);
-    Provided_Results *provided = node->current_provided_results;
-    if( provided )
-    {
-      Result_Code *res_code = provided->current_result_code;
+    Code *code = info->afd->current_code;
 
-      if( res_code )		// in valid result code?
-      {
-	res_code->code += line; 
-      }
+    if( code )
+    {
+      code->code += line;
     }    
   }
+
   void code_block_escape( afd_info *info ) {}
   void finished_file( afd_info *info ) 
   {
@@ -95,6 +73,15 @@ namespace funcgen
 
   //******************************************
   // concrete help functions for parser rules
+
+  void check_id_operator( void *info, std::string identifier )
+  {
+    message::Message_Reporter &msg = static_cast<afd_info*>(info)->msg;
+    if( identifier != "operator" )
+    {
+      msg.error() << "only version name \"operator\" may be followed by an operator";
+    }
+  }
 
   void include_declaration( void *infoptr, const std::string &file )
   {
@@ -222,6 +209,126 @@ namespace funcgen
     }
     else
       afd->current_type->result_types.insert( Result_Type(ret,par) );
+  }
+
+  void start_operator_declaration( void *infoptr, const std::string &type,
+				   const std::string &name )
+  {
+    afd_info *info = static_cast<afd_info*>(infoptr);
+    AFD_Root *afd = info->afd;
+    message::Message_Reporter &msg = info->msg;
+
+    if( afd->operator_declarations.find(name) != afd->operator_declarations.end() )
+    {
+      msg.error() << "operator " << name << " already defined";
+      afd->current_operator_declaration = 0;
+    }
+    else if( !available_operators.is_operator( type ) )
+    {
+      msg.error() << "invalid operator base type: " << type;
+      afd->current_operator_declaration = 0;
+    }
+    else
+    {
+      afd->current_operator_declaration = &afd->operator_declarations[name];
+      afd->current_operator_declaration->pos = info->file_pos.duplicate();
+      afd->current_operator_declaration->operator_name = name;
+      afd->current_operator_declaration->operator_base_type_name = type;
+    }
+  }
+  void start_operator_function_declaration( void *infoptr, 
+					    const std::string &name )
+  {
+    afd_info *info = static_cast<afd_info*>(infoptr);
+    AFD_Root *afd = info->afd;
+    message::Message_Reporter &msg = info->msg;
+
+    if( afd->current_operator_declaration )
+    {
+      if( !available_operators.get_operator( afd->current_operator_declaration
+					     ->operator_base_type_name )
+	  .is_function(name) )
+      {
+	msg.error() << "unknown function name "<< name <<" for this operator";
+	afd->current_operator_declaration->current_function = 0;
+      }
+      else if( afd->current_operator_declaration->function_code.find(name)
+	       != afd->current_operator_declaration->function_code.end() )
+      {
+	msg.error() << "function "<< name <<" already defined";
+	afd->current_operator_declaration->current_function = 0;
+      }
+      else
+      {
+	afd->current_operator_declaration->current_function = 
+	  &afd->current_operator_declaration->function_code[name];
+	afd->current_operator_declaration->current_function->pos 
+	  = info->file_pos.duplicate();
+      }
+    }
+  }
+  void start_operator_function_code( void *infoptr )
+  {
+    afd_info *info = static_cast<afd_info*>(infoptr);
+    AFD_Root *afd = info->afd;
+    //message::Message_Reporter &msg = info->msg;
+
+    if( afd->current_operator_declaration )
+    {
+      if( afd->current_operator_declaration->current_function )
+      {
+	afd->current_code 
+	  = afd->current_operator_declaration->current_function;
+      }
+    }
+  }
+  void finish_operator_function_code( void *infoptr )
+  {	       
+    /* everything is done by copy_code_line() */
+  }
+  void add_operator_function_parameter( void *infoptr, const std::string &name )
+  {
+    afd_info *info = static_cast<afd_info*>(infoptr);
+    AFD_Root *afd = info->afd;
+    //message::Message_Reporter &msg = info->msg;
+
+    if( afd->current_operator_declaration )
+    {
+      if( afd->current_operator_declaration->current_function )
+      {
+	afd->current_operator_declaration->current_function->parameter_names
+	  .push_back( name );
+      }
+    }
+  }
+  void start_operator_version( void *infoptr, const std::string &ret_type,
+			     const std::string &name )
+  {
+    afd_info *info = static_cast<afd_info*>(infoptr);
+    AFD_Root *afd = info->afd;
+    //message::Message_Reporter &msg = info->msg;
+
+    if( afd->current_operator_declaration )
+    {
+      afd->current_operator_declaration->current_version =
+	&afd->current_operator_declaration->versions[name];
+      afd->current_operator_declaration->current_version
+	->push_back( ret_type );
+    }
+  }
+  void add_operator_version_parameter( void *infoptr, const std::string &name )
+  {
+    afd_info *info = static_cast<afd_info*>(infoptr);
+    AFD_Root *afd = info->afd;
+    //message::Message_Reporter &msg = info->msg;
+
+    if( afd->current_operator_declaration )
+    {
+      if( afd->current_operator_declaration->current_version )
+      {
+	afd->current_operator_declaration->current_version->push_back( name );
+      }
+    }
   }
 
   void start_node_declaration( void *infoptr, bool abstract,
@@ -624,6 +731,9 @@ namespace funcgen
 	provided->current_result_code->return_type = ret_type;
 	provided->current_result_code->parameter_type = par_type;
 	provided->current_result_code->parameter = par_name;
+
+	// for code mode of lexer
+	afd->current_code = provided->current_result_code; 
       }
       else
       {				

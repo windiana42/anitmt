@@ -4,7 +4,6 @@ noinst_LIBRARIES=	libsolve.a
 libsolve_a_SOURCES= 	\
 	operand.hpp operand.cpp operand_inline.cpp operand_templ.cpp \
 	operator.hpp operator.cpp operator_inline.cpp operator_templ.cpp \
-	base_operators.hpp base_operators.cpp \
 	solver.hpp solver.cpp solver_templ.cpp \
 	constraint.hpp constraint.cpp \
 	priority.hpp priority.cpp priority_templ.cpp \

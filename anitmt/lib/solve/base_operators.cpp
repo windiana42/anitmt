@@ -17,7 +17,7 @@
 namespace solve
 {
 
-  bool Basic_Operator::is_avail( std::string function ) const
+  bool Basic_Operator::is_function( std::string function ) const
   {
     return functions.find( function ) != functions.end();
   }

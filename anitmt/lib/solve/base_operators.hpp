@@ -26,7 +26,7 @@ namespace solve
   class Basic_Operator
   {
   public:
-    bool is_avail( std::string function ) const;
+    bool is_function( std::string function ) const;
     //! get parameter types of function (first is return type)
     const std::list<type> &get_types( std::string function );
     //! get functions that are required

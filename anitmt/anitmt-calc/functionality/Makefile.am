@@ -14,6 +14,7 @@ libfunctionality_a_SOURCES= base_func.afd base_func.hpp base_func.cpp \
 			scalar.afd scalar.hpp scalar.cpp \
 			object_base.afd object_base.hpp object_base.cpp \
 			object.afd object.hpp object.cpp \
+			solver.afd solver.hpp solver.cpp \
 			make_avail.cpp make_avail.hpp
 
 check_PROGRAMS=		test_functionality
@@ -86,6 +87,14 @@ object.cpp \
 object.hpp: $(srcdir)/object.afd $(srcdir)/object_base.afd $(AFD_COMMON)
 	@if test -e $(FUNCGEN); then					    \
 	  $(FUNCGEN) -i $(srcdir)/object.afd -o object -n functionality -I+=$(srcdir)/ ; \
+	else								    \
+	  echo "No funcgen availible, cannot create code.";		    \
+	fi
+
+solver.cpp \
+solver.hpp: $(srcdir)/solver.afd $(AFD_COMMON)
+	@if test -e $(FUNCGEN); then					    \
+	  $(FUNCGEN) -i $(srcdir)/solver.afd -o solver -n functionality -I+=$(srcdir)/ ; \
 	else								    \
 	  echo "No funcgen availible, cannot create code.";		    \
 	fi

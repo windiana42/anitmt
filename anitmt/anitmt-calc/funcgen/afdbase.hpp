@@ -28,8 +28,10 @@ namespace funcgen
   class Header_Files;
   class Priority_List;
   class Basic_Type;
-  class Provider_Type;
   class Result_Type;
+  class Provider_Type;
+  class Code;
+  class Operator_Declaration;
   class Alias;
   class Constraint_Code;
   class Solver_Code;
@@ -126,6 +128,34 @@ namespace funcgen
     inline id get_id() { return this; }
     void print( std::string ) const; // print, just for debug purposes
   };  
+
+  class Code
+  {
+  public:
+    int start_src_line;		// source line where this code starts
+    int start_src_column;	// source column where this code starts
+    std::string code;		// source code
+  };
+
+  class Function_Code : public Code
+  {
+  public:
+    message::File_Position *pos;
+    std::list<std::string> parameter_names;
+  };
+
+  class Operator_Declaration
+  {
+  public:
+    message::File_Position *pos;
+    std::string operator_name;
+    std::string operator_base_type_name;
+
+    std::map< std::string, Function_Code > function_code;     // name->code
+    std::map< std::string, std::list<std::string> > versions; // name->types
+    Function_Code *current_function; 
+    std::list<std::string> *current_version;
+  };
 
   class Alias
   {
@@ -233,7 +263,7 @@ namespace funcgen
     bool operator<( const Child_Container &cc ) const;
   };
 
-  class Result_Code
+  class Result_Code : public Code
   {
   public:
     bool defined;		// is this code already defined
@@ -243,10 +273,6 @@ namespace funcgen
     std::list<std::string> required_properties; 
     std::list< std::pair<std::string,Result_Type> > required_children; 
     std::list< std::pair<std::string,Result_Type> > required_results; 
-
-    int start_src_line;		// source line where this code starts
-    int start_src_column;	// source column where this code starts
-    std::string code;		// source code
 
     void print( const Result_Type &type ) const; 
 				// print, just for debug purposes
@@ -355,6 +381,8 @@ namespace funcgen
     std::list<std::string> included_basenames;
     Header_Files header_files;
 
+    Code *current_code;		// any type of plain code
+
     Priority_List priority_list;
     bool priority_list_defined;
     bool write_priority_list;
@@ -370,6 +398,11 @@ namespace funcgen
     provider_types_type provider_types;
     Provider_Type  *current_type;
 
+    typedef std::map<std::string, 
+		     Operator_Declaration> operator_declarations_type;
+    operator_declarations_type operator_declarations;
+    Operator_Declaration *current_operator_declaration;
+
     typedef std::map<std::string, Tree_Node_Type> nodes_type;
     nodes_type nodes;
     Tree_Node_Type *current_node;
@@ -378,13 +411,6 @@ namespace funcgen
     void print() const;		// print, just for debug purposes
   };
 
-  //**********************
-  // general help classes
-
-  class Property_Reference_Handler
-  {
-  public:
-  };
 }
 
 #endif

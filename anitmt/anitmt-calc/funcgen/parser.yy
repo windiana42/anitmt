@@ -72,6 +72,7 @@ namespace funcgen
 %token <u.scalar> TAFD_SCALAR
 %token <string> TAFD_QSTRING
 
+%type <string>  operator_version_name
 %type <string>  opt_provider_type
 %type <string>  priority_level
 %type <u.boolean> opt_abstract
@@ -183,7 +184,7 @@ operator_statements: /*optional*/
   | operator_statements operator_statement
 ;
 operator_statement:
-    TAFD_IDENTIFIER TAFD_IDENTIFIER 	{ /*start operator declaration*/ }
+    TAFD_IDENTIFIER TAFD_IDENTIFIER { start_operator_declaration(info,$1,$2); }
       '{' operator_body_statements '}'
 ;
 operator_body_statements: /*optional*/
@@ -194,9 +195,24 @@ operator_body_statement:
   | operator_versions_declaration
 ;
 operator_functions_declaration:
-    TAFD_IDENTIFIER '(' operator_parameter_type_list ')' '{' 
-	{ /* start operator function declaration */ }
-      '}' { /* finish code block */ }
+    TAFD_IDENTIFIER	      { start_operator_function_declaration(info,$1); }
+      '(' operator_parameter_type_list ')' 
+			      { start_operator_function_code(info); }
+      '{' operator_function_code '}'
+	      		      { finish_operator_function_code(info); }
+;
+operator_function_code:
+			      { start_code_block(info); } 
+    operator_code_statements 
+			      { finish_code_block(info); }
+;
+operator_code_statements: /*optional*/
+  | operator_code_statements operator_code_statement
+;
+operator_code_statement:
+    TAFD_CODE
+  | TAFD_BB_left              { yyerr(info,0) << "no \"[[\" allowed in this code"; 
+				continue_code_mode(info); }
 ;
 operator_versions_declaration:
     TAFD_versions '{' operator_version_statements '}'
@@ -205,12 +221,43 @@ operator_version_statements: /*optional*/
   | operator_version_statements operator_version_statement
 ;
 operator_version_statement:
-    TAFD_IDENTIFIER TAFD_IDENTIFIER '(' operator_parameter_type_list ')' ';'
-	{ /*#warning not implemented operator specializations*/ }
+    TAFD_IDENTIFIER operator_version_name  { start_operator_version(info,$1,$2); }
+      '(' operator_parameter_type_list ')' ';'
+				
+;
+operator_version_name:
+    TAFD_IDENTIFIER				{ $$ = $1; }
+  | TAFD_IDENTIFIER '+'				{ check_id_operator(info,$1);
+						  $$ = $1 + '+'; }
+  | TAFD_IDENTIFIER '-'				{ check_id_operator(info,$1);
+						  $$ = $1 + '-'; }
+  | TAFD_IDENTIFIER '*'				{ check_id_operator(info,$1);
+						  $$ = $1 + '*'; }
+  | TAFD_IDENTIFIER '/'				{ check_id_operator(info,$1);
+						  $$ = $1 + '/'; }
+  | TAFD_IDENTIFIER '<'				{ check_id_operator(info,$1);
+						  $$ = $1 + '<'; }
+  | TAFD_IDENTIFIER '>'				{ check_id_operator(info,$1);
+						  $$ = $1 + '>'; }
+  | TAFD_IDENTIFIER TAFD_IS_EQUAL		{ check_id_operator(info,$1);
+						  $$ = $1 + TAFD_IS_EQUAL; }
+  | TAFD_IDENTIFIER TAFD_NOT_EQUAL		{ check_id_operator(info,$1);
+						  $$ = $1 + TAFD_NOT_EQUAL; }
+  | TAFD_IDENTIFIER TAFD_MORE_EQUAL		{ check_id_operator(info,$1);
+						  $$ = $1 + TAFD_MORE_EQUAL; }
+  | TAFD_IDENTIFIER TAFD_LESS_EQUAL		{ check_id_operator(info,$1);
+						  $$ = $1 + TAFD_LESS_EQUAL; }
+    // ... when adding operators see [bool_]op_expression ...
 ;
 operator_parameter_type_list: /*optional*/
-  | TAFD_IDENTIFIER	{}
+  | TAFD_IDENTIFIER		{ add_operator_function_parameter(info,$1);}
   | operator_parameter_type_list ',' TAFD_IDENTIFIER	
+				{ add_operator_function_parameter(info,$3);}
+;
+operator_version_type_list: /*optional*/
+  | TAFD_IDENTIFIER		{ add_operator_version_parameter(info,$1);}
+  | operator_parameter_type_list ',' TAFD_IDENTIFIER	
+				{ add_operator_version_parameter(info,$3);}
 ;
 node_declaration:
     opt_abstract TAFD_node TAFD_IDENTIFIER 
@@ -501,6 +548,7 @@ bool_op_expression:
   | op_expression TAFD_LESS_EQUAL op_expression {$$ = bool_expr($1,"<=",$3);}
   | op_expression '>' op_expression		{$$ = bool_expr($1,">",$3);}
   | op_expression '<' op_expression		{$$ = bool_expr($1,"<",$3);}
+    // ... when adding operators see operator_version_name ...
 ;
 op_expression:
     property_reference			  {$$ = expr_from_ref(info);}
@@ -510,6 +558,7 @@ op_expression:
   | op_expression '-' op_expression	  {$$ = expr($1,"-",$3);}
   | op_expression '*' op_expression	  {$$ = expr($1,"*",$3);}
   | op_expression '/' op_expression	  {$$ = expr($1,"/",$3);}
+    // ... when adding operators see operator_version_name ...
   | TAFD_IDENTIFIER '(' ')'		  {$$ = expr_function($1);}
   | TAFD_IDENTIFIER '(' op_expression_list ')'
 					  {$$ = expr_function($1,$3);}

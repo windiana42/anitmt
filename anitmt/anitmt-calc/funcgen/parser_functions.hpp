@@ -20,6 +20,7 @@
 #include "token.hpp"
 #include "parsinfo.hpp"
 #include "afdbase.hpp"
+#include "base_operators.hpp"
 
 namespace funcgen
 {
@@ -78,6 +79,11 @@ namespace funcgen
   //******************************************
   // concrete help functions for parser rules
 
+  void check_id_operator( void *info, std::string identifier );
+
+  //************************************************************************
+  // concrete help functions for parser rules that handle the afd structure
+
   void include_declaration( void *info, const std::string &file );
   void include_header( void *info, const std::string &file );
   void priority_list_defined( void *info );
@@ -92,6 +98,17 @@ namespace funcgen
 					const std::string &name );
   void add_provided_result_type( void *info, const std::string &ret, 
 				 const std::string &par );
+
+  void start_operator_declaration( void *info, const std::string &type,
+				   const std::string &name );
+  void start_operator_function_declaration( void *info, 
+					    const std::string &name );
+  void start_operator_function_code( void *info );
+  void finish_operator_function_code( void *info );
+  void add_operator_function_parameter( void *info, const std::string &name );
+  void start_operator_version( void *info, const std::string &ret_type,
+			     const std::string &name );
+  void add_operator_version_parameter( void *info, const std::string &name );
 
   void start_node_declaration( void *info, bool abstract,
 			       const std::string &name );
@@ -210,7 +227,6 @@ namespace funcgen
   void ref_node_first_child( void *info );
   void ref_node_last_child( void *info );
   void ref_node_child( void *info, double n );
-
 }
 
 #include "parser_functions_inline.cpp"
