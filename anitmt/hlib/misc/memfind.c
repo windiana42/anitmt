@@ -12,9 +12,9 @@
  * 
  */
 
-#include <string.h>
-
 #include <hlib/prototypes.h>
+
+#include <string.h>
 
 char *memfind(const char *buf,const char *tofind,size_t len)
 {

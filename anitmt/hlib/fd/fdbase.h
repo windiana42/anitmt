@@ -5,7 +5,7 @@
  * file descriptor and time management which works 
  * in cooperation with class FDManager. 
  * 
- * Copyright (c) 2000 by Wolfgang Wieser (wwieser@gmx.de) 
+ * Copyright (c) 2000--2002 by Wolfgang Wieser (wwieser@gmx.de) 
  * 
  * This file may be distributed and/or modified under the terms of the 
  * GNU General Public License version 2 as published by the Free Software 

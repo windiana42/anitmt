@@ -14,9 +14,12 @@ bash# make opt
 On other platforms using gcc, I recommend adding 
 -Os -fno-exceptions -fno-rtti
 to the CXXFLAGS to save build time and binay size. 
+Furthermore, on GNU platforms, it is highly recommended to add 
+-D_GNU_SOURCE 
+to CFLAGS and CXXFLAGS (for large file support, etc). 
 
 HLIB builds without problems on 
-GNU/Linux with gcc >= 2.95 glibc >= 2.1 and kernel >= 2.2 
+GNU/Linux with gcc 2.95.*, 3.0.*, glibc >= 2.1 and kernel >= 2.2 
 
 Other setups should either not make trouble at all or be supported 
 with a minimal effort. 

@@ -313,7 +313,7 @@ extern void ConstructorFailedExit(const char *opt=NULL);
 	void operator delete(void *_h_ptr) \
 	{  LFree(_h_ptr);  }    \
 	void *operator new(size_t _h_size) \
-	{  return(_NewPrepareApply(_h_size));  }  /* Calls uheckMalloc if not prepared. */  
+	{  return(_NewPrepareApply(_h_size));  }  /* Calls CheckMalloc if not prepared. */  
 
 
 // NOTE: DO NOT USE THESE FUNCTIONS ON CLASSES WITH ZERO SIZE. 

@@ -3,20 +3,35 @@ class FDCopyBase : LinkedListBase<FDCopyBase>
 	friend class FDCopyManager;
 	public:
 		typedef FDCopyManager::CopyInfo CopyInfo;
+		typedef FDCopyManager::StatusCode StatusCode;
 		typedef FDCopyManager::CopyID CopyID;
 		typedef FDCopyManager::CopyRequest CopyRequest;
 		typedef FDCopyManager::copylen_t copylen_t;
 	private:
 		typedef FDCopyManager::MCopyNode MCopyNode;
-		// List of copy requests: 
+		// List of copy requests, managed by FDCopyManager: 
 		LinkedList<struct MCopyNode> rlist;
 	protected:
+		// Called upon variuos conditions (completion of copy 
+		// request / error condition): 
+		// See struct CopyInfo (cpmanager.h) for details. 
+		// Return value: currently ignored; use 0. 
+		virtual int cpnotify(CopyInfo *ci)  {  return(0);  }
+		
+		// Called to notify client on progress made: 
+		// Return value: currently ignored; use 0. 
+		virtual int cpnotify(ProgressInfo *pi)  {  return(0);  }
 	public:  _CPP_OPERATORS_FF
 		FDCopyBase(int *failflag);
 		~FDCopyBase();
 		
 		// Use this to get the FDCopyManager: 
 		inline FDCopyManager *cpmanager()  {  return(FDCopyManager::manager);  }
+		
+		#error need \
+			QueryProgress(CopyInfo *save_here)  \
+			CopyControl(stop/cont/cancel)
+		#error Was macht poll() bei SIGPIPE / EPIPE? - Kommt POLLERR??
 		
 		// Central routine: Give FDCopyManager a copy job: 
 		// CopyRequest: stores all the needed information and tuning 
@@ -69,6 +84,8 @@ CopyRequest();
 	
 	timeout=-1;
 	
+	dptr=NULL;
+	
 	iobufsize=FDCopyManager::default_iobufsize;
 	low_read_thresh=-1;
 	high_read_thresh=-1;
@@ -86,4 +103,5 @@ CopyRequest();
 	// Only cancel the most important fields...
 	srcbuf=destbuf=NULL;
 	len=0;
+	dptr=NULL;
 }

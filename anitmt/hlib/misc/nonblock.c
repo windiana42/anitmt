@@ -12,9 +12,9 @@
  * 
  */
 
-#include <fcntl.h>
-
 #include <hlib/prototypes.h>
+
+#include <fcntl.h>
 
 /* Set fd nonblocking. 
  * Return value: 

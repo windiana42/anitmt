@@ -29,6 +29,11 @@ class FDCopyManager : FDBase
 			long timeout;  // Timeout for the complete request in msec; 
 			               // -1 -> no timeout
 			
+			//*** Convenience: ***
+			// costom data pointer to attach data to the CopyRequest: 
+			void *dptr;   
+			#error progress  (progress notification? 0, read, write, rw) 
+			
 			//*** More tuning: ***
 			size_t iobufsize;  // Size of IO buffer allocated for the copy job 
 			// This needs some explanation: The filedescriptor is 
@@ -62,6 +67,83 @@ class FDCopyManager : FDBase
 			CopyRequest(int *failflag=NULL);
 			~CopyRequest();
 		};
+		struct CopyStatistics
+		{
+			HTime starttime;
+			// Number of bytes read/written so far (using read/write 
+			// syscalls). 
+			copylen_t read_bytes;
+			copylen_t written_bytes;
+			
+			_CPP_OPERATORS_FF
+			CopyStatistics(int *failflag=NULL);
+			~CopyStatistics()  { }
+		};
+		
+		enum StatusCode
+		{
+			// Note: that when reaching the copy limit, CopyManager cannot 
+			// detect if EOF is reached simultaniously. If SCEOF is not 
+			// set and DCLimit is set, you don't know if there is more 
+			// data available. 
+			// NOTE: BITWISE OR'ED: 
+			//       Only one of the flags and optionally SCDone is set. 
+			
+			//*** Status codes ***
+			// See below for combined flags. 
+			SCNone=   0x00,   // (mainly internal use; may never happen)
+			SCDone=   0x01,   // IMPORTANT: last time cpnotify() called 
+			SCLimit=  0x02,   // copy limit reached 
+			SCInHup=  0x04,   // hangup on input fd (POLLHUP)
+			SCOutHup= 0x08,   // hangup on output fd (POLLHUP)
+			SCInPipe= 0x10,   // EPIPE on input fd
+			SCOutPipe=0x20,   // EPIPE on output fd
+			SCRead0=  0x40,   // read 0 bytes although POLLIN (EOF)
+			SCWrite0= 0x80,   // wrote 0 bytes although POLLOUT
+			// Combined flags: 
+			// ( Use: if(scode & EDEOI) eof_occured(); )
+			// EOI = ``end of input'' (could not read more data; EOF)
+			SCEOI=(SCInHup|SCInPipe|SCRead0),     // ``end of input'' (EOF)
+			// EOO = ``end of output'' (could not write more data)
+			//       This can be an error for some applications. 
+			SCEOO=(SCOutHup|SCOutPipe|SCWrite0),  // ``end of output''
+			
+			//*** Error codes ***
+			// Note that SCDone is normally set if an error occurs, 
+			// i.e. the job is terminated on error. 
+			SCErrPollI=0x1000,   // poll() returns POLLERR on input fd
+			SCErrPollO=0x2000,   // poll() returns POLLERR on output fd
+			SCErrRead= 0x4000,   // error during call to read()/readv()
+			SCErrWrite=0x8000,   // error during call to write()/writev()
+			// Combined: matches any error: 
+			SCError=(SCErrPollI|SCErrPollO|SCErrRead|SCErrWrite)
+		};
+		struct CopyInfo
+		{
+			const Copyequest *req;   // pointer to copy request 
+			const CopyStatistics *stat;
+			HTime *fdtime;   // time passed to fdnotify() or NULL
+			
+			// See above for status code (bitwise OR'ed flags). 
+			// IMPORTANT FLAG: Every time cpnotify(CopyInfo*) gets 
+			// called, you should check if SCDone is set. 
+			// YES -> This is the last time a cpnotify() is called 
+			//        for this copy job. Either it is done or 
+			//        terminated by an error. 
+			// NO ->  Not the last time cpnotify() gets called. 
+			StatusCode scode;
+			
+			// Check this if(scode & SCError) for errors: 
+			// In case of no error errno is 0. 
+			int errno;           // errno value 
+			
+			_CPP_OPERATORS_FF
+			CopyInfo(
+				StatusCode scode,
+				const MCopyNode *cpn,
+				int *failflag=NULL);
+			~CopyInfo()  {  req=NULL;  }
+		};
 		
 		struct MCopyNode
 		{
@@ -90,10 +172,15 @@ class FDCopyManager : FDBase
 			// Head of buffer: 
 			// buf!=NULL -> current head of cyclic io buffer
 			// buf==NULL -> current read/write position in src/dest buf
-			char *bufhead;
-			// Number of valid bytes after bufhead (possibly wrapping 
-			// around at bufend), or 0 if buf=NULL. 
+			char *bufheadR;  // read data to write from here
+			char *bufheadW;  // store read data here
+			// Number of valid bytes in buffer starting at bufheadR 
+			// (possibly wrapping around at bufend) and ending at
+			// bufheadW-1; or 0 if buf=NULL. 
 			size_t bufuse;
+			
+			// Statistics: 
+			CopyStatistics stat;
 			
 			_CPP_OPERATORS_FF
 			MCopyNode(int *failflag=NULL);
@@ -155,22 +242,85 @@ class FDCopyManager : FDBase
 static FDCopyManager *FDCopyManager::manager=NULL;
 
 
-static ssize_t fdwrite(int fd,const char *buf,size_t len)
+// Only call if cpn->buf is non-NULL (copy fd to fd). 
+xxx FDCopyManager::_ReadInData(MCopyNode *cpn)
 {
-	ssize_t rv;
-	do
-	{  rv=write(fd,buf,len);  }
-	while(rv<0 && errno==EINTR);
-	return(rv);
-}
-
-static ssize_t fdread(int fd,char *buf,size_t len)
-{
-	ssize_t rv;
-	do
-	{  rv=read(fd,buf,len);  }
-	while(rv<0 && errno==EINTR);
-	return(rv);
+	// See how much free space is in the buffer: 
+	assert(cpn->req.iobufsize>=cpn->bufuse);
+	if(cpn->bufuse>cpn->req.high_read_thresh)
+	{
+		#if TESTING
+		// There is not enough free space in the buffer; we should 
+		// not be here at all. 
+		fprintf(stderr,"Oops: CP:%d: why are we here? (%u,%u)\n",
+			__LINE__,cpn->bufuse,cpn->req.high_read_thresh);
+		#endif
+		return;
+	}
+	size_t avail=cpn->req.iobufsize-cpn->bufuse;
+	
+	// Okay, see how much we want to read: 
+	if(avail>cpn->max_read_len)
+	{  avail=cpn->max_read_len;  }
+	
+	// Now, set up read io vector: 
+	struct iovec rio[2];  // never need more than 2
+	int need_readv=0;
+	rio->iov_base=cpn->bufheadW;
+	rio->iov_len=cpn->bufend-cpn->bufheadW;
+	if(rio->iov_len>avail)
+	{  rio->iov_len=avail;  }
+	else
+	{
+		need_readv=1:
+		rio[1].iov_base=cpn->buf;
+		rio[1].iov_len=avail-rio->iov_len;
+	}
+	
+	// Actually read the stuff in: 
+	ssize_t rd = need_readv ? 
+		readv(cpn->req.srcfd,rio,2) : 
+		read(cpn->req.srcfd,rio->iov_base,rio->iov_len);
+	if(rd<0)
+	{
+		// error condition. 
+		int errn=errno;
+		if(errn==EINTR || errn==EWOULDBLOCK)
+		{
+			#if TESTING
+			if(errn==EWOULDBLOCK)
+			{  fprintf(stderr,"Oops: CP%d: writing would block (%d)\n",
+				__LINE__,cpn->req.srcfd);  }
+			#endif
+			
+			#error do sth
+		}
+		
+		#error IMPORTANT: CHECK EINTR STUFF (sometimes better to deliver signal instead of looping)
+		if(errn==EINTR)
+		{  do_sth();  }
+		else if(errn==EWOULDBLOCK)
+		{  do_sth_different();  }
+		else
+		{  ReadErrorNotify();  }
+	}
+	else if(rd==0)
+	{
+		// EOF reached. 
+		do_eof();
+	}
+	else
+	{
+		// Read in data; update buffer stuff: 
+		size_t rrd=rd;
+		size_t to_end=cpn->bufend-cpn->bufheadW;
+		if(rrd<to_end)
+		{  cpn->bufheadW+=rrd;  }
+		else
+		{  cpn->bufheadW=cpn->buf+(rrd-to_end);  }
+		cpn->bufuse+=rrd;
+		assert(cpn->bufuse<cpn->req.iobufsize);
+	}
 }
 
 
@@ -188,15 +338,15 @@ int FDCopyManager::fdnotify(FDInfo *fdi)
 		if(cpn->req.destbuf)
 		{
 			// Read data from fd and write to buffer. Easy case. 
-			size_t need=cpn->bufend-cpn->bufhead;
+			size_t need=cpn->bufend-cpn->bufheadW;
 			if(need>cpn->req.max_read_len)
 			{  need=cpn->req.max_read_len;  }
 			
-			ssize_t rd=fdread(cpn->req.srcfd,cpn->bufhead,need);
+			ssize_t rd=fdread(cpn->req.srcfd,cpn->bufheadW,need);
 			if(rd>0)
 			{
-				cpn->bufhead+=rd;
-				if(cpn->bufhead>=cpn->bufend)
+				cpn->bufheadW+=rd;
+				if(cpn->bufheadW>=cpn->bufend)
 				{  done_calldown();  }
 			}
 			else if(rd==0)
@@ -209,7 +359,13 @@ int FDCopyManager::fdnotify(FDInfo *fdi)
 				error_calldown();
 			}
 		}
-		
+		else
+		{
+			assert(cpn->pdestid);
+			// Okay, read in data into buffer io buffer: 
+			
+			
+		}
 	}
 	else if(fdi->fd==cpn->req.destfd)
 	{
@@ -219,20 +375,30 @@ int FDCopyManager::fdnotify(FDInfo *fdi)
 		if(cpn->req.srcbuf)
 		{
 			// Read data from buffer and write to fd. Easy case. 
-			size_t avail=cpn->bufend-cpn->bufhead;
+			size_t avail=cpn->bufend-cpn->bufheadR;
 			if(avail>cpn->req.max_write_len)
 			{  avail=cpn->req.max_write_len;  }
 			
-			ssize_t wr=fdwrite(cpn->req.destfd,cpn->bufhead,avail);
+			ssize_t wr=write(cpn->req.destfd,cpn->bufheadR,avail);
 			if(wr>0)
 			{
-				cpn->bufhead+=wr;
-				if(cpn->bufhead>=cpn->bufend)
+				cpn->bufheadR+=wr;
+				if(cpn->bufheadR>=cpn->bufend)
 				{  done_calldown();  }
 			}
-			else
+			#error wr==0, wr<0 ??
+			else if(wr<0)
 			{
-				#error wr==0, wr<0 ??
+				int errn=errno;
+				if(errn==EINTR || errn==EWOULDBLOCK)
+				{
+					#if TESTING
+					if(errn==EWOULDBLOCK)
+					{  fprintf(stderr,"Oops: CP%d: writing would block (%d)\n",
+						__LINE__,cpn->req.destfd);  }
+					#endif
+					
+				}
 			}
 		}
 		
@@ -242,6 +408,9 @@ int FDCopyManager::fdnotify(FDInfo *fdi)
 	
 	return(0);
 }
+
+
+int FDCopyManager::_SendCopyNotify(
 
 
 // Save ("original") poll events (client side) on passed fds and 
@@ -383,22 +552,35 @@ FDCopyManager::CopyID FDCopyManager::CopyFD(FDCopyBase *client,
 		if(!cpn->buf)
 		{  req->errcode=-1;  goto retfreebuf;  }
 		cpn->bufend=cpn->buf+cpn->req.iobufsize;
-		cpn->bufhead=cpn->buf;
+		cpn->bufheadR=cpn->buf;
+		cpn->bufheadW=cpn->buf;
 		cpn->bufuse=0;
 	}
-	else
+	else 
+	// Set buffer vars (src or dest (not both) is passd as argument 
+	// to CopyFD()). 
+	if(cpn->req.srcbuf)
 	{
-		// Set buffer vars (src or dest (not both) is passd as argument 
-		// to CopyFD()). 
-		cpn->bufhead = (cpn->pdestbuf) ? cpn->destbuf : cpn->srcbuf;
-		cpn->bufend = cpn->bufhead + cpn->bufuse;
+		cpn->bufheadR = cpn->req.srcbuf;
+		// cpn->bufheadW stays NULL
+		cpn->bufend = cpn->bufheadR + cpn->bufuse;
 		// bufuse must stay 0 as buf=NULL. 
 	}
+	else if(cpn->req.destbuf)
+	{
+		//cpn->bufheadR must stay 0
+		cpn->bufheadW = cpn->req.destbuf;
+		cpn->bufend = cpn->bufheadW + cpn->bufuse;
+		// bufuse must stay 0 as buf=NULL. 
+	}
+	else
+	{  assert(0);  }
 	
 	// Set poll events of FDs to 0 if FDBase pointer is set: 
 	_SavePollEvents(cpn);
 	
 	// Actually start copy process: 
+	cpn->stat.starttime.SetCurr();  // set start time 
 	#error missing.
 	
 	return((CopyID)cpn);
@@ -483,21 +665,23 @@ FDCopyManager::~FDCopyManger()
 /******************************************************************************/
 
 FDCopyManager::MCopyNode::MCopyNode(int *failflag) : 
-	req(failflag)
+	req(failflag),
+	stat(failflag)
 {
 	client=NULL;
-	
-	psrcid=NULL;
-	pdestid=NULL;
-	
 	fdb=NULL;
+	
 	orig_flags=0;
 	orig_src_events=0;
 	orig_dest_events=0;
 	
+	psrcid=NULL;
+	pdestid=NULL;
+	
 	buf=NULL;
 	bufend=NULL;
-	bufhead=NULL;
+	bufheadR=NULL;
+	bufheadW=NULL;
 	bufuse=0;
 }
 
@@ -512,6 +696,31 @@ FDCopyManager::MCopyNode::~MCopyNode()
 	
 	buf=(char*)LFree(buf);
 	bufend=NULL;
-	bufhead=NULL;
+	bufheadR=NULL;
+	bufheadW=NULL;
 	bufuse=0;
+}
+
+/******************************************************************************/
+
+FDCopyManager::CopyStatistics::CopyStatistics(int * /*failflag*/) : 
+	starttime()
+{
+	read_bytes=0;
+	written_bytes=0;
+}
+
+/******************************************************************************/
+
+FDCopyManager::CopyInfo::CopyInfo(
+	FDCopyManager::StatusCode _scode,
+	const FDCopyManager::MCopyNode *cpn,
+	int * /*failflag*/)
+{
+	req=&cpn->req;
+	stat=&cpn->stat;
+	fdtime=NULL;
+	
+	scode=_scode;
+	errno=0;
 }

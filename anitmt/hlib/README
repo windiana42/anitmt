@@ -15,7 +15,7 @@ A: Of course. The best idea is probably if you create your own sub-directory
    along with your code (have a look at my ones for working examples). 
    That's all; everything should work that simple. 
 
-Q: Wnat platforms does HLIB run on?
+Q: What platforms does HLIB run on?
 A: It runs under Linux-2.2 and Linux-2.4 with >=glibc-2.1 and gcc>=2.95. 
    It will probably run on other platforms with minor modifications or 
    maybe even as it is; I did not try out yet. 

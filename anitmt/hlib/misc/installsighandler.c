@@ -12,9 +12,9 @@
  * 
  */
 
-#include <signal.h>
-
 #include <hlib/prototypes.h>
+
+#include <signal.h>
 
 /* Installs signal handler shandler for signal sig. 
  * Returns 0, if all went ok and -1 if sigaction() failed

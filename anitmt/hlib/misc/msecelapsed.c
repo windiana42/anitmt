@@ -12,10 +12,10 @@
  * 
  */
 
+#include <hlib/prototypes.h>
+
 #include <unistd.h>
 #include <sys/time.h>
-
-#include <hlib/prototypes.h>
 
 /* calc the time between *old and *current in msec. 
  * current may be NULL (then it is queried from the system). 

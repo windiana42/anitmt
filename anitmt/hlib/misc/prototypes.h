@@ -17,12 +17,12 @@
 #ifndef _HLIB_MISC_PROTOTYPES_H
 #define _HLIB_MISC_PROTOTYPES_H 1
 
+/* include config */
+#include <hlib/config.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 
-
-/* include config */
-#include <hlib/config.h>
 
 #ifdef __cplusplus
   extern "C" {

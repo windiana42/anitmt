@@ -12,9 +12,9 @@
  * 
  */
 
-#include <string.h>
-
 #include <hlib/prototypes.h>
+
+#include <string.h>
 
 /* GetPrgName()
  * Basically something like the basename shell command. 

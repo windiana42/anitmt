@@ -1,5 +1,9 @@
+CFLAGS = @CFLAGS@ -W -Wall -D_GNU_SOURCE
+CXXFLAGS = @CXXFLAGS@ -W -Wall -D_GNU_SOURCE
+
 INCLUDES = -I../include/
 noinst_LIBRARIES = libmisc.a
+
 libmisc_a_SOURCES = \
 	checkmalloc.c limitmalloc.c \
 		installsighandler.c \
@@ -8,4 +12,5 @@ libmisc_a_SOURCES = \
 		msecelapsed.c \
 		nonblock.c tcpnodelay.c \
 		getprgname.c \
-	prototytes.h hlib.h \
+	prototypes.h hlib.h 
+

@@ -1,17 +1,21 @@
-#CXXFLAGS = @CXXFLAGS@ -W -Wall ...
-#
+#CFLAGS = @CFLAGS@ -W -Wall -D_GNU_SOURCE
+#CXXFLAGS = @CXXFLAGS@ -W -Wall -D_GNU_SOURCE
+
 OPTCXXFLAGS = -W -Wall -Wformat -Woverloaded-virtual \
 	-Os -march=i486 -fno-rtti -fno-exceptions -fomit-frame-pointer \
 	-malign-jumps=2 -malign-loops=2 -malign-functions=2 \
-	-DHLIB_SIZE_OPT=1
+	-DHLIB_SIZE_OPT=1 -D_GNU_SOURCE
 OPTCFLAGS = -W -Wall -Wformat \
 	-Os -march=i486 -fomit-frame-pointer \
 	-malign-jumps=2 -malign-loops=2 -malign-functions=2 \
-	-DHLIB_SIZE_OPT=1
+	-DHLIB_SIZE_OPT=1 -D_GNU_SOURCE
 
-SUBDIRS = include cpp misc fd par
+SUBDIRS = include cpp misc fd crypto par
 
 noinst_LIBRARIES = libhlib.a
+libhlib_a_SOURCES = 
+
+EXTRA_DIST = BUILD 
 
 libhlib.a: FORCE
 	@objs="" ; for i in $(SUBDIRS) ; do \

@@ -7,7 +7,8 @@ AC_OUTPUT(
 	include/Makefile
 	include/hlib/Makefile
 	cpp/Makefile
+	fd/Makefile
 	par/Makefile
 	misc/Makefile
-	fd/Makefile
+	crypto/Makefile 
 	Makefile )

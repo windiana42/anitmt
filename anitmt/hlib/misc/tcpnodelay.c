@@ -12,10 +12,10 @@
  * 
  */
 
+#include <hlib/prototypes.h>
+
 #include <sys/socket.h>
 #include <netinet/tcp.h>
-
-#include <hlib/prototypes.h>
 
 /* Disable Nagle algorithm on TCP sockets.  
  * Return value: 

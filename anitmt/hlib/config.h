@@ -8,7 +8,18 @@
 #ifndef _HLIB_CONFIG_H_
 #define _HLIB_CONFIG_H_ 1
 
-/*#warning (Reading config.h)*/
+/* Cannot define _GNU_SOURCE here as this must be done earlier 
+ * in the source code. */
+#if defined(__GNUC__) && !defined(_GNU_SOURCE)
+#warning *** _GNU_SOURCE NOT DEFINED. Please pass -D_GNU_SOURCE to the compiler. ***
+#endif
+
+
+/*#warning (------- Reading config.h -------)*/
+
+/* Need NULL, u_int32_t, etc. */
+#include <sys/types.h>
+#include <stddef.h>
 
 /*--------<hack helping in allocation debugging if needed>----------
 #ifdef __cplusplus
@@ -32,8 +43,6 @@
 #ifndef HLIB_SIZE_OPT
 #  define HLIB_SIZE_OPT 0
 #endif
-
-#include <sys/types.h>   /* u_int32_t etc. */
 
 /* We might have to define these:  */
 #ifdef __cplusplus
