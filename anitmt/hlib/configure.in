@@ -5,9 +5,7 @@ AC_PROG_CXX
 AC_PROG_RANLIB
 AC_OUTPUT(
 	cpp/Makefile
-	fd/Makefile
 	par/Makefile
 	misc/Makefile
-	crypto/Makefile 
 	Makefile
 	,[ test -f $srcdir/lnheaders.sh && echo -n "linking headers" && $SHELL $srcdir/lnheaders.sh $srcdir && echo " OK"] )
