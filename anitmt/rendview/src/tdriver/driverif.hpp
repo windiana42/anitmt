@@ -49,6 +49,9 @@ class TaskDriverInterface
 		int Get_todo_thresh_low()   {  return(todo_thresh_low);   }
 		int Get_todo_thresh_high()  {  return(todo_thresh_high);  }
 		
+		// Needed by LDR task source and TaskManager: 
+		virtual int Get_njobs() HL_PureVirt(-1)
+		
 		// Write processing info; called from StartProcessing(): 
 		// when: 0 -> start; 1 -> end
 		// const char: "beginning to" or "waiting for". 
@@ -82,6 +85,10 @@ class TaskDriverInterface
 		// reason: JK_UserInterrupt, JK_ServerError
 		// Returns number of killed jobs. 
 		virtual int TermAllJobs(int /*reason*/) HL_PureVirt(0)
+		
+		// Called when everything is done to disconnect from the clients. 
+		// Local interface can handle that quickly. 
+		virtual void PleaseQuit() HL_PureVirt(;)
 };
 
 #endif  /* _RNDV_TDRIVER_DRIVERINTERFACE_HPP_ */

@@ -26,10 +26,6 @@
 #include <hlib/cpbase.h>
 
 
-// LDR protocol version understood by the client (RendView LDR source): 
-#define LDRProtocolVersion 0x001
-
-
 class TaskSourceFactory_LDR;
 
 class TaskSource_LDR : 
@@ -67,19 +63,20 @@ class TaskSource_LDR :
 			// taking orders from. (Only sconn.first().) 
 			int authenticated;
 			
+			union
+			{
+				char expect_chresp[LDRChallengeLength];
+				int now_conn_auth_code;
+			};
+			
 			// LDE Commands (host order)
 			LDR::LDRCommand next_send_cmd;
 			LDR::LDRCommand last_recv_cmd;
-			
-			// SEQ and ACK in protocol. HOST order. 
-			u_int16_t next_send_seq_no;
-			u_int16_t next_send_ack_no;
-			u_int16_t next_expect_ack_no;  // already received all ACKs smaller than that
-			u_int16_t next_expect_seq_no;  // already got all SEQs smaller than that
+			LDR::LDRCommand expect_cmd;
 			
 			_CPP_OPERATORS_FF
 			ServerConn(int *failflag=NULL);
-			~ServerConn()  { }
+			~ServerConn();
 		};
 		LinkedList<ServerConn> sconn;
 		
@@ -89,15 +86,25 @@ class TaskSource_LDR :
 		inline void _StopSchedTimer()
 			{  UpdateTimer(rtid,-1,0);  }
 		
+		int _AtomicSendData(ServerConn *sc,LDR::LDRHeader *d);
+		int _AtomicRecvData(ServerConn *sc,LDR::LDRHeader *d,size_t len);
+		
+		// Returns packet length or 0 -> error. 
+		size_t _CheckRespHeader(ServerConn *sc,
+			LDR::LDRHeader *d,size_t read_len,
+			size_t min_len,size_t max_len);
+		
 		// Packet handling: 
-		void _FillInLDRHEader(ServerConn *sc,LDR::LDRHeader *d,LDR::LDRCommand cmd,size_t length);
 		void _SendChallengeRequest(ServerConn *sc);
+		int _RecvChallengeResponse(ServerConn *sc);
+		void _SendNowConnected(ServerConn *sc);
 		
 		// FD handling: 
 		void _ListenFdNotify(FDInfo *fdi);
 		void _SConnFDNotify(FDInfo *fdi,ServerConn *sc);
-		int _AtomicSendData(ServerConn *sc,LDR::LDRHeader *d);
-		void _ConnCloseUnexpected(ServerConn *sc);
+		int _AuthSConnFDNotify(FDInfo *fdi,ServerConn *sc);
+		
+		void _ConnClose(ServerConn *sc,int reason);
 		
 		// overriding virtuals from FDbase: 
 		int timernotify(TimerInfo *);

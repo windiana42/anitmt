@@ -33,6 +33,9 @@ class TaskSourceFactory_LDR :
 		// Port we will bind the listening socket: 
 		int listen_port;
 		
+		// Password required by server to connect. 
+		RefString password;
+		
 		// Listening socket (managed by TaskSource_LDR, of course)
 		int listen_fd;
 		

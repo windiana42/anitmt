@@ -596,6 +596,17 @@ void TaskManager::_schedule(TimerInfo *ti)
 	{
 		// Quit is scheduled. So, we quit if everything is cleaned up: 
 		
+		// The interface (in case of an LDR server) must disconnect 
+		// from the clients if there are no more jobs to do. 
+		// Let him do that. 
+		if(tasklist_todo.is_empty() && 
+		   !told_interface_to_quit )
+		{
+			interface->PleaseQuit();
+			told_interface_to_quit=1;
+			// The interface will call CheckStartNewJobs(-1) when done. 
+		}
+		
 		if(!interface->AreThereJobsRunning() && 
 		   tasklist_todo.is_empty() && 
 		   tasklist_done.is_empty() && 
@@ -603,7 +614,6 @@ void TaskManager::_schedule(TimerInfo *ti)
 		   pending_action==ANone )
 		{
 			// Okay, we may actually quit. 
-			//fprintf(stderr,"<<%d,%d>>\n",schedule_quit,schedule_quit_after);
 			_DoQuit(cmpMAX(schedule_quit,schedule_quit_after)-1);
 			return;
 		}
@@ -843,14 +853,10 @@ int TaskManager::_StartProcessing()
 	UseTaskSource(ts);
 	
 	// Write out useful verbose information: 
-	
-	interface->WriteProcessingInfo(0,
-		(GetTaskSourceType()==TST_Active) ? "waiting for" : "beginning to");
-	
 	char tmp[24];
 	if(max_failed_in_sequence)  snprintf(tmp,24,"%d",max_failed_in_sequence);
 	else  strcpy(tmp,"OFF");
-	Verbose("  max-failed-in-seq=%s\n",tmp);
+	Verbose("Ready to perform work: max-failed-in-seq=%s\n",tmp);
 	
 	// Get load val for first time; see if it is >0: 
 	int loadval=_GetLoadValue();
@@ -891,6 +897,9 @@ void TaskManager::ReallyStartProcessing(int error_occured)
 		return;
 	}
 	
+	interface->WriteProcessingInfo(0,
+		(GetTaskSourceType()==TST_Active) ? "waiting for" : "beginning to");
+	
 	if(GetTaskSourceType()==TST_Passive)
 	{
 		// Do start exchange with task source: 
@@ -905,11 +914,54 @@ void TaskManager::ReallyStartProcessing(int error_occured)
 }
 
 
-// Called by TaskDriverInterface becuase a TaskDriver or LDR client 
-// unregistered 
-// Only there to check if we want to start new tasks. 
-void TaskManager::CheckStartNewJobs()
+// Called by TaskDriverInterface becuase a TaskDriver unregisterd 
+// or because new LDR clients are connected or others disconnect. 
+void TaskManager::CheckStartNewJobs(int njobs_changed)
 {
+	if(njobs_changed==-1)
+	{
+		// Special case. Called by LDR interface when all clients were 
+		// disconnected. 
+		assert((schedule_quit || schedule_quit_after) && 
+			   tasklist_todo.is_empty());
+		
+		ReSched();
+		return;
+	}
+	
+	if(told_interface_to_quit)
+	{
+		// We're no longer interested in new njobs values. 
+		// Yes, the LDR clients are disconnected by the interface 
+		// and when done, njobs_changed=-1. 
+		return;
+	}
+	
+	if(njobs_changed)
+	{
+		int njobs=Get_njobs();
+		if(!njobs)
+		{
+			// First action: make sure we don't start a task now. 
+			_KillScheduledForStart();
+			
+			// We cannot go on...?
+#warning RACE: njobs may be 0 here because the first client disconnected \
+unexpectedly. In this case we should not quit but wait for the other \
+connections. 
+			
+			// This will put back all tasks to the source and quit then. 
+			// This is an error unless there is nothing to do and we're 
+			// quitting. 
+			bool just_quitting = tasklist_todo.is_empty() && 
+				(schedule_quit || schedule_quit_after);
+			if(!just_quitting)
+			{  schedule_quit=2;  }
+			ReSched();
+			return;
+		}
+	}
+	
 	// See if we want to start more jobs: 
 	_CheckStartTasks();
 	
@@ -1404,6 +1456,7 @@ TaskManager::TaskManager(ComponentDataBase *cdb,int *failflag) :
 	schedule_quit=0;
 	schedule_quit_after=0;
 	sched_kill_tasks=0;
+	told_interface_to_quit=0;
 	kill_tasks_and_quit_now=0;
 	exec_stopped=0;
 	
@@ -1465,11 +1518,15 @@ TaskManager::~TaskManager()
 	
 	// Make sure there are no jobs and no tasks left: 
 	assert(!scheduled_for_start);
-	if(!kill_tasks_and_quit_now)
+	if(kill_tasks_and_quit_now)
 	{
-		assert(tasklist_todo.is_empty());
-		assert(tasklist_done.is_empty());
+		while(!tasklist_todo.is_empty())
+		{  delete tasklist_todo.popfirst();  }
+		while(!tasklist_done.is_empty())
+		{  delete tasklist_done.popfirst();  }
 	}
+	assert(tasklist_todo.is_empty());
+	assert(tasklist_done.is_empty());
 	
 	assert(!connected_to_tsource);
 	assert(pending_action==ANone);

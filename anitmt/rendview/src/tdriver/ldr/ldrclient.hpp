@@ -19,6 +19,9 @@
 #define _RNDV_TDRIVER_LDRCLIENT_HPP_ 1
 
 
+#include <lib/ldrproto.hpp>
+
+
 // THE LINKED TASK DRIVER LIST IS HELD BY TaskDriverInterface_Local
 // (which is the right hand of TaskManager).  
 // (NOT BY ComponentDataBase). 
@@ -41,21 +44,48 @@ class LDRClient :
 		
 		// connected_state: 2 -> connected; 1 -> waiting for conn; 0 -> not conn.
 		int connected_state : 3;  // 0,1,2
+		int auth_passed : 1;
+		int _counted_as_client : 1;  // USED BY TaskDriverInterface_LDR
+		int send_quit_cmd : 3;  // 1 -> must send; 2 -> sent; 3 -> done
+		int : 26;  // padding
 		
-		int : 29;  // padding
+		// Next command to send to client: 
+		LDR::LDRCommand next_send_cmd;
+		LDR::LDRCommand last_recv_cmd;
+		LDR::LDRCommand expect_cmd;  // what we expect to get
+		// Response buffer (used for different things): 
+		size_t resp_buf_alloc_len;
+		char *resp_buf;
+		
+		// Client data: 
+		int c_jobs;  // njobs reported by client. 
+		
+		// Return value: 1 -> alloc failure 
+		inline int _ResizeRespBuf(size_t newlen);
 		
 		inline void PollFD(short events)
 			{  tdif->PollFD(pollid,events);  }
 		inline void ShutdownFD()
-			{  tdif->ShutdownFD(pollid);  }
+			{  tdif->ShutdownFD(pollid);  sock_fd=-1;  }
 		inline void UnpollFD()
 			{  tdif->UnpollFD(pollid);  sock_fd=-1;  }
 		
 		// Returns nice client name: 
 		RefString _ClientName();
 		
-		// Helpers of fdnotify(): 
+		int _StoreChallengeResponse(LDR::LDRChallengeRequest *d);
+		
+		int     _AtomicSendData(LDR::LDRHeader *d);
+		ssize_t _AtomicRecvData(LDR::LDRHeader *d,size_t len,size_t min_len);
+		
+		// Returns packet length or 0 -> error. 
+		size_t _CheckRespHeader(LDR::LDRHeader *d,size_t read_len,
+			size_t min_len,size_t max_len);
+
+		// Helper of fdnotify(): 
 		int _DoFinishConnect(FDBase::FDInfo *fdi);
+		int _DoAuthHandshake(FDBase::FDInfo *fdi);
+		void _DoSendQuit(FDBase::FDInfo *fdi);
 		
 		// Called via TaskDriverInterface_LDR: 
 		void fdnotify(FDBase::FDInfo *fdi);
@@ -76,6 +106,12 @@ class LDRClient :
 		//   1 -> connected successfully without delay
 		//  -1 -> error
 		int ConnectTo(ClientParam *);
+		
+		// Disconnect from client. Immediately quit if not connected. 
+		// Return value: 
+		//  1 -> already connected
+		//  0 -> wait for disconnect to happen. 
+		int Disconnect();
 };
 
 #endif  /* _RNDV_TDRIVER_LDRCLIENT_HPP_ */

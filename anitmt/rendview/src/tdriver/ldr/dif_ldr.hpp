@@ -44,12 +44,19 @@ class TaskDriverInterface_LDR :
 		// Current number of clients which can be used: 
 		int nclients;
 		
+		
+		void _JobsAddClient(LDRClient *client,int mode);
+		
 		// client connect timeout timer: 
 		TimerID tid_connedt_to;
 		
-		int already_started_processing;  // ReallyStartProcessing() called?
+		int already_started_processing : 1;  // ReallyStartProcessing() called?
+		int shall_quit : 1;   // Was PleaseQuit() called?
+		
+		int : 30;  // padding
 		
 		void _WriteStartProcInfo(const char *msg);
+		void _WriteProcInfoUpdate();
 		void _WriteEndProcInfo();
 		
 		// FDBase virtuals: 
@@ -60,6 +67,9 @@ class TaskDriverInterface_LDR :
 		
 		ComponentDataBase *component_db()
 			{  return(TaskDriverInterface::component_db());  }
+		
+		// Needed by LDR task source: 
+		int Get_njobs();
 		
 		/************* INTERFACE TO TaskManager *************/
 		// ALL OVERRIDING VIRTUALS from TaskDriverInterface: 
@@ -94,6 +104,10 @@ class TaskDriverInterface_LDR :
 		// Returns number of killed jobs. 
 		int TermAllJobs(int reason);
 		
+		// Called when everything is done to disconnect from the clients. 
+		// Local interface can handle that quickly. 
+		void PleaseQuit();
+		
 		/************* INTERFACE TO LDRClient *************/
 		
 		// These are called by the constructor/destructor of LDRClient: 
@@ -104,7 +118,7 @@ class TaskDriverInterface_LDR :
 		PollID PollFD_Init(LDRClient *client,int fd);
 		void PollFD(PollID pollid,short events)
 			{  FDBase::PollFD(pollid,events);  }
-		int ShutdownFD(PollID pollid)
+		int ShutdownFD(PollID &pollid)
 			{  return(FDBase::ShutdownFD(pollid));  }
 		void UnpollFD(PollID &pollid)
 			{  FDBase::UnpollFD(pollid);  }
@@ -112,6 +126,13 @@ class TaskDriverInterface_LDR :
 		// Called if connect(2) or authentification failed. 
 		// The client gets removed now. 
 		void FailedToConnect(LDRClient *client);
+		
+		// Called if we are now connected AND authenticated and 
+		// can do tasks. 
+		void SuccessfullyConnected(LDRClient *client);
+		
+		// Called when a client disconnected. 
+		void ClientDisconnected(LDRClient *client);
 		
 		// Called by LDRClient when he is done and wants to get deleted: 
 		void IAmDone(LDRClient *client);

@@ -58,6 +58,9 @@ class TaskDriverInterface_Local :
 		ComponentDataBase *component_db()
 			{  return(TaskDriverInterface::component_db());  }
 		
+		// Needed by LDR task source: 
+		int Get_njobs();
+		
 		/************* INTERFACE TO TaskManager *************/
 		// ALL OVERRIDING VIRTUALS from TaskDriverInterface: 
 		
@@ -91,6 +94,10 @@ class TaskDriverInterface_Local :
 		// reason: JK_UserInterrupt, JK_ServerError
 		// Returns number of killed jobs. 
 		int TermAllJobs(int reason);
+		
+		// Called when everything is done to disconnect from the clients. 
+		// Local interface can handle that quickly. 
+		void PleaseQuit();
 		
 		/************* INTERFACE TO TaskDriver *************/
 		

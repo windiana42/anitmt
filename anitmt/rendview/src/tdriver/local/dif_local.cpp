@@ -22,6 +22,22 @@
 #include <assert.h>
 
 
+// Not inline because virtual: 
+int TaskDriverInterface_Local::Get_njobs()
+{
+	return(p->njobs);
+}
+
+
+// Called when everything is done to disconnect from the clients. 
+// Local interface can handle that quickly. 
+void TaskDriverInterface_Local::PleaseQuit()
+{
+	// Can quit at any time. 
+	component_db()->taskmanager()->CheckStartNewJobs(/*special=*/-1);
+}
+
+
 void TaskDriverInterface_Local::StopContTasks(int signo)
 {
 	// send signal to the tasks: 
@@ -487,7 +503,7 @@ void TaskDriverInterface_Local::UnregisterTaskDriver(TaskDriver *td)
 	// Dequeue task: 
 	joblist.dequeue(td);
 	
-	component_db()->taskmanager()->CheckStartNewJobs();
+	component_db()->taskmanager()->CheckStartNewJobs(/*njobs_changed=*/0);
 }
 
 

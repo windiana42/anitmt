@@ -32,17 +32,18 @@ class TaskDriverInterfaceFactory_LDR :
 		{
 			RefString name;   // as specified by the user (without port)
 			MyAddrInfo addr;
+			RefString password;  // needef for auth at client
 			
 			_CPP_OPERATORS_FF
 			ClientParam(int *failflag=NULL);
-			~ClientParam()  { }
+			~ClientParam();
 		};
 	private:
 		// We may access component_db(). 
 		
-		// As set by user: (ONLY USE FOR PARAM CODE!)
-		int thresh_param_low, thresh_param_high;
-		// todo_thresh_low, todo_thresh_high in TaskDriverInterface. 
+		// User-tunable param: 
+		int todo_thresh_reserved_min;  // always have this many more tasks than clients
+		int todo_thresh_reserved_max;
 		
 		// Default LDR port (if not specified after client): 
 		int default_port;

@@ -18,6 +18,8 @@
 
 #include <hlib/prototypes.h>
 
+class HTime;
+
 namespace LDR
 {
 
@@ -25,6 +27,10 @@ extern const u_int16_t LDREndMagic;
 
 // Default LDR port (client side): 
 extern const int DefaultLDRPort;
+
+// LDR protocol version used by this version of RendView: 
+extern const u_int16_t LDRProtocolVersion;
+
 
 typedef unsigned char uchar;
 
@@ -38,35 +44,42 @@ typedef unsigned char uchar;
 
 enum LDRCommand
 {
-	LDR_NoCommand=0x0000,
-	LDR_ChallengeRequest,
-	LDR_ChallengeResponse,
-	LDR_NowConnected,     // challenge resp okay, now server
-	LDR_ConnectionRefused,  // illegal challenge resp or already connected
-	LDR_TaskRequest,      // please do that task: blahblah...
-	LDR_TaskRefused,      // e.g. unknown renderer
-	LDR_FileRequest,      // need files x,y,z
-	LDR_TaskState,        // working, killed (?)
-	LDR_TaskDone,         // task done
-	LDR_FileTransmission, // here is file x...
-	LDR_SpecialTaskRequest,  // e.g. interrupt, stop, cont
+	// MAKE SURE THAT THE COMMAND NUMBERS ARE 0..._Cmd_LAST. 
+	Cmd_NoCommand=0x0000,
+	Cmd_QuitNow,          // ONLY server -> client
+	Cmd_ChallengeRequest,
+	Cmd_ChallengeResponse,
+	Cmd_NowConnected,     // challenge resp okay, now server -OR-
+	                      // illegal challenge resp or already connected
+	Cmd_TaskRequest,      // please do that task: blahblah...
+	Cmd_TaskRefused,      // e.g. unknown renderer
+	Cmd_FileRequest,      // need files x,y,z
+	Cmd_TaskState,        // working, killed (?)
+	Cmd_TaskDone,         // task done
+	Cmd_FileTransmission, // here is file x...
+	Cmd_SpecialTaskRequest,  // e.g. interrupt, stop, cont
+	
+	_Cmd_LAST,   // MUST BE LAST
 };
+
+const char *LDRCommandString(LDRCommand c);
+
 
 struct LDRHeader
 {
 	u_int32_t length;   // length of header and body until next header
 	u_int16_t command;  // Type of arriving packet
-	// These can be used to implement pipelining. Note that they 
-	// roll back to 0 after 65535. 
-	u_int16_t seq_no;   // sequence number of packet
-	u_int16_t ack_no;   // acknowlege number 
-};
+}__attribute__((__packed__));
 
 
 // LDRTime: 
 // Modified standard unix time format: msec since 1970. 
 typedef u_int64_t LDRTime;
 
+// Time conversion. 
+// Note that LDRTime is always in network order. 
+void LDRTime2HTime(const LDRTime *t,HTime *h);
+void HTime2LDRTime(const HTime *h,LDRTime *t);
 
 #define LDRIDStringLength 18
 #define LDRChallengeLength 16
@@ -86,14 +99,39 @@ struct LDRChallengeResponse : LDRHeader
 };
 
 
+// Store RendView ID string in id_dest of size len: 
+extern void LDRSetIDString(char *id_dest,size_t len);
+
+// resp_buf: buffer of size LDRChallengeRespLength. 
+// passwd may be NULL for -none-. 
+extern void LDRComputeCallengeResponse(LDRChallengeRequest *d,char *resp_buf,
+	const char *passwd);
+
+
+enum  // ConnectionAuthCode
+{
+	CAC_Success=0,
+	CAC_AuthFailed,        // illegal challenge resp. 
+	CAC_AlreadyConnected
+};
+
+// NOTE: In case of error (auth_code != 0), 
+//       the pack is truncated after auth_code. 
+//   the packet is truncated after 
 struct LDRNowConnected : LDRHeader
 {
+	u_int16_t auth_code;  // CAC_*
 	u_int16_t njobs;   // njobs param as passed on startup of client
 	LDRTime starttime;  // when client was started
 	// Could pass a lot more like unsuccessful connection attempts, etc. 
 };
 
 
+struct LDRQuitNow : LDRHeader
+{
+	// NOTE!! MAY NOT BE LONGER THAN ANY OTHER LDR "PACKET". 
+	//        --EVEN WORSE: it may not comtain data. 
+};
 
 
 struct LDRFileInfoEntry

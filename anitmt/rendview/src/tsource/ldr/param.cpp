@@ -142,7 +142,8 @@ int TaskSourceFactory_LDR::init(ComponentDataBase *cdb)
 
 TaskSourceFactory_LDR::TaskSourceFactory_LDR(
 	ComponentDataBase *cdb,int *failflag) : 
-	TaskSourceFactory("LDR",cdb,failflag)
+	TaskSourceFactory("LDR",cdb,failflag),
+	password(failflag)
 {
 	listen_fd=-1;
 	
@@ -168,4 +169,6 @@ TaskSourceFactory_LDR::~TaskSourceFactory_LDR()
 		::close(listen_fd);
 		listen_fd=-1;
 	}
+	
+	password.zero();
 }

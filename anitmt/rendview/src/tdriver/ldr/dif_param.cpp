@@ -238,13 +238,13 @@ int TaskDriverInterfaceFactory_LDR::_RegisterParams()
 		"default LDR port if not specified after client",
 		&default_port);
 	
-	AddParam("task-thresh-low",
-		"start getting new tasks from the task source if there are less "
-		"than this number of non-completely processed tasks in the task "
-		"queue",&thresh_param_low);
-	AddParam("task-thresh-high",
-		"never store more than this number of tasks in the local task queue",
-		&thresh_param_high);
+	AddParam("task-res-min",
+		"try to always have that many task MORE than currently running",
+		&todo_thresh_reserved_min);
+	AddParam("task-res-max",
+		"stop getting tasks when having that many tasks MORE than currenty "
+		"running",
+		&todo_thresh_reserved_max);
 	
 	if(add_failed)
 	{  return(1);  }
@@ -283,7 +283,8 @@ TaskDriverInterfaceFactory_LDR::TaskDriverInterfaceFactory_LDR(
 	int failed=0;
 	
 	// Set up defaults/initial values: 
-	thresh_param_low=thresh_param_high=-1;
+	todo_thresh_reserved_min=2;
+	todo_thresh_reserved_max=6;
 	
 	default_port=DefaultLDRPort;
 	
@@ -314,7 +315,13 @@ TaskDriverInterfaceFactory_LDR::~TaskDriverInterfaceFactory_LDR()
 
 TaskDriverInterfaceFactory_LDR::ClientParam::ClientParam(int *failflag=NULL) : 
 	name(failflag),
-	addr(failflag)
+	addr(failflag),
+	password(failflag)
 {
 	
+}
+
+TaskDriverInterfaceFactory_LDR::ClientParam::~ClientParam()
+{
+	password.zero();
 }

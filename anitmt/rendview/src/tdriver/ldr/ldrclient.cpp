@@ -24,8 +24,7 @@
 #include <assert.h>
 
 
-
-int test=TTR_Unset;
+using namespace LDR;
 
 
 #ifndef TESTING
@@ -38,9 +37,9 @@ int test=TTR_Unset;
 
 #warning IMPORTANT: Remove potentially dangerous asserts in destructors (like assert(fd<0))
 
-#warning do: use getsockopt(2) to read the SO_ERROR \
-option at level  SOL_SOCKET  to  determine  whether \
-connect  completed  successfully (SO_ERROR is zero) 
+#warning make it configurable: 
+static int max_jobs_per_client=24;
+
 
 // Return value: 
 //   0 -> connecting...
@@ -122,6 +121,80 @@ int LDRClient::ConnectTo(ClientParam *cp)
 }
 
 
+// Return value: 
+//  1 -> already connected
+//  0 -> wait for disconnect to happen. 
+int LDRClient::Disconnect()
+{
+	if(connected_state<2)
+	{
+		Verbose("  Nothing to do for disconnect from %s.\n",
+			_ClientName().str());
+		ShutdownFD();
+		return(1);
+	}
+	
+	if(!send_quit_cmd)
+	{
+		// We need not fiddle around with next_send_cmd and expect_cmd 
+		// as send_quit_cmd has precedence and the other vars might be 
+		// changed again before fdnotify() by some other notify. 
+		send_quit_cmd=1;
+		PollFD(POLLOUT);
+	}
+	
+	return(0);
+}
+
+
+// Return value: 0 -> OK; -1 -> error
+int LDRClient::_AtomicSendData(LDRHeader *d)
+{
+	size_t len=d->length;
+	d->length=htonl(len);
+	
+	ssize_t wr=write(sock_fd,(char*)d,len);
+	if(wr<0)
+	{
+		Error("Client %s: Failed to send %u bytes: %s\n",
+			_ClientName().str(),len,strerror(errno));
+		return(-1);
+	}
+	if(size_t(wr)<len)
+	{
+		Error("Client %s: Short write (sent %u/%u bytes).\n",
+			_ClientName().str(),size_t(wr),len);
+		return(-1);
+	}
+	return(0);
+}
+
+// Return value: 0 -> OK; -1 -> error
+ssize_t LDRClient::_AtomicRecvData(LDRHeader *dest,size_t len,size_t min_len)
+{
+	ssize_t rd=read(sock_fd,(char*)dest,len);
+	if(rd<0)
+	{
+		Error("Client %s: While reading: %s\n",
+			_ClientName().str(),strerror(errno));
+		return(-1);
+	}
+	else if(!rd)
+	{
+		Error("Client %s: Disconnected unexpectedly.\n",
+			_ClientName().str());
+		return(-1);
+	}
+	else if(size_t(rd)<min_len)
+	{
+		Error("Client %s: Short (packet \"%s\": %d/%u bytes)\n",
+			_ClientName().str(),LDRCommandString(expect_cmd),rd,min_len);
+		return(-1);
+	}
+	return(len);
+}
+
+
 // Finish up connect(2). 
 // Return value: 
 //  0 -> OK, now connected. 
@@ -130,29 +203,24 @@ int LDRClient::_DoFinishConnect(FDBase::FDInfo *fdi)
 {
 	assert(connected_state==1);
 	
-	Verbose("XXX>>> ");
+	//Verbose("XXX>>> ");
 	
 	// Okay, see if we have POLLIN. (DO THAT FIRST; YES!!)
 	if(fdi->revents & POLLIN)
 	{
-		int errval;
-		socklen_t errval_len=sizeof(errval);
-		if(getsockopt(sock_fd,SOL_SOCKET,SO_ERROR,&errval,&errval_len)<0)
-		{
-			Error("Client %s: getsockopt failed: %s\n",
-				_ClientName().str(),strerror(errno));
-			return(1);
-		}
+		int errval=GetSocketError(sock_fd);
 		if(errval)
 		{
-			Error("Failed to connect to %s: %s\n",
-				_ClientName().str(),strerror(errval));
+			Error("Client %s: %s failed: %s\n",
+				_ClientName().str(),
+				errval<0 ? "getsockopt" : "connect",
+				strerror(errval));
 			return(1);
 		}
 	}
 	else
 	{
-		Error("Client %s: no POLLIN after connect. Removing client.\n",
+		Error("Client %s: No POLLIN after connect. Removing client.\n",
 			_ClientName().str());
 		return(1);
 	}
@@ -161,7 +229,7 @@ int LDRClient::_DoFinishConnect(FDBase::FDInfo *fdi)
 	// See if other flags are set: 
 	if(fdi->revents & (POLLERR | POLLHUP | POLLNVAL))
 	{
-		Error("Client %s: strange poll revents%s%s%s. Removing client.\n",
+		Error("Client %s: Strange poll revents%s%s%s. Removing client.\n",
 			_ClientName().str(),
 			(fdi->revents & POLLERR) ? " ERR" : "",
 			(fdi->revents & POLLHUP) ? " HUP" : "",
@@ -173,7 +241,296 @@ int LDRClient::_DoFinishConnect(FDBase::FDInfo *fdi)
 	connected_state=2;
 	Verbose("Okay, connected to %s. Waiting for challenge...\n",
 		_ClientName().str());
+	next_send_cmd=Cmd_NoCommand;
+	expect_cmd=Cmd_ChallengeRequest;
 	return(0);
+}
+
+
+// Compute a response out of a request and store the whole 
+// response packet in resp_buf. 
+// Return value: 0 -> OK. 
+int LDRClient::_StoreChallengeResponse(LDRChallengeRequest *d)
+{
+	if(_ResizeRespBuf(sizeof(LDRChallengeResponse)))
+	{  return(1);  }
+	
+	LDRChallengeResponse *r=(LDRChallengeResponse *)resp_buf;
+	r->length=sizeof(LDRChallengeResponse);  // STILL IN HOST ORDER
+	r->command=htons(next_send_cmd);
+	
+	LDRSetIDString((char*)r->id_string,LDRIDStringLength);
+	LDRComputeCallengeResponse(d,(char*)r->response,cp->password.str());
+	
+	return(0);
+}
+
+
+// Returns packet length or 0 -> error. 
+size_t LDRClient::_CheckRespHeader(LDRHeader *d,size_t read_len,
+	size_t min_len,size_t max_len)
+{
+	if(read_len<sizeof(LDRHeader))
+	{
+		Error("Client %s: Packet too short (header incomplete: %u bytes)\n",
+			_ClientName().str(),read_len);
+		return(0);  // YES!!
+	}
+	last_recv_cmd=(LDRCommand)ntohs(d->command);
+	if(last_recv_cmd!=expect_cmd)
+	{
+		Error("Client %s: Conversation error (expected: %s; received: %s)\n",
+			_ClientName().str(),
+			LDRCommandString(expect_cmd),
+			LDRCommandString(last_recv_cmd));
+		return(0);  // YES!!
+	}
+	size_t len=ntohl(d->length);
+	if(len<min_len || len>max_len)
+	{
+		Error("Client %s: Packet too %s (header: %u bytes; %s: %u bytes)\n",
+			_ClientName().str(),
+			len<min_len ? "short" : "long",
+			len,
+			len<min_len ? "min" : "max",
+			len<min_len ? min_len : max_len);
+		return(0);  // YES!!
+	}
+	return(len);
+}
+
+
+// Return value: 0 -> OK
+// 1 -> failure; close doen conn. 
+int LDRClient::_DoAuthHandshake(FDBase::FDInfo *fdi)
+{
+	assert(connected_state==2 && !auth_passed);
+	
+	int handeled=0;
+	if(fdi->revents & POLLIN)
+	{
+		if(expect_cmd==Cmd_ChallengeRequest)
+		{
+			assert(next_send_cmd==Cmd_NoCommand);
+			
+			// We want to get challenge from client. 
+			// Challenge is fixed-length and we expect to get it atomically. 
+			
+			LDRChallengeRequest d;
+			ssize_t rd=_AtomicRecvData(&d,sizeof(d),sizeof(d));
+			if(rd<0)
+			{  return(1);  }
+			
+			// Check fields: 
+			if(!_CheckRespHeader(&d,size_t(rd),sizeof(d),sizeof(d)))
+			{  return(1);  }
+			u_int16_t clientpv=ntohs(d.protocol_vers);
+			if(clientpv!=LDRProtocolVersion)
+			{
+				Error("Client %s: LDR proto version mismatch: client: %d; server %d.\n",
+					_ClientName().str(),int(clientpv),int(LDRProtocolVersion));
+				return(1);
+			}
+			
+			Verbose("Client %s: %.*s\n",
+				_ClientName().str(),
+				LDRIDStringLength,d.id_string);
+			
+			// Okay, we have a challenge. Compute the response. 
+			// The response is computed and stored in resp_buf. 
+			next_send_cmd=Cmd_ChallengeResponse;  // DO NOT MOVE
+			expect_cmd=Cmd_NoCommand;
+			_StoreChallengeResponse(&d);          // DO NOT MOVE
+			
+			PollFD(POLLOUT);
+			handeled=1;
+		}
+		else if(expect_cmd==Cmd_NowConnected)
+		{
+			assert(next_send_cmd==Cmd_NoCommand);
+			
+			// Last auth packet. Either challenge response was accepted 
+			// or not. Want to get that atomically, too. 
+			LDRNowConnected d;
+			size_t min_len=(((char*)&d.auth_code)-((char*)&d)+sizeof(d.auth_code));
+			ssize_t rd=_AtomicRecvData(&d,sizeof(d),min_len);
+			if(rd<0)
+			{  return(1);  }
+			
+			// Check fields: 
+			size_t len=_CheckRespHeader(&d,size_t(rd),min_len,sizeof(d));
+			if(!len)
+			{  return(1);  }
+			
+			// Get code: 
+			int okay=0;
+			switch(ntohs(d.auth_code))
+			{
+				case CAC_Success:  okay=1;  break;
+				case CAC_AuthFailed:
+					Warning("Client %s: Auth failed (illegal challenge).\n",
+						_ClientName().str());
+					break;
+				case CAC_AlreadyConnected:
+					Warning("Client %s: Already connected to some other server.\n",
+						_ClientName().str());
+					break;
+				default:
+					Error("Client %s: Illegal auth code %d.\n",
+						_ClientName().str(),int(ntohs(d.auth_code)));
+					break;
+			}
+			if(!okay)
+			{  return(-1);  }
+			
+			c_jobs=ntohs(d.njobs);
+			HTime up_since;
+			LDRTime2HTime(&d.starttime,&up_since);
+			
+			if(c_jobs>max_jobs_per_client)
+			{
+				Warning("Client %s: reports njobs=%d; using %d.\n",
+					_ClientName().str(),c_jobs,max_jobs_per_client);
+				c_jobs=max_jobs_per_client;
+			}
+			
+			// Okay, we are now connected. 
+			Verbose("Client %s: Now connected: njobs=%d (parallel jobs)\n"
+				"  Up since: %s  (local)\n",
+				_ClientName().str(),c_jobs,
+				up_since.PrintTime(1));
+			
+			auth_passed=1;
+			next_send_cmd=Cmd_NoCommand;
+			expect_cmd=Cmd_NoCommand;
+			
+			PollFD(POLLIN);  // EOF and things
+			handeled=1;
+			
+			// Tell interface to that we are now connected. 
+			tdif->SuccessfullyConnected(this);
+		}
+	}
+	if(fdi->revents & POLLOUT)
+	{
+		if(next_send_cmd==Cmd_ChallengeResponse)
+		{
+			assert(resp_buf && resp_buf_alloc_len>=sizeof(LDRChallengeResponse));
+			assert(expect_cmd==Cmd_NoCommand);
+			
+			if(_AtomicSendData((LDRHeader *)resp_buf))
+			{  return(1);  }
+			
+			next_send_cmd=Cmd_NoCommand;
+			expect_cmd=Cmd_NowConnected;
+			
+			PollFD(POLLIN);
+			handeled=1;
+		}
+	}
+	
+	if(!handeled || (fdi->revents & (POLLPRI | POLLERR | POLLNVAL)) )
+	{
+		// See if there is an error: 
+		int errval=GetSocketError(sock_fd);
+		if(errval)
+		{
+			// We do not deal with the case of errval<0 here. 
+			// GetSocketError() did not fail for initial connect; 
+			// why sould it fail here. 
+			// If you get "Unknown error" then proably getspockopt() 
+			// failed...
+			Error("Client %s: %s\n",strerror(errval));
+			return(1);
+		}
+		else
+		{
+			Error("Client %s: Unexpected revents=%d (state %d,%d). "
+				"Disconnecting.\n",
+				_ClientName().str(),fdi->revents,
+				expect_cmd,next_send_cmd);
+			return(1);
+		}
+	}
+	return(0);
+}
+
+
+void LDRClient::_DoSendQuit(FDBase::FDInfo *fdi)
+{
+	if(send_quit_cmd==1)
+	{
+		if(fdi->revents & POLLHUP)
+		{
+			// This is unexpected but okay, because we want to 
+			// disconnect now. 
+			// For poll emulation, we can use the POLLOUT below. 
+			Verbose("Client %s disconnected just in time.\n",
+				_ClientName().str());
+			send_quit_cmd=3;
+		}
+		else if(fdi->revents & POLLOUT)
+		{
+			// Must send quit cmd. 
+			LDRQuitNow d;
+			d.length=sizeof(LDRQuitNow);  // STILL IN HOST ORDER
+			d.command=htons(Cmd_QuitNow);
+			
+			if(_AtomicSendData(&d))
+			{
+				Error("  (Error above happened quring quit. No real problem.)\n");
+				send_quit_cmd=3;
+			}
+			else
+			{
+				Verbose("  Sent quit to client %s.\n",_ClientName().str());
+				send_quit_cmd=2;
+				PollFD(POLLIN);
+			}
+		}
+		else
+		{
+			Verbose("Client %s: strange revents %d during quitting.\n",
+				_ClientName().str(),fdi->revents);
+			send_quit_cmd=3;  // simply shut down NOW. 
+		}
+	}
+	else if(send_quit_cmd==2)
+	{
+		// We expect that the client disconnects. 
+		// Otherwise we do that. 
+		int client_disconnected=0;
+		if(fdi->revents & POLLHUP)
+		{  client_disconnected=1;  }
+		else if(fdi->revents & POLLIN)
+		{
+			char buf[64];
+			ssize_t rd=read(sock_fd,buf,64);
+			if(rd<0)
+			{  Error("Client %s: During quit (read): %s\n",
+				_ClientName().str(),strerror(errno));  }
+			else if(!rd)
+			{  client_disconnected=1;  }
+		}
+		if(client_disconnected)
+		{  Verbose("Client %s disconnected due to our quit request.\n",
+			_ClientName().str());  }
+		else
+		{  Warning("Client %s: did not disconnect after our request. "
+			"Shutting down conn.\n",_ClientName().str());  }
+		
+		// Disconnect done. 
+		send_quit_cmd=3;
+	}
+	
+	if(send_quit_cmd==3)
+	{
+		// We must shutdown anyway...
+		ShutdownFD();
+		
+		tdif->ClientDisconnected(this);  // This will delete us. 
+		return;
+	}
 }
 
 
@@ -182,13 +539,14 @@ void LDRClient::fdnotify(FDBase::FDInfo *fdi)
 {
 	assert(fdi->fd==sock_fd && fdi->pollid==pollid);
 	assert(connected_state);  /* otherwise: we may not be here; we have no fd */
+	
 	if(connected_state==1)  // waiting for response to connect(2)
 	{
 		if(_DoFinishConnect(fdi))
 		{
 			// Failed; we are not connected; give up. 
 			connected_state=0;
-			UnpollFD();
+			ShutdownFD();
 			assert(pollid==NULL);
 			tdif->FailedToConnect(this);  // This will delete us. 
 			return;
@@ -196,8 +554,48 @@ void LDRClient::fdnotify(FDBase::FDInfo *fdi)
 		return;
 	}
 	
+	if(send_quit_cmd)
+	{
+		_DoSendQuit(fdi);
+		return;
+	}
+	
 	// We're connected. 
-	Verbose("ugh ");
+	if(!auth_passed)
+	{
+		// Still not yet authenticated. 
+		if(_DoAuthHandshake(fdi))
+		{
+			// Failed. Give up. 
+			connected_state=0;
+			ShutdownFD();
+			tdif->FailedToConnect(this);  // This will delete us. 
+			return;
+		}
+		return;
+	}
+	
+	// We have passed auth. We are the server the client listenes to. 
+	Error("*** hack on...\n");
+	assert(0);
+}
+
+
+int LDRClient::_ResizeRespBuf(size_t newlen)
+{
+	if(resp_buf_alloc_len<newlen || newlen*2<resp_buf_alloc_len)
+	{
+		char *oldval=resp_buf;
+		resp_buf=(char*)LRealloc(resp_buf,newlen);
+		if(!resp_buf)
+		{
+			LFree(oldval);
+			resp_buf_alloc_len=0;
+			return(1);
+		}
+		resp_buf_alloc_len=newlen;
+	}
+	return(0);
 }
 
 
@@ -226,6 +624,17 @@ LDRClient::LDRClient(TaskDriverInterface_LDR *_tdif,
 	sock_fd=-1;
 	
 	connected_state=0;
+	auth_passed=0;
+	_counted_as_client=0;
+	send_quit_cmd=0;
+	
+	next_send_cmd=Cmd_NoCommand;
+	last_recv_cmd=Cmd_NoCommand;
+	expect_cmd=Cmd_NoCommand;
+	resp_buf_alloc_len=0;
+	resp_buf=NULL;
+	
+	c_jobs=0;
 	
 	// Register at TaskDriverInterface_LDR (-> task manager): 
 	assert(component_db()->taskmanager());
@@ -241,6 +650,8 @@ LDRClient::LDRClient(TaskDriverInterface_LDR *_tdif,
 LDRClient::~LDRClient()
 {
 	ShutdownFD();  // be sure...
+	
+	resp_buf=(char*)LFree(resp_buf);
 	
 	// Unrergister at TaskDriverInterface_LDR (-> task manager): 
 	tdif->UnregisterLDRClient(this);

@@ -27,12 +27,61 @@
 
 using namespace LDR;
 
+#ifndef TESTING
+#define TESTING 1
+#endif
+
+#if TESTING
+#warning TESTING switched on. 
+#endif
 
 
+// Not inline because virtual: 
+int TaskDriverInterface_LDR::Get_njobs()
+{
+	return(njobs);
+}
+
+		
 int TaskDriverInterface_LDR::AreThereJobsRunning()
 {
-	assert(0);
+	// We return 0 here only if we are not connected to any client 
+	// any longer. In this case, the TaskManager may quit. 
+	if(nclients || !clientlist.is_empty())
+	{  return(1);  }
 	return(0);
+}
+
+
+// Called when everything is done to disconnect from the clients. 
+// Local interface can handle that quickly. 
+void TaskDriverInterface_LDR::PleaseQuit()
+{
+	if(shall_quit)  return;
+	
+	// MUST BE SET before the for()-loop: 
+	shall_quit=1;
+	
+	if(clientlist.is_empty())
+	{
+		// Do it immediately if there are no clients to disconnect. 
+		component_db()->taskmanager()->CheckStartNewJobs(/*special=*/-1);
+		return;
+	}
+	
+	Verbose("Disconnecting from clients (%d usable)...\n",nclients);
+	
+	// Schedule disconnect from all clients: 
+	for(LDRClient *_i=clientlist.first(); _i; )
+	{
+		LDRClient *i=_i;
+		_i=_i->next;
+		if(i->Disconnect())
+		{
+			// Already disconnected or not connected. 
+			delete i;  // NO NEED TO DEQUEUE. 
+		}
+	}
 }
 
 
@@ -94,6 +143,9 @@ int TaskDriverInterface_LDR::DealWithNewTask(CompleteTask *ctsk)
 CompleteTask *TaskDriverInterface_LDR::GetTaskToStart(
 	LinkedList<CompleteTask> *tasklist_todo,int schedule_quit)
 {
+	if(tasklist_todo->is_empty())
+	{  return(NULL);  }
+	
 	assert(0 && tasklist_todo && schedule_quit);
 }
 
@@ -101,12 +153,27 @@ CompleteTask *TaskDriverInterface_LDR::GetTaskToStart(
 void TaskDriverInterface_LDR::_WriteStartProcInfo(const char *msg)
 {
 	// Write out useful verbose information: 
-	VerboseSpecial("Okay, %s work: %d parallel tasks on %d clients",
+	VerboseSpecial("Okay, %s work: %d parallel tasks on %d clients.",
 		msg,njobs,nclients);
 	
 	Verbose("  task-thresh: low=%d, high=%d\n",
 		todo_thresh_low,todo_thresh_high);
 	
+}
+
+void TaskDriverInterface_LDR::_WriteProcInfoUpdate()
+{
+	if(!shall_quit && already_started_processing)
+	{
+		VerboseSpecial("Update: %d parallel tasks on %d clients",
+			njobs,nclients);
+		Verbose("  task-thresh: low=%d, high=%d\n",
+			todo_thresh_low,todo_thresh_high);
+	}
+	if(shall_quit && clientlist.is_empty())
+	{
+		VerboseSpecial("Update: All clients disconnected.");
+	}
 }
 
 void TaskDriverInterface_LDR::_WriteEndProcInfo()
@@ -169,8 +236,6 @@ void TaskDriverInterface_LDR::ReallyStartProcessing()
 	}
 	
 	Verbose("Waiting for %d LDR connections to establish.\n",n_connecting);
-	
-	Error("     hack on...\n");
 }
 
 
@@ -195,26 +260,68 @@ FDBase::PollID TaskDriverInterface_LDR::PollFD_Init(LDRClient *client,int fd)
 }
 
 
+// mode: +1 -> add; -1 -> subtract
+void TaskDriverInterface_LDR::_JobsAddClient(LDRClient *client,int mode)
+{
+	int oldval=njobs;
+	if(client->_counted_as_client && mode<0)
+	{
+		--nclients;
+		client->_counted_as_client=0;
+		njobs-=client->c_jobs;
+	}
+	if(!client->_counted_as_client && mode>0)
+	{
+		++nclients;
+		client->_counted_as_client=1;
+		njobs+=client->c_jobs;
+	}
+	
+	todo_thresh_low= njobs+p->todo_thresh_reserved_min;
+	todo_thresh_high=njobs+p->todo_thresh_reserved_max;
+	
+	#if TESTING
+	int cnt=0;
+	for(LDRClient *i=clientlist.first(); i; i=i->next)
+	{  if(i->auth_passed)  ++cnt;  }
+	assert(cnt==nclients);
+	#endif
+	
+	// May be called if shall_quit=1. 
+	if(already_started_processing)
+	{  component_db()->taskmanager()->CheckStartNewJobs(
+		(oldval!=njobs) ? 1 : 0);  }
+}
+
+
+void TaskDriverInterface_LDR::SuccessfullyConnected(LDRClient *client)
+{
+	assert(client->auth_passed);
+	assert(!client->_counted_as_client);
+	
+	// First, adjust njobs and task queue threshs: 
+	_JobsAddClient(client,+1);
+	_WriteProcInfoUpdate();
+	
+	if(!already_started_processing)
+	{
+		// Great. We can start working. 
+		already_started_processing=1;
+		component_db()->taskmanager()->ReallyStartProcessing(/*error=*/0);
+	}
+}
+
+
 void TaskDriverInterface_LDR::FailedToConnect(LDRClient *client)
 {
 	delete client;
-	
-	if(clientlist.is_empty())
-	{
-		Error("No usable clients left in list. Giving up.\n");
-		if(!already_started_processing)
-		{
-			already_started_processing=1;
-			component_db()->taskmanager()->ReallyStartProcessing(/*error=*/1);
-			return;
-		}
-		else
-		{
-			Error("what to do?!");
-			#warning FIXME. 
-			assert(0);
-		}
-	}
+}
+
+
+void TaskDriverInterface_LDR::ClientDisconnected(LDRClient *client)
+{
+	// Oh yes. That is simple. 
+	delete client;
 }
 
 
@@ -241,14 +348,28 @@ void TaskDriverInterface_LDR::UnregisterLDRClient(LDRClient *client)
 	if(clientlist.prev(client) || client==clientlist.first())
 	{
 		// Dequeue client: 
+		// MUST BE DONE before _JobsAddClient(). 
 		clientlist.dequeue(client);
 	}
+	
+	_JobsAddClient(client,-1);
 	
 	// Un-Set client's ClientParam: 
 	client->cp=NULL;
 	
+	_WriteProcInfoUpdate();
+	
 	if(already_started_processing)
-	{  component_db()->taskmanager()->CheckStartNewJobs();  }
+	{
+		if(shall_quit && !nclients)
+		{  component_db()->taskmanager()->CheckStartNewJobs(/*special=*/-1);  }
+	}
+	else if(clientlist.is_empty())
+	{
+		Error("No usable clients left in list. Giving up.\n");
+		already_started_processing=1;
+		component_db()->taskmanager()->ReallyStartProcessing(/*error=*/1);
+	}
 }
 
 
@@ -263,12 +384,13 @@ TaskDriverInterface_LDR::TaskDriverInterface_LDR(
 	
 	// Initial vals: 
 	nclients=0;
-	njobs=0;
+	njobs=0;  // NOT -1
 	
-	todo_thresh_low=p->thresh_param_low;
-	todo_thresh_high=p->thresh_param_high;
+	todo_thresh_low=p->todo_thresh_reserved_min;
+	todo_thresh_high=p->todo_thresh_reserved_max;
 	
 	already_started_processing=0;
+	shall_quit=0;
 	
 	int failed=0;
 	

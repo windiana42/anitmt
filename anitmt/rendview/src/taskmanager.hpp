@@ -71,6 +71,7 @@ class TaskManager :
 		int abort_on_signal : 1;  // abort on next SIGINT/SIGTERM
 		int schedule_quit : 3;  // 1 -> exit(0); 2 -> exit(1)
 		int schedule_quit_after : 3;  // 1 -> exit(0); 2 -> exit(1)
+		int told_interface_to_quit : 1;  // PleaseQuit() called on interface?
 		int kill_tasks_and_quit_now : 1;  // 0,1
 		int sched_kill_tasks : 3;  // 0,1,2
 		
@@ -89,7 +90,7 @@ class TaskManager :
 		int exec_stopped : 1;
 		
 		// Padding bits: 
-		int _pad : 13;
+		int _pad : 12;
 		
 		// Set by parameters, default to values set by program name: 
 		RefString tsource_name;
@@ -173,6 +174,13 @@ class TaskManager :
 		static bool IsPartlyRenderedTask(const CompleteTask *ctsk);
 		static bool IsPartlyFilteredTask(const CompleteTask *ctsk);
 		
+		// Needed by NJobsChanged() and LDR task source: 
+		int Get_njobs()
+			{  return(interface->Get_njobs());  }
+		// This is needed by the LDR task source: 
+		const HTime *Get_starttime()
+			{  return(&starttime);  }
+		
 		// ******** INTERFACE TO TaskDriverInterface ********
 		
 		// Called by interface; the LDR interface calls this when the 
@@ -180,10 +188,10 @@ class TaskManager :
 		// calls this immediately. 
 		void ReallyStartProcessing(int error_occured=0);
 		
-		// Called by TaskDriverInterface becuase a TaskDriver or LDR client 
-		// unregistered 
-		// Only there to check if we want to start new tasks. 
-		void CheckStartNewJobs();
+		// Called by TaskDriverInterface becuase a TaskDriver unregisterd 
+		// or because new LDR clients are connected or others disconnect. 
+		// njobs_changed: 0,1 and special value -1
+		void CheckStartNewJobs(int njobs_changed);
 		
 		void HandleSuccessfulJob(CompleteTask *ctsk);
 		void HandleFailedTask(CompleteTask *ctsk,int running_jobs);
