@@ -9,9 +9,6 @@
 /* Define if you have the <errno.h> header file. */
 #undef HAVE_ERRNO_H
 
-/* Define if you have the <fcntl.h> header file. */
-#undef HAVE_FCNTL_H
-
 /* Define if you have the `gettimeofday' function. */
 #undef HAVE_GETTIMEOFDAY
 
@@ -45,9 +42,6 @@
 /* Define if you have the <stddef.h> header file. */
 #undef HAVE_STDDEF_H
 
-/* Define if you have the <stdint.h> header file. */
-#undef HAVE_STDINT_H
-
 /* Define if you have the <stdlib.h> header file. */
 #undef HAVE_STDLIB_H
 
@@ -75,30 +69,14 @@
 /* Define if you have the `strtoul' function. */
 #undef HAVE_STRTOUL
 
-/* Define if you have the <sys/ioctl.h> header file. */
-#undef HAVE_SYS_IOCTL_H
-
-/* Define if you have the <sys/socket.h> header file. */
-#undef HAVE_SYS_SOCKET_H
-
-/* Define if you have the <sys/stat.h> header file. */
-#undef HAVE_SYS_STAT_H
-
 /* Define if you have the <sys/time.h> header file. */
 #undef HAVE_SYS_TIME_H
-
-/* Define if you have the <sys/types.h> header file. */
-#undef HAVE_SYS_TYPES_H
 
 /* Define if you have <sys/wait.h> that is POSIX.1 compatible. */
 #undef HAVE_SYS_WAIT_H
 
 /* Define if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
-
-/* Define if you have the `wait3' system call. Deprecated, you should no
-   longer depend upon `wait3'. */
-#undef HAVE_WAIT3
 
 /* Name of package */
 #undef PACKAGE

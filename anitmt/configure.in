@@ -15,7 +15,6 @@ AC_PROG_CPP
 #AC_PROG_LEX
 AM_PROG_LEX	# replaced for automake
 AC_PROG_INSTALL
-AC_PROG_LN_S
 AC_PROG_MAKE_SET
 AC_PROG_RANLIB
 AC_PROG_YACC
@@ -48,7 +47,7 @@ unset gccvers
 # Checks for header files.
 AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
-AC_CHECK_HEADERS([alloca.h errno.h fcntl.h limits.h malloc.h memory.h stddef.h stdlib.h string.h strings.h sys/ioctl.h sys/socket.h sys/time.h unistd.h])
+AC_CHECK_HEADERS([alloca.h errno.h limits.h malloc.h memory.h stddef.h stdlib.h string.h strings.h sys/time.h unistd.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
@@ -71,10 +70,9 @@ AC_FUNC_MEMCMP
 AC_TYPE_SIGNAL
 #AC_FUNC_STAT
 #AC_FUNC_STRTOD
-AC_FUNC_WAIT3
 AC_CHECK_FUNCS([dup2 gettimeofday memmove memset pow setenv sqrt strcasecmp strchr strerror strrchr strtol strtoul])
 
-AC_CONFIG_SUBDIRS(hlib)
+AC_CONFIG_SUBDIRS(hlib rendview)
 
 AC_OUTPUT( Makefile
            anitmt-calc/Makefile
