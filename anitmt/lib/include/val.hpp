@@ -182,8 +182,8 @@ namespace values
     friend Vector operator*(const Vector &a,const Matrix &b);
 
     // Unary operators: 
-    Vector  operator+() const  {  return(*this);  }
-    Vector  operator-() const {  Vector r(noinit);  r.x.neg(x);   return(r);  }
+    Vector operator+() const  {  return(*this);  }
+    Vector operator-() const {  Vector r(noinit);  r.x.neg(x);   return(r);  }
 
     // Operators comparing vectors (are using epsilon): 
     friend bool operator==(const Vector &,const Vector &);
@@ -206,7 +206,7 @@ namespace values
     // Computes the angle between the two passed vectors; the returned 
     // value is in range 0...PI. 
     friend Scalar angle(const Vector &a,const Vector &b);
-    inline Scalar angle(const Vector &b)  {  return(values::angle(*this,b));  }
+    inline Scalar angle(const Vector &b) const  {  return(values::angle(*this,b));  }
 
     // Translation functions: 
     // int xyz: x=0, y=1, z=2, no range check. 
