@@ -42,7 +42,7 @@ class Buffered_Output_Stream : public Output_Stream
 		void file_close();
 		
 		inline void _flush();
-		void _write_buf(char *obuf,size_t olen) throw();
+		inline void _write_buf(const char *obuf,size_t olen) throw();
 	public:
 		Buffered_Output_Stream(const std::string &path) throw();
 		~Buffered_Output_Stream() throw();
@@ -52,7 +52,7 @@ class Buffered_Output_Stream : public Output_Stream
 		
 		// overriding virtuals: 
 		size_t Off() const  {  return(off+blen);  }
-		void write(char *buf,size_t len);
+		void write(const char *buf,size_t len);
 }; 
 
 extern size_t Get_Preferred_IO_Size(int fd);

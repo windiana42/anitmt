@@ -49,7 +49,7 @@ void Buffered_Input_Stream::file_close()
 
 // May only be called if the whole request (len bytes) can be 
 // copied from the buffer. 
-void Buffered_Input_Stream::_buf_read(char *dest,size_t destlen) throw()
+inline void Buffered_Input_Stream::_buf_read(char *dest,size_t destlen) throw()
 {
 	assert(blen>=destlen);
 	if(destlen)

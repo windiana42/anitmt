@@ -32,6 +32,9 @@
 
 namespace output_io
 {
+
+class Output_Stream;
+
 namespace POV
 {
 
@@ -78,8 +81,9 @@ class Frame_Dump
 			Dump_Flags flags;
 			void *ptn;  // anitmt::Prop_Tree_Node
 			char *str;  // scalar: name; object: identifier
+			size_t str_len;
 			
-			inline char *write(char *dest,Context *ctx);
+			inline char *write(char *dest,char *dend,Context *ctx);
 			
 			Node(NType type,void *ptn,Dump_Flags flags,unsigned int id);
 			~Node();
@@ -87,26 +91,47 @@ class Frame_Dump
 			private:
 			char *_Alloc_Scalar_Str(anitmt::Ani_Scalar *ptn);
 			char *_Alloc_Object_Str(anitmt::Ani_Object *ptn,unsigned int id);
-			char *_Dump_Scalar2Str(char *d,Context *ctx);
-			char *_Dump_Object2Str(char *d,Context *ctx);
+			char *_Dump_Scalar2Str(char *d,char *dend,Context *ctx);
+			char *_Dump_Object2Str(char *d,char *dend,Context *ctx);
 		};
 	private:
+		anitmt::Animation *ani;
+		anitmt::Ani_Scene *scene;
+		
 		char *buf;      // write buffer
-		size_t bufsize;
+		char *bufhalf;
+		char *bufdest;  // where to append data
+		char *bufend;
+		size_t bufsize;  // multiple of peferred write size 
+		size_t written_bytes;
+		
+		Output_Stream *outp;
 		
 		Node *first,*last;
+		size_t longest_identifier_len;
+		std::string include_me;
 		
-		char *_Write_Header(char *dest,values::Scalar t,int frame);
+		void _Write2Buf(const char *str,size_t len);
+		inline void _Check_Flush();
+		inline void _Force_Flush();
+		
+		void _Write_Header(values::Scalar t,int frame);
+		void _Write_End();
 		
 		int verbose;
 		ostream *_vout;  // verbose stream
 		ostream &vout()  {  return(*_vout);  }
 	public:
-		Frame_Dump();
+		Frame_Dump(anitmt::Animation *ani,anitmt::Ani_Scene *scene);
 		~Frame_Dump();
 		
 		// Set verbosity level and verbose stream. 
 		void Set_Verbose(int verbose,ostream &vout);
+		
+		// include_me is the path to be put into the #include statement 
+		// at the end of the frame. 
+		void Set_Main_File(const std::string &_include_me)
+			{  include_me=_include_me;  }
 		
 		// Add an entry to the list; entries are written to the file in 
 		// the order which they are added here. 
@@ -118,7 +143,7 @@ class Frame_Dump
 			Dump_Flags dump_flags,unsigned int id=0);
 		
 		// Delete all entries. 
-		void Clear();
+		void Clear(anitmt::Animation *new_ani,anitmt::Ani_Scene *new_scene);
 		
 		// Actually write the file; Time is passed in t and the 
 		// frame number in f. 

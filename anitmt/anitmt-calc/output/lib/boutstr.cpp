@@ -62,7 +62,7 @@ inline void Buffered_Output_Stream::_flush()
 
 
 // Only call if the passed data fits entirely into the buffer. 
-void Buffered_Output_Stream::_write_buf(char *obuf,size_t olen) throw()
+inline void Buffered_Output_Stream::_write_buf(const char *obuf,size_t olen) throw()
 {
 	size_t bleft=bsize-blen;
 	assert(bleft>=olen);
@@ -74,7 +74,7 @@ void Buffered_Output_Stream::_write_buf(char *obuf,size_t olen) throw()
 }
 
 
-void Buffered_Output_Stream::write(char *obuf,size_t olen)
+void Buffered_Output_Stream::write(const char *obuf,size_t olen)
 {
 	if(!IsOpen())
 	{
@@ -104,7 +104,7 @@ void Buffered_Output_Stream::write(char *obuf,size_t olen)
 	}
 	
 	// First, fill up the buffer and flush it:
-	char *src=obuf;
+	const char *src=obuf;
 	size_t srclen=olen;
 	_write_buf(src,bleft);
 	src+=bleft;

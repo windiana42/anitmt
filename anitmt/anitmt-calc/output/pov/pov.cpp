@@ -105,8 +105,8 @@ void Pov_Output::process_results() throw( EX )
 		double fps = ani->param.fps();
     	for(int f=startf; f<=endf; f++ /*###f += ani->param.jump()*/ )
     	{
-			snprintf(tmp,32,"%05d",f);
-			file=dn->path+"frame"+tmp+".inc";
+			snprintf(tmp,32,"%07d",f);
+			file=dn->path+"f"+tmp+".pov";
 			values::Scalar time=f/fps;
 			i->fdump->Write(file,time,f);
 		}

@@ -61,7 +61,7 @@ void Output_Stream::close()
 }
 
 
-void Output_Stream::write(char *buf,size_t len)
+void Output_Stream::write(const char *buf,size_t len)
 {
 	size_t done=0;
 	while(done<len)

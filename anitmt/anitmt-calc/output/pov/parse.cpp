@@ -1234,14 +1234,20 @@ int File_Parser::_Set_Up_MCopy(Animation * /*ani*/,Ani_Scene * /*sc*/)
 }
 
 
-int File_Parser::_Set_Up_FDump(Animation * /*ani*/,Ani_Scene * /*sc*/)
+int File_Parser::_Set_Up_FDump(Animation *ani,Ani_Scene *sc)
 {
 	assert(!fdump);
 	
 	int errors=0;
-	fdump = new Frame_Dump();
+	fdump = new Frame_Dump(ani,sc);
 	
 	fdump->Set_Verbose(verbose,vout);
+	
+	// File to be included at the end of the frame file. 
+	std::string include_file;
+	#warning strip path? use "../" as prefix?
+	include_file=sc->get_filename();
+	fdump->Set_Main_File(include_file);
 	
 	if(verbose>1)
 	{  vout << "Frame writer initialized. (errors: " << errors << ")" << 
@@ -2693,7 +2699,7 @@ int File_Parser::Comment_Parser::_parse(int eof)
 						if(fp->config.warn_nested_comments)
 						{  Error_Header(cmt_start.line) << 
 							"warning: nested C-style comment; "
-							"next instance at line " << cc->line << std::endl;  }
+							"next instance in line " << cc->line << std::endl;  }
 
 						Comment_Parser *cp=new Comment_Parser(fp,&rv);
 						// Nested comment: 

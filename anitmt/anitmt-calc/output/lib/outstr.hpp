@@ -70,7 +70,7 @@ class Output_Stream
 		void close();
 		
 		// Write buf of size len 
-		virtual void write(char *buf,size_t len);
+		virtual void write(const char *buf,size_t len);
 };
 
 }  // namespace end

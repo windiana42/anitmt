@@ -41,7 +41,7 @@ class Buffered_Input_Stream : public Input_Stream
 		void file_opened();
 		void file_close();
 		
-		void _buf_read(char *dest,size_t len) throw();
+		inline void _buf_read(char *dest,size_t len) throw();
 		inline void _fill_buf();
 	public:
 		Buffered_Input_Stream(const std::string &path) throw();
