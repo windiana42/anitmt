@@ -181,6 +181,10 @@ public: // work around for the template friend problem
   		Vector<N> &cross(const Vector<N> &b);
 		
 		// Multiplication of a vector with a matrix (resulting in a vector). 
+
+#ifndef GCC_HACK
+// suspicious problems with overloads 
+
 		// This returns void for speed increase. 
 		template<int n>friend void operator*=(Vector<n> &v,const Matrix<n,n> &b);
 		// Special version: 
@@ -192,7 +196,7 @@ public: // work around for the template friend problem
 		// Special versions: 
 		friend Vector<3> operator*(const Matrix<4,4> &a,const Vector<3> &b);
 		friend Vector<3> operator*(const Vector<3> &a,const Matrix<4,4> &b);
-		
+#endif		
 		// Unary operators: 
 		Vector<N> operator+() const  {  return(*this);  }
 		Vector<N> operator-() const  {  Vector<N> r(noinit);  r.x.neg(x);  return(r);  }
