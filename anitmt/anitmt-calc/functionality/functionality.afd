@@ -1,0 +1,180 @@
+base_types{
+  vector = values::Vector;
+  scalar = values::Scalar;
+
+  time = scalar;
+  value = scalar;
+  slope = scalar;
+  acceleration = scalar;
+  stretch = scalar;
+  position = vector;
+  direction = vector;
+  up_vector = vector;
+  
+  orientation = { direction dir, up_vector up };
+}
+
+serial type scalar_vsa {
+  provides value (time);
+  provides slope (time);
+  provides acceleration (time);
+}
+
+type track {
+  provides position( stretch );
+}
+
+type space_state {
+  provides position( time );
+  provides position( stretch );
+  provides orientation( time );
+}
+
+// +-------------+
+// | scalar_base |
+// +-------------+
+// Werte
+node scalar_base {
+  properties {
+    type scalar {    
+      start_time;  end_time;  duration;
+      start_value; end_value; difference;
+      start_slope; end_slope; slope_difference;
+    }
+  }  
+  aliases {
+    diff_slope = slope_difference;
+    diff_value = difference;
+  }
+  common {
+    constraints {
+      duration >= 0;
+    }
+    solvers {
+      addition_solver ( start_time, duration, end_time );
+      addition_solver ( start_value, difference, end_value );
+      addition_solver ( start_slope, slope_difference, end_slope );
+    }
+    actions {
+      default( 110, slope_difference, 0 );
+      push( 10, end_time, next.start_time );
+      push( 11, start_time, prev.end_time );
+    }
+  }
+}
+// +--------------------+
+// | scalar_subfunction |
+// +--------------------+
+// Werte
+
+node scalar_subfunction extends scalar_base{
+}
+
+
+
+// +--------+
+// | scalar |
+// +--------+
+// Werte
+                          
+// Gültige Subfunktionen:
+//   change
+
+node scalar extends scalar_base provides scalar_vsa {
+//  ...
+  contains {
+    min1 scalar_vsa;
+  }
+
+  first scalar_vsa {
+    actions {
+      default(100, starttime, 0 );
+    }
+  }
+  // just an example
+  first {
+    actions {
+      default(102, startvalue, 0 );
+    }
+  }
+  
+  provide scalar_vsa {
+    resulting value( time t ) 
+      requires child.scalar_vsa.value (time) 
+    { 		 time t2;		   // test
+                 t2 = t;                   // test2
+      return [child.scalar_vsa.value (time t2)];
+    } 
+    resulting slope( time t ) requires child.scalar_vsa.slope (time) {
+      return [child.scalar_vsa.slope (time t)];
+    }
+    resulting acceleration( time t ) requires child.scalar_vsa.acceleration (time) {
+      return [child.scalar_vsa.acceleration (time t)];
+    }
+  }
+}
+  
+// +--------+
+// | change |   ????
+// +--------+
+// Werteinterpolationen
+
+// Gültige Subfunktionen:
+//   change; constant; linear; accelerated
+
+node change extends scalar_subfunction provides scalar_vsa {
+//  ...
+  contains {
+    min1 scalar_vsa ;
+  }
+  
+  first scalar_vsa {
+    actions {
+      default(100, starttime, 0 );
+    }
+  }
+
+  provide scalar_vsa {
+    resulting value( time t ) requires child.scalar_vsa.value (time) {
+      return [child.scalar_vsa.value (time t)];
+    }
+    resulting slope( time t ) requires child.scalar_vsa.slope (time) {
+      return [child.scalar_vsa.slope (time t)];
+    }
+    resulting acceleration( time t ) requires child.scalar_vsa.acceleration (time) {
+      return [child.scalar_vsa.acceleration (time t)];
+    }
+  }
+}
+
+// +----------+
+// | constant |
+// +----------+
+// beschleunigte Veränderung
+
+// Gültige Subfunktionen:
+//   keine!
+
+
+
+node constant extends scalar_subfunction provides scalar_vsa {
+//  ...
+
+  first scalar_vsa {
+    actions {
+      default(100, starttime, 0 );
+    }
+  }
+  
+  provide scalar_vsa {
+    resulting value( time t ) requires value {
+      return [value];
+    }
+    resulting slope( time t ) requires slope {
+      return [slope];
+    }
+    resulting acceleration( time t ) requires acceleration {
+      return [acceleration];
+    }
+  }
+}
