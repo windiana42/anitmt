@@ -20,6 +20,7 @@
  *
  */
 
+#warning "Martin... wieso ist das drin? Ich find kein config.h im ganzen Quelltext (ausser hlib)"
 #include <config.h>
 
 #include <iostream>
