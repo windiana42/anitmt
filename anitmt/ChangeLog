@@ -4,17 +4,10 @@
 	    I (implemention of variants)
 	      T (tests)
 
-	X X + +	solving system
-	X X X +	  Operands
-	X X + +	  Operators
-	X X + +	  Solvers
-	Y - - -	    multiple solution Solver
-	+ + + -	output filter
-	+ + + -	  POV 
 	
 0.1.9: 	first version of the new design
 
-a general list of all systems:
+a general list of all systems / to do list:
 
 	Meaning of the following notes:
 	  X: Done
@@ -28,12 +21,14 @@ a general list of all systems:
 	      T (tests)
 
 	X X X Y	data types
+	Y - - -	  Lists
 	X X + +	solving system
 	X X X +	  Operands
 	X X + +	  Operators
 	Y - - -	    multiple solution Operator
 	X X + +	  Solvers
-	Y - - -	    explicite Solver
+	Y - - -	    explicite Solver / References
+	+ - - -     References from/to Lists
 	Y - - -	    multiple solution Solver
 	X X X +	priority system
 	X X + +	data tree
