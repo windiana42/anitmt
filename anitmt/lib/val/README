@@ -294,6 +294,11 @@ Operators:
       * You may multiply a Matrix with a Matrix resulting in a Matrix. 
         Both operator* and operator*= are implemented; due to the temporary, 
         the method is not faster than the friend. 
+        NOTE: a*=b does a rmul (i.e. a=a*b). You are encouraged to 
+              explicitly use one of the member functions rmul() and lmul() 
+              instead of *=: 
+              m.rmul(a)  ->  m = m * a;
+              m.lmil(b)  ->  m = b * m;
 
 Functions: 
   > General:
@@ -372,3 +377,13 @@ String implements a simple string and is publically derived
 from std::string to be easy to use with all the STL string 
 operations. 
 
+
+-----------------------------------------------
+
+Useful functions:
+
+deg2rad()   conversion degrees -> radians
+rad2deg()   conversion radians -> degrees
+
+angle_range()     bring passed angle back into range 0..2*PI
+angle_range360()  the same for angles measured 0..360

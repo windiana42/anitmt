@@ -86,10 +86,22 @@ void matrix_mul(double *rm,int rr,int rc,
 	_matrix_mul(rm,rr,rc, am,ar,ac, bm,br,bc);
 }
 
+// Version where a is multiplied with r and the result is stored in r. 
+// Requires a temporary. [ r = a * r; }
+void matrix_lmul(double *rm,int rr,int rc,
+		  const double *am,int ar,int ac)
+		throw(internal_vect::EX_Matrix_Illegal_Mult)
+{
+	double bm[rr*rc];
+	for(int i=rr*rc-1; i>=0; i--)  // copy rm to bm 
+	{  bm[i]=rm[i];  }
+	_matrix_mul(rm,rr,rc, am,ar,ac, bm,rr,rc);
+}
+
 // Version where r is multiplied with b and the result is stored in r. 
-// Requires a temporary. 
-void matrix_mul(double *rm,int rr,int rc,
-		        const double *bm,int br,int bc)
+// Requires a temporary. [ r = r * b; }
+void matrix_rmul(double *rm,int rr,int rc,
+		  const double *bm,int br,int bc)
 		throw(internal_vect::EX_Matrix_Illegal_Mult)
 {
 	double am[rr*rc];
@@ -107,7 +119,7 @@ void matrix_mul(double *rm,int rr,int rc,
 //       If r!=c or rr!=rc or c!=rc, an exception is thrown. 
 // Returns number of divisions by zero. 
 inline int _matrix_inverse(double *rm,int rr,int rc,
-		           double *m, int r, int c)
+		double *m, int r, int c)
 		throw(internal_vect::EX_Matrix_Illegal_Inverse)
 {
 	int nzd=0;  // number of zero divisions

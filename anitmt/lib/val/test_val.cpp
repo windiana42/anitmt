@@ -306,11 +306,11 @@ int main()
 		{  cerr << "ERROR in determinant: " << d1 << " != " << d2 << "\n";
 			continue;  }
 		
+	#if 1
 	#warning "********************************************"
-	#warning "** GCC-3.0.5 will SIGSEGV with this code. **"
+	#warning "** GCC-3.0.5 will get ICE with this code. **"
 	#warning "** GCC-3.1 makes no trouble.              **"
 	#warning "********************************************"
-	#if 1
 		tr=t1;  tr.inverse();
 		if(tr!=mat_inverse(t1))
 		{  cerr << "ERROR in inverse\n";  }
@@ -352,9 +352,15 @@ int main()
 		m10x10=m10x5*m5x10;
 		m5x10=m5x10*m10x10;
 		
-		#warning "**** PLEASE ENABLE ME, TOO ****"
+		#if 1
+		#warning "********************************************"
+		#warning "** GCC will get ICE with this code...     **"
+		#warning "********************************************"
 		V5=m5x10*V1;
 		V1*=m10x10;
+		#else
+		#warning "**** PLEASE ENABLE ME, TOO ****"
+		#endif
 	}
 	
 	/*********************************************/

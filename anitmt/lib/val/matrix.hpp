@@ -104,6 +104,8 @@ public: // work around for the template friend problem
 		enum MatRotZ { matrotz };
 		enum MatScale { matscale };
 		enum MatTrans { mattrans };
+		enum MatColVec { matcolvec };
+		enum MatRowVec { matrowvec };
 		
 		// Copy constructor: 
 		Matrix(const Matrix<R,C> &m) : x(m.x)  {}
@@ -118,7 +120,7 @@ public: // work around for the template friend problem
 		Matrix(Neutral0) : x()  {  x.set_null(); }
 		
 		// You may (of couse) use these functions but the non-member 
-		// functions below (MrotateX(),...) are more convenient. 
+		// functions below (mat_rotateX(),...) are more convenient. 
 		// * These are only available for 4x4 matrices in combination 
 		// * with 3d vectors. 
 		Matrix(enum MatRotX,double angle);
@@ -129,6 +131,12 @@ public: // work around for the template friend problem
 		Matrix(enum MatScale,const Vector<3> &v);
 		Matrix(enum MatTrans,double delta,int idx);  // idx unchecked. 
 		Matrix(enum MatTrans,const Vector<3> &v);
+		// Constructing 4x4 matrix [ c1 c2 c3 e4 ]. (e4=<0,0,0,1>)
+		Matrix(enum MatColVec,const Vector<3> &c1,
+			const Vector<3> &c2,const Vector<3> &c3);
+		// The same but transposed. 
+		Matrix(enum MatRowVec,const Vector<3> &r1,
+			const Vector<3> &r2,const Vector<3> &r3);
 		
 		// Assignment operator 
 		Matrix<R,C> &operator=(const Matrix<R,C> &m)  {  x=m.x;  return(*this);  }
@@ -195,8 +203,13 @@ public: // work around for the template friend problem
 		#endif
 		// Version changing *this and returning it: 
 		// (only for quadratic matrices -> use of <R,R> instead of <R,C>)
+		Matrix<R,R> &lmul(const Matrix<R,R> &a)    // this = a * this;
+			{  x.lmul(a.x);  return(*this);  }
+		Matrix<R,R> &rmul(const Matrix<R,R> &b)    // this = this * b;
+			{  x.rmul(b.x);  return(*this);  }
+		// NOTE: this does rmul, NOT lmul: 
 		Matrix<R,R> &operator*=(const Matrix<R,R> &b)
-			{  x.mul(b.x);  return(*this);  }
+			{  x.rmul(b.x);  return(*this);  }
 		
 		// Friend needed for vector * matrix calculation. 
 		// This returns void for speed increase. 
@@ -327,6 +340,28 @@ inline Matrix<4,4>::Matrix(enum MatTrans,const Vector<3> &v) : x(0)
 	x[1][3]=v[1];
 	x[2][3]=v[2];
 }
+
+inline Matrix<4,4>::Matrix(enum MatColVec,const Vector<3> &c1,
+	const Vector<3> &c2,const Vector<3> &c3) : x()
+{
+	for(int i=0; i<3; i++)
+	{
+		x[i][0]=c1[i];  x[i][1]=c2[i];  x[i][2]=c3[i];  x[i][3]=0.0;
+		x[3][i]=0.0;
+	}
+	x[3][3]=1.0;
+}
+
+inline Matrix<4,4>::Matrix(enum MatRowVec,const Vector<3> &r1,
+	const Vector<3> &r2,const Vector<3> &r3) : x()
+{
+	for(int i=0; i<3; i++)
+	{
+		x[0][i]=r1[i];  x[1][i]=r2[i];  x[2][i]=r3[i];  x[3][i]=0.0;
+		x[i][3]=0.0;
+	}
+	x[3][3]=1.0;
+}
 #endif
 
 
@@ -364,6 +399,10 @@ inline Matrix<4,4> mat_rotate_z(double angle)  {  return(Matrix<4,4>(Matrix<4,4>
 inline Matrix<4,4> mat_rotate(const Vector<3> &v)
 	{  return(mat_rotate_z(v[2])*mat_rotate_y(v[1])*mat_rotate_x(v[0]));  }
 
+inline Matrix<4,4> mat_compose_cols(const Vector<3> &c0,const Vector<3> &c1,const Vector<3> &c2)
+	{  return(Matrix<4,4>(Matrix<4,4>::matcolvec,c0,c1,c2));  }
+inline Matrix<4,4> mat_compose_rows(const Vector<3> &c0,const Vector<3> &c1,const Vector<3> &c2)
+	{  return(Matrix<4,4>(Matrix<4,4>::matrowvec,c0,c1,c2));  }
 
 /** FUNCTIONS FOR 3d VECTORS AND 4x4 MATRICES: **/
 //! rotates a specified angle around v 

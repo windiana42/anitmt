@@ -44,7 +44,10 @@ namespace internal
 		      double *rm,int rr,int rc, 
 		const double *am,int ar,int ac, 
 		const double *bm,int br,int bc) throw(internal_vect::EX_Matrix_Illegal_Mult);
-	extern void matrix_mul(
+	extern void matrix_lmul(  // r = a * r;
+		      double *rm,int rr,int rc, 
+		const double *am,int ar,int ac) throw(internal_vect::EX_Matrix_Illegal_Mult);
+	extern void matrix_rmul(  // r = r * b;
 		      double *rm,int rr,int rc, 
 		const double *bm,int br,int bc) throw(internal_vect::EX_Matrix_Illegal_Mult);
 	
@@ -185,11 +188,12 @@ public: // work around for the template friend problem
 		matrix<R,C> &neg()
 			{  _mFOR(r,c)  x[r][c]*=-1.0;  return(*this);  }
 		
-		// NOTE: This function will throw EX_Matrix_Illegal_Mult, if R!=C. 
 		// There is also a more general multiplication function available; 
-		// see below. 
-		matrix<R,C> &mul(const matrix<R,C> &b)
-			{  internal::matrix_mul(x[0],R,C,b.x[0],R,C);  return(*this);  }
+		// see below. (Only works on quadratic matrices, of course.) 
+		matrix<R,R> &lmul(const matrix<R,R> &a)  // doing this=a*this;
+			{  internal::matrix_lmul(x[0],R,C,a.x[0],R,C);  return(*this);  }
+		matrix<R,R> &rmul(const matrix<R,R> &b)  // doing this=this*b;
+			{  internal::matrix_rmul(x[0],R,C,b.x[0],R,C);  return(*this);  }
 		
 		// Inverses the matrix *this. 
 		// NOTE: Only quadratic matrices may be inversed; if R!=C, 

@@ -75,6 +75,28 @@ Matrix<4,4>::Matrix(enum MatTrans,const Vector<3> &v) : x(0)
 	x[1][3]=v[1];
 	x[2][3]=v[2];
 }
+
+inline Matrix<4,4>::Matrix(enum MatColVec,const Vector<3> &c1,
+	const Vector<3> &c2,const Vector<3> &c3) : x()
+{
+	for(int i=0; i<3; i++)
+	{
+		x[i][0]=c1[i];  x[i][1]=c2[i];  x[i][2]=c3[i];  x[i][3]=0.0;
+		x[3][i]=0.0;
+	}
+	x[3][3]=1.0;
+}
+
+inline Matrix<4,4>::Matrix(enum MatRowVec,const Vector<3> &r1,
+	const Vector<3> &r2,const Vector<3> &r3) : x()
+{
+	for(int i=0; i<3; i++)
+	{
+		x[0][i]=r1[i];  x[1][i]=r2[i];  x[2][i]=r3[i];  x[3][i]=0.0;
+		x[i][3]=0.0;
+	}
+	x[3][3]=1.0;
+}
 #endif
 
 // rotates a specified angle around v 
