@@ -48,15 +48,16 @@ namespace funcgen
 //********
 
 // keywords
-%token TAFD_include TAFD_declaration  TAFD_base_types TAFD_serial TAFD_type 
-%token TAFD_abstract TAFD_node TAFD_provides TAFD_extends TAFD_properties 
-%token TAFD_aliases TAFD_operands TAFD_common TAFD_constraints TAFD_solvers 
-%token TAFD_actions TAFD_push TAFD_default
+%token TAFD_include TAFD_declaration TAFD_header TAFD_base_types TAFD_serial
+%token TAFD_type TAFD_abstract TAFD_node TAFD_provides TAFD_extends 
+%token TAFD_properties TAFD_aliases TAFD_operands TAFD_common TAFD_constraints 
+%token TAFD_solvers TAFD_actions TAFD_push TAFD_default
 %token TAFD_contains TAFD_max1 TAFD_min1 TAFD_provide TAFD_resulting 
 %token TAFD_requires TAFD_this TAFD_prev TAFD_next TAFD_first TAFD_last 
 %token TAFD_parent TAFD_child TAFD_first_child TAFD_last_child 
 %token TAFD_start_param TAFD_end_param TAFD_true TAFD_false
 %token TAFD_return_res TAFD_return_prop TAFD_return
+%token TAFD_operators TAFD_versions
 // lexer error
 %token TAFD_ERROR 
 // multi character operators
@@ -101,13 +102,18 @@ statements:
 ;
 statement:
     include_declaration
+  | include_header
   | base_types_declaration
   | type_declaration
   | node_declaration
+  | operators_declaration
 ;
 include_declaration:
     TAFD_include TAFD_declaration TAFD_QSTRING ';' 
 					{ include_declaration( info, $3 ); }
+;
+include_header:
+    TAFD_include TAFD_header TAFD_QSTRING ';' {/*warning not implemented*/}
 ;
 base_types_declaration: 
     TAFD_base_types '{' base_type_statements '}'
@@ -149,6 +155,42 @@ provider_type_statements: /*optional*/
 provider_type_statement:
     TAFD_provides TAFD_IDENTIFIER '(' TAFD_IDENTIFIER ')' ';'	
       { add_provided_result_type( info, $2, $4 ); }
+;
+operators_declaration:
+    TAFD_operators '{' operator_statements '}'
+;
+operator_statements: /*optional*/
+  | operator_statements operator_statement
+;
+operator_statement:
+    TAFD_IDENTIFIER TAFD_IDENTIFIER 	{ /*start operator declaration*/ }
+      '{' operator_body_statements '}'
+;
+operator_body_statements: /*optional*/
+  | operator_body_statements operator_body_statement
+;
+operator_body_statement:
+    operator_functions_declaration
+  | operator_versions_declaration
+;
+operator_functions_declaration:
+    TAFD_IDENTIFIER '(' operator_parameter_type_list ')' '{' 
+	{ /* start operator function declaration */ }
+      '}' { /* finish code block */ }
+;
+operator_versions_declaration:
+    TAFD_versions '{' operator_version_statements '}'
+;
+operator_version_statements: /*optional*/
+  | operator_version_statements operator_version_statement
+;
+operator_version_statement:
+    TAFD_IDENTIFIER TAFD_IDENTIFIER '(' operator_parameter_type_list ')' ';'
+	{ /*#warning not implemented operator specializations*/ }
+;
+operator_parameter_type_list: /*optional*/
+  | TAFD_IDENTIFIER	{}
+  | operator_parameter_type_list ',' TAFD_IDENTIFIER	
 ;
 node_declaration:
     opt_abstract TAFD_node TAFD_IDENTIFIER 

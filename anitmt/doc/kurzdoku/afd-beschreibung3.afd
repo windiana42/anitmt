@@ -1,4 +1,18 @@
-// changes: - seriatim moved to provider type
+/*****************************************************************************/
+/**   Specification of the AFD language                                     **/
+/*****************************************************************************/
+/**									    **/
+/** Author: Martin Trautmann, Manuel Moser				    **/
+/**									    **/
+/** EMail:   martintrautmann@gmx.de					    **/
+/**									    **/
+/** License: GPL - free and without any warranty - read COPYING             **/
+/**									    **/
+/** Package: AniTMT							    **/
+/**									    **/
+/** Date: 20.2.2002							    **/
+/**									    **/
+/*****************************************************************************/
 
 base_types {
   <newtype> = <oldtype>;
@@ -12,10 +26,13 @@ base_types {
   ...
 }
 
-
-node <TreeNodeName> [extends <TreeNodeName> [, ...]] 
-                    [provides <ProviderType> [, ...]] {
+// currently a node may be reopened! FIX?
+[abstract] node <TreeNodeName> [extends <TreeNodeName> [, ...]] 
+  [provides <ProviderType> [, ...]] 
+// ignore multiple occurence of the same provided type?
+{
   properties {
+    // type scalar may be reopened!
     type scalar {
       <PropertyName>; 
       <PropertyName>; 
@@ -31,8 +48,13 @@ node <TreeNodeName> [extends <TreeNodeName> [, ...]]
       <PropertyName>; 
       ...
     }
+    scalar <PropertyName>; 
+    string <PropertyName>; 
+    vector <PropertyName>; 
+    ...
   }
   aliases {
+// not implemented yet: currently ignored
     <PropertyAliasName> = <PropertyName>;   // <PropertyAliasName> are only for users !!!
     ...
   }
@@ -52,6 +74,10 @@ node <TreeNodeName> [extends <TreeNodeName> [, ...]]
       <OperandName>; 
       ...
     }
+    scalar <OperandName>; 
+    string <OperandName>; 
+    vector <OperandName>; 
+    ...
   }
    
   common {
@@ -68,8 +94,12 @@ node <TreeNodeName> [extends <TreeNodeName> [, ...]]
       ...
     } 
     actions {
-      <ActionName> ( <Prioritylevel>, <Propertyreference>, <Propertyreference>, ... );
-      <ActionName> ( <Prioritylevel>, <Propertyreference>, <Propertyreference>, ... );
+      default( <Prioritylevel>, <Propertyreference>, <expression> );
+      ...
+      push( <Prioritylevel>, <Propertyreference>, <Propertyreference> );
+      ...
+// allow further actions?
+//      <ActionName> ( <Prioritylevel>, <Propertyreference>, <Propertyreference>, ... );
       ...
     }
   }
@@ -92,19 +122,42 @@ node <TreeNodeName> [extends <TreeNodeName> [, ...]]
    
   provide <ProviderType> {
     resulting <ReturnType>( <ParameterType> <ParameterName> ) 
-              [ requires <Propertyname> | child.<ProviderType>[.<ReturnType>(<ParameterType>)] | this.[<ProviderType>.]<ReturnType>(<ParameterType>) , ... ] {
+// optional things are currently not implemented!
+      [ requires <Propertyname> | child.<ProviderType>[.<ReturnType>(<ParameterType>)] | this.[<ProviderType>.]<ReturnType>(<ParameterType>) , ... ] 
+    {
       <Any C++-Code using 
        <Propertyname>
-       child.<ProviderType>.<ReturnType>(<Parameter>)[,<defaultvalue>[,<failboolvar>]] 
-       this.[<ProviderType>.]<ReturnType>(<Parameter>)
+//!!! rethink about all this references...
+// default value and failvar isn't implemented yet
+       child.<ProviderType>.<ReturnType>(<ParameterType> <Parameter>)[,<defaultvalue>[,<failboolvar>]] 
+       this.[<ProviderType>.]<ReturnType>(<ParameterType> <Parameter>)
+       return <C-Variablename>
+       return_prop <Propertyname>
+       return_res child.<ProviderType>.<ReturnType>(<ParameterType> <Parameter>) 
+       return_res this.[<ProviderType>.]<ReturnType>(<ParameterType> <Parameter>)
+       //<<< I was thinking about:
+       return_fail			// return undefined
+       return_if_fail			// return if last command failed
+       check_fail			// return true if last command failed
+       //<<< 
        ...
-       in SQ_Brackets("[]") >
+       in SQ_Brackets("[]") 
+      >
     }
     ...
   }
 }
 
-/* ex:
+/*
+    **examples:**
+      scalar x = [start_time] + 3;
+      if( x > 5 )
+        [return x];
+      else
+        [return_prop end_time];
+*/
+
+/* future example could look like
 bool x_failed;
 x = [child.scalar_vsa.value(t),0,x_failed];
 if( x_failed )
@@ -114,19 +167,19 @@ if( x_failed )
 }
 */
 
-<Propertyreference>:    PROPERTYNAME
-                      | OPERANDNAME
-                      | <Nodereference>.PROPERTYNAME
-                      | [<ProviderType>.RETURNTYPE(PARAMETERTYPE)].start_param                    // range properties for return type
-                      | [RETURNTYPE(PARAMETERTYPE)].end_param                    
+<Propertyreference>:    <PROPERTYNAME>
+                      | <OPERANDNAME>
+                      | <Nodereference>.<PROPERTYNAME>
+                      | <PROVIDERTYPE>.<RETURNTYPE>(<PARAMETERTYPE>).start_param                    // range properties for result function
+                      | <PROVIDERTYPE>.<RETURNTYPE>(<PARAMETERTYPE>).end_param                    
 <Nodereference>:        <Localnodeidentifier>
                       | <Nodeidentifier>
                       | <Nodereference>.<Nodeidentifier>                           // recursive
-<Localnodeidentifier>:  [RETURNTYPE(PARAMETERTYPE)].prev                           // return type specific sequence
-                      | [RETURNTYPE(PARAMETERTYPE)].next                    
-                      | [CHILDNAME].first                     
-                      | [CHILDNAME].last
-                      | [CHILDNAME][n]
+<Localnodeidentifier>:  <PROVIDERTYPE>.prev                           // return type specific sequence
+                      | <PROVIDERTYPE>.next                    
+                      | child.<CHILDNAME>.first                     
+                      | child.<CHILDNAME>.last
+                      | child.<CHILDNAME>[n]
 <Nodeidentifier>:       prev
                       | next
                       | parent

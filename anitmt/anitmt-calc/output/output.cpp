@@ -12,21 +12,9 @@
 /**									    **/
 /*****************************************************************************/
 
-// needs to be included here, as anitmt.hpp needs the declaration of 
-// Output_Manager
-#include "anitmt.hpp"
+#include "output.hpp"
 
-#ifndef __AniTMT_Output_Interface__
-#define __AniTMT_Output_Interface__
-
-namespace anitmt{
-  class Output_Manager;
-};
-
-#include <param/param.hpp>
-#include <message/message.hpp>
-
-#include "animation.hpp"
+#include "oformats.hpp"
 
 namespace anitmt
 {
@@ -52,22 +40,20 @@ namespace anitmt
     }
   }
 
-  /*! adds a output format
-    /param format is deleted automatically by destructor of Output_Manager
-  */
+  //! adds a output format
+  //!   /param format is deleted automatically by destructor of Output_Manager
   void Output_Manager::add_output_format( Output_Interface *format )
   {
     formats.push_back( format );
   }
 
-  //!!! Quick, dirty implementation of constructor
-
   Output_Manager::Output_Manager( param::Parameter_Manager *par, 
 				message::Message_Consultant *msg,
 				Animation *ani )
-    : param(par), consultant(msg)
+    : param(par), message_consultant(msg)
   {
-    add_output_format( new ADL_Output(ani) );
+    add_output_format( new Raw_Output(ani) );
+    add_output_format( new Pov_Output(ani) );
   }
 
   Output_Manager::~Output_Manager()
@@ -79,5 +65,4 @@ namespace anitmt
   }
 }
 
-#endif
 

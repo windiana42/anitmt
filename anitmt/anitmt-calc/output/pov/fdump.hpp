@@ -26,7 +26,6 @@
 #include <string>
 
 #include <val/val.hpp>
-#include <proptree/proptree.hpp>
 
 #include "compif.hpp"
 

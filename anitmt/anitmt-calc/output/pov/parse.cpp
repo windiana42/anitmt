@@ -1088,7 +1088,8 @@ void File_Parser::Comment_Cutout(Position *start,Position *end)
 int File_Parser::_Finder_Check_Copy_Name(const ComponentInterface &cif,
 	unsigned int *counter)
 {
-	const char *name=cif.get_name_c();
+	std::string str_name = cif.get_name(); // !! must exist longer than name !!
+	const char *name=str_name.c_str();
 	
 	// Check if the name is valid: 
 	if(!(*name))
@@ -1293,7 +1294,7 @@ int File_Parser::Setup_Frame_Dump(Frame_Dump *fdump)
 				assert(av->need_active==av->nfound);
 				
 				if(verbose_level()>=4)
-				{  verbose(4) << "Scalar \"" << av->cif.get_name_c() << "\": dump=" << 
+				{  verbose(4) << "Scalar \"" << av->cif.get_name() << "\": dump=" << 
 					(dump_it ? "yes" : "no");  }
 			} break;
 			case taObject:
@@ -1325,7 +1326,7 @@ int File_Parser::Setup_Frame_Dump(Frame_Dump *fdump)
 				dump_it=(dflags ? true : false);
 				
 				if(verbose_level()>=4)
-				{  verbose(4) << "Object \"" << av->cif.get_name_c() << "\": dump=" << 
+				{  verbose(4) << "Object \"" << av->cif.get_name() << "\": dump=" << 
 					(dump_it ? "yes" : "no") << "; "
 					"flags=" << int(dflags) << "; serial=" << av->serial;  }
 			} break;

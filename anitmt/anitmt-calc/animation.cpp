@@ -20,8 +20,10 @@
 
 namespace proptree
 {
-    Semi_Global::Semi_Global( message::Message_Consultant* c )
-      : msg(c) {}
+    Semi_Global::Semi_Global( param::Parameter_Manager *parameter_manager, 
+			      message::Message_Consultant* c )
+      : param(parameter_manager->old_sys), msg(c) {}
+#warning only to wrap the old parameter system
 }
 
 namespace anitmt{
@@ -34,8 +36,10 @@ namespace anitmt{
   // Animation: Animation root node
   // ********************************
 
-  Animation::Animation( std::string name, message::Message_Manager *manager ) 
-    : GLOB( new message::Message_Consultant(manager,MID_Core) ),
+  Animation::Animation( std::string name, 
+			param::Parameter_Manager *parameter_manager,
+			message::Message_Manager *manager ) 
+    : GLOB( parameter_manager, new message::Message_Consultant(manager,MID_Core) ),
       tree_info( new solve::Priority_System(), &GLOB ), 
       ani_root( name, &tree_info, 
 		GLOB.msg.get_consultant() ) // GLOB has to be initialized

@@ -26,24 +26,42 @@ test_functionality_LDADD= \
 			../../lib/solve/libsolve.a \
 			../../lib/proptree/libproptree.a 
 
-FUNCGEN= ../funcgen/funcgen
+FUNCGEN=../funcgen/funcgen
+FUNCGEN_CODE=../funcgen/gen_cpp.cpp
 
 # exec funcgen...
 # base_func isn't regenerated when funcgen is changed
 base_func.cpp \
 base_func.hpp: $(srcdir)/base_func.afd 
-	$(FUNCGEN) $(srcdir)/base_func.afd base_func functionality $(srcdir)/
+	if test -e $(FUNCGEN); then
+	  $(FUNCGEN) $(srcdir)/base_func.afd base_func functionality $(srcdir)/;
+	else
+	  echo no funcgen availible, don't create code;
+	fi
+	
 
 scalar.cpp \
-scalar.hpp: $(srcdir)/scalar.afd $(FUNCGEN)
-	$(FUNCGEN) $(srcdir)/scalar.afd scalar functionality $(srcdir)/
+scalar.hpp: $(srcdir)/scalar.afd $(FUNCGEN_CODE)
+	if test -e $(FUNCGEN); then
+	  $(FUNCGEN) $(srcdir)/scalar.afd scalar functionality $(srcdir)/;
+	else
+	  echo no funcgen availible, don't create code;
+	fi
 
 object.cpp \
-object.hpp: $(srcdir)/object.afd $(FUNCGEN)
-	$(FUNCGEN) $(srcdir)/object.afd object functionality $(srcdir)/
+object.hpp: $(srcdir)/object.afd $(FUNCGEN_CODE)
+	if test -e $(FUNCGEN); then
+	  $(FUNCGEN) $(srcdir)/object.afd object functionality $(srcdir)/;
+	else
+	  echo no funcgen availible, don't create code;
+	fi
 
 functionality.cpp \
-functionality.hpp: $(srcdir)/functionality.afd $(FUNCGEN)
-	$(FUNCGEN) $(srcdir)/functionality.afd functionality functionality \
-	  $(srcdir)/
+functionality.hpp: $(srcdir)/functionality.afd $(FUNCGEN_CODE)
+	if test -e $(FUNCGEN); then
+	  $(FUNCGEN) $(srcdir)/functionality.afd functionality functionality \
+	    $(srcdir)/;
+	else
+	  echo no funcgen availible, don't create code;
+	fi
 

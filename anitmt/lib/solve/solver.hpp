@@ -304,12 +304,6 @@ namespace solve
     new Square_Solver<values::Scalar,values::Scalar>( a, b );
   }
 
-  inline void square_solver( Operand<values::Scalar> &a, 
-			     Operand<values::Vector> &b )
-  {
-    new Square_Solver<values::Scalar,values::Vector>( a, b );
-  }
-
   //*********************************************************
   // Accel_Solver: Solver for a constantly accelerated system
   //*********************************************************

@@ -1,4 +1,4 @@
-SUBDIRS = lib anitmt-calc anitmt-view mkavi test hlib
+SUBDIRS = lib anitmt-calc anitmt-view mkavi hlib
 EXTRA_DIST = BUILD FAQ autogen.sh
 
 # Make rules currently used by me (Wolfgang): 

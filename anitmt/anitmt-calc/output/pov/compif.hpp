@@ -72,7 +72,7 @@ class ComponentInterface
 			{  return((type==taObject) ? (anitmt::Object_Component_Interface*)cif : NULL);  }
 		
 		// Call functions that *_Component_Interface provide: 
-		const char *get_name_c() const;
+  //		const char *get_name_c() const; // !!! can't work because it returns pointer to temporary string
 		std::string get_name() const;
 };
 

@@ -93,6 +93,7 @@ qstring_err 	(\"([^\"\n]|\\\")*)
 
 include		{ tok_pos(); return TAFD_include; }
 declaration	{ tok_pos(); return TAFD_declaration; }
+header		{ tok_pos(); return TAFD_header; }
 base_types	{ tok_pos(); return TAFD_base_types; }
 serial		{ tok_pos(); return TAFD_serial; }
 type		{ tok_pos(); return TAFD_type; }
@@ -131,6 +132,8 @@ false		{ tok_pos(); return TAFD_false; }
 return_res	{ tok_pos(); return TAFD_return_res; }
 return_prop	{ tok_pos(); return TAFD_return_prop; }
 return		{ tok_pos(); return TAFD_return; }
+operators	{ tok_pos(); return TAFD_operators; }
+versions	{ tok_pos(); return TAFD_versions; }
 
 {id}	  { tok_pos(); yylval->string = yytext; return TAFD_IDENTIFIER; }
 

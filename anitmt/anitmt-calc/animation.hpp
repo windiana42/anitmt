@@ -17,6 +17,7 @@
 
 #include <val/val.hpp>
 
+#include <param/param.hpp>
 // !!! parameter system should be changed
 #include <par/params.hpp>
 
@@ -32,10 +33,10 @@ namespace proptree {
   class Semi_Global
   {
   public:
-    anitmt::Animation_Parameters param;	// all options
+    anitmt::Animation_Parameters &param;	// all options
     message::Message_Reporter msg; // to report messages to the user
 
-    Semi_Global( message::Message_Consultant* );
+    Semi_Global( param::Parameter_Manager *parameter_manager, message::Message_Consultant* );
   };
 }
 
@@ -56,7 +57,8 @@ namespace anitmt{
     void init();
     void hierarchy_final_init();
     void finish_calculations();
-    Animation( std::string name, message::Message_Manager *manager );
+    Animation( std::string name, param::Parameter_Manager *parameter_manager,
+	       message::Message_Manager *manager );
   };
 
   //***************************************

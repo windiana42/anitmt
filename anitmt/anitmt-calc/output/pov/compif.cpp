@@ -31,6 +31,7 @@ namespace POV
 
 using namespace anitmt;
 
+/* !!! can't work because it returns pointer to temporary string
 const char *ComponentInterface::get_name_c() const
 {
 	switch(type)
@@ -45,7 +46,7 @@ const char *ComponentInterface::get_name_c() const
 	assert(0);
 	return(NULL);
 }
-
+*/
 std::string ComponentInterface::get_name() const
 {
 	switch(type)

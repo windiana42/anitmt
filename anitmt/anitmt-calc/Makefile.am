@@ -21,13 +21,14 @@ anitmt_calc_SOURCES=	anitmt-calc.cpp
 anitmt_calc_LDADD=	../lib/message/libmessage.a \
 			input/libinput.a \
 			input/adl2/libadlparser.a \
+			output/liboutput.a \
 			output/raw/librawout.a \
 			output/pov/libpovout.a \
 			output/lib/liboutput.a \
-			output/liboutput.a \
 			libanitmt.a \
 			functionality/libfunctionality.a \
 			../lib/message/libmessage.a \
+			../lib/param/libparam.a \
 			../lib/par/libpar.a \
 			../lib/val/libval.a \
 			../lib/solve/libsolve.a \

@@ -20,9 +20,12 @@
 #include <solve/operand.hpp>
 #include <message/message.hpp>
 
+//wrap to old system
+#include <par/params.hpp>
+
 namespace param
 {
-  class Parameter_Input;
+  class Parameter_Source;
   class Parameter_Manager;
   class Parameter_Interface;
 }
@@ -30,17 +33,28 @@ namespace param
 namespace param
 {
   class Parameter_Source {
+  public:
+    virtual ~Parameter_Source() {}
+  private:
     Parameter_Manager *manager;
 
     friend class Parameter_Manager;
     void set_manager( Parameter_Manager *manager );
-    virtual void read_parameters();
-  public:
-    virtual ~Parameter_Source() {}
+    virtual int read_parameters() = 0;
   };
 
   class Parameter_Manager : public message::Message_Reporter {
-    std::list<Parameter_Input*> inputs;
+  public:
+    Parameter_Manager( Parameter_Source &start_source, message::Message_Consultant &consultant );
+    //! start reading the parameters
+    //! \return 0 means no errors
+    int read_parameters();
+
+    //Wrapping interface to old parameter system
+    anitmt::Animation_Parameters old_sys; // all options
+  private:
+    Parameter_Source &start_source;
+    std::list<Parameter_Source*> sources;
     std::list<Parameter_Interface*> interfaces;
 
     friend class Parameter_Source;
@@ -50,10 +64,6 @@ namespace param
     void register_int_parameter( solve::Operand<int>* param, std::string name, 
 				 std::string description, int default_value,
 				 bool needed );
-  public:
-    void read_parameters();
-
-    Parameter_Manager( message::Message_Consultant consultant );
   };
 
   class Parmeter_Interface {
@@ -64,12 +74,13 @@ namespace param
 			       bool needed );
   };
 
-  class Commandline_Parameter_Source {
-    Parameter_Manager *manager;
-
-    void set_manager( Parameter_Manager *manager );
-    friend class Parameter_Manager;
+  class Commandline_Parameter_Source : public Parameter_Source {
   public:
+    Commandline_Parameter_Source( int argc, char *argv[], char *envp[] );
+  private:
+    virtual int read_parameters();
+    //Wrapping interface to old parameter system
+    anitmt::Command_Line cmd;
   };
 }
 

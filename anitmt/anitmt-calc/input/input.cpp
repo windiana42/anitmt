@@ -12,19 +12,7 @@
 /**									    **/
 /*****************************************************************************/
 
-// needs to be included here, as anitmt.hpp needs the declaration of 
-// Input_Manager
-#include "anitmt.hpp"
-
-#ifndef __AniTMT_Input_Interface__
-#define __AniTMT_Input_Interface__
-
-namespace anitmt{
-  class Input_Manager;
-};
-
-#include <param/param.hpp>
-#include <message/message.hpp>
+#include "input.hpp"
 
 #include "animation.hpp"
 #include <adl2/adlparser.hpp>
@@ -42,14 +30,14 @@ namespace anitmt
   {
     for( formats_type::iterator i = formats.begin(); i != formats.end(); i++ )
     {
-      (*i)->read_structure();
+      (*i)->create_structure();
     }
   }
   void Input_Manager::read_values()
   {
     for( formats_type::iterator i = formats.begin(); i != formats.end(); i++ )
     {
-      (*i)->read_values();
+      (*i)->insert_values();
     }
   }
 
@@ -68,7 +56,7 @@ namespace anitmt
 				Animation *ani )
     : param(par), consultant(msg)
   {
-    add_input_format( new ADL_Input(ani) );
+    add_input_format( new ADL_Input(ani,msg) );
   }
 
   Input_Manager::~Input_Manager()
@@ -79,6 +67,4 @@ namespace anitmt
     }
   }
 }
-
-#endif
 

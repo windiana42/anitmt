@@ -34,6 +34,8 @@ namespace anitmt
   class Input_Interface 
   {
   public:
+    //! initialize interface
+    virtual void init() = 0;
     //! create animation tree structure
     virtual void create_structure() = 0;
     //! create explicite references 

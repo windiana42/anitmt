@@ -25,30 +25,32 @@
 #include <input/input.hpp>
 #include <output/output.hpp>
 
-#include <par/params.hpp>
+#include <param/param.hpp>	// only wrapped
 
 // input filters
 #include <input/adl2/adlparser.hpp>
 // output filters
 #include <output/oformats.hpp>
 /**/
-using namespace anitmt;
-using namespace message;
-
-enum Message_Sources{ ANITMT_Core };
 
 int main(int argc,char **argv,char **envp)
 {
   try
   {
-    /*
-    Commandline_Parameter_Source param_source(argc,argv,envp);
-    Parameter_Manager param_manager(param_source);
-    Stream_Message_Handler msg_handler(cerr,cout,cout);
+    // message objects
+    message::Stream_Message_Handler msg_handler(cerr,cout,cout);
+    message::Message_Manager manager(&msg_handler);
 
-    AniTMT ani( &param_manager, &msg_handler );
+    // parameter objects
+    param::Commandline_Parameter_Source param_source(argc,argv,envp);
+    message::Message_Consultant parameter_consultant(&manager, anitmt::MID_Parameter);
+    param::Parameter_Manager param_manager(param_source, parameter_consultant);
+
+    // animation objects
+    anitmt::AniTMT ani( &param_manager, &msg_handler );
     ani.process();
-    */
+
+    /*
     // This is QnD, I know... but it seems that anitmt.*
     // will someday make all this code here superfluous ?! - OK
     Stream_Message_Handler msg_handler(std::cerr,std::cout,std::cout);

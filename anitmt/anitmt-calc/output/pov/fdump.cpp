@@ -20,6 +20,8 @@
  *
  */
 
+#include <config.h>
+
 #include <iostream>
 
 #include <animation.hpp>

@@ -19,6 +19,11 @@
 
 namespace param
 {
+  void Parmeter_Interface::int_parameter( solve::Operand<int>* param, std::string name, 
+					  std::string description, int default_value,
+					  bool needed )
+  {
+  }
 }
 
 #endif

@@ -25,7 +25,7 @@
 
 namespace anitmt
 {
-  enum Message_IDs{ MID_AniTMT, MID_Core, MID_Output, MID_Input, 
+  enum Message_IDs{ MID_AniTMT, MID_Core, MID_Output, MID_Input, MID_Parameter,
 		    MID_POV, MID_RAW, 
 		    MID_ADL };
 
@@ -34,7 +34,7 @@ namespace anitmt
     message::Message_Consultant default_msg_consultant;
     Animation ani;
     
-    bool is_errors();
+    bool has_errors();
     void report_error_state();
   public:
     //! handles input formats 
@@ -53,7 +53,7 @@ namespace anitmt
 
     //*****************
     // Semi global data 
-    param::Parameter_Manager  &param;
+    param::Parameter_Manager &param;
   };
 }
 

@@ -29,11 +29,12 @@ namespace anitmt
   //! Input Interface for reading ADL files
   //***************************************
   
-  class ADL_Input : public Input_Interface {
-    std::string filename;
+  class ADL_Input : public Input_Interface, message::Message_Reporter {
     Animation *ani;
     message::Message_Consultant *consultant;
   public:
+    //! init interface
+    virtual void init();
     //! create animation tree structure
     virtual void create_structure();
     //! create explicite references 
@@ -46,7 +47,7 @@ namespace anitmt
       \param filename - Name of .adl-file
       \param ani - Animation structure to be filled
       \param c - Message consultant that get's all errors etc. */
-    ADL_Input( std::string filename, Animation *ani, 
+    ADL_Input( Animation *ani, 
 	       message::Message_Consultant *c);
   };
 

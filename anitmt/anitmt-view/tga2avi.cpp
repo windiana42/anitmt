@@ -40,17 +40,17 @@ std::string num_in_string( std::string str, int num ){
   return str.substr(0,p1) + buf + str.substr(p2+1);
 }
 
-const char *TGAname(int nummer)
+std::string TGAname(int nummer)
 {
-  return num_in_string( tga_names, nummer ).c_str();
+  return num_in_string( tga_names, nummer );
 }
 
 void dowithtgaanf(char *AVIname,int fps,int anz,int startframe)
 {
   aniinf INF;
-  if( Film.getSize(TGAname(startframe),INF) )
+  if( Film.getSize(TGAname(startframe).c_str(),INF) )
     {
-      printf("%s:Error: Could not open first TGA!\n", TGAname(startframe));
+      printf("%s:Error: Could not open first TGA!\n", TGAname(startframe).c_str());
       exit(-1);
     }
 
@@ -65,8 +65,8 @@ void dowithtgaanf(char *AVIname,int fps,int anz,int startframe)
 
 void dowithtganow(int z)
 {
-  if( Film.AddTGAFrame(TGAname(z)) )
-    printf("%s:Error: Could not open TGA!\n", TGAname(z));
+  if( Film.AddTGAFrame(TGAname(z).c_str()) )
+    printf("%s:Error: Could not open TGA!\n", TGAname(z).c_str());
 }
 
 void dowithtgaend()

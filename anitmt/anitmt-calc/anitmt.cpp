@@ -13,10 +13,11 @@
 /*****************************************************************************/
 
 #include "anitmt.hpp"
+#include "save_filled.hpp"
 
 namespace anitmt
 {
-  bool AniTMT::is_errors()
+  bool AniTMT::has_errors()
   {
     return default_msg_consultant.get_num_messages(message::MT_Error) > 0;
   }
@@ -31,40 +32,50 @@ namespace anitmt
     (returns number of errors) */
   int AniTMT::process()
   {
-    // init animation tree
-    ani.init();
-
     // get the parameters
     param.read_parameters();
-    if( is_errors() ){ report_error_state();return -1; }
+    if( has_errors() ){ report_error_state();return -1; }
+
+    // init animation tree
+    ani.init();
+    if( has_errors() ){ report_error_state();return -1; }
 
     // initialize filters
     input.init();
-    if( is_errors() ){ report_error_state();return -1; }
-    output.init();
-    if( is_errors() ){ report_error_state();return -1; }
+    if( has_errors() ){ report_error_state();return -1; }
 
     // read input data 
     input.read_structure();
-    if( is_errors() ){ report_error_state();return -1; }
+    if( has_errors() ){ report_error_state();return -1; }
 
     // finish structure initialization
     ani.hierarchy_final_init();	
-    if( is_errors() ){ report_error_state();return -1; }
+    if( has_errors() ){ report_error_state();return -1; }
+
+#warning !!! fixed filename for filled ADL output !!!
+    save_filled("unfilled.out", &ani );
 
     // insert values
     input.read_values();
-    if( is_errors() ){ report_error_state();return -1; }
+    if( has_errors() ){ report_error_state();return -1; }
 
-    // may already check, whether the components match to output 
-    output.check_components();
-    if( is_errors() ){ report_error_state();return -1; }
+#warning !!! fixed filename for filled ADL output !!!
+    save_filled("expl_filled.out", &ani );
 
     ani.finish_calculations();
-    if( is_errors() ){ report_error_state();return -1; }
+    if( has_errors() ){ report_error_state();return -1; }
+
+#warning !!! fixed filename for filled ADL output !!!
+    save_filled("filled.out", &ani );
+
+    output.init();
+    if( has_errors() ){ report_error_state();return -1; }
+
+    output.check_components();
+    if( has_errors() ){ report_error_state();return -1; }
 
     output.process_results();
-    if( is_errors() ){ report_error_state();return -1; }
+    if( has_errors() ){ report_error_state();return -1; }
 
     report_error_state();
     return 0;
@@ -72,12 +83,12 @@ namespace anitmt
 
   AniTMT::AniTMT( param::Parameter_Manager *par, 
 		  message::Message_Handler *msg_handler )
-    : default_msg_consultant(&msg_manager, MID_AniTMT ),
-      ani("noname", &msg_manager),
+    : default_msg_consultant(&msg_manager, MID_AniTMT ), 
+      ani("noname", par, &msg_manager),
       input (par, &default_msg_consultant, &ani), 
       output(par, &default_msg_consultant, &ani),
-      msg_manager(msg_handler), 
-      param(*par)
+      msg_manager(msg_handler), param(*par)
+    // it should be ok to pass &msg_manager earlier...
   {
   }
 }
