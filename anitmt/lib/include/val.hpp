@@ -549,6 +549,8 @@ namespace values
      with the Matrix m
      To reproduce the effet of m, scale, then rotate and finally translate */
   extern Vector get_translation_component( const Matrix &mat );
+
+
 /******************************************************************************/
 /*   STRING                                                                   */
 /******************************************************************************/
