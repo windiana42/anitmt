@@ -75,7 +75,7 @@ int main(int argn,char **argv)
       printf(" Syntax:\n");
       printf("   avi2tga options \n\n");
       printf("   [-o tganames ]  name of the TGA-files that includes number of digits:\n");
-      printf("                   `%c0nd' (f%c04d.tga for f0000.tga,...)\n\n",'%','%');
+      printf("                   `%c0nd' (f%c07d.tga for f0000.tga,...)\n\n",'%','%');
       printf("   [-i inputname]  filename of the AVI-file (film.avi)\n");
       printf("   [-s startframe] first frame number of the TGA set to use (0)\n");
       printf("   [-e endframe]   last  frame number of the TGA set to use\n");

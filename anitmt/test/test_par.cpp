@@ -15,7 +15,7 @@ int main(int argc,char **argv,char **envp)
 	{  return(1);  }
 	
 	// We dump the parameters now (this is a test proggy)
-	anipar.Print_Parameters(cerr,0,true);
+	anipar.Print_Parameters(std::cerr,0,true);
 	
 	return(0);
 }

@@ -24,52 +24,52 @@ int main()
 	
 	da=sb;
 	if(1.00000000001==sb)
-		{  cerr << "equal\n";  }
+		{  std::cerr << "equal\n";  }
 	if(!(sb!=1.00000000001))
-		{  cerr << "equal2\n";  }
+		{  std::cerr << "equal2\n";  }
 	sa=sb*sc;
 	sb=sa-0.00000000001;
 	if(sa==sb)
-		{  cerr << "equal3" "\n";  }
+		{  std::cerr << "equal3" "\n";  }
 	
 	sd-=1.10000000001;
 	if(!sd)
-		{  cerr << "zero\n";  }
+		{  std::cerr << "zero\n";  }
 	if(double(sd)==0.0)
-		{  cerr << "OOPS!!\n";  }
+		{  std::cerr << "OOPS!!\n";  }
 	
 	sa=2.0;
 	sb=2.0*sa;
 	sc=(sa*=sb)*2.0;
-	cerr << "res (16) =" << sc << "\n";
+	std::cerr << "res (16) =" << sc << "\n";
 	
-	sc=-sa;  cerr << "-" << sa << "=" << sc << "\n";
-	sc=+sa;  cerr << "+" << sa << "=" << sc << "\n";
+	sc=-sa;  std::cerr << "-" << sa << "=" << sc << "\n";
+	sc=+sa;  std::cerr << "+" << sa << "=" << sc << "\n";
 	
-	cerr << "sizes=" << sizeof(vect::vector<3>) << "," << sizeof(Vector) << "\n";
+	std::cerr << "sizes=" << sizeof(vect::vector<3>) << "," << sizeof(Vector) << "\n";
 	
 	Vector va(1.0,6.0,3.0),vb(2.0,4.0,2.0),vc,vd(vb);
-	cerr << vb << " -> abs, abs2: " << abs(vb) << ", " << abs2(vb) << "\n";
+	std::cerr << vb << " -> abs, abs2: " << abs(vb) << ", " << abs2(vb) << "\n";
 	
-	cerr << va << "+" << vb << "=" << (va+vb) << "\n";
-	cerr << va << "*" << sa << "=" << (va*sa) << "\n";
-	cerr << vb << "/" << sa << "=" << (vb/sa) << "\n";
+	std::cerr << va << "+" << vb << "=" << (va+vb) << "\n";
+	std::cerr << va << "*" << sa << "=" << (va*sa) << "\n";
+	std::cerr << vb << "/" << sa << "=" << (vb/sa) << "\n";
 	
 	vc=Vector(1.0,6.0,3.0000000001);
-	cerr << va << " == " << vc << " -> " << (va==vc) << "\n";
+	std::cerr << va << " == " << vc << " -> " << (va==vc) << "\n";
 	va=-vc;
 	
 	Vector v0;
-	cerr << "IsNull(" << v0 << ") = " << !v0 << "\n";
-	cerr << "IsNull(" << (v0+Vector(0,0,1)) << ") = " << !(v0+Vector(0,0,1)) << "\n";
+	std::cerr << "IsNull(" << v0 << ") = " << !v0 << "\n";
+	std::cerr << "IsNull(" << (v0+Vector(0,0,1)) << ") = " << !(v0+Vector(0,0,1)) << "\n";
 	
 	va=Vector(1.0,0.0,0.0);
 	vb=va;
-	cerr << "rotate(45):" << va << " -> " << rotateZ(rotateY(va,M_PI/4.0),M_PI/2.0) << "\n";
+	std::cerr << "rotate(45):" << va << " -> " << rotateZ(rotateY(va,M_PI/4.0),M_PI/2.0) << "\n";
 	vb.rotateY(M_PI/4.0).rotateZ(M_PI/2.0);
-	cerr << "rotate(45):" << va << " -> " << vb << "\n";
+	std::cerr << "rotate(45):" << va << " -> " << vb << "\n";
 	
-	cerr << "Testing to_spherical/to_rectangular...";
+	std::cerr << "Testing to_spherical/to_rectangular...";
 	srandom(getpid());
 	// Testing to_spherical, to_rectangular: 
 	for(int i=0; i<100; i++)
@@ -80,77 +80,77 @@ int main()
 		Vector sph2=vva;  sph2.to_spherical();
 		Vector rec2=sph2; rec2.to_rectangular();
 		if(sph1!=sph2)
-		{  cerr << "\nto_spherical: different results: " << 
+		{  std::cerr << "\nto_spherical: different results: " << 
 			sph1 << " " << sph2 << "\n";  }
 		if(rec2!=rec1)
-		{  cerr << "\nto_rectangular: different results. " << 
+		{  std::cerr << "\nto_rectangular: different results. " << 
 			rec2 << " " << rec1 << "\n";  }
 		if(vva!=rec1)
-		{  cerr << "\nto_spherical/to_rectangular non-inverse: " << 
+		{  std::cerr << "\nto_spherical/to_rectangular non-inverse: " << 
 			vva << " -> " << sph1 << " -> " << rec1 << "\n";  }
 	}
-	cerr << "done\n";
+	std::cerr << "done\n";
 	
 	// Speed test:
-	//cerr << "Speed test..."; 
+	//std::cerr << "Speed test..."; 
 	//for(int i=0; i<100000; i++)
 	//{
 	//	va=vb+vc;
 	//	va/=10.0;
 	//	vc-=vb;
 	//}
-	//cerr << "passed.\n";
+	//std::cerr << "passed.\n";
 	
 	va=Vector(2,4,5);
 	vb=va;
-	cerr << "normalize(" << va << ") = " << 
+	std::cerr << "normalize(" << va << ") = " << 
 		normalize(va) << " = " << vb.normalize() << "\n";
 	if(normalize(va) != vb || 
 	   abs(vb) != 1.0)
-	{  cerr << "*** ERROR!! normalize-abs=" << vb.abs() << "\n";  }
+	{  std::cerr << "*** ERROR!! normalize-abs=" << vb.abs() << "\n";  }
 	
-	cerr << "Testing abs...";
+	std::cerr << "Testing abs...";
 	if(va.abs() != abs(va))
-	{  cerr << "abs() ERROR: " << va.abs() << " != " 
+	{  std::cerr << "abs() ERROR: " << va.abs() << " != " 
 		<< abs(va) << "\n";  }
 	else
-	{  cerr << "done\n";  }
+	{  std::cerr << "done\n";  }
 	
 	va=Vector(-2,3.5,-7);
 	vb=va;
-	cerr << "Vector: " << va << "\n";
-	cerr << "Mirrors: " << 
+	std::cerr << "Vector: " << va << "\n";
+	std::cerr << "Mirrors: " << 
 		mirrorX(va) << 
 		mirrorY(va) << 
 		mirrorZ(va) << 
 		mirror(va) << "\n";
-	cerr << "Mirrors: " << 
+	std::cerr << "Mirrors: " << 
 		va.mirrorX() << 
 		va.mirrorX().mirrorY() << 
 		va.mirrorY().mirrorZ() << 
 		va.mirrorZ().mirror() << "\n";
 	
 	va=vb;
-	cerr << "Trans: " << 
+	std::cerr << "Trans: " << 
 		transX(va,-6) << 
 		transY(va,-6) << 
 		transZ(va,-6) << "\n";
-	cerr << "Trans: " << 
+	std::cerr << "Trans: " << 
 		va.transX(-6) << 
 		va.transX(6).transY(-6) << 
 		va.transY(6).transZ(-6) << "\n";
 	
 	va=vb;
-	cerr << "Scale: " << 
+	std::cerr << "Scale: " << 
 		scaleX(va,-2) << 
 		scaleY(va,-2) << 
 		scaleZ(va,-2) << "\n";
-	cerr << "Scale: " << 
+	std::cerr << "Scale: " << 
 		va.scaleX(-2) << 
 		va.scaleX(-0.5).scaleY(-2) << 
 		va.scaleY(-0.5).scaleZ(-2) << "\n";
 	
-	cerr << "Testing multiplication...";
+	std::cerr << "Testing multiplication...";
 	for(int i=0; i<100; i++)
 	{
 		va=Vector(rand()/1000,rand()/1000,rand()/1000);
@@ -160,46 +160,46 @@ int main()
 		sb=dot(vb,vc);
 		sc=abs(va)*abs(vb)*(sin(angle(va,vb)));
 		if(sa!=0 || sb!=0)
-		{  cerr << "*** ERROR (scalar/vector mul) (" << 
+		{  std::cerr << "*** ERROR (scalar/vector mul) (" << 
 			sa << ", " << sb << ")\n";  }
 		else if(abs(vc)-sc > 0.01)
-		{  cerr << "*** ERROR (scalar/vector mul) " << 
+		{  std::cerr << "*** ERROR (scalar/vector mul) " << 
 			abs(vc) << " != " << sc << "; delta=" << 
 			abs(vc)-sc << "\n";  }
 	}
-	cerr << "done\n";
+	std::cerr << "done\n";
 	
 	Matrix ma,mb(Matrix::ident),mc(Matrix::null),md;
 	
 	ma(2,0,5.0)(2,2,7.0);
-	cerr << ma;
-	cerr << "idx:" << ma[0][0] << "," << ma[1][0] << "," 
+	std::cerr << ma;
+	std::cerr << "idx:" << ma[0][0] << "," << ma[1][0] << "," 
 	               << ma[2][0] << "," << ma[2][2] << "\n";
 	
-	cerr << "ident? (should be 1,0) " << !mb << "," << !ma << "\n";
-	cerr << "null? (should be 1,0) " << mc.is_null() << "," << mb.is_null() << "\n";
+	std::cerr << "ident? (should be 1,0) " << !mb << "," << !ma << "\n";
+	std::cerr << "null? (should be 1,0) " << mc.is_null() << "," << mb.is_null() << "\n";
 	
-	//cerr << ma*10 << ma/2 << 2*ma ;
-	//ma*=10;  cerr << ma;  ma/=2;  cerr << ma;
+	//std::cerr << ma*10 << ma/2 << 2*ma ;
+	//ma*=10;  std::cerr << ma;  ma/=2;  std::cerr << ma;
 	
-	cerr << "Simple Matrix*Vector test...";
+	std::cerr << "Simple Matrix*Vector test...";
 	va=Vector(3.77,8.91,-13.1);
 	vb=va;
 	mc=mb*2;
-	cerr << mb << (mb*va);
+	std::cerr << mb << (mb*va);
 	if(mb*va != vb || mc*va != vb*2.0 || va*mc != vb*2.0)
-	{  cerr << "\n*** ERROR in Matrix*Vector (1).\n";  }
+	{  std::cerr << "\n*** ERROR in Matrix*Vector (1).\n";  }
 	else
 	{
 		va*=mc;
 		vb*=2;
 		if(va != vb)
-		{  cerr << "\n*** ERROR in Matrix*Vector (2).\n";  }
+		{  std::cerr << "\n*** ERROR in Matrix*Vector (2).\n";  }
 		else
-		{  cerr << "done\n";  }
+		{  std::cerr << "done\n";  }
 	}
 	
-	cerr << "Matrix*Matrix / invert test...";
+	std::cerr << "Matrix*Matrix / invert test...";
 	for(int i=0; i<100; i++)
 	{
 		for(int c=0; c<4; c++)
@@ -207,27 +207,27 @@ int main()
 				mc(c,r,rand()/1000.0);
 		
 		if(mc*mb != mc)
-		{  cerr << "\n*** ERROR in Matrix*Matrix (1).\n";  }
+		{  std::cerr << "\n*** ERROR in Matrix*Matrix (1).\n";  }
 		if(mb*mc != mc)
-		{  cerr << "\n*** ERROR in Matrix*Matrix (2).\n";  }
+		{  std::cerr << "\n*** ERROR in Matrix*Matrix (2).\n";  }
 		ma=mc;
 		mc*=mb;
 		if(mc != ma)
-		{  cerr << "\n*** ERROR in Matrix*Matrix (3).\n";  }
+		{  std::cerr << "\n*** ERROR in Matrix*Matrix (3).\n";  }
 		
 		// mc = random;  ma = mc;  mb = identity matrix
 		
 		ma.invert();
 		if(ma*mc!=mb)
-		{  cerr << "\n*** ERROR in invert() (1).\n";  }
+		{  std::cerr << "\n*** ERROR in invert() (1).\n";  }
 		
 		ma=invert(mc);
 		if(ma*mc!=mb)
-		{  cerr << "\n*** ERROR in invert() (2).\n";  }
+		{  std::cerr << "\n*** ERROR in invert() (2).\n";  }
 	}
-	cerr << "done\n";
+	std::cerr << "done\n";
 	
-	cerr << "Matrix+-Matrix / -Matrix test...";
+	std::cerr << "Matrix+-Matrix / -Matrix test...";
 	for(int i=0; i<100; i++)
 	{
 		Matrix mrp,mrm,mrn;
@@ -245,16 +245,16 @@ int main()
 		mc=ma+mb;
 		md+=mb;
 		if(mc!=md || mc!=mrp || mc*0.5!=(ma/2.0)+(mb*0.5))
-		{  cerr << "\n*** ERROR in matrix+matrix\n";  }
+		{  std::cerr << "\n*** ERROR in matrix+matrix\n";  }
 		md=ma;
 		mc=ma-mb;
 		md-=mb;
 		if(mc!=md || mc!=mrm || mc*0.5!=(ma/2.0)-(mb*0.5))
-		{  cerr << "\n*** ERROR in matrix-matrix\n";  }
+		{  std::cerr << "\n*** ERROR in matrix-matrix\n";  }
 		if(-ma!=mrn || (-ma)*2.0 != (ma*(-2.0)))
-		{  cerr << "\n*** ERROR in -matrix\n";  }
+		{  std::cerr << "\n*** ERROR in -matrix\n";  }
 	}
-	cerr << "done\n";
+	std::cerr << "done\n";
 	
 	return(0);
 }

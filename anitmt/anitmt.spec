@@ -48,7 +48,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root,755)
-%doc AUTHORS COPYING README NEWS ChangeLog TODO Rules.german Rules.english
+%doc AUTHORS COPYING COPYING.GPL COPYING.LGPL README NEWS ChangeLog TODO FAQ
 %prefix/bin/*
 %prefix/share/anitmt/example/
 
