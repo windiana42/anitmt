@@ -17,6 +17,8 @@
 #ifndef _NS_internal_vect_internals_HPP_
 #define _NS_internal_vect_internals_HPP_ 1
 
+#include <config.h>
+
 // Here is the evil define. 
 // Define this to 1 if you want to disable VECTOR * MATRIX. 
 // #undef it if you want to enable it. 

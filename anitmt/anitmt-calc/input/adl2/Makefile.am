@@ -4,7 +4,7 @@ INCLUDES=		-I$(top_srcdir)/lib -I$(top_srcdir)/lib/flex \
 			-I../../functionality/ -I$(srcdir)/../../functionality/
 noinst_LIBRARIES=	libadlparser.a
 check_PROGRAMS=		testadlparser
-CXXFLAGS =		@CXXFLAGS@ -Wno-non-template-friend -DYYDEBUG 
+CXXFLAGS =		@CXXFLAGS@ -Wno-non-template-friend 
 
 BUILT_SOURCES=		scanner.cc parser.cc tokens.h 
 libadlparser_a_SOURCES=	parser.yy tokens.h\

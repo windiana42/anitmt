@@ -17,6 +17,8 @@
 #ifndef _NS_vect_support_HPP_
 #define _NS_vect_support_HPP_ 1
 
+#include <config.h>
+
 #include <stddef.h>
 #include <math.h>
 

@@ -22,8 +22,7 @@ libfunctionality_a_SOURCES= solver.afd solver.hpp solver.cpp \
 			make_avail.cpp make_avail.hpp 
 
 check_PROGRAMS=		test_functionality
-CXXFLAGS =		@CXXFLAGS@ -Wno-non-template-friend -DYYDEBUG \
-			-ftemplate-depth-30
+CXXFLAGS =		@CXXFLAGS@ -Wno-non-template-friend -ftemplate-depth-30
 
 test_functionality_SOURCES= \
 			test_functionality.cpp

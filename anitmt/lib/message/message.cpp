@@ -17,6 +17,8 @@
 #warning "Replace strstream header with a std::stringstream version (GCC 3.0)"
 #warning "Check warnings in message_inline.cpp... (about nl)"
 
+#include <config.h>  /* for GCC_HACK */
+
 #ifdef WOLFGANG
 #include <stdio.h>
 #endif
@@ -92,7 +94,7 @@ namespace message
       pos(src.pos), position_detail(src.position_detail),
       consultant(src.consultant), 
       mtype(src.mtype), 
-      #if __GNUC__ < 3  /* there is a bug in gcc-2.95.x STL... */
+      #ifdef GCC_HACK /* there is a bug in gcc-2.95.x STL... */
       #define PCOUNT(src) const_cast<std::ostrstream*>(&src.msg_stream)->pcount()
       msg_stream(msg_strcpy(message,src.message,PCOUNT(src)),
 		 _Message_Buf_Size-1-PCOUNT(src)),

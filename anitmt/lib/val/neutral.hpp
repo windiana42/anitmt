@@ -17,6 +17,8 @@
 #ifndef _NS_vect_neutral_HPP_
 #define _NS_vect_neutral_HPP_ 1
 
+#include <config.h>
+
 #include <iostream>
 
 namespace vect

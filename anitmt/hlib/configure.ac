@@ -3,6 +3,9 @@
 # Things work well with autoconf-2.53 and automake-1.6. 
 AC_INIT(hlib,0.9.9,[<see apropriate header file>])
 
+# Make sure people don't use stoneage versions of autoconf: 
+#AC_PREREQ(2.53)
+
 # Check system: 
 # Compute the canonical build-system type variable, $build, 
 # and its three individual parts $build_cpu, $build_vendor, and $build_os. 
@@ -23,6 +26,14 @@ AM_CONFIG_HEADER(hlib-config.h)
 AC_PROG_CC
 AC_PROG_CPP
 AC_PROG_CXX
+
+# For --enable and --with options: 
+#AC_ARG_ENABLE(feature,AC_HELP_STRING([--enable-feature],[help text]),
+#              action-if-given,action-if-not-given)
+#AC_ARG_WITH(package,AC_HELP_STRING([--with-package],[help text]),
+#            action-if-given,action-if-not-given)
+# Where $enableval contains value in --enable-feature=VAL which is "yes" 
+# for --enable-feature and "no" for --disable-feature. 
 
 # Optimization C / C++ compiler flags: 
 AC_SUBST(OPTCFLAGS)
@@ -158,6 +169,8 @@ AC_PROG_LN_S
 AC_PROG_INSTALL
 AC_PROG_RANLIB
 
+# AC_DEFINE(HAVE_XYZ,[value],[description])
+
 # Some information compiled into the library: 
 AC_DEFINE_UNQUOTED(HLIB_BUILD_SYSTEM,["$build"],
 	[canonical build-system type])
@@ -198,6 +211,8 @@ AC_TYPE_SIZE_T
 AC_HEADER_TIME
 AC_HEADER_TIOCGWINSZ
 AC_HEADER_SYS_WAIT
+
+# AC_CHECK_SIZEOF(...)  AC_C_BIGENDIAN()  
 
 AC_CHECK_TYPES([u_int8_t,u_int16_t,u_int32_t,u_int64_t,int8_t,int16_t,int32_t,int64_t],,
 	[AC_MSG_WARN([Oh... if you're not using gcc, expect trouble.])])

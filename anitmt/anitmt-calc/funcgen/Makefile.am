@@ -2,8 +2,7 @@
 INCLUDES=		-I$(top_srcdir)/lib -I$(top_srcdir)/lib/flex -I$(top_builddir)/hlib/include 
 
 bin_PROGRAMS=		funcgen
-CXXFLAGS =		@CXXFLAGS@ -Wno-non-template-friend -DYYDEBUG \
-			-ftemplate-depth-30
+CXXFLAGS =		@CXXFLAGS@ -Wno-non-template-friend -ftemplate-depth-30
 
 BUILT_SOURCES=		scanner.cc parser.cc tokens.h 
 funcgen_SOURCES=	gen_code.hpp gen_code.cpp gen_cpp.cpp gen_cpp.hpp \

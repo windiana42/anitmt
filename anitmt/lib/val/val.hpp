@@ -20,6 +20,8 @@
 #ifndef _NS_values_val_HPP_
 #define _NS_values_val_HPP_ 1
 
+#include <config.h>
+
 #include "neutral.hpp"
 #include "flag.hpp"
 #include "scalar.hpp"

@@ -17,6 +17,8 @@
 #ifndef _NS_vect_string_HPP_
 #define _NS_vect_string_HPP_ 1
 
+#include <config.h>
+
 #include <string>
 
 namespace vect
