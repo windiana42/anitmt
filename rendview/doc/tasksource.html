@@ -1,0 +1,733 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="en">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <title>RendView Manual -- The Task Sources</title>
+  <meta name="Keywords" content="RendView manual documentation task sources">
+  <meta name="Description" content="Manual for RendView: about the task sources">
+  <style type="text/css">
+	pre { background-color:#eeeeee; border: 1px solid black;
+		padding: 0.3em 0.3em 0.3em 0.3em; }
+	dd { margin-bottom: 0.5em; }
+  </style>
+</head>
+<body text="#000000" bgcolor="#ffffff" link="#0000ff" vlink="#800080" alink="#ff0000">
+ <table border="0" cellpadding="0" cellspacing="0" width="100%" summary="" bgcolor="#eeeeee"><tr>
+  <td align="left" width="33%">&lt;<a href="taskmanager.html">prev</a></td>
+  <td align="center" width="34%"><a href="index.html">[index]</a></td>
+  <td align="right" width="33%"><a href="admin.html">next</a>&gt;</td>
+ </tr></table>
+<br>
+<div align="center">
+  <h2><font color="#3333cc"><u>RendView Manual -- The Task Sources</u></font></h2>
+</div>
+<hiernavname "tasksource">
+<p><h3><u>Basic operation</u></h3>
+  As you already know, there are currently two task sources:
+  The local task source using files on your local hard drive and the
+  LDR task source effectively implementing the LDR client and
+  all the network communications needed for LDR on the client side. <br>
+  For a running RendView process, the task source generates tasks
+  which are fed into the <a href="taskmanager.html">taskmanager</a>
+  to get them processed. Finally, the taskmanager gives the tasks back
+  to the task source with success/failure info attached.
+</p>
+<p><h3><u>The local task source</u></h3>
+  The local task source is one of the most important parts. If you ever
+  intend to have a frame rendered or filtered, you have to tell the local
+  task source (LDR server or normal RendView) about that. The local task
+  source saves several parameters about the frames to be rendered/filtered
+  such as the file size, additional arguments to be passed to the
+  render/filter process etc. These parameters may vary between different
+  frames. This is the reason why I introduces <b>per-frame blocks</b>
+  (see below).
+</p>
+<p>
+  Okay, before looking at the per-frame blocks and at the parameters,
+  first some words about what the local task source does:<br>
+  Normally, the local task source checks for the existance of the frame
+  input file (e.g. POV file for rendering (or rendering and filtering)
+  or some image file when only filtering). If the file does not exist,
+  an error occurs.<br>
+  If you specify <tt><font color="#cc3333">-l-cont</font></tt>, you switch on <b>continuing</b>.
+  This means that RendView additionally <b>checks the time stamp</b>: If
+  the input file is newer than the output file, the frame is re-rendered
+  (and also re-filtered if requested), otherwise it is skipped.
+  Also, the modification time of additional files is checked and files
+  are re-processed in case one of the additional files got modified (unless
+  you switch that off using <tt><font color="#cc3333">-no-l-add-check-mtime</font></tt>).<br>
+  (Note: If input and output files have equal time stamps, input is
+  considered to be modified.)<br>
+  If you specify <tt><font color="#cc3333">-l-rcont</font></tt> together with
+  <tt><font color="#cc3333">-l-cont</font></tt>, you tell RendView to switch on <b>resume
+  operation</b>.
+  (Note that <tt><font color="#cc3333">-l-rcont</font></tt> without <tt><font color="#cc3333">-l-cont</font></tt> has
+  no effect.) Resume operation is only implemented for rendering and
+  means that when RendView kills a render job (because of user request
+  using <tt>SIGTERM</tt> or two <tt>SIGINT</tt> or because of a timeout)
+  and the render job leaves an unfinished frame, this frame is kept
+  and renamed appending the suffix <tt>-unfinished</tt>. When you
+  launch RendView again it will check if an unfinished frame
+  exists, check the timestamp and then will tell the renderer to
+  resume the unfinished frame (or completely re-render it if the timestamp
+  demands that). Once the file is completely rendered, the
+  <tt>-unfinished</tt> suffix is removed. (In fact it is removed
+  before resuming rendering.)<br>
+  In case a job is not completely successful and you do <b>not</b>
+  pass <tt><font color="#cc3333">-l-rcont</font></tt>, the output file is deleted.<br>
+  The local task source also deletes an existing output file if
+  it comes to the conclusion that the frame has to be re-rendered/filtered.
+  This means that you can safely symlink render/filter output files
+  because the symlink will be removed before the task is fed into the
+  task manager.<br>
+  <b>PLEASE NOTE</b> one problem with POVRay: If you run more than one
+  POVRay process on your box and you are using POVRay's clock value
+  with the same input file (say, <tt>sceneA.pov</tt>), then you can run
+  into trouble with <tt><font color="#cc3333">-rcont</font></tt>. This is due to POVRay using
+  a temporary file when resuming which gets named <tt>sceneA.tpn</tt> in
+  this case. Hence, both unfinished frames (say <tt>frameA-00017.png</tt>
+  and <tt>frameA-00018.png</tt>) are temporarily written into
+  <tt>sceneA.tpn</tt> which simply produces garbage or even worse:
+  confuses that POVRay process which was started lateron.<br>
+  But note that this problem does <b>neither</b> appear if you are using
+  separate frame files (e.g. <tt>frameA-00000.pov</tt>,
+  <tt>frameA-00001.pov</tt>, etc.) <b>nor</b> if you are only using one
+  POVRay process at a time (i.e. each LDR client runs with
+  <tt><font color="#cc3333">-ld-njobs=1</font></tt>).
+</p>
+<p><h4>Per-frame blocks</h4>
+  A lot of parameters can be specified on a per-frame basis, i.e. you can
+  set them differently for different frames. I was looking for a nice
+  way of doing that and came up with a simple but powerful method:
+  <b>frame ranges</b>. It simply means that you can set the parameters
+  for a range of frames by specifying the start frame number and the
+  number of frames (that follow). (This is useful, because when making
+  animations it is just natural that ranges of frames appear which need
+  similar parameters.) There are a number of parameters which
+  can be specified on a per-frame basis using per-frame blocks (see further
+  down).
+</p>
+<p>
+  Per-frame blocks work in the following way: There is one per-frame block
+  called the <b>master</b> frame block. This block stretches over all
+  frames to be processed and only provides a set of <b>default</b> parameters
+  in case no other per-frame block covers that parameter for a particular
+  frame. You can set parameters
+  for the master frame block by simply using e.g. <tt><font color="#cc3333">-l-rd=povray3.5</font></tt>
+  or <tt><font color="#cc3333">-l-r-fc</font></tt>.
+</p>
+<p>
+  If you need different parameters for some frames, say for example the
+  frames 30...49, then you use a per-frame block beginning at
+  frame&nbsp;30 and being 20&nbsp;frames long, e.g.
+  <tt><font color="#cc3333">-l-30:20-rd=povray3.1g</font></tt> or <tt><font color="#cc3333">-l-30:20-r-fc</font></tt>
+  (or <tt><font color="#cc3333">-no-l-30:20-r-fc</font></tt>).<br>
+  Whenever you specify a previously unknown frame range using
+  <tt><font color="#cc3333">-l-</font></tt><em>F0</em><tt><font color="#cc3333">:</font></tt><em>N</em><tt><font color="#cc3333">-whatever</font></tt>,
+  RendView interally allocates a new per-frame block which collects all
+  parameters specified for this frame range.<br>
+  After argument processing is done, overlapping blocks are splitted and
+  parameters merged. This works in the following way:<br>
+  Say, two frame blocks A and B overlap. Then they are split into no more
+  than 3 blocks, A, A+B, B, where A and B stay untouched while A+B
+  gets all the parameters specified for A and B. In case A and B have
+  different parameters (e.g. A uses renderer povray3.1 while B uses povray3.5),
+  an override error occurs.
+</p>
+<p>
+  <b>Note</b> that in a per-frame block you <b>only</b> have to <b>specify
+  those parameters which differ from the master frame block</b>. Because
+  after merging/splitting the per-frame blocks, all the not yet set
+  parameters get filled in from the master frame block. (This actually makes
+  parameter merging at frame split time useful.)<br>
+  <b>Note</b> also that you can use
+  <tt><font color="#cc3333">-l-r-30:20-r-files+=extra_file.png</font></tt> in case the per-frame
+  block <tt>30:20</tt> needs all additonal render files as specified
+  in the master frame block but <em>additionally</em> the file
+  <tt>extra_file.png</tt>. This also works for additional arguments
+  <tt><font color="#cc3333">-l-r-args</font></tt> (and the same for the filter part).<br>
+  Finally, <b>note</b> that RendView throws away unneeded per-frame blocks.
+  Per-frame blocks are not needed if they have length&nbsp;0 or if
+  the master start and end frame (see <tt><font color="#cc3333">-l-startframe</font></tt>,
+  <tt><font color="#cc3333">-l-nframes</font></tt>) will do not overlap with the frame range
+  of the per-frame block. E.g. if you specify <tt><font color="#cc3333">-l-nframes=0</font></tt>,
+  then all per-frame blocks will be thrown away (as no frames will be
+  processed at all).<br>
+  Actually, RendView also deletes per-frame blocks which have the
+  same content as the master.
+</p>
+<p><h4>An example for per-frame blocks</h4>
+  Consider the following <b>example</b>: (Note that you can use the advanced
+  cmd line passing using <tt>-section-{</tt>...<tt>-}</tt> as described
+  in the <a href="database.html#advancedcmd">database</a> section.)<br>
+  <tt><font color="#cc3333">-l-rd=povray3.5 -l-size=320x240 -l-r-args="-J"</font></tt><br>
+  <tt><font color="#cc3333">-l-30:20-{ -rd=povray3.1g -size=640x480 -fd=shrinkfilter
+  -f-args="-factor 2" -}</font></tt><br>
+  <tt><font color="#cc3333">-l-40:15-r-args+="+A0.3"</font></tt><br>
+  Then, all frames will be rendered passing the additional argument "-J"
+  to the renderer; frames 30..49 will be rendered with povray3.1g at a
+  size of 640x480 and have the shrinkfilter applied which gets the
+  additional arguments <tt>-factor 2</tt> passed (of course, you have
+  to supply the shrinkfilter and an apropriate filter desc e.g. in
+  the <tt>filters.par</tt> file).
+  Additionally, POVRay gets the anti-aliasing argument <tt>+A0.3</tt> passed
+  for the frames 40..54 (additionally to <tt>-J</tt>).
+  All other frames get rendered with povray3.5 at a size of 320x240
+  and not filtered at all.<br>
+  You can control these settings by having a look at the verbose output
+  right after starting RendView.<br>
+  <b>Note</b>: Do <b>not</b> pass <tt><font color="#cc3333">-l-nframes=0</font></tt> here because
+  that will make RendView throw away all the per-frame blocks as they are
+  not needed! If you just want to see the output without having any frames
+  rendered, you can pass <tt><font color="#cc3333">-opmode=ldrserver</font></tt> without specifying
+  any clients and then RendView will exit with an error right after
+  dumping the local task source's info.<br>
+  The output will look something like that in the above example:
+<pre>Local task source: jump: 1; nframes: [unlimited]; startframe: 0
+  Continuing: no
+  Master frame info (complete dump):
+    Renderer: povray3.5 (povray driver); output format: PNG (8 bpc)
+      Size: 320x240; cont operation: resume (-rcont)
+      Render dir: [cwd]
+      Render timeout: [none]
+      Clock value: [none]
+      Add args: -J
+      Add files: [none]
+    Filter: [not filtering]
+      Filter dir: [cwd]
+      Filter timeout: [none]
+      Add args: [none]
+      Add files: [none]
+    Frame patterns: render: "f%07d.pov" -> "f%07d.png"
+                    filter: ... -> "f%07d-f.png"
+  Frame info difference for frames 30--39 (10 frames):
+    Renderer: povray3.1g (povray driver); output format: PNG (8 bpc)
+      Size: 640x480; cont operation: resume (-rcont)
+    Filter: shrinkfilter (generic driver)
+      Add args: -factor 2
+  Frame info difference for frames 40--49 (10 frames):
+    Renderer: povray3.1g (povray driver); output format: PNG (8 bpc)
+      Size: 640x480; cont operation: resume (-rcont)
+      Add args: -J +A0.3
+    Filter: shrinkfilter (generic driver)
+      Add args: -factor 2
+  Frame info difference for frames 50--54 (5 frames):
+      Add render args: -J +A0.3</pre>
+(The complete call to RendView was:
+<tt><font color="#3333cc">rendview -rdfile=/path/to/my-renderers.par
+-fdfile=/path/to/my-filters.par -l-rd=povray3.5 -l-size=320x240 -l-r-args="-J"
+-l-30:20-{ -rd=povray3.1g -size=640x480 -fd=shrinkfilter -f-args="-factor 2" -}
+-l-40:15-r-args+="+A0.3"</font></tt>)<br><br>
+You see how the frame splitting and parameter merging worked as well
+as how to use the defaults from the master per-frame block.<br>
+For a complete list of supported parameters, see below.
+</p>
+<p><h4>Parameters understood by the local task source</h4>
+  The local task source understands quite a lot of parameters.
+  Here are the parameters which are global and not part of a per-frame
+  block:<br><br>
+  <dl><dt><tt><font color="#cc3333">-l-fjump=</font></tt><em>NUM</em>&nbsp;&nbsp;&nbsp;(also: <tt><font color="#cc3333">-l-j</font></tt>)<tt></dt><dd>
+   Only process every <em>NUM</em>th frame, use negative values to process
+   last frames first. [FIXME<a></a>: MORE INFO]<br>
+   Default: +1
+  </dd></dl>
+  <dl><dt><tt><font color="#cc3333">-l-nframes=</font></tt><em>NUM</em>&nbsp;&nbsp;&nbsp;(also: <tt><font color="#cc3333">-l-n</font></tt>)<tt></dt><dd>
+   Specify the number of frames to be rendered. If not specified, this is
+   autodetected: In case <tt><font color="#cc3333">-l-fjump</font></tt> is positive, RendView
+   simply processes frames until three frame input files in sequence do
+   not exist. If <tt><font color="#cc3333">-l-fjump</font></tt> is negative, the task source
+   checks the input file existence and stops at the first non-existing
+   frame file; the previous file is then considered the last file.<br>
+   You may supply a value of 0 if you just want to get all the verbose
+   output dumping startup info. The LDR server will connect to at least
+   one client and then disconnect immediately.
+  </dd></dl>
+  <dl><dt><tt><font color="#cc3333">-l-startframe=</font></tt><em>NUM</em>&nbsp;&nbsp;&nbsp;(also: <tt><font color="#cc3333">-l-f0</font></tt>)<tt></dt><dd>
+   Start with frame numbered <em>NUM</em> instead of frame&nbsp;0.
+  </dd></dl>
+  <dl><dt><tt><font color="#cc3333">-l-cont</font></tt></dt><dd>
+   Switch on continuing. This means that frames are only rendered/filtered
+   if needed based on modification timestamp (source/input versus
+   destination/output file). The additional files are all treated
+   as "source files" and therefore also checked when deciding whether
+   to re-render/filter a frame (unless disabled, see
+   <tt><font color="#cc3333">-l-add-check-mtime</font></tt> below).<br>
+   See also the info above.<br>
+   Default: disabled.<br>
+  </dd></dl>
+  <dl><dt><tt><font color="#cc3333">-l-add-check-mtime</font></tt>&nbsp;&nbsp;&nbsp;(also: <tt><font color="#cc3333">-l-acmt</font></tt>)<tt></dt><dd>
+   If disabled (<tt><font color="#cc3333">-no-l-add-check-mtime</font></tt>), RendView will
+   <em>not</em> check the modification time of additional files when
+   deciding whether to re-render/filter a frame.<br>
+   Meaningless if <tt><font color="#cc3333">-l-cont</font></tt> is not set.<br>
+   Default: enabled
+  </dd></dl>
+  <dl><dt><tt><font color="#cc3333">-l-response-delay=</font></tt><em>MSEC</em></dt><dd>
+   This is something like <tt><font color="#cc3333">-schedule-delay</font></tt> and tells the
+   local task source to not answer any request faster than <em>MSEC</em>
+   milliseconds. This is mainly useful in debugging.<br>
+   Default: 0, of course.
+  </dd></dl>
+  <b>The following parameters can be specified on a per-frame basis</b>, i.e.
+  using per-frame blocks. As mentioned above, there exists a <b>master</b>
+  per-frame block whose parameters can be set using e.g. <tt><font color="#cc3333">-l-rd</font></tt>
+  or <tt><font color="#cc3333">-l-size</font></tt>. The parameters of a per-frame block
+  which shall only apply to several frames (as opposed to the master) is
+  specified using e.g. <tt><font color="#cc3333">-l-3:8-rd</font></tt> or
+  <tt><font color="#cc3333">-l-3:8-size</font></tt> which means that this per-frame block begins
+  at frame&nbsp;3 and is 8 frames long.<br><br>
+  <dl><dt><tt><font color="#cc3333">-l-size=</font></tt><em>WWWxHHH</em>&nbsp;&nbsp;&nbsp;(also: <tt><font color="#cc3333">-l-s</font></tt>)<tt></dt><dd>
+   Size of the rendered frame (and thus normally also of the filtered frame
+   but that is not necessary).<br>
+   Default: <tt><font color="#cc3333">-l-size=320x240</font></tt>
+  </dd></dl>
+  <dl><dt><tt><font color="#cc3333">-l-oformat=</font></tt><em>SPEC</em></dt><dd>
+   Render output image format. Use <tt><font color="#cc3333">-list-imgfmt</font></tt> to get a
+   list of known image formats. You may only specify formats which are
+   known to the used renderer and render driver.<br>
+   Default is PNG (8 bits per color channel).
+  </dd></dl>
+  <dl><dt><tt><font color="#cc3333">-l-renderer, -l-filter=</font></tt><em>DESC_NAME</em>&nbsp;&nbsp;&nbsp;(also: <tt><font color="#cc3333">-l-rd, -l-fd</font></tt>)<tt></dt><dd>
+   Specify the render/filter desc to use. You may use the special value
+   <tt><font color="#cc3333">none</font></tt> to switch off rendering/filtering of the frames in
+   question.<br>
+   Default: <tt><font color="#cc3333">none</font></tt>
+  </dd></dl>
+  <dl><dt><tt><font color="#cc3333">-l-rcont</font></tt></dt><dd>
+   Enable render resume operation (if the renderer supports it like POVRay
+   does). This means that unfinished frames can be resumed. See above
+   for more info.<br>
+   Note: This option requires <tt><font color="#cc3333">-l-cont</font></tt> in order to work.<br>
+   You can use <tt><font color="#cc3333">-no-l-cont</font></tt> to explicitly switch it off.<br>
+   Default: enabled if the renderer supports it.
+  </dd></dl>
+  <dl><dt><tt><font color="#cc3333">-l-r-args, -l-f-args=</font></tt><em>ARGS</em></dt><dd>
+   Space-separated list of additional command line args to be
+   passed to the render/filter process.
+   Use quotes (") if you need to pass args with spaces or protect the spaces
+   with a backslash. If you want to include quotes or backslashes, you
+   need to protect those using a backslash, too. Also note that the shell
+   tends to interprete such characters, so best put all the option
+   in single quotes (which get removed by the shell).
+  </dd></dl>
+  <dl><dt><tt><font color="#cc3333">-l-r-files, -l-f-files=</font></tt><em>FILES</em></dt><dd>
+   Space-separated list of additional files needed for the rendering or
+   filtering. This is not needed for plain RendView operation but probably
+   for LDR because these additional files probably have to be transferred
+   to the client.<br>
+   Path is relative to RendView's CWD (current working directory).<br>
+   Please read the notes about the flat directory structure
+   (above) as well as the current limitation (no file may appear in
+   both <tt><font color="#cc3333">-l-r-files</font></tt> as well as <tt><font color="#cc3333">-l-f-files</font></tt>).
+  </dd></dl>
+  <dl><dt><tt><font color="#cc3333">-l-r-timeout, -l-f-timeout=</font></tt><em>SEC</em></dt><dd>
+   Specify a render/filter timeout, i.e. the time limit for the render
+   and filter process to finish. You can pass a similar timeout using
+   the task driver interface (e.g. <tt><font color="#cc3333">-ld-r-timeout</font></tt>) and
+   the shorter of the two timeouts will take effect.<br>
+   Use a value of -1 to disable.<bt>
+   Default: no timeout (disabled)
+  </dd></dl>
+  <a name="fcsupport"></a>
+  <dl><dt><tt><font color="#cc3333">-l-r-frameclock</font></tt>&nbsp;&nbsp;&nbsp;(also: <tt><font color="#cc3333">-l-r-fc</font></tt>)<tt></dt><dd>
+   Switch on/off (using <tt><font color="#cc3333">-l-r-fc</font></tt>/<tt><font color="#cc3333">-no-l-r-fc</font></tt>)
+   use of the frame clock value as supported by POVRay (POVRay's native
+   animation support using POVRay options <tt>+SF</tt><em>FRAME</em> and
+   <tt>+EF</tt><em>FRAME</em> to select the frame to render).<br>
+   <b>NOTE:</b> How it is meant to work:<br>
+   If you do <b>not</b> use the frame clock, disable this option (default).
+   You may pass any <tt>+K</tt><em>xy</em> options to POVRay (as additional
+   args or in an <tt>.ini</tt> file) without effect because RendView
+   automatically appends <tt>+KFI0 +KFF0</tt> at the end of the command
+   line to make sure that the frame clock is disabled.<br>
+   If you <b>do</b> use the frame clock, enable this option. Make sure to
+   pass correct values for <tt>+KFI, +KFF, KI, KF</tt> either using
+   additional args (<tt><font color="#cc3333">-l-r-args</font></tt>) or by using an
+   <tt>.ini</tt> file (see <tt><font color="#cc3333">-l-r-ifpattern</font></tt> below). RendView
+   will then simply pass the frame number of the frame being rendered
+   using <tt>+SF</tt><em>FRAME</em> <tt>+EF</tt><em>FRAME</em> so that
+   POVRay will automatically calculate the correct clock value from the
+   <tt>SF/EF</tt> option and the <tt>K</tt>-options provided by the user.
+   RendView will automatically pass <tt>+KFI0</tt> as first cmd line arg
+   because RendView defaults to begin animations at frame 0 (you can
+   override that using <tt>.ini</tt> file settings or additional args for
+   POVRay.<br>
+   See also <tt><font color="#cc3333">-l-r-ifpattern</font></tt> below.<br>
+   Default: disabled.<br>
+   Example on the <a href="quickstart.html#fcsupport">quickstart</a> page.
+   <br>
+   <small>The frame clock support works the way as described above sinve
+   version&nbsp;0.7.0. The options <tt><font color="#cc3333">-l-r-fcstart</font></tt> and
+   <tt><font color="#cc3333">-l-r-fcstep</font></tt> (<tt><font color="#cc3333">-l-fc0, -l-fcdt</font></tt>) as provided
+   by earlier versions were dropped in favour of this more flexible
+   and easier to use solution.</small>
+  </dd></dl>
+  <dl><dt><tt><font color="#cc3333">-l-r-dir=</font></tt><em>DIR</em></dt><dd>
+   This tells RendView in <em>ocal operation</em> to change into this
+   directory before calling the renderer.
+   Therefore, <tt><font color="#cc3333">-l-r-ifpattern</font></tt> and <tt><font color="#cc3333">-l-r-ofpattern</font></tt>
+   (see below) are considered relative to <em>DIR</em>.<br>
+   Default: current directory.
+  </dd></dl>
+  <dl><dt><tt><font color="#cc3333">-l-f-dir=</font></tt><em>DIR</em></dt><dd>
+   RendView will change into this directory before executing a filter
+   program. Hence, <tt><font color="#cc3333">-l-f-ofpattern</font></tt> (see below) is considered
+   relative to <tt><font color="#cc3333">-l-f-dir</font></tt>.<br>
+   Default: current directory.
+  </dd></dl>
+  <dl><dt><tt><font color="#cc3333">-l-r-ifpattern, -l-r-ofpattern, -l-f-ofpattern=</font></tt><em>PAT</em></dt><dd>
+   Render frame input, render frame output and filter frame output
+   patterns, respectively. Note that the render frame output pattern is
+   automatically the filter frame input pattern and hence only one
+   option is provided.<br>
+   <em>PAT</em> is a <b>frame pattern</b>, i.e. essentially a file name
+   with a <tt>%d</tt>-spec to be replaced by the frame number.<br>
+   The path is relative to the job's working dir (i.e.
+   relative to <tt><font color="#cc3333">-l-r-dir</font></tt> for <tt><font color="#cc3333">-l-r-ifpattern</font></tt> and
+   <tt><font color="#cc3333">-l-r-ofpattern</font></tt> as well as to <tt><font color="#cc3333">-l-f-dir</font></tt> for
+   <tt><font color="#cc3333">-l-f-ofpattern</font></tt>).<br>
+   The <tt><font color="#cc3333">-l-r-ifpattern</font></tt> does not have to contain a
+   <tt>%d</tt>-spec (e.g. if you are animating using the frame clock);
+   the other two options must include a <tt>%d</tt>-spec.<br>
+   The <tt>%d</tt>-spec follows standard <tt>printf(3)</tt> rules, you
+   may use:<br>
+   <tt><font color="#cc3333">%d</font></tt> to get decimal formatting<br>
+   <tt><font color="#cc3333">%x</font></tt> to have the frame number formatted hexadecimal<br>
+   <tt><font color="#cc3333">%X</font></tt> for hex with capital letters<br>
+   <tt><font color="#cc3333">%03d</font></tt> (for example) to get <tt>000,001,002,003,</tt> etc.
+    (i.e. 3&nbsp;digits with leading zero)<br>
+   <b>Note</b>: The render input frame pattern needs an extension (like
+   <tt>.pov</tt>); the output patterns get one added automatically
+   depending on the output image format (<tt><font color="#cc3333">-l-oformat</font></tt>, see
+   above).<br>
+   Example: <tt><font color="#cc3333">-l-f-ofpattern=frame-%03d-filtered</font></tt><br>
+   <b>Default</b>: <tt><font color="#cc3333">-l-r-ifpattern=f%07d.pov</font></tt><br>
+   The render output pattern defaults to the render input pattern with the
+   extension removed and replaced by the image format's extension (as well
+   as an added frame number <tt>%d</tt>-spec in case the input pattern
+   lacks such a apec).<br>
+   The filter output pattern defaults to the render output pattern with
+   a <tt>-f</tt> added before the file name extension (meaning "filtered").<br>
+   <b>POVRay note</b>: Using POVRay, you may also pass an <tt>.ini</tt> file
+   as frame pattern (with <tt>%d</tt>-spec or without when using the frame
+   clock). If the input file name ends in ".ini", the POVRay driver
+   passes it to POVRay without the <tt>+I</tt> prefix and POVRay will read
+   it as ini file. <b>Make sure</b> to add a <tt>+I</tt><em>FILE</em> in the
+   <tt>.ini</tt> to tell POVRay about the input file <b>and pass</b>
+   the <em>FILE</em> as additional file using <tt><font color="#cc3333">-l-r-files</font></tt>.<br>
+   Example on the <a href="quickstart.html#inisupport">quickstart</a> page.
+  </dd></dl>
+</p>
+<p><a name="LDR"></a><h3><u>The LDR client</u></h3>
+  Finally, some more words about the LDR client. As mentioned before,
+  LDR is a client server system with the rules swapped in some way:
+  The LDR client runs on all computers which shall do the actual
+  rendering/filtering and listen on some port. The LDR server gets
+  launched by you if you have work to be done, and connects to all
+  the clients in order to supply the tasks, required files and get
+  success/failure info and processed frames back. When all tasks are
+  done, client and server disconnect and the client waits again (after
+  <b>"recovery"</b>) for a server connection in order to begin a new
+  <b>work cycle</b>. (The work cycle count is transferred to the server
+  upon connect and can be read in verbose output together with the
+  current load of the client box.)
+</p>
+<p>
+  Only <em>one</em> server can connect to a client at any time. The
+  data link between client and server is exactly <em>one TCP/IP
+  connection</em>.
+  All data, tasks, requests and responses go over this single connection
+  which is driven in <b>full duplex mode</b> (i.e. the client can download
+  a file and then receive a new task while simultaniously uploading a
+  different file). This sort of "pipelining" made the LDR client and
+  server harder to implement.<br>
+  There is no way for the LDR client to disconnect from the server
+  while it is working because both the client and the server must
+  be able to send data (commands, info) to each other at any time
+  during work.
+</p>
+<p>
+  Of course, there are <b>various timeouts</b>, especially on the server side
+  as well as on the client side (see <a href="taskmanager.html">taskmanager</a>
+  and below) which make sure that dead clients / servers are detected.
+  The server can also try to re-connect to lost clients.
+</p>
+<p>
+  This requires some sort of <b>authentication</b> on the client side.
+  Otherwise, anybody could use an LDR server and connect to your clients
+  letting them to his work. The auth works as follows: You may specify a
+  password when starting the LDR client. Only servers which know the
+  password are allowed to connect to the client. (Hence, you also have
+  to specify the password when starting the server.)<br>
+  As <b>no encryption</b> is used for the LDR connection (unnecessary
+  overhead), a <b>challenge-response authentication</b> applying the
+  <b>SHA</b> (hash) algorithm: The client reads some challenge data from
+  <tt>/dev/urandom</tt> (or, if <tt>/dev/urandom</tt> is not available,
+  produces the challenge data using a time-seeded standard PRNG which
+  may be insecure!) and sends it to server. The server computes the
+  SHA hash value of the challenge and the password and sends it back as
+  response. The client compares the response with the expected response
+  and rejects the server if they do not match. <br>
+  <b>Furthermore</b> there is an <b>address-based authentication</b>:
+  The client will only allow servers which connect from one of the allowed
+  networks (IP addresses; parameter <tt><font color="#cc3333">-L-servernet</font></tt>).
+</p>
+<p>
+  The client has to <b>download</b> all the <b>files</b> required by the
+  actual rendering/filtering. Hence, you must tell the (local) task source
+  on the server side about all required files. Of course, the main frame
+  input file is needed but you may specify any number of
+  <b>additional files</b> (using <tt><font color="#cc3333">-l-r-files</font></tt> and
+  <tt><font color="#cc3333">-l-f-files</font></tt>). The client will normally only download the
+  additional files <em>once</em> and even keep them between several
+  work cycles. However, it will download files again if they change their
+  time stamp (i.e. if the modification time on the server is newer than
+  the modification time of the copy on the client side) or file size
+  so that it keeps up to date while at the same time
+  <b>saving network bandwidth</b>. You can control that using
+  <tt><font color="#cc3333">-L-r-delin</font></tt> and similar options (below).<br>
+  Note that this does <b>not require</b> that the time on all computers
+  is <b>synchronisized</b>: RendView is doing automatic client/server time
+  correction by calculating the maximum time difference upon connect
+  (watch verbose output) and applies the difference to timestamp
+  tests (unless disabled via <tt><font color="#cc3333">-no-L-time-correction</font></tt>).<br>
+  Note that <b>resume</b> operation also works with LDR, which means that
+  incompletely rendered frames are down- and uploaded if you specify
+  render resume (<tt><font color="#cc3333">-l-cont -l-rcont</font></tt>).
+</p>
+<p>
+  Please note that the LDR client uses a <b>flat directory structure</b>
+  which means that all files are put into the same directory. This also
+  means that you have to design your frame input files (<tt>frame00.pov</tt>,
+  <tt>scene.pov</tt>) in a way that they cope with this situation. (Due to
+  POVRay's include path this is normally no problem.) The reason for this
+  is that I consider it too dangerous to let the server specify
+  directories as well as file names. If people desperately need that feature,
+  I may consider implementing it.
+</p>
+<p>
+  Please also note a <b>current limitation</b>: An additional render file
+  (additional file used for rendering, e.g. <tt>heightfield_data.png</tt>)
+  cannot be an additional filter file and vice versa. If you really need
+  the same additional file for rendering and filtering, use a symlink.
+  Unfortunately, they will then be transferred twice. <br>
+</p>
+<p><a name="shareddir"></a>
+ <h4>Running the LDR client in shared directories (like NFS)</h4>
+  RendView's LDR client, by default, will transfer all required files using
+  the internal data transfer as implemented in LDR. RendView uses time stamp
+  and file size checks to determine if a file has to be downloaded.
+  However, when using several LDR clients on different computers on an NFS
+  shared volume, this is not what you want because RendView will then
+  (by default) attempt to overwrite the files with themselves leading to
+  trouble (this is because exactly matching time stamps on client and
+  server trigger downloading the file <em>once</em> by default).<br>
+  So, when using shared directories (even when running an LDR client on the
+  same box as the LDR server and from the same directory) requires passing
+  some extra option: <tt><font color="#cc3333">-L-transfer=all-</font></tt> (and don't forget
+  the dash at the end!)<br>
+  As LDR uses a flat directory structure (for security reasons), this
+  requires the shared directory to provide just that flat dir structure as
+  expected by the LDR client (i.e. put <em>all</em> files into the same
+  (shared) directory and start the LDR client from within this directory).<br>
+  Of course, you can use a heterogenous setup with 15 clients sharing an
+  NFS volume with the server and further 10 clients using LDR to transfer
+  all files (<tt><font color="#cc3333">-L-transfer=all+</font></tt> [default] for those).
+  <br>
+  <b>Note</b>: I am unsure if race conditions can make your life uneasy
+  when using NFS.
+</p>
+<p><a name="TSLDR"></a><h4>Parameters understood by the LDR task source</h4>
+  <dl><dt><tt><font color="#cc3333">-L-port=</font></tt><em>NUM</em></dt><dd>
+   Specifies the port the LDR client listens at.<br>
+   Default: 3104
+  </dd></dl>
+  <dl><dt><tt><font color="#cc3333">-L-password=</font></tt><em>PASS</em></dt><dd>
+   Set the client password. <em>PASS</em> can either be a the actual
+   password string or one of the following special values:<br>
+   <tt><font color="#cc3333">none</font></tt>: use no password (insecure); same as if you do
+    not specify one<br>
+   <tt><font color="#cc3333">prompt</font></tt>: asks you to enter a password upon start using
+    <tt>getpass(3)</tt><br>
+   <tt><font color="#cc3333">file:</font></tt><em>PATH</em>: read password from file <em>PATH</em>
+    No more than 128 bytes will be read; falls back to <tt><font color="#cc3333">prompt</font></tt>
+    if an error occurs or the file is empty.<br>
+   Please also read the note about passwords in the
+   <a href="taskmanager.html">taskmanager<a> chapter.
+  </dd></dl>
+  <dl><dt><tt><font color="#cc3333">-L-servernet=</font></tt><em>SNET</em></dt><dd>
+   This specifies a list of IPv4 addresses (client addresses or network
+   addresses). If specified, only servers which match one of the addresses
+   are allowed to connect. <em>SNET</em> is a list of space-separated
+   server nets. A server net spec is either simply an address or host
+   name (e.g. <tt>localhost</tt> or <tt>127.0.0.1</tt>) <em>or</em> an
+   address or host name with a network bit spec
+   (e.g. <tt>localhost/8</tt>, <tt>192.168.0.1/24</tt>).<br>
+   Normally, a network address has all the less significant bits set to
+   0 (e.g. the last&nbsp;8 ones when using "/24"). If that is not the case,
+   a warning is written and the corresponding network address is used.
+   Hence, it is possible to write <tt>myhost/24</tt> if you want to
+   allow all clients in the locat 8&nbsp;bit subnet in which <tt>myhost</tt>
+   is.<br>
+   If you do not specify a server net, any source address is accepted
+   (default).
+  </dd></dl>
+  <dl><dt><tt><font color="#cc3333">-L-wdir=</font></tt><em>DIR</em></dt><dd>
+   This option tells the LDR client to create the directory <em>DIR</em>
+   and change into it upon startup.
+   All the temporary files will be placed in that directory and the
+   renderer/filter will be launched with it as cwd.<br>
+   If you do not specify <em>DIR</em>, then RendView will create one
+   itself with the name <tt>/tmp/ldrclient-</tt><em>pid</em>
+   (with <em>pid</em> being the PID of the LDR client process).<br>
+   RendView will automatically delete the directory when exiting.
+   By default, this feature is swiched off and the current directory is used.
+  </dd></dl>
+  <dl><dt><tt><font color="#cc3333">-L-kamult=</font></tt><em>NUM</em></dt><dd>
+   The server sends ping control commands to the client in some time
+   interval (see <tt><font color="#cc3333">-Ld-keepalive</font></tt> in
+   <a href="taskmanager.html">taskmanager</a> docu).
+   The time interval is transferred from the server to the client upon
+   connect, so the client knows that it has to expect a ping every
+   <tt><font color="#cc3333">-Ld-keepalive</font></tt> seconds. Consequently, the client
+   will consider the server as dead when no ping arrives within
+   <tt><font color="#cc3333">-Ld-keepalive</font></tt> multiplied with <em>NUM</em> divided
+   by&nsbp;10. E.g. if the keepalive time is 30&nbsp;seconds and
+   <em>NUM</em> is 25, then the client will expect pings every
+   30*25/10=75 seconds.<br>
+   Using values below 10 does not make sense.<br>
+   Use -1 to disable this feature which is not recommended because the
+   client will then not be able to detect when the server goes dead.<br>
+   The default is 25.
+  </dd></dl>
+  <dl><dt><tt><font color="#cc3333">-L-atimeout=</font></tt><em>MSEC</em></dt><dd>
+   This is the client-side analogon to <tt><font color="#cc3333">-Ld-ctimeout</font></tt> and
+   specifies the maximum time for the complete authentication to pass
+   (i.e. from initial connection until auth is done).<br>
+   Use a value of -1 to disable (not recommended).<br>
+   The default is 10 seconds.
+  </dd></dl>
+  <dl><dt><tt><font color="#cc3333">-r-delin, -r-delout, -r-deladd, -f-delin, -f-delout, -f-deladd=</font></tt><em>SPEC</em></dt><dd>
+   Specify when the (temporary) render input, render output and additional
+   files needed for rendering, as well as all that for filtering, which were
+   downloaded, should be deleted. These files are downloaded from the LDR
+   server and held on the hard disk by the LDR client in order to execute
+   tasks. Obviously, these files are only needed temporarily and should be
+   removed after some time. These options give you control over that.<br>
+   Possible values for <em>SPEC</em> are:<br>
+   <tt><font color="#cc3333">frame</font></tt>: delete when the frame was processed<br>
+   <tt><font color="#cc3333">cycle</font></tt>: delete at work cycle end (i.e. disconnect from
+     server)<br>
+   <tt><font color="#cc3333">exit</font></tt>: delete when exiting<br>
+   <tt><font color="#cc3333">never</font></tt>: never delete<br>
+   Any abbreviation of <em>SPEC</em> is allowed.<br>
+   <b>Note</b>: All the files are only deleted when they are no longer used
+   (independent of what you specify).
+   If you specify that an additional render file should be deleted on
+   <tt><font color="#cc3333">frame</font></tt> basis and the client currently has more than one
+   frame which uses this file, then it is not deleted before all these
+   frames were completely processed.
+   Hence, the additional file will not be deleted and downloaded again
+   for each frame. Note also that the latter would introduce trouble when
+   more than one process is lauched: If RendView deleted and re-downloaded
+   the file, one process may want to read it at the same time and thus
+   fail.<br>
+   Furthermore, only downloaded files are ever deleted.<br>
+   The defaults are:<br>
+   <tt><font color="#cc3333">-r-delin</font></tt>, <tt><font color="#cc3333">-r-delout</font></tt>: <tt><font color="#cc3333">frame</font></tt><br>
+   <tt><font color="#cc3333">-r-deladd</font></tt>: <tt><font color="#cc3333">exit</font></tt><br>
+   And the same for the files needed for filter tasks. This means, by default
+   additional files are kept across work cycles which normally does not
+   pose a problem because they are automatically downloaded again when
+   the modification time on the server side is newer than on the client
+   side or file size changed.<br>
+   NOTE however, that this means that additional files accumulate on the
+   client side. Hence, if you remove an additional file on the server side,
+   it will still be present on the client side and can be accessed.
+  </dd></dl>
+  <dl><dt><tt><font color="#cc3333">-L-re-download</font></tt></dt><dd>
+   If enabled, download files again if the time stamp test says so <em>even
+   if the modification time stamp reported by the server did not change
+   in the meantime</em>. Disabling this prevents RendView from loading down
+   more than once a file which was just modified.<br>
+   Default: disabled, of course! (<tt><font color="#cc3333">-no-L-re-download</font></tt>)
+  </dd></dl>
+  <dl><dt><tt><font color="#cc3333">-L-always-download-input</font></tt>&nbsp;&nbsp;&nbsp;(also: <tt><font color="#cc3333">-L-adli</font></tt>)<tt></dt><dd>
+   If enabled, always download primary render/filter input file. Normally,
+   RendView does timestamp and size checks on these files, too, so if they
+   are already present, they are not overwritten.
+   The main reason for this option is that when using the frame clock, the
+   same primary render input file may be used for several frames and hence,
+   it makes sense to apply timestamp checks.<br>
+   <b>Note</b> that when resuming, unfinished render output files are
+   <em>always</em> transferred, irrespective of this option.<br>
+   <b>Note</b> that on an NFS volume you have to use <tt><font color="#cc3333">-L-transfer</font></tt>
+   (instead of this option; see below) to walk around possible problems with
+   file versus system time over NFS.<br>
+   Default: disabled (<tt><font color="#cc3333">-no-L-adli</font></tt>)
+  </dd></dl>
+  <dl><dt><tt><font color="#cc3333">-L-time-correction</font></tt></dt><dd>
+   The LDR client only downloads files again which are already present when
+   their file size changes or if the modification time on the client is
+   older than on the server. This, however requires synchronisized system
+   times or some means to compensate the difference.<br>
+   RendView automatically calculates the (worst case) time difference
+   between client and server upon connect and applies this time
+   difference for modification time checks (unless you disable it using
+   <tt><font color="#cc3333">-no-L-time-correction</font></tt>).<br>
+   If <em>really</em> needed, you can switch that off and fall
+   back to <tt><font color="#cc3333">-L-timestamp-thresh</font></tt> (see below).<br>
+   Default: enabled
+  </dd></dl>
+  <dl><dt><tt><font color="#cc3333">-L-timestamp-thresh=</font></tt><em>MSEC</em></dt><dd>
+   By default, RendView automatically compensates the difference between
+   client and server time (see <tt><font color="#cc3333">-L-time-correction</font></tt>).
+   This parameter can be used to (additionally) hand-tune the timestamp check.
+   Positive values optimize the test ("less files get transterred") because
+   the timestamp thresh gets added to the local file modification time before
+   it is compared to the modification time of the file on the server side.<br>
+   It's probably better to relay on automatic time correction. You may
+   need this in special cases (maybe with NFS).
+   The default value is 1 msec if <tt><font color="#cc3333">-L-time-correction</font></tt> is
+   enabled, otherwise 3001, i.e. 3 seconds.
+  </dd></dl>
+  <dl><dt><tt><font color="#cc3333">-L-transfer=</font></tt><em>SPEC</em></dt><dd>
+   You can use this to specify which files should be transferred to the LDR
+   client (more precisely: this specifies which files the client will download
+   from the server). The default is all required files and you should be
+   careful when changing that.<br>
+   You should use <tt><font color="#cc3333">-L-transfer=all-</font></tt> when sharing the working
+   directory between the server and this client using e.g. NFS so that no
+   files get transferred. See also the note <a href="#shareddir">above</a>.<br>
+   <em>SPEC</em> is a concatenated list of tags, each with a postfix
+   "<tt>+</tt>" or "<tt>-</tt>", e.g. <tt><font color="#cc3333">a+rs-rd-fd-</font></tt><br>
+   The allowed tags are:<br>
+   <tt><font color="#cc3333">rs</font></tt>, <tt><font color="#cc3333">rd</font></tt>, <tt><font color="#cc3333">ra</font></tt>:
+     render source, dest and additional files, respectively<br>
+   <tt><font color="#cc3333">fd</font></tt>, <tt><font color="#cc3333">fa</font></tt>:
+     filter dest and additional files, respectively<br>
+   <tt><font color="#cc3333">d</font></tt>: all destination files<br>
+   <tt><font color="#cc3333">a</font></tt>: all additional files<br>
+   <tt><font color="#cc3333">all</font></tt>: all files<br>
+   The <em>SPEC</em> is parsed left-to-right and tags more to the right
+   override those earlier in the spec string.<br>
+   The default is <tt><font color="#cc3333">-L-transfer=all+</font></tt>
+  </dd></dl>
+</p>
+<hr noshade width="100%" size="2">
+ <table border="0" cellpadding="0" cellspacing="0" width="100%" summary="" bgcolor="#eeeeee"><tr>
+  <td align="left" width="33%">&lt;<a href="taskmanager.html">prev</a></td>
+  <td align="center" width="34%"><a href="index.html">[index]</a></td>
+  <td align="right" width="33%"><a href="admin.html">next</a>&gt;</td>
+ </tr></table>
+<table border="0" cellpadding="3" cellspacing="0" width="100%" summary="">
+<tr>
+  <td width="50%" align="left">
+    <small>Last modified: 2004-05-16 16:36:19</small>
+  </td>
+  <td width="50%" align="right">
+    Copyright &copy; 2003 <a href="mailto:wwieser aat gmx doot de">Wolfgang Wieser</a>
+  </td>
+</tr>
+</table>
+</body></html>

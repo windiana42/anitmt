@@ -1,0 +1,138 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="en">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <title>RendView Manual -- Logger and Admin Port</title>
+  <meta name="Keywords" content="RendView manual documentation of logger and admin port">
+  <meta name="Description" content="Manual for RendView: documentation of logger and remote admin port">
+  <style type="text/css">
+	pre { background-color:#eeeeee; border: 1px solid black;
+		padding: 0.3em 0.3em 0.3em 0.3em; }
+	dd { margin-bottom: 0.5em; }
+  </style>
+</head>
+<body text="#000000" bgcolor="#ffffff" link="#0000ff" vlink="#800080" alink="#ff0000">
+ <table border="0" cellpadding="0" cellspacing="0" width="100%" summary="" bgcolor="#eeeeee"><tr>
+  <td align="left" width="33%">&lt;<a href="tasksource.html">prev</a></td>
+  <td align="center" width="34%"><a href="index.html">[index]</a></td>
+  <td align="right" width="33%"><a href="examples.html">next</a>&gt;</td>
+ </tr></table>
+<br>
+<div align="center">
+  <h2><font color="#3333cc"><u>RendView Manual -- Logger and Admin Port</u></font></h2>
+</div>
+<hiernavname "admin">
+<p>
+  The logger can save messages RendView normally writes to the terminal so
+  that you can query them using the remote admin port.<br>
+  The admin port allows you to do more than just querying messages.
+</p>
+<p><h3><u>Message Logger</u></h3>
+  The message logger has two history buffers for logging messages:
+  One for errors, warnings and special verbose messages and one for
+  any messages. Both buffers have a limited size; if more messages are
+  to be stored than the limit, the oldest messages get overwritten.
+  Note that messages stored in both buffers consume memory only once.
+</p><p>
+  The idea behind the two-buffer-system is that you may wish to use a
+  fairly large history size for the errors and warnings (and special verbose)
+  and a smaller one which holds all messages (normal verbose and errors,
+  warnings). Hence, you will get <em>all</em> errors and only the last
+  couple of all messages kept in order.
+</p><p>
+  <b>Note</b> that the message history is completely useless if you do not use
+  the remote admin port.<br>
+  <b>Note</b> that the message logger can only log those messages actually
+  generated. Hence, if you use <tt><font color="#cc3333">-verbose=-all</font></tt>, then no verbose
+  messages will ever get displayed or logged irrespective of what settings
+  you specify at the message logger.
+</p>
+<p><h4>Parameters for the message logger</h4>
+  These parameters are understood by the message logger:
+  <dl><dt><tt><font color="#cc3333">-m-tty=</font></tt><em>SPEC</em></dt><dd>
+   What messages to write to the terminal. Turn on/off different types of
+   messages using <tt><font color="#cc3333">+</font></tt> and <tt><font color="#cc3333">-</font></tt> prefixes, possible
+   flags are:<br>
+   <tt><font color="#cc3333">e</font></tt>: error messages<br>
+   <tt><font color="#cc3333">w</font></tt>: warning messages<br>
+   <tt><font color="#cc3333">s</font></tt>: special (verbose) messages<br>
+   <tt><font color="#cc3333">v</font></tt>: normal verbose messages<br>
+   <tt><font color="#cc3333">d</font></tt>: debug (verbose) messages<br>
+   <tt><font color="#cc3333">a</font></tt>: all of the above messages<br>
+   <tt><font color="#cc3333">P</font></tt>: also write a message prefix<br>
+   The message prefix (<tt><font color="#cc3333">+P</font></tt>) is <b>E:</b> for error messages,
+   <b>W:</b> for warnings and <b>S:</b> for special verbose messages.<br>
+   The default is <tt><font color="#cc3333">+ewsvd-P</font></tt>.
+  </dd></dl>
+  <dl><dt><tt><font color="#cc3333">-m-ehist-size=</font></tt><em>NUM</em></dt><dd>
+   Size in number of messages for the error/warning/special&nbsp;verbose
+   message history.<br>
+   Default size is 0.
+  </dd></dl>
+  <dl><dt><tt><font color="#cc3333">-m-hist-size=</font></tt><em>NUM</em></dt><dd>
+   Size in number of messages for the general message history buffer.<br>
+   Default size is 0.
+  </dd></dl>
+  <dl><dt><tt><font color="#cc3333">-m-hist-msg=</font></tt><em>SPEC</em></dt><dd>
+   What messages to store in the general message buffer. The <em>SPEC</em>
+   is just like for the <tt><font color="#cc3333">-m-tty</font></tt> parameter above but without
+   the <tt><font color="#cc3333">P</font></tt> flag.<br>
+   Default is <tt><font color="#cc3333">+a</font></tt>.
+  </dd></dl>
+</p>
+<p><h3><u>Remote Admin Port</u></h3>
+  The remote admin port lets you stay informed about the state of RendView
+  while it is running and allows you to tune some settings at runtime.<br>
+  <b>Note</b> that you have to explicitly enable the admin port to make
+  it available and that you must specify a password.
+</p>
+<p><h4>Parameters for the admin port</h4>
+  The admin port understands the following parameters:
+  <dl><dt><tt><font color="#cc3333">-a-enable</font></tt></dt><dd>
+   Enable the admin port. Must be set to make it usable at all; otherwise
+   RendView will not open the TCP admin port.<br>
+   Default: disabled (<tt><font color="#cc3333">-no-a-enable</font></tt>)
+  </dd></dl>
+  <dl><dt><tt><font color="#cc3333">-a-port=</font></tt><em>NUM</em></dt><dd>
+   Specify TCP port number to be used for the admin port.<br>
+   Default: 3105
+  </dd></dl>
+  <dl><dt><tt><font color="#cc3333">-a-password=</font></tt><em>SPEC</em></dt><dd>
+   Specify access password for remote admin port. The usual password
+   spec is supprted. (Either literal password or <tt>none</tt> for none,
+   <tt>prompt</tt> to ask for one at startup, <tt>file:</tt><em>PATH</em>
+   to read it from a file.)<br>
+   Default: Unset; you need to specify one.
+  </dd></dl>
+  <dl><dt><tt><font color="#cc3333">-a-itimeout=</font></tt><em>MSEC</em></dt><dd>
+   Idle time in seconds: Discommect the admin shell after being idle for
+   more than this time. Note that the idle shell can take care to send
+   apropriate idle commands even if you do not type in any commands.
+   The idle timeout is transferred to the shell upon connect.<br>
+   Use -1 to disable.<br>
+   Default: 600 sec
+  </dd></dl>
+  <dl><dt><tt><font color="#cc3333">-a-atimeout=</font></tt><em>MSEC</em></dt><dd>
+   Time (in msec) for the complete authentication to take place. Note that
+   this is <em>not</em> the time you need to type in your password.<br>
+   Use -1 to disable.<br>
+   Default: 5000 msec
+  </dd></dl>
+</p>
+<hr noshade width="100%" size="2">
+ <table border="0" cellpadding="0" cellspacing="0" width="100%" summary="" bgcolor="#eeeeee"><tr>
+  <td align="left" width="33%">&lt;<a href="tasksource.html">prev</a></td>
+  <td align="center" width="34%"><a href="index.html">[index]</a></td>
+  <td align="right" width="33%"><a href="examples.html">next</a>&gt;</td>
+ </tr></table>
+<table border="0" cellpadding="3" cellspacing="0" width="100%" summary="">
+<tr>
+  <td width="50%" align="left">
+    <small>Last modified: 2004-05-16 16:36:20</small>
+  </td>
+  <td width="50%" align="right">
+    Copyright &copy; 2003 <a href="mailto:wwieser aat gmx doot de">Wolfgang Wieser</a>
+  </td>
+</tr>
+</table>
+</body></html>

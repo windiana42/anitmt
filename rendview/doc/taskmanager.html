@@ -1,0 +1,716 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="en">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <title>RendView Manual -- The Taskmanager</title>
+  <meta name="Keywords" content="RendView manual documentation taskmanager">
+  <meta name="Description" content="Manual for RendView: about the taskmanager">
+  <style type="text/css">
+	pre { background-color:#eeeeee; border: 1px solid black;
+		padding: 0.3em 0.3em 0.3em 0.3em; }
+	dd { margin-bottom: 0.5em; }
+  </style>
+</head>
+<body text="#000000" bgcolor="#ffffff" link="#0000ff" vlink="#800080" alink="#ff0000">
+ <table border="0" cellpadding="0" cellspacing="0" width="100%" summary="" bgcolor="#eeeeee"><tr>
+  <td align="left" width="33%">&lt;<a href="database.html">prev</a></td>
+  <td align="center" width="34%"><a href="index.html">[index]</a></td>
+  <td align="right" width="33%"><a href="tasksource.html">next</a>&gt;</td>
+ </tr></table>
+<br>
+<div align="center">
+  <h2><font color="#3333cc"><u>RendView Manual -- The Taskmanager</u></font></h2>
+</div>
+<hiernavname "taskmanager">
+<p>
+  The taskmanager is the core of RendView; it is basically an event-driven
+  state machine which takes several actions depending on arriving events
+  and the current state. (If you are looking for it: The code is in
+  <tt>taskmanager.cpp</tt>.)
+  The taskmanager is responsible for launching jobs, terminating RendView,
+  handling arriving signals, etc.
+</p>
+<p><h3><u>Basic operation</u></h3>
+  Normally, when RendView gets started, you pass all the information it
+  needs on the command line. It then runs until it has done all the work
+  you want it to be done or it thinks it cannot go on any more.<br>
+  While RendView is running, you can send <a href="#signals">signals</a> to
+  it.<br>
+  When it has done all the work reported by the task source or it thinks
+  it cannot go on any more, RendView acts in different ways depending on
+  the operation mode. Normal RendView and the LDR serer exit in this case
+  while the LDR client just <b>recovers</b> which means that it disconnects
+  from the server and gets back into a state which is similar to the one just
+  after starting it: It simply waits idle for a new server connection.
+  When recovery is triggered (e.g. by a sudden server disconnect), all
+  the currently running jobs are killed (using <tt>SIGTERM</tt> and then
+  <tt>SIGKILL</tt>, see <a href="#signals">signals</a> below and
+  <tt><font color="#cc3333">-ld-term-kill-delay</font></tt>) and the
+  assigned tasks are deleted. This means that there is no way to benefit
+  from the work which was done for tasks which were not yet reported back
+  to the server. However, this case only occurs in severe circumstances,
+  e.g. if you <tt>SIGKILL</tt> (<b>not</b> <tt>SIGTERM</tt>) the server,
+  if the network goes down or if there is a bug in RendView. <br>
+  Normally, the LDR client gives back tasks (even unfinished frames if it
+  killed the render process) and the LDR server waits for all clients to
+  disconnect before exiting. (There are timeouts, however, see
+  <tt><font color="#cc3333">-Ld-rtimeout</font></tt>, <tt><font color="#cc3333">-L-kamult</font></tt>.)
+</p>
+<p><h4>A word about LDR</h4>
+  You may have guessed that already: LDR works in the following way:
+  You have several computers to have the work done and you start
+  one LDR client on each of these boxes
+  (<tt><font color="#3333cc">rendview -opmode=ldrclient</font></tt>, see also
+  <tt><font color="#cc3333">-opmode</font></tt>). Then, whenever you want some frames to be
+  rendered, you simply call the LDR server
+  (<tt><font color="#3333cc">rendview -opmode=ldrserver</font></tt>). The server
+  will then connect to all the clients (in fact you pass their address
+  and port using <tt><font color="#cc3333">-Ld-clients</font></tt>) and give them the tasks.
+  This means that all the required files are downloaded to the client
+  (but see also <tt><font color="#cc3333">-L-transfer</font></tt>, <tt><font color="#cc3333">-l-r-files</font></tt>),
+  even unfinished frames (resume operation, only) and the success info
+  as well as the rendered/filtered frame are uploaded to the server
+  again. Additional files (<tt><font color="#cc3333">-l-r-files</font></tt>,
+  <tt><font color="#cc3333">-l-f-files</font></tt>) are normally only downloaded if needed
+  (i.e. either the client does not have that file or it was modified)
+  to save network bandwidth and CPU.<br>
+  While the LDR server is running, it stays connected to all the
+  LDR clients (using one TCP connection per client). A client can only
+  be connected to no more than <b>one</b> authenticated server at any
+  time and here is no possibility for client disconnect during work.
+  (This is necessary because both the client and the server must
+  be able to send data to each other at any time while working.)
+</p>
+<p><h4>The path of the tasks</h4>
+  The taskmanager manages the internal path all the tasks take. It has
+  three task queues, <b>todo</b>, <b>proc</b> and <b>done</b> and the
+  number of tasks in these queues can be read in several verbose messages.<br>
+  When a task is obtained from the task source (local: because taskmanager
+  asked the task source to supply one more task; LDR: because the server
+  sends one more task to the client), then that task is put into the todo
+  queue and waits there to be processed.<br>
+  There are normally a couple of tasks in the todo queue so that the
+  taskmanager can server them for processing at any time without having to
+  wait for the task source. <em>Avoiding times of inactivity (no renderer
+  running) was one of the major goals in early development.</em> Especially
+  for LDR it is important that the LDR client has always some tasks around
+  so that we do not have to wait idle until a new task and all the required
+  files are downloaded over the network.<br>
+  Do not be surprised if the task manager seems to always report or request
+  a couple of tasks in sequence and then does not do any request or
+  termination report (back to the task source) for a longer time. The todo
+  and done queues trigger the talking to the task source using a
+  threshold model (if you want to tweak around, see
+  <tt><font color="#cc3333">-ld-todo-thresh-low</font></tt>, <tt><font color="#cc3333">-ld-todo-thresh-high</font></tt>,
+  <tt><font color="#cc3333">-ld-done-thresh-high</font></tt>, the same with <tt>-Ld</tt> instead of
+  <tt>-ld</tt> as well as <tt><font color="#cc3333">-Ld-max-client-task-thresh</font></tt>).
+</p>
+<p>
+  Once the taskmanager launches a job, the task is put from todo into
+  proc queue where it stays until the job terminates or the LDR client
+  reports the task back (as done/partly/not processed). The task is then
+  put into done queue or back into todo queue: If the job failed or is
+  completely processed, it is put into done queue, if it is not completely
+  processed (i.e. rendered but not filtered) or not processed at all
+  (i.e. LDR client gives it back unprocessed), it is put into todo.
+</p>
+<p>
+  The done queue is explained very easily: it just accumulates some
+  tasks before they are reported back to the task source.<br>
+  Hence, the tasks originate from the task source and they finally end up at
+  the task source. The task manager only knows about a couple of tasks
+  at a time which is enough it has to know.
+</p>
+<p><h4>Failures and info</h4>
+  You get quite a lot of information about what if being done (unless you
+  switch that off using the <tt><font color="#cc3333">-verbose</font></tt> option). Needless to say
+  that you get informed about errors and failures.<br>
+  There is a simple protection against RendView launching lots of failing
+  tasks in sequence (which may happen if the path to the renderer is wrong,
+  an additional file is missing or whatever): In case several (normally 3)
+  tasks fail in sequence, the task manager thinks it makes no sense to
+  continue work and schedules quit (or recovery in case of LDR client).
+  See <tt><font color="#cc3333">-max-failed-in-seq</font></tt> if you want to tune that.
+</p>
+<p><a name="fitstrategy"></a><h4>Fit strategy for LDR</h4>
+  The "fit strategy" means the way how to assign jobs to clients in order
+  to achieve good performance. This task is extremely difficult especially
+  if the used computers are not equally fast.<br>
+  RendView implements the following simple stategy which should work
+  quite well (especially when using equally-fast clients with equal
+  capabilities):<br>
+  As long as the task source did not report the last frame, there is no
+  pressure on the algorithm and it assigns tasks to clients in the
+  following way: Take the first task in the todo queue and give it to the
+  <em>best client</em>. If there is none, go to the next task in the queue,
+  and so on. The <em>best client</em> is the one which has the least number
+  of assigned tasks relative to the number of simultanious jobs (aka CPUs)
+  and which can process the task completely. If no client can process it
+  completely, a client which can to it partly is chosen. If two or more
+  clients are equally-qualified, a round robin method is used.<br>
+  If the task source reports the last frame, the "tight condition" comes.
+  The <em>best client</em> is now the one with the least number of assigned
+  tasks relatve to its number of jobs, (nearly) irrespective if the client can
+  to the task completely or partly. Especially, no client gets more tasks
+  than it its njobs value (aka number of CPUs) and in case some clients have
+  more tasks while others need some, the clients are requested to give back
+  all tasks which they are currently not processing (for immediate
+  redistribution to clients which need tasks). [Such a give-back is normally
+  necessary only once.]<br>
+  <b>Note</b> that this strategy may not work very well if the client's
+  abilities are assymetric, e.g. there are 10 render clients and one
+  render and filter client and that it will not smartly handle the case of
+  differently-fast computers (as it will never request a client to kill
+  some already running job).
+</p>
+<p><a name="shellscripts"></a>
+ <h3><u>An important note about render/filter shell scripts</u></h3>
+  Of course, you may use a shell script instead of a renderer or filter
+  program (by specifying the shell script as the <tt><font color="#cc3333">binpath</font></tt>
+  in the correcponding render/filter desc, see <a href="database.html">
+  component data base</a>). There are many reasons why one would like
+  to do so. However, there some important points you must keep in mind
+  when doing that.
+</p>
+<p>
+  <b>Do not start background jobs</b>. RendView's taskmanager needs one
+  process which gets started (the shell script in this case) and which
+  terminated just when the job is done. If you start a background job,
+  the shell script may terminate before the job is done leading to
+  corrupt frames and/or errors. (Well, you may start background jobs
+  but then make sure that the script waits for them to complete before
+  exiting.)
+</p>
+<p>
+  <b>Handle signals properly</b>. This is very important. RendView expects
+  a normal process which can be stopped using <tt>SIGTSTP</tt>
+  and continued using <tt>SIGCONT</tt> as well as killed using
+  <tt>SIGTERM</tt>. Make sure you react quickly to <tt>SIGTERM</tt>
+  or set the <tt><font color="#cc3333">-ld-term-kill-delay</font></tt> large enough.<br>
+  The signal handling is normally acomplished using the <tt>trap</tt>
+  call in shell scripts. Consult you shell manual for more information.
+</p>
+<p>
+  <b>Use a proper return/exit code</b>. RendView normally expects processes
+  to return 0 on success and sone non-zero value on failure.<br>
+  (Unfortunately, POVRay is bugged in a way that it returns success even
+  if parsing failed and RendView's POVRay driver has some file existance
+  and time stamp logic to deal with that quite well.)
+</p>
+<p><a name="signals"></a><h3><u>Signal handling</u></h3>
+  RendView understands the following signals with their corresponding
+  action:<br><br>
+  <dl><dt><font color="#cc3333"><tt>SIGINT</tt></font>&nbsp;&nbsp;&nbsp;(Terminal: often <tt>^C</tt>)</dt><dd>
+   Upon catching the <b>first interrupt signal</b>, the task manager will
+   give back all processed and not yet processed tasks to the task source.
+   The tasks currently running continue execution and RendView waits for
+   them to finish. (That means: Frames which are being rendered will also be
+   filtered before RendView exits.) When all running tasks exitet, RendView
+   will quit gracefully (i.e. disconnect from the task driver interface and
+   the task source).<br>
+   For LDR: The LDR server will request the clients to give back all not yet
+   processed tasks and all done tasks when receiving that signal, so that
+   you only have to wait for tasks which are currently being processed by
+   an LDR client.<br><br>
+   When catching the <b>second <tt>SIGINT</tt></b>, the task manager kills
+   all the currently running processes (using <tt>SIGTERM</tt> and, if they
+   do not terminate within some time, see <tt><font color="#cc3333">-ld-term-kill-delay</font></tt>,
+   then finally kills them using <tt>SIGKILL</tt>). Renderers can catch
+   the <tt>SIGTERM</tt> and terminate gracefully leaving an unfinished frame
+   which can be resumed lateron (see <tt><font color="#cc3333">-l-cont</font></tt> and
+   <tt><font color="#cc3333">-l-rcont</font></tt>). When all the jobs terminated (because they
+   were just killed), RendView exits cleanly.<br><br>
+   When catching the <b>third interrupt signal</b>, RendView instantly
+   aborts execution (using <tt>abort(3)</tt> maybe dumping core). Do not
+   provoke that unless it is necessary.
+  </dd></dl>
+  <dl><dt><font color="#cc3333"><tt>SIGTERM</tt></font></dt><dd>
+   Catching termination signal is exactly the same as catching two
+   <tt>SIGINT</tt>s. This means that if you are running RendView as batch
+   job and the computer shuts down sending all processes the <tt>TERM</tt>
+   signal, then RendView exits cleanly as fast as possible (normally leaving
+   unfinished frames which can be resumed, see <tt>SIGINT</tt>above).
+  </dd></dl>
+  <dl><dt><font color="#cc3333"><tt>SIGTSTP</tt></font>&nbsp;&nbsp;&nbsp;(Terminal: often <tt>^Z</tt>)</dt><dd>
+   Upon catching terminal stop signal, RendView can act in two ways:
+   If the <b>task source</b> is a <b>local</b> one (i.e. RendView and
+   LDRserver), RendView stops all currently running tasks
+   (using <tt>SIGTSTP</tt>) and then stops itself by sending a
+   <tt>SIGSTOP</tt> to itself. In case of an LDR server, a control command
+   is sent to the clients demanding to stop all processes (RendView in
+   mode "stopping". When a confirmation response was received from all
+   clients, the LDR server finally stops itself (<tt>SIGSTOP</tt>, mode now
+   "stopped").<br>
+   This means that when pressing <tt>^Z</tt>, RendView and all taska are
+   stopped and you get the shell prompt back.<br><br>
+   When using the <b>LDR task source</b> (LDR client) things get more
+   complicated as seen above: After receiving the control command to stop
+   all processes, stopping all processes and sending confirmation to the
+   server, the client goes in "stop" mode which means that it will not
+   launch more jobs, will not talk to the task source and will disable the
+   server keepalive timeout (i.e. will not consider the connection to the
+   server to be broken after some time of inactivity). The client
+   does <b>not</b> stop itself because that would render it completely
+   useless (it could not continue upon request, see <tt>SIGCONT</tt> below).<br>
+   <b>Note</b> that all other timeouts (including the client response timeout)
+   stay active. This means that in case you posed a timeout on a render
+   or filter job (<tt><font color="#cc3333">-l-r-timeout</font></tt> or similar) or in case
+   a control command was not yet answered by the client, things are likely
+   to fail at the time you continue. [I will fix the client response timeout
+   in a future version if it turns out to be a problem. LDR works fine as
+   long as no non-answered client control command is pending.]
+  </dd></dl>
+  <dl><dt><font color="#cc3333"><tt>SIGCONT</tt></font>&nbsp;&nbsp;&nbsp;(Terminal: often <tt>fg, bg</tt>)</dt><dd>
+   When receiving <tt>SIGCONT</tt>, RendView will enter "continuing" mide
+   and send <tt>SIGCONT</tt> to all processes or send a continuation control
+   request to all LDR clients. When all processes are running again (i.e.
+   confirmation request from clients), it enters normal "running" mode again.
+   Note that RendView will do so even if it was not in "stopping" or "stopped"
+   mode which means that you can trigger continue jobs launched by RendView
+   which were stopped by some other means in that way. (It also means that
+   the routines to decide whether to give back/get new tasks and whether to
+   launch a task are re-examined, which may be interesting for bug
+   hunting.)<br>
+   The LDR client basically un-does all the things it did when receiving
+   the stop control command.<br>
+   Note that "continuing" and "running" mode are quite the same, RendView
+   will launch new jobs or talk to the task source in both modi.
+   In when "stopping" and when "stopped", these actions are <b>not</b>
+   taken.
+  </dd></dl>
+  <dl><dt><font color="#cc3333"><tt>SIGUSR1</tt></font></dt><dd>
+   If you send a user&nbsp;1 signal to RendView, the task manager will
+   dump the the state of all internal state variables to the terminal
+   (stderr). This is mainly useful in debugging (e.g. if RendView simply
+   does nothing but waiting or spins busily without good reason)
+  </dd></dl>
+  <dl><dt><font color="#cc3333"><tt>SIGUSR2</tt></font></dt><dd>
+   Sending a <tt>SIGUSR2</tt> to RendView will make the taskmanager dump
+   a complete list of all tasks in todo, proc and done list. Also mainly
+   useful in debugging but can also be used to see what is just being done.<br>
+   <b>NOTE</b>: You will see nothing unless the <tt>TDR</tt> verbose
+   stream is enabled.
+  </dd></dl>
+  <dl><dt><font color="#cc3333"><tt>SIGKILL, SIGSTOP</tt></font></dt><dd>
+   These are signals which cannot be handeled by a user process.
+   Consequently, RendView cannot deal with them gracefully. Always use
+   <tt>SIGTERM</tt> instead of <tt>SIGKILL</tt> and <tt>SIGTSTP</tt>
+   instead of <tt>SIGSTOP</tt> unless it is absolutely necessary.
+  </dd></dl>
+</p>
+<p><h3><u>Parameters for the taskmanager and driver interface</u></h3>
+  I've been talking a lot about the "taskmanager" above. As you know from
+  the <a href="quickstart.html">quick start</a>, this is a little
+  simplification. Because the taskmanager does not do all that alone but
+  uses a task driver interface (which can be of type "local" or "LDR").
+  The task driver interface is the virtualisation of the different
+  ways tasks can be launched (either locally or via LDR). Consequently,
+  they also take specific options/parameters.<br>
+</p>
+<p><h4>Parameters for the taskmanager</h4>
+  The taskmanager itself does know very many parameters:<br><br>
+  <dl><dt><tt><font color="#cc3333">-opmode=</font></tt><em>MODE</em></dt><dd>
+   This switch selects the basic operation mode. Valid values for
+   <em>MODE</em> are <tt>rendview</tt> (default), <tt>ldrserver</tt> and
+   <tt>ldrclient</tt>.<br>
+   Normal RendView mode selects the local task source and the local task
+   driver interface.<br>
+   LDR server operation mode selects the local task source and the LDR
+   task driver interface<br>
+   while LDR client uses the LDR task source and the local driver interface.<br>
+   Instead of specifying <tt><font color="#cc3333">-optmode</font></tt>, you can also rename (or
+   symlink) the RendView binary name. If RendView is called <tt>ldrserver</tt>
+   or <tt>ldrclient</tt>, the operation mode will default to
+   <tt>ldrserver</tt> or <tt>ldrclient</tt> respectively. If you call
+   it <tt>rendview</tt> or completely differently, it will default to normal
+   <tt>rendview</tt> opmode.<br>
+   You can use <tt><font color="#cc3333">-opmode</font></tt> to override the operation mode set by
+   the binary name.
+  </dd></dl>
+  <dl><dt><tt><font color="#cc3333">-daemon=</font></tt><em>[VAL]</em></dt><dd>
+   When used, RendView will detach from the terminal and go into background
+   when starting to work. This is especially useful for LDR clients.
+   The following table lists all possibilities:
+   <table border="0" cellpadding="0" cellspacing="5" summary="" width="100%"><tr>
+    <td><b>Argument</b></td>
+    <td><b>Background</b></td>
+    <td><b>Closed streams</b></td>
+    <td><b>Alternative</b></td>
+   </tr><tr>
+    <td><tt><font color="#cc3333">-daemon=no</font></tt></td>
+    <td>no</td>
+    <td>(none)</td>
+    <td>simply do not specify <tt><font color="#cc3333">-daemon</font></tt></td>
+   </tr><tr>
+    <td><tt><font color="#cc3333">-daemon=yes</font></tt></td>
+    <td>yes</td>
+    <td>stdin</td>
+    <td>simply use <tt><font color="#cc3333">-daemon</font></tt></td>
+   </tr><tr>
+    <td><tt><font color="#cc3333">-daemon=close</font></tt></td>
+    <td>yes</td>
+    <td>stdin, stdout, stderr</td>
+   </tr><tr>
+    <td><tt><font color="#cc3333">-daemon=noclose</font></tt></td>
+    <td>yes</td>
+    <td>(none)</td>
+   </tr></table>
+   You will normally want daemons to be quiet. The most convienent way
+   may be to use <tt><font color="#cc3333">-daemon</font></tt> which closes stdin (especially
+   required for ssh connections) and then direct the output streams to
+   some log file:<br>
+   <tt><font color="#3333cc">./rendview -daemon [...] &gt;log 2&gt;&1</font></tt>
+  </dd></dl>
+  <dl><dt><tt><font color="#cc3333">-max-failed-in-seq=</font></tt><em>NUM</em>&nbsp;&nbsp;&nbsp;(also: <tt><font color="#cc3333">-mfis</font></tt>)<tt></dt><dd>
+   When at least this number of tasks failed in sequence (i.e. directly
+   following each other without successful tasks in between), RendView will
+   give up, do not start any more jobs and and schedule quit (i.e. wait
+   for all tasks to finish / clients to quit and quit (local) or
+   recover (LDR) then).<br>
+   You may set a value of -1 to switch off this feature which is not
+   recommended.<br>
+   The default value is 3.
+  </dd></dl>
+  <dl><dt><tt><font color="#cc3333">-etimeout=</font></tt><em>DATE</em></dt><dd>
+   This sets a limit on how long RendView may run. This is useful if you
+   may use several boxes for rendering during the night but you have to
+   stop that at e.g. seven o'clock in the morning.<br>
+   <em>DATE</em> can be specified using either an absolute or a relative
+   time:<br><br>
+   <b>Absolute</b> time has the format "[DD.MM.[YYYY]]&nbsp;HH:MM[:SS]"
+   which means that if you want to stop at 19:00 today, you can use
+   <tt><font color="#cc3333">-etimeout=19:00</font></tt>, for 19:00 on Mar 21st, use
+   <tt><font color="#cc3333">-etimeout="21.3. 19:00"</font></tt>.<br><br>
+   <b>Relative</b> time has the format "now + {DD | [[HH<a></a>:]MM]:SS}",
+   so if you want that RendView will not run longer than 7 hours, use
+   <tt><font color="#cc3333">-etimeout=now+7:0:0</font></tt>, if you want to limit
+   execution to 7 days, use <tt><font color="#cc3333">-etimeout=now+7</font></tt> (without ":"),
+   for a limit of 30 minutes, use <tt><font color="#cc3333">-etimeout=now+30:0</font></tt>.<br><br>
+   For testing, you may set <tt><font color="#cc3333">-l-nframes=0</font></tt>, then launch
+   RendView and check the line <tt>"Execution&nbsp;timeout:"</tt> in verbose
+   output.<br>
+   See also <tt><font color="#cc3333">-etimeout-sig</font></tt>
+  </dd></dl>
+  <dl><dt><tt><font color="#cc3333">-etimeout-sig=</font></tt><em>SPEC</em></dt><dd>
+   When the execution timeout (as specified with <tt><font color="#cc3333">-etimeout</font></tt>)
+   passed, RendView should stop working in some way. Using this option, you
+   can specify how RendView reacts. Possible values for <em>SPEC</em> are:<br>
+   <tt><font color="#cc3333">int</font></tt>: behave like catching one <tt>SIGINT</tt>.<br>
+   <tt><font color="#cc3333">term</font></tt>: behave like catching one <tt>SIGTERM</tt>.<br>
+   <tt><font color="#cc3333">abort</font></tt>: Immediately abort. Do not use if avoidable.<br>
+   See <a href="#signals">above</a> for RendView's reaction to signals.
+  </dd></dl>
+  <dl><dt><tt><font color="#cc3333">-cycitimeout=</font></tt><em>SEC</em></dt><dd>
+   This is the run cycle idle timeout which only affects the active task
+   sources, i.e. the LDR client. If the client is <em>idle</em> (meaning
+   <em>not connected to an authenticated LDR server</em>) for more than
+   <em>SEC</em> seconds, then it will terminate (more precisely: behave like
+   catching one <tt>SIGINT</tt>).<br>
+   This can be useful if you want clients to terminate automatically when
+   you do not give them jobs for some time.
+  </dd></dl>
+  <dl><dt><tt><font color="#cc3333">-load-max, -load-min=</font></tt><em>VAL</em></dt><dd>
+   This is the "load control": When specified, RendView will not start jobs
+   when the load is greater or equal <tt><font color="#cc3333">-load-max</font></tt> but instead
+   wait until the load is lower than <tt><font color="#cc3333">-load-min</font></tt> again.
+   The value <em>VAL</em> is the desired load value multiplied
+   with 100 specified as an integer (i.e. 150 for load 1.5).<br>
+   This option is probably not too useful. You cannot use it to regulate
+   the number of lauched jobs (try out if you do not believe me). However,
+   if you get told that your rendering may only start jobs if the machine
+   you are sharing with others has a load of below 1 (or so), then this
+   can be used.<br>
+   See also <tt><font color="#cc3333">-load-poll-msec</font></tt>
+  </dd></dl>
+  <dl><dt><tt><font color="#cc3333">-load-poll-msec=</font></tt><em>MSEC</em></dt><dd>
+   If the load value is so high that no job may be started, RendView has to
+   check the load continuously to see when it is down again. The checking is
+   done in intervals of length <em>MSEC</em> milliseconds.<br>
+   See also <tt><font color="#cc3333">-load-max</font></tt>.
+  </dd></dl>
+  <dl><dt><tt><font color="#cc3333">-schedule-delay=</font></tt><em>MSEC</em></dt><dd>
+   This is mainly useful in debugging. When re-scheduling is necessary,
+   instruct the taskmanager to not do that immediately but wait
+   <em>MSEC</em> milliseconds before scheduling.<br>
+   Of course, this defaults to 0 and you should not use it.<br>
+   It can be used as a crude fix in case the taskmanager spins idle
+   wasting CPU. But better report sich a case as bug to the author.
+  </dd></dl>
+  <dl><dt><tt><font color="#cc3333">-dumptask=</font></tt><em>SPEC</em></dt><dd>
+   You get informed on the terminal via verbose output about what happens
+   to a task. Using this switch, you can specify when you want to get
+   informed. The syntax for <em>SPEC</em> is <tt>+/-</tt><em>VAL</em>...
+   where <em>VAL</em> consists of one or several letters with the following
+   meaning:<br>
+   <tt><font color="#cc3333">a</font></tt>: dump info on task arrival (LDR)<br>
+   <tt><font color="#cc3333">q</font></tt>: dump info when task is being queued in todo queue<br>
+   <tt><font color="#cc3333">b</font></tt>: dump info when reporting task as done<br>
+   <tt><font color="#cc3333">d</font></tt>: dump info ??? task was and given back/destroyed<br>
+   <tt><font color="#cc3333">r</font></tt>: dump info when rendering is done<br>
+   <tt><font color="#cc3333">f</font></tt>: dump info when filtering is done<br>
+   <tt><font color="#cc3333">+Z</font></tt>: turn <b>all</b> info on<br>
+   <tt><font color="#cc3333">-z</font></tt>: turn <b>all</b> info off<br>
+   <b>Capital</b> letters mean that you get <b>long</b> info (i.e. complete
+   task dump) while <b>small</b> letters only lead to a one-line short info.<br>
+   Examples: <tt><font color="#cc3333">-dumptask=+QDarf-d</font></tt> (default) or
+   <tt><font color="#cc3333">-dumptask=-Rf+QD-r</font></tt> (where the <tt>-r</tt> will cancel the
+   previous <tt>+R</tt>). If unsure, try out to see the effect...
+  </dd></dl>
+</p>
+<p><h4>Parameters for the local task driver interface</h4>
+  The local task driver interface is used whenever a job (renderer or filter)
+  has to be executed on the local machine (thus in normal RendView and in
+  LDR client operation mode). It knows the following parameters.<br><br>
+  <dl><dt><tt><font color="#cc3333">-ld-njobs=</font></tt><em>NUM</em></dt><dd>
+   Specify the number of simultanious jobs to start. RendView will always try
+   to have <em>NUM</em> many processes running at a time; it may be less
+   but never more.<br>
+   If RendView can detect the number of CPUs on in the computer, <em>NUM</em>
+   defaults to that value. Otherwise, the default is&nbsp;1.
+  </dd></dl>
+  <dl><dt><tt><font color="#cc3333">-ld-term-kill-delay=</font></tt><em>MSEC</em></dt><dd>
+   In case RendView decides that a job has to be killed, it will first send
+   it s <tt>SIGTERM</tt>. However, if the job does not terminate within
+   <em>MSEC</em> milliseconds, it will finally kill it using <tt>SIGKILL</tt>.
+   The default is 1000&nbsp;msec (1&nbsp;second).
+  </dd></dl>
+  <dl><dt><tt><font color="#cc3333">-ld-todo-thresh-low, -ld-todo-thresh-high, -ld-done-thresh-high=</font></tt><em>NUM</em></dt><dd>
+   These are the todo and done queue thresholds.<br>
+   The task driver will start requesting new tasks from the task source if
+   there are less than <tt><font color="#cc3333">todo-thresh-low</font></tt> tasks in the todo
+   queue. This does not apply to the LDR client which gets tasks assigned
+   by the LDR server. The client cannot demand for new tasks; the
+   LDR server has to take care that the clients have enough tasks.<br>
+   The taskmanager will never store more than <tt><font color="#cc3333">todo-thresh-high</font></tt>
+   tasks in the todo queue, i.e. it will stop asking the task source for
+   more tasks when these many tasks are in the todo queue. This also
+   does not apply to the LDR client.<br>
+   <tt><font color="#cc3333">done-thresh-high</font></tt> is the number of tasks which have to
+   accumulate in the done queue before reporting (all the tasts in the
+   queue) back to the task source as "done". Use of&nbsp;1 for the LDR
+   client is recommended but not mandatory. (It is safest if the LDR client
+   gives back info about successful frames as quickly as possible. High
+   values may prevent the LDR server to give new tasks to the LDR client
+   because it thinks there are already enough tasks assigned to the
+   client which were not yet reported back.)<br>
+   Defaults should be reasonable.
+  </dd></dl>
+  <dl><dt><tt><font color="#cc3333">-ld-r-mute, -ld-r-quiet</font></tt></dt><dd>
+   Direct render output to <tt>/dev/null</tt> so that it does not clutter
+   your terminal. Using <tt><font color="#cc3333">-ld-r-mute</font></tt> will only tie <tt>stdout</tt>
+   to <tt>/dev/null</tt> while <tt><font color="#cc3333">-ld-r-quiet</font></tt> do it for
+   both <tt>stdout</tt> and <tt>stderr</tt>.<br>
+   Default: Both switched off. Switching <tt><font color="#cc3333">-ld-r-quiet</font></tt> on
+    is recommended.
+  </dd></dl>
+  <dl><dt><tt><font color="#cc3333">-ld-r-nice, -ld-f-nice=</font></tt><em>NVAL</em></dt><dd>
+   Start render/filter processes with the specified nice value <em>NVAL</em>.
+   Values of 10 to 20 are probably good if other perople or processes also
+   want to run on the box.<br>
+   See also <tt><font color="#cc3333">-ld-r-nice-jitter</font></tt> below.<br>
+   Default: No nice value.
+  </dd></dl>
+  <dl><dt><tt><font color="#cc3333">-ld-r-nice-jitter, -ld-f-nice-jitter</font></tt></dt><dd>
+   When used, vary nice values randomly by adding or subtracting&nbsp;1
+   to prevent the render/filter processes from terminating simultaniously.
+   May not have the desired effect, though. Use
+   <tt><font color="#cc3333">-no-ld-r-nice-jitter</font></tt> to switch off.
+  </dd></dl>
+  <dl><dt><tt><font color="#cc3333">-ld-r-jobs-max, -ld-f-jobs-max=</font></tt><em>NUM</em></dt><dd>
+   Limit the number of simultanious render/filter processes, respectively.
+   Note that <tt><font color="#cc3333">-ld-njobs</font></tt> is the overall limit which cannot
+   be exceeded. However, you may find that the filter run so fast that
+   it is sufficient to run one at a time which has the advantage that
+   file filtered frame files will be less fragmented on the hard drive.
+   There may also be other reasons for using this.<br>
+   If you specify a limit of 0, then no rendering/filtering will be done.
+   This is unwise for normal RendView and LDR server operation because
+   the frames to be filtered will get stuck in todo queue and finally
+   nothing goes on any more.<br>
+   On the LDR client side, you may use a limit of 0 to make sure that this
+   client does not get frames to be rendered. This works because the client
+   will then report no render/filter descs to the server.<br>
+   Both values default to <tt><font color="#cc3333">-ld-njobs</font></tt>.
+  </dd></dl>
+  <dl><dt><tt><font color="#cc3333">-ld-r-timeout, -ld-f-timeout=</font></tt><em>SEC</em></dt><dd>
+   Specify a timeout in seconds for the render/filter process. The timeout
+   specifies the maximum time between launching the render/filter process
+   and its termination. In case the timeout is passed the normal
+   <tt>SIGTERM</tt>, <tt>SIGKILL</tt> sequence is sent to the process
+   (see <tt><font color="#cc3333">-ld-term-kill-delay</font></tt>). Use a value of -1 to disable.
+  </dd></dl>
+  <dl><dt><tt><font color="#cc3333">-ld-r-detach-term, -ld-f-detach-term</font></tt></dt><dd>
+   If you disable these (using e.g. <tt><font color="#cc3333">-no-ld-r-detach-term</font></tt>),
+   then you allow the terminal to keep control over the render process.
+   This is <b>not recommended</b> (because of <tt>SIGINT</tt>,
+   <tt>SIGTSTP</tt> signal handling).<br>
+   Default: enabled
+  </dd></dl>
+</p>
+<p><h4>Parameters for the LDR task driver interface</h4>
+  The LDR task driver is used by the LDR server. It effectively handles
+  all the LDR server stuff, including all the network and transfer issues.
+  It understands the following options.<br><br>
+  <dl><dt><tt><font color="#cc3333">-L-clients=</font></tt><em>CLIENTS</em></dt><dd>
+   The most important option; it specifies a list of LDR clients to use.
+   The syntax is a space-separated list of client specs where each client
+   spec looks like one of "<em>HOST</em>", "<em>HOST</em>/<em>PORT</em>",
+   "<em>HOST</em>/<em>PORT</em>/<em>PASSWORD</em>",
+   "<em>HOST</em>//<em>PASSWORD</em>".<br>
+   <em>HOST</em> is either an IPv4 address of the host the client is
+   running on, or a domain name which gets resolved via the standard
+   resolve library.<br>
+   <em>PORT</em> is the TCP port the client listens to. It defaults to
+   the value specified with <tt><font color="#cc3333">-Ld-port</font></tt> (see below).
+   <em>PASSWORD</em> is a password for this client. It defaults to the
+   value specified with <tt><font color="#cc3333">-Ld-password</font></tt> (see below).
+  </dd></dl>
+  <dl><dt><tt><font color="#cc3333">-Ld-port=</font></tt><em>NUM</em></dt><dd>
+   Specify the (default) LDR client TCP port.
+   The default LDR port is 3104.
+  </dd></dl>
+  <dl><dt><tt><font color="#cc3333">-Ld-password=</font></tt><em>PASS</em></dt><dd>
+   Specify the (default) client password. See the LDR client description
+   in the <a href="tasksource.html#LDR">tasksource</a> section for more info
+   about the authentication.<br>
+   Apart from a password string, you may use the following special
+   values:<br>
+   <tt><font color="#cc3333">none</font></tt>: no password (insecure). This is also the case if
+    you do not specify one.<br>
+   <tt><font color="#cc3333">prompt</font></tt>: prompt you for the password
+   (using <tt>getpass(3)</tt>).<br>
+   <tt><font color="#cc3333">file:</font></tt><em>PATH</em>: read password from file <em>PATH</em><br>
+    (No more than 128 bytes will be read; falls back to <tt><font color="#cc3333">prompt</font></tt>
+    if an error occurs or the file is empty.<br>
+   Specifying the password on the command line is insecure; Using
+   <tt><font color="#cc3333">prompt</font></tt> or <tt><font color="#cc3333">file:</font></tt> is better, because it
+   will then not show up using <tt>ps(1)</tt> or <tt>top(1)</tt> and will
+   not be left in your shell history file. You may also consider passing
+   the password spec using the environment var <tt>RENDVIEWARGS</tt>
+   (see <a href="database.html">component data base</a>) but don't pass
+   the literal password there because it may be possible to access the
+   environment as well (Linux users: have a closer look at <tt>/proc</tt>).
+  </dd></dl>
+  <dl><dt><tt><font color="#cc3333">-Ld-ctimeout=</font></tt><em>MSEC</em></dt><dd>
+   The connection timeout in milliseconds; that is the maximum time allowed
+   to pass between initiating a connection to the client and completing
+   the authentication handshake.<br>
+   The default is 15&nbsp;seconds.<br>
+   Note that this timeout as well as <tt><font color="#cc3333">-Ld-rtimeout</font></tt> does
+   not have millisecond precision; values below 1000 (1 second) do not
+   make sense.
+  </dd></dl>
+  <dl><dt><tt><font color="#cc3333">-Ld-rcinterval=</font></tt><em>SEC</em></dt><dd>
+   Re-connect interval. In case the LDR server could not connect to a client
+   or disconnected during operation for what reason ever, you may want that
+   it re-tries to connect from time to time. The <tt><font color="#cc3333">rcinterval</font></tt>
+   option specifies this interval in seconds.<br>
+   Note that due to internal scheduling, the actual interval time may
+   be up to twice as large (which is not really a problem).<br>
+   A value of -1 switches off this feature.<br>
+   Default is 5&nbsp;minutes.
+  </dd></dl>
+  <dl><dt><tt><font color="#cc3333">-Ld-keepalive=</font></tt><em>SEC</em></dt><dd>
+   Send the <b>ping</b> control command to all clients every <em>SEC</em>
+   seconds. This makes sure that they are still up and working because
+   there is a timeout on the response time to all control commands
+   (see <tt><font color="#cc3333">-Ld-rtimeout</font></tt> below).<br>
+   Use a value of -1 to switch that off which is not recommended because
+   the ping is used to detect unreachable clients (for what reason ever:
+   network failure, client computer reboot, etc.). <br>
+   The default is 30&nbsp;seconds.<br>
+   <b>Note</b> that no keepalive ping requests are sent if the connection
+   is busy due to other operation (down/uploading tasks,...) because in these
+   cases the server knows that the client is still there.
+  </dd></dl>
+  <dl><dt><tt><font color="#cc3333">-Ld-rtimeout=</font></tt><em>MSEC</em></dt><dd>
+   Maximum time it may take a client to respond to a control command (like
+   stop/cont/kill tasks, ping, disconnect). The client is considered dead
+   if the response does not arrive within <em>MSEC</em> milliseconds.<br>
+   Use -1 to disable this feature which is <b>not</b> recommended.<br>
+   The default is 5&nbsp;seconds.<br>
+   <b>Note</b>: You may need to increase this default when large files
+   are transferred. The reason is that the LDR client server connection
+   is one TCP connection used in in full duplex mode. That means the server
+   can send a control request to the client while the client uploads a file
+   to the server. However, the client cannot send the response before the
+   file is uploaded completely. If the whole <tt><font color="#cc3333">-Ld-rtimeout</font></tt>
+   timeout passes while uploading the file, the client will get kicked
+   although it should not. There is no easy way to solve that because
+   we may not get trapped by stalled file uploads.
+  </dd></dl>
+  <dl><dt><tt><font color="#cc3333">-Ld-todo-thresh-low, -Ld-todo-thresh-righ, -Ld-done-thresh-high=</font></tt><em>NUM</em></dt><dd>
+   This works just like the corresponding options of the local task
+   driver interface, see above.
+  </dd></dl>
+  <dl><dt><tt><font color="#cc3333">-Ld-max-jobs-per-client, -Ld-max-client-task-thresh=</font></tt><em>NUM</em></dt><dd>
+   These are protective parameters. When the server connects to the client,
+   the client reports (to the server) its <tt><font color="#cc3333">-ld-njobs</font></tt>
+   (see above) value (number of parallel tasks to start)
+   as well as the "high task threshold"
+   which is the number of tasks which the client would like to have assigned
+   at any time (which is higher than <tt><font color="#cc3333">-ld-njobs</font></tt> so that the
+   client always has some tasks around to be able to quickly start new
+   jobs whenever some running jobs terminate -- without having to wait for
+   the LDR server to supply new tasks).<br>
+   <tt><font color="#cc3333">-Ld-max-jobs-per-client</font></tt> specifies the maximum
+   <tt><font color="#cc3333">-ld-njobs</font></tt> value accepted from the clients. Higher values
+   will get decreased to <tt><font color="#cc3333">-Ld-max-jobs-per-client</font></tt>.<br>
+   <tt><font color="#cc3333">-Ld-max-client-task-thresh</font></tt> is the limit for the
+   "high task thresh" reported by the client and hence limits the number
+   of jobs which are assigned to a client at any time.<br>
+   Both features can be switched off using a value of -1 (if you trust
+   your clients).<br>
+   The defaults are 24 and 36, respectively.
+  </dd></dl>
+  <dl><dt><tt><font color="#cc3333">-Ld-r-timeout, -Ld-f-timeout=</font></tt><em>SEC</em></dt><dd>
+   This specifies the task driver's timeout for render/filter jobs.
+   This is normally not needed as you can set a timeout on the server side
+   using the (local) task source (<tt><font color="#cc3333">-l-r-timeout</font></tt>) and on the
+   client side using the local task driver (<tt><font color="#cc3333">-ld-r-timeout</font></tt>).<br>
+   When you use it, the task sent to the client will contain the shortter
+   of the two timeouts (i.e. <tt><font color="#cc3333">-l-r-timeout</font></tt> and
+   <tt><font color="#cc3333">-Ld-r-timeout</font></tt>).<br>
+   A value of -1 disables the timeout (default).
+  </dd></dl>
+</p>
+<p><h3><u>The task drivers</u></h3>
+  <b>Task drivers</b> actually launch the tasks. Currently, there is the
+  POVRay render task driver which supports several versions of
+  <a href="http://www.povray.org">POVRay</a> (at least 3.1g and 3.5) as
+  well as a generic filter driver supporting any filter which reads the
+  input image from stdin and writes it to stdout.
+</p>
+<a name="spurious"></a><p>
+  Unfortunately, POVRay is a bit bugged when it comes to it's exit
+  status. It returns 0 (success) even if parsing failed and no output
+  was actually generated. Hence, <b>RendView applies some tricks</b> to work
+  around this: It checks if the output file exists and also checks the time
+  stamp: if the modification time is older than the launch time of POVRay,
+  the file obviously did not get touched and rendering is considered as
+  failed even if POVRay returns "success".
+  You can read about <b>"spurious success"</b> in the output in such a case.
+</p>
+<p>
+  The filter driver also checks for the output frame existence but does
+  not apply any time stamp checks (because a filter may decide to actually
+  not touch an image for what reason ever).
+</p>
+<a name="bot">&nbsp;</a>
+<hr noshade width="100%" size="2">
+ <table border="0" cellpadding="0" cellspacing="0" width="100%" summary="" bgcolor="#eeeeee"><tr>
+  <td align="left" width="33%">&lt;<a href="database.html">prev</a></td>
+  <td align="center" width="34%"><a href="index.html">[index]</a></td>
+  <td align="right" width="33%"><a href="tasksource.html">next</a>&gt;</td>
+ </tr></table>
+<table border="0" cellpadding="3" cellspacing="0" width="100%" summary="">
+<tr>
+  <td width="50%" align="left">
+    <small>Last modified: 2004-05-16 16:36:19</small>
+  </td>
+  <td width="50%" align="right">
+    Copyright &copy; 2003 <a href="mailto:wwieser aat gmx doot de">Wolfgang Wieser</a>
+  </td>
+</tr>
+</table>
+</body></html>

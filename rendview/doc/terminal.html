@@ -1,0 +1,123 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="en">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <title>RendView Manual -- Terminal Output</title>
+  <meta name="Keywords" content="RendView manual documentation terminal output">
+  <meta name="Description" content="Manual for RendView: about the output on the terminal">
+  <style type="text/css">
+	pre { background-color:#eeeeee; border: 1px solid black;
+		padding: 0.3em 0.3em 0.3em 0.3em; }
+	dd { margin-bottom: 0.5em; }
+  </style>
+</head>
+<body text="#000000" bgcolor="#ffffff" link="#0000ff" vlink="#800080" alink="#ff0000">
+ <table border="0" cellpadding="0" cellspacing="0" width="100%" summary="" bgcolor="#eeeeee"><tr>
+  <td align="left" width="33%">&lt;<a href="quickstart.html">prev</a></td>
+  <td align="center" width="34%"><a href="index.html">[index]</a></td>
+  <td align="right" width="33%"><a href="database.html">next</a>&gt;</td>
+ </tr></table>
+<br>
+<div align="center">
+  <h2><font color="#3333cc"><u>RendView Manual -- Terminal Output</u></font></h2>
+</div>
+<hiernavname "terminal">
+<p>
+  As not uncommon, RendView writes error and warning messages to
+  <tt>stderr</tt> while dumping verbose and debug messages to
+  <tt>stdout</tt>.
+</p>
+<p>
+  RendView produces quite a lot of verbose output.
+  This leads to the following problem: How can you quickly and
+  easily see (with our eyes on the terminal) what is an error
+  and what is just verbose output?<br>
+  The solution was <b>colored output</b>.
+</p>
+<p>
+  By default, RendView turns on colored output if the <tt>stdout</tt>
+  and </tt>stderr</tt> are connected to a terminal. (Switching on/off
+  the colors is done separately for <tt>stdout</tt> and <tt>stderr</tt>.)<br>
+  I actually do not know if the colors work when you are not using
+  a linux terminal.<br>
+  The colors are as follows:<br>
+  <font color="#ee2222"><b>Error messages</b></font> are written in
+   <font color="#ee2222"><b>bold red</b></font>.<br>
+  <font color="#ee2222">Warning messages</font> are written in
+   <font color="#ee2222">red</font> (and not bold).<br>
+  <font color="#2222ee"><b>Special verbose messages</b></font> appear in
+   <font color="#2222ee"><b>bold blue</b></font>, while<br>
+  <font color="#2222ee">Normal verbose messages</font> get dumped in
+   <font color="#2222ee">blue</font> (not bold) and<br>
+  debug (verbose) messages get written in normal (black/white) terminal
+   color.<br>
+</p>
+<p>
+  As you may see, the colors are best viewed on an <tt>xterm</tt> with
+  light background (such as light yellow or white). Unfortunately, on
+  the default terminal with black background all the blue verbose messages
+  cannot be seen very well. Maybe, I add some code to supply user-defined
+  highlighting some day...
+</p>
+<p><h3><u>Options controlling terminal output</u></h3>
+  There are a few options which allow you to control the terminal
+  output. Note that all these options cannot take effect before they are
+  actually read in. For this reason, all the command line
+   is pardsed in two steps. First, the options presented here are
+   parsed, then all the others. Same applies to the options in the
+   <tt>RENDVIEWARGS</tt>, etc. environment variables. Note that the
+   env vars are read in <b>after</b> the command line but the command
+   line still overrides the settings in the env vars.<br><br>
+  <dl><dt><tt><font color="#cc3333">-color,-no-color</font></tt></dt><dd>
+   Force colored output on and off, respectively.
+  </dd></dl>
+  <dl><dt><tt><font color="#cc3333">-verbose=</font></tt><em>SPEC</em></dt><dd>
+   Switch on/off the various verbose message "streams". In fact, all the
+   verbose messages go to <tt>stdout</tt>, so there is only one file
+   "stream", but you can still select which type messages you want.<br>
+   <em>SPEC</em> is a list of identifiers prefixed by either "+" or "-".<br>
+   Possible stream identifiers are:<br>
+    <tt><font color="#cc3333">misc</font></tt>: misc info<br>
+    <tt><font color="#cc3333">tdi</font></tt>: task driver init info (start processing/end)<br>
+    <tt><font color="#cc3333">tdr</font></tt>: task driver runtime info (kill/start...)<br>
+    <tt><font color="#cc3333">tsi</font></tt>: task source init info (per-frame blocks...)<br>
+    <tt><font color="#cc3333">tsp</font></tt>: task source param parse/setup info (skipped xy,...)<br>
+    <tt><font color="#cc3333">tsr0</font></tt>: task source runtime info level 0 (less important)<br>
+    <tt><font color="#cc3333">tsr1</font></tt>: task source runtime info level 1 (more important)<br>
+    <tt><font color="#cc3333">tslr</font></tt>: local task source runtime info (file re-naming...)<br>
+    <tt><font color="#cc3333">tsllr</font></tt>: LDR task source runtime info<br>
+    <tt><font color="#cc3333">dbg</font></tt>: debug messages<br>
+    <tt><font color="#cc3333">dbgv</font></tt>: more debug messages<br>
+    <tt><font color="#cc3333">all</font></tt>: all of the above flags
+	  (<tt><font color="#cc3333">-all</font></tt> for none, <tt><font color="#cc3333">+all</font></tt> for all)<br>
+   I must admit, that the assigment of messages to streams should probably
+   get tidied up a bit in the code. Maybe you find messages which use a
+   different "stream" than they should.<br>
+   The switch logic is clever enough to also switch off <tt>dbgv</tt> if you
+   tell it to switch off <tt>dbg</tt> and consequently also switches on
+   <tt>dbg</tt> if you specify only <tt>+dbgv</tt>. Same applies to
+   <tt>tsr0</tt> and <tt>tsr1</tt>.<br>
+   Example: <tt><font color="#cc3333">-verbose=+all-dbg-misc</font></tt><br>
+   Note that the spec(s) on the command line override those in an env var.
+   You may use <tt><font color="#cc3333">-verbose=+all-tdi</font></tt> in the env var and then
+   pass <tt><font color="#cc3333">-verbose=+tdi-dbg</font></tt> on the command line and thus
+   finally get <tt>+all-dbg</tt>.
+  </dd></dl>
+</p>
+<hr noshade width="100%" size="2">
+ <table border="0" cellpadding="0" cellspacing="0" width="100%" summary="" bgcolor="#eeeeee"><tr>
+  <td align="left" width="33%">&lt;<a href="quickstart.html">prev</a></td>
+  <td align="center" width="34%"><a href="index.html">[index]</a></td>
+  <td align="right" width="33%"><a href="database.html">next</a>&gt;</td>
+ </tr></table>
+<table border="0" cellpadding="3" cellspacing="0" width="100%" summary="">
+<tr>
+  <td width="50%" align="left">
+    <small>Last modified: 2004-05-16 16:36:18</small>
+  </td>
+  <td width="50%" align="right">
+    Copyright &copy; 2003 <a href="mailto:wwieser aat gmx doot de">Wolfgang Wieser</a>
+  </td>
+</tr>
+</table>
+</body></html>

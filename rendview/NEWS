@@ -1,0 +1,37 @@
+2003/08/15:
+ Some minor features added: RendView will now also render .ini files: just use
+ the .ini file as input frame pattern instead of the .pov file and add the
+ associated .pov file as additional file (-l-r-files);
+ furthermore, POVRay frame clock support has been changed. 
+ Fixed bugs: Stopping POVRay-3.5 now works (again?); added new render desc
+ parameter stopsig which can be SIGTSTP (default) or SIGSTOP; finite() 
+ and isinf()/isnan() are no longer required which improves portability. 
+ Current version is 0.7.0 (beta release). 
+
+2003/07/15:
+ Again some bugfixes: Prevent unfinished frames from dropping out as "finished"
+ when not processed at all (huh? :); transfer the primary render/filter
+ input/output file names when using LDR (instead of using fixed f-%d-%d...);
+ LDR client should now only delete downloaded input files; when using the frame
+ clock, the render input file is no longer downloaded repeatedly for no reason;
+ some more minor fixes.  ...and new features: It should now be possible to run
+ LDR using a shared directory like NFS, and some sort of
+ task fit strategy is finally implemented.  Current version is
+ 0.6.9 (beta release). 
+
+2003/04/07:
+ Several enhancements and bugfixes: Check modification time of additional files
+ [added stat(2) cache for efficiency; hope it does not play tricks on us...],
+ read LDR password from file, automatic compensation for different system
+ times, fixed incorrect paths when using -l-r-dir or -l-f-dir [still not well
+ tested], fixed wrong description of -L-timestamp-thresh, prevent downloading
+ recently modified files more than once.  Current version is 0.6.8 (beta
+ release). 
+
+2003/04/01:
+ Some bugs were fixed; RendView on 64bit Alpha Linux on should work now.
+ Current version was 0.6.7a (beta release). 
+
+2003/03/25: 
+  After more than 2 years of development, RendView is finally about to 
+  get released to the public. Current version is 0.6.7 (beta release). 

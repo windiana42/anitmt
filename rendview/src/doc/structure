@@ -1,0 +1,171 @@
+LLB = LinkedListBase<>
+
+ +-----------------------------------------+
+ |           ==TaskStructBase==            |
+ | TaskDriverType dtype;                   |
+ | TaskFile *infile;                       |
+ | TaskFile *outfile;                      |
+ | RefStrList add_args;                    |
+ |                                         |
+ |#########################################|
+ |     RenderTask     |     FilterTask     |
+ | RenderDesc *rdesc; | FilterDesc *fdesc; |
+ | width,height;      | ImageFormat;       |
+ | ImageFormat;       |                    |
+ | resume             |                    |
+ +--------------------+--------------------+
+
+ +---------------------------------------+
+ |           ==TaskParams==              |
+ | TaskDriverType dtype;                 |
+ | RefStrList add_args;                  |
+ | int niceval;                          |
+ | int call_setsid;                      |
+ | long timeout;                         |
+ | RefString crdir;                      |
+ | RefString wdir;                       |
+ |                                       |
+ |#######################################|
+ |  RenderTaskParams  | FilterTaskParams |
+ | std{out,err,in}fd  |                  |
+ +--------------------+------------------+
+
+
+                ,--TaskDriverInterface (between GetTask() / DoneTask()
+                V
+ +-------------------------------+
+ |             LLB               |
+ +-------------------------------+
+ |       ==CompleteTask==        |    CompleteTask is created by the task 
+ | State { TaskDone,ToBeRendered |    source on call to GetTask() and destroyed
+ |                ToBeFiltered } |    by it when calling DoneTask(). 
+ | RenderTask *rt;   // or NULL  |
+ | FilterTask *ft;   // or NULL  |
+ |                               |
+ +-------------------------------+
+
+MISSING: TaskFile
+
+---------------------------------<TASK DRIVER>---------------------------------
+
+TaskDriverType  { DTNone=-1, DTRender=0, DTFilter=1, _DTLast=2 };
+
+    ,--TaskDriverInterface
+    V
+ +-----+---------+-------------+
+ | LLB | FDBase  | ProcessBase |
+ +-----+---------+-------------+
+ |       ==TaskDriver==        |    One TaskDriver per running task; queue held
+ | TaskDriverFactory *f;       |    by TaskDriverInterface; Pointer *f to
+ |                             |    associated factory to access settings.
+ |                             |
+ |                             |
+ |#############################|
+ | RenderDriver | FilterDriver |
+ +--------------+--------------+
+ | POVRayDriver | Generic...   |
+ +--------------+--------------+
+
+
+
+    ,--ComponentDataBase
+    V
+ +-----+-----------------------+
+ | LLB | ParameterConsumer_OVL |
+ +-----+-----------------------+
+ |    ==TaskDriverFactory==    |    Contains all static parameters of the task
+ |                             |    driver; can be set via command line.
+ |                             |    [One factory per driver.]
+ |#############################|    Constructor: Registration at ComponentDataBase
+ | POVRayDriverFactory  | ...  |    Destructor: unregistration; called by ComponentDB
+ | <POVRay driver pars> |      |
+ +-----------------------------+
+
+
+---------------------------------<TASK SOURCE>---------------------------------
+
+ +-----------------------------------+
+ |          ==TaskSource==           |    One TaskSource exists at a time. 
+ | TaskSourceConsumer *;             |    Normally it exists as long as the 
+ |                                   |    program runs. 
+ |###################################|
+ | TaskSource_Local | TaskSource_NRP |
+ | <ptr to factory> | -dito-         |
+ +-----------------------------------+
+
+ +------------------------------+
+ |    ==TaskSourceConsumer==    |    Base class for classes using TaskSource. 
+ +------------------------------+    Only useful if there is only ine class 
+ | TaskSource *;                |    using one TaskSource. This class is 
+ |                              |    TaskManager. 
+ +------------------------------+
+
+     ,--ComponentDataBase
+     V
+ +-------------------------------+
+ |  LLB  | ParameterConsumer_OVL |
+ +-------------------------------+
+ |     ==TaskSourceFactory==     |    Contains all static parameters of the 
+ |                               |    task source; can be set via cmd line. 
+ |###############################|    [One factory per source.]
+ | TaskSourceFactory_Local | ... |    {Con,De}structor: like TaskDriverFactory
+ +-------------------------------+
+
+
+-----------------------------<COMPONENT DATA BASE>-----------------------------
+
+                  ,--ComponentDataBase
+                  V
+ +---------------------------------+
+ |               LLB               |
+ +---------------------------------+
+ |         ==RF_DescBase==         |
+ | TaskDriverType dtype;           |
+ | RefString name;                 |
+ | TaskDriverFactory *dfactory;    |
+ |                                 |
+ |#################################|
+ | ==RenderDesc== | ==FilterDesc== |
+ | binpath;       | binpath;       |
+ | required_args; | required_args; |
+ | include_path;  |                |
+ |                |                |
+ +----------------+----------------+
+
+ +--------------------------------+
+ |      ==ComponentDataBase==     |    One component data base exists; 
+ | ARRAY/LIST<RD_DescBase>;       |    functions to loop up component by name.
+ | ARRAY/LIST<TaskDriverFactory>; |    Registration of components on program 
+ | LIST<ImageFormat>;             |    start. 
+ | LIST<TaskSourceFactory>;       |
+ | TaskManager *;                 |
+ |                                |
+ |                                |
+ +--------------------------------+
+
+
+--------------------------------<TASK MANAGER>---------------------------------
+
+ +-------------------------------------------+
+ | FDBase | ProcessBase | TaskSourceConsumer |
+ +-------------------------------------------+
+ |              ==TaskManager==              |
+ | LIST<CompleteTask> tasklist;              |
+ | TaskDriverInterface *interface;           |
+ +-------------------------------------------+
+
+ +-------------------------------------------------------------+
+ |                   ==TaskDriverInterface==                   |
+ +-------------------------------------------------------------+
+ |          ProcessBase          |                             |
+ +-------------------------------+                             |
+ | ==TaskDriverInterface_Local== | ==TaskDriverInterface_LDR== |
+ | LIST<TaskDriver> joblist;     | LIST<> clientlist;          |
+ | job limits / etc.             | number of clients, ...      |
+ +-------------------------------+-----------------------------+
+
+ So, the TaskManager is the main class. It gets tasks from the TaskSource and 
+ then brings them to execution. This is done via TaskDriverInterface. 
+ The TaskDriverInterface is the virtualisation of the interface to the 
+ actual task execution, because local execution requires significant different 
+ routines as LDR. 

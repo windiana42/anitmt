@@ -1,0 +1,25 @@
+# Filter description (FilterDesc) [implicit subsection -fd]
+#
+# How to edit: 
+#
+# *section filtername
+#   driver = generic
+#   binpath = where to find
+#   req_args+= -quality 17 -progressive -or -whatever
+# *end
+# 
+# driver and binpath must be specified. 
+
+# global search poath for the filter binaries
+searchpath = /usr/bin /usr/local/bin ./
+
+*section invert
+  driver = generic
+  binpath = invert
+*end
+
+*section nop
+  driver = generic
+  binpath = nop-flt
+*end
+

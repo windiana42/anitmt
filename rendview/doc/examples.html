@@ -1,0 +1,312 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="en">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <title>RendView Manual -- Examples</title>
+  <meta name="Keywords" content="RendView manual documentation examples">
+  <meta name="Description" content="Manual for RendView: examples on how to call RendView">
+  <style type="text/css">
+	pre { background-color:#eeeeee; border: 1px solid black;
+		padding: 0.3em 0.3em 0.3em 0.3em; }
+	dd { margin-bottom: 0.5em; }
+  </style>
+</head>
+<body text="#000000" bgcolor="#ffffff" link="#0000ff" vlink="#800080" alink="#ff0000">
+ <table border="0" cellpadding="0" cellspacing="0" width="100%" summary="" bgcolor="#eeeeee"><tr>
+  <td align="left" width="33%">&lt;<a href="admin.html">prev</a></td>
+  <td align="center" width="34%"><a href="index.html">[index]</a></td>
+  <td align="right" width="33%">&nbsp;</td>
+ </tr></table>
+<br>
+<div align="center">
+  <h2><font color="#3333cc"><u>RendView Manual -- Examples</u></font></h2>
+</div>
+<hiernavname "examples">
+<h3><u>Normal RendView</u></h3>
+<p>
+  Finally, let's have a look at some examples.
+  If you have nice calling examples which you find useful for a beginner
+  and you would like to have them added here, please e-mail me.
+</p>
+<p>
+  Please have a look at <b>how to pass arguments using the environment</b>
+  variables (<tt>RENDVIEWARGS</tt>,...); there is an example in
+  <a href="quickstart.html">quick start</a> chapter and it is really
+  easy to figure out.
+</p>
+<p>
+  Note that you <b>may always pass <tt><font color="#cc3333">-help</font></tt></b> to RendView no
+  matter how many other args you pass. So, when you have written a lengthy
+  cmd line and do not know how to go on, just append <tt><font color="#cc3333">-help</font></tt>
+  (or <tt><font color="#cc3333">--help</font></tt>, that does not matter)
+  and hit enter if you wish to get the help screen. You may use
+  <tt><font color="#cc3333">-l-help</font></tt> to get help about the local task source's
+  parameters only, or <tt><font color="#cc3333">-Ld-help</font></tt> for the LDR task driver
+  interface, etc. Yust make sure you are <b>not</b> inside a section
+  block (<tt><font color="#cc3333">-xy-{</font></tt>&nbsp;...) when adding <tt><font color="#cc3333">-help</font></tt>.
+</p>
+<p>
+  <b>First you need</b> a <tt>renderers.par</tt> file as well as a
+  <tt>filters.par</tt> (you do not need the latter if you do not want
+  to filter any frames); examples are distributed with RendView or
+  you may copy the ones from the
+  <a href="quickstart.html">quick start</a> or
+  <a href="database.html">component data base</a> chapter.<br>
+  In any case you <b>have to modify</b> these files to fit your needs.<br>
+  I will assume that you have the render descs <tt>povray3.5</tt> and
+  <tt>povray3.1g</tt> as well as the mysterious <tt>glowfilter</tt>
+  filter desc.
+</p>
+<p>
+  Okay, let's first consider the following case: You have the files
+  <tt>scene.pov</tt>, <tt>mycolors.inc</tt> (used by <tt>scene.pov</tt>
+  as an example for an additional file, just like <tt>texture.png</tt>,
+  etc.) as well as a lot of frame files <tt>frame-0000.pov</tt> up to
+  <tt>frame-0200.pov</tt> which <tt>#include&nbsp;"scene.pov"</tt>.<br>
+  Say you want to render all these with POVRay 3.5 so that the output
+  frames are <tt>frame-0000.png</tt> up to <tt>frame-0200.png</tt>.
+  Then, you may call<br><br>
+  <tt><font color="#3333cc">rendview -rdfile=renderers.par -fdfile=filters.par
+  -l-rd=povray3.5 -l-r-ifpattern=frame-%04d.pov -ld-r-quiet</font></tt><br><br>
+  (<tt><font color="#cc3333">-ld-r-quiet</font></tt> is used to suppress POVRay output on
+  the console.)
+</p>
+<p>
+  Now, let's say we modified the frames 52, 53 and 104 (you may do that using
+  <tt>touch(1)</tt> and we want to re-render only those. Simply execute:<br><br>
+  <tt><font color="#3333cc">rendview -rdfile=renderers.par -fdfile=filters.par
+  -l-rd=povray3.5 -l-r-ifpattern=frame-%04d.pov -ld-r-quiet -l-cont</font></tt><br><br>
+  If you did not modify any pov files, RendView will launch no renderer.
+  Do not get confused by errors telling you<br>
+  <font color="#ee2222">Local: Access check failed on render input file
+   "frame-0201.pov": No such file or directory</font><br>
+  This is normal as you did not specify the number of frames and
+  does not yield to failure.
+</p>
+<p>
+  If you want to re-render frames 30..39 you can use:<br><br>
+  <tt><font color="#3333cc">rendview -rdfile=renderers.par -fdfile=filters.par -l-rd=povray3.5
+   -l-r-ifpattern=frame-%04d.pov -ld-r-quiet -l-f0=30 -l-n=10</font></tt><br><br>
+  If you want to re-render frames 30..39 as well as 55..66 and frame 101
+  using one single call, you may execute:<br><br>
+  <tt><font color="#3333cc">rendview -rdfile=renderers.par -fdfile=filters.par
+  -l-r-ifpattern=frame-%04d.pov -ld-r-quiet -l-30:10-rd=povray3.5
+  -l-55:11-rd=povray3.5 -l-101:1-rd=povray3.5 -verbose=-all</font></tt><br><br>
+  Especially note that the option <tt><font color="#cc3333">-l-rd</font></tt> is no longer present
+  and hence the master frame info's action is not to render anything.
+  Just the three specified per-frame blocks render the frames.<br>
+  The oprion <tt><font color="#cc3333">-verbose=-all</font></tt> suppresses <em>nearly</em>
+  all verbose messages (two lines for each frame stay) so that you can see
+  more easily what frames actually get rendered. (You can pass
+  <tt><font color="#cc3333">-verbose=-all -dumptask=-z</font></tt> to actually switch off
+  <b>all</b> verbose output except one startup and one exit message but
+  that is not recommended.)
+</p>
+<p>
+  Okay, now let's finally post-process the frames 0..29 using the
+  <tt>glowfilter</tt> which we have to pass the arguments
+  <tt>-recurse&nbsp;2 -glowfact=0.177</tt>:<br><br>
+  <tt><font color="#3333cc">rendview -rdfile=renderers.par -fdfile=filters.par
+  -l-r-ifpattern=frame-%04d.pov -l-fd=glowfilter
+  -l-f-args="-recurse 2 -glowfact=0.177" -l-n=30</font></tt><br><br>
+  This will produce the files <tt>frame-0000-f.png</tt> up to
+  <tt>frame-0029-f.png</tt>.<br>
+  Alternatively, you could have used <tt><font color="#cc3333">-l-r-ofpattern=frame-%04d</font></tt>
+  instead of <tt><font color="#cc3333">-l-r-ifpattern=frame-%04d.pov</font></tt> (note the
+  missing file name extension).
+</p>
+<p><a name="exmplC"></a>
+  Of course, you could have done that right from the beginning using<br><br>
+  <tt><font color="#3333cc">rendview -rdfile=renderers.par -fdfile=filters.par -l-rd=povray3.5
+  -l-r-ifpattern=frame-%04d.pov -ld-r-quiet -l-0:30-{ -fd=glowfilter
+  -f-args="-recurse 2 -glowfact=0.177" -}</font></tt><br><br>
+  which renders all 200 framees and filters the ones from 0..29 just
+  like above. (Filtering is always done right after rendering on a
+  per-frame basis).
+</p>
+<p>
+  Now, let's say you have a 4-CPU box and you want to start 3 jobs for
+  every CPU, hence run 12 renderers in parallel. Furthermore, these
+  should run with nice value 15. (You can try out even on a fairly
+  fast single-CPU box.)<br><br>
+  <tt><font color="#3333cc">rendview -rdfile=renderers.par -fdfile=filters.par
+  -l-rd=povray3.5 -l-r-ifpattern=frame-%04d.pov -ld-r-quiet
+  -ld-njobs=12 -ld-r-nice=15</font></tt><br><br>
+  Also, have a look at all the nice output. Running RendView in an
+  XTerm and writing this docu at the same time when executing the above
+  command on a single-CPU Athlon-1.4&nbsp;GHz, I get the following
+  output after the last frame:<br>
+<pre>Exiting at (local): Fri Mar 28 2003, 13:14:57.024 CET
+Elapsed since start:  00:02:15.370
+Load control: [disabled]; current load: 10.97
+Last successfully done frames: 196 197 198 199 200
+Overall CPU stats:
+  RendView:      0.17% CPU  (user: 00:00:00.080; sys: 00:00:00.150)
+  Local jobs:   96.31% CPU  (user: 00:02:09.280; sys: 00:00:01.100)
+  Together:     96.48% CPU  (user: 00:02:09.360; sys: 00:00:01.250)</pre>
+  RendView used 0.17% of the CPU most of that in system time (and some
+  of that for writing the verbose output). This is fairly good
+  (ratio: 566:1 on single-CPU box); remember
+  that one frame just takes less than 0.7&nbsp;seconds to render. If the
+  frame takes 10&nbsp;times as long (7&nbsp;seconds), RendView's influence
+  gets smaller accordingly. (Note that these timings are queried from
+  the system and not very accurate. I could render films with RendView
+  0.00% CPU, 99.9%&nbsp;total, but only when starting RendView on the text
+  console.)
+</p>
+<p>
+  But who has a 4-CPU-box? For many people, rendering on 4&nbsp;boxes
+  (or more) is more likely...
+</p>
+<p><h3><u>LDR Client and server</u></h3>
+  Well, LDR is explained easily. We need to launch the clients and
+  lateron the server whenever there is some work to do.
+</p>
+<p><h4>Starting the LDR clients</h4>
+  First, let's go to all the client boxes
+  and start the LDR client there. Say we want to use a nice value of 15
+  on these clients (other people want to work there, too) and want to
+  suppress renderer output as usual. It is probably useful to
+  telnet/ssh to the rendering clients and let the terminal open to
+  see the output of the clients.<br>
+  We start:<br><br>
+  <tt><font color="#3333cc">rendview -rdfile=renderers.par -fdfile=filters.par -ld-r-nice=15
+   -ld-f-nice=15 -ld-r-quiet -opmode=ldrclient -L-password=foo
+   -L-wdir</font></tt><br><br>
+  Firstly, you need to make sure the client has access to the render
+  and filter desc files (which may need to get adopted to match the
+  paths on the client box).<br>
+  Note the operation mode spec <tt><font color="#cc3333">-opmode=ldrclient</font></tt> and the
+  option <tt><font color="#cc3333">-L-wdir</font></tt> which tells the LDR client to create some
+  subdirectory in <tt>/tmp</tt> and change there (putting all temp files
+  there and removing the subdir upon exit).<br>
+  I used <tt><font color="#cc3333">-L-password</font></tt> to remind you that there is
+  <a href="tasksource.html#TSLDR">such a thing</a>...<br><br>
+  Now, that's all. The clients are up and should output something like
+<pre>Ready to perform work: max-failed-in-seq=3
+  Execution timeout: [none]
+Current load average: 0.000000
+  Load control: [disabled]; current load: 0.00
+  Starting at (local): Fri Mar 28 2003, 15:22:45.946 CET
+  Cycle timeout: [none]
+Okay, waiting for work: njobs=1 (parallel tasks)
+  jtype    jmax  nice   timeout  tty
+  render:     1   15±        --   no  (quiet)
+  filter:     1   15±        --   no
+  todo-thresh: low=1, high=6; done-thresh: high=10
+  term-kill-delay: 1000 msec</pre>
+  which indicates that they are ready to do work for the server.
+  Just select a small font size for the terminal and place it on the
+  bottom right corner of your screen to get some overwiew.
+  (BTW, the "±" in the <tt>nice</tt> column indicates
+  <tt><font color="#cc3333">-ld-r-nice-jitter</font></tt>.)
+</p>
+<p><h4>Using the LDR server</h4>
+  Now, let's do some rendering. This is pretty the same as using normal
+  RendView; see the examples above.<br>
+  Assume, the clients run on the following computers:
+  <tt>localhost</tt>, <tt>remderslave</tt> and <tt>192.168.0.6</tt>.<br>
+  First, let's render the 200 frames and filter the first 30 frames
+  again as we did <a href="#exmplC">above</a>:<br><br>
+  <tt><font color="#3333cc">rendview -rdfile=renderers.par -fdfile=filters.par -l-rd=povray3.5
+  -l-r-ifpattern=frame-%04d.pov -ld-r-quiet -l-0:30-{ -fd=glowfilter
+  -f-args="-recurse 2 -glowfact=0.177" -} -opmode=ldrserver
+  -Ld-clients="localhost renderslave 192.168.0.6" -Ld-password=foo
+  </font></tt><br><br>
+  Essentially, only <tt><font color="#cc3333">-opmode=ldrserver</font></tt> and the following
+  options were added.<br>
+  And what will we get? <b>Lots of errors!</b> Why? Think a moment...<br>
+  Correct. Because we did not specify the <em>additional files</em>.<br>
+  Let's add them:<br><br>
+  <tt><font color="#3333cc">rendview -rdfile=renderers.par -fdfile=filters.par -l-rd=povray3.5
+  -l-r-ifpattern=frame-%04d.pov -ld-r-quiet -l-0:30-{ -fd=glowfilter
+  -f-args="-recurse 2 -glowfact=0.177" -} -opmode=ldrserver
+  -Ld-clients="localhost renderslave 192.168.0.6" -Ld-password=foo
+  -l-r-files="scene.pov mycolors.inc"</font></tt><br><br>
+  Ah now it finally works! (...after fixing an installation problem of the
+  glowfilter on client 192.168.0.6 ;-)<br>
+  Note that the LDR server only reports <b>0.09%&nbsp;CPU</b> (on
+  my AthlonXP 1.4GHz with 2 clients attached via loopback because
+  unfortunately I do not have a render farm at home...).<br>
+  I said "little overhead", right?<br>
+  Let's compare the following two scenarios:<br>
+  (1) The above example using two LDR clients connected via loopback.<br>
+  (2) Normal RendView using <tt><font color="#cc3333">-ld-njobs=2</font></tt> doing just the same
+  job (I just changed the <tt><font color="#cc3333">-opmode</font></tt>)<br>
+  Hence, in both cases all the work is done by a single AthlonXP. I ran
+  both tests under X11 and did no work while testing. The result:<br>
+  (1) takes 0:02:12:386<br>
+  (2) takes 0:02:11.477<br>
+  That's less than one percent difference although one frame takes less than
+  0.7&nbsp;seconds and although when using LDR, all the files (a total of
+  more than 5Mb) have to be transferred, the additional files must be
+  requested before any work can be done and lots of networt operations
+  have to be performed.<br>
+  Obviously, the difference scales down when frame render time goes up.
+  Expect 0.1% when the average frame takes 10&nbsp;seconds.
+</p>
+<p>
+  Okay, now assume we are <b>using the POVRay frame clock</b> to animate our
+  <tt>scene.pov</tt> and we want to have the clock run from -2 to 10
+  for a total of 120 frames. So, we have to pass the following options to
+  POVRay: <tt><font color="#cc3333">+KFI0 +KFF119 +KI-2.0 +KF10</font></tt>
+  Especially, do not forget to pass the number of frames to RendView
+  because it can no longer be auto-detected (you get an error otherwise).<br>
+  Let's further assume that we want PPM files as output instead of
+  default PNG:<br><br>
+  <tt><font color="#3333cc">rendview -rdfile=renderers.par -fdfile=filters.par
+   -l-rd=povray3.5 -l-r-ifpattern=scene.pov -ld-r-quiet -opmode=ldrserver
+   -Ld-clients="localhost renderslave 192.168.0.6" -Ld-password=foo
+   -l-r-files="mycolors.inc" -l-r-args+=\"+KFI0 +KFF119 +KI-2.0 +KF10\""
+   -l-r-fc -l-n=120 -l-oformat=ppm</font></tt><br><br>
+  Especially note that the render input frame pattern was replaced
+  by <tt><font color="#cc3333">-l-r-ifpattern=scene.pov</font></tt> and consequently,
+  <tt>scene.pov</tt> was removed from the <tt><font color="#cc3333">-l-r-files</font></tt>.
+  Furthermore, <tt><font color="#cc3333">-l-r-fc</font></tt> (frame clock) was added to
+  explicitly tell RendView (the LDR server) to use the frame clock
+  value (this is required).<br>
+  <tt><font color="#cc3333">-l-oformat=ppm</font></tt> changes the render output format to PPM.
+  The rendered output files look like <tt>scene-0000000.ppm</tt>,
+  <tt>scene-0000001.ppm</tt>, etc. (To get e.g. <tt>s-000.ppm</tt>, etc,
+  you can use <tt><font color="#cc3333">-l-r-ofpattern="s-%03d"</font></tt>, the extension
+  <tt>.ppm</tt> is added automatically.)
+</p>
+<p>
+  Let's do the same as above but assume we want render <tt>scene.ini</tt>
+  which contains all the <tt>+K</tt><em>xy</em> options and (important) the
+  <tt>+Iscene.pov</tt> input file spec. We can do that simply by replacing
+  <tt>scene.pov</tt> by <tt>scene.ini</tt> and adding <tt>scene.pov</tt> to
+  the additional files (of course, the additional <tt>+K</tt><em>xy</em>
+  args are no longer needed): <br><br>
+  <tt><font color="#3333cc">rendview -rdfile=renderers.par -fdfile=filters.par
+   -l-rd=povray3.5 -l-r-ifpattern=scene.ini -ld-r-quiet -opmode=ldrserver
+   -Ld-clients="localhost renderslave 192.168.0.6" -Ld-password=foo
+   -l-r-files="mycolors.inc scene.pov" -l-r-fc -l-n=120
+   -l-oformat=ppm</font></tt><br><br>
+</p>
+<p>
+  <b>Once you want to kill the LDR clients</b> because they are no longer
+  needed, simply send them a <tt>SIGTERM</tt> or a <tt>SIGINT</tt> (normally
+  pressing <tt>^C</tt> in the terminal).
+</p>
+<p><br>
+ Finally, Enjoy RendView...<br>
+ And support me improving it.
+</p>
+<hr noshade width="100%" size="2">
+ <table border="0" cellpadding="0" cellspacing="0" width="100%" summary="" bgcolor="#eeeeee"><tr>
+  <td align="left" width="33%">&lt;<a href="admin.html">prev</a></td>
+  <td align="center" width="34%"><a href="index.html">[index]</a></td>
+  <td align="right" width="33%">&nbsp;</td>
+ </tr></table>
+<table border="0" cellpadding="3" cellspacing="0" width="100%" summary="">
+<tr>
+  <td width="50%" align="left">
+    <small>Last modified: 2004-05-16 16:36:20</small>
+  </td>
+  <td width="50%" align="right">
+    Copyright &copy; 2003 <a href="mailto:wwieser aat gmx doot de">Wolfgang Wieser</a>
+  </td>
+</tr>
+</table>
+</body></html>

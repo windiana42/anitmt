@@ -1,0 +1,240 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="en">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <title>RendView Manual -- Quick Start</title>
+  <meta name="Keywords" content="RendView manual documentation quick start">
+  <meta name="Description" content="Quick start manual for RendView">
+  <style type="text/css">
+	pre { background-color:#eeeeee; border: 1px solid black;
+		padding: 0.3em 0.3em 0.3em 0.3em; }
+	dd { margin-bottom: 0.5em; }
+  </style>
+</head>
+<body text="#000000" bgcolor="#ffffff" link="#0000ff" vlink="#800080" alink="#ff0000">
+ <table border="0" cellpadding="0" cellspacing="0" width="100%" summary="" bgcolor="#eeeeee"><tr>
+  <td align="left" width="33%">&lt;<a href="index.html">prev</a></td>
+  <td align="center" width="34%"><a href="index.html">[index]</a></td>
+  <td align="right" width="33%"><a href="terminal.html">next</a>&gt;</td>
+ </tr></table>
+<br>
+<div align="center">
+  <h2><font color="#3333cc"><u>RendView Manual -- Quick Start</u></font></h2>
+</div>
+<hiernavname "quickstart">
+<p>
+  People do not want to read lengthy documentation. So, for those who want
+  to get on with it, there is a quick start.<br>
+  <b>If you ever intend to use RendView, please read the quick start
+  carefully.</b><br>
+  Because the online help (call <tt>rendview&nbsp;--help</tt>) will probably
+  not completely enlighten you without having read the docu.
+</p>
+<p>
+  You first have to understand the most basic working principle and structure
+  of RendView:<br>
+</p>
+<p><h4>Basic structure</h4>
+  Rendering and/or filtering a frame is a <b>task</b>.<br>
+  Tasks originate from a <b>task source</b>, are fed into the
+  <b>task manager</b> which has a <b>task driver interface</b> ("dif")
+  which uses a <b>task driver</b> to actually execute the render or
+  filter program (jobs). Once the task is done, it is given back to
+  the task source with success/failure information.<br>
+  Furthermore there is a <b>component data base</b> which stores
+  information about renderers and filters.<br>
+  Which task source and task driver interface are actually used depends
+  on the <b>operation mode</b>.
+</p>
+<p><h4>Operation modes</h4>
+  RendView currently knows 3 operation modes
+  (option <tt><font color="#cc3333">-opmode=</font></tt>):<br>
+  <table border="2" cellpadding="3" cellspacing="0" summary="">
+   <tr><th><tt><font color="#cc3333">-opmode=</font></tt></th>
+       <th>task source</th>
+       <th>driver interface</th><th></th></tr>
+   <tr><td><tt><font color="#cc3333">rendview</font></tt></td>
+       <td>local</td><td>local</td>
+       <td>default; completely local</td></tr>
+   <tr><td><tt><font color="#cc3333">ldrserver</font></tt></td>
+       <td>local</td><td>LDR</td>
+       <td>server for <b>l</b>ocal <b>d</b>istributed <b>r</b>endering</td></tr>
+   <tr><td><tt><font color="#cc3333">ldrclient</font></tt></td>
+       <td>LDR</td><td>local</td>
+       <td>client for local distributed rendering</td></tr>
+  </table><br>
+  As you probably guess, "<b>LDR</b>" means "local distributed rendering" and
+  means that tasks are processed by several clients in a local TCP/IP
+  network. RendView is a single executable and has all three opmodes
+  built in.
+</p>
+<p><h3><u>Calling RendView -- quick start</u></h3>
+  In order to launch RendView, you have to supply information for the
+  task source and the task driver which will get used as well as the
+  component data base.
+</p>
+<p><h4>Feeding the component data base</h4>
+  This is easiest done by creating two files, <tt>renderers.par</tt> and
+  <tt>filters.par</tt> (check your distribution, it includes sample files).<br>
+  The file contents are self-explaining; here is an example for
+  <tt>renderers.par</tt>:
+<pre># renderers.par config file for RendView
+
+*section povray3.1g
+  driver = povray
+  binpath = povray
+  req_args+= -J
+  inc_path= /usr/lib/povray/include
+*end
+
+*section "povray3.5"
+  driver = povray
+  binpath = /usr/src/povray/povray-3.5-build/src/povray
+  stopsig = SIGSTOP
+  req_args+= -J -display :0.0
+  inc_path= /usr/src/povray/povray-3.5/include/ /usr/lib/povray/include
+*end</pre>
+  Note the name after <tt>*section</tt>, it is the name of the render
+  <b>desc</b> (description). There are two descs for different versions
+  of POVRay which both use the POVRay <b>driver</b>. <br>
+  <tt>filters.par</tt> looks quite the same; but you don't need it for a
+  quick start.
+  (You don't want to filter frames at your first quick start, do you?)<br>
+  To tell RendView about these files, pass the options
+  <tt><font color="#cc3333">-rdfile=/path/to/renderers.par</font></tt> and
+  (if available)
+  <tt><font color="#cc3333">-fdfile=/path/to/filters.par</font></tt>.
+</p>
+<p><h4>Feeding the local task source</h4>
+  This is necessary in any case because both LDR server and local RendView
+  use this task source. Important options (all begin with <tt>-l-</tt> for
+  <b>local</b> task source): <br>
+  <dl><dt><tt><font color="#cc3333">-l-rd=</font></tt><em>DESC</em></dt><dd>
+   <b>MUST</b> be specified, otherwise the frames do not get rendered.
+   <em>DESC</em> is the name of a render desc as defined in
+   <tt>renderers.par</tt> (in our example it would be <tt>povray3.1g</tt>
+   or <tt>povray3.5</tt>).
+  </dd></dl>
+  <dl><dt><tt><font color="#cc3333">-l-nframes=</font></tt><em>NUM</em></dt><dd>
+   Specify the number of frames to be rendered (auto-detected).
+  </dd></dl>
+  <dl><dt><tt><font color="#cc3333">-l-size=</font></tt><em>WWWxHHH</em></dt><dd>
+   Specify the size of the rendered frames (<tt>320x240</tt>).
+  </dd></dl>
+  <dl><dt><tt><font color="#cc3333">-l-r-ifpattern=</font></tt><em>PAT</em></dt><dd>
+   Specify the file name pattern where <em>PAT</em> is something like
+   <tt>f%07d.pov</tt> for <tt>f0000000.pov</tt>, <tt>f0000001.pov</tt>,...
+   (following standard printf(3) syntax).<br>
+  </dd></dl>
+<br>
+  Further interesting options: <tt><font color="#cc3333">-l-cont</font></tt> and
+  <tt><font color="#cc3333">-l-rcont</font></tt>.
+<br><br><a name="fcsupport"></a>
+  If you do not have a list of frames but rather want to animate
+  <tt>scene.pov</tt> using POVRay's animation clock,
+  then pass <tt><font color="#cc3333">-l-r-ifpattern=scene.pov</font></tt>
+  and use the following:<br>
+  <dl><dt><tt><font color="#cc3333">-l-r-fc</font></tt></dt><dd>
+   Switch on use of the frame clock (fc).
+  </dd></dl>
+<br>
+  <b>Beginning with RendView-0.7.0</b>, frame clock support has changed.
+  You now no longer pass <tt><font color="#cc3333">-l-r-fc0</font></tt> and <tt><font color="#cc3333">-l-r-fcdt</font></tt>
+  but instead just tell RendView that the frame clock is being used while
+  you give POVRay all information it needs to compute the clock value out
+  of the passed frame number. RendView will then use
+  <tt><font color="#cc3333">+SF</font></tt><em>nnn</em> and <tt><font color="#cc3333">+EF</font></tt><em>nnn</em> to
+  render (the single) frame <em>nnn</em>. Hence, you need to specify
+  <tt><font color="#cc3333">+KFI</font></tt>, <tt><font color="#cc3333">+KFF</font></tt>, <tt><font color="#cc3333">+KI</font></tt> and
+  <tt><font color="#cc3333">+KF</font></tt> for POVRay (as additional arg or in an .ini file or
+  by relaying on the defaults).<br>
+  <b>Note</b> that RendView automatically passes <tt><font color="#cc3333">+KFI0</font></tt>
+  to POVRay (as first arguments to allow for user-overriding). The reason
+  is that RendView defaults to starting with frame number&nbsp;0 while POVRay
+  normally stats at&nbsp;1.
+</p>
+<p><h4>Feeding the local task driver interface</h4>
+  In case you want to try and launch (local) RendView (i.e. execute
+  tasks on the local computer as done by the LDR client and plain RendView),
+  you may need to pass options to the local driver interface.
+  None are required, most important:<br>
+  <dl><dt><tt><font color="#cc3333">-ld-r-quiet=</font></tt><em>NUM</em></dt><dd>
+   Suppress output of renderer (not default but recommended).
+  </dd></dl>
+  <dl><dt><tt><font color="#cc3333">-ld-njobs=</font></tt><em>NUM</em></dt><dd>
+   Number of processes to start and run in parallel (1).
+  </dd></dl>
+</p>
+<p><h4>Finally launching RendView</h4>
+  You can now finally launch RendView. Say you want to render
+  <tt>frame000.pov</tt>... <tt>frame239.pov</tt> locally with POVRay&nbsp;3.5
+  at a size of 640x480, then you may call:
+</p><p>
+  <tt><font color="#3333cc">
+    rendview -rdfile=/path/to/renderers.par -l-rd=povray3.5 -l-nframes=240
+    -l-size=640x480 -l-r-ifpattern="frame%03d.pov" -ld-r-quiet
+  </font></tt>
+</p><p>
+  Alternatively, you can put all the options in the environment variable
+  RENDVIEWARGS and simply launch RendView, e.g. for bash
+  (with <tt>bash&gt;</tt> being the shell prompt):
+</p><p>
+  <tt><font color="#3333cc">bash&gt; export RENDVIEWARGS="-rdfile=/path/to/renderers.par
+   -l-rd=povray3.5 -l-nframes=240 -l-size=640x480 -l-r-ifpattern=frame%03d.pov
+   -ld-r-quiet"</font></tt><br>
+  <tt><font color="#3333cc">bash&gt; rendview</font></tt>
+</p><p>
+  If you want to animate the <b>clock value</b> of <tt>scene.pov</tt> in 25
+  frames from 0.0 to 3.0, you may call (using bash):
+</p><p>
+  <tt><font color="#3333cc">bash&gt; export RENDVIEWARGS="-rdfile=/path/to/renderers.par
+   -l-rd=povray3.5 -l-size=640x480 -l-r-ifpattern=scene.pov
+   -ld-r-quiet -l-r-args+=\"+KFI0 +KFF24 +KI0.0 +KF3.0\""
+  </font></tt><br>
+  <tt><font color="#3333cc">bash&gt; rendview -l-nframes=26 -l-r-fc</font></tt>
+</p><p><a name="inisupport"></a>
+  <b>Read more</b> about POVRay frame clock support
+  <a href="tasksource.html#fcsupport">here</a>.<br>
+  Alternatively, you can put all the frame settings (and anti-aliasing
+  params or the like as well, if desired) into an <tt>.ini</tt>
+  file (which <em>must</em> have the extentsion <tt>.ini</tt>) and render
+  the <tt>.ini</tt> file. Make sure to include <tt>+Iscene.pov</tt> in
+  the <tt>.ini</tt> file somewhere and pass the <tt>scene.pov</tt> file as
+  additional file:
+</p><p>
+  <tt><font color="#3333cc">bash&gt; export RENDVIEWARGS="-rdfile=/path/to/renderers.par
+   -l-rd=povray3.5 -l-size=640x480 -l-r-ifpattern=scene.ini
+   -ld-r-quiet -l-r-files+=\"scene.pov\" "
+  </font></tt><br>
+  <tt><font color="#3333cc">bash&gt; rendview -l-nframes=26 -l-r-fc</font></tt>
+</p>
+<p><h4>Stopping RendView again</h4>
+  Okay, now as RendView is running, we may want to stop it again. The
+  easiest way is to send it a <tt>SIGINT</tt> by pressing <tt>^C</tt> on
+  the terminal. Pressing it once will not start new tasks but wait for the
+  currently running tasks to finish, pressing it a second time will kill
+  the currently running tasks and exit then, pressing it for a third time
+  will abort RendView (do not do that unless it is not aviodable).
+</p>
+<p><h4>Using LDR</h4>
+  If you want to use LDR, please read the normal
+  <a href="index.html">documentation</a> or have at least a look at the
+  <a href="examples.html">examples</a>.
+</p>
+<hr noshade width="100%" size="2">
+ <table border="0" cellpadding="0" cellspacing="0" width="100%" summary="" bgcolor="#eeeeee"><tr>
+  <td align="left" width="33%">&lt;<a href="index.html">prev</a></td>
+  <td align="center" width="34%"><a href="index.html">[index]</a></td>
+  <td align="right" width="33%"><a href="terminal.html">next</a>&gt;</td>
+ </tr></table>
+<table border="0" cellpadding="3" cellspacing="0" width="100%" summary="">
+<tr>
+  <td width="50%" align="left">
+    <small>Last modified: 2004-05-16 16:36:17</small>
+  </td>
+  <td width="50%" align="right">
+    Copyright &copy; 2003 <a href="mailto:wwieser aat gmx doot de">Wolfgang Wieser</a>
+  </td>
+</tr>
+</table>
+</body></html>

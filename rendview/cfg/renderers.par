@@ -1,0 +1,44 @@
+# Renderer description (RenderDesc); [implicit subsection -ri]
+# This file contains descriptions for all renderers supported by rendview. 
+# 
+# How to edit: 
+#   *section <renderer_name>
+#     driver = <driver_name>
+#     req_args+= -J -display :0.0 -A
+#     inc_path = /include/file/path/for/renderer
+#   *end
+#
+# NOTE that you always have to specify the driver to use and the binpath. 
+
+# Global search path for renderer binaries without absolute path: 
+searchpath = . /usr/bin /usr/local/bin /usr/bin/X11
+
+*section povray3.1g
+  driver = povray
+  binpath = povray
+  # Always pass -J to switch jitter off. 
+  req_args+= -J #-display :0.0
+  inc_path= /usr/lib/povray/include
+*end
+
+*section "povray3.1"
+  driver = povray
+  binpath = povray31
+  # Always pass -J to switch jitter off. 
+  req_args+= -J 
+  inc_path= /usr/lib/povray/include 
+*end
+
+*section povray3.5
+  driver = povray
+  binpath = /usr/src/povray/povray-3.5-build/src/povray
+  # Keep the default SIGTSTP for stopsig unless you must use SIGSTOP 
+  # (as e.g. with povray-3.50c). Especially when using a shell script as 
+  # renderer, use default SIGTSP and make sure the script catches TSTP and 
+  # TERM signals and acts correspondingly. 
+  stopsig = SIGSTOP
+  # Always pass -J to switch jitter off.
+  req_args+= -J #-display :0.0
+  inc_path= /usr/src/povray/povray-3.5/include/
+*end
+	  

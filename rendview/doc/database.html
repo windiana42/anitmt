@@ -1,0 +1,310 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="en">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <title>RendView Manual -- Component Data Base</title>
+  <meta name="Keywords" content="RendView manual documentation ComponentDB">
+  <meta name="Description" content="Manual for RendView: about the component data base">
+  <style type="text/css">
+	pre { background-color:#eeeeee; border: 1px solid black;
+		padding: 0.3em 0.3em 0.3em 0.3em; }
+	dd { margin-bottom: 0.5em; }
+  </style>
+</head>
+<body text="#000000" bgcolor="#ffffff" link="#0000ff" vlink="#800080" alink="#ff0000">
+ <table border="0" cellpadding="0" cellspacing="0" width="100%" summary="" bgcolor="#eeeeee"><tr>
+  <td align="left" width="33%">&lt;<a href="terminal.html">prev</a></td>
+  <td align="center" width="34%"><a href="index.html">[index]</a></td>
+  <td align="right" width="33%"><a href="taskmanager.html">next</a>&gt;</td>
+ </tr></table>
+<br>
+<div align="center">
+  <h2><font color="#3333cc"><u>RendView Manual -- Component Data Base</u></font></h2>
+</div>
+<hiernavname "database">
+<p>
+  First of all, a word why it is named "component data base": This is
+  because internally, the component data base (database) not only
+  stores the render and filter descriptions but also knows about
+  all available task (render and filter) drivers, task sources,
+  task driver interfaces and image formats, i.e. main "components"
+  of RendView.
+</p>
+<p>
+  For you as the user, most important are the render and filter
+  <b>descriptions</b> (desc).<br>
+  Note: There are render/filter <b>drivers</b> (like the POVRay driver
+  which knows how to launch POVRay and the generic filter driver) and
+  there are render/filter <b>desc</b>s. Do not mix these up.
+  A render desc is something e.g. saying that you have a renderer which
+  can be driven by the POVRay driver and whose executable can be found
+  at some location. Furthermore, you have a different desc for an old
+  version of POVRay, etc.
+</p>
+<p>
+  Also note that the render and filter descs (including the additional
+  command line args to be passed) are always local to the
+  current machine. [To pass additional args to all clients, use the task
+  source: <tt><font color="#cc3333">-l-r-args</font></tt>.]
+  The LDR server as well as each LDR client has its
+  own list of render and filter descs. The reason is fairly clear:
+  because installation and include paths for renderers and filters
+  as well as the number of installed renderers/filtrs can vary between
+  different LDR client machines.<br>
+  The renderers and filters are identified by their <b>name</b> (the
+  name of the desc). Thus, the name must always refer to the <em>same</em>
+  renderer/filter on all LDR clients and the LDR server. I.e. if you
+  name a filter <tt>sglow</tt>, then <tt>sglow</tt> must be the same
+  filter on all LDR clients and the server. The server does not need to
+  have the filter <em>installed</em> but it needs a <em>desc</em> if
+  any client should apply it (specify a dummy <tt><font color="#cc3333">binpath</font></tt> on
+  the server side if not installed).
+</p>
+<p><h3><u>Specifying render and filter desc(ription)s</u></h3>
+  Render and filter descriptions are most easily specified via the
+  filer <tt>renderers.par</tt> and <tt>filters.par</tt>. (Of course,
+  you can name the files as you like.)<br>
+  An example <tt>renderers.par</tt> file containing two render descs
+  looks like that:
+<pre># renderers.par config file for RendView
+
+searchpath = /usr/bin /usr/local/bin ./
+
+*section povray3.1g
+  driver = povray
+  binpath = povray
+  req_args+= -J
+  inc_path= /usr/lib/povray/include
+*end
+
+*section "povray3.5"
+  driver = povray
+  binpath = /usr/src/povray/povray-3.5-build/src/povray
+  stopsig = SIGSTOP
+  req_args+= -J -display :0.0
+  inc_path= /usr/src/povray/povray-3.5/include/ /usr/lib/povray/include
+*end</pre>
+  (You already know that example from the
+  <a href="quickstart.html">quick start</a> chapter.)<br>
+  An example <tt>filters.par</tt> looks quite similar:<br>
+<pre># filters.par config file for RendView
+
+*include "/usr/local/lib/rendview/site-filters.par"
+
+*section sglow
+  driver = generic
+  binpath = /opt/filters/secret/sglow
+  req_args+= -glow-fact=0.177 -recurse=no "-mark=this is cool"
+*end</pre>
+  Each desc has a <b>name</b> which is specified after the
+  <tt><font color="#cc3333">*section</font></tt> keywoard. It is probably a bad idea to use
+  dashes in the name. Write <tt>povray3.1g</tt> instead of
+  <tt>povray-3.1g</tt>. The reason is that the dash is a special
+  separating character at command line parsing.<br><br>
+  The above examples already describe all available parameters inside the
+  descs:<br><br>
+  <dl><dt><tt><font color="#cc3333">driver=</font></tt><em>DRV</em></dt><dd> (REQUIRED)
+    Specify the render/filter driver to use. Currently, only the
+	<tt><font color="#cc3333">povray</font></tt> render driver (capable of driving POVRay
+	versions 3.1g and 3.5) as well as the <tt><font color="#cc3333">generic</font></tt>
+	filter driver (capable of driving all filters which read the image
+	data from <tt>stdin</tt> and write the output to <tt>stdout</tt>)
+	are available.<br>
+	See also <tt><font color="#cc3333">-list-rd</font></tt> (below) and the info about
+	render/filter shell scripts on the
+	<a href="taskmanager.html">taskmanager</a> page.
+  </dd></dl>
+  <dl><dt><tt><font color="#cc3333">binpath=</font></tt><em>PATH</em></dt><dd> (REQUIRED)
+   This simply states where to find the binary executable for this
+   renderer/filter. This is either an absolute path (beginning with "/")
+   or a relaive path (not beginning with "/"). Absolute paths are taken
+   as they are while relative paths are looked up in the
+   <tt><font color="#cc3333">searchpath</font></tt> (seee below).
+  </dd></dl>
+  <a name="stopsig"></a>
+  <dl><dt><tt><font color="#cc3333">stopsig=</font></tt><em>SIGNAL</em></dt><dd>
+   The stop signal to use when (temporarily) stopping the task, i.e.
+   <tt>SIGTSTP</tt> or <tt>SIGSTOP</tt>. Always keep the default
+   <tt>SIGTSTP</tt> unless you must use <tt>SIGSTOP</tt>
+   (e.g. for POVRay-3.50c which does not respond to <tt>SIGTSTP</tt> when
+   not on terminal). Especially when using shell script renderers or filters,
+   make sure to use <tt>SIGTSTP</tt> and have the script act correctly when
+   catching <tt>SIGTSTP</tt> and <tt>SIGTERM</tt>.
+   See <a href="taskmanager.html#shellscripts">this</a> note for more
+   info on shell scripts.<br>
+   <b>Note:</b> Due to a bug in the param code, the <tt><font color="#cc3333">stopsig</font></tt>
+   spec in the desc file overrides the setting on the command line.
+   Hence, never use <tt><font color="#cc3333">stopsig</font></tt> on the command line unless the
+   complete render desc is specified on the cmdline. (FIXME :)
+  </dd></dl>
+  <dl><dt><tt><font color="#cc3333">req_args+=</font></tt><em>ARGLIST</em></dt><dd>
+   Pass these additional arguments to the render/filter process.
+   You can use quotes (") to enclose arguments containing spaces as done
+   in the filter example. Alternatively, you can use the backslash to
+   protect spaces. You must use the backslash to mask quotes and
+   backslashes in case you want to pass those in the args.
+  </dd></dl>
+  <dl><dt><tt><font color="#cc3333">inc_path=</font></tt><em>DIRLIST</em></dt><dd>
+   This is only available for render descriptions and specifies a list
+   of space-separated paths which are passed as include path to the
+   renderer (e.g. using <tt>+L</tt> for POVRay).
+  </dd></dl>
+  Furthermore, there is one parameter which can be set once for all
+  render descs and one for all filter descs (outside any
+  <tt><font color="#cc3333">*section</font></tt>):<br><br>
+  <dl><dt><tt><font color="#cc3333">searchpath=</font></tt><em>DIRLIST</em></dt><dd>
+   Space-separated list of directories where to search for render/filter
+   binaries without absolute path. The <em>DIRLIST</em> is searched
+   left-to-right. Use <tt>./</tt> to include the current directory.
+  </dd></dl>
+  Note that you can <b>include</b> other files using the
+  <tt><font color="#cc3333">*include</font></tt> statement as shown in the <tt>filters.par</tt>
+  example.
+</p>
+<p><h3><u>Options understood by the component data base</u></h3>
+  The component data base understands several options which can be split
+  into three categories: Specifying desc files, specifying descs and
+  querying info.
+</p>
+<p><h4>Querying info</h4>
+  The following options are available. All these options prevent RendView
+  from running normally, i.e. it will exit after processing the command
+  line arguments.<br><br>
+  <dl><dt><tt><font color="#cc3333">-version</font></tt></dt><dd>
+   Display the software version of this RendView binary.
+  </dd></dl>
+  <dl><dt><tt><font color="#cc3333">-author</font></tt></dt><dd>
+   Display the author of RendView and a brief bug reporting information.
+  </dd></dl>
+  <dl><dt><tt><font color="#cc3333">-license</font></tt></dt><dd>
+   Display the RendView license. This does <b>not</b> dump the complete
+   GNU GPL, just refers to it.
+  </dd></dl>
+  <dl><dt><tt><font color="#cc3333">-help</font></tt></dt><dd>
+   Well, this dumps a little help screen. You will note that the help
+   text is colored on the console (pass <tt><font color="#cc3333">-nocolor</font></tt> if you
+   want to disable that). The help screen is automagically formatted
+   in the width of the current terminal leading to nice indention.<br>
+   As the help text is quite length, you can use
+   <em>-SECTION</em><tt><font color="#cc3333">-help</font></tt> for most (but not all) sections, e.g.
+   <tt><font color="#cc3333">-l-help</font></tt> to just get info about parameters for the
+   <b>local</b> task source.
+  </dd></dl>
+  <dl><dt><tt><font color="#cc3333">-list-rd, -list-fd</font></tt></dt><dd>
+   Dump a list of all available render/filter drivers.
+  </dd></dl>
+  <dl><dt><tt><font color="#cc3333">-list-imgfmt</font></tt></dt><dd>
+   Write out a list of known image formats (which can be specified as
+   <tt><font color="#cc3333">-l-oformat</font></tt> for the renderer and filter).
+  </dd></dl>
+  <dl><dt><tt><font color="#cc3333">-list-opmode</font></tt></dt><dd>
+   Dump a list of supported operation modes (see also
+   <tt><font color="#cc3333">-opmode=</font></tt>).
+  </dd></dl>
+  <dl><dt><tt><font color="#cc3333">-list-tsource, -list-tdriver</font></tt></dt><dd>
+   Dump a list of built-in task sources and driver interfaces, respectively.
+  </dd></dl>
+  <dl><dt><tt><font color="#cc3333">-list-ri, -list-fi</font></tt></dt><dd>
+   Dump the render and filter descs (which were read in from
+   file (<tt>renderers.par</tt>, <tt>filters.par</tt>) or command line)
+   as used by RendView when running. Can be used to check things.
+  </dd></dl>
+</p>
+<p><h4>Specifying desc files</h4>
+  This was already mentioned in <a href="quickstart.html">quick start</a>.
+  You will most likely have to pass one or both of these options: <br><br>
+  <dl><dt><tt><font color="#cc3333">-rdfile, -fdfile=</font></tt><em>FILE</em></dt><dd>
+   Specify the complete path to the renderer and filter description files,
+   respectively. Only one render/filter desc file can be specified but
+   you can <tt><font color="#cc3333">*include</font></tt> other files from inside the parameter
+   files.<br>
+   You do not have to specify these options because you can also specify
+   the complete render/filter descs on the command line (see below).
+   However, using these files often comes handy.<br>
+   These options are probably best put into the environment var
+   <tt>RENDVIEWARGS</tt> (see below).
+  </dd></dl>
+</p>
+<p><h4>Specifying descs on the command line</h4>
+  This is done very similar as when done in desc files. All parameters
+  have the same name. Instead of specifying a <tt><font color="#cc3333">*section</font></tt>,
+  you simply prepend the desc name. An example illustrates that.
+  The following cmd line would be equivalent to the povray3.1g desc
+  in the <tt>renderers.par</tt> file above:<br>
+  <tt><font color="#3333cc">-ri-povray3.1g-driver=povray -ri-povray3.1g-binpath=povray
+  -ri-povray3.1g-req_atgs+="-J"
+  -ri-povray3.1g-inc_path=/usr/lib/povray/include</font></tt><br>
+  As you see it gets a bit unhandy...
+</p>
+<a name="advancedcmd"></a><p>
+  <b>However</b>, there is an <b>advanced command line section handler</b>.
+  It works as follows: use <em>-SECT</em><tt><font color="#cc3333">-{</font></tt> and all
+  following parameters will be considered in the section <em>SECT</em>.
+  Use <tt><font color="#cc3333">-}</font></tt> to end that again, for example, the
+  povray3.5 in the <tt>renderers.par</tt> file above would look like:<br>
+  <tt><font color="#3333cc">-ri-povray3.5-{ -driver=povray
+  -binpath=/usr/src/povray/povray-3.5-build/src/povray
+  -req_args+="-J -display :0.0"
+  -inc_path="/usr/src/povray/povray-3.5/include/ /usr/lib/povray/inc" -}</font></tt><br>
+  <b>Note</b>: Please make sure you leave spaces where you see them here.
+  And please note the quotes used for the <tt><font color="#cc3333">req_args</font></tt> and
+  <tt><font color="#cc3333">inc_path</font></tt> to protect the spaces from getting interpreted by
+  the shell. <br>
+</p>
+<p>
+  You can also use this method to pass several options for the local task
+  source like<br>
+  <tt><font color="#3333cc">-l-{ -nframes=10 -f0=80 -size=160x120 -rd=povray3.1g -}</font></tt><br>
+</p>
+<p><h3><u>Using the environment vars</u></h3>
+  RendView understands three environment variables: <tt>RENDVIEWARGS</tt>,
+  <tt>LDRSERVERARGS</tt> and <tt>LDRCLIENTARGS</tt>. Only <b>one</b> of
+  these vars is read in upon program start, all the others are ignored.
+  Which variable is read in depends solely on the binary name RendView is
+  called. You may symlink/hardlink/copy the <tt>rendview</tt> binary
+  giving it the alternative names <tt>ldrserver</tt> and <tt>ldrclient</tt>.
+  Only these three names are recognized, all others default to normal
+  <tt>rendview</tt> behavior.
+  The binary name has two consequences:<br>
+  The corresponding environment var is read in.<br>
+  The corresponding operation mode is used (unless explicitly overridden
+  using <tt><font color="#cc3333">-opmode=</font></tt>).<br>
+  Note that you <b>cannot</b> influence the used environment variable using
+  the <tt><font color="#cc3333">-opmode=</font></tt> parameter.
+</p>
+<p>
+  The environment vars simply hold parameters/"command line" options.
+  They are read in just as if they were passed on the command line (but
+  before the actual command line args to allow for overriding using the
+  command line). (This is the reason why you will see negative arg
+  numbers in errors concerning the passed arguments.)
+</p>
+<p>
+  You can use the env var as you like. It seems to be useful to pass the
+  list of LDR clients (<tt><font color="#cc3333">-Ld-clients</font></tt>),
+  the <tt><font color="#cc3333">-rdfile</font></tt> as well as the
+  <tt><font color="#cc3333">-fdfile</font></tt> and all other parameters which do not get changed
+  frequently, using an env var. Note that it is legal to specify LDR clients
+  even if you are in normal RendView or ldrclient operation mode -- they will
+  simply be ignored. (Same is true for all other options.)<br>
+  Then, you call RendView and only specify those options which you vary
+  frequently.
+</p>
+<a name="bot">&nbsp</a>
+<hr noshade width="100%" size="2">
+ <table border="0" cellpadding="0" cellspacing="0" width="100%" summary="" bgcolor="#eeeeee"><tr>
+  <td align="left" width="33%">&lt;<a href="terminal.html">prev</a></td>
+  <td align="center" width="34%"><a href="index.html">[index]</a></td>
+  <td align="right" width="33%"><a href="taskmanager.html">next</a>&gt;</td>
+ </tr></table>
+<table border="0" cellpadding="3" cellspacing="0" width="100%" summary="">
+<tr>
+  <td width="50%" align="left">
+    <small>Last modified: 2004-05-16 16:36:18</small>
+  </td>
+  <td width="50%" align="right">
+    Copyright &copy; 2003 <a href="mailto:wwieser aat gmx doot de">Wolfgang Wieser</a>
+  </td>
+</tr>
+</table>
+</body></html>

@@ -1,0 +1,7 @@
+> client task_thresh value!! (njobs+thresh)
+> requeue to proc list when .d is set!!
+> check GetTaskList() does todo/proc right!!
+> do we connect at reasonable done thresh? [automagically via todo thresh]
+> make sure local driverif first tries to filter already-rendered tasks
+
+> Kill a client (^C) which has >3 jobs running ATM. 

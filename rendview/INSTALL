@@ -1,0 +1,18 @@
+Installing RendView
+-------------------
+
+NOTE: I do NOT recomment using "make install". 
+
+Better install rendview manually. That is simple: 
+After a successful build, log in as root and copy the binary 
+builddir/src/rendview where you would like to have it (maybe /usr/local/bin). 
+If you want to use the remote admin shell, also copy adminshell/rvadminshell 
+into some installation directory (/usr/local/bin or so). 
+That's all. RendView is now "installed". 
+You may consider stripping the binary (using strip). 
+
+Also read the docu about config files and how to launch RendView. 
+You may try "rendview --help" if you want to see why reading the quick 
+start in the docu is necessary...
+
+Enjoy... (and don't forget to report bugs you find, see README). 
