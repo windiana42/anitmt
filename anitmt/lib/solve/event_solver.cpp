@@ -85,9 +85,9 @@ namespace solve
     id = info->get_test_run_id();
 
     // search in event listen list for events listening to solved operand
+    Basic_Operand *cmp_operand = const_cast<Basic_Operand*>(solved_operand);
     std::map< Basic_Operand*,std::list<Event*> >::const_iterator listen_list;
-    listen_list = 
-      event_listen_table.find(const_cast<Basic_Operand*>(solved_operand));
+    listen_list = event_listen_table.find(cmp_operand);
     if( listen_list != event_listen_table.end() )
     {
       std::list<Event*>::const_iterator event;
