@@ -388,6 +388,51 @@ FunctionState pf_vlength(FunctionArgs *fa)
 
 /******** INTERNAL FUNCTIONS ********/
 
+FunctionState pfi_dot(FunctionArgs *fa)
+{
+	// Implementation of the member select code. 
+	const Value *argA=fa->args[0];
+	if(argA->type()==VTVector)
+	{
+		const Value *argB=fa->args[1];
+		int v_idx=-1;
+		int vect_dims=3;   // (of argA) #### needs fixing for 2d,4d,5d vectors *FIXME*
+		if(argB->type()==VTScalar)
+		{
+			Scalar a=argB->rscalar();
+			// First, I do a larger range check (purpose: prevent 
+			// integer overflow). 
+			if(a<-2.0 || a>10.0)  // index value out of range
+			{  return(FSOutOfRange);  }
+			v_idx=int(a);
+		}
+		else if(argB->type()==VTVector)
+		{
+			// All elements must be 0 and one must be 1. 
+			Vector v=argB->rvector();
+			for(int i=0; i<3; i++)
+			{
+				if(v[i]==1.0)  // compared using epsilon
+				{  v_idx=i;  break;  }
+			}
+			for(int i=0; i<3; i++)
+			{
+				if(v_idx!=i && v[i]!=0.0)  // compared using epsilon
+				{  return(FSOutOfRange);  }
+			}
+		}
+		else
+		{  return(FSIllegalArg);  }
+		
+		if(v_idx<0 || v_idx>=vect_dims)
+		{  return(FSOutOfRange);  }
+		
+		*fa->result=Scalar(argA->rvector()[v_idx]);
+		return(FSSuccess);
+	}
+	return(FSIllegalArg);
+}
+
 FunctionState pfi_not(FunctionArgs *fa)
 {
 	FuncFlagConv(arg,0);
@@ -678,6 +723,7 @@ const struct FunctionDesc internal_funcs[]=
 	{ "||", &ca_exactly2, &pfi_or   },  // OTOr
 	{ "?",  &ca_exactly3, &pfi_cond },  // OTCondQ,OTCondC 
 	{ "gv", &ca_exactly3, &pfi_gv   },  // (generate vector; used by <>)
+	{ ".",  &ca_exactly2, &pfi_dot  },  // OTDot
 	// ":", ",", "(", ")" not needed as thrown away after parsing. 
 	{ NULL, NULL, NULL }
 };
@@ -691,6 +737,7 @@ struct OperatorDesc _operators[_OTLast]=
 	{ "[function]",-1,-1,  0, NULL },  // OTFunction [special precedence -1]
 	{ "(",         -1, 0,  0, NULL },  // OTBrOp [..]
 	{ ")",         -1, 0,  0, NULL },  // OTBrCl [..]
+	{ ".",         10, 2, +1, NULL },  // OTDot
 	{ "!",          9, 1, -1, NULL },  // OTNot
 	{ " +",         9, 1, -1, NULL },  // OTPos   // space in " +" is important for 
 	{ " -",         9, 1, -1, NULL },  // OTNeg   // lookup in _InitOperators()

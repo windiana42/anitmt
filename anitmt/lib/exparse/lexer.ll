@@ -55,6 +55,7 @@ vECTOR      \<{wSPACE}*{SfLOATVAL}{wSPACE}*\,{wSPACE}*{SfLOATVAL}{wSPACE}*\,{wSP
 
 \(                  return(TEOpBr);
 \)                  return(TEClBr);
+\.                  return(TEDot);
 \!                  return(TENot);
 \+                  return(TEPlus);
 \-                  return(TEMinus);

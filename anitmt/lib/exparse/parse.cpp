@@ -31,12 +31,14 @@ namespace exparse {
 
 ostream &cwarn=cerr;
 
+namespace  // static namespace
+{
 struct TokenDesc
 {
 	OperatorType otype;  // corresponding primary OperatorType or _OTLast 
 };
 
-static const TokenDesc tdesc[_TLast]=
+const TokenDesc tdesc[_TLast]=
 {
 	/*** General: ***/
 	{ _OTLast },  // TIdentifier,
@@ -54,6 +56,7 @@ static const TokenDesc tdesc[_TLast]=
 	/*** For expressions: ***/
 	{ OTBrOp  },  // TEOpBr,
 	{ OTBrCl  },  // TEClBr,
+	{ OTDot   },  // TEDot,
 	{ OTNot   },  // TENot,
 	{ OTAdd   },  // TEPlus,
 	{ OTSub   },  // TEMinus,
@@ -73,6 +76,22 @@ static const TokenDesc tdesc[_TLast]=
 	{ OTSep   }   // TESep,
 };
 
+struct BuiltinValueDesc
+{
+	const char *name;
+	int name_len;  // strlen(name)
+	Value val;
+};
+
+const BuiltinValueDesc builtin_values[]=
+{
+	{ "x", 1, Value(Vector(1.0,0.0,0.0)) },
+	{ "y", 1, Value(Vector(0.0,1.0,0.0)) },
+	{ "z", 1, Value(Vector(0.0,0.0,1.0)) },
+	{ NULL, -1, Value() }   // <- LAST ONE
+};
+
+}  // end of static namespace
 
 // Valid flex-reported scalars only: 
 void Parser::_ParseScalar(Scalar *rv)
@@ -159,6 +178,23 @@ const FunctionDesc *Parser::_ParseFunctionName()
 	return(fdesc);
 }
 
+// Returns 1 if found and stores value in *rv. 
+int Parser::_ParseBuiltinConstant(Value *rv)
+{
+	char tmp=yytext[yyleng];
+	yytext[yyleng]='\0';
+	int found=0;
+	for(const BuiltinValueDesc *vd=builtin_values; vd->name; vd++)
+	{
+		if(vd->name_len!=yyleng)  continue;
+		if(strcmp(vd->name,yytext))  continue;
+		*rv=vd->val;  // assign value
+		found=1;
+	}
+	yytext[yyleng]=tmp;
+	return(found);
+}
+
 
 void Parser::_ParseExpression(LinkedList<OperatorNode> *exp)
 {
@@ -206,6 +242,17 @@ void Parser::_ParseExpression(LinkedList<OperatorNode> *exp)
 				if(_ParseFlag(&tmpf))
 				{  // it is a flag
 					Value *val=new Value();  *val=tmpf;
+					op=new Operator(val,/*attach=*/true);
+					++understood;
+				}
+			}
+			if(!understood)
+			{
+				// Check for build-in constants. 
+				Value tmp;
+				if(_ParseBuiltinConstant(&tmp))
+				{  // found it
+					Value *val=new Value();  *val=tmp;
 					op=new Operator(val,/*attach=*/true);
 					++understood;
 				}

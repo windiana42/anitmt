@@ -37,7 +37,8 @@ enum FunctionState
 	FSNoResult,     //! result pointer is NULL (call SetResult())
 	FSTooManyArgs,  //! too many args
 	FSWrongArgNo,   //! wrong number of args
-	FSIllegalArg    //! at least one argument was of wrong type
+	FSIllegalArg,   //! at least one argument was of wrong type
+	FSOutOfRange    //! at least one arg was out of range for the op. 
 };
 
 struct FunctionDesc
@@ -54,6 +55,7 @@ enum OperatorType
 	OTValue=0,           // \    (starting with value 0)
 	OTFunction,          //  >- special ones _______ 
 	OTBrOp,OTBrCl,       // /  (, )    _____/ The rest is sorted by precedence: 
+	OTDot,               // a.b
 	OTNot,OTPos,OTNeg,   // !a, +a, -a
 	OTPow,               // a^b
 	OTMul,OTDiv,         // a*b, a/b
@@ -73,8 +75,8 @@ struct OperatorDesc
 	const char *name;   //! string representation
 	int precedence;     //! operator precedence (>=0; larger -> higher)
 	int noperands;      //! number of operands 
-	int binddir;        //! -1 -> binds left-to-right; 0 -> irrelevant; 
-	                    //! +1 -> binds right-to-left
+	int binddir;        //! +1 -> binds left-to-right; 0 -> irrelevant; 
+	                    //! -1 -> binds right-to-left
 	const FunctionDesc *fdesc;  //! corresponding function desc 
 };
 

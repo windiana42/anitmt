@@ -46,6 +46,7 @@ enum Token
 	TVFlag,
 	/*** For expressions: ***/
 	TEOpBr,TEClBr,      // "(", ")"
+	TEDot,              // "."
 	TENot,              // "!"
 	TEPlus,TEMinus,     // "+", "-"
 	TEPow,              // "^"
@@ -89,6 +90,8 @@ class Parser : public BasicParserGlue<exparse_FlexLexer>
 		void _ParseScalar(Scalar *rv);
 		void _ParseVector(Vector *rv);
 		int  _ParseFlag(Flag *rv);
+		// Lookup builtin constants: 
+		int _ParseBuiltinConstant(Value *rv);
 		
 		void _ResetParser();
 	public:
