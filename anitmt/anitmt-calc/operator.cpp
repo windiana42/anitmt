@@ -858,8 +858,8 @@ namespace anitmt
 	  if( op.is_solved() )
 	  {
 	    cout << "  +-sqrt(x(=25)) (>0) = " << op.get_value() 
-		 << " (-5)" <<  endl;
-	    assert( op.get_value() == -5 );
+		 << " (5)" <<  endl;
+	    assert( op.get_value() == 5 );
 	  }
 	  else
 	  {
@@ -892,6 +892,121 @@ namespace anitmt
       }
     }
 
+    // calc +-( 5 +- x(=2) ) mit constraint( result <= 3 )
+    {
+      Operand<values::Scalar> x;
+      Operand<values::Scalar> &op = plus_minus( 5 + plus_minus(x) );
+      constraint( op <= 3 );
+
+      if( op.is_solved() )
+      {
+	cerr << "!!Error: why can he solve +-(5 +-x(=2))(<=3) without "
+	  "knowing x?!!"
+	     << endl;
+	errors++;
+      }
+
+      try
+      {
+        if( x.set_value(2) )
+	{
+	  if( op.is_solved() )
+	  {
+	    cout << "  +-(5 +-x(=2))(<=3) = " << op.get_value() 
+		 << " (-7)" <<  endl;
+	    assert( op.get_value() == -7 );
+	  }
+	  else
+	  {
+	    cerr << "!!Error: could not calc +-(5 +-x(=2))(<=3)!!" << endl;
+	    errors++;
+	  }
+	}
+	else
+	{
+	  cerr << "!!Error: why was +-(5 +-x(=2))(<=3) rejected?!! " ;
+	  errors++;
+	  if( op.is_solved() )
+	  {
+	    cerr << "!!Error: why can he solve +-(5 +-x(=2))(<=3) with "
+	      "rejected x?!!";
+	    errors++;
+	  }
+	}
+      }
+      catch( EX )
+      {
+	cerr << "!!Error: why was +-(5 +-x(=2))(<=3) rejected with "
+	  "exception?!!";
+	errors++;
+	if( op.is_solved() )
+	{
+	  cerr << "!!Error: why can he solve +-(5 +-x(=2))(<=3) with rejected "
+	    "x?!!";
+	  errors++;
+	}
+      }
+    }
+
+    // calc +-( 5 +- x(=2) ) mit ( result <= 3), (+-x<0)
+    {
+      Operand<values::Scalar> x;
+      Operand<values::Scalar> &pmx = plus_minus(x);
+      Operand<values::Scalar> &op = plus_minus( 5 + pmx );
+      constraint( op <= 3 );
+      constraint( pmx < 0 );
+
+      if( op.is_solved() )
+      {
+	cerr << "!!Error: why can he solve +-(5 +-x(=2))(<=3),(+-x<0) without"
+	  " knowing x?!!"
+	     << endl;
+	errors++;
+      }
+
+      try
+      {
+        if( x.set_value(2) )
+	{
+	  if( op.is_solved() )
+	  {
+	    cout << "  +-(5 +-x(=2))(<=3),(+-x<0) = " << op.get_value() 
+		 << " (3)" <<  endl;
+	    assert( op.get_value() == 3 );
+	  }
+	  else
+	  {
+	    cerr << "!!Error: could not calc +-(5 +-x(=2))(<=3),(+-x<0)!!" 
+		 << endl;
+	    errors++;
+	  }
+	}
+	else
+	{
+	  cerr << "!!Error: why was +-(5 +-x(=2))(<=3),(+-x<0) rejected?!! " ;
+	  errors++;
+	  if( op.is_solved() )
+	  {
+	    cerr << "!!Error: why can he solve +-(5 +-x(=2))(<=3),(+-x<0) with"
+	      " rejected x?!!";
+	    errors++;
+	  }
+	}
+      }
+      catch( EX )
+      {
+	cerr << "!!Error: why was +-(5 +-x(=2))(<=3),(+-x<0) rejected with "
+	  "exception?!!";
+	errors++;
+	if( op.is_solved() )
+	{
+	  cerr << "!!Error: why can he solve +-(5 +-x(=2))(<=3),(+-x<0) with"
+	    " rejected x?!!";
+	  errors++;
+	}
+      }
+    }
+
     // operand assignment test
     cout << " Tests Operand assignment to Operand" << endl;
 
@@ -918,6 +1033,65 @@ namespace anitmt
       else
       {
 	cerr << "!!Error: could assign x + 2 to operand!!" << endl;
+	errors++;
+      }
+    }
+
+    // calc x + y (x=5) (y=2*x)
+    {
+      Operand<values::Scalar> x;
+      Operand<values::Scalar> y;
+      Operand<values::Scalar> op;
+      y = 2*x;
+      op = x + y;
+
+      if( op.is_solved() )
+      {
+	cerr << "!!Error: why can he solve x + y(=2*x) without knowing x?!! " 
+	     << endl;
+	errors++;
+      }
+
+      x.set_value( 5 );
+
+      if( op.is_solved() )
+      {
+	cout << "  x(=5) + y(=2*x) = " << op << "(15)" << endl;
+	assert( op.get_value() == 15 );
+      }
+      else
+      {
+	cerr << "!!Error: could assign x(=5) + y(=2*x) to operand!!" << endl;
+	errors++;
+      }
+    }
+
+    // calc x + y (x=5) (y=2*x) (already initialized y)
+    {
+      Operand<values::Scalar> x;
+      Operand<values::Scalar> y = 2*x;
+      Operand<values::Scalar> op;
+      op = x + y;
+
+      if( op.is_solved() )
+      {
+	cerr << "!!Error: why can he solve x + y(=2*x)(init) without knowing"
+	  " x?!! " 
+	     << endl;
+	errors++;
+      }
+
+      x.set_value( 5 );
+
+      if( op.is_solved() )
+      {
+	cout << "  x(=5) + y(=2*x)(init) = " << op << "(15)" << endl;
+	assert( op.get_value() == 15 );
+      }
+      else
+      {
+	cerr << "!!Error: could note assign x(=5) + y(=2*x)(init) to operand!!"
+	     << endl;
 	errors++;
       }
     }

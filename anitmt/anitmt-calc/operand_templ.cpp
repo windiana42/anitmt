@@ -51,6 +51,25 @@ namespace anitmt
       delete this;		// !!! No further commands !!!
   }
 
+  //! connects another operand as a solution source
+  template<class T>
+  Operand<T>& Operand<T>::operator=( Operand<T> &src ) throw(EX)
+  {
+    new Store_Operand_to_Operand<T>( src, *this );
+    return *this;
+  }
+
+  //**************************
+  // constructors/destructors
+
+  //! connects another operand as a solution source
+  template<class T>
+  Operand<T>::Operand<T>( Operand<T> &src ) throw(EX)
+    : solved(false), last_test_run_id(-1), delete_without_listener(false)
+  {
+    new Store_Operand_to_Operand<T>( src, *this );
+  }
+
   template<class T>
   Operand<T>::Operand() 
     : solved(false), last_test_run_id(-1), delete_without_listener(false) {}
@@ -63,13 +82,6 @@ namespace anitmt
     {
       (*i)->disconnect( this );
     }
-  }
-
-  template<class T>
-  Operand<T>& Operand<T>::operator=( Operand<T> &src ) throw(EX)
-  {
-    new Store_Operand_to_Operand<T>( src, *this );
-    return *this;
   }
 
   //***********

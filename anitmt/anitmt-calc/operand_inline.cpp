@@ -17,6 +17,8 @@
 
 #include "operand.hpp"
 
+#include <algorithm>
+
 namespace anitmt 
 {
   //**************************************************************
@@ -26,7 +28,10 @@ namespace anitmt
   // checks wheather an id belongs to curr. test
   bool Solve_Run_Info::is_id_valid( id_type id ) const
   {
-    return valid_test_run_ids.find( id ) != valid_test_run_ids.end();
+    // reverse search for id in valid id's
+    valid_test_run_ids_type::const_iterator i = 
+      find( valid_test_run_ids.begin(), valid_test_run_ids.end(), id );
+    return i != valid_test_run_ids.end();
   }
 
   // returns current test run ID
@@ -39,7 +44,7 @@ namespace anitmt
   Solve_Run_Info::id_type Solve_Run_Info::new_test_run_id()
   {
     test_run_id = current_default_test_run_id++;
-    valid_test_run_ids.insert( test_run_id );
+    valid_test_run_ids.push_front( test_run_id );
     return test_run_id;
   }
    
@@ -47,22 +52,26 @@ namespace anitmt
   void Solve_Run_Info::add_test_run_id( id_type id )
   {
     test_run_id = id;
-    valid_test_run_ids.insert( test_run_id );
+    valid_test_run_ids.push_front( test_run_id );
   }
 
   // removes a test run ID
   void Solve_Run_Info::remove_test_run_id( id_type id )
   {
-    valid_test_run_ids.erase( valid_test_run_ids.find(id) );
+    // remove all ids added after this one
+    while( id != valid_test_run_ids.front() )
+    {
+      valid_test_run_ids.pop_front();
+      assert( !valid_test_run_ids.empty() );
+    }
+    // remove this id
+    valid_test_run_ids.pop_front();
+    
+    // id that was added just before is the new active id now
+    assert( !valid_test_run_ids.empty() );
+    test_run_id = valid_test_run_ids.front();
   }
   
-  // sets active test run ID
-  void Solve_Run_Info::set_test_run_id( id_type id )
-  {
-    assert( valid_test_run_ids.find(id) != valid_test_run_ids.end() );
-    test_run_id = id;
-  }
-
   //**********************************************************
   // Operand: base class for operand values of a certain type
   //**********************************************************

@@ -27,7 +27,6 @@ namespace anitmt
 
 #include "error.hpp"
 #include <list>
-#include <set>
 
 namespace anitmt
 {
@@ -101,9 +100,13 @@ namespace anitmt
     typedef int id_type;
 
     static id_type current_default_test_run_id;
+    
+    id_type test_run_id;	// id to mark operands solved in that solve run
 
-    std::set<id_type> valid_test_run_ids;
-    id_type test_run_id;
+    typedef std::list<id_type> valid_test_run_ids_type; 
+    /* operands marked with on of these ids are considered as solved in this
+      solve run */
+    valid_test_run_ids_type valid_test_run_ids;
   public:
     inline bool is_id_valid( id_type id ) const; 
 				// checks wheather an id belongs to curr. test
@@ -111,7 +114,6 @@ namespace anitmt
     inline id_type new_test_run_id();	// adds and returns a new test run ID
     inline void add_test_run_id( id_type id ); // adds a test run ID
     inline void remove_test_run_id( id_type id ); // removes a test run ID
-    inline void set_test_run_id( id_type id ); // sets active test run ID
 
     Solve_Run_Info( Solve_Problem_Handler *handler, int id )
       : problem_handler( handler ), test_run_id( id ) {
@@ -185,9 +187,10 @@ namespace anitmt
 			   Solve_Problem_Handler *handler = &default_handler )
       throw(EX);
 
-    // connects another operand as a solution source
+    //! connects another operand as a solution source
     Operand<T>& operator=( Operand<T> &src ) throw(EX);
-
+    //! connects another operand as a solution source
+    Operand( Operand<T> &src ) throw(EX);
     Operand();
     virtual ~Operand();
 
