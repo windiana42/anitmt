@@ -7,12 +7,14 @@ libfd_a_SOURCES = \
 		fdfifobuf.cc \
 		fdcopybase.cc fdcppump_simple.cc fdcppump_fd.cc fdcopyio_buf.cc fdcopyio_fd.cc \
 		timeoutmanager.cc \
+		searchpath.cc \
 	htime.h \
 		fdmanager.h fdbase.h \
 		procmanager.h intprocbase.h procbase.h \
 		fdfifobuf.h \
 		fdcopybase.h \
-		timeoutbase.h timeoutmanager.h
+		timeoutbase.h timeoutmanager.h \
+		searchpath.h
 
 EXTRA_DIST = depend.txt
 
