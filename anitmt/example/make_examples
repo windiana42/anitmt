@@ -1,4 +1,4 @@
-if "x$top_build_dir" == "x"; then
+if test "x$top_build_dir" == "x"; then
   top_build_dir="..";
 fi
 
