@@ -206,7 +206,11 @@ class TaskManager :
 		// Initialisation of parameter stuff: 
 		int _SetUpParams();
 		
+		// YOU MUST call ReSched() after this function. 
+		// This is always called due to error and thus returns error. 
+		void _QuitOrBeginRecovery();
 		// Simply call fdmanager()->Quit(status) and write info. 
+		// OR: Complete recovery and restart. 
 		void _DoQuit(int status);
 		
 		// This is the code to actually quit. It is three steps: 

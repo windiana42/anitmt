@@ -52,9 +52,6 @@ class TaskDriverInterface_LDR :
 		
 		void _JobsAddClient(LDRClient *client,int mode);
 		
-		// Client connect timeout: 
-		TimeoutID tid_connedt_to;
-		
 		// Reconnect trigger timer: 
 		TimerID reconnect_trigger_tid;
 		

@@ -209,7 +209,7 @@ int TaskDriverInterfaceFactory_LDR::CheckParams()
 	ConvertTimeout2MSec(&reconnect_interval,"reconnect interval timer");
 	
 	if(reconnect_interval>=0 && connect_timeout<0)
-	{  Error("Cannot use reconnection interval (-rcinterval) is connect "
+	{  Error("Cannot use reconnection interval (-rcinterval) if connect "
 		"timeout (-ctimeout) is switched off.\n");  ++failed;  }
 	else if((reconnect_interval/2-1000)<connect_timeout)
 	{  Error("Reconnection interval (-rcinterval; seconds) must be "

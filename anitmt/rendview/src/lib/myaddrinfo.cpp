@@ -126,6 +126,8 @@ int MyAddrInfo::accept(int sockfd)
 int MyAddrInfo::bind(int sockfd)
 {
 	int rv=::bind(sockfd,(sockaddr*)&a,sizeof(a));
+	// Does not help against TIME_WAIT and socket already in use: 
+	SocketReUseAddr(sockfd);
 	return(rv);
 }
 

@@ -1679,6 +1679,8 @@ LDRClient::LDRClient(TaskDriverInterface_LDR *_tdif,
 	tdif=_tdif;
 	cp=NULL;
 	
+	_tid_connect_to=NULL;
+	
 	connected_state=0;
 	auth_passed=0;
 	_counted_as_client=0;
@@ -1716,6 +1718,10 @@ LDRClient::~LDRClient()
 {
 	// Unrergister at TaskDriverInterface_LDR (-> task manager): 
 	tdif->UnregisterLDRClient(this);
+	
+	// This MUST BE NULL here. Becuase TaskDriverInterface_LDR manages 
+	// that. We may risk mem leaks. 
+	assert(!_tid_connect_to);
 	
 	assert(!cp);  // TaskDriverInterface_LDR must have cleaned up. 
 }

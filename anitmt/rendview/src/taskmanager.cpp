@@ -703,22 +703,9 @@ int TaskManager::tsnotify(TSNotifyInfo *ni)
 				// active task sources]. 
 				// Okay, then let's recover: 
 				
-				int ntodo=tasklist.todo_nelem;
-				int nproc=tasklist.proc_nelem;
-				int ndone=tasklist.done_nelem;
-				int nrun=interface->Get_nrunning();
-				VerboseSpecial("Beginning recovery. "
-					"Tasks: todo=%d; proc=%d (%d); done=%d %s",
-					ntodo,nproc,nrun,ndone,
-					(ndone || nproc) ? "(bad)" : 
-					(!ntodo && !ndone && !nproc) ? "(good)" : "(hrm...)");
-				assert(nrun==nproc);
+				// This does recovery because task source type is active. 
+				_QuitOrBeginRecovery();
 				
-				DontStartMoreTasks();
-				recovering=1;
-				// DO NOT SET THESE
-				// schedule_quit=1;  NO!
-				// sched_kill_tasks=2;  NO! // server error
 				ReSched(__LINE__);
 			}
 			else assert(0);
@@ -1155,6 +1142,44 @@ void TaskManager::_EmitCPUStats(const char *title,
 		tmp,(ptu_chld->stime+ptu_self->stime).PrintElapsed());
 }
 
+
+// YOU MUST call ReSched() after this function. 
+// This is always called due to error and thus returns error. 
+void TaskManager::_QuitOrBeginRecovery()
+{
+	assert(!recovering);
+	
+	// Of course, recovery is only done if the task source 
+	// type is active. Else, we quit. 
+	if(GetTaskSourceType()==TST_Active)
+	{
+		int ntodo=tasklist.todo_nelem;
+		int nproc=tasklist.proc_nelem;
+		int ndone=tasklist.done_nelem;
+		int nrun=interface->Get_nrunning();
+		VerboseSpecial("Beginning recovery. "
+			"Tasks: todo=%d; proc=%d (%d); done=%d %s",
+			ntodo,nproc,nrun,ndone,
+			(ndone || nproc) ? "(bad)" : 
+			(!ntodo && !ndone && !nproc) ? "(good)" : "(hrm...)");
+		assert(nrun==nproc);
+		
+		DontStartMoreTasks();
+		recovering=1;
+		// DO NOT SET THESE
+		// schedule_quit=1;  NO!
+		// sched_kill_tasks=2;  NO! // server error
+	}
+	else
+	{
+		// Schedule quit
+		//if(!schedule_quit)
+		//{  schedule_quit=1;  }
+		schedule_quit=2;
+	}
+}
+
+		
 // Simply call fdmanager()->Quit(status) and write info. 
 // (Actually, _ActuallyQuit() is called...)
 // This is also used for recovery. 
@@ -1530,7 +1555,12 @@ void TaskManager::ReallyStartProcessing(int error_occured)
 	
 	if(error_occured)
 	{
-		_ActuallyQuit(1);
+		// Former solution was _ActuallyQuit(1) here. 
+		// This is bad. We need to recover or schedule quit. 
+if(GetTaskSourceType()==TST_Active)
+{  Error("PLEASE CHECK ME!!! (calling _QuitOrBeginRecovery() for TST_Active)\n");  }
+		_QuitOrBeginRecovery();
+		ReSched(__LINE__);
 		return;
 	}
 	

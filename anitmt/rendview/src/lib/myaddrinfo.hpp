@@ -104,6 +104,8 @@ class MyAddrInfo
 		
 		// Calls bind(2). The address to bind to is the current 
 		// address in *this. Return value: see bind(2). 
+		// NOTE: Also does SO_REUSEADDR (if available) but will 
+		//       ignore failure. 
 		int bind(int sockfd);
 };
 

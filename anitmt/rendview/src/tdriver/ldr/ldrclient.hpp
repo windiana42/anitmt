@@ -43,6 +43,9 @@ class LDRClient :
 		int send_quit_cmd : 3;  // 1 -> must send; 2 -> sent; 3 -> done
 		int : (sizeof(int)*8 - 8);   // <-- Use modulo if more than 16 bits. 
 		
+		// For use by TaskDriverInterface_LDR: 
+		TimeoutBase::TimeoutID _tid_connect_to;
+		
 		// Next command to send to client: 
 		// THESE HAVE NO EFFECT IF AUTH IS DONE. 
 		LDR::LDRCommand next_send_cmd;

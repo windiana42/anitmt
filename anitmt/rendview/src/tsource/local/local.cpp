@@ -646,8 +646,8 @@ TaskSource_Local::TaskSource_Local(TaskSourceFactory_Local *tsf,int *failflag) :
 TaskSource_Local::~TaskSource_Local()
 {
 	assert(pending==ANone);
-	assert(!connected);
 	assert(!done_task);
+	assert(!connected);
 }
 
 

@@ -400,19 +400,18 @@ CompleteTask *TaskDriverInterface_LDR::GetTaskToStart(
 	
 	if(!free_client)
 	{
-		fprintf(stderr,"TaskDriverInterface_LDR: ??? No free client!!!\n");
-		fprintf(stderr,"  todo=%d, proc=%d\n",
+		Verbose(DBG,"LDR: No free client (todo=%d, proc=%d)\n",
 			tasklist->todo_nelem,tasklist->proc_nelem);
 		for(LDRClient *i=clientlist.first(); i; i=i->next)
 		{
-			fprintf(stderr,"  Client %s: assigned=%d, njobs=%d, max=%d, %s, %d-%d\n",
+			Verbose(DBG,"  Client %s: assigned=%d, njobs=%d, max=%d, cando=%s\n",
 				i->_ClientName().str(),
 				i->assigned_jobs,i->c_jobs,i->c_task_thresh_high,
-				i->CanDoTask() ? "YES" : "NO",
-				i->auth_passed ? 1 : 0,i->tri.scheduled_to_send ? 1 : 0);
-			fprintf(stderr,"    ioplock=%d, sched=%p, trs=%d, req=%d,%d\n",
+				i->CanDoTask() ? "yes" : "no");
+			Verbose(DBGV,"    ioplock=%d, sched=%p, trs=%d, req=%d,%d, auth=%s, sched=%s\n",
 				i->outpump_lock,i->tri.scheduled_to_send,i->tri.task_request_state,
-				i->tri.req_file_type,i->tri.req_file_idx);
+				i->tri.req_file_type,i->tri.req_file_idx,
+				i->auth_passed ? "y" : "n",i->tri.scheduled_to_send ? "y" : "n");
 		}
 		return(NULL);
 	}
@@ -431,8 +430,9 @@ CompleteTask *TaskDriverInterface_LDR::GetTaskToStart(
 		break;
 	}
 	
-if(!startme)
-{  fprintf(stderr,"TaskDriverInterface_LDR: ??? No task todo!!!\n");  }
+	if(!startme)
+	{  Verbose(DBG,"LDR: No task todo. (todo=%d, proc=%d, done=%d)\n",
+		tasklist->todo_nelem,tasklist->proc_nelem,tasklist->done_nelem);  }
 	
 	return(startme);
 }
@@ -457,7 +457,7 @@ LDRClient *TaskDriverInterface_LDR::_FindFreeClient()
 void TaskDriverInterface_LDR::_PrintInitConnectMsg(const char *msg)
 {
 	char tmp[32];
-	if(p->connect_timeout>0)
+	if(p->connect_timeout>=0)
 	{  snprintf(tmp,32,"%ld msec",p->connect_timeout);  }
 	else
 	{  strcpy(tmp,"[disabled]");  }
@@ -557,13 +557,7 @@ void TaskDriverInterface_LDR::ReallyStartProcessing()
 	}
 	
 	// Start connect timeout (if needed): 
-	if(p->connect_timeout>0)
-	{
-		HTime curr(HTime::Curr);
-		curr.Add(p->connect_timeout,HTime::msec);
-		UpdateTimeout(tid_connedt_to,&curr);
-	}
-	else
+	if(p->connect_timeout<0)
 	{  Warning("Warning: connect timeout disabled.\n");  }
 	
 	// Check reconnect interval: 
@@ -575,13 +569,48 @@ void TaskDriverInterface_LDR::ReallyStartProcessing()
 	
 	_PrintInitConnectMsg("Simultaniously initiating connections to all clients");
 	
+	HTime conn_to(HTime::Invalid);   // Connection timeout. 
 	int n_connecting=0;
 	for(TaskDriverInterfaceFactory_LDR::ClientParam *i=p->cparam.first();
 		i; i=i->next)
 	{
+		int fail=1;
 		LDRClient *c=NEW_LDRClient(i);
-		if(!c)
+		do {
+			if(!c)  break;
+			
+			int rv=c->ConnectTo(i);
+			if(rv<0)
+			{  c->DeleteMe();  c=NULL;  fail=0;  break;  }
+			
+			// NOTE!!! CODE DUPLICATION. timernotify() DOES THE SAME. 
+			
+			++n_connecting;
+			if(p->connect_timeout>=0)
+			{
+				if(conn_to.IsInvalid())  // Not yet set up -- do it. 
+				{
+					conn_to.SetCurr();
+					conn_to.Add(p->connect_timeout,HTime::msec);
+				}
+				// If there is already a timeout, simply update it: 
+				if(c->_tid_connect_to)
+				{  UpdateTimeout(c->_tid_connect_to,conn_to);  }
+				else
+				{
+					c->_tid_connect_to=InstallTimeout(conn_to,/*dptr=*/c);
+					if(!c->_tid_connect_to)  break;
+				}
+			}
+			
+			fail=0;
+		} while(0);
+		
+		if(fail)
 		{
+			if(c)
+			{  c->DeleteMe();  c=NULL;  }
+			
 			assert(!free_client);
 			while(!clientlist.is_empty())
 			{  clientlist.popfirst()->DeleteMe();  }
@@ -591,12 +620,6 @@ void TaskDriverInterface_LDR::ReallyStartProcessing()
 			component_db()->taskmanager()->ReallyStartProcessing(/*error=*/1);
 			return;
 		}
-		
-		int rv=c->ConnectTo(i);
-		if(rv<0)
-		{  c->DeleteMe();  c=NULL;  }
-		else 
-		{  ++n_connecting;  }
 	}
 	
 	if(!n_connecting)
@@ -611,7 +634,13 @@ void TaskDriverInterface_LDR::ReallyStartProcessing()
 		return;
 	}
 	
-	Verbose(TDR,"Waiting for %d LDR connections to establish.\n",n_connecting);
+	HTime left(HTime::Invalid);
+	if(!conn_to.IsInvalid())
+	{  left=conn_to-HTime(HTime::Curr);  }
+	Verbose(TDR,"Waiting%s%s for %d LDR connections to establish.\n",
+		left.IsInvalid() ? "" : " ",
+		left.IsInvalid() ? "" : left.PrintElapsed(/*with_msec=*/0),
+		n_connecting);
 }
 
 
@@ -647,6 +676,7 @@ int TaskDriverInterface_LDR::timernotify(TimerInfo *ti)
 		int msg_written=0;
 		int may_stop_trigger=1;
 		int n_connecting=0;
+		HTime conn_to(HTime::Invalid);   // Connection timeout. 
 		for(TaskDriverInterfaceFactory_LDR::ClientParam *i=p->cparam.first();
 			i; i=i->next)
 		{
@@ -670,33 +700,96 @@ int TaskDriverInterface_LDR::timernotify(TimerInfo *ti)
 				msg_written=1;
 			}
 			
+			// Important: we are now re-connecting: 
+			i->shall_reconnect=0;
+			
 			LDRClient *c=NEW_LDRClient(i);
-			if(!c)
+			int fail=1;
+			do {
+				if(!c)
+				{
+					if(!dont_reconnect)
+					{  i->shall_reconnect=2;  /*may_stop_trigger=0; <-- below */  }
+					break;
+				}
+				
+				int rv=c->ConnectTo(i);
+				if(rv<0)
+				{
+					c->DeleteMe();  c=NULL;  // --> shall_reconnect=1; in unregister
+					may_stop_trigger=0;
+					fail=0;  break;
+				}
+				
+				// NOTE!!! CODE DUPLICATION. ReallyStarProcessing() DOES THE SAME. 
+				
+				++n_connecting;
+				if(p->connect_timeout>=0)
+				{
+					if(conn_to.IsInvalid())  // Not yet set up -- do it. 
+					{
+						conn_to.SetCurr();
+						conn_to.Add(p->connect_timeout,HTime::msec);
+					}
+					// If there is already a timeout, simply update it: 
+					if(c->_tid_connect_to)
+					{  UpdateTimeout(c->_tid_connect_to,conn_to);  }
+					else
+					{
+						c->_tid_connect_to=InstallTimeout(conn_to,/*dptr=*/c);
+						if(!c->_tid_connect_to)  break;
+					}
+				}
+				
+				fail=0;
+			} while(0);
+			
+			if(fail)
 			{
+				if(c)
+				{  c->DeleteMe();  c=NULL;  }
+				
+				// This is because during unregistering, a failed client 
+				// may have set reconnect flag again. 
+				may_stop_trigger=0;
+				
+				// #### What shall we do here? Better not set dont_reconnect=1; 
+				//      but try again later...?
 				Error("Failed to set up LDR client representation.\n");
 				dont_reconnect=1;
 				_StopReconnectTrigger();
 				return(0);
 			}
-			
-			// Important: we are now re-connecting: 
-			i->shall_reconnect=0;
-			
-			int rv=c->ConnectTo(i);
-			if(rv<0)
-			{  c->DeleteMe();  c=NULL;  }
-			else 
-			{  ++n_connecting;  }
 		}
 		
 		if(n_connecting)
-		{  Verbose(TDR,"Waiting for %d LDR re-connects to establish.\n",n_connecting);  }
+		{  Verbose(TDR,"Waiting for %d LDR re-connects to establish.\n",
+			n_connecting);  }
 		
 		if(may_stop_trigger)
 		{
 			// There are no clients which shall be re-connected the 
 			// next time. 
-			_StopReconnectTrigger();
+			
+			int wrong=0;
+			for(TaskDriverInterfaceFactory_LDR::ClientParam *i=p->cparam.first();
+				i; i=i->next)
+			{
+				if(!i->shall_reconnect)  continue;
+				// If this assert fails, there is a great internal error: 
+				// We may not have shall_reconnect set if there is a client 
+				// (i.e. already connected). 
+				assert(!i->client);
+				wrong=1;  break;
+			}
+			if(wrong)
+			{
+				fprintf(stderr,"OOPS: would illegally stop reconnect trigger.\n");
+			}
+			else
+			{
+				_StopReconnectTrigger();
+			}
 		}
 		
 		// We may only be here if there is at least one client which we 
@@ -711,30 +804,36 @@ int TaskDriverInterface_LDR::timernotify(TimerInfo *ti)
 }
 
 
-int TaskDriverInterface_LDR::timeoutnotify(TimeoutInfo * /*ti*/)
+int TaskDriverInterface_LDR::timeoutnotify(TimeoutInfo *ti)
 {
-	int msg_written=0;
-	for(LDRClient *_i=clientlist.first(); _i; )
+	Verbose(DBGV,"--TDIF_LDR::timeoutnotify--<>--\n");
+	
+	// We have one timeout per client, so this is simple: 
+	// Obtain client pointer: 
+	LDRClient *client=(LDRClient*)(ti->dptr);
+	assert(client && client->_tid_connect_to==ti->tid);  // data consistency (BUG otherwise)
+	
+	// See in what state the client is: 
+	if(client->connected_state==0 || 
+	   client->auth_passed || client->send_quit_cmd)
 	{
-		LDRClient *client=_i;
-		_i=_i->next;
-		
-		if(client->connected_state==0)  continue;  // not connecting & not connected 
-		if(client->auth_passed || client->send_quit_cmd)  continue;
-		
-		if(!msg_written)
-		{  Verbose(TDR,"Connection timeout expired:\n");  msg_written=1;  }
-		
-		// He has do die...
-		Warning("  Timed out during %s: %s\n",
-			client->connected_state==1 ? "connect" : "auth",
+		// Why are we here?
+		fprintf(stderr,"Spurious connect timeout for client %s. (BUG?)\n",
 			client->_ClientName().str());
-		if(client->Disconnect())
-		{
-			// Already disconnected: Delete; then destructor will 
-			// unregister it: 
-			client->DeleteMe();
-		}
+		// NOTE: We do NOT kill the timeout so we need not alloc a 
+		//       new one the next time. 
+		return(0);
+	}
+	
+	// He has do die...
+	Warning("  Connection timed out during %s: %s\n",
+		client->connected_state==1 ? "connect" : "auth",
+		client->_ClientName().str());
+	if(client->Disconnect())
+	{
+		// Already disconnected: Delete; then destructor will 
+		// unregister it: 
+		client->DeleteMe();
 	}
 	
 	return(0);
@@ -899,6 +998,9 @@ void TaskDriverInterface_LDR::UnregisterLDRClient(LDRClient *client)
 		_StartReconnectTrigger();
 	}
 	
+	// Kill the timeout (if any): 
+	KillTimeout(client->_tid_connect_to);
+	client->_tid_connect_to=NULL;
 	// Kill client pointer from ClientParams: 
 	client->cp->client=NULL;
 	// Un-Set client's ClientParam: 
@@ -943,9 +1045,6 @@ TaskDriverInterface_LDR::TaskDriverInterface_LDR(
 	shall_quit=0;
 	
 	int failed=0;
-	
-	tid_connedt_to=InstallTimeout(HTime(HTime::Invalid));
-	if(!tid_connedt_to)  ++failed;
 	
 	reconnect_trigger_tid=InstallTimer(-1,0);
 	if(!reconnect_trigger_tid)  ++failed;
