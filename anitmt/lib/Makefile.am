@@ -1,1 +1,1 @@
-SUBDIRS=val utl par param solve message exparse 
+SUBDIRS = val utl par param solve message exparse 

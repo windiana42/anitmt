@@ -8,4 +8,3 @@ libexparse_a_SOURCES=	\
 	tree.cpp tree.hpp \
 	value.cpp value.hpp \
 	linkedlist.h
-# unused: mcache.cpp mcache.hpp 
