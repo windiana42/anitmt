@@ -1,2 +1,1 @@
-EXTRA_DIST=.cvsignore
-SUBDIRS=val utl par include message 
+SUBDIRS=val utl par param solve message 
