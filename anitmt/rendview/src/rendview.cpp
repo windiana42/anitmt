@@ -122,7 +122,8 @@ static int MAIN(int argc,char **argv,char **envp)
 		"make RendView stop all tasks and then als stop; SIGCONT (fg or "
 		"bg in bash) makes them continue all again.\n"
 		"NOTE: COLORED OUTPUT is automatically switched off for non-ttys "
-		"but you can manually switch it off using --nocolor.");
+		"but you can manually switch it off using --nocolor."
+		"\n\n** JUST DO NOT TRY TO DO ANYTHING WITH FILTERS NOW**");
 		// ...as well as only rendering changed frames or resuming operation
 		// ...and later create a film of them...
 	
