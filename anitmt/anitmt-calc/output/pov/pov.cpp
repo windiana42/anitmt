@@ -52,17 +52,27 @@ void Pov_Output::check_components() throw( )
 	Prop_Tree_Interface prop_tree( &ani->ani_root );
 	
 	// Start parser for all scenes: 
+	int nscenes=0,povscenes=0;
 	for( Scene_Interface scene = prop_tree.get_first_scene(); 
 	     scene != prop_tree.get_scene_end(); 
 	     scene = scene.get_next() )
 	{
+		++nscenes;
 		if( scene.get_scene_type() != "pov" )
 			continue;
 		errors+=parser->Go(ani,scene);
+		++povscenes;
+	}
+	
+	if(!povscenes)
+	{
+		verbose(2) << "POV output: No POV scenes; giving up.";
+		return;
 	}
 	
 	verbose(2) << "POV output: checking components: " << 
-			(errors ? "FAILED" : "done");
+		(errors ? "FAILED" : "done") << 
+		" (" << povscenes << "/" << nscenes << " scenes)";
 	
 	if(!errors)
 	{
@@ -84,6 +94,12 @@ void Pov_Output::check_components() throw( )
 //! process the resulting animation (ex: integrate it in scene description)
 void Pov_Output::process_results() throw( )
 {
+	if(dn_list.empty())
+	{
+		verbose(2) << "POV output: processing results: nothing to do.";
+		return;
+	}
+	
 	verbose(2) << "POV output: processing results...";
 	
 	//####what is better: iterating the scenes in the frames or the frames in the scenes?

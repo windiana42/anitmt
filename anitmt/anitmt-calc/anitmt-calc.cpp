@@ -96,7 +96,7 @@ int main(int argc,char **argv,char **envp)
     if( msg.get_num_errors() > 0 )
     {
       msg.vindent_set(0);
-      msg.verbose() << "abort because of errors";
+      msg.verbose() << "After reading structure: giving up due to errors.";
       msg.verbose() << "  errors: " << msg.get_num_errors()
 		    << "  warnings: " << msg.get_num_warnings();
       return -6;
@@ -114,7 +114,7 @@ int main(int argc,char **argv,char **envp)
     if( msg.get_num_errors() > 0 )
     {
       msg.vindent_set(0);
-      msg.verbose() << "abort because of errors";
+      msg.verbose() << "After inserting user references: giving up due to errors.";
       msg.verbose() << "  errors: " << msg.get_num_errors()
 		    << "  warnings: " << msg.get_num_warnings();
       return -6;
@@ -131,7 +131,7 @@ int main(int argc,char **argv,char **envp)
     if( msg.get_num_errors() > 0 )
     {
       msg.vindent_set(0);
-      msg.verbose() << "abort because of errors";
+      msg.verbose() << "After inserting values: giving up due to errors.";
       msg.verbose() << "  errors: " << msg.get_num_errors()
 		    << "  warnings: " << msg.get_num_warnings();
       return -6;
@@ -160,7 +160,7 @@ int main(int argc,char **argv,char **envp)
     if( msg.get_num_errors() > 0 )
     {
       msg.vindent_set(0);
-      msg.verbose() << "abort because of errors";
+      msg.verbose() << "After processing output: giving up due to errors.";
       msg.verbose() << "  errors: " << msg.get_num_errors()
 		    << "  warnings: " << msg.get_num_warnings();
       return -6;
