@@ -1413,12 +1413,9 @@ int TaskManager::_StartProcessing()
 	// *NOTE:* FIX HELP TEXT IN database.cpp TOO, 
 	//         IF YOU CHANGE SOMETHING HERE. 
 	
-	int opmode_num=-1;
-	     if(!strcasecmp(opmode,"rendview"))   opmode_num=0;
-	else if(!strcasecmp(opmode,"ldrclient"))  opmode_num=1;
-	else if(!strcasecmp(opmode,"ldrserver"))  opmode_num=2;
+	RendViewOpMode opmode_num=GetRendViewOpMode(opmode);
 	
-	if(opmode_num<0)
+	if(opmode_num==RVOM_None)
 	{
 		if(opmode_name.str())
 		{  Error("Illegal operation mode \"%s\". Try --list-opmode.\n",
@@ -1427,15 +1424,17 @@ int TaskManager::_StartProcessing()
 		{
 			Warning("Nonstandard binary name. "
 				"Defaulting to opmode \"rendview\".\n");
-			opmode_num=0;
+			opmode_num=RVOM_RendView;
 		}
 	}
 	
 	// Set tsource and tdif name if not explicitly told otherwise by user: 
 	if(!tsource_name)
-	{  _CheckAllocFail(tsource_name.set((opmode_num==1) ? "LDR" : "local"));  }
+	{  _CheckAllocFail(tsource_name.set(
+		(opmode_num==RVOM_LDRClient) ? "LDR" : "local"));  }
 	if(!tdinterface_name)
-	{  _CheckAllocFail(tdinterface_name.set((opmode_num==2) ? "LDR" : "local"));  }
+	{  _CheckAllocFail(tdinterface_name.set(
+		(opmode_num==RVOM_LDRServer) ? "LDR" : "local"));  }
 	
 	
 	const char *tdif_name=tdinterface_name.str();

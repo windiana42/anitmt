@@ -42,6 +42,19 @@
 #define hack_assert(x)  assert(x)
 
 
+enum RendViewOpMode
+{
+	RVOM_None=0,
+	RVOM_RendView,
+	RVOM_LDRClient,
+	RVOM_LDRServer
+};
+
+// Return opmode enum according to passed binary name. 
+// RVOM_None if none matches. 
+extern RendViewOpMode GetRendViewOpMode(const char *prg_name);
+
+
 class RefString;
 class HTime;
 

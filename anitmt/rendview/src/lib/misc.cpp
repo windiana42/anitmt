@@ -16,6 +16,18 @@
 
 #include "prototypes.hpp"
 
+#include <string.h>
+
+
+RendViewOpMode GetRendViewOpMode(const char *pname)
+{
+	if(!strcasecmp(pname,"rendview"))   return(RVOM_RendView);
+	if(!strcasecmp(pname,"ldrclient"))  return(RVOM_LDRClient);
+	if(!strcasecmp(pname,"ldrserver"))  return(RVOM_LDRServer);
+	return(RVOM_None);
+}
+
+
 void ConvertTimeout2MSec(long *timeout,const char *which)
 {
 	// Convert timeout from seconds to msec: 
