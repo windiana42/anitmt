@@ -19,7 +19,7 @@
 #define exparse_in_flex_source 1
 #include "lexer.hpp"
 
-// Grrr #@/&$+\*!!! Opening a namespace here will NOT 
+// Grrr  Opening a namespace here will NOT 
 // put the generated class into this namespace. Damn! 
 using namespace exparse;
 
