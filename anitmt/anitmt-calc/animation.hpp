@@ -71,7 +71,7 @@ namespace anitmt{
     values::Vector rotate;
 
     values::Vector position;
-    values::Vector direction;	
+    values::Vector front;	
     values::Vector up_vector;
   };
 
@@ -114,6 +114,7 @@ namespace anitmt{
     Scene_Interface get_next();
     std::string get_name();
     std::string get_filename();
+    std::string get_scene_type();
     Scalar_Component_Interface get_first_scalar();
     Scalar_Component_Interface get_scalar_end();
     Object_Component_Interface get_first_object();

@@ -22,6 +22,7 @@ anitmt_calc_LDADD=	../lib/message/libmessage.a \
 			input/libinput.a \
 			input/adl2/libadlparser.a \
 			output/raw/librawout.a \
+			output/pov/libpovout.a \
 			output/lib/liboutput.a \
 			output/liboutput.a \
 			libanitmt.a \
@@ -32,4 +33,3 @@ anitmt_calc_LDADD=	../lib/message/libmessage.a \
 			../lib/solve/libsolve.a \
 			../lib/proptree/libproptree.a \
 			../lib/utl/libutl.a 
-#			output/pov/libpovout.a \

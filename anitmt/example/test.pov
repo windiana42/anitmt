@@ -3,8 +3,10 @@
 
 Background <0,1,testvar>
 
-camera{
+camera{ // testobj
 
 }
+
+
 
 #warning s

@@ -283,22 +283,6 @@ Matrix<4,4> Mrotate_spherical_pair(
 	return(rv);
 }
 
-// get the rotation from v1 to v2 around axis 
-double get_rotation_around(
-	const Vector<3> &v1,const Vector<3> &v2,const Vector<3> &axis)
-{
-	// rotate both vectors so that axis maches z and v1 is 
-	// in the x-z-plain
-	Matrix<4,4> rot_easy=Mrotate_pair_pair(axis,v1,
-		Vector<3>(0.0,0.0,1.0),Vector<3>(1.0,0.0,0.0));
-	Vector<3> easy_v2=rot_easy*v2;
-
-	// get rotation from easy_v2 to x-z-plain around z
-	double z_angle = atan2(easy_v2[1],easy_v2[0]);
-
-	return(z_angle);
-}
-
 //! returns the scale factors of each axis as vector, caused by Matrix
 Vector<3> get_scale_component(const Matrix<4,4> &mat)
 {

@@ -60,6 +60,8 @@ namespace funcgen
     std::ifstream &get_in_file();	// output file stream 
     bool lexer_uses_file_stream; // whether lexer is created for in_file
 
+    int depth_counter;		// depth counter for the scanner
+
     //! store position for later access
     inline void store_pos();
     //! get current position (must be deleted!)

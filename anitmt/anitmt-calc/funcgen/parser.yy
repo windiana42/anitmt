@@ -49,9 +49,9 @@ namespace funcgen
 
 // keywords
 %token TAFD_include TAFD_declaration  TAFD_base_types TAFD_serial TAFD_type 
-%token TAFD_node TAFD_provides TAFD_extends TAFD_properties TAFD_aliases
-%token TAFD_operands TAFD_common TAFD_constraints TAFD_solvers TAFD_actions 
-%token TAFD_push TAFD_default
+%token TAFD_abstract TAFD_node TAFD_provides TAFD_extends TAFD_properties 
+%token TAFD_aliases TAFD_operands TAFD_common TAFD_constraints TAFD_solvers 
+%token TAFD_actions TAFD_push TAFD_default
 %token TAFD_contains TAFD_max1 TAFD_min1 TAFD_provide TAFD_resulting 
 %token TAFD_requires TAFD_this TAFD_prev TAFD_next TAFD_first TAFD_last 
 %token TAFD_parent TAFD_child TAFD_first_child TAFD_last_child 
@@ -72,12 +72,14 @@ namespace funcgen
 %type <string>  CXX_identifier
 %type <string>  opt_provider_type
 %type <u.scalar>  priority_level
+%type <u.boolean> opt_abstract
 %type <u.boolean> opt_max1
 %type <u.boolean> opt_min1
 %type <u.boolean> opt_serial
 %type <string>  opt_res_ref_provider
 %type <u.exp>  bool_expression
 %type <u.exp>  expression
+%type <u.exp>  expression_list
 //****************
 // precicion table
 //****************
@@ -149,9 +151,12 @@ provider_type_statement:
       { add_provided_result_type( info, $2, $4 ); }
 ;
 node_declaration:
-    TAFD_node TAFD_IDENTIFIER 
-      { start_node_declaration( info, $2 ); }
+    opt_abstract TAFD_node TAFD_IDENTIFIER 
+      { start_node_declaration( info, $1, $3 ); }
       opt_extends opt_provides '{' node_statements '}'
+;
+opt_abstract: /*optional*/	{$$ = false;}
+  | TAFD_abstract		{$$ = true;}
 ;
 opt_extends: /*optional*/
   | TAFD_extends extend_list
@@ -431,7 +436,13 @@ expression:
   | expression '-' expression		  {$$ = expr($1,"-",$3);}
   | expression '*' expression		  {$$ = expr($1,"*",$3);}
   | expression '/' expression		  {$$ = expr($1,"/",$3);}
-  | TAFD_IDENTIFIER '(' expression ')'	  {$$ = expr_function($1,$3);}
+  | TAFD_IDENTIFIER '(' ')'		  {$$ = expr_function($1);}
+  | TAFD_IDENTIFIER '(' expression_list ')'
+					  {$$ = expr_function($1,$3);}
+;
+expression_list: 
+    expression				  {$$ = expr($1);}
+  | expression_list ',' expression	  {$$ = expr($1,",",$3);}
 ;
 property_reference:
     /* property or operand */

@@ -90,7 +90,8 @@ namespace funcgen
   void add_provided_result_type( void *info, const std::string &ret, 
 				 const std::string &par );
 
-  void start_node_declaration( void *info, const std::string &name );
+  void start_node_declaration( void *info, bool abstract,
+			       const std::string &name );
   void node_extends( void *info, const std::string &node );
   void node_provides( void *info, const std::string &type );
 
@@ -170,10 +171,12 @@ namespace funcgen
 			 Expression *exp2 );
   Expression *expr_from_ref( void *info );
   Expression *expr_scalar( double val );
+  Expression *expr_string( std::string str );
   Expression *expr( Expression *exp1, 
 		    const std::string &op, 
 		    Expression *exp2 );
   Expression *expr( Expression *exp );
+  Expression *expr_function(const std::string &name);
   Expression *expr_function(const std::string &name, 
 			    Expression *par );
 

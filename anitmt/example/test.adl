@@ -1,5 +1,6 @@
 scene testscene {
   filename "test.pov";
+  scene_type "raw";
   scalar testval {
     linear testlinear1 {
       start_time 0;
@@ -27,9 +28,15 @@ scene testscene {
     }
     linear {}
   }
+/*
   scalar testval2 {
     linear {
       end_time 30;
     }
+  }
+*/
+  object testobj
+  {
+
   }
 }

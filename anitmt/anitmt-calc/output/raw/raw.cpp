@@ -38,85 +38,102 @@ namespace anitmt
   {
     Prop_Tree_Interface prop_tree( &ani->ani_root );
 
-    std::string dir = ani->GLOB.param.ani_dir();
-    std::string basename = "raw_", extension = ".out";
-    int startf = ani->GLOB.param.startframe();
-    int endf   = ani->GLOB.param.endframe();
-
-    for( int f = startf; f <= endf; f++ /*f += ani->GLOB.param.jump()*/ )
+    // check whether there is a raw scene
+    Scene_Interface first_raw_scene = prop_tree.get_first_scene();
+    for( ; 
+	 first_raw_scene != prop_tree.get_scene_end(); 
+	 first_raw_scene = first_raw_scene.get_next() )
     {
-      verbose(2) << "Writing Frame " << f << "...";
+      if( first_raw_scene.get_scene_type() == "raw" )
+        break;
+    }
 
-      char str_num[20];
-      sprintf( str_num, "%04d", f );
-      assert( ani->GLOB.param.fps() != 0 );
-      values::Scalar t = f / ani->GLOB.param.fps();
-      
-      std::string filename = dir + basename + str_num + extension;
-      std::ofstream out( filename.c_str() );
+    // if there is any raw scene...
+    if( first_raw_scene != prop_tree.get_scene_end() )
+    {
+      std::string dir = ani->GLOB.param.ani_dir();
+      std::string basename = "raw_", extension = ".out";
+      int startf = ani->GLOB.param.startframe();
+      int endf   = ani->GLOB.param.endframe();
 
-      out << "time " << t << ";" << std::endl;
-      for( Scene_Interface scene = prop_tree.get_first_scene(); 
-	   scene != prop_tree.get_scene_end(); 
-	   scene = scene.get_next() )
+      for( int f = startf; f <= endf; f++ /*f += ani->GLOB.param.jump()*/ )
       {
-	out << "scene " << scene.get_name() << std::endl;
-	out << "{" << std::endl;
+	verbose() << "Writing Frame " << f << "...";
+
+	char str_num[20];
+	sprintf( str_num, "%04d", f );
+	assert( ani->GLOB.param.fps() != 0 );
+	values::Scalar t = f / ani->GLOB.param.fps();
+      
+	std::string filename = dir + basename + str_num + extension;
+	std::ofstream out( filename.c_str() );
+
+	out << "time " << t << ";" << std::endl;
+	for( Scene_Interface scene = first_raw_scene; 
+	     scene != prop_tree.get_scene_end(); 
+	     scene = scene.get_next() )
+	{
+	  if( scene.get_scene_type() != "raw" )
+	    continue;		// continue if scene type is != raw
+
+	  out << "scene " << scene.get_name() << std::endl;
+	  out << "{" << std::endl;
 	
-	// *************************
-	// output scalar components
+	  // *************************
+	  // output scalar components
 
-	for( Scalar_Component_Interface scalar = scene.get_first_scalar();
-	     scalar != scene.get_scalar_end();
-	     scalar = scalar.get_next() )
-	{
-	  out << "  scalar " << scalar.get_name() << std::endl;
-	  out << "  {" << std::endl;
-	  
-	  std::pair<bool,values::Scalar> ret = scalar.get_value( t );
-	  if( ret.first )
-	    out << "    val " << ret.second << ";" << std::endl;
-	  else
-	    out << "    val <undefined>;" << std::endl;
-	  
-	  out << "  }" << std::endl;
-	}
-
-	//*************************
-	// output object components
-
-	for( Object_Component_Interface object = scene.get_first_object();
-	     object != scene.get_object_end();
-	     object = object.get_next() )
-	{
-	  out << "  object " << object.get_name() << std::endl;
-	  out << "  {" << std::endl;
-	  
-	  std::pair<bool,Object_State> ret = object.get_state( t );
-	  if( ret.first )
+	  for( Scalar_Component_Interface scalar = scene.get_first_scalar();
+	       scalar != scene.get_scalar_end();
+	       scalar = scalar.get_next() )
 	  {
-	    out << "    matrix " << ret.second.matrix << ";" << std::endl;
-	    out << "    // equals: " << std::endl;
-	    out << "    translate " << ret.second.translate
-		<< ";" << std::endl;
-	    out << "    rotate "    << ret.second.rotate
-		<< ";" << std::endl;
-	    out << "    // equals: " << std::endl;
-	    out << "    position "  << ret.second.position
-		<< ";" << std::endl;
-	    out << "    direction " << ret.second.direction
-		<< ";" << std::endl;
-	    out << "    up-vector " << ret.second.up_vector
-		<< ";" << std::endl;
-	  }
-	  else
-	    out << "    val <undefined>;" << std::endl;
+	    out << "  scalar " << scalar.get_name() << std::endl;
+	    out << "  {" << std::endl;
 	  
-	  out << "  }" << std::endl;
+	    std::pair<bool,values::Scalar> ret = scalar.get_value( t );
+	    if( ret.first )
+	      out << "    val " << ret.second << ";" << std::endl;
+	    else
+	      out << "    val <undefined>;" << std::endl;
+	  
+	    out << "  }" << std::endl;
+	  }
+
+	  //*************************
+	    // output object components
+
+	    for( Object_Component_Interface object = scene.get_first_object();
+		 object != scene.get_object_end();
+		 object = object.get_next() )
+	    {
+	      out << "  object " << object.get_name() << std::endl;
+	      out << "  {" << std::endl;
+	  
+	      std::pair<bool,Object_State> ret = object.get_state( t );
+	      if( ret.first )
+	      {
+		out << "    matrix " << ret.second.matrix << ";" << std::endl;
+		out << "    // equals: " << std::endl;
+		out << "    translate " << ret.second.translate
+		    << ";" << std::endl;
+		out << "    rotate "    << ret.second.rotate
+		    << ";" << std::endl;
+		out << "    // equals: " << std::endl;
+		out << "    position "  << ret.second.position
+		    << ";" << std::endl;
+		out << "    front " << ret.second.front
+		    << ";" << std::endl;
+		out << "    up-vector " << ret.second.up_vector
+		    << ";" << std::endl;
+	      }
+	      else
+		out << "    val <undefined>;" << std::endl;
+	  
+	      out << "  }" << std::endl;
+	    }
+
+
+	    out << "}" << std::endl;
 	}
-
-
-	out << "}" << std::endl;
       }
     }
   }

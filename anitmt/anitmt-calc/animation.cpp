@@ -14,7 +14,7 @@
 
 #include "animation.hpp"
 
-#include <functionality/functionality.hpp>
+#include <functionality/make_avail.hpp>
 
 #include "save_filled.hpp"
 #include "anitmt.hpp"
@@ -51,8 +51,7 @@ namespace anitmt{
   void Animation::init()
   {
     // register animation tree nodes
-    functionality::make_base_func_nodes_availible();
-    functionality::make_functionality_nodes_availible();
+    functionality::make_nodes_availible();
 
     // activate DEBUG function of parser at verbose level 5
     if( GLOB.param.verbose() >= 4 )
@@ -105,6 +104,25 @@ namespace anitmt{
   // ***************************
   // Object_Component_Interface 
   
+  Object_Component_Interface Scene_Interface::get_first_object()
+  {
+    functionality::node_scene *scene_node = 
+      dynamic_cast<functionality::node_scene *> (*scene);
+    assert( scene_node != 0 );
+
+    return scene_node->_cn_object_component.elements_begin();
+  }
+
+  Object_Component_Interface Scene_Interface::get_object_end()
+  {
+    functionality::node_scene *scene_node = 
+      dynamic_cast<functionality::node_scene *> (*scene);
+    assert( scene_node != 0 );
+
+    return scene_node->_cn_object_component.elements_end();
+  }
+
+
   Object_Component_Interface Object_Component_Interface::get_next()
   {
     return ++object_component;
@@ -119,12 +137,31 @@ namespace anitmt{
   Object_Component_Interface::get_state( values::Scalar t )
   {
     std::pair<bool,Object_State> ret; ret.first = false;
+
+    std::pair<bool,functionality::translation> trans = 
+      (*object_component)->_rf_object_component_translation_time( t );
+    std::pair<bool,functionality::rotation> rot = 
+      (*object_component)->_rf_object_component_rotation_time( t );
     std::pair<bool,functionality::position> pos = 
-#warning adapt to better provider type
       (*object_component)->_rf_object_component_position_time( t );
-    if( !pos.first ) return ret;
-    ret.second.position = pos.second;
+    std::pair<bool,functionality::front> front = 
+      (*object_component)->_rf_object_component_front_time( t );
+    std::pair<bool,functionality::up_vector> up = 
+      (*object_component)->_rf_object_component_up_vector_time( t );
+
+    if( !trans.first ) return ret;
+    if( !rot.first   ) return ret;
+    if( !pos.first   ) return ret;
+    if( !front.first ) return ret;
+    if( !up.first    ) return ret;
+
+    ret.second.translate = trans.second;
+    ret.second.rotate    = rot.second;
+    ret.second.position  = pos.second;
+    ret.second.front     = front.second;
+    ret.second.up_vector = up.second;
     ret.first = true;
+
     return ret;
   }
 
@@ -150,6 +187,20 @@ namespace anitmt{
     proptree::String_Property *fn
       = dynamic_cast<proptree::String_Property*>
       ((*scene)->get_property("filename"));
+    if( !fn ) return "<undefined>";
+    if( !fn->is_solved() ) return "<unsolved>";
+
+    return fn->get_value();
+  }
+
+  std::string Scene_Interface::get_scene_type()
+  {
+    proptree::String_Property *fn
+      = dynamic_cast<proptree::String_Property*>
+      ((*scene)->get_property("scene_type"));
+    if( !fn ) return "<undefined>";
+    if( !fn->is_solved() ) return "<unsolved>";
+
     return fn->get_value();
   }
 
@@ -170,24 +221,6 @@ namespace anitmt{
     assert( scene_node != 0 );
 
     return scene_node->_cn_scalar_component.elements_end();
-  }
-
-  Object_Component_Interface Scene_Interface::get_first_object()
-  {
-    functionality::node_scene *scene_node = 
-      dynamic_cast<functionality::node_scene *> (*scene);
-    assert( scene_node != 0 );
-
-    return scene_node->_cn_object_component.elements_begin();
-  }
-
-  Object_Component_Interface Scene_Interface::get_object_end()
-  {
-    functionality::node_scene *scene_node = 
-      dynamic_cast<functionality::node_scene *> (*scene);
-    assert( scene_node != 0 );
-
-    return scene_node->_cn_object_component.elements_end();
   }
 
   Scene_Interface::Scene_Interface

@@ -259,6 +259,18 @@ extern Vector<3> rotateZ(const Vector<3> &v,double theta);
 extern Vector<3> to_spherical(const Vector<3> &v);
 extern Vector<3> to_rectangular(const Vector<3> &v);
 
+//! Get the rotation from v1 to v2 around axis 
+extern double get_rotation_around(
+	const Vector<3> &v1,const Vector<3> &v2,const Vector<3> &axis);
+
+/*! rotates a vector pair to another
+    the first vectors of each pair will match exactly afterwards but the second
+    may differ in the angle to the first one. They will be in the same plane
+    then. The result are rotations about x-,y- and z-axis as a vector */
+extern Vector<3> Vrotate_pair_pair(
+	const Vector<3> &vect1f,const Vector<3> &vect1u,
+	const Vector<3> &vect2f,const Vector<3> &vect2u);
+
 }  // namespace end 
 
 #endif  /* _NS_vect_vector_HPP_ */

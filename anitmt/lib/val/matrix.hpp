@@ -299,7 +299,7 @@ extern Matrix<4,4> Mrotate_vect_vect(const Vector<3> &from,const Vector<3> &to);
 extern Matrix<4,4> Mrotate_vect_vect_up(const Vector<3> &from,
 	const Vector<3> &to,const Vector<3> &up);
 /*! rotates a vector pair to another
-    the first vectors of each pair will mach exactly afterwards but the second
+    the first vectors of each pair will match exactly afterwards but the second
     may differ in the angle to the first one. They will be in the same plane
     then. */
 extern Matrix<4,4> Mrotate_pair_pair(
@@ -312,10 +312,6 @@ extern Matrix<4,4> Mrotate_pair_pair(
     and the z-coordiante specifies the angle to go up from the plane */
 extern Matrix<4,4> Mrotate_spherical_pair(
 	const Vector<3> &front,const Vector<3> &up,const Vector<3> &angles);
-
-//! Get the rotation from v1 to v2 around axis 
-extern double get_rotation_around(
-	const Vector<3> &v1,const Vector<3> &v2,const Vector<3> &axis);
 
 /*! returns a vector which tells the resulting scalation of an x,y and z 
     vector when being multipied with Matrix m.

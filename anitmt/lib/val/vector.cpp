@@ -126,4 +126,35 @@ Vector<3> &Vector<3>::to_rectangular()
 	return(*this);
 }
 
+
+// get the rotation from v1 to v2 around axis 
+double get_rotation_around(
+	const Vector<3> &v1,const Vector<3> &v2,const Vector<3> &axis)
+{
+	// rotate both vectors so that axis maches z and v1 is 
+	// in the x-z-plain
+	Matrix<4,4> rot_easy=Mrotate_pair_pair(axis,v1,
+		Vector<3>(0.0,0.0,1.0),Vector<3>(1.0,0.0,0.0));
+	Vector<3> easy_v2=rot_easy*v2;
+
+	// get rotation from easy_v2 to x-z-plain around z
+	double z_angle = atan2(easy_v2[1],easy_v2[0]);
+
+	return(z_angle);
+}
+
+// rotates a vector pair to another
+// the first vectors of each pair will mach exactly afterwards but the second
+// may differ in the angle to the first one. They will be in the same plane
+// then. The result are rotations about x-,y- and z-axis as a vector 
+Vector<3> Vrotate_pair_pair(
+	const Vector<3> &vect1f,const Vector<3> &vect1u,
+	const Vector<3> &vect2f,const Vector<3> &vect2u)
+{
+  //!!! lazy implementation !!!
+  Matrix<4,4> m = Mrotate_pair_pair( vect1f, vect1u, vect2f, vect2u );
+  Vector<3> res = get_rotate_component( m );
+  return res;
+}
+
 }  // namespace end

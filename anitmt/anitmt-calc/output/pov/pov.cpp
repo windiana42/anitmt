@@ -56,6 +56,8 @@ void Pov_Output::check_components() throw( )
 	     scene != prop_tree.get_scene_end(); 
 	     scene = scene.get_next() )
 	{
+		if( scene.get_scene_type() != "pov" )
+			continue;
 		errors+=parser->Go(ani,scene);
 	}
 	

@@ -132,8 +132,8 @@ char *Frame_Dump::Node::_Dump_Object2Str(char *d,char *dend,Frame_Dump::Context 
 		obj->get_state(ctx->t);
 	
 	bool defined=ret.first;
-	#warning Object_State lacks is_avtive member. FIXME!!! 
-	bool active=true;  //ret.second.is_active;
+	#warning Object_State lacks is_avtive member. DONE (Martin)!!! 
+	bool active=ret.first;  //ret.second.is_active;
 	{ static int complained=0;
 	  if(complained<10)
 	  {  cout << "Object_State lacks is_avtive member. FIXME!!!" << 

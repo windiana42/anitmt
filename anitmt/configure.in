@@ -41,10 +41,10 @@ AC_OUTPUT(
 	anitmt-calc/output/Makefile
 	anitmt-calc/output/lib/Makefile
 	anitmt-calc/output/raw/Makefile
+	anitmt-calc/output/pov/Makefile
 	anitmt-calc/funcgen/Makefile
 	anitmt-calc/functionality/Makefile
 	anitmt-view/Makefile
 	anitmt-view/parser/Makefile
 	mkavi/Makefile
 	test/Makefile )
-#	anitmt-calc/output/pov/Makefile

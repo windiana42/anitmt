@@ -28,6 +28,7 @@ namespace funcgen
   {
     afd_info *I=static_cast<afd_info*>(info);
     I->lexer->goto_code_copy_mode();
+    I->depth_counter = 0;
 
     //message::Message_Reporter &msg = I->msg;
     //Code_Translator *translator = I->afd->translator;
@@ -201,13 +202,17 @@ namespace funcgen
       afd->current_type->result_types.insert( Result_Type(ret,par) );
   }
 
-  void start_node_declaration( void *infoptr, const std::string &name )
+  void start_node_declaration( void *infoptr, bool abstract,
+			       const std::string &name )
   {
     afd_info *info = static_cast<afd_info*>(infoptr);
     AFD_Root *afd = info->afd;
     afd->current_node = &afd->nodes[name]; 
     afd->current_node->pos = info->file_pos.duplicate();
-    afd->current_node->don_t_create_code = afd->don_t_create_code.top();
+    if( abstract )		// dont create abstract nodes
+      afd->current_node->don_t_create_code = true;
+    else
+      afd->current_node->don_t_create_code = afd->don_t_create_code.top();
   }
   void node_extends( void *infoptr, const std::string &node )
   {
@@ -721,7 +726,7 @@ namespace funcgen
 
       if( res_code )		// in valid result code?
       {
-	//!!! check whether result function of child exists exists !!!
+	//!!! check whether result function of child exists !!!
 	
 	res_code->code += translator->child_result( provider, result_type, 
 						    parameter_type, 
@@ -892,6 +897,12 @@ namespace funcgen
     res->append( str );
     return res;
   }
+  Expression *expr_string( std::string str )
+  {
+    Expression *res = new Expression();
+    res->append( str );
+    return res;
+  }
   Expression *expr( Expression *exp1, 
 		    const std::string &op, 
 		    Expression *exp2 )
@@ -911,6 +922,14 @@ namespace funcgen
     res->append(")");
     return res;
   }
+  Expression *expr_function( const std::string &name )
+  {
+    Expression *res = new Expression;
+    res->append(name+'(');
+    res->append(")");
+    return res;
+  }
+
   Expression *expr_function( const std::string &name, 
 			     Expression *par )
   {

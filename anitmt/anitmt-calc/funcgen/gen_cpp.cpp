@@ -157,7 +157,7 @@ namespace funcgen
   }
   std::string Cpp_Code_Translator::operand_type( std::string name )
   {
-    return "Operand<"+name+">";
+    return "solve::Operand<"+name+">";
   }
   std::string Cpp_Code_Translator::container( std::string prov_type ) 
   {
@@ -1020,28 +1020,6 @@ namespace funcgen
       }
       *decl << std::endl;
 
-      *decl << "    // ** child container **" << std::endl;
-      std::set<Child_Container>::const_iterator k;
-      for( k  = node.child_containers.begin(); 
-	   k != node.child_containers.end(); ++k )
-      {
-	if( afd->provider_types[ k->provider_type ].serial )
-	{
-	  *decl << "    " << translator.serial_container( k->provider_type )
-		<< " " << translator.container_name( k->provider_type ) << ";"
-		<< " // " << (k->max1?"max1 ":"") << (k->min1?"min1":"")
-		<< std::endl;
-	}
-	else
-	{
-	  *decl << "    " << translator.container( k->provider_type )
-		<< " " << translator.container_name( k->provider_type ) << ";"
-		<< " // " << (k->max1?"max1 ":"") << (k->min1?"min1":"")
-		<< std::endl;
-	}
-      }
-      *decl << std::endl;
-
       *decl << "    // ** virtual tree node functions **" << std::endl
 	    << "    virtual proptree::Prop_Tree_Node *try_add_child( "
 	    << "std::string type, std::string name ) throw();" << std::endl
@@ -1056,6 +1034,8 @@ namespace funcgen
 	    << " std::string name ) throw()"<< std::endl
 	    << "  {" << std::endl
 	    << "    proptree::Prop_Tree_Node *node = 0;" << std::endl;
+
+      std::set<Child_Container>::const_iterator k;
       for( k  = node.child_containers.begin(); 
 	   k != node.child_containers.end(); ++k )
       {
@@ -1077,9 +1057,31 @@ namespace funcgen
       }
       *impl << "  }" << std::endl
 	    << std::endl;
+
+      *decl << "  public:" << std::endl;
+
+      *decl << "    // ** child container **" << std::endl;
+      for( k  = node.child_containers.begin(); 
+	   k != node.child_containers.end(); ++k )
+      {
+	if( afd->provider_types[ k->provider_type ].serial )
+	{
+	  *decl << "    " << translator.serial_container( k->provider_type )
+		<< " " << translator.container_name( k->provider_type ) << ";"
+		<< " // " << (k->max1?"max1 ":"") << (k->min1?"min1":"")
+		<< std::endl;
+	}
+	else
+	{
+	  *decl << "    " << translator.container( k->provider_type )
+		<< " " << translator.container_name( k->provider_type ) << ";"
+		<< " // " << (k->max1?"max1 ":"") << (k->min1?"min1":"")
+		<< std::endl;
+	}
+      }
+      *decl << std::endl;
       
-      *decl << "  public:" << std::endl
-	    << "    // ** constraint, solver and action establishing "
+      *decl << "    // ** constraint, solver and action establishing "
 	    << "functions **" << std::endl
 	    << "    //! establish general dependencies (common)" 
 	    <<	      " for each node" << std::endl
@@ -1138,26 +1140,26 @@ namespace funcgen
 	    {
 	      *impl << "    // ** establish availability checks **" 
 		    << std::endl
-		    << "    solve::Multi_And_Operator *and_op;" << std::endl;
+		    << "    solve::Multi_And_Operator *m_and;" << std::endl;
 	      first = false;
 	    }
-	    *impl << "    and_op = "
+	    *impl << "    m_and = "
 		  << "new solve::Multi_And_Operator(get_consultant());"
 		  << std::endl
 		  << "    " 
 		  << translator.is_avail( provides, res_type.return_type, 
 					  res_type.parameter_type ) 
-		  << " = and_op->get_result();" 
+		  << " = m_and->get_result();" 
 		  << std::endl;
 	    std::list<std::string>::const_iterator req_prop;
 	    for( req_prop = res_code.required_properties.begin();
 		 req_prop != res_code.required_properties.end();
 		 ++req_prop )
 	    {
-	      *impl << "    and_op->add_operand( solve::is_solved( " 
+	      *impl << "    m_and->add_operand( solve::is_solved( " 
 		    << translator.prop_op( *req_prop ) << " ) );" << std::endl;
 	    }
-	    *impl << "    and_op->finish_adding();" << std::endl;
+	    *impl << "    m_and->finish_adding();" << std::endl;
 	    std::list< std::pair<std::string,Result_Type> >::const_iterator 
 	      req_child;
 	    for( req_child = res_code.required_children.begin();
@@ -1169,7 +1171,7 @@ namespace funcgen
 	      const std::string &parameter_type 
 		= req_child->second.parameter_type;
 
-	      *impl << "    and_op->add_operand( " 
+	      *impl << "    m_and->add_operand( " 
 		    << translator.container_name( child_type ) << "."
 		    << translator.is_avail( child_type, return_type, 
 					    parameter_type ) << " );" 
@@ -1186,12 +1188,12 @@ namespace funcgen
 	      const std::string &parameter_type 
 		= req_res->second.parameter_type;
 
-	      *impl << "    and_op->add_operand( "
+	      *impl << "    m_and->add_operand( "
 		    << translator.is_avail( provider_type, return_type, 
 					    parameter_type ) << " );" 
 		    << std::endl;
 	    }
-	    *impl << "    and_op->finish_adding();" << std::endl;
+	    *impl << "    m_and->finish_adding();" << std::endl;
 	  }
 	}
       }

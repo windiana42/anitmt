@@ -96,6 +96,7 @@ declaration	{ tok_pos(); return TAFD_declaration; }
 base_types	{ tok_pos(); return TAFD_base_types; }
 serial		{ tok_pos(); return TAFD_serial; }
 type		{ tok_pos(); return TAFD_type; }
+abstract	{ tok_pos(); return TAFD_abstract; }
 node		{ tok_pos(); return TAFD_node; }
 provides	{ tok_pos(); return TAFD_provides; }
 extends		{ tok_pos(); return TAFD_extends; }
@@ -142,10 +143,16 @@ return		{ tok_pos(); return TAFD_return; }
 <COPY_CODE>"\r"	{ ; /*ignore DOS specific line end*/ }
 <COPY_CODE>"["	{ tok_pos(); code_block_escape(info); yy_pop_state(); 
 		  return yytext[0]; }
-<COPY_CODE>"}"	{ unput('}'); yy_pop_state(); return TAFD_CODE; }
-<COPY_CODE>[^\n\t\[}]+ 	{inc_col(); copy_code_line( info, yytext, yyleng ); }
-<COPY_CODE>[^\n\[}]+"\n" 	{ info->file_pos.inc_line(); 
-				  copy_code_line( info, yytext,yyleng ); }
+<COPY_CODE>"{"	{ inc_col(); ++info->depth_counter; 
+		  copy_code_line( info, yytext, yyleng ); }
+<COPY_CODE>"}"	{ if( --info->depth_counter < 0 ) 
+		  { unput('}'); yy_pop_state(); return TAFD_CODE;} 
+		  else
+		  { inc_col(); copy_code_line( info, yytext, yyleng ); }
+                }
+<COPY_CODE>[^\n\t\[{}]+   {inc_col(); copy_code_line( info, yytext, yyleng ); }
+<COPY_CODE>[^\n\[{}]+"\n" {info->file_pos.inc_line(); 
+			   copy_code_line( info, yytext,yyleng ); }
 
 <<EOF>>		{ finished_file(info); if( info->close_file() ) return 0; }
 

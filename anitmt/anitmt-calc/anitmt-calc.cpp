@@ -66,12 +66,6 @@ int main(int argc,char **argv,char **envp)
     if(!cmd.Check_Unused() )
       return -2;
 
-    // !!! memory leak and invariable output format !!!
-    //Output_Interface *output = new Raw_Output( &ani ); 
-    Output_Interface *output = new Raw_Output( &ani ); // Pov_Output( &ani );
-
-    output->init();
-
     // init animation tree
     ani.init();
 
@@ -143,11 +137,25 @@ int main(int argc,char **argv,char **envp)
       return -6;
     }
 
-    output->check_components(); // needs filename property
-
     ani.finish_calculations();
 
+    Output_Interface *output;
+
+    //!!! better interface to choose the output filter in the future !!!
+
+    // RAW output    
+    output = new Raw_Output( &ani ); 
+    output->init();
+    output->check_components();
     output->process_results();
+    delete output;
+
+    // POV output    
+    output = new Pov_Output( &ani ); 
+    output->init();
+    output->check_components();
+    output->process_results();
+    delete output;
 
     if( msg.get_num_errors() > 0 )
     {

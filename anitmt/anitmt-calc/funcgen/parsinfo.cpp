@@ -30,8 +30,9 @@ namespace funcgen
 	<< "fatal error: couldn't open input file " << filename;
       return false;
     }
-    in_files.push( is );
-    positions.push( file_pos.duplicate() );
+
+    in_files.push( is );	// store ne stream
+    positions.push( file_pos.duplicate() ); // store old position
 
     file_pos.set_filename( filename );
     lexer->set_input_stream( *is );
@@ -44,20 +45,22 @@ namespace funcgen
     // remove current file from stack
     delete in_files.top();
     in_files.pop();
-    delete positions.top();
-    positions.pop();
+    bool ret;
     if( in_files.empty() )
     {
       lexer_uses_file_stream = false;
       lexer->set_input_stream( cin );
-      return true;
+      ret = true;
     }
     else
     {
       lexer->set_input_stream( *in_files.top() );
-      file_pos = *positions.top();
-      return false;		// still another file open
+      ret = false;		// still another file open
     }
+    file_pos = *positions.top();
+    delete positions.top();
+    positions.pop();
+    return ret;
   }
 
   afd_info::afd_info( AFD_Root *AFD_Root, 
