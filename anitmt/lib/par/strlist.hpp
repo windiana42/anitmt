@@ -24,7 +24,7 @@
 
 #include <string>
 #include <list>
-#include <ostream>
+#include <iostream>
 
 namespace anitmt
 {
