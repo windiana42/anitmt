@@ -8,12 +8,13 @@
 #include "adlparser.hpp"
 
 using namespace anitmt;
+using namespace message;
 
 //#define SCANNER_TEST
 
 
-void ScannerTest() {
-	VADLFlexLexer l(&cin, &cout);
+void ScannerTest(Message_Consultant *c) {
+	VADLFlexLexer l(string("stdin"), &cin, c);
 	l.set_debug(true);
 	l.yylval.num=0; 
 	int tok;
@@ -23,10 +24,10 @@ void ScannerTest() {
 	}
 }
 
-void ParserTest() {
+void ParserTest(Message_Consultant *c) {
 	try {
 		make_all_nodes_available();
-		ADLParser p(cin, cout, true);
+		ADLParser p(string("stdin"), cin, c);
 		Animation *ani=new Animation("dummy_name");
 		p.ParseTree(ani);
 		ani->pri_sys.invoke_all_Actions();
@@ -42,9 +43,13 @@ void ParserTest() {
 }
 
 int main() {
+	// Copied from testmessage.cpp
+	Stream_Message_Handler handler(cerr,cout,cout);
+	Message_Manager manager(&handler);
+	Message_Consultant c(&manager, 0);
 #ifdef SCANNER_TEST
-	ScannerTest();
+	ScannerTest(&c);
 #else
-	ParserTest();
+	ParserTest(&c);
 #endif
 }

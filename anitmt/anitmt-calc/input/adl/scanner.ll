@@ -7,7 +7,9 @@
    FIXMEs:
    The ugly typecast into VADLFlexLexer ... is there a better solution?
    *NEVER* create objects of type ADLFlexLexer!!
-*/
+
+   This implementation is flex specific - but maybe that's no real
+   problem since everyone uses flex?!  */
 	
 %}
 
@@ -32,16 +34,13 @@
 \>	return (CL_VECTOR);
 \.	return (DOT);
 \,	return (COMMA);
-"n/a"|\""n/a"\" return (N_A);
-scene|scalar|linear {
-	((VADLFlexLexer*)this)->yylval.str=yytext; return (NODE);
-}
-
 [[:alpha:]_][[:alnum:]_]*	{
 	((VADLFlexLexer*)this)->yylval.str=yytext;
 	return (IDENTIFIER);
 }
-\"[^"\n]*\"	{	/*" this hyphen brings the emacs colorizer back into normal mode :)*/
+\"[^"\n]*\"			{	/*" this hyphen brings the
+                                          emacs colorizer back into
+                                          normal mode :)*/
 	((VADLFlexLexer*)this)->yylval.str=string(yytext+1).substr(0, yyleng-2);
 	return (STRING);
 }

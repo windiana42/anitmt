@@ -65,6 +65,8 @@ public:
 	error(new Test_Position(),0) << "this" << " is " << 1 << " long " << tmp <<
 	  " written " << 't' << 'o' << " the con" << "sole" << '.';
 	verbose(0) << "...done";
+   verbose(0, new File_Position("a-file-that-never-existed.txt", 73, 75))
+	   << "verbose output with a file position\n";
   }
   test( Message_Consultant *consultant, int level ) 
     : Message_Reporter( consultant ) 

@@ -8,6 +8,8 @@
 #include <FlexLexer.h>
 
 #include "support.hpp"
+using namespace message;
+
 //-----------------------------------------------------------------------------
 struct TokenTableEntry {int index; char *desc;};
 // Token --> human readable string table
@@ -23,8 +25,6 @@ const TokenTableEntry TokenTable[]= {
 	{CL_VECTOR,			">"				},
 	{DOT,				"."				},
 	{COMMA,				","				},
-	{N_A,				"n/a or \"n/a\""		},
-	{NODE,				"scene, scalar or linear etc."	},
 	{IDENTIFIER,			"identifier"			},
 	{STRING,			"string"			},
 	{NUMBER,			"number"			},
@@ -41,9 +41,16 @@ string NameOfToken(const int tok) {
 }
 
 //-----------------------------------------------------------------------------
-VADLFlexLexer::VADLFlexLexer(istream *is, ostream *os) : ADLFlexLexer(is, os) {}
+VADLFlexLexer::VADLFlexLexer(const string _fn,
+			     istream *is,
+			     message::Message_Consultant *c) :
+	ADLFlexLexer(is, &cerr), //FIXME
+	message::Message_Reporter(c),
+	fn(_fn) {}
+
 void VADLFlexLexer::Warning(const string msg) {
-	*yyout << "ADL-Scanner WARNING (line " << yylineno << "): " << msg << '\n';
+	warn(new File_Position(fn, yylineno))
+		<< "ADL-Scanner: " << msg;
 }
 
 int VADLFlexLexer::GetNext() { return _t=yylex(); }

@@ -89,4 +89,18 @@ namespace message
 						  std::ostream &verbose )
     : error_stream(err), warning_stream(warn), verbose_stream(verbose)
   {}
+
+  //**************************************************************
+  // Position classes
+  void File_Position::write2stream(std::ostream &os,
+			      int detail_level) const {
+	  os << "in file \"" << fn << "\"";
+	  if (l && detail_level > 0) os << " line " << l;
+	  if (c && detail_level > 1) os << ", column " << c;
+	  os << ' ';
+  }
+  File_Position::File_Position(const std::string _fn,
+			       const int _l,
+			       const int _c) :
+	  fn(_fn), l(_l), c(_c) {}
 }

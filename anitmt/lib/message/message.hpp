@@ -21,13 +21,11 @@ namespace message
   class Null_Position;
 
   // Data flow:
-  // Message_Reporter (n)-->(1) Message_Consultant (n)-->(1) Message_Manager
-  // (1)-->(1) Message_Handler
+  // Reporter (n)-->(1) Consultant (n)-->(1) Manager (1)-->(1) Handler
   class Message_Handler;    
   class Message_Manager;
   class Message_Consultant;
   class Message_Reporter;
-
 }
 
 #include <string>
@@ -63,6 +61,20 @@ namespace message
   class Null_Position : public Abstract_Position {
   public:
     void write2stream( std::ostream&, int detail_level ) const {}
+  };
+
+  //! Position used for messages with a general file position (name, line, column)
+  class File_Position : public Abstract_Position {
+  public:
+	void write2stream(std::ostream&, int detail_level) const;
+	//! Create a file position
+	/*\param fn - file name
+	  \param l - line in file (0 if unused)
+	  \param c - column in file (0 if not used) */
+	File_Position(const std::string fn, const int l=0, const int c=0);
+  private:
+	  const std::string fn;
+	  const int l, c;
   };
 
   //! ID type for message source types

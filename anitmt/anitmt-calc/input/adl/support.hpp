@@ -5,7 +5,7 @@
 /* Copyright Onno Kortmann 
    License: GNU GPL */
 //-----------------------------------------------------------------------------
-#include <string>
+#include <message/message.hpp>
 
 //-----------------------------------------------------------------------------
 //! List of adl tokens 
@@ -22,8 +22,7 @@ enum ADLTokens {
 	DOT,		// .
 	COMMA,		// ,
 	N_A,		// n/a
-	NODE,		// scene, scalar, linear, ...
-	IDENTIFIER,	// Blablabla
+	IDENTIFIER,	// Blablabla, blablabla, bla_blabla, bla123, scene, scalar, ...
 	STRING,		// "Blablabla"
 	NUMBER,		// 1.4142
 	END_OF_FILE
@@ -34,10 +33,12 @@ string NameOfToken(const int tok);
 
 //! VADLFlexLexer is a ADLFlexLexer with values for each returned token and
 //! warning/error-handling.
-class VADLFlexLexer : public ADLFlexLexer {
+class VADLFlexLexer : public ADLFlexLexer, public message::Message_Reporter {
 public:
-	VADLFlexLexer(istream *is, ostream *os);
-	//! FIXME: Not a very efficient way to handle values...
+	VADLFlexLexer(const string fn,
+		      istream *is,
+		      message::Message_Consultant *c);
+	//! Not a very efficient way to handle values... but it works.
 	struct {
 		string str;
 		double num;
@@ -52,6 +53,7 @@ public:
 	/*! Get last token, undefined result if called before a first "GetNext" call! */
 	int tok();
 private:
+	const string fn;
 	int _t; // The current token
 };
 //-----------------------------------------------------------------------------

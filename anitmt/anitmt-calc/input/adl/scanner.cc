@@ -256,29 +256,24 @@ typedef unsigned char YY_CHAR;
 	*yy_cp = '\0'; \
 	yy_c_buf_p = yy_cp;
 
-#define YY_NUM_RULES 20
-#define YY_END_OF_BUFFER 21
-static yyconst short int yy_acclist[82] =
+#define YY_NUM_RULES 18
+#define YY_END_OF_BUFFER 19
+static yyconst short int yy_acclist[58] =
     {   0,
-       21,   19,   20,    2,   19,   20,    2,   20,   19,   20,
-        8,   19,   20,    6,   19,   20,   13,   19,   20,    7,
-       19,   20,   12,   19,   20,    9,   19,   20,   18,   19,
-       20,    5,   19,   20,   10,   19,   20,   11,   19,   20,
-       16,   19,   20,   16,   19,   20,   16,   19,   20,   16,
-       19,   20,    3,   19,   20,    4,   19,   20,   19,   20,
-       17,   18,   16,   16,   16,    1,   18,   16,   14,   16,
-       16,   16,   16,   16,   14,   17,   18,   16,   16,   15,
-       16
+       19,   17,   18,    2,   17,   18,    2,   18,   17,   18,
+        8,   17,   18,    6,   17,   18,   13,   17,   18,    7,
+       17,   18,   12,   17,   18,    9,   17,   18,   16,   17,
+       18,    5,   17,   18,   10,   17,   18,   11,   17,   18,
+       14,   17,   18,    3,   17,   18,    4,   17,   18,   17,
+       18,   15,   16,   14,    1,   16,   16
     } ;
 
-static yyconst short int yy_accept[54] =
+static yyconst short int yy_accept[34] =
     {   0,
         1,    1,    1,    2,    4,    7,    9,   11,   14,   17,
        20,   23,   26,   29,   32,   35,   38,   41,   44,   47,
-       50,   53,   56,   59,   61,   61,   62,   62,   63,   63,
-       64,   65,   65,   66,   67,   67,   68,   69,   70,   71,
-       72,   72,   72,   73,   74,   75,   77,   77,   78,   79,
-       80,   82,   82
+       50,   52,   52,   53,   54,   54,   55,   56,   57,   57,
+       57,   58,   58
     } ;
 
 static yyconst int yy_ec[256] =
@@ -292,11 +287,11 @@ static yyconst int yy_ec[256] =
         1,   15,    1,    1,   16,   16,   16,   16,   17,   16,
        16,   16,   16,   16,   16,   16,   16,   16,   16,   16,
        16,   16,   16,   16,   16,   16,   16,   16,   16,   16,
-        1,    1,    1,    1,   16,    1,   18,   16,   19,   16,
+        1,    1,    1,    1,   16,    1,   16,   16,   16,   16,
 
-       20,   16,   16,   16,   21,   16,   16,   22,   16,   23,
-       16,   16,   16,   24,   25,   16,   16,   16,   16,   16,
-       16,   16,   26,    1,   27,    1,    1,    1,    1,    1,
+       17,   16,   16,   16,   16,   16,   16,   16,   16,   16,
+       16,   16,   16,   16,   16,   16,   16,   16,   16,   16,
+       16,   16,   18,    1,   19,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
@@ -313,67 +308,54 @@ static yyconst int yy_ec[256] =
         1,    1,    1,    1,    1
     } ;
 
-static yyconst int yy_meta[28] =
+static yyconst int yy_meta[20] =
     {   0,
-        1,    1,    2,    1,    1,    1,    1,    1,    1,    1,
-        1,    3,    1,    1,    1,    3,    3,    3,    3,    3,
-        3,    3,    3,    3,    3,    1,    1
+        1,    1,    2,    1,    1,    1,    3,    1,    3,    1,
+        1,    4,    1,    1,    1,    5,    5,    1,    1
     } ;
 
-static yyconst short int yy_base[56] =
+static yyconst short int yy_base[37] =
     {   0,
-        0,   67,   71,   73,   73,   73,   24,   73,   58,   73,
-       57,   73,   73,   19,   73,   73,   73,    0,   47,   56,
-       47,   73,   73,    0,   61,   73,   26,   22,   52,    0,
-       40,   44,   15,    0,   32,   26,   41,   73,   38,   36,
-       54,   32,   39,   37,   32,   73,   37,   36,   21,   18,
-        0,   73,   50,   37,   53
+        0,   42,   46,   48,   48,   48,   41,   48,   32,   48,
+       26,   48,   48,   10,   48,   48,   48,    0,   48,   48,
+        0,   27,   48,   11,   16,    0,    0,   12,   15,   14,
+       13,   48,   29,   31,   36,   39
     } ;
 
-static yyconst short int yy_def[56] =
+static yyconst short int yy_def[37] =
     {   0,
-       52,    1,   52,   52,   52,   52,   53,   52,   52,   52,
-       52,   52,   52,   52,   52,   52,   52,   54,   54,   54,
-       54,   52,   52,   55,   53,   52,   53,   52,   52,   54,
-       54,   52,   54,   55,   53,   52,   54,   52,   54,   54,
-       53,   52,   54,   54,   54,   52,   52,   52,   54,   54,
-       54,    0,   52,   52,   52
+       32,    1,   32,   32,   32,   32,   33,   32,   32,   32,
+       32,   32,   32,   32,   32,   32,   32,   34,   32,   32,
+       35,   33,   32,   32,   32,   34,   35,   32,   36,   32,
+       32,    0,   32,   32,   32,   32
     } ;
 
-static yyconst short int yy_nxt[101] =
+static yyconst short int yy_nxt[68] =
     {   0,
         4,    5,    6,    7,    4,    8,    9,   10,   11,   12,
-       13,   14,   15,   16,   17,   18,   18,   18,   18,   18,
-       18,   19,   20,   18,   21,   22,   23,   26,   29,   26,
-       28,   29,   39,   28,   40,   26,   35,   36,   47,   30,
-       47,   51,   42,   48,   51,   42,   27,   48,   48,   41,
-       25,   51,   25,   34,   50,   34,   49,   46,   45,   44,
-       43,   38,   37,   36,   26,   33,   32,   31,   28,   28,
-       52,   24,    3,   52,   52,   52,   52,   52,   52,   52,
-       52,   52,   52,   52,   52,   52,   52,   52,   52,   52,
-       52,   52,   52,   52,   52,   52,   52,   52,   52,   52
-
+       13,   14,   15,   16,   17,   18,   18,   19,   20,   25,
+       25,   24,   24,   28,   31,   31,   31,   28,   29,   22,
+       23,   22,   22,   22,   26,   26,   27,   24,   27,   27,
+       27,   30,   30,   24,   23,   32,   21,    3,   32,   32,
+       32,   32,   32,   32,   32,   32,   32,   32,   32,   32,
+       32,   32,   32,   32,   32,   32,   32
     } ;
 
-static yyconst short int yy_chk[101] =
+static yyconst short int yy_chk[68] =
     {   0,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
-        1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
-        1,    1,    1,    1,    1,    1,    1,    7,   14,   27,
-       14,   28,   33,   28,   33,   35,   27,   36,   42,   54,
-       42,   50,   36,   42,   49,   36,    7,   48,   47,   35,
-       53,   45,   53,   55,   44,   55,   43,   41,   40,   39,
-       37,   32,   31,   29,   25,   21,   20,   19,   11,    9,
-        3,    2,   52,   52,   52,   52,   52,   52,   52,   52,
-       52,   52,   52,   52,   52,   52,   52,   52,   52,   52,
-       52,   52,   52,   52,   52,   52,   52,   52,   52,   52
-
+        1,    1,    1,    1,    1,    1,    1,    1,    1,   14,
+       24,   14,   24,   28,   31,   30,   29,   25,   28,   33,
+       22,   33,   33,   33,   34,   34,   35,   11,   35,   35,
+       35,   36,   36,    9,    7,    3,    2,   32,   32,   32,
+       32,   32,   32,   32,   32,   32,   32,   32,   32,   32,
+       32,   32,   32,   32,   32,   32,   32
     } ;
 
-static yyconst short int yy_rule_linenum[20] =
+static yyconst short int yy_rule_linenum[18] =
     {   0,
-       21,   22,   24,   25,   26,   27,   28,   29,   30,   31,
-       32,   33,   34,   35,   36,   40,   44,   48,   54
+       23,   24,   26,   27,   28,   29,   30,   31,   32,   33,
+       34,   35,   36,   37,   41,   47,   53
     } ;
 
 #define REJECT \
@@ -386,9 +368,9 @@ goto find_rule; \
 #define yymore() yymore_used_but_not_detected
 #define YY_MORE_ADJ 0
 #define YY_RESTORE_YY_MORE_OFFSET
-#line 1 "/home/mtraut/anitmt/anitmt-calc/parser/scanner.ll"
+#line 1 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/input/adl/scanner.ll"
 #define INITIAL 0
-#line 2 "/home/mtraut/anitmt/anitmt-calc/parser/scanner.ll"
+#line 2 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/input/adl/scanner.ll"
 #include "support.hpp"
 /* Scanner/Lexer for the anitmt scene description language 
    Copyright Onno Kortmann 
@@ -397,9 +379,11 @@ goto find_rule; \
    FIXMEs:
    The ugly typecast into VADLFlexLexer ... is there a better solution?
    *NEVER* create objects of type ADLFlexLexer!!
-*/
+
+   This implementation is flex specific - but maybe that's no real
+   problem since everyone uses flex?!  */
 	
-#line 403 "lex.ADL.cc"
+#line 387 "lex.ADL.cc"
 
 /* Macros after this point can all be overridden by user definitions in
  * section 1.
@@ -529,10 +513,10 @@ YY_DECL
 	register char *yy_cp, *yy_bp;
 	register int yy_act;
 
-#line 19 "/home/mtraut/anitmt/anitmt-calc/parser/scanner.ll"
+#line 21 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/input/adl/scanner.ll"
 
 
-#line 536 "lex.ADL.cc"
+#line 520 "lex.ADL.cc"
 
 	if ( yy_init )
 		{
@@ -581,14 +565,14 @@ yy_match:
 			while ( yy_chk[yy_base[yy_current_state] + yy_c] != yy_current_state )
 				{
 				yy_current_state = (int) yy_def[yy_current_state];
-				if ( yy_current_state >= 53 )
+				if ( yy_current_state >= 33 )
 					yy_c = yy_meta[(unsigned int) yy_c];
 				}
 			yy_current_state = yy_nxt[yy_base[yy_current_state] + (unsigned int) yy_c];
 			*yy_state_ptr++ = yy_current_state;
 			++yy_cp;
 			}
-		while ( yy_base[yy_current_state] != 73 );
+		while ( yy_base[yy_current_state] != 48 );
 
 yy_find_action:
 		yy_current_state = *--yy_state_ptr;
@@ -625,12 +609,12 @@ do_action:	/* This label is used only to access EOF actions. */
 			{
 			if ( yy_act == 0 )
 				cerr << "--scanner backing up\n";
-			else if ( yy_act < 20 )
+			else if ( yy_act < 18 )
 				cerr << "--accepting rule at line " << yy_rule_linenum[yy_act] <<
 				         "(\"" << yytext << "\")\n";
-			else if ( yy_act == 20 )
+			else if ( yy_act == 18 )
 				cerr << "--accepting default rule (\"" << yytext << "\")\n";
-			else if ( yy_act == 21 )
+			else if ( yy_act == 19 )
 				cerr << "--(end of buffer or a NUL)\n";
 			else
 				cerr << "--EOF (start condition " << YY_START << ")\n";
@@ -640,120 +624,110 @@ do_action:	/* This label is used only to access EOF actions. */
 	{ /* beginning of action switch */
 case 1:
 YY_RULE_SETUP
-#line 21 "/home/mtraut/anitmt/anitmt-calc/parser/scanner.ll"
+#line 23 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/input/adl/scanner.ll"
 ; /* Comment ... */
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 22 "/home/mtraut/anitmt/anitmt-calc/parser/scanner.ll"
+#line 24 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/input/adl/scanner.ll"
 ; /* Whitespace */
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 24 "/home/mtraut/anitmt/anitmt-calc/parser/scanner.ll"
+#line 26 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/input/adl/scanner.ll"
 return (OP_SECTION);
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 25 "/home/mtraut/anitmt/anitmt-calc/parser/scanner.ll"
+#line 27 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/input/adl/scanner.ll"
 return (CL_SECTION);
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 26 "/home/mtraut/anitmt/anitmt-calc/parser/scanner.ll"
+#line 28 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/input/adl/scanner.ll"
 return (SEMICOLON);
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 27 "/home/mtraut/anitmt/anitmt-calc/parser/scanner.ll"
+#line 29 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/input/adl/scanner.ll"
 return (PLUS);
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 28 "/home/mtraut/anitmt/anitmt-calc/parser/scanner.ll"
+#line 30 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/input/adl/scanner.ll"
 return (MINUS);
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 29 "/home/mtraut/anitmt/anitmt-calc/parser/scanner.ll"
+#line 31 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/input/adl/scanner.ll"
 return (ASTERISK);
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 30 "/home/mtraut/anitmt/anitmt-calc/parser/scanner.ll"
+#line 32 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/input/adl/scanner.ll"
 return (SLASH);
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 31 "/home/mtraut/anitmt/anitmt-calc/parser/scanner.ll"
+#line 33 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/input/adl/scanner.ll"
 return (OP_VECTOR);
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 32 "/home/mtraut/anitmt/anitmt-calc/parser/scanner.ll"
+#line 34 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/input/adl/scanner.ll"
 return (CL_VECTOR);
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 33 "/home/mtraut/anitmt/anitmt-calc/parser/scanner.ll"
+#line 35 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/input/adl/scanner.ll"
 return (DOT);
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 34 "/home/mtraut/anitmt/anitmt-calc/parser/scanner.ll"
+#line 36 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/input/adl/scanner.ll"
 return (COMMA);
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 35 "/home/mtraut/anitmt/anitmt-calc/parser/scanner.ll"
-return (N_A);
-	YY_BREAK
-case 15:
-YY_RULE_SETUP
-#line 36 "/home/mtraut/anitmt/anitmt-calc/parser/scanner.ll"
-{
-	((VADLFlexLexer*)this)->yylval.str=yytext; return (NODE);
-}
-	YY_BREAK
-case 16:
-YY_RULE_SETUP
-#line 40 "/home/mtraut/anitmt/anitmt-calc/parser/scanner.ll"
+#line 37 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/input/adl/scanner.ll"
 {
 	((VADLFlexLexer*)this)->yylval.str=yytext;
 	return (IDENTIFIER);
 }
 	YY_BREAK
-case 17:
+case 15:
 YY_RULE_SETUP
-#line 44 "/home/mtraut/anitmt/anitmt-calc/parser/scanner.ll"
-{	/*" this hyphen brings the emacs colorizer back into normal mode :)*/
+#line 41 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/input/adl/scanner.ll"
+{	/*" this hyphen brings the
+                                          emacs colorizer back into
+                                          normal mode :)*/
 	((VADLFlexLexer*)this)->yylval.str=string(yytext+1).substr(0, yyleng-2);
 	return (STRING);
 }
 	YY_BREAK
-case 18:
+case 16:
 YY_RULE_SETUP
-#line 48 "/home/mtraut/anitmt/anitmt-calc/parser/scanner.ll"
+#line 47 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/input/adl/scanner.ll"
 {
         ((VADLFlexLexer*)this)->yylval.num=atof(yytext);
         return (NUMBER);
 }
 	YY_BREAK
 case YY_STATE_EOF(INITIAL):
-#line 53 "/home/mtraut/anitmt/anitmt-calc/parser/scanner.ll"
+#line 52 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/input/adl/scanner.ll"
 return (END_OF_FILE);
 	YY_BREAK
-case 19:
+case 17:
 YY_RULE_SETUP
-#line 54 "/home/mtraut/anitmt/anitmt-calc/parser/scanner.ll"
+#line 53 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/input/adl/scanner.ll"
 ((VADLFlexLexer*)this)->Warning(string("Invalid character: ")+yytext);
 	YY_BREAK
-case 20:
+case 18:
 YY_RULE_SETUP
-#line 57 "/home/mtraut/anitmt/anitmt-calc/parser/scanner.ll"
+#line 56 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/input/adl/scanner.ll"
 ECHO;
 	YY_BREAK
-#line 757 "lex.ADL.cc"
+#line 731 "lex.ADL.cc"
 
 	case YY_END_OF_BUFFER:
 		{
@@ -1122,7 +1096,7 @@ yy_state_type yyFlexLexer::yy_get_previous_state()
 		while ( yy_chk[yy_base[yy_current_state] + yy_c] != yy_current_state )
 			{
 			yy_current_state = (int) yy_def[yy_current_state];
-			if ( yy_current_state >= 53 )
+			if ( yy_current_state >= 33 )
 				yy_c = yy_meta[(unsigned int) yy_c];
 			}
 		yy_current_state = yy_nxt[yy_base[yy_current_state] + (unsigned int) yy_c];
@@ -1147,11 +1121,11 @@ yy_state_type yyFlexLexer::yy_try_NUL_trans( yy_state_type yy_current_state )
 	while ( yy_chk[yy_base[yy_current_state] + yy_c] != yy_current_state )
 		{
 		yy_current_state = (int) yy_def[yy_current_state];
-		if ( yy_current_state >= 53 )
+		if ( yy_current_state >= 33 )
 			yy_c = yy_meta[(unsigned int) yy_c];
 		}
 	yy_current_state = yy_nxt[yy_base[yy_current_state] + (unsigned int) yy_c];
-	yy_is_jam = (yy_current_state == 52);
+	yy_is_jam = (yy_current_state == 32);
 	if ( ! yy_is_jam )
 		*yy_state_ptr++ = yy_current_state;
 
@@ -1558,5 +1532,5 @@ int main()
 	return 0;
 	}
 #endif
-#line 57 "/home/mtraut/anitmt/anitmt-calc/parser/scanner.ll"
+#line 56 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/input/adl/scanner.ll"
 

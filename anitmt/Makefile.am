@@ -1,1 +1,1 @@
-SUBDIRS=lib anitmt-calc anitmt-view mkavi test
+SUBDIRS=lib anitmt-calc anitmt-view test

@@ -34,6 +34,7 @@
 #include "output/oformats.hpp"
 /**/
 using namespace anitmt;
+using namespace message;
 
 int main(int argc,char **argv,char **envp)
 {
@@ -47,6 +48,12 @@ int main(int argc,char **argv,char **envp)
     AniTMT ani( &param_manager, &msg_handler );
     ani.process();
     /**/
+    // This is QnD, I know... but it seems that anitmt.*
+    // will someday make all this code here superfluous ?! - OK
+    Stream_Message_Handler msg_handler(cerr,cout,cout);
+    Message_Manager manager(&msg_handler);
+    Message_Consultant default_msg_consultant(&manager, 0);
+
     // commandline handler of libpar (params.hpp)
     Command_Line cmd(argc,argv,envp);
 
@@ -78,7 +85,7 @@ int main(int argc,char **argv,char **envp)
 
     for(stringlist::iterator i=adlfiles.begin(); i!=adlfiles.end(); i++)
 	{
-		input.push_back( new ADL_Input( *i, &ani ) );
+		input.push_back( new ADL_Input( *i, &ani, &default_msg_consultant ) );
 	}
 
     // for all input interfaces

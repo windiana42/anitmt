@@ -3,25 +3,29 @@
 #include <fstream>
 //-----------------------------------------------------------------------------
 using namespace values;
+using namespace message;
+
+static const int verb_lvl=0; //FIXME ...
 
 #define PARSER_DEBUG
 #ifdef PARSER_DEBUG
 #define PARSER_DS(section, msg) {					\
-	if (dmode) {							\
-		for (unsigned i=0; i < ind; i++) logs << ' ';		\
-		logs << "PARSE_" section ": " << (msg) << '\n';		\
-                ind++;							\
-	}								\
-}
+	verbose(verb_lvl, new File_Position(fn, fl.lineno()))		\
+	        << "PARSE_" section ": " << (msg) << '\n';		\
+	ind++;								\
+}									
+
+
 #define PARSER_DE {ind--;}
 #else
 #define PARSER_DS(section, msg)
 #define PARSER_DE
 #endif
 
-anitmt::ADLParser::ADLParser(istream &is,
-			     ostream &logs,
-			     bool d) : fl(&is, &logs), dmode(d), logs(logs) {}
+anitmt::ADLParser::ADLParser(const std::string _fn,
+	istream &is,
+	message::Message_Consultant *c) :
+	Message_Reporter(c), fl(_fn, &is, c), fn(_fn) {}
 
 Scalar anitmt::ADLParser::ParseScalar() {
 	ExpectToken(NUMBER);
@@ -55,10 +59,16 @@ String anitmt::ADLParser::ParseString() {
 	return ret;
 }
 
+void anitmt::ADLParser::report_error(const string msg) {
+		error(new File_Position(fn, fl.lineno())) << msg;
+		throw EXParser(msg);
+}
+
 void anitmt::ADLParser::ExpectToken(const int tok) {
-	if (fl.tok() != tok) throw EXParser("Syntax error. Got '"+
-					    NameOfToken(fl.tok())+
-					    "' wanted '"+NameOfToken(tok)+"'");
+	if (fl.tok() != tok)
+		report_error("Syntax error. Got '"+
+			     NameOfToken(fl.tok())+
+			     "' wanted '"+NameOfToken(tok)+"'");
 }
 
 void anitmt::ADLParser::ConsumeToken(const int tok) {
@@ -82,7 +92,7 @@ void anitmt::ADLParser::ParseProperty(Prop_Tree_Node *pt) {
 	case OP_VECTOR:	pt->set_property(name, ParseVector()); break;
 	case STRING:	pt->set_property(name, ParseString()); break;
 	case N_A:	fl.GetNext(); break; // No real property.
-	default: throw EXParser("Number, vector or string expected.");
+	default: report_error("Number, vector or string expected.");
 	}
 	ConsumeToken(SEMICOLON);
 	PARSER_DE;
@@ -101,7 +111,7 @@ void anitmt::ADLParser::ParseNode(Prop_Tree_Node *pt) {
 		ExpectToken(OP_SECTION);
 		break;
 	default:
-		  throw EXParser("{ or node name expected, got '"+NameOfToken(fl.tok())+"'.");
+		  report_error("{ or node name expected, got '"+NameOfToken(fl.tok())+"'.");
 		  break;
 	}
 	fl.GetNext();
@@ -121,13 +131,16 @@ void anitmt::ADLParser::ParseEntry(Prop_Tree_Node *pt) {
 	/* Current token ... must be a node keyword or an identifier,
 	   check for it and parse the content */
 	switch (fl.tok()) {
-	case NODE:
-		ParseNode(pt); break;
 	case IDENTIFIER:
-		ParseProperty(pt); break;
+		if (fl.yylval.str=="scalar" ||
+		    fl.yylval.str=="linear" ||
+		    fl.yylval.str=="scene")
+			ParseNode(pt);
+		else ParseProperty(pt);
+		break;
 	default:
-		throw EXParser("Node keyword or property "
-			       "name (identifier) expected.");
+		report_error("Node keyword or property "
+			     "name (identifier) expected.");
 	}
 	PARSER_DE;
 }
@@ -141,9 +154,9 @@ void anitmt::ADLParser::ParseTree(Prop_Tree_Node *pt) {
 //! create animation tree structure
 void anitmt::ADL_Input::create_structure()
 {
-  ifstream in( filename.c_str() );
-  ADLParser p( in, cout, true);	
-  p.ParseTree( ani );		// !!! shouldn't insert values yet !!!
+	ifstream in(filename.c_str());
+	ADLParser p(filename, in, c);	
+	p.ParseTree(ani ); // !!! shouldn't insert values yet !!!
 }
 
 //! create explicite references 
@@ -158,8 +171,10 @@ void anitmt::ADL_Input::insert_values()
 				// !!! should read/insert property values !!! 
 }
 
-anitmt::ADL_Input::ADL_Input( std::string file, Animation *a ) 
-  : filename(file), ani(a) {}
+anitmt::ADL_Input::ADL_Input(std::string file,
+			     Animation *a,
+			     message::Message_Consultant *_c) 
+	:  filename(file), ani(a), c(_c) {}
 
 
 //-----------------------------------------------------------------------------
