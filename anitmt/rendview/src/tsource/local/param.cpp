@@ -627,6 +627,42 @@ int TaskSourceFactory_Local::FinalInit()
 	
 	if(!failed)
 	{
+		// Okay, last action here: Find the last frame in case 
+		// we are doing backwards steps and nframes is not 
+		// specified: 
+		if(nframes<0 && fjump<0)
+		{
+			// This algorithm will stop at the first non-existing 
+			// frame file: 
+			int fno=startframe;
+			Verbose("Local: Looking for last frame to render... %7d",fno);
+			RefString tmp;
+			for(int chk=0;;chk++,fno-=fjump)
+			{
+				// Good that GetPerFrameTaskInfo() is fast...
+				const PerFrameTaskInfo *fi=GetPerFrameTaskInfo(fno);
+				if(!fi)  break;
+				
+				// Check file existence: 
+				_CheckAllocFail(tmp.sprintf(0,fi->rinfpattern,fno));
+				// Prepend rdir if not absolute path: 
+				if(fi->rdir.str() && tmp.str()[0]!='/')  // NOTE!!! SIMILAR CODE IN local.cpp 
+				{
+					assert(fi->rdir.str()[fi->rdir.len()-1]=='/');  // was appended above
+					_CheckAllocFail(tmp.prepend(fi->rdir));
+				}
+				if(!CheckExistFile(&tmp,1))  break;
+				
+				if(!(chk%50))
+				{  Verbose("\b\b\b\b\b\b\b%7d",fno);  }
+			}
+			nframes=fno-startframe;
+			Verbose("\b\b\b\b\b\b\b%d (nframes=%d)\n",fno,nframes);
+		}
+	}
+	
+	if(!failed)
+	{
 		char nf_tmp[24];
 		if(nframes>=0)  snprintf(nf_tmp,24,"%d",nframes);
 		else  strcpy(nf_tmp,"[unlimited]");
@@ -673,14 +709,6 @@ int TaskSourceFactory_Local::CheckParams()
 	{
 		fjump=1;
 		Warning("Local: Illegal frame jump value 0 corrected to 1.\n");
-	}
-	
-	if(nframes<0 && fjump<0)
-	{
-		Error("Local: Cannot use unlimited nframes value (nframes not specified\n"
-			"Local:   or negative value) combined with reverse jumps (%d).\n",
-			fjump);
-		++failed;
 	}
 	
 	if(startframe<0)

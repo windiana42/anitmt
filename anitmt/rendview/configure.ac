@@ -1,6 +1,6 @@
 # Process this file with autoconf to produce a configure script.
 AC_INIT
-AM_INIT_AUTOMAKE(rendview,0.3.7b)
+AM_INIT_AUTOMAKE(rendview,0.3.8)
 AC_CONFIG_SRCDIR([src/rendview.cpp])
 AM_CONFIG_HEADER(config.h)
 

@@ -90,7 +90,7 @@ int TaskSource_Local::_FillInRenderJobFiles(FrameToProcessInfo *ftpi)
 	// inf, outf: paths for RendView (rdir prepended)
 	RefString inf(ftpi->r_infile),outf(ftpi->r_outfile);
 	assert(inf.str() && outf.str());  // otherwise we should have returned one line above
-	if(fi->rdir.str())
+	if(fi->rdir.str())  // NOTE!!! SIMILAR CODE IN param.cpp (if(nframes<0 && fjump<0))
 	{
 		assert(fi->rdir.str()[fi->rdir.len()-1]=='/');  // FinalInit() should append '/'
 		// Prepend rdir if not absolute path: 
