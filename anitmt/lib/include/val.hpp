@@ -543,17 +543,17 @@ namespace values
 
   /*! returns a vector which tells the resulting scalation of an x,y and z 
      vector when being multipied with Matrix m.
-     To reproduce the effet of m, scale, then rotate and finally translate */
+     To reproduce the effect of m: scale, then rotate and finally translate */
   extern Vector get_scale_component( const Matrix &mat );
   /*! returns a vector representing the rotation around the x, y and finally 
      the z axis that are done to a vector when being multiplied with the 
      Matrix m.
-     To reproduce the effet of m, scale, then rotate and finally translate */
+     To reproduce the effect of m: scale, then rotate and finally translate */
   extern Vector get_rotation_component( const Matrix &mat );
   /*! returns the position independant
      translation as vector, that is done to a vector when being multipied
      with the Matrix m
-     To reproduce the effet of m, scale, then rotate and finally translate */
+     To reproduce the effect of m: scale, then rotate and finally translate */
   extern Vector get_translation_component( const Matrix &mat );
 
 
