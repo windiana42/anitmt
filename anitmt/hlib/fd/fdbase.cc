@@ -140,6 +140,9 @@ void FDBase::_UnlockTimers()
 // Be careful: old_msec_left may be -1 (after AddTimer). 
 void FDBase::_MsecLeftChanged(FDManager::TimerNode *i,long old_msec_left)
 {
+	//fprintf(stderr,"[%d,%d,%d,%d,%d]\n",i->msec_val,i->msec_left,old_msec_left,
+	//	sh_timer_dirty,i==sh_timer);
+	
 	if(sh_timer_dirty)  return;
 	if(i==sh_timer)
 	{
@@ -149,7 +152,8 @@ void FDBase::_MsecLeftChanged(FDManager::TimerNode *i,long old_msec_left)
 			__LINE__,old_msec_left,sh_timer);  abort();  }
 		#endif
 		if(i->msec_left>old_msec_left)
-		{  sh_timer_dirty=1;  fdmanager()->TimeoutChange();  }
+		{  sh_timer_dirty=1;  }
+		fdmanager()->TimeoutChange();
 		return;
 	}
 	if(i->msec_val>=0)  // Not for disabled timers: 

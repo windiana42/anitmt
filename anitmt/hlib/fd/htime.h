@@ -175,10 +175,47 @@ class HTime
 		// (No trailing '\n', of course...)
 		const char *PrintTime(int local=1,int with_msec=0) const;
 		
+		// FIXME: could add a function using strftime(3) 
+		//        (time formatting like date(1)). 
+		
 		// This is useful to print elapsed times: 
 		// (You may use operator-() to calc elapsed time.) 
 		// Returns static buffer. 
 		const char *PrintElapsed() const;
+		
+		// This can be used to read in time from a string. 
+		// This is done in the following way: localtime(3) is used to 
+		// get the current local time. 
+		// In the string you may specify the TIME and DATE in any 
+		// order separated by whitespace or comma "," (comma treated 
+		// like wspace). 
+		// TIME: HH:MM    -> implicitly set seconds to 0
+		//       HH:MM:SS -> as usual
+		//       examples: 17:23, 5:3, 06:1:02
+		// DATE: DD.MM.     -> implicitly set current year. 
+		//                     (NOTE the trailing dot ".")
+		//       DD.MM.YYYY -> be sure to use the 4 digits for the 
+		//                     year and NOT 2-digt abbreviation 
+		//       YYYY/MM/DD -> ...if you like that one more
+		// You may only specify one TIME and one DATE. 
+		// Only specifying the TIME will use the current date. 
+		// Only specifying the DATE will use current time at specified 
+		//   date. 
+		// Not specifying anything or just "now" or "NOW" will use the 
+		//   current date and time. 
+		// Time offset from current time can be specified with 
+		//   now +|- HH:MM:SS   -or-   now +|- MM:SS  -or-  
+		//   now +|- DD         -or-   now +|- :SS
+		// Return value: 
+		//      0 -> success
+		//  -1,-2 -> format error
+		//     -3 -> mktime failed (time out of range)
+		// NOTE: Time can only be specified with second precision; 
+		//       usec (sub-second) information is set to 0. 
+		// NOTE: Time spec like "Aug 10 2002" and the like will NEVER 
+		//       be supported by ReadTime(). 
+		//       One may, however, add a ReadTime2() for that case. 
+		int ReadTime(const char *str);
 		
 		// This is special functionality as used e.g. by TimeoutManager. 
 		// SetInvalid() sets an invalid time (currently usec=-2000000 

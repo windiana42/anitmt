@@ -164,7 +164,8 @@ class FDManager
 		inline void _DeliverFDNotify(const HTime *fdtime);
 		
 		// Internally: unpoll FD node (dequeue & free). 
-		inline int _UnpollFD(FDBase *fdb,FDManager::FDNode *fdn);
+		inline int _iUnpollFD(FDBase *fdb,FDManager::FDNode *fdn);
+		int _UnpollFD(FDBase *fdb,FDManager::FDNode *fdn);
 		int _PollFD(FDBase *fdb,FDManager::FDNode *j,short events,const void **dptr);
 		
 		// Exit status value or -1. 
@@ -227,7 +228,8 @@ class FDManager
 			{  return(pollid ? _PollFD(fdb,(FDManager::FDNode*)pollid,
 				events,dptr) : (-2));  }
 		int UnpollFD(FDBase *fdb,int fd);
-		int UnpollFD(FDBase *fdb,PollID pollid);   // faster, of course...
+		int UnpollFD(FDBase *fdb,PollID pollid)   // faster, of course...
+			{  return(pollid ? _UnpollFD(fdb,(FDManager::FDNode*)pollid) : 1);  }
 		
 		/* Set manager type: */
 		int SetManager(FDBase *fdb,ManagerType mtype);

@@ -963,10 +963,6 @@ int FDManager::MainLoop()
 				#endif
 			//fprintf(stderr,">>%d (t=%d, n=%d, rv=%d, rev=%d, %d)<<    ",
 			//	t0.Elapsed(HTime::msec),timeout,npfds,ret,pfd[-1].revents,sig_pipe_bytes);
-				// Set time when poll returns so that this time can be passed 
-				// to the calls to fdnotify(). 
-				if(ret>0)
-				{  currtv.SetCurr();  }
 				
 				int spb=sig_pipe_bytes;
 				// Tell signal catcher not to write to pipe when signals are 
@@ -978,6 +974,11 @@ int FDManager::MainLoop()
 					++spb;  // so that _ClearSigPipe() will be done below
 					--ret;  // decrease ret val for all the FDBase fd's
 				}
+				
+				// Set time when poll returns so that this time can be passed 
+				// to the calls to fdnotify(). 
+				if(ret>0)
+				{  currtv.SetCurr();  }
 				
 				// Make signal detection pipe empty if needed. 
 				if(spb>0)
@@ -1022,9 +1023,22 @@ int FDManager::MainLoop()
 		
 		// Check timers: 
 		{
-			currtv.SetCurr();  // important
-			long elapsed=timertv.MsecElapsed(&currtv);  // time since last timer update. 
+			currtv.SetCurr();  // important (really!)
+			long elapsed=timertv.MsecElapsedR(&currtv);  // time since last timer update. 
+			                             // ^^ SHOULD NOT CALL THE ROUNDONG ONE. 
+			// The problem is: We compute the time difference between last time and 
+			// this time and subtract that time from the timers. Now, each of these 
+			// subtracted times has a precision of 1 msec. So, each time we subtract, 
+			// we can expect a time drift of 0.5 msec. Rounding the difference 
+			// improves things quite a lot. But: 
+			#warning "***********************************"
+			#warning "**** PLEASE FIX ME! TIME DRIFT ****"
+			#warning "***********************************"
+			// ...and then check timeoutmanager.cc and remove the labs()-thingy!!
+			
 			//fprintf(stderr,"timer_elapsed=%ld\n",elapsed);
+			
+			#warning optimization: elapsed=0 -> need only call 0msec timers ->only if timeout0==0. 
 			
 			timertv=currtv;  // implicit copy
 			
@@ -1876,7 +1890,7 @@ if(events & ~(POLLIN | POLLOUT))
 
 
 // Internally: unpoll FD node (dequeue & free). 
-inline int FDManager::_UnpollFD(FDBase *fdb,FDManager::FDNode *fdn)
+inline int FDManager::_iUnpollFD(FDBase *fdb,FDManager::FDNode *fdn)
 {
 	if(fdn->events)
 	{  --pollnodes;  }
@@ -1902,6 +1916,10 @@ inline int FDManager::_UnpollFD(FDBase *fdb,FDManager::FDNode *fdn)
 	return(0);
 }
 
+// non-inline version:
+int FDManager::_UnpollFD(FDBase *fdb,FDManager::FDNode *fdn)
+{  return(_iUnpollFD(fdb,fdn));  }
+
 // deletes fd entry from list (if existing)
 int FDManager::UnpollFD(FDBase *fdb,int fd)
 {
@@ -1911,18 +1929,19 @@ int FDManager::UnpollFD(FDBase *fdb,int fd)
 	for(FDManager::FDNode *j=fdb->fds; j; j=j->next)
 	{
 		if(j->fd==fd)
-		{  return(_UnpollFD(fdb,j));  }
+		{  return(_iUnpollFD(fdb,j));  }
 	}
 	
 	return(1);
 }
 
-int FDManager::UnpollFD(FDBase *fdb,PollID pollid)
+// This is now inline. 
+/*int FDManager::UnpollFD(FDBase *fdb,PollID pollid)
 {
 	if(!pollid)  return(1);
 	
 	return(_UnpollFD(fdb,(FDManager::FDNode*)pollid));
-}
+}*/
 
 
 /******************************************************************************/

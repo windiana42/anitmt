@@ -68,8 +68,25 @@ void TimeoutManager::SetFDBaseTimer(const HTime *current)
 			{  to_val=diff.Get(HTime::msec);  }
 		}
 	}
-	if(TimerLeft(tid)!=to_val)
-	{  UpdateTimer(tid,to_val,0);  }
+	#warning THIS SHOULD BE THE FIRST ONE...
+	long tleft=TimerLeft(tid);
+	if(tleft!=to_val)
+	{
+		// Must update. 
+		// Okay, we ignore a +/- 1 msec difference if the value is 
+		// greater than 20 msec (i.e. precision >5%). 
+		if(labs(tleft-to_val)>1 || to_val<20 /*YES!*/ || tleft<0 /*YES!*/)
+		{
+			#if TESTING
+			// It is normal to get this message if the shortest timeout 
+			// was changed. But otherwise not. 
+			//if(to_val>=0 && TimerLeft(tid)>=0)
+			{  fprintf(stderr,"Timeoutmanager: UPDATE %ld -> %ld (msec)\n",
+				tleft,to_val);  }
+			#endif
+			UpdateTimer(tid,to_val,0);
+		}
+	}
 }
 
 
@@ -91,7 +108,7 @@ int TimeoutManager::timernotify(TimerInfo *ti)
 	
 	// First, lock reordering: 
 	assert(lock_reorder<0);
-	lock_reorder=0;
+	lock_reorder=0;  // YES.
 	
 	TimeoutInfo tinfo;
 	HTime to_tmp;
@@ -271,7 +288,7 @@ int TimeoutManager::UpdateTimeout(TimeoutBase *tb,TimeoutID tid,
 	_CheckTimeoutID(tb,tid)
 	#endif
 	
-	assert(n->next || tb->to_list.last()==n);
+	assert(n->next || tb->to_list.last()==n || tb->dis_list.last()==n);
 	
 	// Okay, let's see what changes: 
 	if(timeout.IsInvalid())
@@ -341,7 +358,7 @@ int TimeoutManager::KillTimeout(TimeoutBase *tb,TimeoutID tid)
 	_CheckTimeoutID(tb,tid)
 	#endif
 	
-	assert(n->next || tb->to_list.last()==n);
+	assert(n->next || tb->to_list.last()==n || tb->dis_list.last()==n);
 	
 	if(n->timeout.IsInvalid())
 	{
