@@ -1,4 +1,4 @@
-INCLUDES = -I$(srcdir)/../include/
+INCLUDES = -I../include/
 noinst_LIBRARIES = libmisc.a
 libmisc_a_SOURCES = \
 	checkmalloc.c limitmalloc.c \
@@ -7,4 +7,5 @@ libmisc_a_SOURCES = \
 		memfind.c \
 		msecelapsed.c \
 		nonblock.c \
-	prototytes.h \
+		getprgname.c \
+	prototytes.h hlib.h \

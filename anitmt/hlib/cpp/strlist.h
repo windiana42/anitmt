@@ -1,7 +1,7 @@
 /*
  * strlist.h 
  * 
- * Simple linked string list (based on linkedlist.h). 
+ * Simple linked string list (based on linkedlist.h) using RefStrings. 
  * 
  * Copyright (c) 2001 by Wolfgang Wieser (wwieser@gmx.de) 
  * 
@@ -20,68 +20,68 @@
 #include <stddef.h>
 #include "cplusplus.h"
 #include "linkedlist.h"
+#include "refstring.h"
 
-// This implements a simple string list. 
-// All the string elements get allocated by the list and freed 
-// on destruction or removal. 
 class StrList
 {
 	public:
-		struct Node : LinkedListBase<Node>
+		struct Node : LinkedListBase<Node>, RefString
 		{  _CPP_OPERATORS_FF
-			Node(int * /*failflag*/=NULL) : LinkedListBase<Node>()
-				{  str=NULL; len=0;  }
-			~Node()  {  StrList::free((char*)str);  len=0;  }
-			
-			const char *str;   // pointer to the string 
-			size_t len;        // length of the string 
+			Node(int *failflag=NULL) : 
+				LinkedListBase<Node>(), RefString(failflag)  {}
+			~Node()  {}
 			
 			private:  // Do not copy. 
-				Node(const Node &) : LinkedListBase<Node>() { }
+				Node(const Node &) : 
+					LinkedListBase<Node>(), RefString() { }
 				void operator=(const Node &) { }
 		};
 	private:
 		LinkedList<Node> list;
 		
 		// where: -1 -> beginning; +1 -> end. 
-		int _insapp(const char *str,size_t len,int where);
+		int _insapp(const RefString &ref,int where);
+		int _insapp(const char *str,int where);
 	public:  _CPP_OPERATORS_FF
 		StrList(int *failflag=NULL);
 		~StrList();
 		
-		// These are the allocation and deallocation (free) functions 
-		// used by StrList. Use them whenever you have to manually 
-		// allocate/free a string of this list. 
-		// Allocate len bytes; returns NULL if failed. 
-		static char *alloc(size_t len)
-			{  return((char*)LMalloc(len));  }
-		// Deallocate pointer in *ptr. Always returns NULL. 
-		// Does nothing if ptr=NULL. 
-		static char *free(char *ptr)
-			{  return((char*)LFree(ptr));  }
-		
 		// Delete (and free) all elements in the list. 
 		void clear();
 		
-		// Insert string at the beginning of the list. 
-		// String is (as always) copied. 
-		// Returns 0 on success and -1 on (allocation) failure.
-		int insert(const char *str,size_t len)
-			{  return(str ? _insapp(str,len,-1) : 0);  }
-		int insert(const char *str)
-			{  return(str ? _insapp(str,strlen(str),-1) : 0);  }
+		// List empty?
+		bool is_empty() const  {  return(list.is_empty());  }
 		
-		// Append a string at the end of the list. 
-		// String is (as always) copied. 
-		// Returns 0 on success and -1 on (allocation) failure.
-		int append(const char *str,size_t len)
-			{  return(str ? _insapp(str,len,+1) : 0);  }
-		int append(const char *str)
-			{  return(str ? _insapp(str,strlen(str),+1) : 0);  }
+		// Insert string at the beginning of the list / append at the 
+		// end of the list. 
+		// Return value: 
+		//  0 -> success 
+		// -1 -> allocation failure 
+		int insert(const RefString &str)  {  return(_insapp(str,-1));  }
+		int append(const RefString &str)  {  return(_insapp(str,+1));  }
+		int insert(const char *str)  {  return(_insapp(str,-1));  }
+		int append(const char *str)  {  return(_insapp(str,+1));  }
 		
-		// Insert/append a whole list. All elements of lst are 
-		// copied. To copy a list, use clear() and append(). 
-		// Return value: 0 -> OK; -1 -> allocation failed. 
+		// See LinkedList for details: 
+		// Return value: 
+		//  0 -> success
+		// -1 -> allocation failure 
+		// -2 -> where=NULL or loc==0 
+		int queuebefore(const RefString &str,Node *where)
+			{  return(queue(str,where,-1));  }
+		int queueafter(const RefString &str,Node *where)
+			{  return(queue(str,where,+1));  }
+		int queue(const RefString &str,Node *where,int loc);
+		
+		// To replace the content of a node, simply do 
+		// node->set(new_content);
+		
+		// Insert/append a whole list. Only Nodes are allocated, the 
+		// strings are (of course) only referenced. 
+		// To copy a list, use clear() and append(). 
+		// Return value: 
+		//  0 -> OK
+		// -1 -> allocation failure
 		int insert(const StrList *lst);
 		int append(const StrList *lst);
 		
@@ -95,11 +95,8 @@ class StrList
 		//   previous nodes in the list. 
 		// - Simply delete a node if it is no longer in the list 
 		//   to free it and the string in it. 
-		// - If you do not want the string to be freed, set Node::str. 
-		//   to NULL before calling operator delete. 
 		// - DO NOT MODIFY NODES WHICH ARE STILL IN THE LIST other 
-		//   than changing the content of str (don't forget to keep 
-		//   Node::len in sync). 
+		//   than changing the content of the string in the node. 
 		
 		// This function dequeues the passed node from the list and 
 		// returns it. The node is NOT freed. Simply delete the node 
@@ -117,7 +114,11 @@ class StrList
 		
 		// Finds the node containing the passed string. The strings 
 		// are compared using len and strcmp(). 
+		// When comparing a data string to *str, the last '\0' of the 
+		// data string (if any) is ignored, thus "abc" and "abc\0" will 
+		// both match str="ABC". 
 		// Returns NULL if not found. 
+		// Passing str=NULL will find the first NULL-reference. 
 		const Node *find(const char *str);
 		
 		// Counts the elements in the list: 

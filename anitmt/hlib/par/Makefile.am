@@ -1,4 +1,4 @@
-INCLUDES = -I$(srcdir)/../include/
+INCLUDES = -I../include/
 noinst_LIBRARIES = libpar.a
 libpar_a_SOURCES = \
 	sindentcout.cc \

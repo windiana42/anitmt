@@ -4,8 +4,9 @@ AC_PROG_CC
 AC_PROG_CXX
 AC_PROG_RANLIB
 AC_OUTPUT(
+	include/Makefile
+	include/hlib/Makefile
 	cpp/Makefile
 	par/Makefile
 	misc/Makefile
-	Makefile
-	,[ test -f $srcdir/lnheaders.sh && echo -n "linking headers" && $SHELL $srcdir/lnheaders.sh $srcdir && echo " OK"] )
+	Makefile )

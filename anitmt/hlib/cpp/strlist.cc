@@ -19,15 +19,48 @@
 
 const StrList::Node *StrList::find(const char *str)
 {
-	if(!str)  return(NULL);
-	size_t str_len=strlen(str);
-	for(Node *n=list.first(); n; n=n->next)
+	if(!str)
+	{  // Find first NULL-ref: 
+		for(Node *n=list.first(); n; n=n->next)
+		{
+			if(!n->str())
+			{  return(n);  }
+		}
+	}
+	else
 	{
-		if(n->len!=str_len)  continue;
-		if(strcmp(n->str,str))  continue;
-		return(n);
+		size_t str_len=strlen(str);
+		for(Node *n=list.first(); n; n=n->next)
+		{
+			int t=n->stype();
+			if(t<0)  continue;
+			if(!t)  // normal '\0'-terminated string
+			{  if(strcmp(n->str(),str))  continue;  }
+			else   // data string
+			{
+				size_t len=n->len();
+				// Ignore last '\0'-char if there is one. 
+				if(len && *(n->str()+len-1)=='\0')
+				{  --len;  }
+				if(len!=str_len)  continue;
+				if(strncmp(n->str(),str,str_len))  continue;
+			}
+			return(n);
+		}
 	}
 	return(NULL);
+}
+
+
+int StrList::queue(const RefString &str,Node *where,int loc)
+{
+	if(!loc || !where)  return(-2);
+	Node *n=NEW<Node>();
+	if(!n)  return(-1);
+	n->set(str);  // cannot fail (REF-string)
+	// queue...
+	list.queue(n,where,loc);
+	return(0);
 }
 
 
@@ -35,7 +68,7 @@ int StrList::insert(const StrList *lst)
 {
 	for(const Node *n=lst->list.last(); n; n=n->prev)
 	{
-		if(this->insert(n->str,n->len))
+		if(this->insert(*n))
 		{  return(1);  }
 	}
 	return(0);
@@ -45,28 +78,30 @@ int StrList::append(const StrList *lst)
 {
 	for(const Node *n=lst->list.first(); n; n=n->next)
 	{
-		if(this->append(n->str,n->len))
+		if(this->append(*n))
 		{  return(1);  }
 	}
 	return(0);
 }
 
 
-int StrList::_insapp(const char *str,size_t len,int where)
+int StrList::_insapp(const RefString &ref,int where)
 {
-	// str is NOT NULL here. 
 	Node *n=NEW<Node>();
 	if(!n)  return(-1);
-	n->str=StrList::alloc(len+1);
-	if(!n->str)
-	{  delete n;  return(-1);  }
-	strncpy((char*)n->str,str,len);
-	((char*)n->str)[len]='\0';
-	n->len=len;
+	n->set(ref);  // cannot fail (REF-string)
 	// queue...
 	if(where<0)  list.insert(n);
 	else         list.append(n);
 	return(0);
+}
+
+int StrList::_insapp(const char *str,int where)
+{
+	RefString cp;
+	if(cp.set(str))
+	{  return(-1);  }
+	return(_insapp(cp,where));
 }
 
 
@@ -74,7 +109,7 @@ void StrList::clear()
 {
 	Node *n;
 	while((n=list.popfirst()))
-	{  delete n;  }   // deletes n->str 
+	{  delete n;  }   // delete node with string ref
 }
 
 StrList::StrList(int * /*failflag*/=NULL) : list()

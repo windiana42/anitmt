@@ -94,13 +94,15 @@ template<class T> class LinkedList
 		
 		// Dequeues *oldp and puts newp at the place where oldp was. 
 		// Make sure neither oldp nor newp are NULL. 
-		void replace(T *newp,T *oldp)
+		// Returns oldp (so that you may pass it to operator delete). 
+		T *replace(T *newp,T *oldp)
 		{
 			newp->_LLB::next=oldp->_LLB::next;
 			newp->_LLB::prev=oldp->_LLB::prev;
 			if(lfirst==oldp)  lfirst=newp;
 			if(llast==oldp)   llast=newp;
 			oldp->_LLB::prev=oldp->_LLB::next=NULL;
+			return(oldp);
 		}
 		
 		// Put p before/after `where´ into the queue: 

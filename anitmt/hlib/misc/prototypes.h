@@ -90,6 +90,11 @@ extern char *prg_name;
    */
   extern int SetNonblocking(int fd);
 
+/* getprgname.c: */
+  /* Used to get the program name from argv[0]. Will return "???" in
+   * case arg[0] is NULL or an empty string.
+   */
+  extern char *GetPrgName(const char *arg0);
 
 #ifdef __cplusplus
   }   /* extern "C" */
