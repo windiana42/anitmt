@@ -15,7 +15,15 @@
 #ifndef __AniTMT_Animation__
 #define __AniTMT_Animation__
 
-#include <functionality/scene_base.hpp>
+//#include <functionality/scene_base_prototypes.hpp> this file often changes 
+namespace functionality
+{
+  // prototypes for needed classes (avoids to include generated files here)
+  class _pt_scalar_component;
+  class _pt_object_component;
+  class _pt_scene_type;
+  class node_root;
+}
 
 #include <param/param.hpp>
 // !!! parameter system should be changed
@@ -26,7 +34,10 @@
 #include <proptree/property.hpp>
 #include <proptree/proptree.hpp>
 
-namespace proptree {
+#include <list>
+
+namespace proptree 
+{
   // *****************************************
   // semi global variables for the animation
   class Semi_Global
@@ -35,7 +46,12 @@ namespace proptree {
     anitmt::Animation_Parameters &param;	// all options
     message::Message_Reporter msg; // to report messages to the user
 
-    Semi_Global( param::Parameter_Manager *parameter_manager, message::Message_Consultant* );
+    solve::User_Problem_Handler handler;
+    solve::Solve_Run_Info final_run_info;
+				// final test run info for collecting the data
+
+    Semi_Global( param::Parameter_Manager *parameter_manager, 
+		 message::Message_Consultant* );
   };
 }
 
@@ -49,7 +65,8 @@ namespace anitmt{
   public:
     proptree::Semi_Global GLOB;
     proptree::tree_info tree_info;
-    functionality::node_root ani_root;		// root node of animation
+    proptree::Prop_Tree_Node *ani_root;		 // root node of animation
+    functionality::node_root *ani_root_original; // root node as original type
 
     std::string get_name();
 
@@ -58,6 +75,7 @@ namespace anitmt{
     void finish_calculations();
     Animation( std::string name, param::Parameter_Manager *parameter_manager,
 	       message::Message_Manager *manager );
+    ~Animation();
   };
 
   //***************************************
@@ -78,8 +96,7 @@ namespace anitmt{
 
   class Scalar_Component_Interface 
   {
-    functionality::_container_scalar_component::elements_type::iterator 
-    scalar_component;
+    std::list<functionality::_pt_scalar_component*>::iterator scalar_component;
   public:
     Scalar_Component_Interface get_next();
     std::string get_name();
@@ -91,13 +108,11 @@ namespace anitmt{
     { return scalar_component != scalar2.scalar_component; }
 
     Scalar_Component_Interface
-    ( functionality::_container_scalar_component::elements_type::iterator 
-      scalar );
+    ( std::list<functionality::_pt_scalar_component*>::iterator scalar );
   };
   class Object_Component_Interface 
   {
-    functionality::_container_object_component::elements_type::iterator  
-    object_component;
+    std::list<functionality::_pt_object_component*>::iterator object_component;
   public:
     Object_Component_Interface get_next();
     std::string get_name();
@@ -109,12 +124,11 @@ namespace anitmt{
     { return object_component != object2.object_component; }
 
     Object_Component_Interface
-    ( functionality::_container_object_component::elements_type::iterator 
-      object );
+    ( std::list<functionality::_pt_object_component*>::iterator object );
   };
   class Scene_Interface 
   {
-    functionality::_container_scene_type::elements_type::iterator scene;
+    std::list<functionality::_pt_scene_type*>::iterator scene;
   public:
     Scene_Interface get_next();
     std::string get_name();
@@ -131,7 +145,7 @@ namespace anitmt{
     { return scene != scene2.scene; }
 
     Scene_Interface
-    ( functionality::_container_scene_type::elements_type::iterator scene );
+    ( std::list<functionality::_pt_scene_type*>::iterator scene );
   };
   class Prop_Tree_Interface
   {

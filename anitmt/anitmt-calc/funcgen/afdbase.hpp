@@ -174,6 +174,15 @@ namespace funcgen
     std::string type;
   };
 
+  class Solver_Name
+  {
+  public:
+    Solver_Name( std::string name="", std::string type="" );
+
+    std::string name;
+    std::string type;
+  };
+
   class Context
   {
   public:
@@ -201,7 +210,6 @@ namespace funcgen
     // containers
     std::map<std::string,Container*> containers;// for search
     std::list<Container> container_list;	// for sequence
-    std::string current_container_type;
     bool is_container( std::string name );
     Container *get_container( std::string name );
 
@@ -244,6 +252,13 @@ namespace funcgen
     std::map<std::string,Event_Solver> solvers;
     bool is_solver( std::string name );
     Event_Solver *get_solver( std::string name );
+
+    //************
+    // solver name
+    std::map<std::string,Solver_Name*> solver_names;
+    std::list<Solver_Name> solver_name_list;		// for sequence
+    bool is_solver_name( std::string name );
+    Solver_Name *get_solver_name( std::string name );
   private:
     Context *parent;
   };
@@ -253,6 +268,7 @@ namespace funcgen
   public:
     Code();
 
+    message::File_Position *pos;
     int start_src_line;		// source line where this code starts
     int start_src_column;	// source column where this code starts
     std::string code;		// source code
@@ -261,7 +277,6 @@ namespace funcgen
   class Function_Code : public Code
   {
   public:
-    message::File_Position *pos;
     std::list<std::string> parameter_names;
   };
 
@@ -512,6 +527,16 @@ namespace funcgen
 			std::string parameter_type="" );
   };
 
+  class Solver_Function
+  {
+  public:
+    Solver_Function( std::string solver="", std::string function="" );
+
+    std::string solver;
+    std::string function;
+  };
+
+
   class Solver_Parameter
   {
   public:
@@ -579,6 +604,9 @@ namespace funcgen
     std::list<std::string> required_operands;
     std::list<std::string> required_containers;
     std::list<Container_Function> required_container_functions;
+    std::list<std::string> required_events;
+    std::list<std::string> required_event_groups;
+    std::list<Solver_Function> required_solver_functions;
     Code test_run_code;
     Code reset_code;
     Code final_code;
@@ -594,15 +622,6 @@ namespace funcgen
     // events:
     std::list<Event> events;
     Event *current_event;
-  };
-
-  class Solver_Function
-  {
-  public:
-    Solver_Function( std::string solver="", std::string function="" );
-
-    std::string solver;
-    std::string function;
   };
 
   class Solver_Function_Code : public Code, public Context
@@ -715,6 +734,7 @@ namespace funcgen
     Property_Reference current_reference;
     Solve_System_Code *current_solve_code;
     std::list<std::string> string_list;
+    std::string store;		// to store a string
   private:
     std::stack<Context*> contexts;
   };

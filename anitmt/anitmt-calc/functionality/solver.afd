@@ -1,8 +1,27 @@
+///////////////////////////////////////////////////////////////////////////////
+/*****************************************************************************/
+/*                                                                           */
+/*                              solver declarations                          */
+/*                                                                           */
+/* afd generated solvers                                                     */
+/*                                                                           */
+/*****************************************************************************/
+///////////////////////////////////////////////////////////////////////////////
+
 avoid_recursion __adl_solver_declarations__;
 
+// ****************************************************************************
+// ****************************************************************************
+// ** dependence
+// ****************************************************************************
+// ****************************************************************************
+
 include declaration "base_func.afd";
+include declaration "complex_solver.afd";
 include header "val/val.hpp";
-include header "complex_solver.hpp";
+include header "break_point.hpp";
+
+include header "math.h";
 
 // ************************************************
 // Needed operators:
@@ -29,6 +48,29 @@ operators
   // Common Operators
   // *******************************************************
   // *******************************************************
+
+  // *********************
+  // _debug
+  // *********************
+  
+  one_operand_operator _debug
+  {
+    calc_result( op1 )
+    {
+#ifndef NDEBUG
+      _break_point_function();
+#endif
+      return op1;
+    }
+    versions
+    {
+      flag   _debug( flag );
+      scalar _debug( scalar );
+      vector _debug( vector );
+      matrix _debug( matrix );
+      string _debug( string );
+    }
+  }
 
   // ************************************************
   // Comparisons
@@ -107,7 +149,6 @@ operators
     {
       flag operator<( scalar, scalar );
       flag operator<( vector, vector );
-      flag operator<( matrix, matrix );
       flag operator<( string, string );
     }
   }
@@ -125,7 +166,6 @@ operators
     {
       flag operator>( scalar, scalar );
       flag operator>( vector, vector );
-      flag operator>( matrix, matrix );
       flag operator>( string, string );
     }
   }
@@ -143,7 +183,6 @@ operators
     {
       flag operator<=( scalar, scalar );
       flag operator<=( vector, vector );
-      flag operator<=( matrix, matrix );
       flag operator<=( string, string );
     }
   }
@@ -161,7 +200,6 @@ operators
     {
       flag operator>=( scalar, scalar );
       flag operator>=( vector, vector );
-      flag operator>=( matrix, matrix );
       flag operator>=( string, string );
     }
   }
@@ -781,7 +819,7 @@ operators
     }
     versions
     {
-      vector abs2( vector );
+      scalar abs2( vector );
     }
   }
 
@@ -826,7 +864,7 @@ operators
     }
     versions
     {
-      vector vec_angle( vector, vector );
+      scalar vec_angle( vector, vector );
     }
   }
 
@@ -861,9 +899,9 @@ operators
   // scale
   // *************************
 
-  two_operands_operator vector_scale
+  simple_three_operands_operator vector_scale
   {
-    is_operand2_ok( index, info )
+    is_operand3_ok( index, info )
     {
       // value under square root must be positive
       if( (index < 0) || (index >= 3/*vect.size()*/) )
@@ -874,13 +912,13 @@ operators
       }
       return true;
     }
-    calc_result( vect, index ) 
+    calc_result( vect, val, index ) 
     {
-      return vec_scale( vect, index );
+      return vec_scale( vect, val, index );
     }
     versions
     {
-      vector vec_scale( vector, scalar );
+      vector vec_scale( vector, scalar, scalar );
     }
   }
 
@@ -1072,15 +1110,15 @@ operators
   // get inverse matrix
   // *************************
 
-  one_operand_operator matrix_invert
+  one_operand_operator inverse_matrix
   {
     calc_result( val ) 
     {
-      return mat_invert(val);
+      return mat_inverse(val);
     }
     versions
     {
-      matrix mat_invert( matrix );
+      matrix mat_inverse( matrix );
     }
   }
 

@@ -120,9 +120,6 @@ namespace funcgen
 			const std::string &name );
   void declare_variable( void *info, const std::string &type, 
 			 const std::string &name );
-  void declare_container( void *info, bool serial,
-			  const std::string &type,
-			  const std::string &name );
   void declare_container( void *info, 
 			  const std::string &type,
 			  const std::string &name );
@@ -133,8 +130,9 @@ namespace funcgen
 
   void node_solve_constraint( void *info, const Expression *exp );
 
-  void node_start_solver( void *info, const std::string &solver );
-  void node_solver_identifier( void *info, const std::string &name );  
+  void node_start_solver( void *info, const std::string &solver, 
+			  const std::string &name );
+  // rename these functions
   void node_add_solver_parameter( void *info ); // from reference
   void node_add_solver_const_parameter( void *info, bool b ); 
   void node_add_solver_const_parameter( void *info, double s ); 
@@ -142,6 +140,8 @@ namespace funcgen
   void node_add_solver_const_parameter( void *info, 
 					const std::string &function,
 					const std::string &parameter); 
+  void solver_code_add_container_parameter( void *info, 
+					    const std::string &container );
   void node_finish_solver( void *info ); 
   void node_solve_expression( void *info, const std::string &property,
 			      Expression *exp );
@@ -195,7 +195,7 @@ namespace funcgen
   void start_event_solver_parameters( void *info, const std::string &name );
   void event_solver_parameter_operand( void *info, const std::string &type, 
 				       const std::string &name );
-  void event_solver_parameter_container( void *info, bool serial,
+  void event_solver_parameter_container( void *info, 
 					 const std::string &type, 
 					 const std::string &name );
   void start_event_solver_declaration( void *info );
@@ -219,6 +219,11 @@ namespace funcgen
 					   const std::string &name,
 					   const std::string &return_type,
 					   const std::string &parameter_type );
+  void event_condition_event( void *info, const std::string &name );
+  void event_condition_event_group( void *info, const std::string &name );
+  void event_condition_solver( void *info, const std::string &solver, 
+			       const std::string &function );
+
   void start_event_solver_init_code( void *info );
   void finish_event_solver_init_code( void *info );
   void start_event_group_reset_code( void *info );
@@ -256,13 +261,14 @@ namespace funcgen
 				  std::string function, 
 				  std::string parameter, 
 				  std::string opt_fail_bool_var );
-  void user_code_container_function( void *info, std::string container, 
+  void user_code_store_container_name( void *info, std::string container );
+  void user_code_container_function( void *info,  
 				     std::string return_type, 
 				     std::string parameter_type, 
 				     std::string parameter, 
 				     std::string opt_fail_bool_var );
-  void user_code_container_first_index( void *info, std::string container );
-  void user_code_container_last_index( void *info, std::string container );
+  void user_code_container_first_index( void *info );
+  void user_code_container_last_index( void *info );
   void user_code_container_element_function( void *info, std::string container,
 					     double index, 
 					     std::string return_type, 
@@ -278,6 +284,7 @@ namespace funcgen
 				   std::string opt_fail_bool_var );
 				   
   void user_code_return_prop( void *info, std::string operand );
+  void user_code_return_prop_try( void *info, std::string operand );
   void user_code_return( void *info, std::string expression );
   void user_code_return_solver_function( void *info, 
 					 std::string solver, 
@@ -316,6 +323,17 @@ namespace funcgen
   void res_ref_return_if_fail( void *info );
 
   void require_identifier( void *info, std::string id, std::string expect );
+  void require_operand( void *info, std::string id );
+  void require_property( void *info, std::string id );
+  void require_prop_op( void *info, std::string id );
+  void require_provider_type( void *info, std::string id );
+  void require_container_name( void *info, std::string id );
+  void require_variable( void *info, std::string id );
+  void require_special_variable( void *info, std::string id );
+  void require_base_type( void *info, std::string id );
+  void require_operator( void *info, std::string id );
+  void require_solver( void *info, std::string id );
+  void require_solver_name( void *info, std::string id );
 
   Expression *bool_expr( Expression *exp1, const std::string &op, 
 			 Expression *exp2 );

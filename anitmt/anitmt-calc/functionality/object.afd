@@ -64,21 +64,18 @@ abstract node object_subfunc_base provides object_state
       start_pos;
       start_dir;    // muss Länge=1 sein???
       start_up_norm;
+      start_up_try;
       end_pos;
       end_dir;
       end_up_norm;
+      end_up_try;
       diff_pos;
-      direction;
       // orientation
       start_front;
       start_up_vector;
       end_front;
       end_up_vector;
     }
-  }
-  operands 
-  {
-    vector start_up_norm_try;
   }
   common
   {
@@ -87,21 +84,26 @@ abstract node object_subfunc_base provides object_state
       duration >= 0;
       start_speed >= 0;
       end_speed >= 0;
+      abs( start_up_norm ) == 1;
+      abs( end_up_norm ) == 1;
+      dot( start_up_norm, start_dir ) == 0;
+      dot( end_up_norm, end_dir ) == 0;
     }
     solvers
     {
+      // general
       sum_solver( end_time, duration, start_time );
       sum_solver( end_length, length, start_length );
       sum_solver( end_speed, diff_speed, start_speed );
       sum_solver( end_pos, diff_pos, start_pos );
-      //equal_solver( start_dir, direction );
-      //start_dir = vec_normalize( direction );
-      //direction = vec_normalize( start_dir );
-      //equal_solver( end_dir, direction );
-      
-      //length = abs( diff_pos );
 
 //!!! a lot missing here !!!
+
+      // track
+      start_up_norm = 
+        vec_normalize( cross( start_dir, cross(start_up_try,start_dir) ) );
+      end_up_norm = 
+        vec_normalize( cross( end_dir, cross(end_up_try,end_dir) ) );
 
       // orientation
       sum_solver( end_rot_horizontal, diff_rot_horizontal, start_rot_horizontal );
@@ -126,10 +128,6 @@ abstract node object_subfunc_base provides object_state
       accel_solver(diff_rot_roll, duration, rot_acceleration_roll, 
   start_rot_speed_roll, end_rot_speed_roll);
       product_solver(diff_rot_speed_roll, rot_acceleration_roll, duration);
-
-//!!! dummy solvers: !!!
-      equal_solver( start_front, end_front );
-      equal_solver( start_up_vector, end_up_vector );
 
       // ********************
       // start/end parameters
@@ -209,8 +207,6 @@ abstract node object_subfunc_base provides object_state
       default( default_state, start_pos, vector(0,0,0) );
       default( default_state_post, start_dir, vector(1,0,0) );
 
-      default( default_state_2x_post, start_front, vector(1,0,0) );
-      default( default_state_2x_post2, start_up_vector, vector(0,1,0) );
     }
   }
   first object_state 
@@ -223,7 +219,10 @@ abstract node object_subfunc_base provides object_state
       default( default_first_state_pre1, start_rot_horizontal, 0 );
       default( default_first_state_pre2, start_rot_vertical, 0 );
       default( default_first_state_pre3, start_rot_roll, 0 );
-      default( default_first_up_norm, start_up_norm_try, vector(0,1,0) );
+      default( default_first_up_norm, start_up_try, vector(0,1,0) );
+      default( default_state_2x_post, start_front, vector(1,0,0) );
+      default( default_state_2x_post2, start_up_vector, vector(0,1,0) );
+
       default( default_first_state, start_pos, vector(0,0,0) );
     }
   }
@@ -234,6 +233,7 @@ node move_straight extends object_subfunc_base
   properties
   {
     scalar acceleration;
+    vector direction;
   }
   common
   {
@@ -248,6 +248,9 @@ node move_straight extends object_subfunc_base
 
       accel_solver(length, duration, acceleration, start_speed, end_speed);
       product_solver(diff_speed, acceleration, duration);
+
+      equal_solver( start_front, end_front );
+      //equal_solver( start_up_vector, end_up_vector ); up_roll!!!
     }
   }
   provide object_state
@@ -282,12 +285,12 @@ node move_straight extends object_subfunc_base
     resulting direction( time _t ) 
       requires start_dir
     {
-      [[ return_prop start_dir; ]]
+      [[ return property.start_dir; ]]
     }
     resulting direction( stretch _s ) 
       requires start_dir
     {
-      [[ return_prop start_dir; ]]
+      [[ return property.start_dir; ]]
     }
 // timing 
     resulting stretch( time _t ) 
@@ -317,12 +320,12 @@ node move_straight extends object_subfunc_base
     resulting acceleration( time _t ) 
       requires acceleration
     {
-      [[ return_prop acceleration; ]]
+      [[ return property.acceleration; ]]
     }
     resulting acceleration( stretch _s ) 
       requires acceleration
     {
-      [[ return_prop acceleration; ]]
+      [[ return property.acceleration; ]]
     }
 // orientation on track
     resulting front( time _t ) 
@@ -441,16 +444,17 @@ node move_bezier extends object_subfunc_base
       [[ return solver.bezier.get_pos( s ); ]]
     }
     resulting direction( time _t ) 
-      requires start_dir
+      requires start_time, accel.get_stretch, bezier.get_dir
     {
-      [[ return_prop start_dir; ]] 
-#warning use bezier solver to calc this!
+      scalar t = (_t - [[ start_time ]]);    // local time
+      scalar s = [[ solver.accel.get_stretch(t) ]];
+      [[ return solver.bezier.get_dir( s ); ]]
     }
     resulting direction( stretch _s ) 
-      requires start_dir
+      requires start_length, bezier.get_dir
     {
-      [[ return_prop start_dir; ]]
-#warning use bezier solver to calc this!
+      scalar s = (_s - [[ start_length ]]);  // local stretch
+      [[ return solver.bezier.get_dir( s ); ]]
     }
 // timing 
     resulting stretch( time _t ) 
@@ -472,12 +476,132 @@ node move_bezier extends object_subfunc_base
     resulting acceleration( time _t ) 
       requires acceleration
     {
-      [[ return_prop acceleration; ]]
+      [[ return property.acceleration; ]]
     }
     resulting acceleration( stretch _s ) 
       requires acceleration
     {
-      [[ return_prop acceleration; ]]
+      [[ return property.acceleration; ]]
+    }
+// orientation on track
+    resulting front( time _t ) 
+      requires this.object_state.direction(time)
+    {
+      [[ return this.object_state.direction(time _t); ]]
+    }
+    resulting front( stretch _s ) 
+      requires this.object_state.direction(stretch)
+    {
+      [[ return this.object_state.direction(stretch _s); ]]
+    }
+    resulting up_vector( time _t ) 
+      requires start_time, bezier.get_up
+    {
+      scalar t = (_t - [[ start_time ]]);    // local time
+      scalar s = [[ solver.accel.get_stretch(t) ]];
+      [[ return solver.bezier.get_up( s ); ]]
+    }
+
+    resulting up_vector( stretch _s ) 
+      requires  start_length, bezier.get_up
+    {
+      scalar s = (_s - [[ start_length ]]);  // local stretch
+      [[ return solver.bezier.get_up( s ); ]]
+    }
+  }
+}
+
+node point provides point
+{
+  properties
+  {
+    vector p;
+  }
+  provide point
+  {
+    resulting position( nothing _ ) requires p
+    {
+      [[ return property.p; ]]
+    }
+  }
+}
+
+node move_bspline extends object_subfunc_base 
+{
+  properties
+  {
+    scalar acceleration;
+  }
+  contains
+  {
+    min1 point;
+  }
+  common
+  {
+    solvers
+    {
+      accel_solver accel(length, duration, acceleration, start_speed, 
+	end_speed);
+      product_solver(diff_speed, acceleration, duration);
+      bspline_solver bspline( container.point, length,
+	start_dir, end_dir, start_up_norm, end_up_norm, up_norm_roll );
+    }
+  }
+  provide object_state
+  {
+// track
+    resulting position( time _t ) 
+      requires  start_time, start_speed, acceleration, length,
+		bspline.get_pos, accel.get_stretch
+    {
+      scalar t = (_t - [[ start_time ]]);    // local time
+      scalar s = [[ solver.accel.get_stretch(t) ]];
+      [[ return solver.bspline.get_pos( s ); ]]
+    }
+    resulting position( stretch _s ) 
+      requires start_length, length, start_pos, end_pos
+    {
+      scalar s = (_s - [[ start_length ]]);  // local stretch
+      [[ return solver.bspline.get_pos( s ); ]]
+    }
+    resulting direction( time _t ) 
+      requires start_dir
+    {
+      [[ return property.start_dir; ]] 
+#warning use bspline solver to calc this!
+    }
+    resulting direction( stretch _s ) 
+      requires start_dir
+    {
+      [[ return property.start_dir; ]]
+#warning use bspline solver to calc this!
+    }
+// timing 
+    resulting stretch( time _t ) 
+      requires start_time, start_speed, acceleration
+    {
+      scalar t = (_t - [[ start_time ]]);    // local time
+      [[ return solver.accel.get_stretch(t); ]]
+    }
+    resulting speed( time _t ) 
+      requires start_time, start_speed, acceleration
+    {
+      [[ return solver.accel.get_speed_t( _t ); ]]
+    }
+    resulting speed( stretch _s ) 
+      requires start_length, acceleration, start_speed
+    {
+      [[ return solver.accel.get_speed_s( _s ); ]]
+    }
+    resulting acceleration( time _t ) 
+      requires acceleration
+    {
+      [[ return property.acceleration; ]]
+    }
+    resulting acceleration( stretch _s ) 
+      requires acceleration
+    {
+      [[ return property.acceleration; ]]
     }
 // orientation on track
     resulting front( time _t ) 
@@ -491,7 +615,7 @@ node move_bezier extends object_subfunc_base
         x = 0;
       vector res = [[ start_front ]] * (1-x) + [[ end_front ]] * x;
       [[ return res; ]]
-#warning use bezier solver to calc this!
+#warning use bspline solver to calc this!
     }
     resulting front( stretch _s ) 
       requires  start_length, acceleration, length, start_speed, duration,
@@ -518,7 +642,7 @@ node move_bezier extends object_subfunc_base
       }
       vector res = [[ start_front ]] * (1-x) + [[ end_front ]] * x;
       [[ return res; ]]
-#warning use bezier solver to calc this!
+#warning use bspline solver to calc this!
     }
     resulting up_vector( time _t ) 
       requires start_time, start_up_vector, end_up_vector, duration
@@ -531,7 +655,7 @@ node move_bezier extends object_subfunc_base
         x = 0;
       vector res = [[ start_up_vector ]] * (1-x) + [[ end_up_vector ]] * x;
       [[ return res; ]]
-#warning use bezier solver to calc this!
+#warning use bspline solver to calc this!
     }
 
     resulting up_vector( stretch _s ) 
@@ -559,7 +683,169 @@ node move_bezier extends object_subfunc_base
       }
       vector res = [[ start_up_vector ]] * (1-x) + [[ end_up_vector ]] * x;
       [[ return res; ]]
-#warning use bezier solver to calc this!
+#warning use bspline solver to calc this!
+    }
+  }
+}
+
+node move_crspline extends object_subfunc_base 
+{
+  properties
+  {
+    scalar acceleration;
+  }
+  contains
+  {
+    min1 point;
+  }
+  common
+  {
+    solvers
+    {
+      accel_solver accel(length, duration, acceleration, start_speed, 
+	end_speed);
+      product_solver(diff_speed, acceleration, duration);
+      crspline_solver crspline( container.point, length,
+	start_dir, end_dir, start_up_norm, end_up_norm, up_norm_roll );
+    }
+  }
+  provide object_state
+  {
+// track
+    resulting position( time _t ) 
+      requires  start_time, start_speed, acceleration, length,
+		crspline.get_pos, accel.get_stretch
+    {
+      scalar t = (_t - [[ start_time ]]);    // local time
+      scalar s = [[ solver.accel.get_stretch(t) ]];
+      [[ return solver.crspline.get_pos( s ); ]]
+    }
+    resulting position( stretch _s ) 
+      requires start_length, length, start_pos, end_pos
+    {
+      scalar s = (_s - [[ start_length ]]);  // local stretch
+      [[ return solver.crspline.get_pos( s ); ]]
+    }
+    resulting direction( time _t ) 
+      requires start_dir
+    {
+      [[ return property.start_dir; ]] 
+#warning use crspline solver to calc this!
+    }
+    resulting direction( stretch _s ) 
+      requires start_dir
+    {
+      [[ return property.start_dir; ]]
+#warning use crspline solver to calc this!
+    }
+// timing 
+    resulting stretch( time _t ) 
+      requires start_time, start_speed, acceleration
+    {
+      scalar t = (_t - [[ start_time ]]);    // local time
+      [[ return solver.accel.get_stretch(t); ]]
+    }
+    resulting speed( time _t ) 
+      requires start_time, start_speed, acceleration
+    {
+      [[ return solver.accel.get_speed_t( _t ); ]]
+    }
+    resulting speed( stretch _s ) 
+      requires start_length, acceleration, start_speed
+    {
+      [[ return solver.accel.get_speed_s( _s ); ]]
+    }
+    resulting acceleration( time _t ) 
+      requires acceleration
+    {
+      [[ return property.acceleration; ]]
+    }
+    resulting acceleration( stretch _s ) 
+      requires acceleration
+    {
+      [[ return property.acceleration; ]]
+    }
+// orientation on track
+    resulting front( time _t ) 
+      requires start_time, start_front, end_front, duration
+    {
+      scalar x,t;
+      t = (_t - [[ start_time ]]);    // local time
+      if( [[ duration ]] )
+        x = t / [[ duration ]];   // relative state
+      else
+        x = 0;
+      vector res = [[ start_front ]] * (1-x) + [[ end_front ]] * x;
+      [[ return res; ]]
+#warning use crspline solver to calc this!
+    }
+    resulting front( stretch _s ) 
+      requires  start_length, acceleration, length, start_speed, duration,
+    start_front, end_front
+    {
+      scalar x,t,s,d;
+      s = (_s - [[ start_length ]]);
+      if( [[ acceleration ]] == 0 )   // is stretch proportional to time
+      {
+  if( [[ length ]] )
+    x = s / [[ length ]];   // relative stretch
+  else
+    x = 0;
+      }
+      else        // else calc time first
+      {
+  // t = (-v0 + ::sqrt(v0^2 - 2as)) / a
+  d = ::sqrt([[ start_speed ]]*[[ start_speed ]] - 2 * [[ acceleration ]] * s);
+  t = (- [[ start_speed ]] + d) / [[ acceleration ]];
+  if( [[ duration ]] )
+    x = t / [[ duration ]];   // relative state
+        else
+          x = 0;
+      }
+      vector res = [[ start_front ]] * (1-x) + [[ end_front ]] * x;
+      [[ return res; ]]
+#warning use crspline solver to calc this!
+    }
+    resulting up_vector( time _t ) 
+      requires start_time, start_up_vector, end_up_vector, duration
+    {
+      scalar x,t;
+      t = (_t - [[ start_time ]]);    // local time
+      if( [[ duration ]] )
+        x = t / [[ duration ]];   // relative state
+      else
+        x = 0;
+      vector res = [[ start_up_vector ]] * (1-x) + [[ end_up_vector ]] * x;
+      [[ return res; ]]
+#warning use crspline solver to calc this!
+    }
+
+    resulting up_vector( stretch _s ) 
+      requires  start_length, acceleration, length, start_speed, duration,
+    start_up_vector, end_up_vector
+    {
+      scalar x,t,s,d;
+      s = (_s - [[ start_length ]]);
+      if( [[ acceleration ]] == 0 )   // is stretch proportional to time
+      {
+  if( [[ length ]] )
+    x = s / [[ length ]];   // relative stretch
+  else
+    x = 0;
+      }
+      else        // else calc time first
+      {
+  // t = (-v0 + ::sqrt(v0^2 - 2as)) / a
+  d = ::sqrt([[ start_speed ]]*[[ start_speed ]] - 2 * [[ acceleration ]] * s);
+  t = (- [[ start_speed ]] + d) / [[ acceleration ]];
+  if( [[ duration ]] )
+    x = t / [[ duration ]];   // relative state
+        else
+          x = 0;
+      }
+      vector res = [[ start_up_vector ]] * (1-x) + [[ end_up_vector ]] * x;
+      [[ return res; ]]
+#warning use crspline solver to calc this!
     }
   }
 }

@@ -49,7 +49,7 @@ void Pov_Output::check_components() throw( )
 	verbose(2) << "POV output: checking components...";
 	
 	int errors=0;
-	Prop_Tree_Interface prop_tree( &ani->ani_root );
+	Prop_Tree_Interface prop_tree( ani->ani_root_original );
 	
 	// Start parser for all scenes: 
 	int nscenes=0,povscenes=0;

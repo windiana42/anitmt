@@ -22,13 +22,6 @@ include header "sp_curve.hpp";
 include header "spline.hpp";
 include header "math.h";
 
-
-
-// point privder type for spline
-type point {
-  provides position( nothing );
-}
-
 /* test /*nested*/ */
 
 solvers 
@@ -53,7 +46,11 @@ solvers
     }
     operands
     {
-      bool length_calculated;
+      type flag
+      {
+	length_calculated;
+	up_vector_calculated;
+      }
     }
     init_operands
     {
@@ -88,7 +85,8 @@ solvers
 	  scalar len = bezier->length;
 	  [[ set length_calculated = true; ]]
 	  [[ set length = len; ]]
-	  //[[ set length = bezier.get_length(); ]]
+	  //[[ set start_dir = bezier->get_front(0); ]]
+	  //[[ set end_dir = bezier->get_front(len); ]]
 	}
 	reset
 	{
@@ -101,6 +99,63 @@ solvers
 	{
 	  if( ![[ is_solved_in_try(length_calculated) ]] ) 
 	    [[ try_reject p1,p2,p3,p4; ]]
+	}
+      }
+      group up_vector
+      {
+	event calc_end_up requires start_up, end_dir, up_roll, 
+	  event.points_avail
+	{
+	  test_run
+	  {
+	    if( ![[ is_solved_in_try(up_vector_calculated) ]] ) 
+	    {
+	      vector vend_dir = [[ end_dir ]];
+	      bezier->calc_up_forward( [[ start_up ]] );
+	      vector vend_up = bezier->get_end_up();
+	      vend_up = mat_rotate_around( vend_dir, [[ up_roll ]] ) * 
+	        vend_up;
+	      vend_up = 
+	        vec_normalize( cross( vend_dir, cross( vend_up, vend_dir) ) );
+	      [[ set up_vector_calculated = true; ]]
+	      [[ set end_up = vend_up; ]]
+	    }
+	  }	
+	}
+	event calc_start_up requires end_up, start_dir, up_roll, 
+	  event.points_avail
+	{
+	  test_run
+	  {
+	    if( ![[ is_solved_in_try(up_vector_calculated) ]] ) 
+	    {
+	      vector vstart_dir = [[ start_dir ]];
+	      bezier->calc_up_backward( [[ end_up ]] );
+	      vector vstart_up = bezier->get_beg_up();
+	      vstart_up = 
+	        mat_rotate_around( vstart_dir, -[[ up_roll ]] ) * vstart_up;
+	      vstart_up = 
+	        vec_normalize(cross(vstart_dir,cross(vstart_up, vstart_dir)));
+	      [[ set up_vector_calculated = true; ]]
+	      [[ set start_up = vstart_up; ]]
+	    }
+	  }	
+	}
+	event calc_up_roll requires start_up, end_up, end_dir,  
+	  event.points_avail
+	{
+	  test_run
+	  {
+	    if( ![[ is_solved_in_try(up_vector_calculated) ]] ) 
+	    {
+	      vector start_up = [[ start_up ]];
+	      bezier->calc_up_forward( start_up );
+	      vector end_up = bezier->get_end_up();
+	      vector axis = [[ end_dir ]];
+	      [[ set up_vector_calculated = true; ]]
+	      [[ set up_roll = get_rotation_around( start_up, end_up, axis); ]]
+	    }
+	  }	
 	}
       }
     }
@@ -118,14 +173,13 @@ solvers
 	[[ return bezier->get_front( s ); ]]
       }
       vector get_up ( stretch s ) 
-        requires event.points_avail
+        requires group.up_vector
       {
 	[[ return bezier->get_up( s ); ]]
       }
     }
   }
-  bspline_solver( vector start_pos, vector end_pos, 
-    container.point points, scalar length, 
+  bspline_solver( container.point points, scalar length, 
     vector start_dir, vector end_dir,
     vector start_up, vector end_up, scalar up_roll )
   {
@@ -135,7 +189,7 @@ solvers
     }
     operands
     {
-      bool length_calculated;
+      flag length_calculated;
     }
     init_operands
     {
@@ -181,6 +235,102 @@ solvers
 	  }
 
 	  spline = new BSpline( points, 
+	    1./180*values::PI, len_sum/100, len_sum/10000, 10 );
+
+	  scalar len = spline->length;
+	  [[ set length_calculated = true; ]]
+	  [[ set length = len; ]]
+	  //[[ set length = spline.get_length(); ]]
+	}
+	reset
+	{
+	  delete spline;
+	}
+      }
+      event reject_length requires length
+      {
+	test_run
+	{
+	  if( ![[ is_solved_in_try(length_calculated) ]] ) 
+	    ;//[[ try_reject container.points; ]]
+	}
+      }
+    }
+    provide
+    {
+      vector get_pos ( stretch s ) 
+        requires event.points_avail
+      {
+	[[ return spline->get_pos( s ); ]]
+      }
+      vector get_dir ( stretch s ) 
+        requires event.points_avail
+      {
+	[[ return spline->get_front( s ); ]]
+      }
+      vector get_up ( stretch s ) 
+        requires event.points_avail
+      {
+	[[ return spline->get_up( s ); ]]
+      }
+    }
+  }
+  crspline_solver( container.point points, scalar length, 
+    vector start_dir, vector end_dir,
+    vector start_up, vector end_up, scalar up_roll )
+  {
+    declarations
+    {
+      CRSpline *spline;
+    }
+    operands
+    {
+      flag length_calculated;
+    }
+    init_operands
+    {
+      constraints 
+      {
+	length >= 0;
+      }
+      solvers
+      {
+      }
+    }
+    init_code
+    {
+    }
+    events
+    {
+      event points_avail requires container.points
+      {
+	test_run 
+	{
+	  std::list<values::Vector> points;
+	  values::Vector p0,p1;
+	  bool first = true;
+	  int idx = 0;
+	  double len_sum = 0,n=0;
+	  [[ for_each point in points ]]
+	  {
+	    p0 = [[ element.point.position(nothing n) ]];
+	    //[[ return_if_fail; ]]
+	    if( did_result_fail ) return false;
+	    if( first )
+	    { 
+	      first = false;
+	    }
+	    else
+	    {
+	      len_sum += abs(p1-p0);
+	      p1 = p0;
+	    }
+
+	    points.push_back( p0 );
+	    idx++;
+	  }
+
+	  spline = new CRSpline( points, 
 	    1./180*values::PI, len_sum/100, len_sum/10000, 10 );
 
 	  scalar len = spline->length;

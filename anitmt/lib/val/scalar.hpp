@@ -125,6 +125,18 @@ inline Scalar abs(const Scalar &a)
 inline Scalar sqrt(const Scalar &a)
 	{  return(::sqrt(double(a))); }
 
+inline Scalar floor(const Scalar &a)
+	{  return(::floor(double(a))); }
+
+inline Scalar ceil(const Scalar &a)
+	{  return(::ceil(double(a))); }
+
+inline Scalar trunc(const Scalar &a)
+	{  return(::floor(double(a))); }
+
+inline Scalar round(const Scalar &a)
+	{  return(::floor(double(a)+0.5)); }
+
 inline std::ostream& operator<<(std::ostream& s,const Scalar &m)
 	{  s << m.x;  return(s);  }
 

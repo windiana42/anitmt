@@ -147,7 +147,7 @@ node constant extends scalar_subfunction {
   provide scalar_vsa {
     resulting value( time t ) requires value
     {
-      [[ return_prop value; ]]
+      [[ return property.value; ]]
     }
     resulting slope( time t ) 
     {
@@ -208,7 +208,7 @@ node linear extends scalar_subfunction provides scalar_vsa {
     }
     resulting slope( time t ) requires slope
     {
-      [[ return_prop slope; ]]
+      [[ return property.slope; ]]
     }
     resulting acceleration( time t ) 
     {
@@ -278,7 +278,7 @@ node accelerated extends scalar_subfunction provides scalar_vsa {
     resulting acceleration( time t ) 
     requires acceleration
     {
-      [[ return_prop acceleration; ]]
+      [[ return property.acceleration; ]]
     }
   }
 }
@@ -558,13 +558,13 @@ node test extends scalar_subfunction provides scalar_vsa {
   // MM: Using the boolean type, may not work in the moment
   provide scalar_vsa {
     resulting value ( time t ) requires ret_value { 
-      [[ return_prop ret_value; ]]
+      [[ return property.ret_value; ]]
     } 
     resulting slope ( time t ) requires ret_slope { 
-      [[ return_prop ret_slope; ]]
+      [[ return property.ret_slope; ]]
     } 
     resulting acceleration ( time t ) requires ret_acceleration { 
-      [[ return_prop ret_acceleration; ]]
+      [[ return property.ret_acceleration; ]]
     } 
   }
 }

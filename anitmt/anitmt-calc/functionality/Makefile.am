@@ -10,12 +10,6 @@ BUILT_SOURCES=		solver.hpp solver.cpp \
 			object_base.hpp object_base.cpp \
 			object.hpp object.cpp \
 			complex_solver.hpp complex_solver.cpp 
-libfunctionality_a_SOURCES= solver.afd base_func.afd scene_base.afd   \
-			scalar_base.afd scalar.afd  object_base.afd   \
-			object.afd complex_solver.afd \
-			sp_curve.hpp sp_curve.cpp \
-			spline.hpp spline.cpp \
-			make_avail.cpp make_avail.hpp 
 nodist_libfunctionality_a_SOURCES= solver.hpp solver.cpp \
 			complex_solver.hpp complex_solver.cpp \
 			base_func.hpp base_func.cpp \
@@ -24,6 +18,13 @@ nodist_libfunctionality_a_SOURCES= solver.hpp solver.cpp \
 			scalar.hpp scalar.cpp \
 			object_base.hpp object_base.cpp \
 			object.hpp object.cpp 
+libfunctionality_a_SOURCES= solver.afd base_func.afd scene_base.afd   \
+			scalar_base.afd scalar.afd  object_base.afd   \
+			object.afd complex_solver.afd \
+			sp_curve.hpp sp_curve.cpp \
+			spline.hpp spline.cpp \
+			make_avail.cpp make_avail.hpp \
+			break_point.cpp break_point.hpp
 
 check_PROGRAMS=		test_functionality
 CXXFLAGS =		@CXXFLAGS@ -Wno-non-template-friend -Wno-unused\

@@ -44,7 +44,7 @@ namespace anitmt
     for(stringlist::iterator i=adlfiles.begin(); i!=adlfiles.end(); ++i)
     {
       const std::string &filename = *i;
-      adlparser::parse_adl( &ani->ani_root, consultant, filename, 
+      adlparser::parse_adl( ani->ani_root, consultant, filename, 
 			    adlparser::pass1 );
     }
   }
@@ -61,7 +61,7 @@ namespace anitmt
     for(stringlist::iterator i=adlfiles.begin(); i!=adlfiles.end(); ++i)
     {
       const std::string &filename = *i;
-      parse_adl( &ani->ani_root, consultant, filename, adlparser::pass2 );
+      parse_adl( ani->ani_root, consultant, filename, adlparser::pass2 );
     }
   }
     

@@ -206,8 +206,8 @@ namespace solve
   Event::Event( Event_Solver *s, Event_Group *g,
 		message::Message_Consultant* consultant )
     : message::Message_Reporter( consultant ),
-      data_ok(consultant),
-      stored_id(-1), id(-1), retry_at_once(false), num_ops(0), 
+      data_ok(consultant), data_base_ok(false), status(no_data), id(-1), 
+      retry_at_once(false), num_ops(0), 
       num_ops_solved_in_try(0),
       me_in_test_run_ready_list( s->test_run_ready_events.end() ),
       solver(s), group(g)
@@ -243,12 +243,7 @@ namespace solve
   //! does a reset invoked by the group
   void Event::do_reset( Solve_Run_Info* info )
   {
-    if( stored_id >= 0 ) 
-    {
-      assert( info->is_id_valid(stored_id) );
-      info->remove_test_run_id( stored_id );
-      stored_id = -1;
-    }
+    data_base_ok = false;	// data_base will be destroyed
     switch( status )
     {
     case valid_data:		// recalc will follow
@@ -282,7 +277,8 @@ namespace solve
       info->set_test_run_id( id ); // use last test run ID again
       bool res = is_result_ok(0,info);	// rerun test_run
       info->set_test_run_id( save_id );
-      assert( res == true );
+      assert( res == true );	// recalc has to result in the same values
+				// which has to be accepted
     }
   }
 
@@ -293,6 +289,7 @@ namespace solve
 			    Solve_Run_Info* info )
   {
     assert( status != in_test_run );
+    assert( !data_base_ok );	// we want to build up data_base here
 
     num_ops_solved_in_try++;
     if( num_ops_solved_in_try >= num_ops )
@@ -338,6 +335,8 @@ namespace solve
 	  return false;
 	}
       }while( retry_at_once );
+      data_base_ok = true;	// data_base build up now
+
       switch( old_status )
       {
       case no_data:		// got new operand
@@ -351,6 +350,17 @@ namespace solve
 	break;
       case in_test_run: assert( false );
       }
+
+      // set data_ok operand true and involk connected functions
+      if( data_ok.test_set_value(true,info) ) 
+	solved_operands.push_back( &data_ok );
+      else
+	{			
+	  // if operand was rejected, we have to return false even
+	  // though we are pretty sure that the value true for the
+	  // operand was not the cause
+	  return false;
+	}
     }
     return true;		// return that operand is acceptable
   }

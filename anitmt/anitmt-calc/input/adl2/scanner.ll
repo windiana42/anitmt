@@ -121,8 +121,58 @@ operand  ({scal}|{qstring}|{id})
 true	  { tok_pos(); yylval->flag() = true;  return TOK_FLAG; }
 false	  { tok_pos(); yylval->flag() = false; return TOK_FLAG; }
 
-sin	  { tok_pos(); return TOK_FUNC_SIN; } /* sin() function keyword */
-sqrt	  { tok_pos(); return TOK_FUNC_SQRT; } /* sqrt() function keyword */
+_debug			{ tok_pos(); return TOK_FUNC__debug; }
+abs			{ tok_pos(); return TOK_FUNC_abs; }
+abs2			{ tok_pos(); return TOK_FUNC_abs2; }
+ceil			{ tok_pos(); return TOK_FUNC_ceil; }
+choose			{ tok_pos(); return TOK_FUNC_choose; }
+cross			{ tok_pos(); return TOK_FUNC_cross; }
+floor			{ tok_pos(); return TOK_FUNC_floor; }
+mat_inverse		{ tok_pos(); return TOK_FUNC_mat_inverse; }
+get_element		{ tok_pos(); return TOK_FUNC_get_element; }
+get_rotate_component	{ tok_pos(); return TOK_FUNC_get_rotate_component; }
+get_scale_component	{ tok_pos(); return TOK_FUNC_get_scale_component; }
+get_translate_component	{ tok_pos(); return TOK_FUNC_get_translate_component; }
+mat_rotate		{ tok_pos(); return TOK_FUNC_mat_rotate; }
+mat_rotate_around	{ tok_pos(); return TOK_FUNC_mat_rotate_around; }
+mat_rotate_pair_pair	{ tok_pos(); return TOK_FUNC_mat_rotate_pair_pair; }
+mat_rotate_spherical_pair { tok_pos(); return TOK_FUNC_mat_rotate_spherical_pair; }
+mat_rotate_vect_vect	{ tok_pos(); return TOK_FUNC_mat_rotate_vect_vect; }
+mat_rotate_vect_vect_up	{ tok_pos(); return TOK_FUNC_mat_rotate_vect_vect_up; }
+mat_rotate_x		{ tok_pos(); return TOK_FUNC_mat_rotate_x; }
+mat_rotate_y		{ tok_pos(); return TOK_FUNC_mat_rotate_y; }
+mat_rotate_z		{ tok_pos(); return TOK_FUNC_mat_rotate_z; }
+mat_scale		{ tok_pos(); return TOK_FUNC_mat_scale; }
+mat_scale_x		{ tok_pos(); return TOK_FUNC_mat_scale_x; }
+mat_scale_y		{ tok_pos(); return TOK_FUNC_mat_scale_y; }
+mat_scale_z		{ tok_pos(); return TOK_FUNC_mat_scale_z; }
+mat_translate		{ tok_pos(); return TOK_FUNC_mat_translate; }
+mat_translate_x		{ tok_pos(); return TOK_FUNC_mat_translate_x; }
+mat_translate_y		{ tok_pos(); return TOK_FUNC_mat_translate_y; }
+mat_translate_z		{ tok_pos(); return TOK_FUNC_mat_translate_z; }
+dot			{ tok_pos(); return TOK_FUNC_dot; }
+pass_if			{ tok_pos(); return TOK_FUNC_pass_if; }
+pass_if_equal		{ tok_pos(); return TOK_FUNC_pass_if_equal; }
+pass_if_not_equal	{ tok_pos(); return TOK_FUNC_pass_if_not_equal; }
+plus_minus		{ tok_pos(); return TOK_FUNC_plus_minus; }
+reject_if		{ tok_pos(); return TOK_FUNC_reject_if; }
+reject_if_equal		{ tok_pos(); return TOK_FUNC_reject_if_equal; }
+reject_if_not_equal	{ tok_pos(); return TOK_FUNC_reject_if_not_equal; }
+round			{ tok_pos(); return TOK_FUNC_round; }
+sqrt			{ tok_pos(); return TOK_FUNC_sqrt; }
+to_angle		{ tok_pos(); return TOK_FUNC_to_angle; }
+to_vector		{ tok_pos(); return TOK_FUNC_to_vector; }
+trunc			{ tok_pos(); return TOK_FUNC_trunc; }
+vec_angle		{ tok_pos(); return TOK_FUNC_vec_angle; }
+vec_mirror		{ tok_pos(); return TOK_FUNC_vec_mirror; }
+vec_normalize		{ tok_pos(); return TOK_FUNC_vec_normalize; }
+vec_rotate_x		{ tok_pos(); return TOK_FUNC_vec_rotate_x; }
+vec_rotate_y		{ tok_pos(); return TOK_FUNC_vec_rotate_y; }
+vec_rotate_z		{ tok_pos(); return TOK_FUNC_vec_rotate_z; }
+vec_scale		{ tok_pos(); return TOK_FUNC_vec_scale; }
+vec_to_rectangular	{ tok_pos(); return TOK_FUNC_vec_to_rectangular; }
+vec_to_spherical	{ tok_pos(); return TOK_FUNC_vec_to_spherical; }
+vec_translate		{ tok_pos(); return TOK_FUNC_vec_translate; }
 
 {id}	  { tok_pos(); Token tok = get_identifier(yytext,info);
 	    *yylval = tok; return tok.get_type(); } /* identifiers */

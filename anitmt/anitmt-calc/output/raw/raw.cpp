@@ -36,7 +36,7 @@ namespace anitmt
   //! process the resulting animation (ex: integrate it in scene description)
   void Raw_Output::process_results() throw()
   {
-    Prop_Tree_Interface prop_tree( &ani->ani_root );
+    Prop_Tree_Interface prop_tree( ani->ani_root_original );
 
     // check whether there is a raw scene
     Scene_Interface first_raw_scene = prop_tree.get_first_scene();

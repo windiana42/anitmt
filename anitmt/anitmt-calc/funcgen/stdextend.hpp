@@ -31,5 +31,8 @@ namespace std
   string to_string( int );
   string to_string( long );
   string to_string( double );
+
+  string to_upper( std::string );
+  bool starts_with( std::string str, std::string cmp );
 }
 

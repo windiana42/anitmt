@@ -15,6 +15,7 @@
 #include "stdextend.hpp"
 
 #include <sstream>
+#include <cctype>
 
 //***********
 // help stuff
@@ -80,6 +81,20 @@ namespace std
     ostringstream os;
     os << v;
     return os.str();
+  }
+
+  string to_upper( std::string str )
+  {
+    string ret;
+    for( string::size_type i = 0; i < str.size(); ++i )
+    {
+      ret += char(toupper(str[i]));
+    }
+    return ret;
+  }
+  bool starts_with( std::string str, std::string cmp )
+  {
+    return str.find(cmp) == 0;
   }
 }
 

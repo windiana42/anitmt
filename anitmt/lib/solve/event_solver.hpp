@@ -101,10 +101,12 @@ namespace solve
      */
     void add_operand( Basic_Operand &op );
 
-    Operand<values::Flag> data_ok;
+    // to involk functions that require this solver
+    Operand<values::Flag> data_ok; 
+    // wheather data base is really ok
+    bool data_base_ok;		
     // for functions in derived event_solver
     inline bool get_retry_at_once() { return retry_at_once; }
-    Solve_Run_Info::id_type stored_id;
     std::list< Basic_Operand* > solved_operands; // ... by this event
   private:
     friend class Event_Group;

@@ -162,6 +162,9 @@ namespace funcgen
   Variable::Variable( std::string n, std::string t ) : name(n), type(t)
   {
   }
+  Solver_Name::Solver_Name( std::string n, std::string t ) : name(n), type(t)
+  {
+  }
 
   //**********
   // Context
@@ -309,6 +312,33 @@ namespace funcgen
     if( parent ) return parent->is_solver(name);
     return false;
   }
+  Event_Solver *Context::get_solver( std::string name )
+  {
+    std::map<std::string,Event_Solver>::iterator i 
+      = solvers.find(name);
+    if( i != solvers.end() )
+      return &(i->second);
+
+    if( parent ) return parent->get_solver(name);
+    return 0;
+  }
+
+  bool Context::is_solver_name( std::string name )
+  {
+    if( solver_names.find(name) != solver_names.end() )
+      return true;
+    if( parent ) return parent->is_solver_name(name);
+    return false;
+  }
+  Solver_Name *Context::get_solver_name( std::string name )
+  {
+    std::map<std::string,Solver_Name*>::iterator i = solver_names.find(name);
+    if( i != solver_names.end() )
+      return i->second;
+
+    if( parent ) return parent->get_solver_name(name);
+    return 0;
+  }
 
   Code::Code() : start_src_line(0), start_src_column(0), code("") {}
 
@@ -441,16 +471,6 @@ namespace funcgen
   Event_Group::Event_Group( std::string name ) : name(name) {}
 
   Event_Solver::Event_Solver() : current_event_group(0) {}
-
-  Event_Solver *Context::get_solver( std::string name )
-  {
-    std::map<std::string,Event_Solver>::iterator i = solvers.find(name);
-    if( i != solvers.end() )
-      return &(i->second);
-
-    if( parent ) return parent->get_solver(name);
-    return 0;
-  }
 
   void Context::set_parent_context( Context *parent_context )
   {

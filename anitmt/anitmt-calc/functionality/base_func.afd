@@ -46,6 +46,21 @@ base_types{
   //orientation = { direction dir, up_vector up };
 }
 
+// ***************
+// provider types
+// ***************
+
+// point privder type for spline
+type point {
+  provides position( nothing );
+}
+
+// point privder type for spline
+serial type serial_point {
+  provides position( index );
+}
+
+
 // **************
 // Priority List
 // **************

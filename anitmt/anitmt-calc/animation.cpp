@@ -14,6 +14,7 @@
 
 #include <config.h>
 
+#include <functionality/scene_base.hpp>
 #include <functionality/make_avail.hpp>
 
 #include "animation.hpp"
@@ -24,7 +25,7 @@ namespace proptree
 {
     Semi_Global::Semi_Global( param::Parameter_Manager *parameter_manager, 
 			      message::Message_Consultant* c )
-      : param(parameter_manager->old_sys), msg(c) {}
+      : param(parameter_manager->old_sys), msg(c), final_run_info(&handler) {}
 #warning only to wrap the old parameter system
 }
 
@@ -43,16 +44,24 @@ namespace anitmt{
   Animation::Animation( std::string name, 
 			param::Parameter_Manager *parameter_manager,
 			message::Message_Manager *manager ) 
-    : GLOB( parameter_manager, new message::Message_Consultant(manager,MID_Core) ),
-      tree_info( new solve::Priority_System(), &GLOB ), 
-      ani_root( name, &tree_info, 
-		GLOB.msg.get_consultant() ) // GLOB has to be initialized
+    : GLOB( parameter_manager, 
+	    new message::Message_Consultant(manager,MID_Core) ),
+      tree_info( new solve::Priority_System(), &GLOB )
   { 
+    ani_root_original = 
+      new functionality::node_root( name, &tree_info, 
+				    GLOB.msg.get_consultant() );
+    ani_root = ani_root_original;
+  }
+
+  Animation::~Animation()
+  {
+    delete ani_root_original;
   }
 
   std::string Animation::get_name()
   {
-    return ani_root.get_name();
+    return ani_root_original->get_name();
   }
 
   void Animation::init()
@@ -73,7 +82,7 @@ namespace anitmt{
   //! function of the return type container
   void Animation::hierarchy_final_init()
   {
-    ani_root.hierarchy_final_init();
+    ani_root_original->hierarchy_final_init();
   }
   void Animation::finish_calculations()
   {
@@ -100,7 +109,10 @@ namespace anitmt{
   std::pair<bool,values::Scalar> 
   Scalar_Component_Interface::get_value( values::Scalar t )
   {
-    return (*scalar_component)->_rf_scalar_component_value_time( t );
+    solve::Solve_Run_Info *info = 
+      &(*scalar_component)->get_tree_info()->GLOB->final_run_info;
+
+    return (*scalar_component)->_rf_scalar_component_value_time( t, info );
   }
 
   Scalar_Component_Interface::Scalar_Component_Interface
@@ -142,18 +154,21 @@ namespace anitmt{
   std::pair<bool,Object_State> 
   Object_Component_Interface::get_state( values::Scalar t )
   {
+    solve::Solve_Run_Info *info = 
+      &(*object_component)->get_tree_info()->GLOB->final_run_info;
+
     std::pair<bool,Object_State> ret; ret.first = false;
 
     std::pair<bool,functionality::translation> trans = 
-      (*object_component)->_rf_object_component_translation_time( t );
+      (*object_component)->_rf_object_component_translation_time( t, info );
     std::pair<bool,functionality::rotation> rot = 
-      (*object_component)->_rf_object_component_rotation_time( t );
+      (*object_component)->_rf_object_component_rotation_time( t, info );
     std::pair<bool,functionality::position> pos = 
-      (*object_component)->_rf_object_component_position_time( t );
+      (*object_component)->_rf_object_component_position_time( t, info );
     std::pair<bool,functionality::front> front = 
-      (*object_component)->_rf_object_component_front_time( t );
+      (*object_component)->_rf_object_component_front_time( t, info );
     std::pair<bool,functionality::up_vector> up = 
-      (*object_component)->_rf_object_component_up_vector_time( t );
+      (*object_component)->_rf_object_component_up_vector_time( t, info );
 
     if( !trans.first ) return ret;
     if( !rot.first   ) return ret;
@@ -246,6 +261,6 @@ namespace anitmt{
   Prop_Tree_Interface::Prop_Tree_Interface( functionality::node_root *root )
     : ani_root(root) {}
   Prop_Tree_Interface::Prop_Tree_Interface( Animation *ani )
-    : ani_root(&ani->ani_root) {}
+    : ani_root(ani->ani_root_original) {}
 }
 

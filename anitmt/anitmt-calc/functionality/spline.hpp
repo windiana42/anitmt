@@ -43,19 +43,36 @@ namespace functionality
     //! derived concrete classes have to call init() !
   };
 
-  // class for bezier curves
-  class BSpline : public Spline
+  // class for splines which depend on a koefficient matrix
+  class Matrix_Spline : public Spline
   {
-  public:
-    BSpline::BSpline( std::list<values::Vector> control_points,
-		      double max_a, double max_l, double min_l, int anz );
-
+  protected:
+    Matrix_Spline::Matrix_Spline( std::list<values::Vector> control_points,
+				  double max_a, double max_l, double min_l, 
+				  int anz );
+    values::Matrix<4,4> matrix;
   private:
     virtual values::Vector get_local_point_pos( double t,
 						values::Vector p0,
 						values::Vector p1,
 						values::Vector p2,
 						values::Vector p3 );
+  };
+
+  // class for bspline
+  class BSpline : public Matrix_Spline
+  {
+  public:
+    BSpline::BSpline( std::list<values::Vector> control_points,
+		      double max_a, double max_l, double min_l, int anz );
+  };
+
+  // class for bspline
+  class CRSpline : public Matrix_Spline
+  {
+  public:
+    CRSpline::CRSpline( std::list<values::Vector> control_points,
+			double max_a, double max_l, double min_l, int anz );
   };
 }
 

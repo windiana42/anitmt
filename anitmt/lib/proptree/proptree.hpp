@@ -134,6 +134,8 @@ namespace proptree
     inline Prop_Tree_Node* get_last_child()	{ return last_child; }
     Prop_Tree_Node* get_child( int n );	
 
+    inline tree_info *get_tree_info()		{ return info; }
+
     //* child access
 
     //! returns child with name, or 0 for unknown name

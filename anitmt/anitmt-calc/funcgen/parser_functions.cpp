@@ -98,7 +98,6 @@ namespace funcgen
     ++afd->include_depth;
 
     const code_gen_info *code_info = afd->translator->get_info();
-    afd->don_t_create_code.push(true);
     std::string::size_type p = file.rfind('.');
     std::string base_name;
     if( p != std::string::npos )
@@ -106,7 +105,11 @@ namespace funcgen
     else
       base_name = file;
 
-    afd->included_basenames.push_back(base_name);
+    if( !afd->don_t_create_code.top() )
+      afd->included_basenames.push_back(base_name);
+
+    afd->don_t_create_code.push(true);
+
     if( !info->open_file(file, false) )	// if unable to open
     {
       // try all include directories
@@ -260,27 +263,33 @@ namespace funcgen
 
     afd->pop_context();
   }
-  void node_extends( void *infoptr, const std::string &node )
+  void node_extends( void *infoptr, const std::string &node_name )
   {
     afd_info *info = static_cast<afd_info*>(infoptr);
     AFD_Root *afd = info->afd;
-    assert(afd->current_node != 0);
 
-    // search node
-    std::map<std::string,Tree_Node_Type>::iterator i;
-    i = afd->nodes.find( node );
-    
-    if( i == afd->nodes.end() )
-      info->msg.error() 
-	<< "node \"" << node << "\" to extend doesen't exist";
-    else
+    if( afd->current_node )
     {
-      if( &(i->second) == afd->current_node )
+
+      // search node
+      std::map<std::string,Tree_Node_Type>::iterator i;
+      i = afd->nodes.find( node_name );
+      
+      if( i == afd->nodes.end() )
 	info->msg.error() 
-	  << "recursive inheritance of node \"" << node << "\" not allowed";
+	  << "node \"" << node_name << "\" to extend doesen't exist";
       else
       {
-	afd->current_node->merge( i->second ); // merge with node to extend
+	Tree_Node_Type &node = i->second;
+	if( &node == afd->current_node )
+	  info->msg.error() 
+	    << "recursive inheritance of node \"" << node_name 
+	    << "\" is not allowed";
+	else
+	{
+	  afd->current_node->merge( node ); // merge with node to extend
+	  afd->current_node->set_parent_context( &node );
+	}
       }
     }
   }
@@ -462,30 +471,32 @@ namespace funcgen
     {
       if( context->is_provider_type(type) )
       {
-	declare_container( info, context->provider_types[type].serial,
-			   type, name );
+	context->container_list.push_back
+	  ( Container(context->get_provider_type(type)->serial,type,name) );
+	context->containers[name] = &context->container_list.back();
       }
       else
       {
-	msg.error() << type << " is no provider type";
+	msg.error() << "provider type expected instead of \""<< type << "\"";
       }
     }    
   }
-  void declare_container( void *info, bool serial, const std::string &type, 
-			  const std::string &name )
+
+  void declare_solver_name( void *info, const std::string &type, 
+			    const std::string &name )
   {
     message::Message_Reporter &msg = static_cast<afd_info*>(info)->msg;
     Context *context = static_cast<afd_info*>(info)->afd->get_context();
     if( context )
     {
-      if( !context->is_container(name) )
+      if( !context->is_solver_name(name) )
       {
-	context->container_list.push_back( Container(serial,type,name) );
-	context->containers[name] = &context->container_list.back();
+	context->solver_name_list.push_back( Solver_Name(name,type) );
+	context->solver_names[name] = &context->solver_name_list.back();
       }
       else
       {
-	msg.error() << "container \"" << name << "\" already defined";
+	msg.error() << "solver name \"" << name << "\" already defined";
       }
     }
   } 
@@ -561,7 +572,8 @@ namespace funcgen
     delete exp;
   }
 
-  void node_start_solver( void *info, const std::string &solver )
+  void node_start_solver( void *info, const std::string &solver, 
+			  const std::string &name )
   {
     AFD_Root *afd = static_cast<afd_info*>(info)->afd;
     Solve_System_Code *solve_code = afd->current_solve_code;    
@@ -569,16 +581,12 @@ namespace funcgen
     if( solve_code )
     {
       solve_code->solvers.new_solver(solver);
-    }
-  }
-  void node_solver_identifier( void *info, const std::string &name )
-  {
-    AFD_Root *afd = static_cast<afd_info*>(info)->afd;
-    Solve_System_Code *solve_code = afd->current_solve_code;    
 
-    if( solve_code )
-    {
-      solve_code->solvers.set_solver_identifier( name );
+      if( name != "" )
+      {
+	declare_solver_name( info, solver, name );
+	solve_code->solvers.set_solver_identifier(name);
+      }
     }
   }
 
@@ -639,6 +647,18 @@ namespace funcgen
 						  parameters ) );
     }
   }
+  void solver_code_add_container_parameter( void *info, 
+					    const std::string &container )
+  {
+    AFD_Root *afd = static_cast<afd_info*>(info)->afd;
+    Solve_System_Code *solve_code = afd->current_solve_code;    
+
+    if( solve_code )
+    {
+      solve_code->solvers.add_const_parameter
+	( afd->translator->container_name( container ) );
+    }
+  } // from reference
   void node_finish_solver( void *info )
   {
     AFD_Root *afd = static_cast<afd_info*>(info)->afd;
@@ -732,6 +752,8 @@ namespace funcgen
   void node_contains( void *info, bool max1, bool min1, 
 		      const std::string &type )
   {
+    declare_container( info, type, type /*name=type*/ );
+
     message::Message_Reporter &msg = static_cast<afd_info*>(info)->msg;
     AFD_Root *afd = static_cast<afd_info*>(info)->afd;
     Tree_Node_Type *node = afd->current_node;
@@ -1103,21 +1125,25 @@ namespace funcgen
       solver->parameters.parameters.push_back( Operand( name, type ) );
     }
   }
-  void event_solver_parameter_container( void *info, bool serial, 
+  void event_solver_parameter_container( void *info,
 					 const std::string &type, 
 					 const std::string &name )
   {
     // declare container in context
-    declare_container( info, serial, type, name ); 
+    declare_container( info, type, name ); 
 
     afd_info *I=static_cast<afd_info*>(info);
     //message::Message_Reporter &msg = I->msg;
     Event_Solver *solver= I->afd->current_event_solver;
+    Context *context = I->afd->get_context();
     
     if( solver )
     {
-      solver->
-	parameters.parameters.push_back( Container( serial, type, name ) );
+      if( context->is_container(name) )
+      // use container just declared in context because serial is detected 
+      // there
+	solver->
+	  parameters.parameters.push_back( *context->get_container(name) );
     }
   }
   void start_event_solver_declaration( void *info )
@@ -1334,6 +1360,68 @@ namespace funcgen
 	{
 	  event->required_container_functions.push_back
 	    ( Container_Function( name, return_type, parameter_type ) );
+	}
+      }
+    }
+  }
+  void event_condition_event( void *info, const std::string &name )
+  {
+    afd_info *I=static_cast<afd_info*>(info);
+    //message::Message_Reporter &msg = I->msg;
+    AFD_Root *afd = I->afd;
+    Event_Solver *solver = afd->current_event_solver;
+    
+    if( solver )
+    {
+      Event_Group *group = solver->current_event_group;
+      if( group )		// if there is no group
+      {
+	Event *event = group->current_event;
+	if( event )
+	{
+	  event->required_events.push_back( name );
+	}
+      }
+    }
+  }
+  void event_condition_event_group( void *info, const std::string &name )
+  {
+    afd_info *I=static_cast<afd_info*>(info);
+    //message::Message_Reporter &msg = I->msg;
+    AFD_Root *afd = I->afd;
+    Event_Solver *solver = afd->current_event_solver;
+    
+    if( solver )
+    {
+      Event_Group *group = solver->current_event_group;
+      if( group )		// if there is no group
+      {
+	Event *event = group->current_event;
+	if( event )
+	{
+	  event->required_event_groups.push_back( name );
+	}
+      }
+    }
+  }
+  void event_condition_solver( void *info, const std::string &solver_name, 
+			       const std::string &function )
+  {
+    afd_info *I=static_cast<afd_info*>(info);
+    //message::Message_Reporter &msg = I->msg;
+    AFD_Root *afd = I->afd;
+    Event_Solver *solver = afd->current_event_solver;
+    
+    if( solver )
+    {
+      Event_Group *group = solver->current_event_group;
+      if( group )		// if there is no group
+      {
+	Event *event = group->current_event;
+	if( event )
+	{
+	  event->required_solver_functions.push_back
+	    ( Solver_Function(solver_name, function) );
 	}
       }
     }
@@ -1706,14 +1794,32 @@ namespace funcgen
 	( solver, function, parameter, opt_fail_bool_var);
     }
   }
-  void user_code_container_function( void *info, std::string container, 
+  void user_code_store_container_name( void *info, std::string container )
+  {
+    afd_info *I=static_cast<afd_info*>(info);
+    message::Message_Reporter &msg = I->msg;
+    //Code_Translator *translator = I->afd->translator;
+    AFD_Root *afd = I->afd;
+
+    Context *context = afd->get_context();
+    assert( context );
+    if( context->is_container( container ) )
+    {
+      afd->store = container;
+    }
+    else
+    {
+	msg.error() << "`" << container << "' is no container name";
+    }
+  }
+  void user_code_container_function( void *info, 
 				     std::string return_type, 
 				     std::string parameter_type, 
 				     std::string parameter, 
 				     std::string opt_fail_bool_var )
   {
     afd_info *I=static_cast<afd_info*>(info);
-    message::Message_Reporter &msg = I->msg;
+    //message::Message_Reporter &msg = I->msg;
     Code_Translator *translator = I->afd->translator;
     AFD_Root *afd = I->afd;
     Code *code = afd->current_code;
@@ -1722,20 +1828,14 @@ namespace funcgen
     {
       Context *context = afd->get_context();
       assert( context );
-      if( context->is_container( container ) )
-      {
-	code->code += translator->container_function_value
-	  ( container, context->get_container(container)->provider_type,
-	    return_type, parameter_type, parameter, 
-	    opt_fail_bool_var );
-      }
-      else
-      {
-	msg.error() << "`" << container << "' is no container name";
-      }
+
+      code->code += translator->container_function_value
+	( afd->store, context->get_container(afd->store)->provider_type,
+	  return_type, parameter_type, parameter, 
+	  opt_fail_bool_var );
     }
   }
-  void user_code_container_first_index( void *info, std::string container )
+  void user_code_container_first_index( void *info )
   {
     afd_info *I=static_cast<afd_info*>(info);
     //message::Message_Reporter &msg = I->msg;
@@ -1745,10 +1845,10 @@ namespace funcgen
 
     if( code )
     {
-      code->code += translator->container_first_index( container );
+      code->code += translator->container_first_index( afd->store );
     }
   }
-  void user_code_container_last_index( void *info, std::string container )
+  void user_code_container_last_index( void *info )
   {
     afd_info *I=static_cast<afd_info*>(info);
     //message::Message_Reporter &msg = I->msg;
@@ -1758,7 +1858,7 @@ namespace funcgen
 
     if( code )
     {
-      code->code += translator->container_last_index( container );
+      code->code += translator->container_last_index( afd->store );
     }
   }
   void user_code_container_element_function( void *info, std::string container,
@@ -1863,6 +1963,21 @@ namespace funcgen
     {
       code->code += translator->start_return_value( afd->return_type );
       code->code += translator->prop_op_value( operand );
+      code->code += translator->finish_return_value( afd->return_type );
+    }
+  }
+  void user_code_return_prop_try( void *info, std::string operand )
+  {
+    afd_info *I=static_cast<afd_info*>(info);
+    //message::Message_Reporter &msg = I->msg;
+    Code_Translator *translator = I->afd->translator;
+    AFD_Root *afd = I->afd;
+    Code *code = afd->current_code;
+
+    if( code )
+    {
+      code->code += translator->start_return_value( afd->return_type );
+      code->code += translator->prop_op_value_try( operand );
       code->code += translator->finish_return_value( afd->return_type );
     }
   }
@@ -2312,6 +2427,162 @@ namespace funcgen
       message::Message_Reporter &msg = I->msg;
 
       msg.error() << "`" << expect << "' expected instead of `" << id << "'";
+    }
+  }
+  void require_operand( void *info, std::string id )
+  {
+    afd_info *I=static_cast<afd_info*>(info);
+    message::Message_Reporter &msg = I->msg;
+    AFD_Root *afd = I->afd;
+    Context *context = afd->get_context();
+    if( context )
+    {
+      if( !context->is_operand(id) )
+      {
+	msg.error() << "operand expected insted of \"" << id << "\"";
+      }
+    }
+  }
+  void require_property( void *info, std::string id )
+  {
+    afd_info *I=static_cast<afd_info*>(info);
+    message::Message_Reporter &msg = I->msg;
+    AFD_Root *afd = I->afd;
+    Context *context = afd->get_context();
+    if( context )
+    {
+      if( !context->is_property(id) )
+      {
+	msg.error() << "property expected insted of \"" << id << "\"";
+      }
+    }
+  }
+  void require_prop_op( void *info, std::string id )
+  {
+    afd_info *I=static_cast<afd_info*>(info);
+    message::Message_Reporter &msg = I->msg;
+    AFD_Root *afd = I->afd;
+    Context *context = afd->get_context();
+    if( context )
+    {
+      if( !(context->is_operand(id) || context->is_property(id)) )
+      {
+	msg.error() << "property or operand expected insted of \"" << id 
+		    << "\"";
+      }
+    }
+  }
+  void require_provider_type( void *info, std::string id )
+  {
+    afd_info *I=static_cast<afd_info*>(info);
+    message::Message_Reporter &msg = I->msg;
+    AFD_Root *afd = I->afd;
+    Context *context = afd->get_context();
+    if( context )
+    {
+      if( !context->is_provider_type(id) )
+      {
+	msg.error() << "provider_type expected insted of \"" << id << "\"";
+      }
+    }
+  }
+  void require_container_name( void *info, std::string id )
+  {
+    afd_info *I=static_cast<afd_info*>(info);
+    message::Message_Reporter &msg = I->msg;
+    AFD_Root *afd = I->afd;
+    Context *context = afd->get_context();
+    if( context )
+    {
+      if( !context->is_container(id) )
+      {
+	msg.error() << "container name expected insted of \"" << id << "\"";
+      }
+    }
+  }
+  void require_variable( void *info, std::string id )
+  {
+    afd_info *I=static_cast<afd_info*>(info);
+    message::Message_Reporter &msg = I->msg;
+    AFD_Root *afd = I->afd;
+    Context *context = afd->get_context();
+    if( context )
+    {
+      if( !context->is_variable(id) )
+      {
+	msg.error() << "variable expected insted of \"" << id << "\"";
+      }
+    }
+  }
+  void require_special_variable( void *info, std::string id )
+  {
+    afd_info *I=static_cast<afd_info*>(info);
+    message::Message_Reporter &msg = I->msg;
+    AFD_Root *afd = I->afd;
+    Context *context = afd->get_context();
+    if( context )
+    {
+      if( !context->is_special_variable(id) )
+      {
+	msg.error() << "special variable expected insted of \"" << id << "\"";
+      }
+    }
+  }
+  void require_base_type( void *info, std::string id )
+  {
+    afd_info *I=static_cast<afd_info*>(info);
+    message::Message_Reporter &msg = I->msg;
+    AFD_Root *afd = I->afd;
+    Context *context = afd->get_context();
+    if( context )
+    {
+      if( !context->is_base_type(id) )
+      {
+	msg.error() << "base type expected insted of \"" << id << "\"";
+      }
+    }
+  }
+  void require_operator( void *info, std::string id )
+  {
+    afd_info *I=static_cast<afd_info*>(info);
+    message::Message_Reporter &msg = I->msg;
+    AFD_Root *afd = I->afd;
+    Context *context = afd->get_context();
+    if( context )
+    {
+      if( !context->is_operator(id) )
+      {
+	msg.error() << "operator expected insted of \"" << id << "\"";
+      }
+    }
+  }
+  void require_solver( void *info, std::string id )
+  {
+    afd_info *I=static_cast<afd_info*>(info);
+    message::Message_Reporter &msg = I->msg;
+    AFD_Root *afd = I->afd;
+    Context *context = afd->get_context();
+    if( context )
+    {
+      if( !context->is_solver(id) )
+      {
+	msg.error() << "solver expected insted of \"" << id << "\"";
+      }
+    }
+  }
+
+  void require_solver_name( void *info, std::string id )
+  {
+    afd_info *I=static_cast<afd_info*>(info);
+    message::Message_Reporter &msg = I->msg;
+    AFD_Root *afd = I->afd;
+    Context *context = afd->get_context();
+    if( context )
+    {
+      if( !context->is_solver_name(id) )
+      {
+	msg.error() << "solver name expected insted of \"" << id << "\"";
+      }
     }
   }
 

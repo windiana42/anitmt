@@ -265,7 +265,7 @@ namespace functionality{
     double q = ( s - s0 ) / (s1 - s0);
 
     // return direction
-    return (1-q) * f0 + q * f1;
+    return vec_normalize((1-q) * f0 + q * f1);
   }
 
   // get up-vector at a certain stretch
@@ -291,18 +291,18 @@ namespace functionality{
     double q = ( s - s0 ) / (s1 - s0);
 
     // return direction
-    return (1-q) * u0 + q * u1;
+    return vec_normalize((1-q) * u0 + q * u1);
   }
 
   // get first up-vector
   values::Vector Space_Curve::get_beg_up (){
-    return points.front().up;
+    return vec_normalize(points.front().up);
   }
 
   // get last up-vector
   values::Vector Space_Curve::get_end_up (){
     //return points.last().up;   // last() isn't availible in my gcc version
-    return (--points.end())->up;
+    return vec_normalize((--points.end())->up);
   }
 
   /****************/

@@ -292,6 +292,7 @@ namespace proptree
     {
       n->hierarchy_final_init();
     }    
+    custom_hierarchy_final_init();
   }
 
 

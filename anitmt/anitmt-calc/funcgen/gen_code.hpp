@@ -140,8 +140,10 @@ namespace funcgen
     virtual std::string operand_from_string( std::string ) = 0;
     virtual std::string operand_from_function( std::string name, 
 					       std::string parameters ) = 0;
+    /*
     virtual std::string function( std::string function_name,
 				  std::string parameters ) = 0;
+    */
     virtual std::string event_code_set( std::string operand, 
 					std::string expression ) = 0;
     virtual std::string event_code_try( std::string operand, 

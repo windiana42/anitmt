@@ -61,11 +61,10 @@ namespace functionality
     if( parts >= 2 )		// at least two parts (one real control point)
     {
       // following code needs equal sized intervals of t range per part
-      // that is why t=1 has to be handled differently
-      if( t == 1 )		
-	return control_points.back();
-
       int part = int(t * parts); // 0 <= part <= parts - 1
+
+      if( part == parts ) return control_points.back();	// for t == 1
+
       assert( (0 <= part) && (part < parts) );
 
       values::Vector &p1 = control_points[part];
@@ -83,26 +82,64 @@ namespace functionality
     }
   }
 
+  /*****************/
+  /* Matrix_Spline */
+  /*****************/
+
+  Matrix_Spline::Matrix_Spline( std::list<values::Vector> control_points,
+		    double max_a, double max_l, double min_l, int anz )
+    : Spline(control_points,max_a,max_l,min_l,anz)
+  {}
+
+  values::Vector Matrix_Spline::get_local_point_pos( double t, 
+					       values::Vector p1, 
+					       values::Vector p2,
+					       values::Vector p3, 
+					       values::Vector p4 )
+  {
+    double t_sq = t*t; double t_cub = t_sq * t;
+    // matrix usage might be different than in some books (trasposed)
+    values::Vector<4> prod = matrix * values::Vector<4>(t_cub, t_sq, t, 1);
+
+    values::Vector<3> pos = 
+      prod[0] * p1 + prod[1] * p2 + prod[2] * p3 + prod[3] * p4;
+
+    return pos;
+  }
+
   /***********/
   /* BSpline */
   /***********/
 
   BSpline::BSpline( std::list<values::Vector> control_points,
 		    double max_a, double max_l, double min_l, int anz )
-      : Spline(control_points,max_a,max_l,min_l,anz) 
+    : Matrix_Spline(control_points,max_a,max_l,min_l,anz)
   {
+    matrix[0][0] = -1; matrix[0][1] =  3; matrix[0][2] = -3; matrix[0][3] =  1;
+    matrix[1][0] =  3; matrix[1][1] = -6; matrix[1][2] =  0; matrix[1][3] =  4;
+    matrix[2][0] = -3; matrix[2][1] =  3; matrix[2][2] =  3; matrix[2][3] =  1;
+    matrix[3][0] =  1; matrix[3][1] =  0; matrix[3][2] =  0; matrix[3][3] =  0;
+
+    matrix *= 1./6.;
+
     init();
   }
 
-  values::Vector BSpline::get_local_point_pos( double t, 
-					       values::Vector p1, 
-					       values::Vector p2,
-					       values::Vector p3, 
-					       values::Vector p4 )
+  /***********/
+  /* CRSpline */
+  /***********/
+
+  CRSpline::CRSpline( std::list<values::Vector> control_points,
+		    double max_a, double max_l, double min_l, int anz )
+    : Matrix_Spline(control_points,max_a,max_l,min_l,anz)
   {
-    // Qubic interpolation:
-    // v = (1-t)^3 * p1 + 3*(1-t)^2*t * p2 + 3*(1-t)*t^2 * p3 + t^3 * p4
-    return 
-      (1-t)*(1-t)*(1-t)*p1 + 3*(1-t)*(1-t)*t*p2 + 3*(1-t)*t*t*p3 + t*t*t*p4;
+    matrix[0][0] = -1; matrix[0][1] =  2; matrix[0][2] = -1; matrix[0][3] =  0;
+    matrix[1][0] =  3; matrix[1][1] = -5; matrix[1][2] =  0; matrix[1][3] =  2;
+    matrix[2][0] = -3; matrix[2][1] =  4; matrix[2][2] =  1; matrix[2][3] =  0;
+    matrix[3][0] =  1; matrix[3][1] = -1; matrix[3][2] =  0; matrix[3][3] =  0;
+
+    matrix *= 1./2.;
+
+    init();
   }
 }

@@ -59,7 +59,7 @@ namespace anitmt {
     std::ofstream out( filename.c_str() );
 
     // write children recursive
-    for( proptree::Prop_Tree_Node* cc = root->ani_root.get_first_child(); 
+    for( proptree::Prop_Tree_Node* cc = root->ani_root->get_first_child(); 
 	 cc != 0; cc = cc->get_next() )
       {
 	// recursive call to write child node indented

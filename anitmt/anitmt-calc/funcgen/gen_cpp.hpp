@@ -121,8 +121,10 @@ namespace funcgen
     virtual std::string operand_from_string( std::string );
     virtual std::string operand_from_function( std::string name, 
 					       std::string parameters );
+    /*
     virtual std::string function( std::string function_name,
 				  std::string parameters );
+    */
     virtual std::string event_code_set( std::string operand, 
 					std::string expression );
     virtual std::string event_code_try( std::string operand, 
@@ -161,8 +163,11 @@ namespace funcgen
   //! generates C++ code
   class Cpp_Code_Generator : public Code_Generator
   {
+    std::ostream *prot;		// stream to output prototype declaration code
     std::ostream *decl;		// stream to output declaration code
     std::ostream *impl;		// stream to output implementation code
+    std::ostream *pars;		// stream to output code to insert in a parser
+    std::ostream *scan;		// stream to output code to insert in a lexer
     AFD_Root *afd;
     code_gen_info *info;
 

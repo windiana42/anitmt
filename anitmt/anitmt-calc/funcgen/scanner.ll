@@ -141,7 +141,6 @@ end_param		{ tok_pos(); return TAFD_end_param; }
 true			{ tok_pos(); return TAFD_true; }
 false			{ tok_pos(); return TAFD_false; }
 return			{ tok_pos(); return TAFD_return; }
-return_prop		{ tok_pos(); return TAFD_return_prop; }
 return_fail		{ tok_pos(); return TAFD_return_fail; }
 return_if_fail		{ tok_pos(); return TAFD_return_if_fail; }
 operators		{ tok_pos(); return TAFD_operators; }
@@ -151,7 +150,6 @@ init_operands		{ tok_pos(); return TAFD_init_operands; }
 init_code		{ tok_pos(); return TAFD_init_code; }
 events			{ tok_pos(); return TAFD_events; }
 container		{ tok_pos(); return TAFD_container; }
-serial_container	{ tok_pos(); return TAFD_serial_container; }
 group			{ tok_pos(); return TAFD_group; }
 event			{ tok_pos(); return TAFD_event; }
 test_run		{ tok_pos(); return TAFD_test_run; }
@@ -163,6 +161,8 @@ try_reject		{ tok_pos(); return TAFD_try_reject; }
 trial_failed		{ tok_pos(); return TAFD_trial_failed; }
 is_solved_in_try	{ tok_pos(); return TAFD_is_solved_in_try; }
 is_just_solved		{ tok_pos(); return TAFD_is_just_solved; }
+operand			{ tok_pos(); return TAFD_operand; }
+property		{ tok_pos(); return TAFD_property; }
 solver			{ tok_pos(); return TAFD_solver; }
 first_index		{ tok_pos(); return TAFD_first_index; }
 last_index		{ tok_pos(); return TAFD_last_index; }

@@ -95,21 +95,22 @@ namespace funcgen
   ( std::string provider_type, std::string ret_type, std::string par_type )
   {
     return prefix_res_fun + provider_type + '_' + ret_type + '_' + par_type 
-      + "( " + prefix_base_type + par_type + " )";
+      + "( " + prefix_base_type + par_type + ", solve::Solve_Run_Info * )";
   }
   std::string Cpp_Code_Translator::result_function_impl
   ( std::string provider_type, std::string ret_type, std::string par_type,
     std::string par )
   {
     return prefix_res_fun + provider_type + '_' + ret_type + '_' + par_type 
-      + "( " + prefix_base_type + par_type + " " + par + " )";
+      + "( " + prefix_base_type + par_type + " " + par 
+      + ", solve::Solve_Run_Info *__info__ )";
   }
   std::string Cpp_Code_Translator::result_function_call
   ( std::string provider_type, std::string ret_type, std::string par_type,
     std::string par )
   {
     return prefix_res_fun + provider_type + '_' + ret_type + '_' + par_type 
-      + "( " + par + " )";
+      + "( " + par + ", __info__ )";
   }
   std::string Cpp_Code_Translator::start_return_result( std::string )
   {
@@ -158,7 +159,7 @@ namespace funcgen
   }
   std::string Cpp_Code_Translator::prop_op_value_try( std::string name )
   {
-    return prefix_prop_op + name + ".get_value( __cc__info )";
+    return prefix_prop_op + name + ".get_value( __info__ )";
   }
   std::string Cpp_Code_Translator::node_prop( std::string name )
   {
@@ -315,18 +316,20 @@ namespace funcgen
   {
     return "solve::const_op( " + name + "( " + par + " ), get_consultant() )";
   }
+  /*
   std::string Cpp_Code_Translator::function( std::string function_name,
 					     std::string parameters )
   {
     return function_name + "( " + parameters + " )";
   }
+  */
   std::string Cpp_Code_Translator::event_code_set( std::string operand, 
 						   std::string expression )
   {
     return 
       "// [[ set " + operand + " = " + expression + "; ]]\n"
       "__cc__res = " + prop_op(operand) + ".test_set_value( " + expression + 
-      ", __cc__info );\n" 
+      ", __info__ );\n" 
       "if( (__cc__event->get_retry_at_once()) || (__cc__res == false) )\n"
       "{\n"
       "  return __cc__res;\n"
@@ -339,16 +342,16 @@ namespace funcgen
   {
     return
       "// [[ try " + operand + " = " + expression + "; ]]\n"
-      "__cc__was_trial_run = __cc__info->is_trial_run();\n"
-      "__cc__info->set_trial_run(true);\n"
+      "__cc__was_trial_run = __info__->is_trial_run();\n"
+      "__info__->set_trial_run(true);\n"
       "__cc__res = " + prop_op(operand) + ".test_set_value( " + expression 
-      + ", __cc__info );\n"
-      "__cc__info->set_trial_run(__cc__was_trial_run);\n"
+      + ", __info__ );\n"
+      "__info__->set_trial_run(__cc__was_trial_run);\n"
       "if( __cc__res == false )\n"
       "{\n"
-      "  __cc__info->remove_test_run_id( id );"
+      "  __info__->remove_test_run_id( id );"
       "		// lot's of resets increase id very much\n"
-      "  __cc__info->set_test_run_id( save_id );\n"
+      "  __info__->set_test_run_id( save_id );\n"
       "}\n"
       "else if( __cc__event->get_retry_at_once() )\n"
       "{\n"
@@ -368,8 +371,8 @@ namespace funcgen
 	+ " );\n";
 	
     return code +
-      "__cc__res = __cc__info->problem_handler->may_operand_reject_val( "
-      "__cc__bad_ops, __cc__info, this );\n"
+      "__cc__res = __info__->problem_handler->may_operand_reject_val( "
+      "__cc__bad_ops, __info__, this );\n"
       "__cc__bad_ops.clear();\n"
       "if( __cc__res==true ) return false;\n";
   }
@@ -378,7 +381,7 @@ namespace funcgen
   {
     return
       "(/*[[ is_solved_in_try( " + operand + ") ]]*/ "
-      + prop_op(operand) + ".is_solved_in_try(__cc__info))";
+      + prop_op(operand) + ".is_solved_in_try(__info__))";
   }
   std::string Cpp_Code_Translator::event_code_is_just_solved
   ( std::string operand )
@@ -397,14 +400,14 @@ namespace funcgen
       "(/*[[ solver." + solver + "." + function + "(" + parameter + ")"
       ", " + opt_fail_bool_var +
       " ]]*/ extract_status(" + solver_identifier(solver) + "->" + function +
-      "(" + parameter + ")" + ", " + opt_fail_bool_var + 
-      ", did_any_result_fail ))";
+      "(" + parameter + (parameter != ""?", ":"") + "__info__ )" + ", " + 
+      opt_fail_bool_var + ", did_any_result_fail ))";
   }
   std::string Cpp_Code_Translator::solver_function_result
   ( std::string solver, std::string function, std::string parameter )
   {
-    return
-      solver_identifier(solver) + "->" + function + "(" + parameter + ")";
+    return solver_identifier(solver) + "->" + function + "(" + parameter 
+      + (parameter != ""?", ":"") + "__info__ )";
   }
 
   std::string Cpp_Code_Translator::container_function_value
@@ -481,17 +484,47 @@ namespace funcgen
 
   void Cpp_Code_Generator::generate_header()
   {
-    *decl << "// ********************************************" << std::endl;
-    *decl << "// generated file by funcgen (www.anitmt.org)" << std::endl;
+    std::list<std::string>::const_iterator i;
+
+    *prot << "// *************************************************************"
+	  << "*************" << std::endl;
+    *prot << "// generated file by funcgen (www.anitmt.org) and comes without "
+	  << "any warranty" 
+	  << std::endl;
+    *prot << "// *************************************************************"
+	  << "*************" << std::endl;
+    *prot << std::endl;
+    *prot << "#ifndef __functionality_"+info->id_name+"_prototypes__" 
+	  << std::endl;
+    *prot << "#define __functionality_"+info->id_name+"_prototypes__" 
+	  << std::endl;
+    *prot << std::endl;
+    for( i  = afd->included_basenames.begin();
+	 i != afd->included_basenames.end(); ++i )
+    {
+      *prot << "#include \"" << *i << "_prototypes.hpp\"" << std::endl;
+    }
+    *prot << std::endl;
+    *prot << "namespace functionality" << std::endl;
+    *prot << "{" << std::endl;
+
+    *decl << "// *************************************************************"
+	  << "*************" << std::endl;
+    *decl << "// generated file by funcgen (www.anitmt.org) and comes without "
+	  << "any warranty" 
+	  << std::endl;
     *decl << "// requires:" << std::endl;
     *decl << "//   - libmessage" << std::endl;
     *decl << "//   - libval" << std::endl;
     *decl << "//   - libsolve" << std::endl;
     *decl << "//   - libproptree" << std::endl;
-    *decl << "// ********************************************" << std::endl;
+    *decl << "// *************************************************************"
+	  << "*************" << std::endl;
     *decl << std::endl;
     *decl << "#ifndef __functionality_"+info->id_name+"__" << std::endl;
     *decl << "#define __functionality_"+info->id_name+"__" << std::endl;
+    *decl << std::endl;
+    *decl << "#include \"" + info->base_name + "_prototypes.hpp\""<< std::endl;
     *decl << std::endl;
     *decl << "#include <val/val.hpp>" << std::endl;
     *decl << "#include <solve/operand.hpp>" << std::endl;
@@ -507,7 +540,6 @@ namespace funcgen
     *decl << "#include <map>" << std::endl;
     *decl << "#include <math.h>" << std::endl;
     *decl << std::endl;
-    std::list<std::string>::const_iterator i;
     for( i  = afd->included_basenames.begin();
 	 i != afd->included_basenames.end(); ++i )
     {
@@ -521,14 +553,18 @@ namespace funcgen
     *decl << "namespace " << info->namespace_name << std::endl;
     *decl << "{" << std::endl;
 
-    *impl << "// ********************************************" << std::endl;
-    *impl << "// generated file by funcgen (www.anitmt.org)" << std::endl;
+    *impl << "// *************************************************************"
+	  << "*************" << std::endl;
+    *impl << "// generated file by funcgen (www.anitmt.org) and comes without "
+	  << "any warranty" 
+	  << std::endl;
     *impl << "// requires:" << std::endl;
     *impl << "//   - libmessage" << std::endl;
     *impl << "//   - libval" << std::endl;
     *impl << "//   - libsolve" << std::endl;
     *impl << "//   - libproptree" << std::endl;
-    *impl << "// ********************************************" << std::endl;
+    *impl << "// *************************************************************"
+	  << "*************" << std::endl;
     *impl << std::endl;
     *impl << "#include <solve/constraint.hpp>" << std::endl;
     *impl << "#include \""+info->base_name+".hpp\"" << std::endl;
@@ -541,19 +577,33 @@ namespace funcgen
     *impl << std::endl;
     *impl << "  template<class T>" << std::endl;
     *impl << "  inline T extract_status( std::pair<bool,T> value, "
-	  << "bool &status, " << std::endl;
+	  << "bool &failed, " << std::endl;
     *impl << "			   bool &any_false )" << std::endl;
     *impl << "  {" << std::endl;
-    *impl << "    status = value.first;" << std::endl;
+    *impl << "    failed = !value.first;" << std::endl;
     *impl << "    any_false |= !value.first;" << std::endl;
     *impl << "    return value.second;" << std::endl;
     *impl << "  }" << std::endl;
+
+    *pars << "// *************************************************************"
+	  << "*************" << std::endl;
+    *pars << "// generated file by funcgen (www.anitmt.org) and comes without "
+	  << "any warranty" 
+	  << std::endl;
+    *pars << "// this file contains code that may be copied into a parser for "
+	  << std::endl;
+    *pars << "// the language defined in the .afd file" << std::endl;
+    *pars << "// *************************************************************"
+	  << "*************" << std::endl;
+    *pars << std::endl;
   }
   void Cpp_Code_Generator::generate_footer()
   {
     *impl << "}" << std::endl;
     *decl << "}" << std::endl;
     *decl << "#endif" << std::endl;
+    *prot << "}" << std::endl;
+    *prot << "#endif" << std::endl;
   }
 
   void Cpp_Code_Generator::generate_priority_list()
@@ -632,6 +682,8 @@ namespace funcgen
       // ****************
       // provider class
 
+      *prot << "  class " << translator.provider_type( provides ) << ";" 
+	    << std::endl;
       *decl << "  class " << translator.provider_type( provides ) 
 	    << " : virtual public " << translator.node_base_type()
 	    << std::endl
@@ -796,6 +848,8 @@ namespace funcgen
 	      << std::endl
 	      << std::endl;
  
+	*prot << "  class " << translator.serial_container( provides ) << ";"
+	      << std::endl;
 	*decl << "  class " << translator.serial_container( provides )
 	      << std::endl
 	      << "  {" << std::endl
@@ -1062,7 +1116,7 @@ namespace funcgen
 	      << "  {" << std::endl;
 	*impl << "    solve::Multi_And_Operator *m_and = "
 	      << "new solve::Multi_And_Operator(c);" << std::endl;
-	*impl << "    is_avail = m_and->get_result();";
+	*impl << "    is_avail = m_and->get_result();" << std::endl;
 	for( j  = provider_type.result_types.begin(); 
 	     j != provider_type.result_types.end(); ++j )
 	{
@@ -1105,6 +1159,8 @@ namespace funcgen
 	      << std::endl
 	      << std::endl;
 
+	*prot << "  class " << translator.container( provides ) << ";"
+	      << std::endl;
 	*decl << "  class " << translator.container( provides )
 	      << std::endl
 	      << "  {" << std::endl
@@ -1172,7 +1228,7 @@ namespace funcgen
 	      << "      node = nf->cast(already_obj);" << std::endl
 	      << "    else" << std::endl
 	      << "      node = nf->create(name,info,msg);" << std::endl
-	      << "    elements.push_back(node.first); ";
+	      << "    elements.push_back(node.first); " << std::endl;
 	for( j  = provider_type.result_types.begin(); 
 	     j != provider_type.result_types.end(); ++j )
 	{
@@ -1244,7 +1300,7 @@ namespace funcgen
 	      << translator.container( provides )
 	      << "(bool _max1, bool _min1, message::Message_Consultant *c )" 
 	      << std::endl
-	      << "    : max1(_max1), min1(_min1), is_avail(c)" << std::endl;
+	      << "    : max1(_max1), min1(_min1), is_avail(c)";
 	for( j  = provider_type.result_types.begin(); 
 	     j != provider_type.result_types.end(); ++j )
 	{
@@ -1255,6 +1311,9 @@ namespace funcgen
 	}
 	*impl << std::endl
 	      << "  {" << std::endl;
+	*impl << "    solve::Multi_And_Operator *m_and = "
+	      << "new solve::Multi_And_Operator(c);" << std::endl;
+	*impl << "    is_avail = m_and->get_result();" << std::endl;
 	for( j  = provider_type.result_types.begin(); 
 	     j != provider_type.result_types.end(); ++j )
 	{
@@ -1266,7 +1325,13 @@ namespace funcgen
 		<< " = avail_operator_" << j->return_type << "_" 
 		<< j->parameter_type << "->get_result();"
 		<< std::endl;
+
+	  *impl << "    m_and->add_operand( "
+		<< translator.is_avail( provides, j->return_type, 
+					j->parameter_type )
+		<< " );" << std::endl;
 	}
+	*impl << "    m_and->finish_adding();" << std::endl;
 	*impl << "  }" << std::endl
 	      << std::endl
 	      << "    // ** Don't call the following functions! ** " 
@@ -1447,6 +1512,14 @@ namespace funcgen
     return "";
   }
 
+  std::string indent( int pos, int indent_pos, int tab_width = 8 )
+  {
+    std::string tmp;
+    for( int i = indent_pos - pos; i > 0; i -= tab_width )
+      tmp += "\t";
+    return tmp;
+  }
+
   // *******************************************
   void Cpp_Code_Generator::generate_operators()
   {
@@ -1481,12 +1554,19 @@ namespace funcgen
       *decl << "  // *******************************************" << std::endl;
       *decl << std::endl;
 
+      *prot << "  template< class T_Result";
       *decl << "  template< class T_Result";
       for( i=1; i <= op_decl_operands; ++i )
       {
+	*prot << ", class T_Operand" << i;
 	*decl << ", class T_Operand" << i;
       }
+      *prot << " >" << std::endl;
       *decl << " >" << std::endl;
+
+      *prot << "  class " << translator.operator_class_name(op_name) << ";"
+	    << std::endl;
+
       *decl << "  class " << translator.operator_class_name(op_name)
 	    << std::endl;
       *decl << "    : public solve::" 
@@ -1681,6 +1761,345 @@ namespace funcgen
 	}
       }
     }
+    // *************************************************
+    // generate parser statements to recognize versions
+      
+    std::set < std::string > parser_types;
+    std::list< std::string > parser_type_list;
+    std::list< std::string >::iterator parser_type;
+      
+    parser_types.insert("flag");   parser_type_list.push_back("flag");
+    parser_types.insert("scalar"); parser_type_list.push_back("scalar");
+    parser_types.insert("vector"); parser_type_list.push_back("vector");
+    parser_types.insert("matrix"); parser_type_list.push_back("matrix");
+    parser_types.insert("string"); parser_type_list.push_back("string");
+
+    *pars << "// functions" << std::endl;
+    std::set<std::string> all_version_names;
+    
+    for( op = afd->operators.begin();
+	 op != afd->operators.end(); ++op )
+    {
+      const Operator_Declaration &op_decl = op->second;
+
+      if( op_decl.don_t_create_code ) continue;
+
+      std::list< std::list<std::string> >::const_iterator v;
+      for( v = op_decl.versions.begin(); v != op_decl.versions.end(); ++v )
+      {
+	const std::list<std::string> &version_types = *v;
+	assert( version_types.size() >= 2 ); // return type and name
+	std::list<std::string>::const_iterator vt = version_types.begin();
+	  
+	const std::string &version_name = *vt; 
+	/*const std::string &version_type = *(++vt);*/ ++vt;
+
+	// skip all version with unknown types as parameters
+	bool skip = false;
+	std::list<std::string>::const_iterator type;
+	for( type = vt; type != version_types.end(); ++type )
+	{
+	  // if type is no type known by the parser
+	  if( parser_types.find(*type) == parser_types.end() )
+	  {
+	    skip = true;
+	  }
+	}
+	if( skip ) continue;
+
+	// does version_name not start with "operator" ?
+	if( !starts_with( version_name, "operator") )
+	{
+	  if( all_version_names.find(version_name) == all_version_names.end() )
+	  {
+	    *pars << "%token TOK_FUNC_" << version_name << std::endl;
+	    *scan << version_name;
+	    int len = version_name.size();
+	    const int indent_pos = 24;
+	    *scan << indent( len, indent_pos );
+	    *scan << "{ tok_pos(); return TOK_FUNC_" << version_name << "; }"
+		  << std::endl;
+
+	    all_version_names.insert( version_name );
+	  }
+	}
+      }
+    }
+    
+    const int indent_pos = 56;
+
+    *pars << std::endl;
+    // constant expression
+    for( parser_type = parser_type_list.begin();
+	 parser_type != parser_type_list.end(); ++parser_type )
+    {
+      *pars << *parser_type << "_exp:" << std::endl;
+      std::string tmp;
+      tmp = "    '(' " + *parser_type + "_exp ')'";
+      *pars << tmp << indent(tmp.size(), indent_pos) << "{ $$ = $2; }" 
+	    << std::endl;
+
+      AFD_Root::operators_type::iterator op;
+      for( op = afd->operators.begin();
+	   op != afd->operators.end(); ++op )
+      {
+	//const std::string &op_name = op->first;
+	const Operator_Declaration &op_decl = op->second;
+	//int op_decl_operands = op_decl.basic_operator->get_num_operands();
+	
+	if( op_decl.don_t_create_code ) continue;
+
+	std::list< std::list<std::string> >::const_iterator v;
+	for( v = op_decl.versions.begin(); v != op_decl.versions.end(); ++v )
+	{
+	  const std::list<std::string> &version_types = *v;
+	  assert( version_types.size() >= 2 ); // return type and name
+	  std::list<std::string>::const_iterator vt = version_types.begin();
+	  
+	  const std::string &version_name = *vt; 
+	  const std::string &version_type = *(++vt);
+	  // sort versions, so continue if type is different than current
+	  if( version_type != *parser_type ) continue;
+
+	  // skip all version with unknown types as parameters
+	  bool skip = false;
+	  std::list<std::string>::const_iterator type;
+	  for( type = vt; type != version_types.end(); ++type )
+	  {
+	    // if type is no type known by the parser
+	    if( parser_types.find(*type) == parser_types.end() )
+	    {
+	      skip = true;
+	    }
+	  }
+	  if( skip ) continue;
+
+	  // choose right prefix
+	  *pars << "  | "; 
+	  // does version_name start with "operator" ?
+	  if( starts_with( version_name, "operator") )
+	  {
+	    std::string operator_name = version_name.substr(8);
+	    std::string operator_statement;
+
+	    if( operator_name.size() == 1 )
+	      operator_statement = "'" + operator_name + "' ";
+	    else if( operator_name == "==" )
+	      operator_statement = "TAFD_IS_EQUAL ";
+	    else if( operator_name == "!=" )
+	      operator_statement = "TAFD_NOT_EQUAL ";
+	    else if( operator_name == ">=" )
+	      operator_statement = "TAFD_MORE_EQUAL ";
+	    else if( operator_name == "<=" )
+	      operator_statement = "TAFD_LESS_EQUAL ";
+	    else if( operator_name == "&&" )
+	      operator_statement = "TAFD_AND ";
+	    else if( operator_name == "||" )
+	      operator_statement = "TAFD_OR ";
+	    else 
+	    {
+	      for( std::string::size_type i=0; i < operator_name.size(); ++i )
+	      {
+		operator_statement += "'";
+		operator_statement += operator_name[i];
+		operator_statement += "' ";
+	      }
+	    }
+	    int len;
+	    switch( version_types.size() )
+	    {
+	    case 3:
+	      tmp = operator_statement + *(++vt) + "_exp %prec UMINUS";
+	      len = 4 + tmp.size();
+	      *pars << tmp << indent( len, indent_pos ) 
+		    << "{ $$ = " << operator_name << " $2; }" 
+		    << std::endl; 
+	      break;
+	    case 4:
+	      tmp = 
+		*(++vt) + "_exp " + operator_statement +
+		*(++vt) + "_exp";
+	      len = 4 + tmp.size();
+	      *pars << tmp << indent( len, indent_pos ) 
+		    << "{ $$ = $1 " << operator_name << " $3; }" 
+		    << std::endl; 
+	      break;
+	    default:
+	      info->msg.error(op_decl.pos) 
+		<< "C++ operator versions must have one or two operands";
+	      break;
+	    }
+	  }
+	  else
+	  {
+	    *pars << "TOK_FUNC_" << version_name << " '(' ";
+	    bool first = true;
+	    int max = 1;	// max token number for parameters
+	    while( ++vt != version_types.end() )
+	    {
+	      if( first ) first = false; 
+	      else *pars << "',' ";
+	      *pars << *vt << "_exp ";
+	      max += 2;
+	    }
+	    *pars << " ')'" << std::endl;
+	    *pars << "        { $$ = " << version_name << " ( ";
+	    first = true;
+	    for( int i=3; i <= max; i += 2 )
+	    {
+	      if( first ) first = false; 
+	      else *pars << ", ";
+	      *pars << "$" << i;
+	    }
+	    *pars << " ); }" << std::endl;
+	  }
+	}
+      }
+      tmp = "  | TOK_" + to_upper(*parser_type);
+      *pars << tmp << indent(tmp.size(), indent_pos) << "{ $$ = $1; }" 
+	    << std::endl;
+      *pars << ";" << std::endl;
+    }
+
+    // operator expression
+    *pars << std::endl;
+    for( parser_type = parser_type_list.begin();
+	 parser_type != parser_type_list.end(); ++parser_type )
+    {
+      *pars << "op_" << *parser_type << "_exp:" << std::endl;
+      std::string tmp;
+      tmp = "    '(' op_" + *parser_type + "_exp ')'";
+      *pars << tmp << indent(tmp.size(), indent_pos) << "{ $$ = $2(); }" 
+	    << std::endl;
+
+      AFD_Root::operators_type::iterator op;
+      for( op = afd->operators.begin();
+	   op != afd->operators.end(); ++op )
+      {
+	//const std::string &op_name = op->first;
+	const Operator_Declaration &op_decl = op->second;
+	//int op_decl_operands = op_decl.basic_operator->get_num_operands();
+	
+	if( op_decl.don_t_create_code ) continue;
+
+	std::list< std::list<std::string> >::const_iterator v;
+	for( v = op_decl.versions.begin(); v != op_decl.versions.end(); ++v )
+	{
+	  const std::list<std::string> &version_types = *v;
+	  assert( version_types.size() >= 2 ); // return type and name
+	  std::list<std::string>::const_iterator vt = version_types.begin();
+	  
+	  const std::string &version_name = *vt; 
+	  const std::string &version_type = *(++vt);
+	  // sort versions, so continue if type is different than current
+	  if( version_type != *parser_type ) continue;
+
+	  // skip all version with unknown types as parameters
+	  bool skip = false;
+	  std::list<std::string>::const_iterator type;
+	  for( type = vt; type != version_types.end(); ++type )
+	  {
+	    // if type is no type known by the parser
+	    if( parser_types.find(*type) == parser_types.end() )
+	    {
+	      skip = true;
+	    }
+	  }
+	  if( skip ) continue;
+
+	  // choose right prefix
+	  *pars << "  | "; 
+	  // does version_name start with "operator" ?
+	  if( starts_with( version_name, "operator") )
+	  {
+	    std::string operator_name = version_name.substr(8);
+	    std::string operator_statement;
+
+	    if( operator_name.size() == 1 )
+	      operator_statement = "'" + operator_name + "' ";
+	    else if( operator_name == "==" )
+	      operator_statement = "TAFD_IS_EQUAL ";
+	    else if( operator_name == "!=" )
+	      operator_statement = "TAFD_NOT_EQUAL ";
+	    else if( operator_name == ">=" )
+	      operator_statement = "TAFD_MORE_EQUAL ";
+	    else if( operator_name == "<=" )
+	      operator_statement = "TAFD_LESS_EQUAL ";
+	    else if( operator_name == "&&" )
+	      operator_statement = "TAFD_AND ";
+	    else if( operator_name == "||" )
+	      operator_statement = "TAFD_OR ";
+	    else 
+	    {
+	      for( std::string::size_type i=0; i < operator_name.size(); ++i )
+	      {
+		operator_statement += "'";
+		operator_statement += operator_name[i];
+		operator_statement += "' ";
+	      }
+	    }
+	    int len;
+	    switch( version_types.size() )
+	    {
+	    case 3:
+	      tmp = operator_statement + "op_" + *(++vt) + "_exp %prec UMINUS";
+	      len = 4 + tmp.size();
+	      *pars << tmp << indent( len, indent_pos ) 
+		    << "{ $$ = " << operator_name << " $2(); }" 
+		    << std::endl; 
+	      break;
+	    case 4:
+	      tmp = 
+		"op_" + *(++vt) + "_exp " + operator_statement +
+		"op_" + *(++vt) + "_exp";
+	      len = 4 + tmp.size();
+	      *pars << tmp << indent( len, indent_pos ) 
+		    << "{ $$ = $1() " << operator_name << " $3(); }" 
+		    << std::endl; 
+	      break;
+	    default:
+	      info->msg.error(op_decl.pos) 
+		<< "C++ operator versions must have one or two operands";
+	      break;
+	    }
+	  }
+	  else
+	  {
+	    *pars << "TOK_FUNC_" << version_name << " '(' ";
+	    bool first = true;
+	    int max = 1;	// max token number for parameters
+	    while( ++vt != version_types.end() )
+	    {
+	      if( first ) first = false; 
+	      else *pars << "',' ";
+	      *pars << "op_" << *vt << "_exp ";
+	      max += 2;
+	    }
+	    *pars << " ')'" << std::endl;
+	    *pars << "        { $$ = " << version_name << " ( ";
+	    first = true;
+	    for( int i=3; i <= max; i += 2 )
+	    {
+	      if( first ) first = false; 
+	      else *pars << ", ";
+	      *pars << "$" << i << "()";
+	    }
+	    *pars << " ); }" << std::endl;
+	  }
+	}
+      }
+      tmp = "  | TOK_PROP_" + to_upper(*parser_type);
+      *pars << tmp << indent(tmp.size(), indent_pos) << "{ $$ = $1; }" 
+	    << std::endl;
+      tmp = "  | TOK_OP_" + to_upper(*parser_type);
+      *pars << tmp << indent(tmp.size(), indent_pos) << "{ $$ = $1; }" 
+	    << std::endl;
+      tmp = "  | " + *parser_type + "_exp %prec OP_CONVERTION";
+      *pars << tmp << std::endl;
+      *pars << "        { $$ = solve::const_op( $1, msg_consultant(info) ); }"
+	    << std::endl;
+      *pars << ";" << std::endl;
+    }
     *decl << "}" << std::endl;
     *decl << "namespace " << info->namespace_name << std::endl;
     *decl << "{" << std::endl;
@@ -1707,20 +2126,8 @@ namespace funcgen
     *impl << "  // ********************" << std::endl;
     *impl << std::endl;
 
-    bool first;
     int i;
     AFD_Root::event_solver_type::iterator solver;
-    for( solver = afd->solvers.begin();
-	 solver != afd->solvers.end(); ++solver )
-    {
-      const std::string &solver_name = solver->first;
-      const Event_Solver &solver_decl = solver->second;
-
-      if( solver_decl.don_t_create_code ) continue;
-
-      *decl << "  class " << translator.solver_class_name( solver_name ) << ";"
-	    << std::endl;
-    }
 
     for( solver = afd->solvers.begin();
 	 solver != afd->solvers.end(); ++solver )
@@ -1732,6 +2139,8 @@ namespace funcgen
 	= translator.solver_class_name( solver_name );
 
       if( solver_decl.don_t_create_code ) continue;
+
+      *prot << "  class " << solver_class_name  << ";" << std::endl;
 
       *decl << "  class " << solver_class_name 
 	    << " : public solve::Event_Solver" << std::endl;
@@ -1752,17 +2161,14 @@ namespace funcgen
 	      << solver_class_name << "::" 
 	      << func->name << " ( ";
 	std::list<Variable>::const_iterator var;
-	first = true;
 	for( var = func->variable_list.begin(); 
 	     var != func->variable_list.end(); ++var )
 	{
-	  if( first ) first = false;
-	  else { *decl << ", "; *impl << ", "; }
-	  *decl << var->type << " " << var->name;
-	  *impl << var->type << " " << var->name;
+	  *decl << var->type << " " << var->name << ", ";
+	  *impl << var->type << " " << var->name << ", ";
 	}
-	*decl << " );" << std::endl;
-	*impl << " )" << std::endl;
+	*decl << "solve::Solve_Run_Info * );" << std::endl;
+	*impl << "solve::Solve_Run_Info *__info__ )" << std::endl;
 	*impl << "  {" << std::endl;
 	*impl << "    std::pair< bool," 
 	      << translator.base_type(func->return_type) 
@@ -1771,6 +2177,52 @@ namespace funcgen
 	*impl << "    bool did_any_result_fail = false;" << std::endl;
 	*impl << "    bool did_result_fail = false;" << std::endl;
 	*impl << std::endl;
+	// check whether the data base of required events is really ok
+	std::list<std::string>::const_iterator event_name;
+	for( event_name = func->required_events.begin();
+	     event_name != func->required_events.end(); ++event_name )
+	{
+	  std::list<Event_Group>::const_iterator group;
+	  int i;
+	  for( group = solver_decl.event_groups.begin(), i=1;
+	       group != solver_decl.event_groups.end(); ++group, ++i )
+      	  {
+	    std::list<Event>::const_iterator event;
+	    int j;
+	    for( event = group->events.begin(), j=1;
+	         event != group->events.end(); ++event, ++j )
+	    {
+	      if( event->name == *event_name )
+	        *impl << "    if( !__cc__group" << i << "_event" << j 
+		      << ".data_base_ok ) return __cc__no_res;" 
+		      << std::endl;
+	    }
+	  }
+	}
+	// check the data base of all events of required groups
+	std::list<std::string>::const_iterator group_name;
+	for( group_name = func->required_event_groups.begin();
+	     group_name != func->required_event_groups.end(); ++group_name )
+	{
+	  std::list<Event_Group>::const_iterator group;
+	  int i;
+	  for( group = solver_decl.event_groups.begin(), i=1;
+	       group != solver_decl.event_groups.end(); ++group, ++i )
+      	  {
+	    if( group->name == *group_name )
+	    {
+	      std::list<Event>::const_iterator event;
+	      int j;
+	      for( event = group->events.begin(), j=1;
+		   event != group->events.end(); ++event, ++j )
+	      {
+	        *impl << "    if( !__cc__group" << i << "_event" << j 
+		      << ".data_base_ok ) return __cc__no_res;" 
+		      << std::endl;
+	      }
+	    }
+	  }
+	}
 	*impl << "    // *** user code following... line:" 
 	      << func->start_src_line << " ***" << std::endl;
 	// indent like in AFD source file
@@ -1945,6 +2397,56 @@ namespace funcgen
 		  << " );"
 		  << std::endl;
 	  }
+	  std::list<std::string>::const_iterator event_name;
+	  for( event_name = event->required_events.begin();
+	       event_name != event->required_events.end(); ++event_name )
+	  {
+	    std::list<Event_Group>::const_iterator req_group;
+	    int k;
+	    for( req_group = solver_decl.event_groups.begin(), k=1;
+		 req_group != solver_decl.event_groups.end(); 
+		 ++req_group, ++k )
+	    {
+	      std::list<Event>::const_iterator req_event;
+	      int l;
+	      for( req_event = req_group->events.begin(), l=1;
+		   req_event != req_group->events.end(); ++req_event, ++l )
+	      {
+		if( req_event->name == *event_name )
+		  *impl << "    __cc__group" << i << "_event" << j 
+			<< ".add_operand( " 
+			<< "__cc__group" << k << "_event" << l << ".data_ok );"
+			<< std::endl;
+	      }
+	    }
+	  }
+	  std::list<std::string>::const_iterator event_group_name;
+	  for( event_group_name = event->required_event_groups.begin();
+	       event_group_name != event->required_event_groups.end();
+	       ++event_group_name )
+	  {
+	    std::list<Event_Group>::const_iterator req_group;
+	    int k;
+	    for( req_group = solver_decl.event_groups.begin(), k=1;
+		 req_group != solver_decl.event_groups.end(); 
+		 ++req_group, ++k )
+	    {
+	      if( req_group->name == *event_group_name )
+		*impl << "    __cc__group" << i << "_event" << j 
+		      << ".add_operand( " 
+		      << "__cc__group" << k << ".data_ok );" << std::endl;
+	    }
+	  }
+	  std::list<Solver_Function>::const_iterator sol_func;
+	  for( sol_func = event->required_solver_functions.begin();
+	       sol_func != event->required_solver_functions.end(); ++sol_func )
+	  {
+	    *impl << "    __cc__group" << i << "_event" << j 
+		  << ".add_operand( " 
+		  << translator.solver_identifier(sol_func->solver) << "->" 
+		  << translator.is_avail( sol_func->function ) 
+		  << " );" << std::endl;
+	  }
 	}
       }
       *impl << "    connect_operands_to_listener();" << std::endl;
@@ -2003,6 +2505,7 @@ namespace funcgen
 	for( event_name = func->required_events.begin();
 	     event_name != func->required_events.end(); ++event_name )
 	{
+	  std::list<Event_Group>::const_iterator group;
 	  int i;
 	  for( group = solver_decl.event_groups.begin(), i=1;
 	       group != solver_decl.event_groups.end(); ++group, ++i )
@@ -2023,6 +2526,7 @@ namespace funcgen
 	     event_group_name != func->required_event_groups.end();
 	     ++event_group_name )
 	{
+	  std::list<Event_Group>::const_iterator group;
 	  int i;
 	  for( group = solver_decl.event_groups.begin(), i=1;
 	       group != solver_decl.event_groups.end(); ++group, ++i )
@@ -2253,7 +2757,7 @@ namespace funcgen
 	  *impl << "  bool " << solver_class_name << "::__cc__group" << i 
 		<< "_event" << j 
 		<< "_test_run(const solve::Basic_Operand *__cc__solved_op, "
-		<< "solve::Solve_Run_Info* __cc__info, "
+		<< "solve::Solve_Run_Info* __info__, "
 		<< "solve::Event *__cc__event)" << std::endl;
 	  *impl << "  {" << std::endl;
 	  *impl << "    bool did_any_result_fail = false;" << std::endl;
@@ -2272,24 +2776,6 @@ namespace funcgen
 	  for( int cnt = 0; cnt < event->test_run_code.start_src_column;++cnt )
 	    *impl << ' ';
 	  *impl << event->test_run_code.code << std::endl;
-	  *impl << "    // *** end user code" << std::endl;
-	  *impl << "	__cc__save_id = __cc__info->get_test_run_id();" 
-		<< std::endl;
-	  *impl << "	__cc__event->stored_id =__cc__info->new_test_run_id();"
-		<< std::endl;
-	  *impl << "    if( !__cc__group" << i << "_event" << j 
-		<< ".data_ok.test_set_value(true,__cc__info) ) " << std::endl;
-	  *impl << "    {" << std::endl;
-	  *impl << "      "
-		<< "__cc__info->remove_test_run_id(__cc__event->stored_id);" 
-		<< std::endl;
-	  *impl << "      __cc__event->stored_id = -1;" << std::endl;
-	  *impl << "    }" << std::endl;
-	  *impl << "    else" << std::endl;
-	  *impl << "      __cc__event->solved_operands.push_back( &__cc__group"
-		<< i << "_event" << j << ".data_ok );" << std::endl;
-	  *impl << "	__cc__info->set_test_run_id(__cc__save_id);" 
-		<< std::endl;
 	  *impl << "    return true;" << std::endl;
 	  *impl << "  }" << std::endl;
 	  *impl << "  void " << solver_class_name << "::__cc__group" << i 
@@ -2427,6 +2913,9 @@ namespace funcgen
 	    << "  // *****************************" << std::endl
 	    <<  std::endl;
       
+      *prot << "  class " << translator.node_type( node_name ) << ";" 
+	    << std::endl;
+
       *decl << "  // *****************************" << std::endl
 	    << "  // node type " << node_name <<  std::endl
 	    << std::endl
@@ -2762,7 +3251,8 @@ namespace funcgen
 	    {
 	      const std::string &prop = *p;
 	      *impl << (first?first=false,"":" || ")
-		    << "!" << translator.prop_op(prop) << ".is_solved()";
+		    << "!" << translator.prop_op(prop) 
+		    << ".is_solved_in_try(__info__)";
 	    }
 	    *impl << " )" << std::endl
 		  << "    {" << std::endl
@@ -2789,7 +3279,7 @@ namespace funcgen
 		    << translator.is_avail( child_provider, 
 					    res_type.return_type,
 					    res_type.parameter_type )
-		    << ".is_solved()";
+		    << ".is_solved_in_try(__info__)";
 	    }
 	    *impl << " )" << std::endl
 		  << "    {" << std::endl 
@@ -2815,7 +3305,7 @@ namespace funcgen
 		    << "!" << translator.is_avail( provides, 
 						   res_type.return_type,
 						   res_type.parameter_type )
-		    << ".is_solved()";
+		    << ".is_solved_in_try(__info__)";
 	    }
 	    *impl << " )" << std::endl
 		  << "    {" << std::endl 
@@ -3001,8 +3491,11 @@ namespace funcgen
   void Cpp_Code_Generator::generate_code( AFD_Root *afd_root )
   {
     afd = afd_root;
+    prot = new std::ofstream( (info->base_name+"_prototypes.hpp").c_str() );
     decl = new std::ofstream( (info->base_name+".hpp").c_str() );
     impl = new std::ofstream( (info->base_name+".cpp").c_str() );
+    pars = new std::ofstream( (info->base_name+"_parser.yy").c_str() );
+    scan = new std::ofstream( (info->base_name+"_scanner.ll").c_str() );
     generate_header();
     generate_priority_list();
     generate_base_types();
@@ -3011,6 +3504,11 @@ namespace funcgen
     generate_solvers();
     generate_nodes();
     generate_footer();
+    delete prot;
+    delete decl;
+    delete impl;
+    delete pars;
+    delete scan;
   }
 
   Cpp_Code_Generator::Cpp_Code_Generator( code_gen_info *i ) 
