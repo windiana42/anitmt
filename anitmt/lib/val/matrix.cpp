@@ -335,7 +335,7 @@ Vector<3> get_rotate_component(const Matrix<4,4> &mat)
 	/**/y_rot.rotateX(-x_angle);
 
 	// (vector::operator==() uses epsilon)
-	/**/assert( x_rot == x );assert( y_rot == y );
+	/**/assert( x_rot == x );assert( y_rot == y * (y_rot*y) );
 
 	return(Vector<3>(x_angle,y_angle,z_angle));
 }  
