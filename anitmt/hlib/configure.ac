@@ -1,6 +1,6 @@
 # Process this file with autoconf to produce a configure script.
 AC_INIT
-AM_INIT_AUTOMAKE(hlib,0.9)
+AM_INIT_AUTOMAKE(hlib,0.9.1)
 AC_CONFIG_SRCDIR([cpp/cplusplusff.cc])
 AM_CONFIG_HEADER(config.h)
 
@@ -41,5 +41,6 @@ AC_CONFIG_FILES([include/Makefile \
 	fd/Makefile \
 	par/Makefile \
 	misc/Makefile \
+	crypto/Makefile \
 	Makefile])
 AC_OUTPUT
