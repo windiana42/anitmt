@@ -1,5 +1,6 @@
 INCLUDES = 		-I$(srcdir)/.. -I$(srcdir)/../.. -I../../ \
-			-I$(srcdir)/../../../lib/ -I../../functionality 
+			-I$(srcdir)/../../../lib/ \
+			-I../../functionality -I$(srcdir)/../../functionality
 noinst_LIBRARIES = 	liboutput.a
 CXXFLAGS = 		@CXXFLAGS@ -Wno-non-template-friend
 liboutput_a_SOURCES = 	compif.hpp compif.cpp \
