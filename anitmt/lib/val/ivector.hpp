@@ -146,8 +146,13 @@ template<int N> class vector
 		
 		template<int n>friend std::ostream& operator<<(std::ostream &s,const vector<n> &v);
 		
-		template<int r,int c>friend void mult(vector<r> &r,const matrix<r,c> &m,const vector<c> &v);
-		friend void mult(vector<3> &r,const matrix<4,4> &m,const vector<3> &v);
+		// Multiply matrix*vector (normal) and vector*matrix: 
+		template<int r,int c>friend void mult_mv(vector<r> &r,const matrix<r,c> &m,const vector<c> &v);
+		friend void mult_mv(vector<3> &r,const matrix<4,4> &m,const vector<3> &v);
+		#ifndef LIBVAL_DISABLE__VEC_MUL_MAT
+		template<int r,int c>friend void mult_vm(vector<c> &r,const matrix<r,c> &m,const vector<r> &v);
+		friend void mult_vm(vector<3> &r,const matrix<4,4> &m,const vector<3> &v);
+		#endif
 		
 		// Returns 1, if a is equal to *this (or each component pair does not 
 		// differ more than epsilon). 

@@ -45,15 +45,17 @@ template<int N>inline Scalar dot(const Vector<N> &a,const Vector<N> &b)
 // VECTOR product: 
 template<int N> Vector<N> cross(const Vector<N> &a,const Vector<N> &b);
 
-// MATRIX * VECTOR: 
+// MATRIX * VECTOR and VECTOR * MATRIX: 
 template<int R,int C>inline Vector<R> operator*(const Matrix<R,C> &m,const Vector<C> &v)
-{  Vector<R> r(Vector<R>::noinit);  internal_vect::mult(r.x,m.x,v.x);  return(r);  }
-template<int R,int C>inline Vector<R> operator*(const Vector<C> &v,const Matrix<R,C> &m)
-{  Vector<R> r(Vector<R>::noinit);  internal_vect::mult(r.x,m.x,v.x);  return(r);  }
+{  Vector<R> r(Vector<R>::noinit);  internal_vect::mult_mv(r.x,m.x,v.x);  return(r);  }
+#ifndef LIBVAL_DISABLE__VEC_MUL_MAT
+template<int R,int C>inline Vector<C> operator*(const Vector<R> &v,const Matrix<R,C> &m)
+{  Vector<R> r(Vector<R>::noinit);  internal_vect::mult_vm(r.x,m.x,v.x);  return(r);  }
+#endif
 
 // This one must use a temporary: (returns void for speed increase) 
 template<int N>inline void operator*=(Vector<N> &v,const Matrix<N,N> &m)
-{  Vector<N> tmp(Vector<N>::noinit); internal_vect::mult(tmp.x,m.x,v.x);  v=tmp;  }
+{  Vector<N> tmp(Vector<N>::noinit); internal_vect::mult_mv(tmp.x,m.x,v.x);  v=tmp;  }
 
 // Computes the square of the length of the specified vector: 
 template<int N>inline Scalar abs2(const Vector<N> &v)  {  return(Scalar(v.abs2()));  }
@@ -192,10 +194,12 @@ public: // work around for the template friend problem
 		
 		// Multiplication of matrix and vector: 
 		template<int R,int C>friend Vector<R> operator*(const Matrix<R,C> &a,const Vector<C> &b);
-		template<int R,int C>friend Vector<R> operator*(const Vector<C> &a,const Matrix<R,C> &b);
 		// Special versions: 
 		friend Vector<3> operator*(const Matrix<4,4> &a,const Vector<3> &b);
+		#ifndef LIBVAL_DISABLE__VEC_MUL_MAT
+		template<int R,int C>friend Vector<C> operator*(const Vector<R> &a,const Matrix<R,C> &b);
 		friend Vector<3> operator*(const Vector<3> &a,const Matrix<4,4> &b);
+		#endif
 #endif		
 		// Unary operators: 
 		Vector<N> operator+() const  {  return(*this);  }

@@ -245,7 +245,8 @@ double matrix_det(const double *m,int n)
 // Multiplication of matrix m (size mr,mc) with vector v (vn 
 // dimensions); result is stored in rv (rn elements). 
 // NOTE: If mc!=vn or mr!=rn, EX_Matrix_Illegal_VectMult is thrown. 
-void matrix_mul_vect(
+// MATRIX * VECTOR: 
+void matrix_mul_vect_mv(
 	double *rv,int rn,
 	const double *m,int mr,int mc,
 	const double *v,int vn)  throw(internal_vect::EX_Matrix_Illegal_VectMult)
@@ -262,11 +263,35 @@ void matrix_mul_vect(
 	}
 }
 
+#ifndef LIBVAL_DISABLE__VEC_MUL_MAT
+// VECTOR * MATRIX: 
+void matrix_mul_vect_vm(
+	double *rv,int rn,
+	const double *m,int mr,int mc,
+	const double *v,int vn)  throw(internal_vect::EX_Matrix_Illegal_VectMult)
+{
+	if(mr!=vn || mc!=rn)
+	{  throw internal_vect::EX_Matrix_Illegal_VectMult();  }
+
+	for(int c=0; c<mc; c++)
+	{
+		double s=0.0;
+		for(int i=0; i<mr; i++)
+		{  s += SUB(m,mr,i,c) * v[i];  }
+		rv[c]=s;
+	}
+}
+#else
+#warning "**** LIBVAL_DISABLE__VEC_MUL_MAT is defined. ****"
+#endif
+
+
 // Special function: multiply a 3d vector with a 4x4 matrix and 
 // get a 3d vector. 
 // The exception is thrown if the 4th element of the result is 
 // different from 1. 
-void matrix_mul_vect343(double *rv,const double *m,const double *v)
+// MATRIX * VECTOR: 
+void matrix_mul_vect343mv(double *rv,const double *m,const double *v)
 {
 	for(int r=0; r<3; r++)
 	{
@@ -299,6 +324,18 @@ void matrix_mul_vect343(double *rv,const double *m,const double *v)
 		#endif
 	}
 }
+
+#ifndef LIBVAL_DISABLE__VEC_MUL_MAT
+// VECTOR * MATRIX: 
+void matrix_mul_vect343vm(double *rv,const double *m,const double *v)
+{
+	for(int c=0; c<3; c++)
+	{
+		rv[c] = SUB(m,4,0,c)*v[0] + SUB(m,4,1,c)*v[1] + 
+				SUB(m,4,2,c)*v[2] + SUB(m,4,3,c) /* *1 */;
+	}
+}
+#endif
 
 }  // end of namespace internal
 }  // namespace end 

@@ -188,10 +188,14 @@ public: // work around for the template friend problem
 		// (Vector::operator*=(Matrix) is also available.)
 		#ifndef GCC_HACK
 		template<int r,int c>friend Vector<r> operator*(const Matrix<r,c> &a,const Vector<c> &b);
-		template<int r,int c>friend Vector<r> operator*(const Vector<c> &a,const Matrix<r,c> &b);
+		#ifdef LIBVAL_DISABLE__VEC_MUL_MAT
+		template<int r,int c>friend Vector<c> operator*(const Vector<r> &a,const Matrix<r,c> &b);
+		#endif
 		// Special versions: 
 		friend Vector<3> operator*(const Matrix<4,4> &a,const Vector<3> &b);
+		#ifndef LIBVAL_DISABLE__VEC_MUL_MAT
 		friend Vector<3> operator*(const Vector<3> &a,const Matrix<4,4> &b);
+		#endif
 		#endif
 		
 		#ifndef GCC_HACK
@@ -338,12 +342,14 @@ inline Matrix<4,4>::Matrix(enum MatTrans,const Vector<3> &v) : x(0)
 
 // Special versions: 
 inline Vector<3> operator*(const Matrix<4,4> &m,const Vector<3> &v)
-{  Vector<3> r(Vector<3>::noinit);  internal_vect::mult(r.x,m.x,v.x);  return(r);  }
+{  Vector<3> r(Vector<3>::noinit);  internal_vect::mult_mv(r.x,m.x,v.x);  return(r);  }
+#ifndef LIBVAL_DISABLE__VEC_MUL_MAT
 inline Vector<3> operator*(const Vector<3> &v,const Matrix<4,4> &m)
-{  Vector<3> r(Vector<3>::noinit);  internal_vect::mult(r.x,m.x,v.x);  return(r);  }
+{  Vector<3> r(Vector<3>::noinit);  internal_vect::mult_vm(r.x,m.x,v.x);  return(r);  }
+#endif
 
 inline void operator*=(Vector<3> &v,const Matrix<4,4> &m)
-{  Vector<3> tmp(Vector<3>::noinit); internal_vect::mult(tmp.x,m.x,v.x);  v=tmp;  }
+{  Vector<3> tmp(Vector<3>::noinit); internal_vect::mult_mv(tmp.x,m.x,v.x);  v=tmp;  }
 
 
 // **** Constructing matrices: ****

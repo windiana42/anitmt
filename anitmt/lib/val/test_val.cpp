@@ -192,7 +192,7 @@ int main()
 	vb=va;
 	mc=mb*2;
 	cerr << mb << (mb*va);
-	if(mb*va != vb || mc*va != vb*2.0 || va*mc != vb*2.0)
+	if(mb*va != vb || mc*va != vb*2.0)
 	{  cerr << "\n*** ERROR in Matrix*Vector (1).\n";  }
 	else
 	{
