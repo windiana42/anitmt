@@ -8,3 +8,4 @@ install-sh
 depcomp
 configure
 aclocal.m4
+hlib-config.h.in
