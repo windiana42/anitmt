@@ -36,6 +36,7 @@ namespace anitmt
 #include <solve/operand.hpp>
 
 #include "error.hpp"
+#include "proptree.hpp"
 
 namespace anitmt
 {
@@ -60,7 +61,7 @@ namespace anitmt
   {
     std::string name;		// property name
     Prop_Tree_Node *node;	// tree node the property belongs to
-    message::Abstact_Position *pos;
+    message::Abstract_Position *pos;
 				// position where it is defined (by user)
 
     values::Valtype::Types type;
@@ -69,15 +70,15 @@ namespace anitmt
     // modifiers
 
     // tells the property where it occurs in user's inputs
-    void set_input_position( message::Abstact_Position *pos );
+    void set_input_position( message::Abstract_Position *pos );
 
     //******************
     // access functions
 
-    inline std::string			get_name() { return name; }
-    inline Prop_Tree_Node*		get_node() { return node; }	
-    inline message::Abstract_Position*	get_position() { return pos; }
-    inline values::Valtype::Types	get_type() { return type; }
+    inline std::string			get_name();
+    inline Prop_Tree_Node*		get_node();
+    inline message::Abstract_Position*	get_position();
+    inline values::Valtype::Types	get_type();
 
     //************************
     // usage member functions

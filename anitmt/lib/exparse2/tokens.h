@@ -1,0 +1,19 @@
+#define	TOK_INVALID_ID	257
+#define	TOK_IS_EQUAL	258
+#define	TOK_NOT_EQUAL	259
+#define	TOK_MORE_EQUAL	260
+#define	TOK_LESS_EQUAL	261
+#define	TOK_FUNC_SIN	262
+#define	TOK_OP_FLAG	263
+#define	TOK_OP_SCALAR	264
+#define	TOK_OP_VECTOR	265
+#define	TOK_OP_MATRIX	266
+#define	TOK_OP_STRING	267
+#define	TOK_FLAG	268
+#define	TOK_SCALAR	269
+#define	TOK_VECTOR	270
+#define	TOK_MATRIX	271
+#define	TOK_STRING	272
+#define	UMINUS	273
+#define	OP_CONVERTION	274
+

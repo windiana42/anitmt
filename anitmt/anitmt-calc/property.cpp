@@ -26,7 +26,7 @@ namespace anitmt
   // modifiers
   
   // tells the property where it occurs in user's inputs
-  void Property::set_input_position( message::Abstact_Position *p )
+  void Property::set_input_position( message::Abstract_Position *p )
   {
     if( pos != 0 )
       ;//!!! warn that there is already another position

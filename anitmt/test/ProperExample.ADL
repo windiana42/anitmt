@@ -1,0 +1,95 @@
+// -------- file start --------
+
+// names of the properties are sugestions
+  
+starttime     0;
+endtime      10;
+duration     10;
+
+// ---- outputfilter ----
+povoutput MyFunnyName {
+  do_output              true; // = default
+  starttime     1;
+  endtime       2;
+  // duration     3;
+  fps                      24;
+  //startframe               0;
+  //endframe                23;
+  //frames                  24;
+  scenes                   MyScene1 MyScene2;
+  parsefiles               "AdditionalFile.inc" /*[...]*/;
+  copyfiles                "NicePictureBild1.png" "BadPicture1.jpg" "Stran" + "geFi"+ "le.Name";
+  output_creation_path     "anipov";
+  Very_special_POV_Option1 true;
+  Very_special_POV_Option2 false;
+  Very_special_POV_Option3 true;
+  frame_filenames          "f%04d.inc";
+  main_filename            "Povray.pov";
+  /*[...]*/
+}
+
+// ---- future outputfilter ---- 
+// (rename "XYZ")
+
+XYZoutput {
+  do_output               false;
+  /*[...]*/
+  scenes                   MyScene2 MyScene3 /*[...]*/;
+  parsefiles               "AdditionalFile.inc" /*[...]*/;
+  copyfiles                "NicePictureBild2.png" "BadPicture2.jpg";
+  output_creation_path     "aniXYZ";
+  Very_special_XYZ_Option1    2;
+  Very_special_XYZ_Option2  pi;
+  /*[...]*/
+}
+
+// ---- scenes ----
+scene MyScene1 {
+
+  // components
+
+
+  /*[...]*/
+
+  // output info 
+  povinfo {
+    parsefiles  "file1.pov" "file2.Pov";
+    copyfiles   "NicePictureBild3.png" "BadPicture3.jpg";
+    /*[...]*/
+  }
+}
+scene MyScene2 {
+
+  // components
+
+  /*[...]*/
+
+  // output info 
+  povinfo MyVerySillyName {
+    parsefiles  "file3.pov";
+    copyfiles   "NicePictureBild4.png" "BadPicture4.jpg";
+    /*[...]*/
+  }
+  // output info 
+  XYZinfo {
+    parsefiles  "file1.XYZ" "file2.XYZ";
+    copyfiles   "NicePictureBild5.png" "BadPicture5.jpg";
+    /*[...]*/
+  }
+}
+scene MyScene3 {
+
+  // components
+  /*[...]*/
+
+}
+
+// componets here won't have an output 
+scene {
+
+  // components
+  /*[...]*/
+
+}
+
+// -------- file end --------

@@ -7,7 +7,8 @@ AC_PROG_RANLIB
 dnl FIXME: Yacc check seems to necessary for detection of the "ylwrap" script.
 AC_PROG_YACC
 AM_PROG_LEX
-if test "$LEX" != "flex"; then echo "Warning: You need flex for rebuild of .ll-sources!"; fi
+if test "$LEX" != "flex"; then echo "Warning: You need flex to generate new lexer sources!"; LEX=; fi
+if test "$YACC" != "bison -y"; then echo "Warning: You need "bison -y" to generate new parser source!"; export YACC=; fi
 AC_OUTPUT(
 	Makefile 
 	lib/Makefile 
@@ -18,6 +19,8 @@ AC_OUTPUT(
 	lib/solve/Makefile 
 	lib/message/Makefile 
 	lib/exparse/Makefile 
+	lib/exparse2/Makefile
+	lib/flex/Makefile
 	anitmt-calc/Makefile 
 	anitmt-calc/input/Makefile 
 	anitmt-calc/input/adl/Makefile 

@@ -14,6 +14,8 @@
 
 #include "message.hpp"
 
+#warning "Replace strstream header with a std::stringstream version (GCC 3.0)"
+
 namespace message
 {
   const Null_Position *GLOB::no_position = new Null_Position;

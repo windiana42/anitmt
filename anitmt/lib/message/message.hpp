@@ -30,7 +30,6 @@ namespace message
 
 #include <string>
 #include <iostream>
-#warning "Replace me with std::stringstream (GCC 3.0)"
 #include <strstream>
 
 // strstream message buffer size: 

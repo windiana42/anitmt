@@ -1,11 +1,12 @@
 # Makefile.am for parser of anitmt adl - animation description language 
-INCLUDES=		-I$(srcdir)/../.. -I$(srcdir)/../../../lib/
+INCLUDES=		-I$(srcdir)/../.. -I$(top_srcdir)/lib/
 noinst_LIBRARIES=	libadlparser.a
 check_PROGRAMS=		adltest
 CXXFLAGS =		@CXXFLAGS@ -Wno-non-template-friend
 
 libadlparser_a_SOURCES=	scanner.ll support.hpp support.cpp \
-			adlparser.hpp adlparser.cpp
+			flexlexer_global.h flexlexer_public.h \
+			adlparser.hpp adlparser.cpp 
 
 adltest_SOURCES=	adltest.cpp
 adltest_LDADD=		libadlparser.a \

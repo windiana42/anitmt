@@ -8,8 +8,9 @@ libexparse_a_SOURCES=	\
 	tree.cpp tree.hpp \
 	value.cpp value.hpp \
 	basicparser.cpp basicparser.hpp \
-	lexer.cc parse.cpp lexer.hpp \
-	linkedlist.h
+	lexer.ll parse.cpp lexer.hpp \
+	flexlexer_public.h flexlexer_global.h \
+	linkedlist.h 
 # unused: mcache.cpp mcache.hpp
 
 check_PROGRAMS=		minicalc
