@@ -3,3 +3,5 @@ Makefile
 Makefile.in
 functionality.cpp
 functionality.hpp
+base_func.cpp
+base_func.hpp
