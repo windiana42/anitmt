@@ -68,7 +68,7 @@ void TimeoutManager::SetFDBaseTimer(const HTime *current)
 			{  to_val=diff.Get(HTime::msec);  }
 		}
 	}
-	#warning THIS SHOULD BE THE FIRST ONE...
+	#warning THIS SHOULD BE THE FIRST ONE... // (...what did that want to tell me?)
 	long tleft=TimerLeft(tid);
 	if(tleft!=to_val)
 	{
@@ -227,7 +227,7 @@ void TimeoutManager::_ReOrderTBList()
 }
 
 
-TimeoutManager::TimeoutID TimeoutManager::IstallTimeout(TimeoutBase *tb,
+TimeoutManager::TimeoutID TimeoutManager::InstallTimeout(TimeoutBase *tb,
 	const HTime &timeout,void *dptr)
 {
 	if(!tb)  return(NULL);

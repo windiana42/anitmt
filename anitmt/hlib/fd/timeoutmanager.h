@@ -97,7 +97,7 @@ class TimeoutManager : private FDBase
 		void Unregister(TimeoutBase *tb);
 		
 		// These are called by TimeoutBase. See there for more info. 
-		TimeoutID IstallTimeout(TimeoutBase *tb,const HTime &timeout,void *dptr);
+		TimeoutID InstallTimeout(TimeoutBase *tb,const HTime &timeout,void *dptr);
 		int UpdateTimeout(TimeoutBase *tb,TimeoutID tid,const HTime &timeout);
 		int KillTimeout(TimeoutBase *tb,TimeoutID tid);
 };

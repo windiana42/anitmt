@@ -71,14 +71,23 @@ class TimeoutBase :
 		virtual ~TimeoutBase()
 			{  timeoutmanager()->Unregister(this);  }
 		
+		// Return pointer to the manager. 
 		TimeoutManager *timeoutmanager()
 			{  return(TimeoutManager::manager);  }
 		
 		// Install a new timeout. You may use HTime(HTime::Invalid) to 
 		// set up a disabled timeout. 
+		// NOTE: A timeout is a complete HTime, i.e. if it is 
+		//     Aug 15 12:08:30 2002
+		// and you want the timeout to occur in 30 minutes, you must pass 
+		//     Aug 15 12:38:30 2002
+		// as timeout. To do that, you may use: 
+		//     HTime timeout(HTime::Curr);
+		//     timeout.Add(30,HTime::minutes);
+		//     TimeoutID tid=InstallTimeout(timeout);
 		// Return value: TimeoutID or NULL (alloc failed). 
-		TimeoutID IstallTimeout(const HTime &timeout,void *dptr=NULL)
-			{  return(timeoutmanager()->IstallTimeout(this,timeout,dptr));  }
+		TimeoutID InstallTimeout(const HTime &timeout,void *dptr=NULL)
+			{  return(timeoutmanager()->InstallTimeout(this,timeout,dptr));  }
 		// Change timeout time of specified TimeoutID: 
 		// Pass an invalid time (HTime::IsInvalid()) to disable timeout. 
 		// Return value: 0 -> OK
