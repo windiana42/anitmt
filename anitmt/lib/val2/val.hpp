@@ -35,6 +35,7 @@ typedef vect::Vector<3> Vector;
 typedef vect::Matrix<4,4> Matrix;
 typedef vect::String String;
 
+
 /*class Valtype
 {
 	public:
