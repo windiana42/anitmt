@@ -67,7 +67,7 @@ void Pov_Output::check_components() throw( )
 	if(!errors)
 	{
 		Dump_Node dn;
-		dn.path = ani->param.ani_dir();
+		dn.path = ani->GLOB.param.ani_dir();
 		dn.fdump=parser->Transfer_FDump();
 		assert(dn.fdump);
 		dn_list.push_back(dn);
