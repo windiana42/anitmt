@@ -90,9 +90,9 @@ namespace solve
     // Virtual methods for concrete solvers
 
     virtual T_A calc_a1( const T_B &b ) = 0;
-    virtual T_A calc_a2( const T_B &b ) { assert(0); }
+    virtual T_A calc_a2( const T_B &b ) { assert(0); return a(); }
     virtual T_B calc_b1( const T_A &a ) = 0;
-    virtual T_B calc_b2( const T_A &a ) { assert(0); }
+    virtual T_B calc_b2( const T_A &a ) { assert(0); return b(); }
 
     virtual bool is_a_ok( const T_A &a, const T_B &b, bool avail_b ) 
     { return true; }
@@ -158,12 +158,12 @@ namespace solve
     virtual bool is_a_calcable_from_c( const T_C &/*c*/ ) { return false; }
     virtual bool is_b_calcable_from_c( const T_C &/*c*/ ) { return false; }
 
-    virtual T_A calc_a_from_b( const T_B &/*b*/ ) { assert(0); }
-    virtual T_A calc_a_from_c( const T_C &/*c*/ ) { assert(0); }
-    virtual T_B calc_b_from_a( const T_A &/*a*/ ) { assert(0); }
-    virtual T_B calc_b_from_c( const T_C &/*c*/ ) { assert(0); }
-    virtual T_C calc_c_from_a( const T_A &/*a*/ ) { assert(0); }
-    virtual T_C calc_c_from_b( const T_B &/*b*/ ) { assert(0); }
+    virtual T_A calc_a_from_b( const T_B &/*b*/ ) { assert(0); return a(); }
+    virtual T_A calc_a_from_c( const T_C &/*c*/ ) { assert(0); return a(); }
+    virtual T_B calc_b_from_a( const T_A &/*a*/ ) { assert(0); return b(); }
+    virtual T_B calc_b_from_c( const T_C &/*c*/ ) { assert(0); return b(); }
+    virtual T_C calc_c_from_a( const T_A &/*a*/ ) { assert(0); return c(); }
+    virtual T_C calc_c_from_b( const T_B &/*b*/ ) { assert(0); return c(); }
   public:
     Basic_Solver_for_3_Operands( Operand<T_A> &a, Operand<T_B> &b,
 				 Operand<T_C> &c );

@@ -183,12 +183,12 @@ namespace solve
     /*! has to calculate result only with operand1 when is_operand1_enough 
       returns true */
     virtual T_Result calc_result_from_op1( const T_Op1 &value1 ) 
-    { assert(0); }	// function doesn't need to be implemented
+    { assert(0); return result(); } // function doesn't need to be implemented
 
     /*! has to calculate result only with operand2 when is_operand2_enough 
       returns true */
     virtual T_Result calc_result_from_op2( const T_Op2 &value2 ) 
-    { assert(0); }	// function doesn't need to be implemented
+    { assert(0); return result(); } // function doesn't need to be implemented
 
     Operand<T_Op1> &operand1;
     Operand<T_Op2> &operand2;
