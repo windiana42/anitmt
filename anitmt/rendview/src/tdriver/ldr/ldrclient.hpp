@@ -3,7 +3,7 @@
  * 
  * LDR task driver stuff: LDR client representation on server side. 
  * 
- * Copyright (c) 2002 by Wolfgang Wieser (wwieser@gmx.de) 
+ * Copyright (c) 2002 -- 2003 by Wolfgang Wieser (wwieser@gmx.de) 
  * 
  * This file may be distributed and/or modified under the terms of the 
  * GNU General Public License version 2 as published by the Free Software 

@@ -32,7 +32,7 @@
 
 static volatile void __CheckAllocFailFailed()
 {
-	Error("Allocation failure.\n");
+	Error("%s.\n",cstrings.allocfail);
 	abort();
 }
 

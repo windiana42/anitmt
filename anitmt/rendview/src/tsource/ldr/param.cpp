@@ -41,7 +41,7 @@ const char *TaskSourceFactory_LDR::TaskSourceDesc() const
 static void _CheckAlloc(int x)
 {
 	if(x)
-	{  Error("Allocation failure.\n");  abort();  }
+	{  Error("%s.\n",cstrings.allocfail);  abort();  }
 }
 
 

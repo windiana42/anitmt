@@ -27,6 +27,11 @@
 // Global params: 
 RVOutputParams rv_oparams;
 
+const _ConstStrings cstrings=
+{
+	/*allocfail:*/ "allocation failure"
+};
+
 
 int InitRVOutputParams(int &argc,char **argv,char ** /*envp*/)
 {
@@ -69,7 +74,6 @@ int InitRVOutputParams(int &argc,char **argv,char ** /*envp*/)
 	rv_oparams.console_Blue_end="\33[00m";
 	
 	// Check cmd line: 
-	int color_arg=0;
 	int errors=0;
 	for(int i=1; i<argc; i++)
 	{

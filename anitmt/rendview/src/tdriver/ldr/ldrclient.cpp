@@ -3,7 +3,7 @@
  * 
  * LDR task driver stuff: LDR client representation on server side. 
  * 
- * Copyright (c) 2002 by Wolfgang Wieser (wwieser@gmx.de) 
+ * Copyright (c) 2002 -- 2003 by Wolfgang Wieser (wwieser@gmx.de) 
  * 
  * This file may be distributed and/or modified under the terms of the 
  * GNU General Public License version 2 as published by the Free Software 
@@ -46,7 +46,7 @@ static int max_high_thresh_of_client=36;
 static void _AllocFailure(int fail=-1)
 {
 	if(fail)
-	{  Error("LDR: Alloc failure.\n");  }
+	{  Error("LDR: %s.\n",cstrings.allocfail);  }
 }
 
 
@@ -1389,32 +1389,42 @@ int LDRClient::cpnotify_outpump_start()
 				tri.scheduled_to_send);  }
 			
 			// Okay, we have to send the main task data. 
-			int fail=1;
-			do {
-				if(_Create_TaskRequest_Packet(&send_buf))  break;
-				// Okay, make ready to send it: 
-				if(_FDCopyStartSendBuf((LDRHeader*)(send_buf.data)))  break;
-				fail=0;
-			} while(0);
-			static int warned=0;
-			if(!warned)
-			{  fprintf(stderr,"hack code to handle failure. (1)\n");  ++warned;  }
+			int fail=_Create_TaskRequest_Packet(&send_buf);
+			if(!fail)
+			{
+				fail=_FDCopyStartSendBuf((LDRHeader*)(send_buf.data));
+				// Currently, _FDCopyStartSendBuf() only returns 0, but I add 
+				// 100 here to be able to distinguish the error codes (once 
+				// needed).
+				if(fail)  fail+=100;
+			}  // NO <else> !
 			if(fail)
 			{
 				// Failure. 
-				#warning HANDLE FAILURE. 
-				Error("Cannot handle failure (HACK ME!)\n");
-				hack_assert(0);
+				const char *msg=NULL;
+				switch(fail)
+				{
+					case -1:  msg=cstrings.allocfail;  break;
+					case -2:  msg="failed to convert frame clock "
+						"to 32bit representation";  break;
+					//case 99: <--  _FDCopyStartSendBuf() returns -1
+					default:  assert(0);  // huh?
+				}
+				Error("Client %s: Sending task request [frame %d]: %s. "
+					"Kicking.\n",
+					_ClientName().str(),tri.scheduled_to_send->frame_no,msg);
+				_KickMe();  return(1);
 			}
 		}
 		else if(!outpump_lock && tri.task_request_state==TRC_SendFileDownloadH)
 		{
 			// Well, then let's send the file request. First, we send the 
 			// header, then we copy the data: 
-			int fail=1;
+			int fail=0;
 			do {
 				assert(send_buf.content==Cmd_NoCommand);
-				if(_ResizeRespBuf(&send_buf,sizeof(LDRFileDownload)))  break;
+				if(_ResizeRespBuf(&send_buf,sizeof(LDRFileDownload)))
+				{  fail=-1;  break;  }
 				
 				send_buf.content=Cmd_FileDownload;
 				LDRFileDownload *pack=(LDRFileDownload*)(send_buf.data);
@@ -1426,23 +1436,25 @@ int LDRClient::cpnotify_outpump_start()
 				pack->size=htonll(tri.req_file_size);
 				
 				// Okay, make ready to send it: 
-				if(_FDCopyStartSendBuf(pack))  break;
+				fail=_FDCopyStartSendBuf(pack);  // Currently never fails. 
+				if(fail)  break;
 				
 				// When pump is running, lock here so that data comes 
 				// directly after header. 
 				outpump_lock=IOPL_Download;
-				
-				fail=0;
 			} while(0);
-			static int warned=0;
-			if(!warned)
-			{  fprintf(stderr,"hack code to handle failure. (2)\n");  ++warned;  }
 			if(fail)
 			{
-				// Failure. 
-				#warning HANDLE FAILURE. 
-				Error("Cannot handle failure (HACK ME!)\n");
-				hack_assert(0);
+				const char *msg=NULL;
+				switch(fail)
+				{
+					case -1:  msg=cstrings.allocfail;  break;
+					default:  assert(0);  // huh?
+				}
+				Error("Client %s: Sending file request [frame %d]: %s. "
+					"Kicking.\n",
+					_ClientName().str(),tri.scheduled_to_send->frame_no,msg);
+				_KickMe();  return(1);
 			}
 		}
 		else if(tri.task_request_state==TRC_SendFileDownloadB)
@@ -1458,9 +1470,6 @@ int LDRClient::cpnotify_outpump_start()
 			assert(out_active_cmd==Cmd_NoCommand);
 			int rv=_FDCopyStartSendFile(tri.req_tfile.HDPath().str(),
 				tri.req_file_size);
-			static int warned=0;
-			if(!warned)
-			{  fprintf(stderr,"hack code to handle failure. (3)\n");  ++warned;  }
 			if(rv)
 			{
 				if(rv==-1)
@@ -1469,13 +1478,12 @@ int LDRClient::cpnotify_outpump_start()
 				{
 					int errn=errno;
 					Error("Client %s: Failed to open requested file \"%s\": "
-						"%s [frame %d]\n",
+						"%s [frame %d]. Kicking.\n",
 						_ClientName().str(),tri.req_tfile.HDPath().str(),
 						strerror(errn),tri.scheduled_to_send->frame_no);
 				}
 				else assert(0);  // rv=-3 may not happen here 
-				Error("Cannot handle failure (HACK ME!)\n");
-				hack_assert(0);
+				_KickMe();  return(1);
 			}
 			
 			out_active_cmd=Cmd_FileDownload;

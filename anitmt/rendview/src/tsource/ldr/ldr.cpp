@@ -216,7 +216,7 @@ int TaskSource_LDR::fdnotify(FDInfo *fdi)
 		{  sc->DeleteMe();  sc=NULL;  }
 		if(!sc)
 		{
-			Error("LDR: Accept failed (alloc failure).\n");
+			Error("LDR: Accept failed (%s).\n",cstrings.allocfail);
 			close(as);
 			return(0);
 		}

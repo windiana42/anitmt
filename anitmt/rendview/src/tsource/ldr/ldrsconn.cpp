@@ -3,7 +3,7 @@
  * 
  * LDR task source server connection. 
  * 
- * Copyright (c) 2002 by Wolfgang Wieser (wwieser@gmx.de) 
+ * Copyright (c) 2002 -- 2003 by Wolfgang Wieser (wwieser@gmx.de) 
  * 
  * This file may be distributed and/or modified under the terms of the 
  * GNU General Public License version 2 as published by the Free Software 
@@ -37,7 +37,7 @@ using namespace LDR;
 static void _AllocFailure(CompleteTask *ctsk_for_frame,int fail=-1)
 {
 	if(fail)
-	{  Error("LDR: Alloc failure [frame %d].\n",
+	{  Error("LDR: %s [frame %d].\n",cstrings.allocfail,
 		ctsk_for_frame ? ctsk_for_frame->frame_no : (-1));  }
 }
 
@@ -1562,7 +1562,7 @@ int TaskSource_LDR_ServerConn::cpnotify_outpump_start()
 				{
 					int errn=errno;
 					Error("LDR: Failed to open output file \"%s\" for upload: "
-						"%s [frame %d]\n",
+						"%s [frame %d] Giving up.\n",
 						tdi.upload_file.HDPath().str(),
 						strerror(errn),tdi.done_ctsk->frame_no);
 					// Okay, so this means that we already sent the request 
@@ -1571,7 +1571,9 @@ int TaskSource_LDR_ServerConn::cpnotify_outpump_start()
 					// Maybe quitting seems a bit hard but there is not much 
 					// point in doing work if we cannot deliver the result. 
 					// OTOH, what about the other tasks... grmbl.. ###FIXME###
-					hack_assert(0);
+					// Fix: Keep it reasonable. This error is unlikely to 
+					// happen and if it does, oh well, the other tasks get 
+					// lost, too. 
 					_ConnClose(0);
 					return(1);
 				}

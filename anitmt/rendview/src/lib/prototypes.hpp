@@ -127,6 +127,13 @@ extern int vaWarning(const char *fmt,va_list ap);
 		{  _Verbose(VERBOSE_##vspec,fmt);  } \
 	} while(0)
 
+// Some string constants: 
+extern struct _ConstStrings
+{
+	const char *allocfail;  // "allocation failure"  :)
+} const cstrings;
+
+
 // Returns number of CPUs; assumes one CPU and warn if detection fails. 
 extern int GetNumberOfCPUs();
 

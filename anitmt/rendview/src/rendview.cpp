@@ -3,7 +3,7 @@
  * 
  * Implementation of RendView's main routine. 
  * 
- * Copyright (c) 2001 -- 2002 by Wolfgang Wieser (wwieser@gmx.de) 
+ * Copyright (c) 2001 -- 2003 by Wolfgang Wieser (wwieser@gmx.de) 
  * 
  * This file may be distributed and/or modified under the terms of the 
  * GNU General Public License version 2 as published by the Free Software 
@@ -48,6 +48,10 @@ class RendViewEnvVars : public par::ParameterConsumer_Overloaded
 		RendViewEnvVars(par::ParameterManager *parman,int *failflag);
 		~RendViewEnvVars();
 		
+		// Parse special args (color/no-color/verbose): 
+		// Return value: 0 -> OK; else error
+		int ParseSpecialAddArgs();
+		
 		// Feed the args passed via environment var into passed 
 		// param source. 
 		// Return value: 0 -> OK; else error
@@ -57,8 +61,6 @@ class RendViewEnvVars : public par::ParameterConsumer_Overloaded
 
 int RendViewEnvVars::ParseAddArgs(par::ParameterSource_CmdLine *cmd_src)
 {
-	static const char *_afail="Alloc failure\n";
-	
 	// Make sure, this is no longer known: 
 	DelParam(addargs_pi);
 	addargs_pi=NULL;
@@ -68,26 +70,20 @@ int RendViewEnvVars::ParseAddArgs(par::ParameterSource_CmdLine *cmd_src)
 	
 	par::ParamArg *pa_array=NEWarray<par::ParamArg>(nargs);
 	if(!pa_array)
-	{  Error(_afail);  return(-1);  }
+	{  Error("%s: %s.\n",prg_name,cstrings.allocfail);  return(-1);  }
 	
 	int cnt=0;
 	int rv=0;
 	for(const RefStrList::Node *i=addargs.first(); i; i=i->next)
 	{
-		// Check for special optput options (-color/-no-color/-verbose=...):
-		int toskip=CheckParseOutputParam(
-			i->str(),i->next ? i->next->str() : NULL,&rv,-cnt-1);
-		if(rv)  break;
-		if(toskip)
-		{
-			if(toskip>1)  i=i->next;
-			continue;
-		}
+		//fprintf(stderr,"ENV-ARG<%s>\n",i->str());
 		
+		// Check for special optput options (-color/-no-color/-verbose=...) 
+		// has already be done; these were removed from the list. 
 		int fflag=0;
 		par::ParamArg tmp(i->str(),-cnt-1,&fflag);
 		if(fflag)
-		{  Error(_afail);  rv=-1;  break;  }
+		{  Error("%s: %s.\n",prg_name,cstrings.allocfail);  rv=-1;  break;  }
 		
 		pa_array[cnt++].Assign(tmp);
 	}
@@ -102,6 +98,29 @@ int RendViewEnvVars::ParseAddArgs(par::ParameterSource_CmdLine *cmd_src)
 	DELarray(pa_array);
 	
 	return(rv);
+}
+
+int RendViewEnvVars::ParseSpecialAddArgs()
+{
+	int errors=0;
+	int cnt=0;
+	for(const RefStrList::Node *i=addargs.first(); i; )
+	{
+		// Check for special optput options (-color/-no-color/-verbose=...):
+		int toskip=CheckParseOutputParam(
+			i->str(),i->next ? i->next->str() : NULL,&errors,-cnt-1);
+		if(errors)  break;
+		if(!toskip)
+		{  i=i->next;  ++cnt;  }
+		else while(toskip--)
+		{
+			RefStrList::Node *tmp=(RefStrList::Node*)i;
+			i=i->next;  ++cnt;
+			delete addargs.dequeue(tmp);
+			if(!i)  break;  // <-- Should not be necessary. 
+		}
+	}
+	return(errors);
 }
 
 
@@ -183,7 +202,7 @@ static par::ParameterManager *SetUpParManager()
 		"    tsllr  LDR task source runtime info\n"
 		"    dbg    debug messages\n"
 		"    dbgv   more debug messages\n"
-		"    all    all of the above flags\n\n"
+		"    all    all of the above flags (\"-all\" for none)\n\n"
 		
 		"RENDVIEWARGS/LDRCLIENTARGS/LDRSERVERARGS: Environment var to "
 		"pass arguments just as if you put them at the beginning of the "
@@ -314,8 +333,16 @@ static int MAIN(int argc,char **argv,char **envp)
 		Verbose(BasicInit," OK\n");
 	} while(0);
 	
-	// It can never hurt to seed the randon number generator...
-	_SeedRandom();
+	if(!fail)
+	{
+		// It can never hurt to seed the randon number generator...
+		_SeedRandom();
+		
+		// Also, check the special (-no-color, -verbose) additional 
+		// flags in the environment: 
+		if(envvars->ParseSpecialAddArgs())
+		{  fail=1;  }
+	}
 	
 	// Okay, then... Here we go...
 	while(!fail) {

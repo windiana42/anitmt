@@ -241,7 +241,7 @@ void LDRGetPassIfNeeded(RefString *passwd,const char *prompt,RefString *defpass)
 		if(*pass)
 		{
 			if(passwd->set(pass))
-			{  Error("Allocation failure.\n");  abort();  }
+			{  Error("%s.\n",cstrings.allocfail);  abort();  }
 		}
 		else
 		{  passwd->deref();  }

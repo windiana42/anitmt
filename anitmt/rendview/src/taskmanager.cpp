@@ -3,7 +3,7 @@
  * 
  * Task manager class implementation. 
  * 
- * Copyright (c) 2002 by Wolfgang Wieser (wwieser@gmx.de) 
+ * Copyright (c) 2002 -- 2003 by Wolfgang Wieser (wwieser@gmx.de) 
  * 
  * This file may be distributed and/or modified under the terms of the 
  * GNU General Public License version 2 as published by the Free Software 
@@ -69,7 +69,7 @@
 
 static volatile void __CheckAllocFailFailed()
 {
-	Error("Allocation failure.\n");
+	Error("%s.\n",cstrings.allocfail);
 	abort();
 }
 
@@ -2207,7 +2207,7 @@ int TaskManager::CheckParams()
 	if(dev_null_fd<0 || PollFD(dev_null_fd))
 	{
 		Error("Failed to open /dev/null: %s\n",
-			(dev_null_fd<0) ? strerror(errno) : "alloc failure");
+			(dev_null_fd<0) ? strerror(errno) : cstrings.allocfail);
 		++failed;
 	}
 	
@@ -2480,16 +2480,17 @@ void TaskManager::_DestructCleanup(int real_destructor)
 	
 	//if(!kill_tasks_and_quit_now)
 	{
+		const char *_oopsmsg="OOPS: Tasks left in %s queue.\n";
 		if(!tasklist.todo.is_empty())
-		{  Warning("OOPS: Tasks left in todo queue.\n");  }
+		{  Warning(_oopsmsg,"todo");  }
 		while(!tasklist.todo.is_empty())
 		{  delete tasklist.todo.popfirst();  --tasklist.todo_nelem;  }
 		if(!tasklist.proc.is_empty())
-		{  Warning("OOPS: Tasks left in proc queue.\n");  }
+		{  Warning(_oopsmsg,"proc");  }
 		while(!tasklist.proc.is_empty())
 		{  delete tasklist.proc.popfirst();  --tasklist.proc_nelem;  }
 		if(!tasklist.done.is_empty())
-		{  Warning("OOPS: Tasks left in done queue.\n");  }
+		{  Warning(_oopsmsg,"done");  }
 		while(!tasklist.done.is_empty())
 		{  delete tasklist.done.popfirst();  --tasklist.done_nelem;  }
 		assert(!tasklist.todo_nelem);

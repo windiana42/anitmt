@@ -99,7 +99,7 @@ void TaskSourceConsumer::_TSWriteError_GetTask(const TSNotifyInfo *ni)
 				ni->ctsk->frame_no,_TSTaskQueueStatStr(/*special=*/1));
 			break;
 		case GTSAllocFailed:
-			Error("%s allocation failure.\n",tsr);
+			Error("%s %s.\n",tsr,cstrings.allocfail);
 			break;
 		case GTSNoMoreTasks:
 			Verbose(TSR1,"TS: %s no more available tasks %s.\n",
