@@ -5,15 +5,15 @@ echo top_builddir = $top_builddir
 
 # if AniTMT was build in $top_build_dir 
 # and current working directory is example/
-ANITMT=../$top_builddir/anitmt-calc
-RENDER=../../../utils/render 
-TGA2AVI=../../$top_builddir/utils/tga2avi/tga2avi
-MKAVI=../../$top_builddir/utils/mkavi/mkavi
+#ANITMT=../$top_builddir/anitmt-calc
+#RENDER=../../../utils/render 
+#TGA2AVI=../../$top_builddir/utils/tga2avi/tga2avi
+#MKAVI=../../$top_builddir/utils/mkavi/mkavi
 # if AniTMT is compiled and installed:
-#ANITMT=anitmt-calc
-#RENDER=render 
-#TGA2AVI=tga2avi
-#MKAVI=mkavi
+ANITMT=anitmt-calc
+RENDER=render 
+TGA2AVI=tga2avi
+MKAVI=mkavi
 
 cd test/
 $ANITMT test.ini
