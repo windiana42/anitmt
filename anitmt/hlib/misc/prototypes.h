@@ -50,11 +50,15 @@ extern char *prg_name;
 
 /* checkmalloc.c: */
   /* returns ptr; exits with error, if ptr==NULL */
-  extern int CheckMallocMayFail;  /* defaults to 0; see checkmalloc.c */
-  extern int CheckMallocFailed;   /* initially 0; see checkmalloc.c */
   extern void *CheckMalloc(void *ptr);
   static inline void *Free(void *ptr)
     {  if(ptr)  free(ptr);  return(NULL);  }
+
+/* getprgname.c: */
+  /* Used to get the program name from argv[0]. Will return "???" in
+   * case arg[0] is NULL or an empty string.
+   */
+  extern char *GetPrgName(const char *arg0);
 
 /* installsighandler.c: */
   /* Installs signal handler shandler for signal sig. 
@@ -90,11 +94,14 @@ extern char *prg_name;
    */
   extern int SetNonblocking(int fd);
 
-/* getprgname.c: */
-  /* Used to get the program name from argv[0]. Will return "???" in
-   * case arg[0] is NULL or an empty string.
+/* tcpnodelay.c: */
+  /* Disable Nagle algorithm on TCP sockets.
+   * Return value:
+   *   0 -> success
+   *  -1 -> setsockopt(SOL_TCP,TCP_NODELAY) failed
    */
-  extern char *GetPrgName(const char *arg0);
+  extern int SetTcpNoDelay(int fd);
+
 
 #ifdef __cplusplus
   }   /* extern "C" */

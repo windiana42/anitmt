@@ -9,4 +9,5 @@ AC_OUTPUT(
 	cpp/Makefile
 	par/Makefile
 	misc/Makefile
+	fd/Makefile
 	Makefile )

@@ -6,6 +6,6 @@ libmisc_a_SOURCES = \
 		llongstr.c ullongstr.c \
 		memfind.c \
 		msecelapsed.c \
-		nonblock.c \
+		nonblock.c tcpnodelay.c \
 		getprgname.c \
 	prototytes.h hlib.h \

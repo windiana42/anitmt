@@ -16,21 +16,9 @@
 
 extern char *prg_name;
 
-int CheckMallocMayFail=0;
-int CheckMallocFailed=0;
-
 void *CheckMalloc(void *ptr)
 {
 	if(!ptr)
-	{  ++CheckMallocFailed;  }
-	if(CheckMallocMayFail<0)
-	{  return(ptr);  }
-	else if(CheckMallocMayFail)
-	{
-		--CheckMallocMayFail;
-		return(ptr);
-	}
-	if(!ptr && !CheckMallocMayFail)
 	{
 		fprintf(stderr,"%s: malloc() failed.\n",prg_name);
 		abort();   // helps in debugging 

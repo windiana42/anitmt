@@ -9,7 +9,7 @@ OPTCFLAGS = -W -Wall -Wformat \
 	-malign-jumps=2 -malign-loops=2 -malign-functions=2 \
 	-DHLIB_SIZE_OPT=1
 
-SUBDIRS = include cpp misc par
+SUBDIRS = include cpp misc fd par
 
 noinst_LIBRARIES = libhlib.a
 

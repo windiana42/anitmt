@@ -32,14 +32,8 @@
 extern char *prg_name;
 
 // CheckMalloc(ptr) simply checks if ptr==NULL. 
-// If not, it returns the ptr. 
-// If ptr==NULL:
-//   If CheckMallocMayFail is >0, then it is decremented and NULL is returned.
-//   If CheckMallocMayFail == 0, then it aborts (writing an error to stderr).
-//   If CheckMallocMayFail is <0, then NULL is returned. 
-// CheckMallocFailed is incremented always if ptr=NULL. 
-extern int CheckMallocMayFail;
-extern int CheckMallocFailed;
+// In this case, it aborts (writing an error to stderr) otherwise 
+// it returns the pointer. 
 extern void *CheckMalloc(void *);
 
 // These are limited versions of malloc(), realloc() and free(). 
@@ -319,7 +313,7 @@ extern void ConstructorFailedExit(const char *opt=NULL);
 	void operator delete(void *_h_ptr) \
 	{  LFree(_h_ptr);  }    \
 	void *operator new(size_t _h_size) \
-	{  return(_NewPrepareApply(_h_size));  }  /* Calls CheckMalloc if not prepared. */  
+	{  return(_NewPrepareApply(_h_size));  }  /* Calls uheckMalloc if not prepared. */  
 
 
 // NOTE: DO NOT USE THESE FUNCTIONS ON CLASSES WITH ZERO SIZE. 
