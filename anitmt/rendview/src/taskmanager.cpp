@@ -156,10 +156,7 @@ void TaskManager::HandleSuccessfulJob(CompleteTask *ctsk)
 			
 			#if TEST_TASK_LIST_MEMBERSHIP
 			// Test: see if task is actually in tasklist_todo: 
-			for(CompleteTask *i=tasklist_todo.first(); i; i=i->next)
-			{  if(ctsk==i)  goto found;  }
-			assert(0);   // OOPS: ctsk not in tasklist_todo. 
-			found:;
+			assert(tasklist_todo.find(ctsk));
 			#endif
 			
 			tasklist_todo.dequeue(ctsk);
@@ -200,10 +197,7 @@ void TaskManager::HandleFailedTask(CompleteTask *ctsk,int running_jobs)
 	
 	#if TEST_TASK_LIST_MEMBERSHIP
 	// Test: see if task is actually in tasklist_todo: 
-	for(CompleteTask *i=tasklist_todo.first(); i; i=i->next)
-	{  if(ctsk==i)  goto found;  }
-	assert(0);   // OOPS: ctsk not in tasklist_todo. 
-	found:;
+	assert(tasklist_todo.find(ctsk));
 	#endif
 	
 	tasklist_todo.dequeue(ctsk);
@@ -496,65 +490,70 @@ int TaskManager::tsnotify(TSNotifyInfo *ni)
 
 int TaskManager::signotify(const SigInfo *si)
 {
+	if((si->info.si_signo==SIGINT || si->info.si_signo==SIGTERM) && 
+	   abort_on_signal )
+	{
+		fprintf(stderr,"*** Caught fatal SIGINT. Aborting. ***\n");
+			abort();
+		}
+	
+	_ActOnSignal(si->info.si_signo,/*real_signal=*/1);
+	return(0);
+}
+
+void TaskManager::_ActOnSignal(int signo,int real_signal)
+{
 	int do_sched_quit=0;
 	int do_kill_tasks=0;
 	
-	if(si->info.si_signo==SIGINT || 
-	   si->info.si_signo==SIGTERM)
+	if(signo==SIGINT)
 	{
-		if(abort_on_signal)
+		if(!caught_sigint)
 		{
-			fprintf(stderr,"*** Caught fatal SIGINT. Aborting. ***\n");
-			abort();
-		}
-		
-		if(si->info.si_signo==SIGINT)
-		{
-			if(!caught_sigint)
-			{
-				// This is the first SIGINT. 
-				++caught_sigint;
-				
-				Warning("Caught SIGINT. No more tasks will be started. "
-					"(Next ^C is more brutal.)\n");
-				
-				// First, do not allow NEW tasks to be started. 
-				// (Old tasks may be finished even if we have to start new 
-				// tasks (i.e. a filter for the rendered image).)
-				// --> DO NOT SET dont_start_more_tasks=1;
-				
-				do_sched_quit=1;
-			}
-			else if(caught_sigint==1)
-			{
-				// This is the second SIGINT. 
-				++caught_sigint;
-				
-				Warning("Caught second SIGINT. Killing tasks. "
-					"(Next ^C will abort %s.)\n",prg_name);
-				
-				do_kill_tasks=1;
-				
-				abort_on_signal=1;
-			}
-		}
-		else if(si->info.si_signo==SIGTERM)
-		{
-			Warning("Caught SIGTERM. Killing tasks. "
-				"(Next signal will abort %s.)\n",prg_name);
+			// This is the first SIGINT. 
+			++caught_sigint;
+			
+			if(real_signal)
+			{  Warning("Caught SIGINT. No more tasks will be started. "
+				"(Next ^C is more brutal.)\n");  }
+			
+			// First, do not allow NEW tasks to be started. 
+			// (Old tasks may be finished even if we have to start new 
+			// tasks (i.e. a filter for the rendered image).)
+			// --> DO NOT SET dont_start_more_tasks=1;
 			
 			do_sched_quit=1;
+		}
+		else if(caught_sigint==1)
+		{
+			// This is the second SIGINT. 
+			++caught_sigint;
+			
+			if(real_signal)
+			{  Warning("Caught second SIGINT. Killing tasks. "
+				"(Next ^C will abort %s.)\n",prg_name);  }
+			
 			do_kill_tasks=1;
 			
 			abort_on_signal=1;
 		}
 	}
-	else if(si->info.si_signo==SIGTSTP || 
-	        si->info.si_signo==SIGCONT )
+	else if(signo==SIGTERM)
+	{
+		if(real_signal)
+		{  Warning("Caught SIGTERM. Killing tasks. "
+			"(Next signal will abort %s.)\n",prg_name);  }
+		
+		do_sched_quit=1;
+		do_kill_tasks=1;
+		
+		abort_on_signal=1;
+	}
+	else if(signo==SIGTSTP || signo==SIGCONT )
 	{
 		// Terminal stop and cont. Hmm... check state. 
-		if( ( exec_stopped && si->info.si_signo==SIGCONT) || 
-		    (!exec_stopped && si->info.si_signo==SIGTSTP) )
+		if( ( exec_stopped && signo==SIGCONT) || 
+		    (!exec_stopped && signo==SIGTSTP) )
 		{
 			int signo=exec_stopped ? SIGCONT : SIGSTOP;
 			interface->StopContTasks(signo);
@@ -569,10 +568,10 @@ int TaskManager::signotify(const SigInfo *si)
 		}
 		else
 		{  Warning("Ignoring SIG%s because already %s.\n",
-			si->info.si_signo==SIGCONT ? "CONT" : "TSTP",
+			signo==SIGCONT ? "CONT" : "TSTP",
 			exec_stopped ? "stopped" : "running");  }
 	}
-	else if(si->info.si_signo==SIGUSR1)
+	else if(signo==SIGUSR1)
 	{  _DumpInternalState();  }
 	
 	if(do_sched_quit)
@@ -597,8 +596,6 @@ int TaskManager::signotify(const SigInfo *si)
 	}
 	if(do_sched_quit || do_kill_tasks)
 	{  ReSched();  }  // -> quit now if nothing to do 
-	
-	return(0);
 }
 
 
@@ -750,6 +747,20 @@ int TaskManager::timernotify(TimerInfo *ti)
 	}
 	else
 	{  assert(0);  }
+	
+	return(0);
+}
+
+
+int TaskManager::timeoutnotify(TimeoutInfo *ti)
+{
+	assert(ti->tid==timeout_id);
+	Warning("Execution timeout.\n");
+	Warning("  Timeout time: %s\n",ti->timeout->PrintTime(1));
+	Warning("  Current time: %s\n",ti->current->PrintTime(1));
+	
+	#warning allow different actions. (also SIGTERM and abort)
+	_ActOnSignal(SIGINT,/*real_signal=*/0);
 	
 	return(0);
 }
@@ -920,21 +931,35 @@ int TaskManager::_StartProcessing()
 		return(-1);
 	}
 	
-	// Set some important vars: 
-	connected_to_tsource=0;
-	pending_action=ANone;
-	UseTaskSource(ts);
-	
 	// Write out useful verbose information: 
 	char tmp[24];
 	if(max_failed_in_sequence)  snprintf(tmp,24,"%d",max_failed_in_sequence);
 	else  strcpy(tmp,"OFF");
 	Verbose(TDI,"Ready to perform work: max-failed-in-seq=%s\n",tmp);
 	
+	Verbose(TDI,"  Execution timeout: ");
+	#warning could also print relative time...
+	if(timeout_id && !TimeoutTime(timeout_id)->IsInvalid())
+	{
+		HTime tmp(HTime::Curr);
+		HTime delta=*TimeoutTime(timeout_id)-tmp;
+		Verbose(TDI,"%s (%s)\n",TimeoutTime(timeout_id)->PrintTime(1),
+			delta.PrintElapsed());
+		tmp.Set(10,HTime::seconds);
+		if(delta<tmp)
+		{
+			UpdateTimeout(timeout_id,HTime(HTime::Invalid));
+			Error("He... you will give me at least 10 seconds, will you?!\n");
+			return(-1);
+		}
+	}
+	else
+	{  Verbose(TDI,"[none]\n");  }
+	
 	// Get load val for first time; see if it is >0: 
 	int loadval=_GetLoadValue();
 	
-	Verbose(TDI,"  load control: ");
+	Verbose(TDI,"  Load control: ");
 	if(load_low_thresh<=0)
 	{
 		Verbose(TDI,"[disabled]\n");
@@ -949,10 +974,15 @@ int TaskManager::_StartProcessing()
 		assert(load_poll_msec>0);  // we want it LARGER THAN 0
 	}
 	
+	// Set some important vars: 
+	connected_to_tsource=0;
+	pending_action=ANone;
+	UseTaskSource(ts);
+	
 	ProcessManager::ProcTimeUsage ptu;
 	ProcessManager::manager->GetTimeUsage(-1,&ptu);
 	starttime=ptu.starttime;
-	Verbose(TDI,"  starting at (local): %s\n",starttime.PrintTime(1,1));
+	Verbose(TDI,"  Starting at (local): %s\n",starttime.PrintTime(1,1));
 	
 	// Tell the interface to really start things; this will call 
 	// TaskManager::ReallyStartProcessing(). 
@@ -1247,11 +1277,7 @@ void TaskManager::_TS_GetOrDoneTask()
 				{  _KillScheduledForStart();  }
 				
 				#if TEST_TASK_LIST_MEMBERSHIP
-				// Test: see if task is actually in tasklist_todo: 
-				for(CompleteTask *_ii=tasklist_todo.first(); _ii; _ii=_ii->next)
-				{  if(ctsk==_ii)  goto found;  }
-				assert(0);   // OOPS: ctsk not in tasklist_todo. 
-				found:;
+				assert(tasklist_todo.find(ctsk));
 				#endif
 				
 				tasklist_todo.dequeue(ctsk);
@@ -1491,13 +1517,30 @@ int TaskManager::CheckParams()
 		}
 	}
 	
+	if(exec_timeout_spec.str() && *(exec_timeout_spec.str())!='\0' && 
+	   strcmp(exec_timeout_spec.str(),"none"))
+	{
+		HTime end_time;
+		if(end_time.ReadTime(exec_timeout_spec.str()))
+		{
+			Error("Invalid timeout spec \"%s\".\n",exec_timeout_spec.str());
+			++failed;
+		}
+		else
+		{  UpdateTimeout(timeout_id,end_time);  }
+	}
+	exec_timeout_spec.deref();
+	
 	// Always open /dev/null: 
 	dev_null_fd=open("/dev/null",O_RDONLY);
 	// We must PollFD() the fd so that it gets properly closed on 
 	// execution of other processes. 
 	if(dev_null_fd<0 || PollFD(dev_null_fd))
-	{  Error("Failed to open /dev/null: %s\n",
-		(dev_null_fd<0) ? strerror(errno) : "alloc failure");  }
+	{
+		Error("Failed to open /dev/null: %s\n",
+			(dev_null_fd<0) ? strerror(errno) : "alloc failure");
+		++failed;
+	}
 	
 	return(failed ? 1 : 0);
 }
@@ -1525,6 +1568,12 @@ int TaskManager::_SetUpParams()
 	AddParam("max-failed-in-seq|mfis",
 		"max number of jobs to fail in sequence until giving up "
 		"(0 to disable [NOT recommended])",&max_failed_in_sequence);
+	
+	AddParam("etimeout",
+		"execution timeout; will behave like catching SIGINT when the "
+		"timeout expires; use absolute time (\"[DD.MM.[YYYY]] HH:MM[:SS]\") "
+		"or relative time (\"now + {DD | [[HH:]MM]:SS\") or \"none\" to "
+		"switch off",&exec_timeout_spec);
 	
 	AddParam("load-max","do not start jobs if the system load multiplied "
 		"with 100 is >= this value; instead wait unitl it is lower than "
@@ -1617,8 +1666,10 @@ void TaskManager::_DumpInternalState()
 
 TaskManager::TaskManager(ComponentDataBase *cdb,int *failflag) :
 	FDBase(failflag),
+	TimeoutBase(failflag),
 	TaskSourceConsumer(failflag),
 	par::ParameterConsumer_Overloaded(cdb->parmanager(),failflag),
+	exec_timeout_spec(failflag),
 	starttime(),
 	tasklist_todo(failflag),tasklist_done(failflag),
 	tsource_name(failflag),tdinterface_name(failflag),opmode_name(failflag)
@@ -1686,6 +1737,10 @@ TaskManager::TaskManager(ComponentDataBase *cdb,int *failflag) :
 	tid_load_poll=InstallTimer(-1,0);
 	if(!tid0 || !tid_ts_cwait || !tid_load_poll)
 	{  ++failed;  }
+	
+	// Install timeout node: 
+	timeout_id=IstallTimeout(HTime(HTime::Invalid));
+	if(!timeout_id)  ++failed;
 	
 	if(_SetUpParams())
 	{  ++failed;  }

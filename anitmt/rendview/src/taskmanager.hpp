@@ -22,9 +22,13 @@
 #include "tsource/tasksource.hpp"
 #include "tdriver/driverif.hpp"
 
+#include <hlib/timeoutmanager.h>
+#include <hlib/timeoutbase.h>
+
 
 class TaskManager : 
 	public FDBase, 
+	public TimeoutBase,
 	public TaskSourceConsumer,
 	public par::ParameterConsumer_Overloaded
 {
@@ -38,6 +42,10 @@ class TaskManager :
 		
 		// Task source connect re-try timer: 
 		TimerID tid_ts_cwait;
+		
+		// For execution time timeout: 
+		RefString exec_timeout_spec;
+		TimeoutID timeout_id;
 		
 		HTime starttime;  // same as ProcessManager::starttime. 
 		
@@ -165,11 +173,15 @@ class TaskManager :
 		// Simply call fdmanager()->Quit(status) and write 
 		void _DoQuit(int status);
 		
+		void _ActOnSignal(int signo,int real_signal);
+		
 		// Overriding virtual from TaskSourceConsumer: 
 		int tsnotify(TSNotifyInfo *);
 		// Overriding virtual from FDBase: 
 		int signotify(const SigInfo *);
 		int timernotify(TimerInfo *);
+		// Overriding virtual from TimeoutBase: 
+		int timeoutnotify(TimeoutInfo *);
 		// Overriding virtual from ParameterConsumer: 
 		int CheckParams();
 	public: _CPP_OPERATORS_FF
