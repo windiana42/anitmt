@@ -119,7 +119,7 @@ char *Frame_Dump::Node::_Dump_Scalar2Str(char *d,char *dend,Frame_Dump::Context 
 	}
 	else
 	{
-		for(char *s=_warning_scal_str; *s; s++)
+		for(const char *s=_warning_scal_str; *s; s++)
 		{  *(d++)=*s;  }
 		for(char *s=str+8; *s; s++)
 		{  *(d++)=*s;  }

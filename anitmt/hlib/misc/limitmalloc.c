@@ -70,7 +70,7 @@ static void DebugFree(void *ptr);
 #define BUGACTION  abort();
 #else  /* !AllocDebugging */
 #define DebugAlloc(x)
-#define DebugRealloc(x,x)
+#define DebugRealloc(x,y)
 #define DebugFree(x)
 #endif
 
