@@ -7,5 +7,17 @@ libexparse_a_SOURCES=	\
 	operator.cpp operator.hpp \
 	tree.cpp tree.hpp \
 	value.cpp value.hpp \
+	lexer.cc parse.cpp lexer.hpp \
 	linkedlist.h
-# unused: mcache.cpp mcache.hpp 
+# unused: mcache.cpp mcache.hpp
+
+check_PROGRAMS=		minicalc
+minicalc_SOURCES=	minicalc.cpp
+minicalc_LDADD=		libexparse.a ../val/libval.a -lstdc++ -lm
+
+
+# YLWRAP  =               $(top_srcdir)/ylwrap
+
+lexer.cc: $(srcdir)/lexer.ll $(srcdir)/lexer.hpp
+	$(LEX) -s -olexer.cc $(srcdir)/lexer.ll 
+ 
