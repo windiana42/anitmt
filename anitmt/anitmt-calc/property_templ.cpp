@@ -28,10 +28,14 @@ namespace anitmt{
   // Type_Property: container for property values of a certain type
   //***************************************************************
 
+  // static standard user problem handler
+  template<class T>
+  User_Problem_Handler Type_Property<T>::user_problem_handler;
+
   // returns the value of the property
   template<class T>
   T Type_Property<T>::get() const{
-    assert( s_in_try() );	// make sure this property is solved
+    assert( is_solved_in_try() );	// make sure this property is solved
     return v;
   }
 
@@ -56,8 +60,7 @@ namespace anitmt{
   // !!! may be recursive
   template<class T>
   bool Type_Property<T>::is_this_ok( T v_to_try, Solver *caller, 
-				     Solve_Problem_Handler *problem_handler ) 
-    throw( EX_value_conflict ){
+				     Solve_Problem_Handler *problem_handler ) {
     
     bool res = true;
     
@@ -73,7 +76,7 @@ namespace anitmt{
 	  {
 	    std::list< Property* > l; l.push_back( this );
 	    problem_handler->
-	      problem_occured( l, Solve_Problem_Handler::prop_colission );
+	      property_collision_occured( l );
 	  }
 
 	return false;
@@ -121,7 +124,7 @@ namespace anitmt{
 
   template<class T>
   std::ostream &Type_Property<T>::write2stream( std::ostream& os ) {
-    if( !s_in_try() )
+    if( !is_solved_in_try() )
       return os << "n/a";
     return os << get();
   }

@@ -15,6 +15,8 @@
 #ifndef __AniTMT_Solver__
 #define __AniTMT_Solver__
 
+#include <list>
+
 namespace anitmt{
   class Solver;
 }
@@ -24,33 +26,42 @@ namespace anitmt{
 
 namespace anitmt{
 
+  //*************
+  // Exceptions: 
+  //*************
+
+  class EX_Property_Not_Connected {};
+
   //************************************************
   // Solver: general solver for dependent properties
   //************************************************
 
   class Solver{
+    //** Variables **
+
     friend class Property;
     template<class T> friend class Type_Property;
 
+    typedef std::list< Property* > properties_type;
+    properties_type properties;
+
+    //** Methods **
+
+    // Properties call that if they are distroyed
+    void disconnect_Property( Property *prop )
+      throw( EX_Property_Not_Connected );
     // Properties call that if they were solved
     virtual void prop_was_solved( Property *ID ) = 0;
     // Properties call that if they want to validate their results
     virtual bool is_prop_solution_ok
     ( Property *ID, Solve_Problem_Handler *problem_handler ) = 0;
-
-    // Property that caused the last rejection of a solve run
-    static Property *rejection_cause;
   protected:
     int n_props_available;
-    int n_props_connected;
     long try_id;		// id to identify a solution try
+
+    // add property connection
+    void add_Property( Property *prop );
   public:
-    // returns the Property that caused the last solve run rejection
-    static Property *get_rejection_cause();
-
-    // Properties call that if they are distroyed
-    void prop_disconnect();
-
     Solver();
     virtual ~Solver();
   };

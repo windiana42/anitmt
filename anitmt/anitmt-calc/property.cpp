@@ -14,7 +14,28 @@
 
 #include "property.hpp"
 
+#include <algorithm>
+
 namespace anitmt{
+
+  //********************************************************
+  // User_Problem_Handler: handles problems occured by user
+  //********************************************************
+  
+  // a property collision occured!
+  void User_Problem_Handler::property_collision_occured
+  ( std::list<Property*> ) {
+
+    throw EX_property_collision();
+  }
+  
+  // property signals to reject value 
+  // usage may be enforced by returning false
+  bool User_Problem_Handler::may_property_reject_val
+  ( std::list<Property*> ) {
+    
+    return false;		// user values may not be rejected
+  }
 
   //****************************************
   // Property: container for property values
@@ -25,7 +46,7 @@ namespace anitmt{
 
   bool Property::s() const { return solved; }
   // returns whether the property is solved in the current try
-  bool Property::s_in_try() const {
+  bool Property::is_solved_in_try() const {
     if( try_id == cur_try_id )	// did the property get a solution in the
       return true;		// current try? 
     return solved; 
@@ -36,13 +57,24 @@ namespace anitmt{
   void Property::add_Solver( Solver *solver ){
     solvers.push_back( solver );
   }
+ 
+  // removes solver connection
+  void Property::disconnect_Solver( Solver *solver ) 
+    throw( EX_solver_is_not_connected ) {
+
+    solvers_type::iterator i = find( solvers.begin(), solvers.end(), solver );
+    if( i == solvers.end() )
+      throw EX_solver_is_not_connected();
+
+    solvers.erase( i );
+  }
 
   Property::~Property(){
     // for each solver (*i)
     for( solvers_type::iterator i = solvers.begin(); i != solvers.end(); i++ )
       {
 	// solver might be destroyed by this
-	(*i)->prop_disconnect();
+	(*i)->disconnect_Property( this );
       }
   }
 

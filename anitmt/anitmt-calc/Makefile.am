@@ -1,6 +1,6 @@
 INCLUDES=-I$(srcdir)/../lib/include/
 bin_PROGRAMS=anitmt-calc
-anitmt_calc_SOURCES = 	anitmt.cpp solver.cpp solver.hpp \
+anitmt_calc_SOURCES = 	anitmt.cpp solver.cpp solver.hpp caller.hpp caller.cpp\
 			property.hpp property_templ.cpp property.cpp \
 			proptree.hpp proptree.cpp proptree_templ.cpp \
 			priority.hpp priority.cpp priority_templ.cpp \

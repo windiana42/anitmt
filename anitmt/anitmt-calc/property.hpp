@@ -37,7 +37,8 @@ namespace anitmt{
   // Exceptions:
   //************
   
-  class EX_value_conflict {};
+  class EX_property_collision {};
+  class EX_solver_is_not_connected {};
 
   //*********************************************************
   // Solve_Problem_Handler: handles problems in solve system
@@ -45,10 +46,31 @@ namespace anitmt{
   
   class Solve_Problem_Handler {
   public:
-    enum problem_type{ have_to_wait_for_prop, prop_colission }
+    // a property collision occured!
+    // (may throw exceptions!!!)
+    virtual void property_collision_occured( std::list< Property* > bad_props )
+      = 0;
 
-    virtual problem_occured( std::list< Property* > bad_props, 
-			     problem_type type ) = 0;
+    // property signals to reject value 
+    // usage may be enforced by returning false
+    // (may throw exceptions!!!)
+    virtual bool may_property_reject_val( std::list< Property* > bad_props )
+      = 0;
+  };
+
+  //********************************************************
+  // User_Problem_Handler: handles problems occured by user
+  //********************************************************
+  
+  class User_Problem_Handler : public Solve_Problem_Handler {
+  public:
+    // a property collision occured!
+    // (throws exceptions)
+    virtual void property_collision_occured( std::list<Property*> bad_props );
+
+    // property signals to reject value 
+    // usage may be enforced by returning false
+    virtual bool may_property_reject_val( std::list<Property*> bad_props );
   };
 
   //****************************************
@@ -57,6 +79,9 @@ namespace anitmt{
 
   class Property{
     friend class Solver;
+    void add_Solver( Solver *solver ); // adds a solver for this property
+    void disconnect_Solver( Solver *solver )
+      throw( EX_solver_is_not_connected ); // removes solver connection
   protected:
     typedef std::list< Solver* > solvers_type;
     solvers_type solvers;	// Solvers that might calculate this property
@@ -79,8 +104,7 @@ namespace anitmt{
     // the following functions should only be accessed by class Solver and
     // derived classes
 
-    void add_Solver( Solver *solver ); // adds a solver for this property
-    bool s_in_try() const;	// is property solved in current try
+    bool is_solved_in_try() const;	// is property solved in current try
     long get_try_id() const;	// returns the current try id
   };
 
@@ -92,9 +116,12 @@ namespace anitmt{
   template<class T> class Type_Property : public Property{
     T v;			// contained value
 
+    static User_Problem_Handler user_problem_handler;
   public:	
     T get() const;		// returns the value
-    bool set_if_ok( T v, Solve_Problem_Handler *problem_handler = 0 ); 
+    bool set_if_ok( T v, 
+		    Solve_Problem_Handler *problem_handler 
+		    = &user_problem_handler ); 
 				// tries to set the value and returns whether
 				// the attempt was successful (true) or not.
 				// problem_handler is for explizite user inputs
@@ -110,8 +137,7 @@ namespace anitmt{
     // This is called to try if this value might be valid for this property
     // returns true if value is acceptable
     bool is_this_ok( T v, Solver *caller, 
-		     Solve_Problem_Handler *problem_handler )
-      throw( EX_value_conflict );
+		     Solve_Problem_Handler *problem_handler );
     // Solver call this when the given value was ok
     void use_it( Solver *caller );
   };

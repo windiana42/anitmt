@@ -13,6 +13,7 @@
 /*****************************************************************************/
 
 #include <assert.h>
+#include <algorithm>
 
 #include "solver.hpp"
 
@@ -20,18 +21,35 @@ namespace anitmt{
   //****************************************
   // Solver: Base Class for Property Solvers
   //****************************************
-  Solver::Solver() : n_props_available(0), n_props_connected(-1), try_id(-1) {}
-  Solver::~Solver(){}
+  Solver::Solver() : n_props_available(0), try_id(-1) {}
+  Solver::~Solver() {
+    properties_type::iterator i;
+    for( i = properties.begin(); i != properties.end(); i++ )
+      {
+	(*i)->disconnect_Solver( this );
+      }
+  }
 
   // Properties call that if they are distroyed
-  void Solver::prop_disconnect(){
-    // only connected properties may call this function
-    assert( n_props_connected > 0 ); 
+  void Solver::disconnect_Property( Property *prop ) 
+    throw( EX_Property_Not_Connected ){
 
-    if( --n_props_connected == 0 ) // is the last property disconnecting?
+    properties_type::iterator i = 
+      find( properties.begin(), properties.end(), prop );
+    if( i == properties.end() ) 
+      throw EX_Property_Not_Connected();
+
+    properties.erase( i );
+
+    if( properties.empty() ) // is the last property disconnecting?
       {
 	delete this;		// destroy myself
       }
+  }
+
+  void Solver::add_Property( Property *prop ) {
+    properties.push_back( prop );
+    prop->add_Solver( this );
   }
 
   //*****************************************************************
@@ -42,12 +60,11 @@ namespace anitmt{
 			      Scalar_Property *_a, 
 			      Scalar_Property *_v0, Scalar_Property *_ve ) 
     : d(*_d), t(*_t), a(*_a), v0(*_v0), ve(*_ve){
-    n_props_connected = 5;
-    d.add_Solver( this );
-    t.add_Solver( this );
-    a.add_Solver( this );
-    v0.add_Solver( this );
-    ve.add_Solver( this );
+    add_Property( _d );
+    add_Property( _t );
+    add_Property( _a );
+    add_Property( _v0 );
+    add_Property( _ve );
   }
   
   // Properties call that if they were solved
@@ -61,6 +78,10 @@ namespace anitmt{
     if( s_a  && (caller !=  &a) )  a.use_it( this );
     if( s_v0 && (caller != &v0) ) v0.use_it( this );
     if( s_ve && (caller != &ve) ) ve.use_it( this );
+
+    if( s_d && s_t && s_a && s_v0 && s_ve ) 
+      delete this;		
+    // !!! no more use of object member variables !!!
   }
   
   // Properties call that if they want to validate their results
@@ -77,13 +98,13 @@ namespace anitmt{
     // duration solved in this try now ?
     if( caller == &t )
       {
-	assert( t.s_in_try() );	
+	assert( t.is_solved_in_try() );	
 
 	// stretch known ?
-	if( v0.s_in_try() )
+	if( v0.is_solved_in_try() )
 	  {
 	    // acceleration known ?
-	    if( a.s_in_try() )
+	    if( a.is_solved_in_try() )
 	      {
 		values::Scalar res_ve = v0 + a * t;
 		values::Scalar res_d  = v0*t + 0.5*a*t*t;
@@ -116,10 +137,9 @@ namespace anitmt{
   Diff_Solver::Diff_Solver( Scalar_Property *_d, Scalar_Property *_s, 
 			      Scalar_Property *_e ) 
     : d(*_d), s(*_s), e(*_e){
-    n_props_connected = 3;
-    d.add_Solver( this );
-    s.add_Solver( this );
-    e.add_Solver( this );
+    add_Property( _d );
+    add_Property( _s );
+    add_Property( _e );
   }
   
   // Properties call that if they were solved
@@ -131,6 +151,10 @@ namespace anitmt{
     if( s_d  && (caller !=  &d) )  d.use_it( this );
     if( s_s  && (caller !=  &s) )  s.use_it( this );
     if( s_e  && (caller !=  &e) )  e.use_it( this );
+
+    if( s_d && s_s && s_e ) 
+      delete this;		
+    // !!! no more use of object member variables !!!
   }
   
   // Properties call that if they want to validate their results
@@ -147,10 +171,10 @@ namespace anitmt{
     // difference solved in this try now ?
     if( caller == &d )
       {
-	assert( d.s_in_try() );	
+	assert( d.is_solved_in_try() );	
 
 	// start value known ?
-	if( s.s_in_try() )
+	if( s.is_solved_in_try() )
 	  {
 	    // can calculate end value now:
 	    values::Scalar res_e = s + d;
@@ -163,7 +187,7 @@ namespace anitmt{
 	  }	    
 
 	// end value known ?
-	if( e.s_in_try() )
+	if( e.is_solved_in_try() )
 	  {
 	    // can calculate start value now:
 	    values::Scalar res_s = e - d;
@@ -179,10 +203,10 @@ namespace anitmt{
     // start value solved in this try now ?
     if( caller == &s )
       {
-	assert( s.s_in_try() );	
+	assert( s.is_solved_in_try() );	
 
 	// difference value known ?
-	if( d.s_in_try() )
+	if( d.is_solved_in_try() )
 	  {
 	    // can calculate end value now:
 	    values::Scalar res_e = s + d;
@@ -195,7 +219,7 @@ namespace anitmt{
 	  }	    
 
 	// end value known ?
-	if( e.s_in_try() )
+	if( e.is_solved_in_try() )
 	  {
 	    // can calculate difference now:
 	    values::Scalar res_d = e - s;
@@ -211,10 +235,10 @@ namespace anitmt{
     // end value solved in this try now ?
     if( caller == &e )
       {
-	assert( e.s_in_try() );	
+	assert( e.is_solved_in_try() );	
 
 	// difference value known ?
-	if( d.s_in_try() )
+	if( d.is_solved_in_try() )
 	  {
 	    // can calculate start value now:
 	    values::Scalar res_s = e - d;
@@ -227,7 +251,7 @@ namespace anitmt{
 	  }	    
 
 	// start value known ?
-	if( s.s_in_try() )
+	if( s.is_solved_in_try() )
 	  {
 	    // can calculate difference now:
 	    values::Scalar res_d = e - s;
@@ -251,10 +275,9 @@ namespace anitmt{
   Relation_Solver::Relation_Solver( Scalar_Property *_q, Scalar_Property *_n, 
 			      Scalar_Property *_d ) 
     : q(*_q), n(*_n), d(*_d){
-    n_props_connected = 3;
-    q.add_Solver( this );
-    n.add_Solver( this );
-    d.add_Solver( this );
+    add_Property( _q );
+    add_Property( _n );
+    add_Property( _d );
   }
   
   // Properties call that if they were solved
@@ -266,6 +289,10 @@ namespace anitmt{
     if( s_q  && (caller !=  &q) )  q.use_it( this );
     if( s_n  && (caller !=  &n) )  n.use_it( this );
     if( s_d  && (caller !=  &d) )  d.use_it( this );
+
+    if( s_q && s_n && s_d ) 
+      delete this;		
+    // !!! no more use of object member variables !!!
   }
   
   // Properties call that if they want to validate their results
@@ -283,14 +310,14 @@ namespace anitmt{
     // relation solved in this try now ?
     if( caller == &q )
       {
-	assert( q.s_in_try() );	
+	assert( q.is_solved_in_try() );	
 
 	// assure quotient doesn't equal zero
 	if( q == 0 ) 
 	  return false;		// avoid division by zero
 
 	// numerator known ?
-	if( n.s_in_try() )
+	if( n.is_solved_in_try() )
 	  {
 	    // can calculate denominator
 	    values::Scalar res_d = n / q;
@@ -303,7 +330,7 @@ namespace anitmt{
 	  }	    
 
 	// denominator known ?
-	if( d.s_in_try() )
+	if( d.is_solved_in_try() )
 	  {
 	    // can calculate numerator now:
 	    values::Scalar res_n = q * d;
@@ -319,10 +346,10 @@ namespace anitmt{
     // numerator solved in this try now ?
     if( caller == &n )
       {
-	assert( n.s_in_try() );	
+	assert( n.is_solved_in_try() );	
 
 	// quotient known ?
-	if( q.s_in_try() )
+	if( q.is_solved_in_try() )
 	  {
 	    // can calculate denominator now:
 	    values::Scalar res_d = n / q;
@@ -335,7 +362,7 @@ namespace anitmt{
 	  }	    
 
 	// denominator known ?
-	if( d.s_in_try() )
+	if( d.is_solved_in_try() )
 	  {
 	    // can calculate quotient now:
 	    values::Scalar res_q = n / d;
@@ -351,10 +378,10 @@ namespace anitmt{
     // denominator solved in this try now ?
     if( caller == &d )
       {
-	assert( d.s_in_try() );	
+	assert( d.is_solved_in_try() );	
 
 	// quotient value known ?
-	if( q.s_in_try() )
+	if( q.is_solved_in_try() )
 	  {
 	    // can calculate numerator now:
 	    values::Scalar res_n = q * d;
@@ -367,7 +394,7 @@ namespace anitmt{
 	  }	    
 
 	// numerator known ?
-	if( n.s_in_try() )
+	if( n.is_solved_in_try() )
 	  {
 	    // can calculate quotient now:
 	    values::Scalar res_q = n / d;
