@@ -99,9 +99,8 @@ namespace solve
   {
   public:
     Solve_Problem_Handler *problem_handler;
-  private:
     typedef int id_type;
-
+  private:
     static id_type current_default_test_run_id;
     
     id_type test_run_id;	// id to mark operands solved in that solve run

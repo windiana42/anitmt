@@ -35,8 +35,10 @@ namespace solve{
   //***************************************************************
 
   class Priority_System {
+  public:
     typedef double level_type;
 
+  private:
     typedef std::list< Priority_Action* > priority_level_list_type;
     typedef std::map< level_type, priority_level_list_type > priority_tab_type;
     priority_tab_type priority_tab;
@@ -86,12 +88,12 @@ namespace solve{
     // a operand collision occured!
     // (throws exceptions)
     virtual void operand_collision_occured( std::list< Basic_Operand* > 
-					    bad_ops );
+					    bad_ops ) throw(EX);
 
     // operand signals to reject value 
     // usage may be enforced by returning false
     virtual bool may_operand_reject_val( std::list< Basic_Operand* > 
-					 bad_ops );
+					 bad_ops ) throw(EX);
 
     Action_Caller_Inserter( Priority_Action *action );
   };

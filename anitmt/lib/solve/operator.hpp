@@ -528,7 +528,7 @@ namespace solve
   // Equal_Operator: operator for comparing 2 operands 
   //***************************************************
 
-  template<class T_Result=bool, class T_Op1, class T_Op2>
+  template<class T_Result, class T_Op1, class T_Op2>
   class Equal_Operator
     : public Basic_Operator_for_2_Operands<T_Result, T_Op1, T_Op2> 
   {
@@ -587,7 +587,7 @@ namespace solve
   // Unequal_Operator: operator for comparing 2 operands 
   //***************************************************
 
-  template<class T_Result=bool, class T_Op1, class T_Op2>
+  template<class T_Result, class T_Op1, class T_Op2>
   class Unequal_Operator
     : public Basic_Operator_for_2_Operands<T_Result, T_Op1, T_Op2> 
   {
@@ -646,7 +646,7 @@ namespace solve
   // Less_Operator: operator for comparing 2 operands 
   //***************************************************
 
-  template<class T_Result=bool, class T_Op1, class T_Op2>
+  template<class T_Result, class T_Op1, class T_Op2>
   class Less_Operator
     : public Basic_Operator_for_2_Operands<T_Result, T_Op1, T_Op2> 
   {
@@ -689,7 +689,7 @@ namespace solve
   // Greater_Operator: operator for comparing 2 operands 
   //***************************************************
 
-  template<class T_Result=bool, class T_Op1, class T_Op2>
+  template<class T_Result, class T_Op1, class T_Op2>
   class Greater_Operator
     : public Basic_Operator_for_2_Operands<T_Result, T_Op1, T_Op2> 
   {
@@ -732,7 +732,7 @@ namespace solve
   // Not_Greater_Operator: operator for comparing 2 operands 
   //***************************************************
 
-  template<class T_Result=bool, class T_Op1, class T_Op2>
+  template<class T_Result, class T_Op1, class T_Op2>
   class Not_Greater_Operator
     : public Basic_Operator_for_2_Operands<T_Result, T_Op1, T_Op2> 
   {
@@ -775,7 +775,7 @@ namespace solve
   // Not_Less_Operator: operator for comparing 2 operands 
   //***************************************************
 
-  template<class T_Result=bool, class T_Op1, class T_Op2>
+  template<class T_Result, class T_Op1, class T_Op2>
   class Not_Less_Operator
     : public Basic_Operator_for_2_Operands<T_Result, T_Op1, T_Op2> 
   {

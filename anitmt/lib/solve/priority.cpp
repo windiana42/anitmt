@@ -107,7 +107,7 @@ namespace solve
   // a operand collision occured!
   // (throws exceptions)
   void Action_Caller_Inserter::operand_collision_occured
-  ( std::list< Basic_Operand* > ) 
+  ( std::list< Basic_Operand* > ) throw(EX)
   {
     // ignore problem
   }
@@ -115,7 +115,7 @@ namespace solve
   // operand signals to reject value 
   // usage may be enforced by returning false
   bool Action_Caller_Inserter::may_operand_reject_val
-  ( std::list< Basic_Operand* > bad_props ) {
+  ( std::list< Basic_Operand* > bad_props ) throw(EX) {
 
     std::list< Basic_Operand* >::iterator i;
     for( i = bad_props.begin(); i != bad_props.end(); i++ )
