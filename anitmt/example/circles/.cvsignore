@@ -1,3 +1,7 @@
-Makefile.in
-Makefile
 .deps
+Makefile
+Makefile.in
+expl_filled.out
+filled.out
+half_filled.out
+unfilled.out
