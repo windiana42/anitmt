@@ -1,0 +1,7 @@
+HLIB now uses GNU autoconf/automake. I've just made that step 
+(with some problems) and things are far from perfect. 
+Especially configure should make much more testing and the code 
+should respect the results. I'm working on that (slowly but 
+surely). 
+
+Wolfgang Wieser <wwieser@gmx.de>

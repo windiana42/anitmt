@@ -1,7 +1,7 @@
 some things to do (not complete at all)
 
 Martin:
-- Prop_Tree_Node::get_possible_childs()
+- Prop_Tree_Node::get_possible_children()
 - optimization of Prop_Tree_Node::get_properties_names()
 - Test functions for anything
 - destruction of operator trees (with constant operands)

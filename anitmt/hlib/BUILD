@@ -1,2 +1,21 @@
-Run configure
-Optimized build with 'make opt'
+Build instructions: 
+
+Do the standard GNU build routine: 
+bash# aclocal && autoconf && automake
+bash# ./configure
+bash# make
+(I recommend building in a separate build directory.) 
+
+On i386 I also recommend compiling with special optimizations; 
+for this do 
+bash# make opt
+
+On other platforms using gcc, I recommend adding 
+-Os -fno-exceptions -fno-rtti
+to the CXXFLAGS to save build time and binay size. 
+
+HLIB builds without problems on 
+GNU/Linux with gcc >= 2.95 glibc >= 2.1 and kernel >= 2.2 
+
+Other setups should either not make trouble at all or be supported 
+with a minimal effort. 
