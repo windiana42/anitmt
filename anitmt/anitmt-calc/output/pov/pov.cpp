@@ -85,7 +85,7 @@ void Pov_Output::check_components() throw( )
 	else
 	{
 		#warning errors not reported. 
-		cerr << "Errors in Pov_Output::check_components()." << std::endl;
+		std::cerr << "Errors in Pov_Output::check_components()." << std::endl;
 		abort();
 	}
 }

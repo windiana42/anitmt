@@ -38,7 +38,7 @@ int main(int argc,char **argv,char **envp)
   try
   {
     // message objects
-    message::Stream_Message_Handler msg_handler(cerr,cout,cout);
+    message::Stream_Message_Handler msg_handler(std::cerr,std::cout,std::cout);
     message::Message_Manager manager(&msg_handler);
 
     // parameter objects
