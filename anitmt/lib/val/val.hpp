@@ -23,6 +23,7 @@
 #if __GNUC__ < 3
 #define GCC_HACK 1
 #warning GCC_HACK enabled as gcc version < 3.0
+#warning **** PLEASE PASS -fno-access-control IN YOUR CXXFLAGS! ****
 #else
 #undef GCC_HACK
 #endif
