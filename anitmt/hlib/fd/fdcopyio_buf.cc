@@ -37,6 +37,8 @@ int FDCopyIO_Buf::dataptr(DataPtr *dp)
 	dp->buf=buf+bufdone;
 	dp->buflen=buflen-bufdone;
 	dp->more=0;   // dp->buflen is all, there is not more buffer
+	
+	return(0);
 }
 
 int FDCopyIO_Buf::datadone(DataDone *dd)
@@ -44,15 +46,22 @@ int FDCopyIO_Buf::datadone(DataDone *dd)
 	assert(dd->buf==buf);
 	bufdone+=dd->donelen;
 	assert(bufdone<=buflen);
+	return(0);
+}
+
+
+void FDCopyIO_Buf::reset()
+{
+	buf=NULL;
+	buflen=0;
+	bufdone=0;
 }
 
 
 FDCopyIO_Buf::FDCopyIO_Buf(int *failflag) : 
 	FDCopyIO(CPT_Buf,failflag)
 {
-	buf=NULL;
-	buflen=0;
-	bufdone=0;
+	reset();
 }
 
 FDCopyIO_Buf::~FDCopyIO_Buf()

@@ -106,12 +106,6 @@ class FDCopyIO
 		// NOTE: These members are public for easy access. 
 		// ****  Do not modify them while the copy job is active. 
 		
-		// This is the max numer of bytes fed into a call to write(2) 
-		// or writev(2) or the max number of bytes requested by a 
-		// call to read(2) or readv(2). 
-		// Use 0 for unlimited (default). 
-		size_t max_iolen;   // may read/write len (per call) (0 -> unlimited)
-		
 		// Max time which may pass between two calls to read() or two 
 		// calls to write(). 
 		long io_timeout;    // timeout between two read()/write() calls
@@ -159,6 +153,10 @@ class FDCopyIO
 		virtual int datadone(DataDone * /*dd*/)
 			{  return(0);  }
 		
+		// This is the reset function used by DoSuicide(): 
+		// Only sensitive data is reset. 
+		virtual void reset() HL_PureVirt(;)
+		
 	public:  _CPP_OPERATORS_FF
 		// NOTE: You need not call this directly; use one of the 
 		//       derived classes. 
@@ -168,6 +166,14 @@ class FDCopyIO
 		// Get Type ID of this FDCopyIO: 
 		CPType Type() const
 			{  return(type);  }
+		
+		// A non-persistent FDCopyIO gets deleted (delete this); 
+		// a persistent one just gets reset by this call. 
+		// Only sensitive data (like FDCopyIO_FD::transferred) is reset. 
+		// Return value: 
+		//   0 -> persistent; not deleted itself
+		//   1 -> delete this; was done
+		virtual int DoSuicide();
 };
 
 
@@ -182,6 +188,7 @@ class FDCopyIO_Buf : public FDCopyIO
 		// Ovrriding virtuals from FDCopyIO: 
 		int dataptr(DataPtr *dp);
 		int datadone(DataDone *dd);
+		void reset();
 		
 	public:  /* _CPP_OPERATORS_FF from FDCopyIO */
 		FDCopyIO_Buf(int *failflag=NULL);
@@ -210,6 +217,10 @@ class FDCopyIO_Buf : public FDCopyIO
 // set up the fields in FDCopyIO_FD and FDCopyIO. 
 class FDCopyIO_FD : public FDCopyIO
 {
+	protected:
+		// Ovrriding virtual from FDCopyIO: 
+		void reset();
+	
 	public:  /* _CPP_OPERATORS_FF from FDCopyIO */
 		FDCopyIO_FD(int *failflag=NULL);
 		~FDCopyIO_FD();
@@ -227,6 +238,12 @@ class FDCopyIO_FD : public FDCopyIO
 		// (Note: FDCopyBase provides replacements for the poll 
 		//        functions to handle such cases.)
 		FDManager::PollID pollid;   // fd to read from / write to
+		
+		// This is the max numer of bytes fed into a call to write(2) 
+		// or writev(2) or the max number of bytes requested by a 
+		// call to read(2) or readv(2). 
+		// Use 0 for unlimited (default). 
+		size_t max_iolen;   // may read/write len (per call) (0 -> unlimited)
 		
 		// The number of already transferred bytes (i.e. the number 
 		// of bytes aready written to or read from the fd). 
@@ -726,10 +743,10 @@ class FDCopyBase : public FDBase
 		
 		// Forwards calls from FDBase::fdnotify(): 
 		// Return value: See FDBase::fdnotify(). 
-		virtual int fdnotify2(FDManager::FDInfo *fdi)  {  return(0);  }
+		virtual int fdnotify2(FDManager::FDInfo * /*fdi*/)  {  return(0);  }
 		// Status calls informing derived class abount copy job status: 
 		// Return value: Currently unused; use 0. 
-		virtual int cpnotify(CopyInfo *ci)  {  return(0);  }
+		virtual int cpnotify(CopyInfo * /*ci*/)  {  return(0);  }
 		
 	private:
 		// Internally used: 

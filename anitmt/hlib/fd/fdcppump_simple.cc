@@ -409,8 +409,8 @@ int FDCopyPump_Simple::SetIO(FDCopyIO *nsrc,FDCopyIO *ndest)
 	{  retval=-4;  goto delret;  }
 	
 	// Okay, then get rid of the old ones: 
-	if(src &&  !src->persistent)   {  delete src;   src=NULL;   }
-	if(dest && !dest->persistent)  {  delete dest;  dest=NULL;  }
+	if(src)   {  src->DoSuicide();   src=NULL;   }
+	if(dest)  {  dest->DoSuicide();  dest=NULL;  }
 	
 	src=nsrc;
 	dest=ndest;
@@ -418,8 +418,8 @@ int FDCopyPump_Simple::SetIO(FDCopyIO *nsrc,FDCopyIO *ndest)
 	return(0);
 	
 delret:
-	if(nsrc &&  !nsrc->persistent)   delete nsrc;
-	if(ndest && !ndest->persistent)  delete ndest;
+	if(nsrc)   nsrc->DoSuicide();
+	if(ndest)  ndest->DoSuicide();
 	return(retval);
 }
 

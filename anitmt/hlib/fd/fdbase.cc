@@ -296,8 +296,11 @@ int FDBase::_ClearFDs(int close_them,int *pollfds)
 			//shutdown(n->fd,2);
 			#if TESTING
 			// this means some FDBase did not close/unregister its fd. 
-			fprintf(stderr,"ClearFDs(): deleting fd=%d. (close()=%d)\n",
-				n->fd,close(n->fd));
+			fprintf(stderr,"ClearFDs(): deleting fd=%d (events=%d,idx=%d). "
+				"(close()=%d)\n",n->fd,n->events,n->idx,close(n->fd));
+			if(n->idx==-2)
+			{  fprintf(stderr,"BUG!! idx=%d here but fdslock=%d\n",	
+				n->idx,fdslock);  }
 			#else
 			int rv;
 			do

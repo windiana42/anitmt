@@ -203,6 +203,9 @@ int FDCopyBase::DoneJob(FDCopyPump *pump,PollID in_id,PollID out_id)
 
 int FDCopyBase::PollFD(int fd,short events,const void *dptr,PollID *ret_id)
 {
+	if(ret_id)
+	{  *ret_id=NULL;  }
+	
 	// First, see if the poll node already exists: 
 	PollID pollid = FDBase::FDPollID(fd);
 	if(pollid)
@@ -466,8 +469,8 @@ FDCopyPump *FDCopyBase::_NEW_CopyPump_DoRest(FDCopyPump *pump,
 		{  return(pump);  }
 		delete pump;
 	}
-	if(src &&  !src->persistent)   delete src;
-	if(dest && !dest->persistent)  delete dest;
+	if(src)  src->DoSuicide();
+	if(dest)  dest->DoSuicide();
 	return(NULL);
 }
 
@@ -552,15 +555,9 @@ void FDCopyPump::_DoSuicide()
 		
 		// Get rid of src and dest: 
 		if(src)
-		{
-			if(!src->persistent)  delete src;
-			src=NULL;
-		}
+		{  src->DoSuicide();  src=NULL;  }
 		if(dest)
-		{
-			if(!dest->persistent)  delete dest;
-			dest=NULL;
-		}
+		{  dest->DoSuicide();  dest=NULL;  }
 		return;
 	}
 	
@@ -625,7 +622,7 @@ FDCopyPump::~FDCopyPump()
 		if(src->persistent)
 		{  fprintf(stderr,_warn_persist_fdcopyio,src->Type());  }
 		#endif
-		delete src;  src=NULL;
+		src->DoSuicide();  src=NULL;
 	}
 	if(dest)
 	{
@@ -633,7 +630,7 @@ FDCopyPump::~FDCopyPump()
 		if(dest->persistent)
 		{  fprintf(stderr,_warn_persist_fdcopyio,dest->Type());  }
 		#endif
-		delete dest;  dest=NULL;
+		dest->DoSuicide();  dest=NULL;
 	}
 	
 	fcb=NULL;
@@ -644,12 +641,21 @@ FDCopyPump::~FDCopyPump()
 /******************************************************************************/
 /**** FDCopyIO                                                             ****/
 
+int FDCopyIO::DoSuicide()
+{
+	if(!persistent)
+	{  delete this;  return(1);  }
+	reset();
+	active=0;
+	return(0);
+}
+
+
 FDCopyIO::FDCopyIO(CPType t,int * /*failflag*/) : 
 	starttime(HTime::Invalid)
 {
 	type=t;
 	
-	max_iolen=0;  // unlimited
 	io_timeout=-1;
 	dptr=NULL;
 	

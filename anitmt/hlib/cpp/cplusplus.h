@@ -366,6 +366,10 @@ template<class T,class P0,class P1,class P2> inline T *NEW3(P0 p0,P1 p1,P2 p2)
 	return(ptr);
 }
 
+// Well, this is not really needed but helps in deleting. 
+// Does nothing in ptr=NULL and sets ptr=NULL. 
+template<class T> inline void DELETE(T* &ptr)
+{  if(ptr)  {  delete ptr;  ptr=NULL;  }  }
 
 // Internal function to be passed as function pointer to 
 // (even more internal) function _NewConstructArray(). 

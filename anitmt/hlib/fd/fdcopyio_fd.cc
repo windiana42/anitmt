@@ -16,7 +16,7 @@
 
 #include <hlib/fdcopybase.h>
 
-#ifndef TESTING
+/*#ifndef TESTING
 #define TESTING 1
 #endif
 
@@ -25,14 +25,21 @@
 #  include <assert.h>
 #else
 #  define assert(x)  do{}while(0)
-#endif
+#endif*/
+
+
+void FDCopyIO_FD::reset()
+{
+	transferred=(copylen_t)0;
+}
 
 
 FDCopyIO_FD::FDCopyIO_FD(int *failflag) : 
 	FDCopyIO(CPT_FD,failflag)
 {
 	pollid=NULL;
-	transferred=(copylen_t)0;
+	max_iolen=0;  // unlimited
+	reset();
 }
 
 FDCopyIO_FD::~FDCopyIO_FD()

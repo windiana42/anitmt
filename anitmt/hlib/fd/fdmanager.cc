@@ -536,7 +536,7 @@ void FDManager::__UpdateFDArray()
 				{
 					fprintf(stderr,"OOPS: GREAT internal error: pollnodes=%d too small.\n",
 						pollnodes);
-					exit(1);
+					abort();
 				}
 				#endif
 				p->fd=i->fd;
@@ -741,6 +741,8 @@ void FDManager::_DeliverSignal(SigNode *sn)
 // inline as called only from one pos. 
 inline void FDManager::_DeliverFDNotify(const HTime *fdtime)
 {
+	//fprintf(stderr,"---------------<_DeliverFDNotify START>--------------\n");
+	
 	// Make sure to deal with arrived signals: 
 	_DeliverPendingSignals();  // inline check (does _TidyUp())
 	//_TidyUp();  // inline check 
@@ -764,7 +766,7 @@ inline void FDManager::_DeliverFDNotify(const HTime *fdtime)
 				fdb,fdb->deleted,__LINE__);
 			continue;
 		}
-		if(!fdb->fdslock)  // already locked
+		if(fdb->fdslock>=0)  // already locked
 		{  fprintf(stderr,"FD: *** OOPS: fds already locked! (FDN)\n");  }
 		#endif
 		
@@ -792,7 +794,7 @@ inline void FDManager::_DeliverFDNotify(const HTime *fdtime)
 			#if TESTING
 			if(p->fd!=i->fd || p->events!=i->events)
 			{  fprintf(stderr,"internal error: fd=%d,%d; events=%d,%d\n",
-				p->fd,i->fd,p->events,i->events);  exit(1);  }
+				p->fd,i->fd,p->events,i->events);  abort();  }
 			#endif
 			if(p->revents)
 			{
@@ -826,6 +828,8 @@ inline void FDManager::_DeliverFDNotify(const HTime *fdtime)
 		fdb->UnlockFDs();
 	}
 	_TidyUp();  // inline check 
+	
+	//fprintf(stderr,"---------------<_DeliverFDNotify DONE>--------------\n");
 }
 
 
@@ -1219,7 +1223,7 @@ FDManager::~FDManager()
 	#if TESTING
 	if(fd_nnodes || pollnodes)
 	{  fprintf(stderr,"internal warning: ~FDManager: "
-		"fd_nnodes=%d, pollnodes=%d ",fd_nnodes,pollnodes);  }
+		"fd_nnodes=%d, pollnodes=%d\n",fd_nnodes,pollnodes);  }
 	#endif
 	
 	// Cleanup global manager: 
@@ -1782,6 +1786,9 @@ inline void FDManager::_AssignFDArrElem(FDManager::FDNode *n)
 int FDManager::_PollFD(FDBase * /*fdb*/,FDManager::FDNode *j,
 	short events,const void **dptr)
 {
+	//fprintf(stderr,"_PollFD(events=0x%x; fd=%d,events=0x%x,idx=%d; &dptr=%p\n",
+	//	events,j->fd,j->events,j->idx,dptr);
+	
 	// Just update events & dptr: 
 	if(dptr)
 	{  j->dptr=*dptr;  }
@@ -1874,6 +1881,8 @@ if(events & ~(POLLIN | POLLOUT))
 	if(!n)
 	{  return(-1);  }
 	fdb->AddFDNode(n);
+	//fprintf(stderr,"_NewFDN(fd=%d,events=0x%x,idx=%d)\n",
+	//	n->fd,n->events,n->idx);
 	++fd_nnodes;
 	if(n->events)
 	{
@@ -1892,8 +1901,11 @@ if(events & ~(POLLIN | POLLOUT))
 // Internally: unpoll FD node (dequeue & free). 
 inline int FDManager::_iUnpollFD(FDBase *fdb,FDManager::FDNode *fdn)
 {
+	//fprintf(stderr,"_iUnpollFD(fd=%d,events=0x%x,idx=%d)\n",
+	//	fdn->fd,fdn->events,fdn->idx);
 	if(fdn->events)
 	{  --pollnodes;  }
+	
 	#if TESTING
 	// NOTE: if you get that, I bet it's because UnpollFD() was called more 
 	// than once with the same pollid. You can detect if that is the case 
@@ -1901,8 +1913,8 @@ inline int FDManager::_iUnpollFD(FDBase *fdb,FDManager::FDNode *fdn)
 	// for the illegal calls to UnpollFD. 
 	/*fdn->events=0;*/  // can be enabled for bug hunting...
 	if(pollnodes<0)
-	{  fprintf(stderr,"FD:%d: OOPS: pollnodes=%d<0\n",__LINE__,pollnodes);
-		pollnodes=0;  }
+	{  fprintf(stderr,"FD:%d: OOPS: pollnodes=%d<0 [fd=%d]\n",
+		__LINE__,pollnodes,fdn->fd);  pollnodes=0;  abort();  }
 	#endif
 	// In case there is no array elem associated with that fd 
 	// node, the array keeps in sync. 
