@@ -44,13 +44,12 @@ namespace anitmt{
   }
 
   template<class T>
-  void Operand<T>::init_reporter( Value_Reporter *reporter, int sender_ID ) {
+  void Operand<T>::init_reporter( Value_Reporter *reporter ) {
     this->reporter = reporter;
-    this->sender_ID = sender_ID;
   }
 
   template<class T>
-  Operand<T>::Operand() : value_valid(false), reporter(0), sender_ID(-1) {}
+  Operand<T>::Operand() : value_valid(false), reporter(0) {}
 
   //*****************************************
   // Constant: Operand for holding constants
@@ -69,13 +68,13 @@ namespace anitmt{
   // for operand to deliver result
   template<class T_Result, class T_Operand>
   void Basic_Operator_for_1_param<T_Result,T_Operand>
-  ::use_value( T_Operand const &value, int /*sender_ID*/ ) {
+  ::use_value( T_Operand const &value ) {
     set_value( calc_result( value ) );
   }
 
   template<class T_Result, class T_Operand>
   bool Basic_Operator_for_1_param<T_Result,T_Operand>
-  ::test_value( T_Operand const &value, int /*sender_ID*/, int test_ID ) {
+  ::test_value( T_Operand const &value, int test_ID ) {
     if( !is_operand_ok( value ) ) return false;
 
     return test_set_value( calc_result( value ), test_ID );
@@ -91,12 +90,11 @@ namespace anitmt{
       }
   }
 
-
   template<class T_Result, class T_Operand>
   Basic_Operator_for_1_param<T_Result,T_Operand>::Basic_Operator_for_1_param
   ( Operand<T_Operand> &op ) : operand( op ) {
 
-    operand.init_reporter( this, 0 );
+    operand.init_reporter( this );
   }
 
   //***************************************************************
@@ -106,32 +104,27 @@ namespace anitmt{
   // for operand to deliver result
   template<class T_Result, class T_Op1, class T_Op2>
   void Basic_Operator_for_2_params<T_Result,T_Op1,T_Op2>
-  ::use_value( T_Op1 const &value, int sender_ID ) {
-    if( operand2.is_value_valid() )
-      set_value( calc_result( value, operand2.get_value() ) );
+  ::Operand_1_Interface::use_value( T_Op1 const &value ) {
+    if( host->operand2.is_value_valid() )
+      host->set_value( host->calc_result( value, host->operand2.get_value() ));
   }
 
   template<class T_Result, class T_Op1, class T_Op2>
   bool Basic_Operator_for_2_params<T_Result,T_Op1,T_Op2>
-  ::test_value( T_Op1 const &value, int sender_ID, int test_ID ) {
+  ::Operand_1_Interface::test_value( T_Op1 const &value, int test_ID ) {
 
-    switch( sender_ID )
+    if( !host->is_operand1_ok( value ) ) return false;
+
+    // are both operands solved now?
+    if( host->operand2.is_value_valid() )
       {
-      case sender_is_op1:
-	if( !is_operand1_ok( value ) ) return false;
-
-	// are both operands solved now?
-	if( operand2.is_value_valid() )
-	  {
-	    if( !are_operands_ok( value, operand2.get_value() ) ) return false;
-
-	    return test_set_value( calc_result( value, operand2.get_value() ),
-				   test_ID );
-	  }
- 	break;
-      default: assert(0); break;
+	if( !host->are_operands_ok( value, host->operand2.get_value() ) ) 
+	  return false;
+	
+	return host->test_set_value
+	  ( host->calc_result( value, host->operand2.get_value() ), test_ID );
       }
-
+    
     return true;
   }
 
@@ -139,30 +132,26 @@ namespace anitmt{
   // for operand to deliver result
   template<class T_Result, class T_Op1, class T_Op2>
   void Basic_Operator_for_2_params<T_Result,T_Op1,T_Op2>
-  ::use_value( T_Op2 const &value, int sender_ID ) {
-    if( operand1.is_value_valid() )
-      set_value( calc_result( operand1.get_value(), value ) );
+  ::Operand_2_Interface::use_value( T_Op2 const &value ) {
+    if( host->operand1.is_value_valid() )
+      host->set_value( host->calc_result( host->operand1.get_value(), value ));
   }
 
   template<class T_Result, class T_Op1, class T_Op2>
   bool Basic_Operator_for_2_params<T_Result,T_Op1,T_Op2>
-  ::test_value( T_Op2 const &value, int sender_ID, int test_ID ) {
-    switch( sender_ID )
+  ::Operand_2_Interface::test_value( T_Op2 const &value, int test_ID ) {
+    if( !host->is_operand2_ok( value ) ) return false;
+
+    // are both operands solved now?
+    if( host->operand1.is_value_valid() )
       {
-      case sender_is_op2:
-	if( !is_operand2_ok( value ) ) return false;
+	if( !host->are_operands_ok( host->operand1.get_value(), value ) ) 
+	  return false;
 
-	// are both operands solved now?
-	if( operand1.is_value_valid() )
-	  {
-	    if( !are_operands_ok( operand1.get_value(), value ) ) return false;
-
-	    return test_set_value( calc_result( operand1.get_value(), 
-						value ), test_ID );
-	  }
-	break;
-      default: assert(0); break;
+	return host->test_set_value
+	  ( host->calc_result( host->operand1.get_value(), value ), test_ID );
       }
+
     return true;
   }
 
@@ -177,8 +166,8 @@ namespace anitmt{
       }
   }
 
-  //************
-  // Constructor  
+  //***********************
+  // Constructor/Destructor
 
   template<class T_Result, class T_Op1, class T_Op2>
   Basic_Operator_for_2_params<T_Result,T_Op1,T_Op2>
@@ -186,90 +175,18 @@ namespace anitmt{
 				 Operand<T_Op2> &op2 ) 
     : operand1( op1 ), operand2( op2 ) { 
     
-    operand1.init_reporter( this, sender_is_op1 );
-    operand2.init_reporter( this, sender_is_op2 );
+    interface1 = new Operand_1_Interface(this);
+    interface2 = new Operand_2_Interface(this);
+
+    operand1.init_reporter( interface1 );
+    operand2.init_reporter( interface2 );
   }
-
-
-  //**************************************************************************
-  // Basic_Operator_for_2_same_params: two parameter Operator (both same type)
-  //**************************************************************************
-
-  // for operand to deliver result
-  template<class T_Result, class T_Operand>
-  void Basic_Operator_for_2_same_params<T_Result,T_Operand>
-  ::use_value( T_Operand const &value, int sender_ID ) {
-    switch( sender_ID )
-      {
-      case sender_is_op1:
-	if( operand2.is_value_valid() )
-	  set_value( calc_result( value, operand2.get_value() ) );
-	break;
-      case sender_is_op2:
-	if( operand1.is_value_valid() )
-	  set_value( calc_result( operand1.get_value(),value ) );
-	break;
-      default: assert(0); break;
-      }
-  }
-
-  template<class T_Result, class T_Operand>
-  bool Basic_Operator_for_2_same_params<T_Result,T_Operand>
-  ::test_value( T_Operand const &value, int sender_ID, int test_ID ) {
-    switch( sender_ID )
-      {
-      case sender_is_op1:
-	if( !is_operand1_ok( value ) ) return false;
-
-	// are both operands solved now?
-	if( operand2.is_value_valid() )
-	  {
-	    if( !are_operands_ok( value, operand2.get_value() ) ) return false;
-
-	    return test_set_value( calc_result( value, operand2.get_value() ),
-				   test_ID );
-	  }
- 	break;
-      case sender_is_op2:
-	if( !is_operand2_ok( value ) ) return false;
-
-	// are both operands solved now?
-	if( operand1.is_value_valid() )
-	  {
-	    if( !are_operands_ok( operand1.get_value(), value ) ) return false;
-
-	    return test_set_value( calc_result( operand1.get_value(), value ),
-				   test_ID );
-	  }
-	break;
-      default: assert(0); break; // shouldn't happen
-      }
-    return true;
-  }
-
-  template<class T_Result, class T_Operand>
-  void Basic_Operator_for_2_same_params<T_Result,T_Operand>
-  ::init() {
-    
-    if( operand1.is_value_valid() && operand2.is_value_valid() ) 
-      {
-	set_value( calc_result( operand1.get_value(), operand2.get_value() ));
-				// should throw exception if params are wrong
-      }
-  }
-
-  //************
-  // Constructor  
-
-  template<class T_Result, class T_Operand>
-  Basic_Operator_for_2_same_params<T_Result,T_Operand>
-  ::Basic_Operator_for_2_same_params( Operand<T_Operand> &op1, 
-				      Operand<T_Operand> &op2 ) 
-    : operand1( op1 ), operand2( op2 ) { 
-
-    operand1.init_reporter( this, sender_is_op1 );
-    operand2.init_reporter( this, sender_is_op2 );
-  }
+  template<class T_Result, class T_Op1, class T_Op2>
+  Basic_Operator_for_2_params<T_Result,T_Op1,T_Op2>
+  ::~Basic_Operator_for_2_params() {
+    delete interface1;
+    delete interface2;
+  } 
 
   //**********************************************
   // Not_Operator: operator for inverting operand
@@ -289,37 +206,19 @@ namespace anitmt{
     init();
   }
 
-  //***************************************************************
-  // Add_Operator: operator for adding 2 operands
-  //***************************************************************
-
-  // may throw exception!
-  template<class T_Result, class T_Operand>
-  T_Result Add_Operator<T_Result,T_Operand>::calc_result
-  ( T_Operand const &value1, T_Operand const &value2 ) {
-    return value1 + value2;
-  }
-
-  template<class T_Result, class T_Operand>
-  Add_Operator<T_Result,T_Operand>::Add_Operator
-  ( Operand<T_Operand> &operand1, Operand<T_Operand> &operand2 ) 
-    : Basic_Operator_for_2_same_params<T_Result,T_Operand>( operand1,
-							    operand2 ) {
-    init();
-  }
   //**********************************************************************
-  // Add_Operator_Diff: operator for adding 2 operands of different types
+  // Add_Operator: operator for adding 2 operands of different types
   //**********************************************************************
 
   // may throw exception!
   template<class T_Result, class T_Op1, class T_Op2>
-  T_Result Add_Operator_Diff<T_Result,T_Op1,T_Op2>
+  T_Result Add_Operator<T_Result,T_Op1,T_Op2>
   ::calc_result( T_Op1 const &value1, T_Op2 const &value2 ) {
     return value1 + value2;
   }
 
   template<class T_Result, class T_Op1, class T_Op2>
-  Add_Operator_Diff<T_Result,T_Op1,T_Op2>::Add_Operator_Diff
+  Add_Operator<T_Result,T_Op1,T_Op2>::Add_Operator
   ( Operand<T_Op1> &operand1, Operand<T_Op2> &operand2 ) 
     : Basic_Operator_for_2_params<T_Result,T_Op1,T_Op2>( operand1,
 							 operand2 ) {

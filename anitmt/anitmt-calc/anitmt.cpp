@@ -268,6 +268,138 @@ int main()
 	else
 	  cerr << "!!Error could not calc <1,2,3> + <5,4,7>!! " << endl;
       }
+
+      // operator test
+      cout << " Tests with usage of C++-Operators" << endl;
+
+      // calc 1 + 2 = 3
+      {
+	Operand<values::Scalar> &op = 
+	  *(new Constant<values::Scalar>(1)) + 
+	  *(new Constant<values::Scalar>(2));
+
+	if( op.is_value_valid() )
+	  {
+	    cout << "  1 + 2 = " << op.get_value() << " (3)" <<  endl;
+	    assert( op.get_value() == 3 );
+	  }
+	else
+	  cerr << "!!Error could not calc 1 + 2 ;)!! " << endl;
+      }
+      // calc (!1) + 2 = 2
+      {
+	Operand<values::Scalar> &op = 
+	  !*(new Constant<values::Scalar>(1)) + 
+	  *(new Constant<values::Scalar>(2));
+
+	if( op.is_value_valid() )
+	  {
+	    cout << "  (!1) + 2 = " << op.get_value() << " (2)" << endl;
+	    assert( op.get_value() == 2 );
+	  } 
+	else
+	  cerr << "!!Error could not calc (!1) + 2 ;)!! " << endl;
+      }
+
+      // calc 2 + x (x = 5)    
+      {
+	Operand<values::Scalar> x;
+	Operand<values::Scalar> &op = 2 + x;
+
+	if( op.is_value_valid() )
+	  cerr << "!!Error why can he solve 2 + x without knowing x?!! " 
+	       << endl;
+
+	x.set_value( 5 );
+
+	if( op.is_value_valid() )
+	  {
+	    cout << "  2 + x(=5) = " << op.get_value() << "(7)" << endl;
+	    assert( op.get_value() == 7 );
+	  }
+	else
+	  cerr << "!!Error could not calc 2 + x !!" << endl;
+      }
+
+
+      // calc x + 2 (x = 5)    
+      {
+	Operand<values::Scalar> x;
+	Operand<values::Scalar> &op =  x + 2;
+
+	if( op.is_value_valid() )
+	  cerr << "!!Error why can he solve x + 2 without knowing x?!! " 
+	       << endl;
+
+	x.set_value( 5 );
+
+	if( op.is_value_valid() )
+	  {
+	    cout << "  x(=5) + 2 = " << op.get_value() << "(7)" << endl;
+	    assert( op.get_value() == 7 );
+	  }
+	else
+	  cerr << "!!Error could not calc x + 2 !!" << endl;
+      }
+
+
+      // calc (!x) + 2 (x = 5)    
+      {
+	Operand<values::Scalar> x;
+	Operand<values::Scalar> &op = (!x) + 2;
+
+	if( op.is_value_valid() )
+	  cerr << "!!Error why can he solve (!x) + 2 without knowing x?!! " 
+	       << endl;
+
+	x.set_value( 5 );
+
+	if( op.is_value_valid() )
+	  {
+	    cout << "  (!x(=5)) + 2 = " << op.get_value() << "(2)" << endl;
+	    assert( op.get_value() == 2 );
+	  }
+	else
+	  cerr << "!!Error could not calc (!x) + 2 !!" << endl;
+      }
+
+
+      // calc <1,2,3> + <5,4,7>     
+      {
+	Operand<values::Vector> &op = 
+	  *(new Constant<values::Vector>( values::Vector(1,2,3) )) +
+	  *(new Constant<values::Vector>( values::Vector(5,4,7) ));
+
+	if( op.is_value_valid() )
+	  {
+	    cout << "  <1,2,3> + <5,4,7> = " << op.get_value() 
+		 << " (<6,6,10>)" <<  endl;
+	    assert( op.get_value() == values::Vector(6,6,10) );
+	  }
+	else
+	  cerr << "!!Error could not calc <1,2,3> + <5,4,7>!! " << endl;
+      }
+
+      // calc <1,2,3> + v
+      {
+	Operand<values::Vector> v; 
+	Operand<values::Vector> &op = values::Vector(1,2,3) + v;
+
+	if( op.is_value_valid() )
+	  cerr << "!!Error why can he solve <1,2,3> + v without knowing v?!! " 
+	       << endl;
+
+	v.set_value( values::Vector(5,4,7) );
+
+	if( op.is_value_valid() )
+	  {
+	    cout << "  <1,2,3> + v(=<5,4,7>) = " << op.get_value() 
+		 << " (<6,6,10>)" <<  endl;
+	    assert( op.get_value() == values::Vector(6,6,10) );
+	  }
+	else
+	  cerr << "!!Error could not calc <1,2,3> + <5,4,7>!! " << endl;
+      }
     }
     cout << "Done..." << endl;
   }
