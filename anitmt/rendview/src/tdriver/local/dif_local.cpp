@@ -469,8 +469,8 @@ void TaskDriverInterface_Local::_WriteStartProcInfo(const char *msg)
 		Verbose(TDI,"\n");
 	}
 	
-	Verbose(TDI,"  todo-thresh: low=%d, high=%d\n",
-		todo_thresh_low,todo_thresh_high);
+	Verbose(TDI,"  todo-thresh: low=%d, high=%d; done-thresh: high=%d\n",
+		todo_thresh_low,todo_thresh_high,done_thresh_high);
 	
 }
 
@@ -547,6 +547,7 @@ TaskDriverInterface_Local::TaskDriverInterface_Local(
 	
 	todo_thresh_low=p->thresh_param_low;
 	todo_thresh_high=p->thresh_param_high;
+	done_thresh_high=p->thresh_param_donehigh;
 	
 	for(int i=0; i<_DTLast; i++)
 	{

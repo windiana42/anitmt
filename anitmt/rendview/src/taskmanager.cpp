@@ -308,8 +308,8 @@ void TaskManager::LaunchingTaskDone(CompleteTask *ctsk)
 	// See if we can start more tasks. (NEEDED.)
 	_CheckStartTasks();
 
-	// This is not needed; we check that often enough. 
-	//_CheckStartExchange();
+	// This IS needed, too. (Checked!) 
+	_CheckStartExchange();
 }
 
 
@@ -1576,20 +1576,21 @@ int TaskManager::_CheckStartExchange()
 	// Note: recovering sets dont_start_more_tasks. 
 	assert(!recovering || dont_start_more_tasks);
 	
-	int must_connect=-1;
+	int must_connect=0;
 	if(dont_start_more_tasks || schedule_quit)
 	{
 		// We will immediately contact the task source and put back 
 		// the tasks that need to be put back...
 		must_connect=_TS_CanDo_DoneTask() ? 1 : 0;
 	}
-	if(must_connect<0 && !schedule_quit_after)
+	
+	if(!must_connect)
 	{
-		if(tasklist.todo_nelem<interface->Get_todo_thresh_low())  // NOT <= 
+		if(tasklist.done_nelem>=interface->Get_done_thresh_high() ||
+		   (!schedule_quit_after &&
+			tasklist.todo_nelem<interface->Get_todo_thresh_low()) )   // NOT <= 
 		{  must_connect=1;  }
 	}
-	if(must_connect<0)
-	{  must_connect=0;  }
 	
 	if(!must_connect && 
 	   tasklist.todo.is_empty() && 

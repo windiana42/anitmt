@@ -217,6 +217,27 @@ int TaskDriverInterfaceFactory_LDR::CheckParams()
 		"significantly larger than connect timeout (-ctimeout; msec).\n");
 		++failed;  }
 	
+	if(todo_thresh_low<1)  // YES: <1, NOT <0
+	{
+		Warning("Adjusted low todo queue threshold to 1.\n");
+		todo_thresh_low=1;
+	}
+	
+	if(todo_thresh_high<=todo_thresh_low)
+	{
+		int oldval=todo_thresh_high;
+		todo_thresh_high=todo_thresh_low+2;  // For LDR, just use +2. 
+		if(oldval>=0)  // oldval=-1 for initial value set by constructor
+		{  Warning("Adjusted high todo queue threshold to %d (was %d)\n",
+			todo_thresh_high,oldval);  }
+	}
+	
+	if(done_thresh_high<1)
+	{
+		Warning("Adjusted high done queue threshold to 1.\n");
+		done_thresh_high=1;
+	}
+	
 	return(failed ? 1 : 0);
 }
 
@@ -301,7 +322,10 @@ int TaskDriverInterfaceFactory_LDR::_RegisterParams()
 	AddParam("todo-thresh-high",
 		"never store more than this number of tasks in the local todo queue",
 		&todo_thresh_high);
-	
+	AddParam("done-thresh-high",
+		"always report tasks as done when there are this many task in "
+		"done queue",
+		&done_thresh_high);
 	if(add_failed)
 	{  return(1);  }
 	
@@ -341,7 +365,8 @@ TaskDriverInterfaceFactory_LDR::TaskDriverInterfaceFactory_LDR(
 	
 	// Set up defaults/initial values: 
 	todo_thresh_low=2;
-	todo_thresh_high=5;
+	todo_thresh_high=4;   // Only 2 safety-tasks for LDR. 
+	done_thresh_high=10;   // 1 -> immediately report done task
 	
 	default_port=DefaultLDRPort;
 	

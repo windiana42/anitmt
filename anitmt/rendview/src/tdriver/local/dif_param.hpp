@@ -33,6 +33,7 @@ class TaskDriverInterfaceFactory_Local :
 		// As set by user: (ONLY USE FOR PARAM CODE!)
 		int thresh_param_low, thresh_param_high;
 		// todo_thresh_low, todo_thresh_high in TaskDriverInterface. 
+		int thresh_param_donehigh;  // -> done_thresh_high
 		
 		struct DTPrm
 		{

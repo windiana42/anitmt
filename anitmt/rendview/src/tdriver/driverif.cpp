@@ -42,6 +42,7 @@ TaskDriverInterface::TaskDriverInterface(ComponentDataBase *cdb,int *failflag)
 	
 	todo_thresh_low=-1;  // initial value
 	todo_thresh_high=-1;
+	done_thresh_high=-1;
 }
 
 TaskDriverInterface::~TaskDriverInterface()

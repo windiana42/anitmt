@@ -80,11 +80,15 @@ int TaskDriverInterfaceFactory_Local::FinalInit()
 		int oldval=thresh_param_high;
 		thresh_param_high=thresh_param_low+5;
 		if(oldval>=0)  // oldval=-1 for initial value set by constructor
-		{  Warning("Adjusted high task queue threshold to %d (was %d)\n",
+		{  Warning("Adjusted high todo queue threshold to %d (was %d)\n",
 			thresh_param_high,oldval);  }
 	}
 	
-	
+	if(thresh_param_donehigh<1)
+	{
+		Warning("Adjusted high done queue threshold to 1.\n");
+		thresh_param_donehigh=1;
+	}
 	
 	return(failed ? 1 : 0);
 }
@@ -181,6 +185,10 @@ int TaskDriverInterfaceFactory_Local::_RegisterParams()
 	AddParam("todo-thresh-high",
 		"never store more than this number of tasks in the local todo queue",
 		&thresh_param_high);
+	AddParam("done-thresh-high",
+		"always report tasks as done when there are this many task in "
+		"done queue; using 1 for LDR is recommed",
+		&thresh_param_donehigh);
 	
 	if(add_failed)
 	{  return(1);  }
@@ -220,6 +228,7 @@ TaskDriverInterfaceFactory_Local::TaskDriverInterfaceFactory_Local(
 	njobs=UnsetNegMagic;
 	
 	thresh_param_low=thresh_param_high=-1;
+	thresh_param_donehigh=10;   // 1 -> immediately report done task
 	
 	for(int i=0; i<_DTLast; i++)
 	{

@@ -78,13 +78,14 @@ class TaskDriverInterface_LDR :
 		void _WriteProcInfoUpdate();
 		void _WriteEndProcInfo();
 		
+		void _PrintThreshAndQueueInfo(int with_thresh);
+		
 		void _PrintInitConnectMsg(const char *msg);
 		
 		void _HandleFailedLaunch(CompleteTask *ctsk,int resp_code);
 		void _HandleTaskTermination(CompleteTask *ctsk);
 		
 		// FDBase virtuals: 
-		int fdnotify(FDInfo *fdi);
 		int timernotify(TimerInfo *ti);
 		// TimeoutBase virtual:
 		int timeoutnotify(TimeoutInfo *ti);

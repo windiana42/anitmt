@@ -49,6 +49,7 @@ class TaskDriverInterfaceFactory_LDR :
 		// User-tunable param: 
 		int todo_thresh_low;  // Always have this many tasks in todo (NOT proc) queue. 
 		int todo_thresh_high;
+		int done_thresh_high;  // Report done when this many tasks in done list. 
 		
 		// Default LDR port and password (if not specified after client): 
 		int default_port;

@@ -463,16 +463,27 @@ void TaskDriverInterface_LDR::_PrintInitConnectMsg(const char *msg)
 }
 
 
+void TaskDriverInterface_LDR::_PrintThreshAndQueueInfo(int with_thresh)
+{
+	if(with_thresh)
+	{
+		Verbose(TDI,"  Todo-thresh: low=%d, high=%d; done-thresh: high=%d\n",
+			todo_thresh_low,todo_thresh_high,done_thresh_high);
+	}
+	Verbose(TDI,"  Task queue: todo=%d, proc=%d, done=%d\n",
+		todo_thresh_low,todo_thresh_high,
+		GetTaskList()->todo_nelem,GetTaskList()->proc_nelem,
+		GetTaskList()->done_nelem);
+}
+
+
 void TaskDriverInterface_LDR::_WriteStartProcInfo(const char *msg)
 {
 	// Write out useful verbose information: 
 	VerboseSpecial("Okay, %s work: max %d parallel tasks on %d client%s.",
 		msg,njobs,nclients,nclients==1 ? "" : "s");
 	
-	Verbose(TDI,"  todo-thresh: low=%d, high=%d  (current: todo=%d, proc=%d)\n",
-		todo_thresh_low,todo_thresh_high,
-		GetTaskList()->todo_nelem,GetTaskList()->proc_nelem);
-	
+	_PrintThreshAndQueueInfo(1);
 }
 
 void TaskDriverInterface_LDR::_WriteProcInfoUpdate()
@@ -481,13 +492,13 @@ void TaskDriverInterface_LDR::_WriteProcInfoUpdate()
 	{
 		VerboseSpecial("Update: max %d parallel tasks (currently %d) on %d client%s",
 			njobs,RunningJobs(),nclients,nclients==1 ? "" : "s");
-		Verbose(TDI,"  todo-thresh: low=%d, high=%d (current: todo=%d, proc=%d)\n",
-			todo_thresh_low,todo_thresh_high,
-			GetTaskList()->todo_nelem,GetTaskList()->proc_nelem);
+		
+		_PrintThreshAndQueueInfo(1);
 	}
 	if(shall_quit && clientlist.is_empty())
 	{
 		VerboseSpecial("Update: All clients disconnected.");
+		_PrintThreshAndQueueInfo(0);
 	}
 }
 
@@ -600,21 +611,6 @@ void TaskDriverInterface_LDR::ReallyStartProcessing()
 	}
 	
 	Verbose(TDR,"Waiting for %d LDR connections to establish.\n",n_connecting);
-}
-
-
-int TaskDriverInterface_LDR::fdnotify(FDInfo *fdi)
-{
-	Error("This is needed?!\n");
-	assert(0);
-	
-	assert(fdi->dptr);
-	LDRClient *client=(LDRClient*)(fdi->dptr);
-	assert(client->pollid==fdi->pollid);  // otherwise data corrupt
-	
-	client->fdnotify2(fdi);
-	
-	return(0);
 }
 
 
@@ -934,10 +930,9 @@ TaskDriverInterface_LDR::TaskDriverInterface_LDR(
 	nclients=0;
 	njobs=0;  // NOT -1
 	
-Error("dif_ldr.cpp: Get rid of fdnotify()!!!!!\n");
-	
 	todo_thresh_low=p->todo_thresh_low;
 	todo_thresh_high=p->todo_thresh_high;
+	done_thresh_high=p->done_thresh_high;
 	
 	already_started_processing=0;
 	shall_quit=0;

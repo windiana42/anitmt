@@ -37,6 +37,9 @@ class TaskDriverInterface
 		// NOTE: We're talking about todo queue, NOT proc queue. 
 		int todo_thresh_low;
 		int todo_thresh_high;
+		// This means that we start reporting done tasks as done 
+		// when this many tasks are in the done queue: 
+		int done_thresh_high;
 		
 		void NewTask_SetUpState(CompleteTask *ctsk);
 		
@@ -65,6 +68,7 @@ class TaskDriverInterface
 		// Get task queue thresholds: 
 		int Get_todo_thresh_low()   {  return(todo_thresh_low);   }
 		int Get_todo_thresh_high()  {  return(todo_thresh_high);  }
+		int Get_done_thresh_high()  {  return(done_thresh_high);  }
 		
 		// Needed by LDR task source and TaskManager: 
 		virtual int Get_njobs() HL_PureVirt(-1)
