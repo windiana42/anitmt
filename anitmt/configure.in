@@ -68,7 +68,12 @@ AC_FUNC_MEMCMP
 AC_TYPE_SIGNAL
 AC_FUNC_STAT
 #AC_FUNC_STRTOD
-AC_CHECK_FUNCS([dup2 gettimeofday stat memmove memset pow setenv sqrt strcasecmp strchr strerror strrchr strtol strtoul])
+AC_CHECK_FUNCS([dup2 gettimeofday stat])
+AC_CHECK_FUNCS([memmove memset strcasecmp strchr strerror strrchr strtol strtoul])
+AC_CHECK_FUNCS([setenv])
+
+AC_CHECK_LIB([m],[sqrt])
+AC_CHECK_LIB([m],[pow])
 
 AC_CONFIG_SUBDIRS(hlib rendview)
 
