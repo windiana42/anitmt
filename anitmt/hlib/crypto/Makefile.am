@@ -11,17 +11,7 @@ endif
 INCLUDES = -I../include/
 noinst_LIBRARIES = libcrypto.a
 libcrypto_a_SOURCES = \
-	bcipher.cc nullcipher.cc \
-		blowfishcipher.cc ideacipher.cc twofishcipher.cc \
-		shash.cc sha0hash.cc sha1hash.cc rmd160hash.cc \
-		$(RSA_SRC_C) \
-		rndmanager.cc \
-	base64.h base64dec.c base64enc.c \
-	bcipherbase.h bcipher.h \
-		nullcipher.h blowfishcipher.h ideacipher.h twofishcipher.h \
-		shashbase.h shash.h sha0hash.h sha1hash.h rmd160hash.h \
-		$(RSA_SRC_H) \
-		rndmanager.h rndbase.h 
+	base64.h base64dec.c base64enc.c 
 
 
 check_PROGRAMS = check_crypto

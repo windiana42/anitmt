@@ -12,7 +12,7 @@ I386_OPT_FLAGS = -march=i486 -malign-jumps=2 -malign-loops=2 -malign-functions=2
 # Pass ADDFLAGS if you want to set -fmessage-length or the like. 
 ADDFLAGS=""
 
-SUBDIRS = include cpp misc fd par
+SUBDIRS = include cpp misc fd crypto par
 
 noinst_LIBRARIES = libhlib.a
 libhlib_a_SOURCES = 
