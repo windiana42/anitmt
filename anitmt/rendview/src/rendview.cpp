@@ -113,7 +113,11 @@ static int MAIN(int argc,char **argv,char **envp)
 		"bg in bash) makes them continue all again.\n"
 		"NOTE: COLORED OUTPUT is automatically switched off for non-ttys "
 		"but you can manually force it off/on using --nocolor/--color."
-		"\n\n** JUST DO NOT TRY TO DO ANYTHING WITH LDR NOW**");
+		"\n\n** LDR is in experimental state **"
+		"\n\nExample:\n"
+		"rendview --rdfile=/dir/to/renderers.par -l-rd=povray3.5 "
+		"-l-n=240 -l-f0=10 -l-size=320x200 -l-oformat=ppm -l-cont "
+		"-ld-r-quiet ");
 		// ...as well as only rendering changed frames or resuming operation
 		// ...and later create a film of them...
 		
