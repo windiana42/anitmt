@@ -2,3 +2,4 @@ Makefile.in
 TODO.priv
 doxy-doc
 autom4te.cache
+configure
