@@ -24,7 +24,7 @@
 #define _HLIB_cplusplus_h_ 1
 
 // Include config. 
-#include <hlib/config.h>
+#include <hlib/hconfig.h>
 
 #ifdef __cplusplus
   extern "C" {
@@ -411,7 +411,7 @@ template<class T> inline T *DELarray(T *array)
 // So, you may use: 
 // (This will return x if the (former pure) virual function gets called.) 
 //#define HL_PureVirt(x)  {  return x;  }
-//NOTE: THIS IS NOW IN config.h AND TURNED ON/OFF BY HLIB_SIZE_OPT
+//NOTE: THIS IS NOW IN hconfig.h AND TURNED ON/OFF BY HLIB_SIZE_OPT
 
 
 #endif /* _HLIB_cplusplus_h_ */

@@ -4,7 +4,7 @@
  * Routines for memory allocation which limit the amount of 
  * memory beingin use at the same time. 
  * 
- * Copyright (c) 2000 by Wolfgang Wieser (wwieser@gmx.de) 
+ * Copyright (c) 2000--2002 by Wolfgang Wieser (wwieser@gmx.de) 
  * 
  * This file may be distributed and/or modified under the terms of the 
  * GNU General Public License version 2 as published by the Free Software 
@@ -22,7 +22,7 @@
  * of pointers is held. For simplicity, this array is of fixed size 
  * and has as many elements as you specify here. 
  */
-#define AllocDebugging 0 /*16384*/
+#define AllocDebugging 16384
 
 static size_t malloc_limit=0;   /* 0 -> unlimited */
 static size_t curr_size=0;   /* current amount of malloc()ed memory */

@@ -10,6 +10,9 @@ OPTCFLAGS = -W -Wall -Wformat \
 	-malign-jumps=2 -malign-loops=2 -malign-functions=2 \
 	-DHLIB_SIZE_OPT=1 -D_GNU_SOURCE
 
+# Pass ADDFLAGS if you want to set -fmessage-length or the like. 
+ADDFLAGS=""
+
 SUBDIRS = include cpp misc fd par
 
 noinst_LIBRARIES = libhlib.a
@@ -29,6 +32,6 @@ libhlib.a: FORCE
 	$(RANLIB) libhlib.a 
 
 opt: FORCE
-	$(MAKE) CFLAGS="$(OPTCFLAGS)" CXXFLAGS="$(OPTCXXFLAGS)"
+	$(MAKE) CFLAGS="$(OPTCFLAGS) $(ADDFLAGS)" CXXFLAGS="$(OPTCXXFLAGS) $(ADDFLAGS)"
 
 FORCE:

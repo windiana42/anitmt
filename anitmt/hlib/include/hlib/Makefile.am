@@ -1,4 +1,4 @@
-HlibHeaders = config.h \
+HlibHeaders = hconfig.h \
 	cpp/cplusplus.h cpp/refstring.h cpp/linkedlist.h cpp/strlist.h cpp/growbuffer.h \
 	fd/procbase.h fd/procmanager.h fd/fdmanager.h fd/htime.h fd/intprocbase.h fd/fdbase.h \
 		fd/cpbase.h fd/cpmanager.h \

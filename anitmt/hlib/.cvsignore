@@ -6,3 +6,6 @@ config.cache
 aclocal.m4
 configure
 .deps
+stamp-h.in
+config.h.in
+config.h
