@@ -38,7 +38,6 @@ base_func.hpp: $(srcdir)/base_func.afd
 	else \
 	  echo 'no funcgen availible, cannont create code' ; \
 	fi
-	
 
 scalar.cpp \
 scalar.hpp: $(srcdir)/scalar.afd $(FUNCGEN_CODE)

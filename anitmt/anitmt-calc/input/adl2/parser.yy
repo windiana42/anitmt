@@ -332,6 +332,7 @@ dummy_exp_comma_list:
 dummy_operator:
     TOK_DUMMY_OPERATOR
   | '+' | '-' | '*' | '/'
+;
 %%
     int parse_adl( proptree::Prop_Tree_Node *node, 
 		   message::Message_Consultant *c, 

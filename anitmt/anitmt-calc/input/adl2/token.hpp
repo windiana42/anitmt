@@ -183,11 +183,9 @@ namespace anitmt
 
       //***************************
       // constuctors/destructors
-
       Token();
       // copy constructor
       Token(const Token &t);
-
       ~Token();
     };
 

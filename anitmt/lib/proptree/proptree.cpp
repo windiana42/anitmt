@@ -120,6 +120,7 @@ namespace proptree
       }
       else
       {
+	assert( last_child != 0 );
 	// connect with last child
 	node->prev = last_child;
 	last_child->next = node;

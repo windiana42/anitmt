@@ -23,10 +23,13 @@ namespace solve
   // give the action on the lowest priority a try
   bool Priority_System::invoke_Action()
   {
+    if( priority_tab.empty() ) return false; // no more actions
+
     // determine action list with lowest priority
     priority_tab_type::iterator i = priority_tab.begin();
     // rename it list
     priority_level_list_type &list = i->second;
+    assert( !list.empty() );
     // get the first action in there
     priority_level_list_type::iterator j = list.begin();
     // execute it

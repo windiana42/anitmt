@@ -131,7 +131,7 @@ sqrt	  { tok_pos(); return TOK_FUNC_SQRT; } /* sqrt() function keyword */
 // identifier. In case they don't it returns TOK_INVALID_ID 
 inline Token get_identifier( char *s,adlparser_info *info )
 {
-  Token tok;
+  Token tok; 
   if( info->id_resolver ) tok = info->id_resolver->get_identifier(s); 
   // if resolver didn't know what the string means?
   if( tok.get_type() == TOK_INVALID_ID )
