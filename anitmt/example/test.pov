@@ -1,3 +1,6 @@
+//#include "dummy.inc"
+#include "inc_dummy.inc"
+
 #declare testval = 5;
 #declare test_s = 1;
 
