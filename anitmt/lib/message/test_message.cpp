@@ -27,6 +27,23 @@ enum Error_Source_Types{ Common_Test, Perticular_Part };
 
 class test : public Message_Reporter {
 public:
+  void RecursiveIndent(int depth)
+  {
+    vindent(+1);
+    if(!(rand()%5))
+    {  error(new File_Position("here")) << "error occured (just a joke)";  }
+    if(!depth)
+    {  verbose() << "BOTTOM!!";  }
+    else
+    {
+      verbose() << "Depth [" << depth << "] Branch-A:";
+      RecursiveIndent(depth-1);
+      verbose() << "Done; Depth [" << depth << "] Branch-B:";
+      RecursiveIndent(depth-1);
+      verbose() << "Done";
+    }
+    vindent(-1);
+  }
   void complain(){
     verbose(0) << "------------------------";
     verbose(0) << "Stream test following...";
@@ -88,6 +105,11 @@ public:
     }
     verbose() << "done";
     #endif
+    
+    // Check indentions
+    verbose() << "Testing Verbose indention:";
+    RecursiveIndent(3);
+    verbose() << "Done";
   }
   test( Message_Consultant *consultant, int level ) 
     : Message_Reporter( consultant ) 

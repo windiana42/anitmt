@@ -144,6 +144,7 @@ namespace message
     int verbose_level;
     bool warnings;
     Message_Source_Identifier msg_source;
+    int vindent;  // number of indentions for verbose messages
   public:
     inline int get_verbose_level();
     inline bool is_verbose(int level);
@@ -152,9 +153,12 @@ namespace message
     inline void set_verbose_level( int level );
     inline void set_warnings( bool warn );
 
-    inline void message( Message_Type mtype, 
-			 const Abstract_Position *pos, int position_detail, 
-			 const std::string message, bool no_end );
+    void message( Message_Type mtype, 
+		  const Abstract_Position *pos, int position_detail, 
+		  const std::string &message, bool no_end );
+
+    inline int verbose_indent(int delta);
+    inline void verbose_indent_set(int val);
 
     Message_Consultant( Message_Manager *manager, 
 			Message_Source_Identifier source );
@@ -228,6 +232,16 @@ namespace message
     inline Message_Stream verbose ( int min_verbose_level = 1,
 				    const Abstract_Position *pos =GLOB::no_position, 
 				    int position_detail = 2 );
+
+    //! Functions to change the verbose indent level of this 
+    //! consultant: 
+    //! delta: number of indention steps to indent more (>0) or less (<0). 
+    //! Normally, delta will be +1 or -1. 
+    //! Returns new indent size. 
+    inline int vindent(int delta);
+    //! Set the indention size of a special value; normally used to 
+    //! reset it to 0. 
+    inline void vindent_set(int vindent=0);
 
     Message_Reporter( Message_Consultant *consultant );
     ~Message_Reporter();

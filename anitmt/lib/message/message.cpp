@@ -26,7 +26,30 @@ namespace message
 
   Message_Consultant::Message_Consultant( Message_Manager *mgr, 
 					  Message_Source_Identifier source )
-    : manager(mgr), verbose_level(2), warnings(true), msg_source(source) {}
+    : manager(mgr), verbose_level(2), warnings(true), 
+      msg_source(source), vindent(0) {}
+
+  //**************************************************************
+  // Message consultant
+
+  void Message_Consultant::message( Message_Type mtype,
+				    const Abstract_Position *pos, 
+				    int position_detail, 
+				    const std::string &message,
+				    bool noend )
+  {
+    // there is no need to check verbose or warnings here as 
+    // this is already done when calling the Message_Stream 
+    // constructor. Why do things twice?
+    std::string i_message;
+    if(mtype==MT_Verbose)
+    {
+      for(int i=0; i<vindent; i++)
+      {  i_message+="  ";  }
+    }
+    i_message+=message;
+    manager->message( mtype, pos, position_detail, i_message, msg_source, noend );
+  }
 
   //**************************************************************
   // Message streams
@@ -91,8 +114,8 @@ namespace message
     /*else if(msg.mtype==MT_Error)    stream << "error: ";*/
     stream << msg.message;
     if(append_nl)
-    {  stream << endl;  }
-    stream.flush();
+    {  stream << std::endl;  }
+    else  stream.flush();  // streams get flushed by std::endl. 
   }
 
   void Stream_Message_Handler::message( Message &msg )

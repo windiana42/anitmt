@@ -59,16 +59,16 @@ namespace message
     warnings = warn;
   }
 
-  void Message_Consultant::message( Message_Type mtype,
-				    const Abstract_Position *pos, 
-				    int position_detail, 
-				    const std::string message,
-				    bool noend )
+  int Message_Consultant::verbose_indent(int delta)
   {
-    // there is no need to check verbose or warnings here as 
-    // this is already done when calling the Message_Stream 
-    // constructor. Why do things twice?
-    manager->message( mtype, pos, position_detail, message, msg_source, noend );
+    vindent+=delta;
+    if(vindent<0)  vindent=0;
+    return(vindent);
+  }
+  void Message_Consultant::verbose_indent_set(int val)
+  {
+    vindent=val;
+    if(vindent<0)  vindent=0;
   }
 
   //**************************************************************
@@ -141,6 +141,14 @@ namespace message
     return ret;
   }
 
+  inline int Message_Reporter::vindent(int delta)
+  {
+    return(consultant->verbose_indent(delta));
+  }
+  inline void Message_Reporter::vindent_set(int val)
+  {
+    consultant->verbose_indent_set(val);
+  }
 }
 
 #endif  /* _lib_Message_inline_HPP_ */
