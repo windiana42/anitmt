@@ -19,7 +19,8 @@ libhlib_a_SOURCES =
 
 EXTRA_DIST = BUILD hlib-config.h.in hconfig.h
 
-libhlib.a: FORCE
+libhlib.a: cpp/libcpp.a misc/libmisc.a fd/libfd.a crypto/libcrypto.a par/libpar.a
+	@echo "Re-creating libhlib.a..."
 	@objs="" ; for i in $(SUBDIRS) ; do \
 		test "$$i" = "include" && continue ; \
 		for o in `$(AR) -t "$$i/lib$$i.a"` ; do \
