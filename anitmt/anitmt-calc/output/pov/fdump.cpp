@@ -20,7 +20,8 @@
  *
  */
 
-#include <config.h>
+// This includes the config: 
+#include "../lib/lproto.hpp"
 
 #include <iostream>
 
@@ -30,7 +31,6 @@
 #include "outstr.hpp"
 #include "convtoa.hpp"
 
-#include "htime.h"
 
 // Bottom limit for write size (buffer will be twice as large) 
 #define MinWriteSize 4096

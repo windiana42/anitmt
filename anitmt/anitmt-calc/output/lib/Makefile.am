@@ -12,5 +12,5 @@ liboutput_a_SOURCES = 	compif.hpp compif.cpp \
 			outstr.cpp outstr.hpp \
 			recinstr.cpp recinstr.hpp \
 			searchpath.cpp searchpath.hpp \
-			htime.cc htime.h
+			htime.cc lproto.hpp
 

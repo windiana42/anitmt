@@ -23,7 +23,8 @@
 #ifndef _Inc_IO_OutStr_H_
 #define _Inc_IO_OutStr_H_ 1
 
-#include <stdio.h>
+#include "lproto.hpp"
+
 #include <string>
 
 namespace output_io

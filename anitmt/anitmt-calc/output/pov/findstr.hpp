@@ -24,7 +24,8 @@
 #ifndef _Inc_IO_FindString_H_
 #define _Inc_IO_FindString_H_ 1
 
-#include <stddef.h>   /* for size_t */
+// This includes the config: 
+#include "../lib/lproto.hpp"
 
 namespace output_io
 {

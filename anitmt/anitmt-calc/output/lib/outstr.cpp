@@ -20,11 +20,9 @@
  *
  */
 
-#include <unistd.h>
-#include <fcntl.h>
-#include <errno.h>
-
 #include "outstr.hpp"
+
+#include <fcntl.h>
 
 #include <iostream>
 

@@ -24,6 +24,8 @@
 #ifndef _Inc_IO_SearchPath_H_
 #define _Inc_IO_SearchPath_H_ 1
 
+#include "lproto.hpp"
+
 #include <string>
 #include <list>
 

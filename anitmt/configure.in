@@ -1,11 +1,8 @@
 # Process this file with autoconf to produce a configure script.
-AC_INIT(anitmt-calc/anitmt.cpp)
-#** created by too new autoscan
-#AC_INIT(anitmt, 0.2.0, anitmt@theofel.de)
-#AC_CONFIG_SRCDIR([anitmt-calc/anitmt-calc.cpp])
-
-AM_INIT_AUTOMAKE(anitmt, 0.2.0)
-AM_CONFIG_HEADER(config.h)	# replaced for automake
+AC_INIT(anitmt, 0.2.0, anitmt@theofel.de)
+AM_INIT_AUTOMAKE
+AC_CONFIG_SRCDIR([anitmt-calc/anitmt-calc.cpp])
+AM_CONFIG_HEADER(config.h)
 
 # Checks for programs.
 AC_PROG_AWK
@@ -47,8 +44,9 @@ unset gccvers
 
 # Checks for header files.
 AC_HEADER_STDC
-AC_HEADER_SYS_WAIT
-AC_CHECK_HEADERS([alloca.h errno.h limits.h malloc.h memory.h stddef.h stdlib.h string.h strings.h sys/time.h unistd.h])
+AC_CHECK_HEADERS([errno.h limits.h malloc.h memory.h stddef.h stdlib.h string.h])
+AC_CHECK_HEADERS([strings.h sys/time.h unistd.h inttypes.h stdint.h sys/stat.h])
+AC_CHECK_HEADERS([memory.h inttypes.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
@@ -57,21 +55,20 @@ AC_C_INLINE
 AC_TYPE_OFF_T
 AC_TYPE_PID_T
 AC_TYPE_SIZE_T
-#** created by too new autoscan
-#AC_CHECK_MEMBERS([struct stat.st_blksize])
+AC_CHECK_MEMBERS([struct stat.st_blksize])
 AC_HEADER_TIME
 
+AC_CHECK_TYPES([ssize_t],,\
+	[AC_MSG_WARN([You don't have ssize_t. Using signed int. (grmbl...)])])
+
 # Checks for library functions.
-#** created by too new autoscan
-#AC_FUNC_ERROR_AT_LINE
-#AC_FUNC_FORK
+AC_FUNC_ERROR_AT_LINE
 AC_PROG_GCC_TRADITIONAL
-#AC_FUNC_MALLOC
 AC_FUNC_MEMCMP
 AC_TYPE_SIGNAL
-#AC_FUNC_STAT
+AC_FUNC_STAT
 #AC_FUNC_STRTOD
-AC_CHECK_FUNCS([dup2 gettimeofday memmove memset pow setenv sqrt strcasecmp strchr strerror strrchr strtol strtoul])
+AC_CHECK_FUNCS([dup2 gettimeofday stat memmove memset pow setenv sqrt strcasecmp strchr strerror strrchr strtol strtoul])
 
 AC_CONFIG_SUBDIRS(hlib rendview)
 

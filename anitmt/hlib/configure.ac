@@ -22,10 +22,11 @@ AC_DEFINE_UNQUOTED(HLIB_BUILD_DATE,["`date || echo unknown`"],\
 # Checks for header files.
 AC_HEADER_STDC
 AC_CHECK_HEADERS([stddef.h stdlib.h string.h stdarg.h unistd.h])
+AC_CHECK_HEADERS([memory.h inttypes.h stdint.h])
 AC_CHECK_HEADERS([errno.h fcntl.h limits.h signal.h])
 AC_CHECK_HEADERS([arpa/inet.h])
 AC_CHECK_HEADERS([sys/ioctl.h sys/poll.h sys/socket.h \
-	sys/time.h sys/wait.h sys/resource.h sys/uio.h])
+	sys/time.h sys/wait.h sys/resource.h sys/uio.h sys/stat.h])
 AC_CHECK_HEADERS([netinet/ip_compat.h])
 
 AC_CHECK_HEADERS([gmp.h], \
@@ -63,6 +64,8 @@ AC_CHECK_TYPES([struct pollfd],, \
 	[AC_MSG_WARN([Providing struct pollfd. You seem to lack poll(2)...])],
 	[#include <sys/poll.h>] )
 
+## AC_CHECK_MEMBERS([struct stat.st_blksize])
+
 # Checks for library functions.
 AC_FUNC_ERROR_AT_LINE
 AC_PROG_GCC_TRADITIONAL
@@ -73,6 +76,7 @@ AC_FUNC_MEMCMP
 AC_TYPE_SIGNAL
 AC_FUNC_STAT
 AC_FUNC_FORK
+AC_FUNC_STRTOD
 AC_FUNC_GETLOADAVG
 
 AC_CHECK_FUNCS([execve pipe sigaction dup2 gettimeofday kill strerror],,\

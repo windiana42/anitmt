@@ -25,9 +25,10 @@
 #ifndef _Inc_Recursive_Input_Stream_H_
 #define _Inc_Recursive_Input_Stream_H_ 1
 
+#include "lproto.hpp"
+
 #include <list>
 #include <message/message.hpp>
-#include <sys/types.h>
 
 #include "binstr.hpp"
 #include "searchpath.hpp"

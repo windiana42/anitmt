@@ -23,11 +23,13 @@
 #ifndef _Inc_Modification_Copy_H_
 #define _Inc_Modification_Copy_H_
 
+#include "lproto.hpp"
+
 #include <iostream>
 #include <string>
 
 #include <message/message.hpp>
-#include <sys/types.h>
+
 
 namespace output_io
 {

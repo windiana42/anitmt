@@ -14,13 +14,10 @@
  * 
  */
 
-#include "htime.h"
+// This includes the config: 
+#include "../lib/lproto.hpp"
 
 #if CALC_ELAPSED_TIME
-
-#include <stdlib.h>
-#include <unistd.h>
-#include <sys/time.h>
 
 /* calc the time between *old and *current in msec. 
  * current may be NULL (then it is queried from the system). 

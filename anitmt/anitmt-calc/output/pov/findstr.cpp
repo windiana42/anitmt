@@ -21,8 +21,10 @@
  */
 
 
+// This includes the config: 
+#include "../lib/lproto.hpp"
+
 #include "findstr.hpp"
-#include <string.h>
 
 
 namespace output_io

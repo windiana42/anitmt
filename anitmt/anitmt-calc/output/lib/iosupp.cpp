@@ -20,8 +20,7 @@
  *
  */
 
-#include <unistd.h>
-#include <sys/stat.h>
+#include "lproto.hpp"
 
 #include "binstr.hpp"
 #include "boutstr.hpp"

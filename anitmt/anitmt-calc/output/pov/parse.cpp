@@ -41,8 +41,6 @@
 
 #include "parse.hpp"
 
-#include "htime.h"
-
 namespace output_io
 {
 namespace POV

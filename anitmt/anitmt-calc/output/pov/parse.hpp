@@ -23,7 +23,8 @@
 #ifndef _Inc_IO_PovFileParse_H_
 #define _Inc_IO_PovFileParse_H_ 1
 
-#include <stddef.h>
+// This includes the config: 
+#include "../lib/lproto.hpp"
 
 #include "recinstr.hpp"
 #include "modcopy.hpp"

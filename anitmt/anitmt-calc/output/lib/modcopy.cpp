@@ -27,8 +27,6 @@
 #include "boutstr.hpp"
 #include "recinstr.hpp"
 
-#include "htime.h"
-
 //#include <iostream>
 //#include <string>
 
