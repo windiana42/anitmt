@@ -1,5 +1,5 @@
 scene testscene {
-	filename "test.scene" sdff;
+	filename "test.scene";
 	scalar testval {
 		linear testlinear1 {
 			starttime 0;
