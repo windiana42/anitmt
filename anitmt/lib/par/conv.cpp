@@ -106,7 +106,8 @@ ostream &String_Value_Converter::_Prefix(int type)
 	if(cmd_mode)
 	{
 		(*errstream) << "Option " << 
-			((optname.length()>0 && optname[0]=='[') ? "" : "--") << 
+			((optname.length()>0 && optname[0]=='[') ? "" : 
+				( (optname.length()==1) ? "-" : "--" )) << 
 			optname << ": ";
 	}
 	else

@@ -121,38 +121,38 @@ static Parameter_Description<bool> desc_bool[PID::_last_bool]=
 
 static Parameter_Description<int> desc_int[PID::_last_int]=
 {
-	{ PID::width,      {"width","renderWidth"}, 
+	{ PID::width,      {"width","renderWidth","w"}, 
 	  Default<int>(/*unset*/), PAT::Needed, POT::Simple, 
 	  "Width of film images (as passed to the render program)" },
-	{ PID::height,     {"height","renderHeight"}, 
+	{ PID::height,     {"height","renderHeight","h"}, 
 	  Default<int>(/*unset*/), PAT::Needed, POT::Simple, 
 	  "Height of film images (as passed to the render program)" },
-	{ PID::startframe, {"startframe"},
+	{ PID::startframe, {"startframe","f0"},
 	  Default<int>(0),         PAT::Needed, POT::Needs_Solver, 
 	  "Frame number of first frame to render" },
-	{ PID::endframe,   {"endframe"},
+	{ PID::endframe,   {"endframe","f1"},
 	  Default<int>(),          PAT::Needed, POT::Needs_Solver, 
 	  "Frame number of last frame to render" },
 	{ PID::frames,     {"frames"},
 	  Default<int>(),          PAT::Needed, POT::Needs_Solver, 
 	  "Number of frames to render" },
-	{ PID::verbose,    {"verbose","verbosity"},
+	{ PID::verbose,    {"verbose","verbosity","v"},
 	  Default<int>(0),         PAT::Increment, POT::Simple, 
 	  "Verbosity level (0...??)" }
 };
 
 static Parameter_Description<double> desc_double[PID::_last_double]=
 {
-	{ PID::starttime,  {"starttime"},
+	{ PID::starttime,  {"starttime","t0"},
 	  Default<double>(0.0), PAT::Needed, POT::Needs_Solver, 
 	  "Time of first frame to render (seconds)" },
-	{ PID::endtime,    {"endtime"},
+	{ PID::endtime,    {"endtime","t1"},
 	  Default<double>(),    PAT::Needed, POT::Needs_Solver, 
 	  "Time of last frame to render (seconds)" },
-	{ PID::duration,   {"duration"},
+	{ PID::duration,   {"duration","t"},
 	  Default<double>(),    PAT::Needed, POT::Needs_Solver, 
 	  "Duration of the rendered film (seconds)" },
-	{ PID::fps,        {"fps"},
+	{ PID::fps,        {"framesPerSecond","fps"},
 	  Default<double>(),    PAT::Needed, POT::Needs_Solver, 
 	  "Number of frames per second" }
 };
@@ -499,6 +499,14 @@ template<class T> int Animation_Parameters::Do_Simple_Override(
 }
 
 
+// returns "-" or "--"
+const char *Arg_Prefix(const char *arg)
+{
+	if(strlen(arg)==1)  return("-");
+	return("--");
+}
+
+
 template<class T> void Animation_Parameters::Do_Print_Help(ostream &os)
 {
 	T *dummy;  // Pointer prevents an object from being constructed. 
@@ -506,11 +514,11 @@ template<class T> void Animation_Parameters::Do_Print_Help(ostream &os)
 	Parameter_Description<T> *descend=desc+LastID_By_Type(dummy);
 	for(; desc<descend; desc++)
 	{
-		os << "    --" << desc->names[0];
+		os << "    " << Arg_Prefix(desc->names[0]) << desc->names[0];
 		for(int i=1; i<MaxSynonymes; i++)
 		{
 			if(!desc->names[i])  break;
-			os << ",  --" << desc->names[i];
+			os << ",  " << Arg_Prefix(desc->names[i]) << desc->names[i];
 		}
 		if(desc->defaultval.is_set)
 		{

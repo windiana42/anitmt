@@ -77,11 +77,11 @@ static void Print_Version(ostream &os)
 static void _Help_Helper(ostream &os,
 	const char **opt_argname,const char *ftype)
 {
-	os << "    --" << opt_argname[0];
+	os << "    " << Arg_Prefix(opt_argname[0]) << opt_argname[0];
 	for(int i=1; i<FD_Max_Synonymes; i++)
 	{
 		if(!opt_argname[i])  continue;
-		os << ", --" << opt_argname[i];
+		os << ", " << Arg_Prefix(opt_argname[i]) << opt_argname[i];
 	}
 	os << "  specify " << ftype << " file to read" << endl;
 }
@@ -317,6 +317,34 @@ bool Animation_Parameters::Parse_Command_Line(Command_Line *cmd)
 		}
 	}
 	
+	// Go one last time through the args (check for one letter options) 
+	for(int i=1; i<cmd->argc; i++)
+	{
+		if(cmd->used[i])  continue;
+		if(cmd->argv[i][0]!='-')  continue;
+		if(cmd->argv[i][1]=='-')  continue;
+		if(strchr(cmd->argv[i],'='))  continue;
+		
+		int verbinc=0;
+		int used=0;
+		for(char *c=cmd->argv[i]+1; *c; c++)
+		{
+			switch(*c)
+			{
+				case 'v':  ++verbinc;  ++used;  break;
+				#warning "Any more one letter options without arg (besides -v)?"
+			}
+		}
+		if(verbinc>0)
+		{
+			if(!cmd_pars.verbose().is_set)
+			{  cmd_pars.par_int[PID::verbose]=0;  }
+			cmd_pars.par_int[PID::verbose].val+=verbinc;
+		}
+		if(used) ++used;   // we also `used' the initial `-' 
+		cmd->used[i]=used;
+	}
+	
 	const int n_o_pars=5;
 	struct Override_Pars pars[n_o_pars]=
 	{
@@ -351,7 +379,12 @@ bool Animation_Parameters::Parse_Command_Line(Command_Line *cmd)
 	
 	// ... then the hard part: those parameters which have to 
 	// get solved (as they depend on others). 
-	#warning MISSING!!!
+	// Dealing with: start/endtime, start/endframe, duration, frames, fps 
+	if(Solve_TimeFrame_Net(pars,n_o_pars,cerr,
+		warnings().is_set ? warnings().val : true))
+	{
+		++errors;
+	}
 	
 	if(strchr(dump_parameters,'f'))
 	{

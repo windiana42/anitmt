@@ -122,13 +122,15 @@ template<class T> struct AParameter
 	
 	operator T()  {  return(val);  }
 	
-	AParameter()           : is_set(false)        { }
-	AParameter(const T &v) : is_set(true),val(v)  { }
+	AParameter()          : is_set(false)        { }
+	AParameter(const T v) : is_set(true),val(v)  { }
 	// Copy constructor, assignment operator: 
 	AParameter(const AParameter<T> &ap) : 
 		is_set(ap.is_set),val(ap.val)  { }
 	AParameter &operator=(const AParameter<T> &ap)
 		{  is_set=ap.is_set;  val=ap.val;  return(*this);  }
+	AParameter &operator=(const T v)
+		{  is_set=true;  val=v;  return(*this);  }
 };
 
 
@@ -262,6 +264,10 @@ class Animation_Parameters : String_Value_Converter
 			ostream &os=cerr,bool verbose_warnings=false);
 		template<class T> int Do_Simple_Override(Override_Pars *op,
 			int nop,ostream &os,bool verbose_warnings,bool listtype=false);
+		
+		int Solve_TimeFrame_Net(Override_Pars *array,int npars,
+			ostream &os,bool warnings);
+		void Solve_TimeFrame_Done(/*ugly*/void *tmp);
 	public:
 		Animation_Parameters();
 		~Animation_Parameters();
@@ -348,6 +354,9 @@ class Animation_Parameters : String_Value_Converter
 		// STRING LIST parameters: 
 		AParameter<stringlist> rendeargs()  {  return(par_stringlist[PID::renderargs]);  }
 };
+
+// Returns "-" or "--". 
+extern const char *Arg_Prefix(const char *arg);
 
 }  /* end of namespace anitmt */
 
