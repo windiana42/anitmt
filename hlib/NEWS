@@ -1,0 +1,18 @@
+May/2004: HLIB-1.0.0 finally out. Includes compression code. 
+  Configure now checks for presence of zlib, bzlib, libgmp, libpng and 
+  will not compile code depending on it if not found. 
+
+Mar/2003: HLib getting released for the first time together with RendView. 
+  Configure stuff re-designed again. All bugfixes applied :)
+
+Aug/2002: Better configure script, now that "make opt" stuff is handeled 
+  in a cleaner way: The options are chosen at configure time. Any amount 
+  of time could still be spend in making that process better...
+
+Back in 2001: 
+  HLIB now uses GNU autoconf/automake. After some initial problems, things 
+  seem to work quite well now.  It's at least possible to configure & compile 
+  hlib on all platforms provided on the compile farm of sourceforge.net by 
+  simply running ./configure and make. 
+
+Wolfgang Wieser <wwieser@gmx.de>

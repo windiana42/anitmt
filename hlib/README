@@ -1,0 +1,101 @@
+   #   #  #      ###  #####,           #    .###.   .###. 
+   #   #  #       #    #   #          ##    #  /#   #  /# 
+   #####  #       #    ####.  ####   # #    # / #   # / # 
+   #   #  #       #    #   #           #    #/  #   #/  # 
+   #   #  #####  ###  #####´          ### # `###´ # `###´ 
+
+This is HLIB. 
+
+HLIB is a general-purpose library for POSIX and POSIX-like operating systems 
+providing convenient classes which help you to deal in a sophisticated (as 
+I hope...) way with following standard issues: 
+
+  - catching signals (synchroniously)
+  - timers and quasi-parallel execution (single threaded)
+  - surveilling FDs (read / write / exception)
+  - launching processes (including command line args and environment 
+     parameters, IO redirection, nice value, working directory)
+  - and staying informed about the launched process (termination and 
+     termination reason, runtime)
+
+For this purpose, HLIB implements a nice select(2) model (well, actually 
+it is using poll(2)). HLIB provides base classes for the mentioned tasks 
+and other useful functions (e.g. for making FDs non-blocking) and the 
+following addons:
+
+  - command line parameter handling
+  - strong cryptography and hashing
+
+Note that HLIB can _only_ be used in single-threaded context. 
+
+HLIB uses C++ because of the object structure, but not becuase of fancy 
+things like exceptions and RTTI. You can, of course, use these but HLIB 
+does not need them, and as a consequence HLIB stays small in binary size. 
+
+HLIB has its own allocation model using LMalloc(), LRealloc(), LFree() 
+and implementations for operator new and delete (the CPP_OPERATORS / 
+CPP_OPERATORS_FF stuff, you will notice...)
+The `L' stands for `limit' which means that you can limit the amount of 
+allocated data (unless your arch misses malloc_usable_size(); configure 
+does the check). (These functions use standard libc malloc/realloc/free.) 
+
+In order to be able to compile C++ programs using GNU C++ without linking 
+against libstdc++, there is the CPP_OPERATORS and CPP_OPERATORS_FF thingy 
+combined with NEW<class>(). Please read cpp/cplusplus.h to get the clue. 
+Especially the _FF version can be used to detect failure during construction 
+although HLIB does NOT use exceptions. 
+
+Unfortunately, there is no extra documentation, so please read the comments 
+in the apropriate header files. I do not have the time to write extra docu 
+and please recognize the advantage that this eliminates all discrepancy 
+between the docu and the actual code. 
+
+Wolfgang Wieser <wwieser at gmx dot de>
+Aug 2002
+
+--------------------------------------------------------------------------------
+
+Q: What license is HLIB published under?
+A: As of version 1.0 (and above) HLIB is put completely under the 
+   GNU General Public License version 2, see COPYING.GPL (bundeled with 
+   HLib) for details. 
+   Each (nontrivial) source file has a small license info in the comment 
+   at the beginnning. 
+
+Q: Why is it called HLIB?
+A: `LIB' stands for `library' and `H' is just the next letter after 
+   `G' (as used by `GNU'). `glib' was already taken, (belongs to GTK). 
+   (Actually, I would never have dared to grab the letter `g' for my 
+    purpose ;)
+
+Q: Can I extend HLIB with my own functions?
+A: Of course. The best idea is probably if you create your own sub-directory 
+   (like misc/ or fd/) and put your code in there. Add your subdir to 
+   the SUBDIRS value in Makefile.am and provide an own Makefile.am 
+   along with your code (have a look at my ones for working examples). 
+   That's all; everything should work that simple. 
+
+Q: What platforms does HLIB run on?
+A: It runs under several platforms, including Linux-2.2 and Linux-2.4 
+   with >=glibc-2.1 and gcc>=2.95. See BUILD for more info on that. 
+
+Q: I found a bug in HLIB. Whom do I contact?
+A: The guy who put his name in the comment at the beginning of the source 
+   code file the bug is in. 
+
+Q: What's HLIB's goal?
+A: To be 
+   * flexible, 
+   * modular in desing, 
+   * fast and 
+   * small (as of executable size). 
+   For this reason, 
+   - C++ exceptions, 
+   - runtime type identification and 
+   - the standard C++ library (libstdc++ / STL)
+   are not used by HLIB. 
+
+Q: I cannot find the docu. Where is it?
+A: Please read the apropriate header files. There is no extra docu. 
+   The reason is that I do not have the time to write it and the advantage 
+   is that there is no discrepancy between the docu and the actual code. 
