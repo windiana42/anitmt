@@ -2,21 +2,21 @@ AC_INIT(anitmt-calc/anitmt.cpp)
 AM_INIT_AUTOMAKE(anitmt, 0.1.9)
 AC_PROG_CC
 AC_PROG_CXX
-dnl check gcc version:
-gccvers="`$CXX -v 2>&1 | tail -1`"
-if test "${gccvers/" *"/}" = "gcc" ; then
-  # we're actually using gcc, so check version
-  # this test is not perfect as it can be tricked using "gcc -Vxyz"
-  echo -n "checking $CXX version... "
-  gccvers="${gccvers/"*version "/}"
-  echo "$gccvers"
-  if test "${gccvers:0:1}" -lt 3 ; then 
-    echo "** Sorry, you need at least gcc 3.0 to compile anitmt.     **"
-    echo "** All previous versions have bugs dealing with templates. **"
-    exit 1
-  fi
-fi
-unset gccvers
+#dnl check gcc version:
+#gccvers="`$CXX -v 2>&1 | tail -1`"
+#if test "${gccvers/" *"/}" = "gcc" ; then
+#  # we're actually using gcc, so check version
+#  # this test is not perfect as it can be tricked using "gcc -Vxyz"
+#  echo -n "checking $CXX version... "
+#  gccvers="${gccvers/"*version "/}"
+#  echo "$gccvers"
+#  if test "${gccvers:0:1}" -lt 3 ; then 
+#    echo "** Sorry, you need at least gcc 3.0 to compile anitmt.     **"
+#    echo "** All previous versions have bugs dealing with templates. **"
+#    exit 1
+#  fi
+#fi
+#unset gccvers
 AC_PROG_INSTALL
 AC_PROG_RANLIB
 dnl FIXME: Yacc check seems to be necessary for detection of the "ylwrap" script.
