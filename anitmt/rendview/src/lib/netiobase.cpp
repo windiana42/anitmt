@@ -243,11 +243,11 @@ int NetworkIOBase::_FDCopyStartSendFile(const char *path,int64_t filelen)
 	
 	// This is special: We cannot send a file with size 0 with limit 
 	// because limit=0 is "unlimited". So, for simplicity, we simply 
-	// send a buffer of size 0: 
+	// send a buffer of size 1: (See recv-side for explanation on that.) 
 	if(filelen==0)
 	{
 		static char _dummybuf='\0';
-		return(_FDCopyStartSendBuf(&_dummybuf,0));
+		return(_FDCopyStartSendBuf(&_dummybuf,1));  // YES, size 1
 	}
 	
 	if(filelen<0)
@@ -322,15 +322,6 @@ int NetworkIOBase::_FDCopyStartRecvFile(const char *path,int64_t filelen)
 {
 	assert(in.ioaction==IOA_None);
 	
-	// This is special: We cannot receive a file with size 0 with limit 
-	// because limit=0 is "unlimited". So, for simplicity, we simply 
-	// receive a buffer of size 0: 
-	if(filelen==0)
-	{
-		static char _dummybuf='\0';
-		return(_FDCopyStartRecvBuf(&_dummybuf,0));
-	}
-	
 	if(filelen<0)
 	{  return(-3);  }
 	
@@ -340,6 +331,25 @@ int NetworkIOBase::_FDCopyStartRecvFile(const char *path,int64_t filelen)
 	{  fd=::open(path,O_WRONLY | O_CREAT | O_TRUNC,0666);  }
 	while(fd<0 && errno==EINTR);
 	if(fd<0)  return(-2);
+	
+	// This is special: We cannot receive a file with size 0 with limit 
+	// because limit=0 is "unlimited". So, for simplicity, we simply 
+	// receive a buffer of size 1 and create a file of size 0. 
+	// (YES, buffer size 1 is necessary so that the server can send one 
+	// byte and POLLIN will occur. Otherwise POLLIN will not occur because 
+	// of lack of data and deadlock occurs instead. 
+	if(filelen==0)
+	{
+		// File already created; close it again: 
+		int rv;
+		do
+		{  rv=::close(fd);  }
+		while(rv<0 && errno==EINTR);
+		assert(rv>=0);  // Actually never fails, right?
+		
+		static char _dummybuf='\0';
+		return(_FDCopyStartRecvBuf(&_dummybuf,1));   // YES, size 1
+	}
 	
 	PollID recv_pollid=NULL;
 	int rv=PollFD(fd,0,NULL,&recv_pollid);

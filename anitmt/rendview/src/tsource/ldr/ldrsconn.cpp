@@ -1098,9 +1098,7 @@ int TaskSource_LDR_ServerConn::_ParseFileDownload(RespBuf *buf)
 		return(-1);
 	}
 	// Okay, then let's start to receive the file. 
-	// NOTE!!! What to do with files of size 0??
-	fprintf(stderr,"Starting to download file (%s; %lld bytes) "
-		"[HANDLE FILES OF SIZE 0!!]\n",
+	fprintf(stderr,"Starting to download file (%s; %lld bytes)\n",
 		tri.req_tfile->HDPath().str(),fsize);
 	
 	const char *path=tri.req_tfile->HDPath().str();
@@ -1480,8 +1478,6 @@ int TaskSource_LDR_ServerConn::cpnotify_outpump_start()
 			assert(outpump_lock==IOPL_Upload);
 			
 			// Finally, send the file body. 
-			// Be careful with files of size 0...
-			fprintf(stderr,"TEST IF FILE TRANSFER WORKS for files with size=0\n");
 			
 			// If this assert fails, then we're in trouble. 
 			// The stuff should have been set earlier. 

@@ -1055,9 +1055,7 @@ int LDRClient::_ParseFileUpload(RespBuf *buf)
 		return(-1);
 	}
 	// Okay, then let's start to receive the file. 
-	// NOTE!!! What to do with files of size 0??
-	fprintf(stderr,"Starting to receive file (%s; %lld bytes) "
-		"[HANDLE FILES OF SIZE 0!!]\n",
+	fprintf(stderr,"Starting to receive file (%s; %lld bytes)\n",
 		tdi.recv_file->HDPath().str(),fsize);
 	
 	const char *path=tdi.recv_file->HDPath().str();
@@ -1406,8 +1404,6 @@ int LDRClient::cpnotify_outpump_start()
 			assert(outpump_lock==IOPL_Download);
 			
 			// Finally, send the file body. 
-			// Be careful with files of size 0...
-			fprintf(stderr,"TEST IF FILE TRANSFER WORKS for files with size=0\n");
 			
 			// If this assert fails, then we're in trouble. 
 			// The stuff should have been set earlier. 
@@ -1452,8 +1448,12 @@ int LDRClient::cpnotify_inpump(FDCopyBase::CopyInfo *cpi)
 	// copy exactly LDRHeader->length - sizeof(LDRHeader) bytes 
 	// and if it reports SCLimit here, then they have to be 
 	// there. 
+	// NOTE: The exception for file upload body is necessary 
+	//       becase for files of size 0, we use FD->Buf pump with 
+	//       buffer of size 1. (See netiobase.cpp for details.) 
 	#if TESTING
-	if(cpi->pump==in.pump_s)
+	if(cpi->pump==in.pump_s && 
+	   !(in_active_cmd==Cmd_FileUpload && tdi.task_done_state==TDC_UploadBody) )
 	{
 		FDCopyIO_Buf *_dst=(FDCopyIO_Buf*)(cpi->pump->Dest());
 		if(_dst->bufdone+sizeof(LDRHeader)!=
