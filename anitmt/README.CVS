@@ -5,6 +5,8 @@ To update the sources from the CVS repository, call the following
 command from the anitmt source dir top: 
 (Referring to the BUILD file, this would be /home/me/source/anitmt.)
 
+   /home/me/source/anitmt# <== this is just the prompt. Don't write this!
+
    /home/me/source/anitmt# cvs update -dP
 
 Then, follow the points 1, 4, 5 and 6 described in BUILD. 
