@@ -33,15 +33,16 @@ class stringlist : public std::list<std::string>
 	private:
 		void _addlist(const stringlist &sl);
 	public:
-		stringlist() { }
-		stringlist(const stringlist &sl)  {  _addlist(sl);  }
+		stringlist() : std::list<std::string>() { }
+		stringlist(const stringlist &sl) : std::list<std::string>()
+			{  _addlist(sl);  }
 		stringlist(const char *str0,...);  // NULL-terminated!!!
 		~stringlist()  {  clear();  }
 		
 		stringlist &operator=(const stringlist &sl)
-			{  clear();  _addlist(sl);  }
+			{  clear();  _addlist(sl);  return(*this);  }
 		stringlist &operator+=(const stringlist &sl)
-			{  _addlist(sl);  }
+			{  _addlist(sl);  return(*this);  }
 		
 		bool is_empty()
 			{  return((begin()==end()) ? true : false);  }

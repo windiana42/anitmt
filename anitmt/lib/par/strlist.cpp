@@ -43,7 +43,8 @@ void stringlist::_addlist(const stringlist &sl)
 }
 
 
-stringlist::stringlist(const char *str0,...)  // NULL-terminated!!!
+stringlist::stringlist(const char *str0,...) : // NULL-terminated!!!
+	std::list<std::string>() 
 {
 	if(str0)
 	{
