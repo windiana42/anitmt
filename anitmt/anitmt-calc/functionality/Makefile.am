@@ -1,5 +1,5 @@
 # Makefile.am for test functionality
-INCLUDES=		-I$(top_srcdir)/lib -I$(srcdir)
+INCLUDES=		-I$(top_srcdir)/lib -I$(srcdir) -I$(builddir)
 
 noinst_LIBRARIES=	libfunctionality.a
 BUILT_SOURCES=		solver.hpp solver.cpp \

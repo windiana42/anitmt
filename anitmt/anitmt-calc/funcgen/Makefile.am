@@ -23,6 +23,9 @@ funcgen_LDADD=		../../lib/message/libmessage.a ../../hlib/libhlib.a
 
 YLWRAP  = 		$(top_srcdir)/ylwrap
 
+clean:
+	rm -f $(BUILT_SOURCES)
+
 #-- Scanner
 # A .cc-File is a must here. The ylwrap script doesn't accept other file
 # suffixes.

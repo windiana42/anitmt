@@ -2,7 +2,7 @@
 INCLUDES=		-I$(top_srcdir) -I$(top_srcdir)/lib		\
 			-I$(top_srcdir)/lib/flex			\
 			-I$(srcdir)/../ -I$(srcdir)/../../ -I../../	\
-			-I../../functionality/ -I$(srcdir)/../../functionality/
+			-I$(builddir)/../../functionality/ -I$(srcdir)/../../functionality/
 noinst_LIBRARIES=	libadlparser.a
 check_PROGRAMS=		testadlparser
 CXXFLAGS =		@CXXFLAGS@ -Wno-non-template-friend 
@@ -34,6 +34,9 @@ testadlparser_LDADD=	libadlparser.a \
 #also includes old adl/libadlparser.a for libanitmt
 
 YLWRAP  = 		$(top_srcdir)/ylwrap
+
+clean:
+	rm -f $(BUILT_SOURCES)
 
 #-- Scanner
 # A .cc-File is a must here. The ylwrap script doesn't accept other file
