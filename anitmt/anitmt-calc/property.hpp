@@ -15,23 +15,17 @@
 #ifndef __AniTMT_Property__
 #define __AniTMT_Property__
 
+#include "property_classes.hpp"
+
 #include <list>
+#include <set>
 #include <iostream>
 
-namespace anitmt{
-  class Solve_Problem_Handler;
-
-  class Property;
-  template<class T> class Type_Property;
-  class Scalar_Property;
-  class Vector_Property;
-  class String_Property;
-  class Flag_Property;
-}
-
 #include "val.hpp"
-#include "solver.hpp"
 #include "error.hpp"
+
+#include "solver.hpp"
+#include "operand_classes.hpp"
 
 namespace anitmt{
 
@@ -84,6 +78,38 @@ namespace anitmt{
       throw( EX );
   };
 
+  //**************************************************************
+  // Solve_Run_Info: stores information needed during a solve run
+  //**************************************************************
+
+  class Solve_Run_Info {
+    typedef int id_type;
+
+    static id_type current_default_test_run_id;
+
+    std::set<id_type> valid_test_run_ids;
+    id_type test_run_id;
+  public:
+    Solve_Problem_Handler *problem_handler;
+
+    inline bool is_id_valid( id_type id ) const; 
+				// checks wheather an id belongs to curr. test
+    inline id_type get_test_run_id() const; // returns current test run ID
+    inline id_type new_test_run_id();	// adds a new test run ID
+    inline void add_test_run_id( id_type id ); // adds a test run ID
+    inline void remove_test_run_id( id_type id ); // removes a test run ID
+    inline void set_test_run_id( id_type id ); // sets active test run ID
+
+    Solve_Run_Info( Solve_Problem_Handler *handler, int id )
+      : problem_handler( handler ), test_run_id( id ) {
+      add_test_run_id( id );
+    }
+    Solve_Run_Info( Solve_Problem_Handler *handler )
+      : problem_handler( handler ) {
+      new_test_run_id();
+    }
+  };
+
   //****************************************
   // Property: container for property values
   //****************************************
@@ -98,7 +124,6 @@ namespace anitmt{
     void disconnect_Solver( Solver *solver )
       throw( EX_solver_is_not_connected ); // removes solver connection
 
-    long get_try_id() const;	// returns the current try id
   protected:
     // Solver call this when the previous given value was ok
     // ( see Type_Property::is_this_ok() )
@@ -108,13 +133,12 @@ namespace anitmt{
     solvers_type solvers;	// Solvers that might calculate this property
     bool solved;		// is the property already solved?
 
-    static long cur_try_id;	// unique id for a try which is increase
-				// after every try
-    long try_id;		// to identify the last try for this property
-				// try_id == cur_try_id indicates that the
-				// property was solved in the try
+    long last_test_run_id;	// to identify the last test solve run for 
+				// this property
+				// it is used to determine wheather the 
+				// property is already solved in test run
   public:
-    bool s() const;		// is solved?
+    bool is_solved() const;	// is property solved?
 
     virtual std::ostream &write2stream( std::ostream& ) = 0;
 
@@ -125,7 +149,8 @@ namespace anitmt{
     // the following functions should only be accessed by class Solver and
     // derived classes
 
-    bool is_solved_in_try() const;	// is property solved in current try
+    bool is_solved_in_try( Solve_Run_Info const *info ) const;	
+				// is property solved in current try
   };
 
   std::ostream &operator << ( std::ostream&, Property & );
@@ -136,17 +161,25 @@ namespace anitmt{
   template<class T> class Type_Property : public Property{
     T v;			// contained value
 
-    static User_Problem_Handler user_problem_handler;
+    static User_Problem_Handler default_handler;
   public:	
-    T get() const;		// returns the value
+    T get() const;		// returns the value when solved
+    T get( Solve_Run_Info const *info ) const; // returns the value in test run
+    bool set_if_ok( T v, Solve_Run_Info const *info ); 
+				// tries to set the value and returns whether
+				// the attempt was successful (true) or not.
+				// info includes problem handler and test ID
+
     bool set_if_ok( T v, 
-		    Solve_Problem_Handler *problem_handler 
-		    = &user_problem_handler ); 
+		    Solve_Problem_Handler *problem_handler=&default_handler ); 
 				// tries to set the value and returns whether
 				// the attempt was successful (true) or not.
 				// problem_handler is for explizite user inputs
 
     operator T() const;		// implicite convertion to type (like get())
+
+    // allow operator syntax to assign an Operand to a Property
+    inline void operator=( Operand<T> &operand ); 
 
     virtual std::ostream &write2stream( std::ostream& );
 
@@ -156,8 +189,7 @@ namespace anitmt{
 
     // This is called to try if this value might be valid for this property
     // returns true if value is acceptable
-    bool is_this_ok( T v, Solver *caller, 
-		     Solve_Problem_Handler *problem_handler );
+    bool is_this_ok( T v, Solver *caller, Solve_Run_Info const *info );
   };
 
   //  template<class T>

@@ -72,7 +72,7 @@ namespace anitmt{
     std::cout << "try push!" << std::endl;
 #endif
 
-    if( source->s() )
+    if( source->is_solved() )
       {
 #ifdef __DEBUG__
 	std::cout << "push source:" << source->get() << std::endl;
@@ -85,6 +85,12 @@ namespace anitmt{
 #endif
 	    delete this; // if push succeeds:
 	  } 
+      }
+    else
+      {
+#ifdef __DEBUG__
+	std::err << "!!Error: push source not ready!" << std::endl;
+#endif
       }
   }
   
@@ -99,7 +105,7 @@ namespace anitmt{
     : Priority_Action( sys, level ), action_caller_inserter( this ), 
       source(src), destination(dest) {
 
-    if( dest->s() )		// if source is already solved
+    if( dest->is_solved() )	// if source is already solved
       {
 	sys->add_Action( level, this );
       }

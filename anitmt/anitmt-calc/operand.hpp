@@ -15,27 +15,13 @@
 #ifndef __AniTMT_Operand__
 #define __AniTMT_Operand__
 
+#include "operand_classes.hpp"
+
 #include "val.hpp"
-
-namespace anitmt{
-  class Basic_Operand;
-  template<class T> class Operand;
-  template<class T> class Constant;
-  template<class T_Result=values::Scalar, class T_Operand = T_Result> 
-  class Not_Operator;
-  template<class T_Result=values::Scalar, 
-	   class T_Op1 = T_Result, class T_Op2 = T_Op1> 
-  class Add_Operator;
-
-  /*
-  template<class T_Result, 
-	   class T_Operand = T_Result> class Basic_Operator_for_1_param;
-  template<class T_Result, class T_Op1 = T_Result, 
-	   class T_Op2 = T_Op1> class Basic_Operator_for_2_params;
-  */
-}
-
 #include "error.hpp"
+
+#include "property.hpp"
+#include "solver.hpp"
 
 namespace anitmt{
 
@@ -56,40 +42,81 @@ namespace anitmt{
   // Operand: base class for operand values of a certain type
   //**********************************************************
   template<class T> class Operand : public Basic_Operand{
+    static User_Problem_Handler default_handler;
   protected:
     class Value_Reporter{
       friend Operand;
-      virtual bool test_value( T const &value, int test_ID ) = 0;
-      virtual void use_value ( T const &value ) = 0;
+      virtual bool is_this_ok( T const &value, Solve_Run_Info const *info) = 0;
+      virtual void use_it () = 0;
     };
 
     T value;			// to store the value
-    bool value_valid;
-    int value_test_ID;
+    bool solved;
+    int last_test_run_id;
 
     Value_Reporter *reporter; 
 
-    inline void report_value( T res ) {
-      if( reporter ) reporter->use_value( res );
+    inline void report_value() {
+      if( reporter ) reporter->use_it();
     }
-    inline bool report_test_value( T res, int test_ID ) {
+    inline bool report_test_value( T res, Solve_Run_Info const *info ) {
       if( reporter ) 
-	return reporter->test_value( res, test_ID );
+	return reporter->is_this_ok( res, info );
       
       return true;
     }
 
-    bool test_set_value( T res, int test_ID );
+    bool test_set_value( T res, Solve_Run_Info const *info );
   public:	
-    inline bool is_value_valid() { return value_valid; }
-    inline const T& get_value() { assert( is_value_valid() ); return value; }
-    inline void set_value( T res ) 
-    { value = res; value_valid = true; report_value( res ); }
+    inline bool is_solved_in_try( Solve_Run_Info const *info ) 
+    { return solved || info->is_id_valid( last_test_run_id ); }
+    inline bool is_solved() const { return solved; }
+    inline const T& get_value() const { assert( is_solved() ); return value; }
+    inline void use_value() 
+    { solved = true; report_value(); }
+    inline void set_value( T res, 
+			   Solve_Problem_Handler *handler = &default_handler ) 
+    { 
+      Solve_Run_Info info( handler );
+      if(test_set_value(res,&info)) report_value(); 
+    }
 
     void init_reporter( Value_Reporter *reporter );
 
     Operand();
   };
+
+  //*************************************************************************
+  // Store_Operand_to_Property: stores the value of an operand to a property
+  //*************************************************************************
+
+  template<class T> 
+  class Store_Operand_to_Property 
+    : public Operand<T>::Value_Reporter, public Solver {
+    Type_Property<T> *property;
+
+    //** Operand Methods **
+
+    virtual bool is_this_ok( T const &value, Solve_Run_Info const *info );
+    virtual void use_it ();
+
+    //** Solver Methods **
+
+    // is called when property was solved
+    virtual void do_when_prop_was_solved( Property *ID ) {}
+    // calculates results of a solved Property (ID) and returns wheather
+    // the solution is ok
+    virtual bool check_prop_solution_and_results
+    ( Property *ID, Solve_Run_Info const *info ){}
+
+  public:
+    Store_Operand_to_Property( Operand<T> &op, Type_Property<T> *prop ); 
+  };
+
+  template< class T >
+  void assign( Type_Property<T> &property, Operand<T> &operand ) {
+    new Store_Operand_to_Property<T>( operand, &property );
+  }
 
   //*****************************************
   // Constant: Operand for holding constants
@@ -109,8 +136,9 @@ namespace anitmt{
   class Basic_Operator_for_1_param 
     : public Operand<T_Result>, public Operand<T_Operand>::Value_Reporter {
     // for operand to deliver result
-    virtual bool test_value( T_Operand const &value, int test_ID );
-    virtual void use_value( T_Operand const &value );
+    virtual bool is_this_ok( T_Operand const &value, 
+			     Solve_Run_Info const *info );
+    virtual void use_it();
 
     virtual bool is_operand_ok( T_Operand const &test_value ) { return true; };
     virtual T_Result calc_result( T_Operand const &value ) = 0;
@@ -134,21 +162,24 @@ namespace anitmt{
     // Interface classes for operands to deliver result to
     class Operand_1_Interface : public Operand<T_Op1>::Value_Reporter{
       Basic_Operator_for_2_params *host;
-      virtual bool test_value( T_Op1 const &value, int test_ID );
-      virtual void use_value( T_Op1 const &value );
+      virtual bool is_this_ok( T_Op1 const &value, 
+			       Solve_Run_Info const *info );
+      virtual void use_it();
     public:
       Operand_1_Interface( Basic_Operator_for_2_params *h ) : host(h) {}
     };
     class Operand_2_Interface : public Operand<T_Op2>::Value_Reporter{
       Basic_Operator_for_2_params *host;
-      
-      virtual bool test_value( T_Op2 const &value, int test_ID );
-      virtual void use_value( T_Op2 const &value );
+      virtual bool is_this_ok( T_Op2 const &value, 
+			       Solve_Run_Info const *info );
+      virtual void use_it();
     public:
       Operand_2_Interface( Basic_Operator_for_2_params *h ) : host(h) {}
     };
     friend class Operand_1_Interface; // both interface classes
     friend class Operand_2_Interface; // have direct access to host object
+
+    bool just_solved;		// did operator just solve the result
 
     virtual bool is_operand1_ok( T_Op1 const &test_value ) { return true; }
     virtual bool is_operand2_ok( T_Op2 const &test_value ) { return true; }

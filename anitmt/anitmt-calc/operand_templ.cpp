@@ -28,17 +28,20 @@ namespace anitmt{
   //***************************************************************
   
   template<class T>
-  bool Operand<T>::test_set_value( T res, int test_ID ){
+  User_Problem_Handler Operand<T>::default_handler;
+
+  template<class T>
+  bool Operand<T>::test_set_value( T res, Solve_Run_Info const *info ){
     // was value already solved in test run?
-    if( value_valid || (value_test_ID == test_ID) )
+    if( is_solved_in_try( info ) )
       {
 	return res == value;	// test ok, when same value
       }
     
     value = res; 
-    value_test_ID = test_ID; 
+    last_test_run_id = info->get_test_run_id(); 
     if( reporter ) 
-      return report_test_value( res, test_ID );
+      return report_test_value( res, info );
 
     return true;
   }
@@ -49,7 +52,33 @@ namespace anitmt{
   }
 
   template<class T>
-  Operand<T>::Operand() : value_valid(false), reporter(0) {}
+  Operand<T>::Operand() : solved(false), reporter(0) {}
+
+  //**************************************************************************
+  // Store_Operand_to_Property: reports the value of an operand to a property
+  //**************************************************************************
+  
+  template<class T>
+  bool Store_Operand_to_Property<T>::is_this_ok
+  ( T const &value, Solve_Run_Info const *info ) {
+
+    return property->is_this_ok( value, this, info );
+  }
+
+  template<class T>
+  void Store_Operand_to_Property<T>::use_it() {
+    property_use_it( property );
+  }
+
+  template<class T>
+  Store_Operand_to_Property<T>::Store_Operand_to_Property
+  ( Operand<T> &op, Type_Property<T> *prop ) : property(prop) {
+    // Solver initialization
+    add_Property( prop );
+
+    // Operand initialization
+    op.init_reporter( this );
+  }
 
   //*****************************************
   // Constant: Operand for holding constants
@@ -68,22 +97,22 @@ namespace anitmt{
   // for operand to deliver result
   template<class T_Result, class T_Operand>
   void Basic_Operator_for_1_param<T_Result,T_Operand>
-  ::use_value( T_Operand const &value ) {
-    set_value( calc_result( value ) );
+  ::use_it() {
+    use_value();
   }
 
   template<class T_Result, class T_Operand>
   bool Basic_Operator_for_1_param<T_Result,T_Operand>
-  ::test_value( T_Operand const &value, int test_ID ) {
+  ::is_this_ok( T_Operand const &value, Solve_Run_Info const *info ) {
     if( !is_operand_ok( value ) ) return false;
 
-    return test_set_value( calc_result( value ), test_ID );
+    return test_set_value( calc_result( value ), info );
   }
 
   template<class T_Result, class T_Operand>
   void Basic_Operator_for_1_param<T_Result,T_Operand>::init() {
 
-    if( operand.is_value_valid() ) 
+    if( operand.is_solved() ) 
       {
 	set_value( calc_result( operand.get_value() ) ); 
 				// could throw exception 
@@ -104,27 +133,29 @@ namespace anitmt{
   // for operand to deliver result
   template<class T_Result, class T_Op1, class T_Op2>
   void Basic_Operator_for_2_params<T_Result,T_Op1,T_Op2>
-  ::Operand_1_Interface::use_value( T_Op1 const &value ) {
-    if( host->operand2.is_value_valid() )
-      host->set_value( host->calc_result( value, host->operand2.get_value() ));
+  ::Operand_1_Interface::use_it() {
+    if( host->just_solved )
+      host->use_value();
   }
 
   template<class T_Result, class T_Op1, class T_Op2>
   bool Basic_Operator_for_2_params<T_Result,T_Op1,T_Op2>
-  ::Operand_1_Interface::test_value( T_Op1 const &value, int test_ID ) {
-
+  ::Operand_1_Interface::is_this_ok( T_Op1 const &value, 
+				     Solve_Run_Info const *info ) {
     if( !host->is_operand1_ok( value ) ) return false;
 
     // are both operands solved now?
-    if( host->operand2.is_value_valid() )
+    if( host->operand2.is_solved_in_try( info ) )
       {
 	if( !host->are_operands_ok( value, host->operand2.get_value() ) ) 
 	  return false;
 	
+	host->just_solved = true;
 	return host->test_set_value
-	  ( host->calc_result( value, host->operand2.get_value() ), test_ID );
+	  ( host->calc_result( value, host->operand2.get_value() ), info );
       }
     
+    host->just_solved = false;
     return true;
   }
 
@@ -132,26 +163,29 @@ namespace anitmt{
   // for operand to deliver result
   template<class T_Result, class T_Op1, class T_Op2>
   void Basic_Operator_for_2_params<T_Result,T_Op1,T_Op2>
-  ::Operand_2_Interface::use_value( T_Op2 const &value ) {
-    if( host->operand1.is_value_valid() )
-      host->set_value( host->calc_result( host->operand1.get_value(), value ));
+  ::Operand_2_Interface::use_it( ) {
+    if( host->just_solved )
+      host->use_value();
   }
 
   template<class T_Result, class T_Op1, class T_Op2>
   bool Basic_Operator_for_2_params<T_Result,T_Op1,T_Op2>
-  ::Operand_2_Interface::test_value( T_Op2 const &value, int test_ID ) {
+  ::Operand_2_Interface::is_this_ok( T_Op2 const &value, 
+				     Solve_Run_Info const *info ) {
     if( !host->is_operand2_ok( value ) ) return false;
 
     // are both operands solved now?
-    if( host->operand1.is_value_valid() )
+    if( host->operand1.is_solved_in_try( info ) )
       {
 	if( !host->are_operands_ok( host->operand1.get_value(), value ) ) 
 	  return false;
 
+	host->just_solved = true;
 	return host->test_set_value
-	  ( host->calc_result( host->operand1.get_value(), value ), test_ID );
+	  ( host->calc_result( host->operand1.get_value(), value ), info );
       }
 
+    host->just_solved = false;
     return true;
   }
 
@@ -159,7 +193,7 @@ namespace anitmt{
   void Basic_Operator_for_2_params<T_Result,T_Op1,T_Op2>
   ::init() { 
     
-    if( operand1.is_value_valid() && operand2.is_value_valid() ) 
+    if( operand1.is_solved() && operand2.is_solved() ) 
       {
 	set_value( calc_result(operand1.get_value(), operand2.get_value()) ); 
 				// could throw exception !!!

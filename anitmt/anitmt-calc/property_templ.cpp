@@ -30,22 +30,44 @@ namespace anitmt{
 
   // static standard user problem handler
   template<class T>
-  User_Problem_Handler Type_Property<T>::user_problem_handler;
+  User_Problem_Handler Type_Property<T>::default_handler;
+
+  // returns the value of the property
+  template<class T>
+  T Type_Property<T>::get( Solve_Run_Info const *info ) const{
+    assert( is_solved_in_try( info ) );
+    return v;
+  }
 
   // returns the value of the property
   template<class T>
   T Type_Property<T>::get() const{
-    assert( is_solved_in_try() );	// make sure this property is solved
+    assert( is_solved() );
     return v;
   }
 
   // tries to set the property and returns whether it was successful (true)
   template<class T>
+  bool Type_Property<T>::set_if_ok( T v, Solve_Run_Info const *info ){
+    res = is_this_ok( v, 0, info );
+    if( res ) use_it(0);
+
+    return res;
+  }
+  
+  // tries to set the property and returns whether it was successful (true)
+  template<class T>
   bool Type_Property<T>::set_if_ok( T v, 
 				    Solve_Problem_Handler *problem_handler ){
-    bool res = is_this_ok( v, 0, problem_handler );
+    bool res;
+
+    Solve_Run_Info *info = new Solve_Run_Info( &default_handler );
+
+    res = is_this_ok( v, 0, info );
     if( res ) use_it(0);
-    cur_try_id++;		// change try_id for next time
+
+    delete info;
+
     return res;
   }
   
@@ -60,29 +82,29 @@ namespace anitmt{
   // !!! may be recursive
   template<class T>
   bool Type_Property<T>::is_this_ok( T v_to_try, Solver *caller, 
-				     Solve_Problem_Handler *problem_handler ) {
+				     Solve_Run_Info const *info ) {
     
     bool res = true;
     
     // if property is already solved (in current try)
-    if( solved || ( try_id == cur_try_id ) )
+    if( is_solved_in_try( info ) )
       {
 	// return whether it is the same result
 	if( (v == v_to_try) )
 	  return true;
 
 	// report problem
-	if( problem_handler ) 
+	if( info->problem_handler ) 
 	  {
 	    std::list< Property* > l; l.push_back( this );
-	    problem_handler->
-	      property_collision_occured( l );
+	    info->problem_handler->property_collision_occured( l );
 	  }
 
 	return false;
       }
 
-    try_id = cur_try_id;	// mark this property to be solved in this try
+    last_test_run_id = info->get_test_run_id(); 
+				// mark this property to be solved in this try
     v = v_to_try;
 
     // for each solver (*i)
@@ -91,7 +113,7 @@ namespace anitmt{
 	// skip the solver who gave the solution
 	if( (*i) == caller ) continue;
 
-	if( !((*i)->is_prop_solution_ok( this, problem_handler )) )
+	if( !((*i)->is_prop_solution_ok( this, info )) )
 	  {
 	    res = false;
 	    break;
@@ -101,8 +123,13 @@ namespace anitmt{
   }
 
   template<class T>
+  void Type_Property<T>::operator=( Operand<T> &operand ) { 
+    assign( *this, operand ); 
+  }
+
+  template<class T>
   std::ostream &Type_Property<T>::write2stream( std::ostream& os ) {
-    if( !is_solved_in_try() )
+    if( !is_solved() )
       return os << "n/a";
     return os << get();
   }

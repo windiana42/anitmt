@@ -32,7 +32,7 @@ namespace anitmt{
 
   // Properties call that if they want to validate their results
   bool Action_Caller::check_prop_solution_and_results( Property*, 
-					   Solve_Problem_Handler* ) {
+						       Solve_Run_Info const*) {
     
 #ifdef __DEBUG__
     std::cout << "action caller was asked for a solution!" << std::endl;

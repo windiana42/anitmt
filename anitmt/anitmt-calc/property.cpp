@@ -15,6 +15,7 @@
 #include "property.hpp"
 
 #include <algorithm>
+#include "operand.hpp"
 
 namespace anitmt{
 
@@ -37,21 +38,58 @@ namespace anitmt{
     return false;		// user values may not be rejected
   }
 
+  //**************************************************************
+  // Solve_Run_Info: stores information needed during a solve run
+  //**************************************************************
+
+  int Solve_Run_Info::current_default_test_run_id = 1;
+
+  // checks wheather an id belongs to test 
+  bool Solve_Run_Info::is_id_valid( Solve_Run_Info::id_type id ) const {
+    return valid_test_run_ids.find(id) != valid_test_run_ids.end();
+  }
+
+  // returns current test run ID
+  Solve_Run_Info::id_type Solve_Run_Info::get_test_run_id() const {
+    return test_run_id;
+  }
+
+  // adds a new test run ID
+  Solve_Run_Info::id_type Solve_Run_Info::new_test_run_id(){
+    test_run_id = current_default_test_run_id;
+    valid_test_run_ids.insert( test_run_id );
+    return test_run_id;
+  }
+
+  // adds a test run ID
+  void Solve_Run_Info::add_test_run_id( id_type id ){
+    valid_test_run_ids.insert(id);
+  }
+
+  // removes a test run ID
+  void Solve_Run_Info::remove_test_run_id( id_type id ){
+    valid_test_run_ids.erase(id);
+  }
+
+  // sets active test run ID
+  void Solve_Run_Info::set_test_run_id( id_type id ){
+    test_run_id = id;
+  }
+
   //****************************************
   // Property: container for property values
   //****************************************
-  long Property::cur_try_id = 0;
 
-  Property::Property() : try_id(-1) {}
+  Property::Property() : last_test_run_id(-1) {}
 
-  bool Property::s() const { return solved; }
+  bool Property::is_solved() const { return solved; }
   // returns whether the property is solved in the current try
-  bool Property::is_solved_in_try() const {
-    if( try_id == cur_try_id )	// did the property get a solution in the
+  bool Property::is_solved_in_try( Solve_Run_Info const *info ) const {
+    if( info->is_id_valid( last_test_run_id ) )	
+				// did the property get a solution in the
       return true;		// current try? 
     return solved; 
   }
-  long Property::get_try_id() const { return cur_try_id; }
   
   // adds a solver for this property
   void Property::add_Solver( Solver *solver ){
@@ -75,8 +113,6 @@ namespace anitmt{
     // was this property not already solved
     if( !solved )
       {
-	// v already got the value from the try
-	assert( try_id == cur_try_id ); // it was hopefully the same try
 	// v is accepted as solution now
 	solved = true;
 

@@ -89,25 +89,28 @@ namespace anitmt{
   // Properties call that if they want to validate their results
   // (uses virtual function check_prop_solution)
   bool Solver::is_prop_solution_ok
-  ( Property *caller, Solve_Problem_Handler *problem_handler ) {
-    long cur_try_id = caller->get_try_id();
-    if( try_id != cur_try_id )	// is this the first call in try
+  ( Property *caller, Solve_Run_Info const *info ) {
+    if( !info->is_id_valid( try_id ) )	// is this the first call in try
       {
 	// reset the check flags that indicate which properties were solved
 	properties_type::iterator i;
 	for( i = properties.begin(); i != properties.end(); i++ )
 	  i->second = prop_not_solved;
 
-	try_id = cur_try_id;
+	try_id = info->get_test_run_id();
       }
 
     
-    return check_prop_solution_and_results( caller, problem_handler );
+    return check_prop_solution_and_results( caller, info );
   }
 
   void Solver::add_Property( Property *prop ) {
     properties[ prop ] = prop_not_solved; 
     prop->add_Solver( this );
+  }
+
+  void Solver::property_use_it( Property *prop ) { 
+    prop->use_it( this ); 
   }
 
   //*****************************************************************
@@ -128,28 +131,28 @@ namespace anitmt{
   // Properties call that if they want to validate their results
   // !!! may be self recursive
   bool Accel_Solver::check_prop_solution_and_results
-  ( Property *caller, Solve_Problem_Handler *problem_handler ){
+  ( Property *caller, Solve_Run_Info const *info ){
 
     // duration solved in this try now ?
     if( caller == &t )
       {
-	assert( t.is_solved_in_try() );	
+	assert( t.is_solved_in_try( info ) );	
 
 	// stretch known ?
-	if( v0.is_solved_in_try() )
+	if( v0.is_solved_in_try( info ) )
 	  {
 	    // acceleration known ?
-	    if( a.is_solved_in_try() )
+	    if( a.is_solved_in_try( info ) )
 	      {
 		values::Scalar res_ve = v0 + a * t;
 		values::Scalar res_d  = v0*t + 0.5*a*t*t;
 
 		// verify result for endspeed
-		if( !ve.is_this_ok( res_ve, this, problem_handler ) )
+		if( !ve.is_this_ok( res_ve, this, info ) )
 		  return false; 
 
 		// verify result for difference
-		if( !d.is_this_ok( res_d, this, problem_handler ) )
+		if( !d.is_this_ok( res_d, this, info ) )
 		  return false; 
 
 		properties[ &ve ] = prop_just_solved; // endspeed solved
@@ -180,34 +183,34 @@ namespace anitmt{
   // Properties call that if they want to validate their results
   // !!! may be self recursive
   bool Diff_Solver::check_prop_solution_and_results
-  ( Property *caller, Solve_Problem_Handler *problem_handler ){
+  ( Property *caller, Solve_Run_Info const *info ){
 
     // difference solved in this try now ?
     if( caller == &d )
       {
-	assert( d.is_solved_in_try() );	
+	assert( d.is_solved_in_try( info ) );	
 
 	// start value known ?
-	if( s.is_solved_in_try() )
+	if( s.is_solved_in_try( info ) )
 	  {
 	    // can calculate end value now:
 	    values::Scalar res_e = s + d;
 
 	    // verify result for end value
-	    if( !e.is_this_ok( res_e, this, problem_handler ) )
+	    if( !e.is_this_ok( res_e, this, info ) )
 	      return false; 
 
 	    properties[ &e ] = prop_just_solved; // end value solved
 	  }	    
 
 	// end value known ?
-	if( e.is_solved_in_try() )
+	if( e.is_solved_in_try( info ) )
 	  {
 	    // can calculate start value now:
 	    values::Scalar res_s = e - d;
 
 	    // verify result for end value
-	    if( !s.is_this_ok( res_s, this, problem_handler ) )
+	    if( !s.is_this_ok( res_s, this, info ) )
 	      return false; 
 
 	    properties[ &s ] = prop_just_solved; // end value solved
@@ -217,29 +220,29 @@ namespace anitmt{
     // start value solved in this try now ?
     if( caller == &s )
       {
-	assert( s.is_solved_in_try() );	
+	assert( s.is_solved_in_try( info ) );	
 
 	// difference value known ?
-	if( d.is_solved_in_try() )
+	if( d.is_solved_in_try( info ) )
 	  {
 	    // can calculate end value now:
 	    values::Scalar res_e = s + d;
 
 	    // verify result for end value
-	    if( !e.is_this_ok( res_e, this, problem_handler ) )
+	    if( !e.is_this_ok( res_e, this, info ) )
 	      return false; 
 
 	    properties[ &e ] = prop_just_solved; // end value solved
 	  }	    
 
 	// end value known ?
-	if( e.is_solved_in_try() )
+	if( e.is_solved_in_try( info ) )
 	  {
 	    // can calculate difference now:
 	    values::Scalar res_d = e - s;
 
 	    // verify result for difference
-	    if( !d.is_this_ok( res_d, this, problem_handler ) )
+	    if( !d.is_this_ok( res_d, this, info ) )
 	      return false; 
 
 	    properties[ &d ] = prop_just_solved; // difference solved
@@ -249,29 +252,29 @@ namespace anitmt{
     // end value solved in this try now ?
     if( caller == &e )
       {
-	assert( e.is_solved_in_try() );	
+	assert( e.is_solved_in_try( info ) );	
 
 	// difference value known ?
-	if( d.is_solved_in_try() )
+	if( d.is_solved_in_try( info ) )
 	  {
 	    // can calculate start value now:
 	    values::Scalar res_s = e - d;
 
 	    // verify result for start value
-	    if( !s.is_this_ok( res_s, this, problem_handler ) )
+	    if( !s.is_this_ok( res_s, this, info ) )
 	      return false; 
 
 	    properties[ &s ] = prop_just_solved; // start value solved
 	  }	    
 
 	// start value known ?
-	if( s.is_solved_in_try() )
+	if( s.is_solved_in_try( info ) )
 	  {
 	    // can calculate difference now:
 	    values::Scalar res_d = e - s;
 
 	    // verify result for start value
-	    if( !d.is_this_ok( res_d, this, problem_handler ) )
+	    if( !d.is_this_ok( res_d, this, info ) )
 	      return false; 
 
 	    properties[ &d ] = prop_just_solved; // start value solved
@@ -297,38 +300,38 @@ namespace anitmt{
   // Properties call that if they want to validate their results
   // !!! may be self recursive
   bool Relation_Solver::check_prop_solution_and_results
-  ( Property *caller, Solve_Problem_Handler *problem_handler ){
+  ( Property *caller, Solve_Run_Info const *info ){
 
     // relation solved in this try now ?
     if( caller == &q )
       {
-	assert( q.is_solved_in_try() );	
+	assert( q.is_solved_in_try( info ) );	
 
 	// assure quotient doesn't equal zero
 	if( q == 0 ) 
 	  return false;		// avoid division by zero
 
 	// numerator known ?
-	if( n.is_solved_in_try() )
+	if( n.is_solved_in_try( info ) )
 	  {
 	    // can calculate denominator
 	    values::Scalar res_d = n / q;
 
 	    // verify result for denominator
-	    if( !d.is_this_ok( res_d, this, problem_handler ) )
+	    if( !d.is_this_ok( res_d, this, info ) )
 	      return false; 
 
 	    properties[ &d ] = prop_just_solved; // denominator
 	  }	    
 
 	// denominator known ?
-	if( d.is_solved_in_try() )
+	if( d.is_solved_in_try( info ) )
 	  {
 	    // can calculate numerator now:
 	    values::Scalar res_n = q * d;
 
 	    // verify result for numerator
-	    if( !n.is_this_ok( res_n, this, problem_handler ) )
+	    if( !n.is_this_ok( res_n, this, info ) )
 	      return false; 
 
 	    properties[ &n ] = prop_just_solved; // numerator solved
@@ -338,29 +341,29 @@ namespace anitmt{
     // numerator solved in this try now ?
     if( caller == &n )
       {
-	assert( n.is_solved_in_try() );	
+	assert( n.is_solved_in_try( info ) );	
 
 	// quotient known ?
-	if( q.is_solved_in_try() )
+	if( q.is_solved_in_try( info ) )
 	  {
 	    // can calculate denominator now:
 	    values::Scalar res_d = n / q;
 
 	    // verify result for denominator
-	    if( !d.is_this_ok( res_d, this, problem_handler ) )
+	    if( !d.is_this_ok( res_d, this, info ) )
 	      return false; 
 
 	    properties[ &d ] = prop_just_solved; // denominator solved
 	  }	    
 
 	// denominator known ?
-	if( d.is_solved_in_try() )
+	if( d.is_solved_in_try( info ) )
 	  {
 	    // can calculate quotient now:
 	    values::Scalar res_q = n / d;
 
 	    // verify result for quotient
-	    if( !q.is_this_ok( res_q, this, problem_handler ) )
+	    if( !q.is_this_ok( res_q, this, info ) )
 	      return false; 
 
 	    properties[ &q ] = prop_just_solved; // quotient solved
@@ -370,29 +373,29 @@ namespace anitmt{
     // denominator solved in this try now ?
     if( caller == &d )
       {
-	assert( d.is_solved_in_try() );	
+	assert( d.is_solved_in_try( info ) );	
 
 	// quotient value known ?
-	if( q.is_solved_in_try() )
+	if( q.is_solved_in_try( info ) )
 	  {
 	    // can calculate numerator now:
 	    values::Scalar res_n = q * d;
 
 	    // verify result for numerator
-	    if( !n.is_this_ok( res_n, this, problem_handler ) )
+	    if( !n.is_this_ok( res_n, this, info ) )
 	      return false; 
 
 	    properties[ &n ] = prop_just_solved; // numerator solved
 	  }	    
 
 	// numerator known ?
-	if( n.is_solved_in_try() )
+	if( n.is_solved_in_try( info ) )
 	  {
 	    // can calculate quotient now:
 	    values::Scalar res_q = n / d;
 
 	    // verify result for numerator
-	    if( !q.is_this_ok( res_q, this, problem_handler ) )
+	    if( !q.is_this_ok( res_q, this, info ) )
 	      return false; 
 
 	    properties[ &q ] = prop_just_solved; // numerator solved

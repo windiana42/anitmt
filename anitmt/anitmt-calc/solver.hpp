@@ -38,6 +38,15 @@ namespace anitmt{
   //************************************************
 
   class Solver{
+    //** virtual Methods implemented by derived objects
+
+    // is called when property was solved
+    virtual void do_when_prop_was_solved( Property *ID ) {}
+    // calculates results of a solved Property (ID) and returns wheather
+    // the solution is ok
+    virtual bool check_prop_solution_and_results
+    ( Property *ID, Solve_Run_Info const *info ) = 0;
+
     //** Variables **
 
     friend class Property;
@@ -51,16 +60,11 @@ namespace anitmt{
     // Properties call that if they were solved
     // (uses virtual function do_when_prop_was_solved)
     void prop_was_solved( Property *ID );
-    // is called when property was solved
-    virtual void do_when_prop_was_solved( Property *ID ) {}
     // Properties call that if they want to validate their results
     // (uses virtual function check_prop_solution)
     bool is_prop_solution_ok
-    ( Property *ID, Solve_Problem_Handler *problem_handler );
-    // calculates results of a solved Property (ID) and returns wheather
-    // the solution is ok
-    virtual bool check_prop_solution_and_results
-    ( Property *ID, Solve_Problem_Handler *problem_handler ) = 0;
+    ( Property *ID, Solve_Run_Info const *info );
+
   protected:
     int n_props_available;
     long try_id;		// id to identify a solution try
@@ -72,6 +76,8 @@ namespace anitmt{
 
     // add property connection
     void add_Property( Property *prop );
+
+    inline void property_use_it( Property *prop );
   public:
     Solver();
     virtual ~Solver();
@@ -92,7 +98,7 @@ namespace anitmt{
   public:
     // Properties call that if they want to validate their results
     virtual bool check_prop_solution_and_results
-    ( Property *ID, Solve_Problem_Handler *problem_handler );
+    ( Property *ID, Solve_Run_Info const *info );
 
     Accel_Solver( Scalar_Property *d, Scalar_Property *t, Scalar_Property *a,
 		  Scalar_Property *v0, Scalar_Property *ve );
@@ -111,7 +117,7 @@ namespace anitmt{
   public:
     // Properties call that if they want to validate their results
     virtual bool check_prop_solution_and_results
-    ( Property *ID, Solve_Problem_Handler *problem_handler );
+    ( Property *ID, Solve_Run_Info const *info );
 
     Diff_Solver( Scalar_Property *d, Scalar_Property *s, Scalar_Property *e );
   };
@@ -126,7 +132,7 @@ namespace anitmt{
   public:
     // Properties call that if they want to validate their results
     virtual bool check_prop_solution_and_results
-    ( Property *ID, Solve_Problem_Handler *problem_handler );
+    ( Property *ID, Solve_Run_Info const *info );
 
     Relation_Solver( Scalar_Property *q, Scalar_Property *n, 
 		     Scalar_Property *d );
