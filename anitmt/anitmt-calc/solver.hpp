@@ -23,16 +23,29 @@ namespace anitmt{
 #include "property.hpp"
 
 namespace anitmt{
+
+  //************************************************
+  // Solver: general solver for dependent properties
+  //************************************************
+
   class Solver{
+    friend class Property;
+    template<class T> friend class Type_Property;
+
+    // Properties call that if they were solved
+    virtual void prop_was_solved( Property *ID ) = 0;
+    // Properties call that if they want to validate their results
+    virtual bool is_prop_solution_ok( Property *ID, bool force_usage ) = 0;
+
+    // Property that caused the last rejection of a solve run
+    static Property *rejection_cause;
   protected:
     int n_props_available;
     int n_props_connected;
     long try_id;		// id to identify a solution try
   public:
-    // Properties call that if they were solved
-    virtual void prop_was_solved( Property *ID = 0 ) = 0;
-    // Properties call that if they want to validate their results
-    virtual bool prop_solution_ok( Property *ID = 0 ) = 0;
+    // returns the Property that caused the last solve run rejection
+    static Property *get_rejection_cause();
 
     // Properties call that if they are distroyed
     void prop_disconnect();
@@ -41,7 +54,10 @@ namespace anitmt{
     virtual ~Solver();
   };
 
-  // Solver for a constantly accelerated system
+  //*********************************************************
+  // Accel_Solver: Solver for a constantly accelerated system
+  //*********************************************************
+
   class Accel_Solver : public Solver{
     Scalar_Property &d;		// differance
     Scalar_Property &t;		// duration
@@ -51,16 +67,19 @@ namespace anitmt{
     bool s_d, s_t, s_a, s_v0, s_ve; // indicates wheater a property was solved
 				    // while checking a solution
   public:
-    // Properties call that if they want to validate their results
-    virtual bool prop_solution_ok( Property *ID );
     // Properties call that if they were solved
     virtual void prop_was_solved( Property *ID );
+    // Properties call that if they want to validate their results
+    virtual bool is_prop_solution_ok( Property *ID, bool force_usage );
 
     Accel_Solver( Scalar_Property *d, Scalar_Property *t, Scalar_Property *a,
 		  Scalar_Property *v0, Scalar_Property *ve );
   };
 
-  // Solver for a start, end and differance value
+  //**********************************************************
+  // Diff_Solver: Solver for a start, end and differance value
+  //**********************************************************
+
   class Diff_Solver : public Solver{
     Scalar_Property &d;		// differance
     Scalar_Property &s;		// start
@@ -68,10 +87,10 @@ namespace anitmt{
     bool s_d, s_s, s_e;		// indicates wheater a property was solved
 				// while checking a solution
   public:
-    // Properties call that if they want to validate their results
-    virtual bool prop_solution_ok( Property *ID );
     // Properties call that if they were solved
     virtual void prop_was_solved( Property *ID );
+    // Properties call that if they want to validate their results
+    virtual bool is_prop_solution_ok( Property *ID, bool force_usage );
 
     Diff_Solver( Scalar_Property *d, Scalar_Property *s, Scalar_Property *e );
   };
@@ -84,10 +103,10 @@ namespace anitmt{
     bool s_q, s_n, s_d;		// indicates wheater a property was solved
 				// while checking a solution
   public:
-    // Properties call that if they want to validate their results
-    virtual bool prop_solution_ok( Property *ID );
     // Properties call that if they were solved
     virtual void prop_was_solved( Property *ID );
+    // Properties call that if they want to validate their results
+    virtual bool is_prop_solution_ok( Property *ID, bool force_usage );
 
     Relation_Solver( Scalar_Property *q, Scalar_Property *n, 
 		     Scalar_Property *d );

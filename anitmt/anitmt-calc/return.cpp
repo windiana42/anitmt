@@ -57,14 +57,14 @@ namespace anitmt{
   // tries to use the node as element for this container
   template <class Return_Type>
   bool Contain_Return<Return_Type>::try_add_child( Return<Return_Type> *node )
-    throw( exception_more_than_one_child ) {
+    throw( EX_more_than_one_child ) {
     
       if( !node )
 	return false;
       else
 	{
 	  if( unique_child && ( num_childs > 0 ) )
-	    throw exception_more_than_one_child();
+	    throw EX_more_than_one_child();
 
 	  if( !content.empty() )
 	    {
@@ -83,22 +83,22 @@ namespace anitmt{
   template <class Return_Type>
   Return_Type Contain_Return<Return_Type>::get_return_value( values::Scalar t,
 							     Return_Type ) 
-    throw( exception_essential_child_missing, exception_no_active_child ) {
+    throw( EX_essential_child_missing, EX_no_active_child ) {
 
     if( essential_child && ( num_childs == 0 ) )
-      throw exception_essential_child_missing();
+      throw EX_essential_child_missing();
 
     for( content_type::iterator i = content.begin(); i != content.end(); i++ )
       {
 	try{
 	  return (*i)->get_return_value( t );
 	}
-	catch( exception_not_active_at_time ){
+	catch( EX_not_active_at_time ){
 	  continue;
 	}
       }
 
-    throw exception_no_active_child();
+    throw EX_no_active_child();
   }
 
   template <class Return_Type>

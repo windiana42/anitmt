@@ -30,7 +30,8 @@ namespace anitmt{
   //******************************************************************
   // Ani_Scene: general Scene node 
   //******************************************************************
-  class Ani_Scene: public Prop_Tree_Node {
+  class Ani_Scene: public Prop_Tree_Node, 
+		   public Return< Scene_State > {
 
     static const std::string type_name;
 
@@ -45,9 +46,11 @@ namespace anitmt{
     static std::string get_type_name();
 
     Ani_Scene( std::string name );
+
+    Scene_State get_return_value( values::Scalar t, 
+				  Scene_State s = Scene_State() );    
   };
   
-  bool try_add_child( Prop_Tree_Node *node );
 }
 #endif
 

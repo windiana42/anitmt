@@ -60,8 +60,8 @@ namespace anitmt{
     return get(); 
   }
   
-  // implicite convertion to vect::vector3
-  Vector_Property::operator vect::vector3() const { 
+  // implicite convertion to values::Vector
+  Vector_Property::operator values::Vector() const { 
     return get(); 
   }
   

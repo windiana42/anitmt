@@ -21,7 +21,7 @@
 
 namespace anitmt{
   class Prop_Tree_Node;
-  class Priority_Action;
+  template< class NT> class Node_Factory;
 }
 
 #include "val.hpp"
@@ -32,9 +32,6 @@ namespace anitmt{
   //************************************************************
   // Prop_Tree_Node: provides tree structure for property groups
   //************************************************************
-
-  // type for a list of involved nodes
-  typedef std::list< Prop_Tree_Node* > involve_list_type; 
 
   class Prop_Tree_Node{
     // navigation in tree
@@ -47,20 +44,13 @@ namespace anitmt{
     std::string type;		// type of this node
     std::string name;		// name for reference
 
-    //************
     // properties
     typedef std::map< std::string, Property* > properties_type;
     properties_type properties;
 
-    // priority levels for actions like a transmission of properties to 
-    // neighbour nodes or like setting default values
-    typedef std::map< int, Priority_Action* > priority_levels_type;
-    priority_levels_type priority_level;
-
-    //********
     // childs
     virtual bool try_add_child( Prop_Tree_Node *node ) = 0;
-
+				
     // abstract child factory:
     class Child_Factory{
     public:
@@ -77,23 +67,24 @@ namespace anitmt{
       properties[ name ] = prop;
     }
 
-    inline void add_action( int level, Priority_Action *act ){
-      priority_level[ level ] = act;
-    }
-
   public:
     // known exceptions
-    class exception_child_type_unkown {};
-    class exception_child_type_rejected {};
-    class exception_child_type_already_defined {};
-    class exception_unknown_property {};
-    class exception_wrong_property_type {};
-    class exception_property_rejected {};
+    class EX_child_type_unkown {};
+    class EX_child_type_rejected {};
+    class EX_child_type_already_defined {};
+    class EX_unknown_property {};
+    class EX_wrong_property_type {};
+    class EX_property_rejected {};
+    class EX_invalid_reference {}; //!!! should be more differentiated
 
     std::string	get_name();	// return name
     std::string get_type();	// return type
     Property *get_property( std::string name );	
 				// return property
+    template< class T > 
+    void set_property( std::string name, T val )
+      throw( EX_unknown_property,EX_wrong_property_type );
+				// set value of a property 
     std::list<std::string> get_properties_names(); 
 				// returns all property names
 
@@ -102,73 +93,36 @@ namespace anitmt{
     std::list<Prop_Tree_Node*> get_all_childs();
 				// return all childs
     Prop_Tree_Node *add_child( std::string type, std::string name )
-      throw( exception_child_type_unkown, exception_child_type_rejected );
+      throw( EX_child_type_unkown, EX_child_type_rejected );
 				// add child of type with name
     virtual Prop_Tree_Node *get_referenced_node( std::string ref );
 				// returns node by interpreting the hierachical
  				// reference string. 
 
     static void add_child_factory( std::string name, Child_Factory* fac )
-      throw( exception_child_type_already_defined );
+      throw( EX_child_type_already_defined );
+				// adds a factory object for class generation
+    //**************************
+    // constructors / destructor
 
     Prop_Tree_Node( std::string type, std::string name );
     virtual ~Prop_Tree_Node();
 
-    //-- Templates
-
-    // set property
-    template< class T >  
-    void set_property( std::string name, T val ) 
-      throw( exception_unknown_property,exception_wrong_property_type ) {
-
-      if( get_property( name ) != 0 )
-	{
-	  Type_Property<T> *p = 
-	    dynamic_cast< Type_Property<T>* >( properties[ name ] );
-
-	  if( !p )
-	    throw exception_wrong_property_type();
-
-	  bool accepted = p->set_if_ok( val );
-	  if( !accepted )
-	    throw exception_property_rejected();
-	}
-      else
-	throw exception_unknown_property();
-    }
   };
 
-  // child factory template
+  //**************************************************************************
+  // Node_Factory<NT>: provides a factory template for objects that may create 
+  //                   any node objects of type NT
+  //**************************************************************************
   template< class NT>
   class Node_Factory : public Prop_Tree_Node::Child_Factory{
   public:
-    virtual Prop_Tree_Node *create( std::string name ){
-      return new NT( name );
-    }
-  };
-  
-  class Priority_Action{
-  public:
-    virtual involve_list_type do_it() = 0;
-    
-    virtual ~Priority_Action() {}
-  };
-
-  template<class T>
-  class Default_Value : public Priority_Action{
-    Type_Property<T> *prop;
-    T val;
-    Prop_Tree_Node *node;
-  public:
-    virtual involve_list_type do_it(){ 
-      //node->clear_involve_list();
-      prop->set_if_ok( val ); 
-      //return node->get_involve_list();
-    }
-
-    Default_Value( Type_Property<T> *p, T v, Prop_Tree_Node *n ) 
-      : prop(p), val(v), node(n){}
+    virtual Prop_Tree_Node *create( std::string name );
   };
 }
+
+// force template generation of all used types
+#include "proptree_templ.cpp"
+
 #endif
 

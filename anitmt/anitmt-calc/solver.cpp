@@ -65,7 +65,7 @@ namespace anitmt{
   
   // Properties call that if they want to validate their results
   // !!! may be self recursive
-  bool Accel_Solver::prop_solution_ok( Property *caller ){
+  bool Accel_Solver::is_prop_solution_ok( Property *caller, bool force_usage ){
     long cur_try_id = caller->get_try_id();
     if( try_id != cur_try_id )	// is this the first call in try
       {
@@ -89,11 +89,11 @@ namespace anitmt{
 		values::Scalar res_d  = v0*t + 0.5*a*t*t;
 
 		// verify result for endspeed
-		if( !ve.is_this_ok( res_ve, this ) )
+		if( !ve.is_this_ok( res_ve, this, force_usage ) )
 		  return false; 
 
 		// verify result for difference
-		if( !d.is_this_ok( res_d, this ) )
+		if( !d.is_this_ok( res_d, this, force_usage ) )
 		  return false; 
 
 		s_ve = true; // endspeed solved
@@ -135,7 +135,7 @@ namespace anitmt{
   
   // Properties call that if they want to validate their results
   // !!! may be self recursive
-  bool Diff_Solver::prop_solution_ok( Property *caller ){
+  bool Diff_Solver::is_prop_solution_ok( Property *caller, bool force_usage ){
     long cur_try_id = caller->get_try_id();
     if( try_id != cur_try_id )	// is this the first call in try
       {
@@ -156,7 +156,7 @@ namespace anitmt{
 	    values::Scalar res_e = s + d;
 
 	    // verify result for end value
-	    if( !e.is_this_ok( res_e, this ) )
+	    if( !e.is_this_ok( res_e, this, force_usage ) )
 	      return false; 
 
 	    s_e = true; // end value solved
@@ -169,7 +169,7 @@ namespace anitmt{
 	    values::Scalar res_s = e - d;
 
 	    // verify result for end value
-	    if( !s.is_this_ok( res_s, this ) )
+	    if( !s.is_this_ok( res_s, this, force_usage ) )
 	      return false; 
 
 	    s_s = true; // end value solved
@@ -188,7 +188,7 @@ namespace anitmt{
 	    values::Scalar res_e = s + d;
 
 	    // verify result for end value
-	    if( !e.is_this_ok( res_e, this ) )
+	    if( !e.is_this_ok( res_e, this, force_usage ) )
 	      return false; 
 
 	    s_e = true; // end value solved
@@ -201,7 +201,7 @@ namespace anitmt{
 	    values::Scalar res_d = e - s;
 
 	    // verify result for difference
-	    if( !d.is_this_ok( res_d, this ) )
+	    if( !d.is_this_ok( res_d, this, force_usage ) )
 	      return false; 
 
 	    s_d = true; // difference solved
@@ -220,7 +220,7 @@ namespace anitmt{
 	    values::Scalar res_s = e - d;
 
 	    // verify result for start value
-	    if( !s.is_this_ok( res_s, this ) )
+	    if( !s.is_this_ok( res_s, this, force_usage ) )
 	      return false; 
 
 	    s_s = true; // start value solved
@@ -233,7 +233,7 @@ namespace anitmt{
 	    values::Scalar res_d = e - s;
 
 	    // verify result for start value
-	    if( !d.is_this_ok( res_d, this ) )
+	    if( !d.is_this_ok( res_d, this, force_usage ) )
 	      return false; 
 
 	    s_d = true; // start value solved
@@ -270,7 +270,8 @@ namespace anitmt{
   
   // Properties call that if they want to validate their results
   // !!! may be self recursive
-  bool Relation_Solver::prop_solution_ok( Property *caller ){
+  bool Relation_Solver::is_prop_solution_ok( Property *caller, 
+					     bool force_usage ){
     long cur_try_id = caller->get_try_id();
     if( try_id != cur_try_id )	// is this the first call in try
       {
@@ -295,7 +296,7 @@ namespace anitmt{
 	    values::Scalar res_d = n / q;
 
 	    // verify result for denominator
-	    if( !d.is_this_ok( res_d, this ) )
+	    if( !d.is_this_ok( res_d, this, force_usage ) )
 	      return false; 
 
 	    s_d = true; // denominator
@@ -308,7 +309,7 @@ namespace anitmt{
 	    values::Scalar res_n = q * d;
 
 	    // verify result for numerator
-	    if( !n.is_this_ok( res_n, this ) )
+	    if( !n.is_this_ok( res_n, this, force_usage ) )
 	      return false; 
 
 	    s_n = true; // numerator solved
@@ -327,7 +328,7 @@ namespace anitmt{
 	    values::Scalar res_d = n / q;
 
 	    // verify result for denominator
-	    if( !d.is_this_ok( res_d, this ) )
+	    if( !d.is_this_ok( res_d, this, force_usage ) )
 	      return false; 
 
 	    s_d = true; // denominator solved
@@ -340,7 +341,7 @@ namespace anitmt{
 	    values::Scalar res_q = n / d;
 
 	    // verify result for quotient
-	    if( !q.is_this_ok( res_q, this ) )
+	    if( !q.is_this_ok( res_q, this, force_usage ) )
 	      return false; 
 
 	    s_q = true; // quotient solved
@@ -359,7 +360,7 @@ namespace anitmt{
 	    values::Scalar res_n = q * d;
 
 	    // verify result for numerator
-	    if( !n.is_this_ok( res_n, this ) )
+	    if( !n.is_this_ok( res_n, this, force_usage ) )
 	      return false; 
 
 	    s_n = true; // numerator solved
@@ -372,7 +373,7 @@ namespace anitmt{
 	    values::Scalar res_q = n / d;
 
 	    // verify result for numerator
-	    if( !q.is_this_ok( res_q, this ) )
+	    if( !q.is_this_ok( res_q, this, force_usage ) )
 	      return false; 
 
 	    s_q = true; // numerator solved

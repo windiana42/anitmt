@@ -21,7 +21,7 @@ namespace anitmt{
   //******************************************************************
 
   // type name identifier as string
-  const std::string Ani_Scene::type_name = "scene";
+  const std::string Ani_Scene::type_name = "animation";
 
   std::string Ani_Scene::get_type_name(){
     return type_name;
@@ -49,5 +49,10 @@ namespace anitmt{
     return res;
   }
 
+  Scene_State Ani_Scene::get_return_value( values::Scalar t, 
+					   Scene_State s = Scene_State() ) {
+    return Scene_State();
+  }
+  
 }
 

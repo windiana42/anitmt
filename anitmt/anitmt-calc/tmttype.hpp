@@ -20,7 +20,9 @@
 
 namespace anitmt{
 
+  //*************
   // Scalar types
+  //*************
 
   class Angle : public values::Scalar {
   public:
@@ -28,13 +30,13 @@ namespace anitmt{
     Angle( values::Scalar v ) : values::Scalar(v) {}
   };
 
-
+  //*************
   // Vector types
+  //*************
 
   class Position  : public values::Vector {
   public:
     Position() : values::Vector() {}
-    Position( vect::vector3 v ) : values::Vector(v) {}
     Position( values::Vector v ) : values::Vector(v) {}
   };
   class Direction : public values::Vector {
@@ -48,7 +50,11 @@ namespace anitmt{
     Up_Vector( values::Vector v ) : values::Vector(v) {}
   };
 
+  //************
   // State types
+  //************
+
+  class Scene_State {};
 
   class Object_State : public values::Matrix {
   public:

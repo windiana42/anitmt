@@ -42,7 +42,7 @@ namespace anitmt{
     add_property( "endtime",   &te );
     add_property( "slope",      &s );
  
-    add_action( 5, new Default_Value<values::Scalar>( &s, 0, this ) );
+    //add_action( 5, new Default_Value<values::Scalar>( &s, 0, this ) );
     // add_default_value( &s, values::Scalar(0), 5 );
   }
     

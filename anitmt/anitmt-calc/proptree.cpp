@@ -102,12 +102,12 @@ namespace anitmt{
   // add child of type with name
   Prop_Tree_Node *Prop_Tree_Node::add_child( std::string type, 
 					     std::string name ) 
-    throw( exception_child_type_unkown, exception_child_type_rejected ) {
+    throw( EX_child_type_unkown, EX_child_type_rejected ) {
 
     child_factory_type::iterator i = child_factory.find( type );
     // if type not found
     if( i == child_factory.end() )
-      throw exception_child_type_unkown();
+      throw EX_child_type_unkown();
 
     // create node with factory found
     Prop_Tree_Node *node = i->second->create( name );
@@ -129,13 +129,10 @@ namespace anitmt{
       }
 
     if( !try_add_child( node ) )
-      throw exception_child_type_rejected();
+      throw EX_child_type_rejected();
 
     return node;
   }
-
-
-  class exception_invalid_reference {};	//!!! should be more differentiated
 
   // find node according to referencing string
   Prop_Tree_Node *Prop_Tree_Node::get_referenced_node( std::string ref ){
@@ -147,21 +144,21 @@ namespace anitmt{
 	{
 	  cur = cur->parent;
 	  if( cur == 0 )
-	    throw exception_invalid_reference();
+	    throw EX_invalid_reference();
 	  continue;
 	}
       if( part == "next" )
 	{
 	  cur = cur->next;
 	  if( cur == 0 )
-	    throw exception_invalid_reference();
+	    throw EX_invalid_reference();
 	  continue;
 	}
       if( part == "prev" )
 	{
 	  cur = cur->prev;
 	  if( cur == 0 )
-	    throw exception_invalid_reference();
+	    throw EX_invalid_reference();
 	  continue;
 	}
 
@@ -172,25 +169,30 @@ namespace anitmt{
 	  continue;
 	}
 
-      throw exception_invalid_reference();
+      throw EX_invalid_reference();
     }
   }
 
+  // adds a factory object for class generation
   void Prop_Tree_Node::add_child_factory( std::string type_name, 
 					  Child_Factory* fac )
-    throw( exception_child_type_already_defined ) {
+    throw( EX_child_type_already_defined ) {
 
     child_factory_type::iterator i = child_factory.find( type_name );
     // if type not found
     if( i != child_factory.end() )
-      throw exception_child_type_already_defined();
+      throw EX_child_type_already_defined();
     
     child_factory[ type_name ] = fac;
   }
 
+  //**************************
+  // constructors / destructor
+
   Prop_Tree_Node::Prop_Tree_Node( std::string t, std::string n ) 
     : parent(0), prev(0), next(0), first_child(0), last_child(0), 
       type(t), name(n) {}
+
   Prop_Tree_Node::~Prop_Tree_Node() {}
 
 }

@@ -37,8 +37,8 @@ namespace anitmt{
 
   // tries to set the property and returns whether it was successful (true)
   template<class T>
-  bool Type_Property<T>::set_if_ok( T v ){
-    bool res = is_this_ok( v, 0 );
+  bool Type_Property<T>::set_if_ok( T v, bool force_usage ){
+    bool res = is_this_ok( v, 0, force_usage );
     if( res ) use_it(0);
     cur_try_id++;		// change try_id for next time
     return res;
@@ -51,27 +51,30 @@ namespace anitmt{
   }
 
   // This is called try if this value might be valid for this property
-  // returns 0 if value is acceptable
-  // !!! may be self recursive
+  // returns true if value is acceptable
+  // !!! may be recursive
   template<class T>
-  bool Type_Property<T>::is_this_ok( T v_to_try, Solver *caller ){
+  bool Type_Property<T>::is_this_ok( T v_to_try, Solver *caller, 
+				     bool force_usage ) 
+    throw( EX_value_conflict ){
+    
     bool res = true;
     
-    // if property is already solved
-    if( solved )
+    // if property is already solved (in current try)
+    if( solved || ( try_id == cur_try_id ) )
       {
 	// return whether it is the same result
-	return (v == v_to_try);
+	if( (v == v_to_try) )
+	  return true;
+
+	// return error or exception
+	if( force_usage )
+	  throw EX_value_conflict();
+	else
+	  return false;
       }
 
-    // if property was already solved in the current try
-    if( try_id == cur_try_id )
-      {
-	// return whether it is the same result
-	return (v == v_to_try);
-      }
-
-    try_id = cur_try_id;	// mark this property to be of this try
+    try_id = cur_try_id;	// mark this property to be solved in this try
     v = v_to_try;
 
     // for each solver (*i)
@@ -80,7 +83,7 @@ namespace anitmt{
 	// skip the solver who gave the solution
 	if( (*i) == caller ) continue;
 
-	if( !((*i)->prop_solution_ok( this )) )
+	if( !((*i)->is_prop_solution_ok( this, force_usage )) )
 	  {
 	    res = false;
 	    break;
@@ -97,7 +100,7 @@ namespace anitmt{
     if( !solved )
       {
 	// v already got the value from the try
-	assert( try_id == cur_try_id );// it was hopefully the same try
+	assert( try_id == cur_try_id ); // it was hopefully the same try
 	// v is accepted as solution now
 	solved = true;
 

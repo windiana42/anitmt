@@ -29,13 +29,13 @@ namespace anitmt{
   //************************************************************
 
   // exception that this child is able to return a value at specified time
-  class exception_not_active_at_time {};
+  class EX_not_active_at_time {};
   // exception that more than one child is added to a unique child container
-  class exception_more_than_one_child {};
+  class EX_more_than_one_child {};
   // exception that no child was added but was essential
-  class exception_essential_child_missing {};
+  class EX_essential_child_missing {};
   // exception that no child is able to return a value
-  class exception_no_active_child {};
+  class EX_no_active_child {};
 
   template <class Return_Type>
   class Return {
@@ -53,7 +53,7 @@ namespace anitmt{
     // returns the result at time t of defined return type
     virtual Return_Type get_return_value( values::Scalar t, 
 					  Return_Type type_ID = Return_Type() )
-      throw( exception_not_active_at_time ) = 0;
+      throw( EX_not_active_at_time ) = 0;
 
     Return();
   };
@@ -75,12 +75,12 @@ namespace anitmt{
 
     // tries to use the node as element for this container
     bool try_add_child( Return<Return_Type> *node ) 
-      throw( exception_more_than_one_child );
+      throw( EX_more_than_one_child );
 
     // returns the result according to childs that are active at time t
     Return_Type get_return_value( values::Scalar t, 
 				  Return_Type type_ID = Return_Type() )
-      throw( exception_essential_child_missing, exception_no_active_child );
+      throw( EX_essential_child_missing, EX_no_active_child );
 
     Contain_Return( bool essential_child, bool is_unique_child );
   };

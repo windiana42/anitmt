@@ -118,7 +118,7 @@ namespace anitmt{
     add_property( "startspeed", &v0 );
     add_property( "endspeed", &ve );
  
-    add_action( 3, new Default_Value<values::Scalar>( &a, 0, this ) );
+    //add_action( 3, new Default_Value<values::Scalar>( &a, 0, this ) );
     // add_default_value( &a, values::Scalar(0), 3 );
   }
     

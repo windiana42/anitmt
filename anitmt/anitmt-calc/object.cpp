@@ -45,7 +45,7 @@ namespace anitmt{
     try {
       return mat.get_return_value(t);
     }
-    catch( exception_no_active_child ) {}
+    catch( EX_no_active_child ) {}
 
     values::Matrix ret;
 

@@ -31,10 +31,19 @@ namespace anitmt{
 #include "solver.hpp"
 
 namespace anitmt{
+
+  //************
+  // Exceptions:
+  //************
+  
+  class EX_value_conflict {};
+
   //****************************************
   // Property: container for property values
   //****************************************
+
   class Property{
+    friend class Solver;
   protected:
     typedef std::list< Solver* > solvers_type;
     solvers_type solvers;	// Solvers that might calculate this property
@@ -48,18 +57,18 @@ namespace anitmt{
   public:
     bool s() const;		// is solved?
 
+    virtual std::ostream &write2stream( std::ostream& ) = 0;
+
     Property();
     virtual ~Property();
-
-    virtual std::ostream &write2stream( std::ostream& ) = 0;
 
     //********************************************************************
     // the following functions should only be accessed by class Solver and
     // derived classes
 
+    void add_Solver( Solver *solver ); // adds a solver for this property
     bool s_in_try() const;	// is property solved in current try
     long get_try_id() const;	// returns the current try id
-    void add_Solver( Solver *solver ); // adds a solver for this property
   };
 
   std::ostream &operator << ( std::ostream&, Property & );
@@ -72,8 +81,10 @@ namespace anitmt{
 
   public:	
     T get() const;		// returns the value
-    bool set_if_ok( T v );	// tries to set the value and returns whether
-				// the attempt was successful (true) or not
+    bool set_if_ok( T v, bool force_usage = true ); 
+				// tries to set the value and returns whether
+				// the attempt was successful (true) or not.
+				// force_usage is for explizite user inputs
 
     operator T() const;		// implicite convertion to type (like get())
 
@@ -85,7 +96,8 @@ namespace anitmt{
 
     // This is called to try if this value might be valid for this property
     // returns true if value is acceptable
-    bool is_this_ok( T v, Solver *caller );
+    bool is_this_ok( T v, Solver *caller, bool force_usage )
+      throw( EX_value_conflict );
     // Solver call this when the given value was ok
     void use_it( Solver *caller );
   };
@@ -106,7 +118,7 @@ namespace anitmt{
   //******************************************************
   class Vector_Property : public Type_Property<values::Vector>{
   public:
-    operator vect::vector3() const;	// implicite convertion to vector3
+    operator values::Vector() const;	// implicite convertion to Vector
   };
 
   //******************************************************
