@@ -26,6 +26,7 @@
 #define _Inc_Recursive_Input_Stream_H_ 1
 
 #include <list>
+#include <message/message.hpp>
 
 #include "binstr.hpp"
 #include "searchpath.hpp"
@@ -39,7 +40,8 @@ extern const char *Num_Postfix(int n);
 
 // Class to read in files which can #include other files 
 // in turn etc. 
-class Recursive_Input_Stream
+class Recursive_Input_Stream : 
+	public message::Message_Reporter
 {
 	private:
 		struct UInput_Stream : public Buffered_Input_Stream
@@ -199,12 +201,12 @@ class Recursive_Input_Stream
 		//   file2:17 included from
 		//   file1:48 included from
 		//   file0:2"
-		std::ostream &Print_Include_Hierarchy(std::ostream &os);
+		std::string Include_Hierarchy_String();
 		
 		// Print error header. Must be called from within 
 		// Parse_Input() or Parse_EOF(). 
-		std::ostream &Error_Header(std::ostream &os,int line,
-			bool force_print_hierarchy=false);
+		message::Message_Stream &Error_Header(message::Message_Stream os,
+			int line,bool force_print_hierarchy=false);
 		
 		// Abort paring; Start_Parser() will return an error. 
 		// Must return from Parse_Input() / Parse_EOF() after 
@@ -232,7 +234,7 @@ class Recursive_Input_Stream
 		// etc. (hint: check ib->depth; depth=0 for top level) 
 		virtual void Parse_EOF(const Parse_Input_Buf *ib)=0;
 	public:
-		Recursive_Input_Stream();
+		Recursive_Input_Stream(message::Message_Consultant *mcons);
 		virtual ~Recursive_Input_Stream();
 		
 		// Warn if files get included more than once?

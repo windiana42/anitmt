@@ -125,11 +125,10 @@ ssize_t Recursive_Input_Stream::_read_curr(char *buf,size_t len)
 	tot_read_bytes+=rd;
 	if(rd!=tocopy)  // otherwise: internal error or file modified
 	{
-		std::cerr << cr.curr->is->Path() << ": unexpected EOF encountered "
+		error() << cr.curr->is->Path() << ": unexpected EOF encountered "
 			"while trying to read " << tocopy << " bytes at position " << 
-			pos << "." << std::endl;
-		std::cerr << "Internal error or file was modified during execution." <<
-			std::endl;
+			pos << ".";
+		error() << "Internal error or file was modified during execution.";
 		return(-2);
 	}
 	
@@ -152,10 +151,9 @@ int Recursive_Input_Stream::_Switch_CR(InFile_Segment *new_ifs)
 			size_t pos=cr.curr->is->Off();
 			if(cr.curr->is->skip(cr.skip)!=size_t(cr.skip))
 			{
-				std::cerr << cr.curr->is->Path() << ": failed to skip " << 
-					cr.skip << " at position " << pos << "." << std::endl;
-				std::cerr << "Internal error or file was modified during execution." <<
-					std::endl;
+				error() << cr.curr->is->Path() << ": failed to skip " << 
+					cr.skip << " at position " << pos << ".";
+				error() << "Internal error or file was modified during execution.";
 				return(-3);
 			}
 		}
@@ -235,8 +233,8 @@ int Recursive_Input_Stream::Start_Parser(const std::string &file)
 	
 	if(!top_is->open(/*print_error*/true))
 	{
-		std::cerr << "Hmm, could not open master scene file; "
-			"you may wish to interrupt me." << std::endl;
+		error() << "Hmm, could not open master scene file; "
+			"you may wish to interrupt me.";
 		delete top_is;
 		return(-1);
 	}
@@ -316,8 +314,8 @@ int Recursive_Input_Stream::_Recursive_Read(InFile_Segment *ifs)
 		{
 			if(ifs->depth>=Max_Include_Depth)
 			{
-				std::cerr << "Error: Max include depth (" << Max_Include_Depth <<
-					") exceeded; skipping " << include.is->Path() << std::endl;
+				error() << "Error: Max include depth (" << Max_Include_Depth <<
+					") exceeded; skipping " << include.is->Path();
 				if(include.is)  delete include.is;
 				include.is=NULL;
 				include.scheduled=false;
@@ -408,7 +406,7 @@ int Recursive_Input_Stream::Include_File(
 		
 		if(_Input_File_In_Hierarchy(lis))
 		{
-			Error_Header(std::cerr,lineno) << 
+			Error_Header(error(),lineno) << 
 				"detected include recursion loop: " << 
 				lis->Path() << std::endl;
 			return(2);
@@ -419,13 +417,13 @@ int Recursive_Input_Stream::Include_File(
 		assert(!is->IsOpen());
 		if(!is->open(/*print_error*/true))
 		{
-			Error_Header(std::cerr,lineno) << "  failed to include the file for "
+			Error_Header(error(),lineno) << "  failed to include the file for "
 				"the second time. Are you doing nasty things here?" << std::endl;
 			return(3);  // opening failed; error written
 		}
 		
 		if(warn_multiple_include)
-		{  Error_Header(std::cerr,lineno) << "warning: " << (lis->Path()) << 
+		{  Error_Header(error(),lineno) << "warning: " << (lis->Path()) << 
 			" included for the " << (lis->use_cnt) << 
 			Num_Postfix(lis->use_cnt) << 
 			" time. Expect trouble." << std::endl;  }
@@ -468,23 +466,28 @@ Recursive_Input_Stream::InFile_Segment
 //   file2:17 included from
 //   file1:48 included from
 //   file0:2"
-std::ostream &Recursive_Input_Stream::Print_Include_Hierarchy(std::ostream &os)
+std::string Recursive_Input_Stream::Include_Hierarchy_String()
 {
 	InFile_Segment *i=last_ifs;
-	if(!i)  return(os);
-	os << i->is->Path();
+	std::string hs="";
+	if(!i)  return(hs);
+	hs+=i->is->Path();
+	char tmp_line[32];
 	for(i=_Prev_Depth(i); i; i=_Prev_Depth(i))
 	{
-		os << " included from" << std::endl << 
-			"  " << i->is->Path() << ":" << 
-			(i->line0+i->lines);
+		hs+=" included from\n  ";
+		hs+=i->is->Path();
+		hs+=":";
+		snprintf(tmp_line,32,"%d",(i->line0+i->lines));
+		hs+=tmp_line;
 	}
-	return(os);
+	return(hs);
 }
 
 
-std::ostream &Recursive_Input_Stream::Error_Header(std::ostream &os,int line,
-	bool force_print_hierarchy)
+message::Message_Stream &Recursive_Input_Stream::Error_Header(
+	message::Message_Stream os,
+	int line,bool force_print_hierarchy)
 {
 	if(!last_ifs)
 		return(os);
@@ -510,19 +513,18 @@ std::ostream &Recursive_Input_Stream::Error_Header(std::ostream &os,int line,
 	{
 		if(last_ifs->depth>0)
 		{
-			os << "In ";
-			Print_Include_Hierarchy(os);
-			os << std::endl;
+			os << "In " << Include_Hierarchy_String();
 			h_p_ifs=last_ifs;
 		}
 		else  // do not print hierarchy for depth=0. 
 		{  h_p_ifs=NULL;  }
 	}
 	
-	os << last_ifs->is->Path() << ":";
-	if(line<0)  {  os << "???";  }
-	else        {  os << line;   }
-	os << ": ";
+	char line_tmp[32];
+	if(line<0)  {  strcpy(line_tmp,"???");  }
+	else        {  snprintf(line_tmp,32,"%d",line);  }
+	os << last_ifs->is->Path() << ":" << line_tmp << ": " << 
+		message::noend;
 	
 	return(os);
 }
@@ -658,7 +660,8 @@ Recursive_Input_Stream::Input_Buffer::~Input_Buffer()
 }
 
 
-Recursive_Input_Stream::Recursive_Input_Stream()
+Recursive_Input_Stream::Recursive_Input_Stream(message::Message_Consultant *mcons) : 
+	message::Message_Reporter(mcons)
 {
 	ibuf_default_len=4096;
 	curr_ib=NULL;

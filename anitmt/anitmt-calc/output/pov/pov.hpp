@@ -24,6 +24,8 @@
 #ifndef __AniTMT_Pov_Output_Interface__
 #define __AniTMT_Pov_Output_Interface__
 
+#include <message/message.hpp>
+
 #include "../output.hpp"
 #include "fdump.hpp"
 
@@ -39,7 +41,8 @@ namespace anitmt
 
 //! raw data output format
 class Pov_Output : 
-	public Output_Interface
+	public Output_Interface,
+	public message::Message_Reporter
 {
 	private:
 		Animation *ani;
@@ -55,16 +58,13 @@ class Pov_Output :
 		};
 		
 		std::list<Dump_Node> dn_list;
-		
-		int verbose()  {  return(ani->param.verbose());  }
-		std::ostream &vout;  // verbose stream
 	public:
 		//! init interface (ex: check if scene file exists)
-		virtual void init() throw();
+		virtual void init() throw( );
 		//! check the components (verify them and copy files)
-		virtual void check_components() throw();
+		virtual void check_components() throw( );
 		//! process the resulting animation (ex: integrate it in scene description)
-		virtual void process_results() throw(); 
+		virtual void process_results() throw( ); 
 		
 		Pov_Output(Animation *ani);
 		virtual ~Pov_Output();

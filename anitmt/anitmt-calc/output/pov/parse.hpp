@@ -30,7 +30,7 @@
 #include "findstr.hpp"
 #include "fdump.hpp"
 
-#include "animation.hpp"
+#include <animation.hpp>
 
 
 namespace output_io
@@ -71,7 +71,7 @@ enum tokID
 };
 
 class File_Parser : 
-	public Recursive_Input_Stream 
+	public Recursive_Input_Stream
 {
 	class Sub_Parser_Stack;
 	class AValue_List;
@@ -218,7 +218,8 @@ class File_Parser :
 			AValue *next;  // AValue_List queuing; do not modify 
 			
 			tokID type;   // taScalar or taObject
-			anitmt::Prop_Tree_Node *ptn;
+			void *cif;   // *_Component_Interface (allocated by us)
+			
 			int nfound;  // how often found in POV/.. file
 			unsigned int serial;  // the _aniTMT_???_ value
 			bool locked;   // currently working on this one?
@@ -243,7 +244,10 @@ class File_Parser :
 			int curr_active;
 			
 			AValue();
-			~AValue() { }
+			~AValue();
+			
+			// Returns name of stored *_Component_Interface
+			std::string get_name();
 		};
 		
 	private:
@@ -282,11 +286,11 @@ class File_Parser :
 			
 			// Print warnings on unused objects/scalars
 			// Returns number of unused things. 
-			int Warn_Unused(std::ostream &os);
+			int Warn_Unused(message::Message_Stream os);
 			
 			AValue_List()  {  first=last=NULL;  }
 			~AValue_List()  {  Clear();  }
-			private: int _Warn_Unused(std::ostream &os,tokID type);
+			private: int _Warn_Unused(message::Message_Stream os,tokID type);
 		};
 		
 		Modification_Copy *mcopy;
@@ -295,11 +299,11 @@ class File_Parser :
 		Find_String *av_finder;   // includig object/scalar names 
 		size_t pp_find_longest;  // longest str +1 
 		
-		int _Finder_Check_Copy_Name(anitmt::Prop_Tree_Node *ptn,tokID id,unsigned int *counter);
+		int _Finder_Check_Copy_Name(void *cif,tokID id,unsigned int *counter);
 		void _Set_Up_Finder_Const();
-		int _Set_Up_Finder(anitmt::Animation *ani,anitmt::Ani_Scene *sc);
-		int _Set_Up_MCopy(anitmt::Animation *ani,anitmt::Ani_Scene *sc);
-		int _Set_Up_FDump(anitmt::Animation *ani,anitmt::Ani_Scene *sc);
+		int _Set_Up_Finder(anitmt::Animation *ani,anitmt::Scene_Interface &scene_if);
+		int _Set_Up_MCopy(anitmt::Animation *ani,anitmt::Scene_Interface &scene_if);
+		int _Set_Up_FDump(anitmt::Animation *ani,anitmt::Scene_Interface &scene_if);
 		void _Set_Up_SPS();
 		void _CleanupUnneeded();
 		void _Cleanup();
@@ -334,10 +338,14 @@ class File_Parser :
 		void Put_Back_Tok(Find_String::RV *rv);
 		void Consumed(size_t n,int nlines);
 		
-		std::ostream &Error_Header()
-			{  return(Recursive_Input_Stream::Error_Header(std::cerr,cc.line));  }
-		std::ostream &Error_Header(int line)
-			{  return(Recursive_Input_Stream::Error_Header(std::cerr,line));  }
+		message::Message_Stream &Error_Header()
+			{  return(Recursive_Input_Stream::Error_Header(error(),cc.line));  }
+		message::Message_Stream &Error_Header(int line)
+			{  return(Recursive_Input_Stream::Error_Header(error(),line));  }
+		message::Message_Stream &Warning_Header()
+			{  return(Recursive_Input_Stream::Error_Header(warn(),cc.line));  }
+		message::Message_Stream &Warning_Header(int line)
+			{  return(Recursive_Input_Stream::Error_Header(warn(),line));  }
 
 		AValue_List av_list;
 		Frame_Dump *fdump;  // namespace POV
@@ -354,18 +362,15 @@ class File_Parser :
 		
 		// To cut out comment if user wants it. 
 		void Comment_Cutout(Position *start,Position *end);
-		
-		int verbose;
-		std::ostream &vout;  // verbose stream
 	public:
-		File_Parser();
+		File_Parser(message::Message_Consultant *mcon);
 		~File_Parser();
 		
 		// To tweak parser settings: 
 		Config config;
 		
 		// Return 0 on success; !=0 on error 
-		int Go(anitmt::Animation *ani,anitmt::Ani_Scene *sc);
+		int Go(anitmt::Animation *ani,anitmt::Scene_Interface &sc_if);
 		
 		// Call this if you want to write frame include files. 
 		// This returns a pointer to the Frame_Dump class allocated 

@@ -79,8 +79,8 @@ int Modification_Copy::_Copy_Till(Input_Stream *inf,
 		buf->len=inf->read(buf->buf,want);
 		if(buf->len<want)
 		{
-			std::cerr << "Unexpected EOF in " << inf->CPath() << 
-				" at position " << inf->Off() << std::endl;
+			error() << "Unexpected EOF in " << inf->CPath() << 
+				" at position " << inf->Off();
 			return(-1);
 		}
 		outf->write(buf->buf,buf->len);
@@ -94,8 +94,8 @@ int Modification_Copy::_Skip_Bytes(Buffered_Input_Stream *inf,size_t nbytes)
 {
 	if(inf->skip(nbytes)<nbytes)
 	{
-		std::cerr << "Unexpected EOF in " << inf->CPath() << 
-			" at position " << inf->Off() << std::endl;
+		error() << "Unexpected EOF in " << inf->CPath() << 
+			" at position " << inf->Off();
 		return(1);
 	}
 	return(0);
@@ -126,9 +126,8 @@ int Modification_Copy::_Copy_File(const std::string &output_path,CopyFile *cf)
 	if(!outf.open(/*allow_overwrite=*/true))
 	{  return(1);  }
 	
-	if(verbose)
-	{  vout() << "Copying \"" << inf.CPath() << "\" --> \"" << 
-		outf.CPath() << "\"...";  vout().flush();  }
+	verbose(1) << "Copying \"" << inf.CPath() << "\" --> \"" << 
+		outf.CPath() << "\"..." << message::noend;
 	
 	// The performance does not depend hightly upon the buffer size here 
 	// but I want to make sure not to use a size which is not too far 
@@ -140,13 +139,15 @@ int Modification_Copy::_Copy_File(const std::string &output_path,CopyFile *cf)
 	int ninsert=0,ndelete=0;
 	for(ModNode *n=cf->mod; n; n=n->next)
 	{
-		if(verbose>3)  // yes...
+		if(verbose_level()>3)  // yes...
 		{
-			vout() << "Next action: ";
+			verbose(4) << "Next action: " << message::noend;
 			if(n->action==MC_Delete)
-			{  vout() << "delete " << n->len << " bytes at " << n->pos << ": ";  }
+			{  verbose(4) << "delete " << n->len << " bytes at " << 
+				n->pos << ": " << message::noend;  }
 			else if(n->action==MC_Insert)
-			{  vout() << "insert " << n->len << " bytes at " << n->pos << ": ";  }
+			{  verbose(4) << "insert " << n->len << " bytes at " << 
+				n->pos << ": " << message::noend;  }
 		}
 		int ctv=_Copy_Till(&inf,&outf,&buf,n->pos);
 		if(ctv<0)
@@ -163,9 +164,9 @@ int Modification_Copy::_Copy_File(const std::string &output_path,CopyFile *cf)
 					if(nend<ipos)  skiplen=0;
 					else  skiplen=nend-ipos;
 				}
-				if(verbose>3)
-				{  vout() << "skip=" << skiplen << 
-					((ctv==1) ? " [overlapping]" : "");  }
+				if(verbose_level()>3)
+				{  verbose(4) << "skip=" << skiplen << 
+					((ctv==1) ? " [overlapping]" : "") << message::noend;  }
 				if(_Skip_Bytes(&inf,skiplen))
 				{  ++errors;  break;  }
 				++ndelete;
@@ -179,11 +180,11 @@ int Modification_Copy::_Copy_File(const std::string &output_path,CopyFile *cf)
 				break;
 			case _MC_None:  // fall through
 			default:
-				std::cerr << "Illegal action " << n->action << std::endl;
+				error() << "Illegal action " << n->action;
 				abort();
 		}
-		if(verbose>3)
-		{  vout() << std::endl;  }
+		if(verbose_level()>3)
+		{  verbose(4) << "" /*newline*/;  }
 	}
 	if(!errors)
 	{  _Copy_TillEOF(&inf,&outf,&buf);  }
@@ -201,21 +202,18 @@ int Modification_Copy::_Copy_File(const std::string &output_path,CopyFile *cf)
 		double elapsed=starttime.ElapsedD(HTime::seconds);
 	#endif
 	
-	if(verbose)
+	if(verbose_level())
 	{
-		vout() << (errors ? "FAILED" : "done.") << std::endl;
-		if(verbose>1)
-		{  vout() << "  bytes: " << inbytes << " --> " << outbytes << 
+		verbose(1) << (errors ? "FAILED" : "done.");
+		verbose(1) << "  bytes: " << inbytes << " --> " << outbytes << 
 				" (deletions: " << ndelete << 
-				"; insertions: " << ninsert << ")" << std::endl;  }
-		if(verbose>2)
-		{  vout() << "  buffers: in " << _inf_bs << "; out " << _outf_bs << 
-			"; transmit " << buf.size << std::endl;  }
+				"; insertions: " << ninsert << ")";
+		verbose(2) << "  buffers: in " << _inf_bs << "; out " << _outf_bs << 
+			"; transmit " << buf.size;
 		
 		#if CALC_ELAPSED_TIME
 		size_t nbytes=inbytes+outbytes;
-		vout() << "  Input+Output: " << Throughput_Str(nbytes,elapsed) << 
-			std::endl;
+		verbose(1) << "  Input+Output: " << Throughput_Str(nbytes,elapsed);
 		#endif
 	}
 	
@@ -336,7 +334,7 @@ int Modification_Copy::DoCopy(class Recursive_Input_Stream *ris,
 					break;
 				case _MC_None:  // fall through
 				default:
-					std::cerr << "Illegal action " << mn->action << std::endl;
+					error() << "Illegal action " << mn->action;
 					abort();
 			}
 			
@@ -501,18 +499,9 @@ void Modification_Copy::_Reset()
 }
 
 
-void Modification_Copy::Set_Verbose(int _verbose,std::ostream &vs)
+Modification_Copy::Modification_Copy(message::Message_Consultant *mcons) : 
+	message::Message_Reporter(mcons)
 {
-	verbose=_verbose;
-	_vout=&vs;
-}
-
-
-Modification_Copy::Modification_Copy()
-{
-	verbose=0;
-	_vout=&std::cout;
-	
 	cfirst=NULL;
 }
 
@@ -586,7 +575,7 @@ Modification_Copy::CopyFile::CopyFile()
 		} break;
 		case _MC_None:  // fall through
 		default:
-			std::cerr << "Illegal action " << n->action << std::endl;
+			error() << "Illegal action " << n->action;
 			abort();
 	}
 #endif

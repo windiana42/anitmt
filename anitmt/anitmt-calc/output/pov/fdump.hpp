@@ -26,9 +26,7 @@
 #include <string>
 
 #include <val/val.hpp>
-#include "animation.hpp"
-//#include "proptree.hpp"
-//#include "scene.hpp"
+#include <proptree/proptree.hpp>
 
 
 namespace output_io
@@ -40,7 +38,8 @@ namespace POV
 {
 
 // To write the frame include files for POV-Ray. 
-class Frame_Dump
+class Frame_Dump : 
+	public message::Message_Reporter
 {
 	public:
 		enum NType
@@ -64,15 +63,14 @@ class Frame_Dump
 			double t;
 			int ndigits;
 			
-			int verbose;
-			std::ostream *vout;
+			message::Message_Reporter *msgrep;
 			
 			int nscalars;
 			int nobjects,active_objects;
 			int undefined_scalars;
 			int undefined_objects;
 			
-			Context(double t,int ndigits,int _verbose,std::ostream &_vout);
+			Context(double t,int ndigits,message::Message_Reporter *msgrep);
 			~Context() { }
 		};
 		struct Node 
@@ -80,25 +78,25 @@ class Frame_Dump
 			Node *next;
 			NType type;
 			Dump_Flags flags;
-			void *ptn;  // anitmt::Prop_Tree_Node
+			void *cif;  // new-allocated copy of 
+			            // anitmt::Scalar/Object_Component_Interface
 			char *str;  // scalar: name; object: identifier
 			size_t str_len;
 			
 			inline char *write(char *dest,char *dend,Context *ctx);
 			
-			Node(NType type,void *ptn,Dump_Flags flags,unsigned int id);
+			Node(NType type,void *cif,Dump_Flags flags,unsigned int id);
 			~Node();
 			
 			private:
-			char *_Alloc_Scalar_Str(anitmt::Scalar_Component_Interface scal);
-			char *_Alloc_Object_Str(anitmt::Object_Component_Interface obj,
-															unsigned int id);
+			char *_Alloc_Scalar_Str(anitmt::Scalar_Component_Interface *sif);
+			char *_Alloc_Object_Str(anitmt::Object_Component_Interface *oif,unsigned int id);
 			char *_Dump_Scalar2Str(char *d,char *dend,Context *ctx);
 			char *_Dump_Object2Str(char *d,char *dend,Context *ctx);
 		};
 	private:
 		anitmt::Animation *ani;
-		anitmt::Scene_Interface scene;
+		anitmt::Scene_Interface scene_if;
 		
 		char *buf;      // write buffer
 		char *bufhalf;
@@ -119,33 +117,32 @@ class Frame_Dump
 		
 		void _Write_Header(values::Scalar t,int frame);
 		void _Write_End();
-		
-		int verbose;
-		std::ostream *_vout;  // verbose stream
-		std::ostream &vout()  {  return(*_vout);  }
 	public:
-		Frame_Dump(anitmt::Animation *ani,anitmt::Scene_Component_Interface scene);
+		Frame_Dump(anitmt::Animation *ani,
+			anitmt::Scene_Interface &scene_if,
+			message::Message_Consultant *m_cons);
 		~Frame_Dump();
-		
-		// Set verbosity level and verbose stream. 
-		void Set_Verbose(int verbose,std::ostream &vout);
 		
 		// include_me is the path to be put into the #include statement 
 		// at the end of the frame. 
 		void Set_Main_File(const std::string &_include_me)
 			{  include_me=_include_me;  }
 		
-		// Add an entry to the list; entries are written to the file in 
-		// the order which they are added here. 
+		// Add an entry to the list; entries are written to the file 
+		// in the order which they are added here. 
+		// oif/sif: allocated (and freed) by higher level 
+		//     (e.g. File_Parser). 
 		// id: value that makes the generated identifiers unique; not 
 		//     needed for NT_Scalar. 
-		// dump_flags: what shall be dumped (pass 0 for scalars); 
-		//    see enum Dump_Flags above. 
-		void Add_Entry(NType type,prop::Prop_Tree_Node *ptn,
+		// dump_flags: what shall be dumped; see enum 
+		//     Dump_Flags above. 
+		void Add_Entry(anitmt::Scalar_Component_Interface *sif);
+		void Add_Entry(anitmt::Object_Component_Interface *oif,
 			Dump_Flags dump_flags,unsigned int id=0);
 		
 		// Delete all entries. 
-		void Clear(anitmt::Animation *new_ani,anitmt::Ani_Scene *new_scene);
+		void Clear(anitmt::Animation *ani,
+			anitmt::Scene_Interface &scene_if);
 		
 		// Actually write the file; Time is passed in t and the 
 		// frame number in f. 

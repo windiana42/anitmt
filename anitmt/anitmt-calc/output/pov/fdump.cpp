@@ -20,17 +20,13 @@
  *
  */
 
+#include <iostream>
+
+#include <animation.hpp>
+
 #include "fdump.hpp"
 #include "outstr.hpp"
 #include "convtoa.hpp"
-
-//#include "val.hpp"
-#include "tmttype.hpp"
-#include "animation.hpp"
-#include "scene.hpp"
-//#include "proptree.hpp"
-
-#include <iostream>
 
 #include "htime.h"
 
@@ -100,16 +96,16 @@ char *Frame_Dump::Node::_Dump_Scalar2Str(char *d,char *dend,Frame_Dump::Context 
 	++ctx->nscalars;
 	for(char *s=str; *s; s++)
 	{  *(d++)=*s;  }
-	Ani_Scalar *scl=(Ani_Scalar*)ptn;
-	std::pair<bool,Scalar_State> ret=scl->get_return_value(ctx->t);
+	Scalar_Component_Interface *scl=(Scalar_Component_Interface*)cif;
+	std::pair<bool,values::Scalar> ret=scl->get_value(ctx->t);
 	
 	bool defined=ret.first;
-	if(ctx->verbose>3)  // YES!
-	{  (*(ctx->vout)) << "scalar: " << scl->get_name() << 
+	if(ctx->msgrep->verbose_level()>3)  // YES!
+	{  ctx->msgrep->verbose(4) << "scalar: " << scl->get_name() << 
 		(defined ? "" : "UNDEFINED") << std::endl;  }
 	
 	if(defined)
-	{  d=Double2Str(d,ret.second.get_value(),ctx->ndigits);  }
+	{  d=Double2Str(d,ret.second,ctx->ndigits);  }
 	else
 	{
 		for(const char *s=_undefined_str; *s; s++)
@@ -131,15 +127,20 @@ char *Frame_Dump::Node::_Dump_Object2Str(char *d,char *dend,Frame_Dump::Context 
 	
 	++ctx->nobjects;
 	
-	Ani_Object *obj=(Ani_Object*)ptn;
+	Object_Component_Interface *obj=(Object_Component_Interface*)cif;
 	std::pair<bool,Object_State> ret=
-		obj->get_return_value(ctx->t);
+		obj->get_state(ctx->t);
 	
 	bool defined=ret.first;
-	bool active=ret.second.is_active();
+	#warning Object_State lacks is_avtive member. FIXME!!! 
+	bool active=true;  //ret.second.is_active;
+	{ static int complained=0;
+	  if(complained<10)
+	  {  cout << "Object_State lacks is_avtive member. FIXME!!!" << 
+	  std::endl;  ++complained;  } }
 	
-	if(ctx->verbose>3)  // YES!
-	{  (*ctx->vout) << "object: " << obj->get_name() << 
+	if(ctx->msgrep->verbose_level()>3)  // YES!
+	{  ctx->msgrep->verbose(4) << "object: " << obj->get_name() << 
 		(active ? " [active]" : "") << 
 		(defined ? "" : " [UNDEFINED]") << std::endl;  }
 	
@@ -193,7 +194,6 @@ char *Frame_Dump::Node::_Dump_Object2Str(char *d,char *dend,Frame_Dump::Context 
 	{  return(d);  }  // cannot go on; undefined. 
 	
 	// Insert scale/rot/trans: 
-	#warning write faster versions of get_scale_component(), get_translation_component()
 	if(flags & scale_flag)
 	{
 		for(char *s=str; *s; s++)
@@ -201,7 +201,7 @@ char *Frame_Dump::Node::_Dump_Object2Str(char *d,char *dend,Frame_Dump::Context 
 		for(const char *s=_scale_str; *s; s++)
 		{  *(d++)=*s;  }
 		*(d++)='=';
-		d=Vector2Str(d,ret.second.get_scale(),ctx->ndigits);
+		d=Vector2Str(d,vect::get_scale_component(ret.second.matrix),ctx->ndigits);
 		*(d++)=';';  *(d++)='\n';
 	}
 	
@@ -212,7 +212,7 @@ char *Frame_Dump::Node::_Dump_Object2Str(char *d,char *dend,Frame_Dump::Context 
 		for(const char *s=_rot_str; *s; s++)
 		{  *(d++)=*s;  }
 		*(d++)='=';
-		d=Vector2Str(d,ret.second.get_rotate(),ctx->ndigits);
+		d=Vector2Str(d,ret.second.rotate,ctx->ndigits);
 		*(d++)=';';  *(d++)='\n';
 	}
 	
@@ -223,7 +223,7 @@ char *Frame_Dump::Node::_Dump_Object2Str(char *d,char *dend,Frame_Dump::Context 
 		for(const char *s=_trans_str; *s; s++)
 		{  *(d++)=*s;  }
 		*(d++)='=';
-		d=Vector2Str(d,ret.second.get_translate(),ctx->ndigits);
+		d=Vector2Str(d,ret.second.translate,ctx->ndigits);
 		*(d++)=';';  *(d++)='\n';
 	}
 	
@@ -247,7 +247,7 @@ void Frame_Dump::_Write_Header(values::Scalar t,int frame)
 {
 	size_t needbuf=
 		ani->get_name().length()+
-		scene->get_name().length()+
+		scene_if.get_name().length()+
 		strlen(VERSION)+
 		256;
 	char tmp[needbuf+2];
@@ -256,7 +256,7 @@ void Frame_Dump::_Write_Header(values::Scalar t,int frame)
 		"// Animation: \"%s\";  Scene: \"%s\"\n"
 		"// Frame: %6d;  Time: %f\n\n",
 		VERSION,
-		ani->get_name().c_str(),scene->get_name().c_str(),
+		ani->get_name().c_str(),scene_if.get_name().c_str(),
 		frame,(double)t);
 	size_t len=strlen(tmp);
 	assert(len<needbuf);
@@ -375,16 +375,15 @@ int Frame_Dump::Write(const std::string &file,values::Scalar t,int frame)
 	bufdest=buf;  // buf empty
 	written_bytes=0;
 	
-	if(verbose)
+	if(verbose_level())
 	{
-		vout() << "  Writing \"" << file << "\" " <<
-			"Time: " << t << "; Frame: " << frame;
-		if(verbose>2)
-		{  vout() << std::endl << 
-			"    (buffer: " << bufsize << " bytes; "
-			"longest identifier: " << longest_identifier_len << " bytes)";  }
-		vout() << " ...";
-		vout().flush();
+		verbose(1) << "  Writing \"" << file << "\" " <<
+				"Time: " << t << "; Frame: " << frame << message::noend;
+		verbose(2) << "";  // <-- newline
+		verbose(2) << "      (buffer: " << bufsize << " bytes; "
+				"longest identifier: " << longest_identifier_len << " bytes)" << 
+				message::noend;
+		verbose(1) << " ..." << message::noend;
 	}
 	
 	#warning get ndigits value (precsison)
@@ -398,7 +397,7 @@ int Frame_Dump::Write(const std::string &file,values::Scalar t,int frame)
 	#endif
 	
 	_Write_Header(t,frame);
-	Context ctx(t,ndigits,verbose,vout());
+	Context ctx(t,ndigits,this);
 	for(Node *n=first; n; n=n->next)
 	{
 		_Check_Flush();
@@ -414,20 +413,15 @@ int Frame_Dump::Write(const std::string &file,values::Scalar t,int frame)
 		double elapsed=starttime.ElapsedD(HTime::seconds);
 	#endif
 	
-	if(verbose)
+	if(verbose_level())
 	{
-		vout() << "done (" << written_bytes << " bytes)." << std::endl;
-		if(verbose>1)
-		{  vout() << "  Output: " << Throughput_Str(written_bytes,elapsed) << 
-			std::endl;  }
-		if(verbose>2)
-		{
-			vout() << "  Dumped: scalars: " << ctx.nscalars << " ("	<< 
-				ctx.undefined_scalars << " undefined)" << std::endl;
-			vout() << "          objects: " << ctx.nobjects << " (" << 
+		verbose(1) << "done (" << written_bytes << " bytes).";
+		verbose(2) << "  Output: " << Throughput_Str(written_bytes,elapsed);
+		verbose(3) << "  Dumped: scalars: " << ctx.nscalars << " ("	<< 
+				ctx.undefined_scalars << " undefined)";
+		verbose(3) << "          objects: " << ctx.nobjects << " (" << 
 				ctx.active_objects << " active; " <<
-				ctx.undefined_objects << " undefined)" << std::endl;
-		}
+				ctx.undefined_objects << " undefined)";
 	}
 	if(ctx.undefined_scalars || ctx.undefined_objects)
 	{
@@ -443,13 +437,42 @@ int Frame_Dump::Write(const std::string &file,values::Scalar t,int frame)
 }
 
 
-namespace { template<class Dest> void *cast_void(Prop_Tree_Node *ptn)
-{
-	Dest *d=dynamic_cast<Dest *>(ptn);
-	assert(d);
-	return(d);
-} }
+//namespace { template<class Dest> void *cast_void(Prop_Tree_Node *ptn)
+//{
+//	Dest *d=dynamic_cast<Dest *>(ptn);
+//	assert(d);
+//	return(d);
+//} }
 
+
+// *sif allocated (and freed lateron) by higher level (e.g. File_Parser)
+void Frame_Dump::Add_Entry(Scalar_Component_Interface *sif)
+{
+	size_t len=sif->get_name().length();
+	if(len>longest_identifier_len)
+	{  longest_identifier_len=len;  }
+	
+	Node *n=new Node(NT_Scalar,sif,Dump_Flags(0),0);
+	(last ? last->next : first) = n;
+	last=n;
+}
+
+// *oif allocated (and freed lateron) by higher level (e.g. File_Parser)
+void Frame_Dump::Add_Entry(Object_Component_Interface *oif,
+	Dump_Flags flags,unsigned int id)
+{
+	// Tweak flags: 
+	if(flags & DF_Obj_Scale)  (int)flags|=DF_Obj_AScale;
+	if(flags & DF_Obj_Rot)    (int)flags|=DF_Obj_ARot;
+	if(flags & DF_Obj_Trans)  (int)flags|=DF_Obj_ATrans;
+	
+	Node *n=new Node(NT_Object,oif,flags,id);
+	(last ? last->next : first) = n;
+	last=n;
+}
+
+#warning To be removed: 
+#if 0  // ####
 void Frame_Dump::Add_Entry(NType type,Prop_Tree_Node *ptn,Dump_Flags flags,
 	unsigned int id)
 {
@@ -483,7 +506,7 @@ void Frame_Dump::Add_Entry(NType type,Prop_Tree_Node *ptn,Dump_Flags flags,
 	{  first=n;  }
 	last=n;
 }
-
+#endif
 
 static char *NewStr(const char *str)
 {
@@ -493,9 +516,10 @@ static char *NewStr(const char *str)
 }
 
 
-char *Frame_Dump::Node::_Alloc_Scalar_Str(Ani_Scalar *ptn)
+char *Frame_Dump::Node::_Alloc_Scalar_Str(
+	Scalar_Component_Interface *sif)
 {
-	values::String name=ptn->get_name();
+	values::String name=sif->get_name();
 	int len=name.length();
 	
 	// Write ``#declare name='' to str. 
@@ -516,7 +540,8 @@ char *Frame_Dump::Node::_Alloc_Scalar_Str(Ani_Scalar *ptn)
 }
 
 
-char *Frame_Dump::Node::_Alloc_Object_Str(anitmt::Ani_Object *,unsigned int id)
+char *Frame_Dump::Node::_Alloc_Object_Str(
+	Object_Component_Interface *,unsigned int id)
 {
 	// Write ``#declare _aniTMT_xxx_'' to str. 
 	char tmp[128];   // must be enough
@@ -531,23 +556,23 @@ char *Frame_Dump::Node::_Alloc_Object_Str(anitmt::Ani_Object *,unsigned int id)
 }
 
 
-Frame_Dump::Node::Node(NType _type,void *_ptn,Dump_Flags _flags,unsigned int id)
+Frame_Dump::Node::Node(NType _type,void *_cif,Dump_Flags _flags,unsigned int id)
 {
 	next=NULL;
 	type=_type;
 	flags=_flags;
-	ptn=_ptn;
+	cif=_cif;
 	str=NULL;
 	str_len=0;
 	
 	switch(type)
 	{
 		case NT_Scalar:
-			str=_Alloc_Scalar_Str((Ani_Scalar*)ptn);
+			str=_Alloc_Scalar_Str((Scalar_Component_Interface*)cif);
 			str_len=strlen(str);
 			break;
 		case NT_Object:
-			str=_Alloc_Object_Str((Ani_Object*)ptn,id);
+			str=_Alloc_Object_Str((Object_Component_Interface*)cif,id);
 			str_len=strlen(str);
 			break;
 		default:
@@ -559,19 +584,19 @@ Frame_Dump::Node::Node(NType _type,void *_ptn,Dump_Flags _flags,unsigned int id)
 
 Frame_Dump::Node::~Node()
 {
-	if(str)  delete str;
-	str=NULL;
+	if(str)  delete str;  str=NULL;
+	// do not delete cif, just NULL it: 
+	cif=NULL;
 }
 
 
 Frame_Dump::Context::Context(double _t,int _ndigits,
-	int _verbose,std::ostream &_vout)
+	message::Message_Reporter *_msgrep)
 {
 	t=_t;
 	ndigits=_ndigits;
 	
-	verbose=_verbose;
-	vout=&_vout;
+	msgrep=_msgrep;
 	
 	nscalars=0;
 	nobjects=0;
@@ -581,7 +606,8 @@ Frame_Dump::Context::Context(double _t,int _ndigits,
 }
 
 
-void Frame_Dump::Clear(anitmt::Animation *new_ani,anitmt::Ani_Scene *new_scene)
+void Frame_Dump::Clear(anitmt::Animation *new_ani,
+	anitmt::Scene_Interface &new_scene_if)
 {
 	while(first)
 	{
@@ -595,24 +621,18 @@ void Frame_Dump::Clear(anitmt::Animation *new_ani,anitmt::Ani_Scene *new_scene)
 	outp=NULL;
 	
 	ani=new_ani;
-	scene=new_scene;
+	scene_if=new_scene_if;
 }
 
 
-void Frame_Dump::Set_Verbose(int _verbose,std::ostream &vs)
+Frame_Dump::Frame_Dump(
+	anitmt::Animation *_ani,
+	anitmt::Scene_Interface &_scene_if,
+	message::Message_Consultant *m_cons) : 
+		message::Message_Reporter(m_cons),
+		scene_if(_scene_if)
 {
-	verbose=_verbose;
-	_vout=&vs;
-}
-
-
-Frame_Dump::Frame_Dump(anitmt::Animation *_ani,anitmt::Ani_Scene *_scene)
-{
-	verbose=0;
-	_vout=&std::cout;
-	
 	ani=_ani;
-	scene=_scene;
 	outp=NULL;
 	
 	first=NULL;
@@ -627,10 +647,12 @@ Frame_Dump::Frame_Dump(anitmt::Animation *_ani,anitmt::Ani_Scene *_scene)
 
 Frame_Dump::~Frame_Dump()
 {
-	Clear(NULL,NULL);
+	Clear(NULL,*(Scene_Interface*)NULL);
 	
 	if(buf)  delete buf;
 	buf=NULL;
+	
+	ani=NULL;
 }
 
 

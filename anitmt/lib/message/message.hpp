@@ -200,6 +200,7 @@ namespace message
   //**************************************************************
   // Message streams
   enum _NoEnd   {  noend  };
+  enum _NewLine {  nl  };
   enum _NoInit  {  noinit  };
   
   class Message_Stream {
@@ -230,6 +231,8 @@ namespace message
     //! This is used to end messaged using noend. For obvious 
     //! reason, thid returns void. 
     inline void operator<<(_NoEnd v);
+    //! This is used to insert a newline in a message: 
+    inline Message_Stream &operator<<(_NewLine v);
     
     //! implicite convertion to ostream to allow operator access
     //inline operator std::ostream() { return msg_stream; }
@@ -263,6 +266,7 @@ namespace message
   public:
     inline bool is_warning();
     inline bool is_verbose(int verbose_level);
+    inline int verbose_level();
 
     inline Message_Consultant *get_consultant() const;
 

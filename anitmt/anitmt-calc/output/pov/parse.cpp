@@ -35,12 +35,11 @@
 //  - using a custom operator new for Sub_Parser-derived classes. 
 
 
-#include "parse.hpp"
-
 #include <val/val.hpp>
-#include "tmttype.hpp"
-#include "scene.hpp"
-#include "proptree.hpp"
+#include <proptree/proptree.hpp>
+#include <animation.hpp>
+
+#include "parse.hpp"
 
 #include "htime.h"
 
@@ -161,7 +160,7 @@ inline bool is_pp_command(const Find_String::RV *rv)
 }
 
 
-struct File_Parser::Sub_Parser
+struct File_Parser::Sub_Parser : public message::Message_Reporter
 {
 	typedef File_Parser::Position File_Parser::Sub_Parser::Position;
 	typedef File_Parser::Object_Flags File_Parser::Sub_Parser::Object_Flags;
@@ -174,9 +173,11 @@ struct File_Parser::Sub_Parser
 	
 	void _construct(File_Parser *parent,tokID tok);
 	// *tok needed for parser_type. 
-	Sub_Parser(File_Parser *parent,Find_String::RV *tok)
+	Sub_Parser(File_Parser *parent,Find_String::RV *tok) : 
+		message::Message_Reporter(parent->get_consultant())
 		{  _construct(parent,tokID(tok->id));  }
-	Sub_Parser(File_Parser *parent,tokID tid)
+	Sub_Parser(File_Parser *parent,tokID tid) : 
+		message::Message_Reporter(parent->get_consultant())
 		{  _construct(parent,tid);  }
 	virtual ~Sub_Parser();
 	
@@ -197,11 +198,15 @@ struct File_Parser::Sub_Parser
 	void Consumed(size_t n,int nlines=0)
 		{  fp->Consumed(n,nlines);  }
 	
-	// Write an error/warning header to std::cerr. 
-	std::ostream &Error_Header()
-		{  return(fp->Recursive_Input_Stream::Error_Header(std::cerr,cc->line));  }
-	std::ostream &Error_Header(int line)
-		{  return(fp->Recursive_Input_Stream::Error_Header(std::cerr,line));  }
+	// Write an error/warning header to error/warning stream. 
+	message::Message_Stream &Error_Header()
+		{  return(fp->Recursive_Input_Stream::Error_Header(error(),cc->line));  }
+	message::Message_Stream &Error_Header(int line)
+		{  return(fp->Recursive_Input_Stream::Error_Header(error(),line));  }
+	message::Message_Stream &Warning_Header()
+		{  return(fp->Recursive_Input_Stream::Error_Header(warn(),cc->line));  }
+	message::Message_Stream &Warning_Header(int line)
+		{  return(fp->Recursive_Input_Stream::Error_Header(warn(),line));  }
 	
 	// Either returns "line xx" or "path/file:xx" depending if 
 	// pos referrs to the same file as *cc. 
@@ -234,9 +239,6 @@ struct File_Parser::Sub_Parser
 	// a comment and a comment parser was installed, 
 	// otherwise NULL. 
 	Comment_Parser *Skip_Comment(Find_String::RV *rv,bool allow_insert_statements);
-	
-	int verbose()  {  return(fp->verbose);  }
-	std::ostream &vout()  {  return(fp->vout);  }
 	
 	// Parser must modify cc->line and cc->src, cc->srclen 
 	// when parsing. 
@@ -301,7 +303,7 @@ class File_Parser::Comment_Parser : public Sub_Parser
 		
 		// Read in flags and AValue: 
 		AValue *av;
-		const char *obj_name;  // av->ptn->get_name()
+		const char *obj_name;  // av->get_name()
 		bool name_valid;  // obj_name valid?
 		Object_Flags flags;
 		bool flags_valid;
@@ -587,8 +589,7 @@ void File_Parser::Parse_EOF(const Parse_Input_Buf *ib)
 		else if(eofval==1)  break;
 		else
 		{
-			std::cerr << "Internal error: non-unregistered "
-				"subparser on hard EOF" << std::endl;
+			error() << "Internal error: non-unregistered subparser on hard EOF";
 			abort();
 		}
 	}
@@ -624,9 +625,7 @@ int File_Parser::Should_Copy(const std::string &file,Position *pos)
 {
 	if(!config.copy_nonsource_files)
 	{
-		if(verbose)
-		{  vout << "Found non-source file \"" << file << "\" (not copied)" << 
-			std::endl;  }
+		verbose() << "Found non-source file \"" << file << "\" (not copied)";
 		return(0);
 	}
 	
@@ -641,18 +640,15 @@ int File_Parser::Should_Copy(const std::string &file,Position *pos)
 	{
 		// Should still be same file...
 		assert(pos->handle==cc.ib->handle);
-		Error_Header(pos->line) << "warning: failed to "
+		Warning_Header(pos->line) << "warning: failed to "
 			"open seemingly required file \"" << file << 
-			"\". (ignoring it)" << std::endl;
+			"\". (ignoring it)";
 	}
 	else
 	{
-		if(verbose)
-		{
-			vout << "Adding file \"" << file << "\" to copy list. "
-				"(found in " << Get_Path(pos->handle) << ":" << 
-				pos->line << ")" << std::endl;
-		}
+		verbose() << "Adding file \"" << file << "\" to copy list. "
+			"(found in " << Get_Path(pos->handle) << ":" << 
+			pos->line << ")";
 		mcopy->MFile(file);
 	}
 	
@@ -689,13 +685,13 @@ size_t File_Parser::_Find_Tok_PP(Find_String::RV *rv,bool with_ani_names)
 			// Can't read more; can't do anything more. 
 			if(!cc.ib->eof_reached)
 			{
-				Error_Header() << "warning: too many spaces between `#\' and "
-					"(probably following) preprocessor command." << std::endl;
+				Warning_Header() << "warning: too many spaces between `#\' and "
+					"(probably following) preprocessor command.";
 				if(!too_many_spaces_explained)
 				{
 					Error_Header() << "         (if this line declares an "
 						"animated scalar, the `#\' and the spaces will not "
-						"be cut out)" << std::endl;
+						"be cut out)";
 					too_many_spaces_explained=true;
 				}
 			}
@@ -747,8 +743,8 @@ size_t File_Parser::Find_Tok(Find_String::RV *rv,bool with_ani_names)
 			if(tpt!=tCOpComment && 
 			   tpt!=tCppComment && 
 			   tpt!=tString)
-			{  Error_Header() << "Stray closing C-style comment `*/\'." << 
-				std::endl;  ++sps.Top()->errors;  }
+			{  Error_Header() << "Stray closing C-style comment `*/\'.";
+				++sps.Top()->errors;  }
 		}
 		else
 		{  cc._slt_reset=true;  }
@@ -830,13 +826,14 @@ size_t File_Parser::Find_Tok(Find_String::RV *rv,bool with_ani_names)
 		cc.last_found_len=rv->found_len;
 		may_put_back=true;
 		if(config.dump_tokens && rv->id!=tNewline)
-		{  std::cerr << "  TOK[" << cc.ib->depth << "]" 
-			"(" << cc.line << ")=" << rv->found << 
-			"  only_wspace=" << cc.only_wspace << 
-			" (" << cc.with_newline << " \\n)" << 
-			"  (pe=" << parse_errors << "; err=" << 
-			(sps.Top() ? (sps.Top()->errors) : (-1)) << ")" << 
-			std::endl;  }
+		{
+			error() << "  TOK[" << cc.ib->depth << "]" 
+				"(" << cc.line << ")=" << rv->found << 
+				"  only_wspace=" << cc.only_wspace << 
+				" (" << cc.with_newline << " \\n)" << 
+				"  (pe=" << parse_errors << "; err=" << 
+				(sps.Top() ? (sps.Top()->errors) : (-1)) << ")";
+		}
 	}
 	return(cc.src-old_cc_src);
 }
@@ -887,10 +884,10 @@ void File_Parser::Insert_Statement(AValue *av,Position *pos,char type)
 		++av->need_active;
 		++av->curr_active;  // we enter an if(active) statement
 		if(av->curr_active>1 && config.warn_active_mismatch)
-		{  Error_Header() << "warning: nested #if(active) statement for " << 
-			Ani_Type_Name(av->type) << " `" << av->ptn->get_name() << 
-			"\' (use insert." << av->ptn->get_name() << ".actend "
-			"instead of #end)" << std::endl;  }
+		{  Warning_Header() << "warning: nested #if(active) statement for " << 
+			Ani_Type_Name(av->type) << " `" << av->get_name() << 
+			"\' (use insert." << av->get_name() << ".actend "
+			"instead of #end)";  }
 	}
 	if(type=='s' || type=='i')
 	{
@@ -925,9 +922,9 @@ void File_Parser::Insert_Statement(AValue *av,Position *pos,char type)
 		strcpy(end,"#end ");  end+=5;
 		--av->curr_active;
 		if(av->curr_active==-1 && config.warn_active_mismatch)
-		{  Error_Header() << "warning: more insert." << av->ptn->get_name() << 
-			".actend statements than insert." << av->ptn->get_name() << 
-			".active." << std::endl;  }
+		{  Warning_Header() << "warning: more insert." << av->get_name() << 
+			".actend statements than insert." << av->get_name() << 
+			".active.";  }
 	}
 	
 	if(end>tmp)
@@ -957,14 +954,14 @@ bool File_Parser::Process_AValue(AValue *av)
 		assert(av->dec_start.handle == av->dec_end.handle);
 		assert(av->dec_start.fileoff<=av->dec_end.fileoff);
 		
-		if(verbose>3)
-		{  vout << "Deleting scalar declaration of `" << av->ptn->get_name() << 
+		if(verbose_level()>3)
+		{  verbose(4) << "Deleting scalar declaration of `" << av->get_name() << 
 			"\' in " << 
 			Get_Path(av->dec_start.handle) << ":" << av->dec_start.line << 
 			" ... " << 
 			Get_Path(av->dec_end.handle) << ":" << av->dec_end.line << 
 			" (" << (av->dec_end.fileoff - av->dec_start.fileoff) << 
-			" bytes)" << ((av->nfound==1) ? " [first]" : "") << std::endl;  }
+			" bytes)" << ((av->nfound==1) ? " [first]" : "");  }
 		
 		// Animated scalar declarations must be snipped out if the code. 
 		mcopy->MDelete(
@@ -990,9 +987,9 @@ bool File_Parser::Process_AValue(AValue *av)
 		size_t buflen=256*4;
 		char tmp[buflen],*end;
 		
-		if(verbose>3)
-		{  vout << "Inserting pov commands for object `" << 
-			av->ptn->get_name() << "\' "
+		if(verbose_level()>3)
+		{  verbose(4) << "Inserting pov commands for object `" << 
+			av->get_name() << "\' "
 			"(start: " << Get_Path(av->dec_start.handle) << ":" << av->dec_start.line << 
 			"; matrix: " << Get_Path(av->mat_pos.handle) << ":" << av->mat_pos.line << 
 			"; end: " << Get_Path(av->dec_end.handle) << ":" << av->dec_end.line << 
@@ -1000,8 +997,7 @@ bool File_Parser::Process_AValue(AValue *av)
 			(av->flags.insert_active ? " active" : "") << 
 			(av->flags.insert_scale ? " scale" : "") << 
 			(av->flags.insert_rot ? " rot" : "") << 
-			(av->flags.insert_trans ? " trans" : "") << 
-			std::endl;  }
+			(av->flags.insert_trans ? " trans" : "");  }
 		
 		bool ins_act=av->flags.insert_active;
 		// Cannot use av->curr_active here because of nested objects. 
@@ -1089,17 +1085,31 @@ void File_Parser::Comment_Cutout(Position *start,Position *end)
 }
 
 
-int File_Parser::_Finder_Check_Copy_Name(Prop_Tree_Node *ptn,tokID id,
-	unsigned int *counter)
+int File_Parser::_Finder_Check_Copy_Name(void *cif,tokID id,unsigned int *counter)
 {
-	std::string tmp=ptn->get_name();
-	const char *name=tmp.c_str();
+	const char *name=NULL;
+	void *copy_cif;
+	switch(id)
+	{
+		case taScalar:
+		{
+			Scalar_Component_Interface *sif=(Scalar_Component_Interface*)cif;
+			name=sif->get_name().c_str();
+			copy_cif = new Scalar_Component_Interface(*sif);
+		}  break;
+		case taObject:
+		{
+			Object_Component_Interface *oif=(Object_Component_Interface*)cif;
+			name=oif->get_name().c_str();
+			copy_cif = new Object_Component_Interface(*oif);
+		}  break;
+		// default: not needed as name=NULL handled below. 
+	}
 	
 	// Check if the name is valid: 
 	if(!(*name))
 	{
-		std::cerr << "Error: Object or scalar without a name (ignored)." << 
-			std::endl;
+		error() << "Error: Object or scalar without a name (ignored).";
 		return(1);
 	}
 	bool allowed=allowed_name_char0(*name);
@@ -1111,17 +1121,17 @@ int File_Parser::_Finder_Check_Copy_Name(Prop_Tree_Node *ptn,tokID id,
 		}
 	if(!allowed)
 	{
-		std::cerr << "Error: Object or scalar name \"" << name << 
-			"\" contains invalid characters (ignored)." << std::endl;
+		error() << "Error: Object or scalar name \"" << name << 
+			"\" contains invalid characters (ignored).";
 		return(1);
 	}
 	
-	if(verbose>2)
-	{  vout << name << " ";  }
+	if(verbose_level()>2)
+	{  verbose(3) << name << " " << message::noend;  }
 	
 	AValue av;
 	av.type=id;
-	av.ptn=ptn;
+	av.cif=copy_cif;
 	av.serial=*counter;
 	AValue *avp=av_list.Add(av);
 	av_finder->Copy_String(name,id,avp);
@@ -1157,12 +1167,8 @@ void File_Parser::_Set_Up_Finder_Const()
 }
 
 
-int File_Parser::_Set_Up_Finder(Animation * /*ani*/,Ani_Scene *sc)
+int File_Parser::_Set_Up_Finder(Animation * /*ani*/,Scene_Interface &scene_if)
 {
-	#warning REMOVE ME!!! TESTING PURPOSE ONLY!!!
-	sc->add_child("object","testobj");
-	sc->add_child("object","testobjB");
-	
 	int errors=0;
 	assert(!av_finder);
 	av_finder = new Find_String();
@@ -1172,86 +1178,71 @@ int File_Parser::_Set_Up_Finder(Animation * /*ani*/,Ani_Scene *sc)
 	{  av_finder->Add_String(st->str,st->id,&(st->flags));  }
 	
 	// Get a list of scalar components: 
-	if(verbose>1)
-	{  vout << "Adding scalar nodes: ";  }
-	const Contain<Ani_Scalar>::content_type &scalars = 
-		sc->get_scalars().get_content();
+	verbose(2) << "Adding scalar nodes: " << message::noend;
+	
 	unsigned int count=0;
-	for(Contain<Ani_Scalar>::content_type::const_iterator 
-		scal = scalars.begin(); scal != scalars.end(); scal++)
+	for( Scalar_Component_Interface scalar = scene_if.get_first_scalar();
+	     scalar != scene_if.get_scalar_end();
+	     scalar = scalar.get_next() )
 	{
-		if(_Finder_Check_Copy_Name(*scal,taScalar,&count))
+		if(_Finder_Check_Copy_Name(&scalar,taScalar,&count))
 		{  ++errors;  }
 	}
-	if(verbose>1)
-	{  vout << "[" << count << " nodes]" << std::endl;  }
+	verbose(2) << "[" << count << " nodes]";
 	
 	// Get a list of object components: 
-	if(verbose>1)
-	{  vout << "Adding object nodes: ";  }
-	const Contain<Ani_Object>::content_type &objects = 
-		sc->get_objects().get_content();
+	verbose(2) << "Adding object nodes: " << message::noend;
 	count=0;
-	for(Contain<Ani_Object>::content_type::const_iterator 
-		obj = objects.begin(); obj != objects.end(); obj++)
+	for( Object_Component_Interface object = scene_if.get_first_object();
+	     object != scene_if.get_object_end();
+	     object = object.get_next() )
 	{
-		if(_Finder_Check_Copy_Name(*obj,taObject,&count))
+		if(_Finder_Check_Copy_Name(&object,taObject,&count))
 		{  ++errors;  }
 	}
-	if(verbose>1)
-	{  vout << "[" << count << " nodes]" << std::endl;  }
+	verbose(2) << "[" << count << " nodes]";
 	
 	// Now, as all strings are written into the finder, sort them: 
-	if(verbose>1)  {  vout << "Sorting names...";  vout.flush();  }
+	verbose(2) << "Sorting names..." << message::noend;
 	av_finder->Sort_By_Length();
-	if(verbose>1)  {  vout << "done" << std::endl;  vout.flush();  }
+	verbose(2) << "done";
 	
 	Search_Path_Reset();
 	
 	#warning searchpath...
 	Search_Path_Add("/usr/src/povray/povray31/include");
 	
-	if(verbose>1)
-	{  vout << "Token finder initialized. (errors: " << errors << ")" << 
-		std::endl;  }
+	verbose(2) << "Token finder initialized. (errors: " << errors << ")";
 	return(errors);
 }
 
 
-int File_Parser::_Set_Up_MCopy(Animation * /*ani*/,Ani_Scene * /*sc*/)
+int File_Parser::_Set_Up_MCopy(Animation * /*ani*/,Scene_Interface & /*scene_if*/)
 {
 	assert(!mcopy);
 	
 	int errors=0;
-	mcopy = new Modification_Copy();
+	mcopy = new Modification_Copy(get_consultant());
 	
-	mcopy->Set_Verbose(verbose,vout);
-	
-	if(verbose>1)
-	{  vout << "File copy routines initialized. (errors: " << errors << ")" << 
-		std::endl;  }
+	verbose(2) << "File copy routines initialized. (errors: " << errors << ")";
 	return(errors);
 }
 
 
-int File_Parser::_Set_Up_FDump(Animation *ani,Ani_Scene *sc)
+int File_Parser::_Set_Up_FDump(Animation *ani,Scene_Interface &scene_if)
 {
 	assert(!fdump);
 	
 	int errors=0;
-	fdump = new Frame_Dump(ani,sc);
-	
-	fdump->Set_Verbose(verbose,vout);
+	fdump = new Frame_Dump(ani,scene_if,get_consultant());
 	
 	// File to be included at the end of the frame file. 
 	std::string include_file;
 	#warning strip path? use "../" as prefix?
-	include_file=sc->get_filename();
+	include_file=scene_if.get_filename();
 	fdump->Set_Main_File(include_file);
 	
-	if(verbose>1)
-	{  vout << "Frame writer initialized. (errors: " << errors << ")" << 
-		std::endl;  }
+	verbose(2) << "Frame writer initialized. (errors: " << errors << ")";
 	return(errors);
 }
 
@@ -1297,27 +1288,33 @@ void File_Parser::_Sub_Parser_Done()
 
 int File_Parser::Setup_Frame_Dump(Frame_Dump *fdump)
 {
-	if(verbose>1)
-	{  vout << "Preparing frame output...";  vout.flush();  }
+	verbose(2) << "Preparing frame output..." << message::noend;
 	
 	int nent=0;
 	for(AValue *av=av_list.first; av; av=av->next)
 	{
-		Frame_Dump::NType nt;
 		bool dump_it=false;
 		int dflags=0;
 		switch(av->type)
 		{
 			case taScalar:
-				nt=Frame_Dump::NT_Scalar;
+			{
+				Scalar_Component_Interface *sif=(Scalar_Component_Interface *)av->cif;
 				dump_it=(config.frame_dump_all_scalars || av->need_active);
 				
 				// This should be the case for scalars...?!
 				assert(av->need_active==av->nfound);
 				
-				break;
+				if(dump_it)
+				{
+					fdump->Add_Entry(sif/*,(Frame_Dump::Dump_Flags)dflags,av->serial*/);
+					++nent;
+				}
+				
+			} break;
 			case taObject:
-				nt=Frame_Dump::NT_Object;
+			{
+				Object_Component_Interface *oif=(Object_Component_Interface *)av->cif;
 				
 				if(config.frame_dump_object_info>2)  // all info
 				{  dflags = Frame_Dump::DF_Obj_Mat | Frame_Dump::DF_Obj_Active;  }
@@ -1344,19 +1341,18 @@ int File_Parser::Setup_Frame_Dump(Frame_Dump *fdump)
 				}
 				
 				dump_it=(dflags ? true : false);
-				break;
+				
+				if(dump_it)
+				{
+					fdump->Add_Entry(oif,(Frame_Dump::Dump_Flags)dflags,av->serial);
+					++nent;
+				}
+			} break;
 			default:  assert(0);  break;
-		}
-		if(dump_it)
-		{
-			fdump->Add_Entry(nt,av->ptn,
-				(Frame_Dump::Dump_Flags)dflags,av->serial);
-			++nent;
 		}
 	}
 	
-	if(verbose>1)
-	{  vout << "done [" << nent << " entries]" << std::endl;  }
+	verbose(2) << "done [" << nent << " entries]";
 	
 	return(0);
 }
@@ -1371,30 +1367,21 @@ Frame_Dump *File_Parser::Transfer_FDump()
 
 
 // Return 0 on success; !=0 on error 
-int File_Parser::Go(Animation *ani,Ani_Scene *sc)
+int File_Parser::Go(Animation *ani,Scene_Interface &scene_if)
 {
-	// Scene name: sc->get_name()
-	// Scene file: sc->get_filename()
-	// Scene type: sc->get_scene_type()
-	// Animation_Parameters: ani->param 
-	
-	#warning MAKE COUT, std::cerr LINEBUFFERED. 
-	//int cout_line_buf_val=cout.Xx
-	//int std::cerr_line_buf_val=std::cerr.xx
+	// Scene name: sc.get_name()
+	// Scene file: sc.get_filename()
+	// Animation_Parameters: ani->GLOB.param 
 	
 	_Cleanup();
-	verbose=ani->param.verbose();
-	if(verbose)
-	{  vout << "processing scene \"" << sc->get_name() << 
-		"\"." << std::endl;  }
+	verbose(1) << "processing scene \"" << scene_if.get_name() << "\".";
 	
 	int errors=0;
 	bool dontparse=false;
-	values::String file=sc->get_filename();
+	values::String file=scene_if.get_filename();
 	if(!file)
 	{
-		std::cerr << "Scene \"" << sc->get_name() << "\" has no associated file." 
-			<< std::endl;
+		error() << "Scene \"" << scene_if.get_name() << "\" has no associated file."; 
 		// Don't know if this is an error. 
 		//++errors;
 		dontparse=true;
@@ -1402,14 +1389,13 @@ int File_Parser::Go(Animation *ani,Ani_Scene *sc)
 	
 	if(!errors && !dontparse)
 	{
-		errors+=_Set_Up_Finder(ani,sc);
-		errors+=_Set_Up_MCopy(ani,sc);
-		errors+=_Set_Up_FDump(ani,sc);
+		errors+=_Set_Up_Finder(ani,scene_if);
+		errors+=_Set_Up_MCopy(ani,scene_if);
+		errors+=_Set_Up_FDump(ani,scene_if);
 		_Set_Up_SPS();
 		
-		if(verbose)
-		{  vout << "starting to parse primary file \"" << file << 
-			"\" (scene \"" << sc->get_name() << "\")." << std::endl;  }
+		verbose(1) << "starting to parse primary file \"" << file << 
+			"\" (scene \"" << scene_if.get_name() << "\").";
 		
 		Recursive_Input_Stream::warn_multiple_include=config.warn_multiple_include;
 		
@@ -1424,14 +1410,14 @@ int File_Parser::Go(Animation *ani,Ani_Scene *sc)
 			size_t nbytes=Recursive_Input_Stream::Read_Bytes();
 		#endif
 		
-		if(verbose)
+		if(verbose_level())
 		{
-			vout << "Parsing now done. Status: " << 
-				((parse_errors || errors) ? "FAILED" : "OK");
-			if(verbose>1 && (parse_errors || errors))
-			{  vout << "  [parse error counter: " << parse_errors << 
-				"; other error counter: " << errors << "]";  }
-			vout << std::endl;
+			verbose(1) << "Parsing now done. Status: " << 
+				((parse_errors || errors) ? "FAILED" : "OK") << message::noend;
+			if(verbose_level()>1 && (parse_errors || errors))
+			{  verbose(2) << "  [parse error counter: " << parse_errors << 
+				"; other error counter: " << errors << "]" << message::noend;  }
+			verbose(1) << "";  // <-- newline
 			#if CALC_ELAPSED_TIME
 			char tmp[64];
 			if(elapsed<=0.0000001)
@@ -1454,12 +1440,12 @@ int File_Parser::Go(Animation *ani,Ani_Scene *sc)
 			else
 			{  snprintf(tim,64,"%.0f ",elapsed);  }
 			
-			vout << "  Parsed " << ((nbytes+512)/1024) << " kb in " << 
-				tim << "sec (" << tmp << "b/sec)" << std::endl;
+			verbose(1) << "  Parsed " << ((nbytes+512)/1024) << " kb in " << 
+				tim << "sec (" << tmp << "b/sec)";
 			#endif
 		}
 		
-		av_list.Warn_Unused(std::cerr);
+		av_list.Warn_Unused(warn());
 		Warn_Active_Mismatch();
 		
 		// This function writes a verbose message itself: 
@@ -1470,20 +1456,17 @@ int File_Parser::Go(Animation *ani,Ani_Scene *sc)
 	//       are not part of the ones counted via errors. 
 	if(errors)
 	{
-		std::cerr << "Aborting work on scene \"" << sc->get_name() << 
-			"\" due to errors." << std::endl;
+		error() << "Aborting work on scene \"" << scene_if.get_name() << 
+			"\" due to errors.";
 	}
 	else
 	{
 		// Actually copy the files: 
 		#warning path names need fixing. 
-		std::string dest_path=ani->param.ani_dir();
-		if(verbose)
-		{  vout << "Copying files to \"" << dest_path << "\"..." << std::endl;  }
+		std::string dest_path=ani->GLOB.param.ani_dir();
+		verbose(1) << "Copying files to \"" << dest_path << "\"...";
 		errors+=mcopy->DoCopy(dest_path);
-		if(verbose)
-		{  vout << "Copying files " << (errors ? "FAILED" : "done.") << 
-			std::endl;  }
+		verbose() << "Copying files " << (errors ? "FAILED" : "done.");
 	}
 	
 	// We may (not) clean up here: 
@@ -1498,10 +1481,6 @@ int File_Parser::Go(Animation *ani,Ani_Scene *sc)
 	//           have been referenced (other than in AValue)
 	//           DO NOT clean up; we may need it. 
 	_CleanupUnneeded();  // does all that for us...
-	
-	#warning RESTORE BUFFER FLAG
-	//cout.linebuffered(cout_line_buf_val);
-	//std::cerr.linebuffered(std::cerr_line_buf_val);
 	
 	return(errors+parse_errors);
 }
@@ -1519,13 +1498,13 @@ int File_Parser::Warn_Active_Mismatch()
 		++warnings;
 		if(!config.warn_active_mismatch)  continue;
 		if(!header_written)
-		{  std::cerr << "warning: more if(active) then end statements: " << 
-				av->ptn->get_name();  header_written=true;  }
+		{  warn() << "warning: more if(active) then end statements: " << 
+				av->get_name() << message::noend;  header_written=true;  }
 		else
-		{  std::cerr << ", " << av->ptn->get_name();  }
+		{  warn() << ", " << av->get_name() << message::noend;  }
 	}
 	if(header_written)
-	{  std::cerr << std::endl;  }
+	{  warn() << "";  }  // <-- newline
 	
 	header_written=false;
 	for(AValue *av=av_list.first; av; av=av->next)
@@ -1535,29 +1514,30 @@ int File_Parser::Warn_Active_Mismatch()
 		++warnings;
 		if(!config.warn_active_mismatch)  continue;
 		if(!header_written)
-		{  std::cerr << "warning: less if(active) then end statements: " << 
-			av->ptn->get_name();  header_written=true;  }
+		{  warn() << "warning: less if(active) then end statements: " << 
+			av->get_name() << message::noend;  header_written=true;  }
 		else
-		{  std::cerr << ", " << av->ptn->get_name();  }
+		{  warn() << ", " << av->get_name() << message::noend;  }
 	}
 	if(header_written)
-	{  std::cerr << std::endl;  }
+	{  warn() << "";  }  // <-- newline
 	
 	if(warnings && config.warn_active_mismatch)
-	{  std::cerr << 
-		"         use insert.<object>.actend for active end "
-		"statements; maybe you must set" << std::endl << 
-		"         ###frame_dump_object_info=1/2### to dump all object vals "
-		"(trans/rot/scale)" << std::endl << 
-		"         into the frame include file." << std::endl;  }
+	{
+		warn() << 
+			"         use insert.<object>.actend for active end "
+			"statements; maybe you must set" << message::nl <<
+			"         ###frame_dump_object_info=1/2### to dump all object vals "
+			"(trans/rot/scale)" << message::nl <<
+			"         into the frame include file.";
+	}
 	
 	return(warnings);
 }
 
 
-File_Parser::File_Parser() : 
-	Recursive_Input_Stream(),
-	vout(std::cout)
+File_Parser::File_Parser(message::Message_Consultant *mcon) : 
+	Recursive_Input_Stream(mcon)
 {
 	mcopy=NULL;
 	pp_finder=NULL;
@@ -1565,7 +1545,6 @@ File_Parser::File_Parser() :
 	av_finder=NULL;
 	pp_find_longest=0;
 	fdump=NULL;
-	verbose=0;
 	too_many_spaces_explained=false;
 	may_put_back=false;
 	refill_buffer=false;
@@ -1587,7 +1566,6 @@ void File_Parser::_Cleanup()
 {
 	_CleanupUnneeded();
 	if(fdump)  delete fdump;  fdump=NULL;
-	verbose=0;
 	parse_errors=0;
 	cc.last_found_len=0;
 	may_put_back=false;
@@ -1647,11 +1625,23 @@ inline void File_Parser::Object_Flags::reset(int val)
 	insert_trans=val;
 }
 
+
+inline std::string File_Parser::AValue::get_name()
+{
+	if(cif) switch(type)
+	{
+		case taScalar:  return(((Scalar_Component_Interface*)cif)->get_name());
+		case taObject:  return(((Object_Component_Interface*)cif)->get_name());
+		default:  assert(0);
+	}
+	return(std::string("(null)"));
+}
+
 inline File_Parser::AValue::AValue()
 {
 	next=NULL;
 	type=tNone;
-	ptn=NULL;
+	cif=NULL;
 	nfound=0;
 	serial=0;   // NOT -1 as unsigned. 
 	locked=false;
@@ -1663,6 +1653,19 @@ inline File_Parser::AValue::AValue()
 	curr_active=0;
 }
 
+inline File_Parser::AValue::~AValue()
+{
+	if(cif)  // free/delete cif:
+	{
+		switch(type)
+		{
+			case taScalar:  delete ((Scalar_Component_Interface*)cif);  break;
+			case taObject:  delete ((Object_Component_Interface*)cif);  break;
+			default:  assert(0);  break;
+		}
+		cif=NULL;
+	}
+}
 
 void File_Parser::Current_Context::reset()
 {
@@ -1703,7 +1706,7 @@ void File_Parser::AValue_List::Clear()
 	last=NULL;
 }
 
-int File_Parser::AValue_List::_Warn_Unused(std::ostream &os,tokID type)
+int File_Parser::AValue_List::_Warn_Unused(message::Message_Stream os,tokID type)
 {
 	int nunused=0;
 	bool header_written=false;
@@ -1713,19 +1716,19 @@ int File_Parser::AValue_List::_Warn_Unused(std::ostream &os,tokID type)
 		if(!header_written)
 		{
 			os << "warning: unused " << Ani_Type_Name(type) << "s: " << 
-				av->ptn->get_name();
+				av->get_name() << message::noend;
 			header_written=true;
 		}
 		else
-		{  os << ", " << av->ptn->get_name();  }
+		{  os << ", " << av->get_name() << message::noend;  }
 		++nunused;
 	}
 	if(nunused)
-	{  os << " [" << nunused << "]" << std::endl; }
+	{  os << " [" << nunused << "]"; }
 	return(nunused);
 }
 
-int File_Parser::AValue_List::Warn_Unused(std::ostream &os)
+int File_Parser::AValue_List::Warn_Unused(message::Message_Stream os)
 {
 	int nunused=0;
 	nunused+=_Warn_Unused(os,taScalar);
@@ -1858,13 +1861,11 @@ void File_Parser::Sub_Parser::Register_Sub_Parser(Sub_Parser *sb)
 	if(fp->Register_Sub_Parser(sb))
 	{
 		Error_Header() << "parser ran out of stack (" << 
-			fp->sps.size() << " instances)" << std::endl;
-		Error_Header() << "this happens either due to a great "
-			"misinterpretation of the input" << std::endl;
-		Error_Header() << "by the parser or as the input is too deeply "
-			"nested." << std::endl;
-		Error_Header() << "In this case, increase ###parser_stack_limit." << 
-			std::endl;
+			fp->sps.size() << " instances).";
+		error() << "This happens either due to a great "
+			"misinterpretation of the input" << message::nl << 
+			"by the parser or as the input is too deeply nested." << message::nl << 
+			"In this case, increase ###parser_stack_limit.";
 		Abort_Parsing();
 	}
 }
@@ -2016,11 +2017,11 @@ int File_Parser::Toplevel_Parser::spdone(File_Parser::Sub_Parser *sb)
 		if(cp->encountered_parse_end)
 		{
 			assert(cp->av);
-			Error_Header() << "warning: encountered stray parse.end "
+			Warning_Header() << "warning: encountered stray parse.end "
 				"statement for " << Ani_Type_Name(cp->av->type) << " `" << 
-				cp->av->ptn->get_name() << "\'." << std::endl;
-			Error_Header() << "         `" << cp->av->ptn->get_name() << 
-				"\' was" << Prev_Decl_Loc_Str(cp->av) << std::endl;
+				cp->av->get_name() << "\'.";
+			Warning_Header() << "         `" << cp->av->get_name() << 
+				"\' was" << Prev_Decl_Loc_Str(cp->av);
 		}
 		if(TL_Parse_Object(cp))  // only if cp->name_valid
 		{  newwaittok=taObject;  }
@@ -2052,7 +2053,7 @@ int File_Parser::Include_Parser::parse(int eof)
 {
 	if(eof)  // eof==1 || eof==2
 	{
-		Error_Header() << "failed to include missing file" << std::endl;
+		Error_Header() << "failed to include missing file.";
 		++errors;
 		done=true;
 		return(0);
@@ -2085,8 +2086,7 @@ int File_Parser::Include_Parser::spdone(File_Parser::Sub_Parser *sb)
 			/*honor_search_path=*/true,
 			/*search_current_path=*/fp->config.search_current_path);
 		if(rv==1)
-		{  Error_Header() << "failed to include \"" << file << "\"." << 
-			std::endl;  }
+		{  Error_Header() << "failed to include \"" << file << "\".";  }
 		if(rv)
 		{  ++errors;  }
 	}
@@ -2117,7 +2117,7 @@ int File_Parser::Filename_Parser::parse(int eof)
 {
 	if(eof)  // eof==1 || eof==2
 	{
-		Error_Header() << "missing filename (EOF reached)" << std::endl;
+		Error_Header() << "missing filename (EOF reached)";
 		++errors;
 		done=true;
 		return(0);
@@ -2139,9 +2139,8 @@ int File_Parser::Filename_Parser::parse(int eof)
 		    rv.id!=tCOpComment && rv.id!=tCppComment))
 		{
 			if(warn_no_string)
-			{  Error_Header() << ((warn_no_string>1) ? "" : "warning: ") << 
-				"filename string expected after `" << tok_name << "\'." << 
-				std::endl;  }
+			{  ((warn_no_string>1) ? Error_Header() : (Warning_Header() << "warning: ")) <<
+				"filename string expected after `" << tok_name << "\'.";  }
 			if(warn_no_string>1)  ++errors;
 			Put_Back_Tok(&rv);
 			done=true;
@@ -2223,8 +2222,7 @@ void File_Parser::String_Parser::_addbytes(char *startptr,char *endptr)
 
 void File_Parser::String_Parser::_Unterminated_Str()
 {
-	Error_Header(str_start.line) << "unterminted or too long string" << 
-		std::endl;
+	Error_Header(str_start.line) << "unterminted or too long string";
 	++errors;
 	string.append("...");
 	// We cannot parse on if we found an unterminated string. 
@@ -2235,7 +2233,7 @@ int File_Parser::String_Parser::parse(int eof)
 {
 	if(eof)  // eof==1 || eof==2
 	{
-		Error_Header(str_start.line) << "unterimated string at EOF" << std::endl;
+		Error_Header(str_start.line) << "unterimated string at EOF";
 		++errors;
 		done=true;
 		return(0);
@@ -2277,8 +2275,7 @@ int File_Parser::String_Parser::parse(int eof)
 		{
 			if(!allow_multiline)
 			{
-				Error_Header(str_start.line) << 
-					"string terminated by newline" << std::endl;
+				Error_Header(str_start.line) << "string terminated by newline.";
 				_addbytes(startptr,rv.ptr-1);
 				++errors;
 				done=true;
@@ -2286,8 +2283,7 @@ int File_Parser::String_Parser::parse(int eof)
 			}
 			if(!multiline_warned)
 			{
-				Error_Header(str_start.line) << 
-					"warning: multi-line string" << std::endl;
+				Warning_Header(str_start.line) << "warning: multi-line string.";
 			}
 			++multiline_warned;
 			_addbytes(startptr,rv.ptr);
@@ -2369,13 +2365,13 @@ int File_Parser::Comment_Parser::_parse_flags(Find_String::RV *rv)
 	
 	int parsed=(txt-rv->ptr)-illegal;
 	if(txt==rv->ptr)
-	{  Error_Header() << "warning: flags for object `" << obj_name << 
-		"\' expected." << std::endl;  }
+	{  Warning_Header() << "warning: flags for object `" << obj_name << 
+		"\' expected.";  }
 	else if(parsed)
 	{
 		if(illegal)
 		{  Error_Header() << "illegal flags for object `" << obj_name << 
-			"\'." << std::endl;  ++errors;  }
+			"\'.";  ++errors;  }
 		
 		flags_valid=true;
 		flags.unset=false;
@@ -2383,13 +2379,13 @@ int File_Parser::Comment_Parser::_parse_flags(Find_String::RV *rv)
 	
 	Consumed(txt-rv->ptr);
 	
-	if(flags_valid && verbose()>3)
-	{  vout() << "Object `" << obj_name << "\' flags: " << 
+	if(flags_valid && verbose_level()>3)
+	{  verbose(4) << "Object `" << obj_name << "\' flags: " << 
 		(flags.has_end_statement ? 'E' : '-') << 
 		(flags.insert_active ? 'a' : '-') << 
 		(flags.insert_scale ? 's' : '-') << 
 		(flags.insert_rot ? 'r' : '-') << 
-		(flags.insert_trans ? 't' : '-') << std::endl;  }
+		(flags.insert_trans ? 't' : '-');  }
 	
 	return(0);
 }
@@ -2445,9 +2441,9 @@ int File_Parser::Comment_Parser::_parse_insert_which()
 	if(!type || txt>=endtxt)
 	{  _illegal_i_pe_statement();  return(0);  }
 	
-	if(verbose()>3)
-	{  vout() << "Insert statement for " << Ani_Type_Name(av->type) << 
-		" `" << obj_name << "\' of type >" << type << "<." << std::endl;  }
+	if(verbose_level()>3)
+	{  verbose(4) << "Insert statement for " << Ani_Type_Name(av->type) << 
+		" `" << obj_name << "\' of type >" << type << "<.";  }
 	fp->Insert_Statement(av,&cmt_start,type);
 	in_insert_statement=0;  // done. 
 	return(0);
@@ -2473,9 +2469,9 @@ int File_Parser::Comment_Parser::_parse_parse_end_which()
 	if(str_compare(txt,endtxt,"end"))
 	{
 		encountered_parse_end=true;
-		if(verbose()>3)
-		{  vout() << "Parse end statement for " << Ani_Type_Name(av->type) << 
-			" `" << obj_name << "\' found." << std::endl;  }
+		if(verbose_level()>3)
+		{  verbose(4) << "Parse end statement for " << Ani_Type_Name(av->type) << 
+			" `" << obj_name << "\' found.";  }
 	}
 	else
 	{  _illegal_i_pe_statement();  return(0);  }
@@ -2487,18 +2483,17 @@ int File_Parser::Comment_Parser::_parse_parse_end_which()
 
 void File_Parser::Comment_Parser::_incomplete_i_pe_statement()
 {
-	Error_Header(cmt_start.line) << "warning: incomplete " << 
+	Warning_Header(cmt_start.line) << "warning: incomplete " << 
 		(in_insert_statement ? "insert" : "parse") << 
-		" statement?" << std::endl;
+		" statement?";
 	in_insert_statement=0;
 	in_parse_end_statement=0;
 }
 
 void File_Parser::Comment_Parser::_illegal_i_pe_statement()
 {
-	Error_Header(cmt_start.line) << "warning: illegal or incomplete " << 
-		(in_insert_statement ? "insert" : "parse") << " statement?" << 
-		std::endl;
+	Warning_Header(cmt_start.line) << "warning: illegal or incomplete " << 
+		(in_insert_statement ? "insert" : "parse") << " statement?";
 	in_insert_statement=0;
 	in_parse_end_statement=0;
 }
@@ -2508,7 +2503,7 @@ int File_Parser::Comment_Parser::_parse(int eof)
 {
 	if(!(!av || obj_name))
 	{
-		std::cerr << av << obj_name << std::endl;
+		error() << av << obj_name;
 		assert(!av || obj_name);   // obj_name should have been assigned 
 	}
 	
@@ -2516,17 +2511,15 @@ int File_Parser::Comment_Parser::_parse(int eof)
 	{
 		if(in_insert_statement || in_parse_end_statement)
 		{
-			Error_Header() << "warning: " << 
+			Warning_Header() << "warning: " << 
 				(in_insert_statement ? "insert" : "parse") << 
-				" statement terminated by EOF?" << 
-				std::endl;
+				" statement terminated by EOF?";
 			in_insert_statement=0;
 			in_parse_end_statement=0;
 		}
 		if(style==tCOpComment)
 		{
-			Error_Header() << "unterminated C-style comment (EOF reached)" << 
-				std::endl;
+			Error_Header() << "unterminated C-style comment (EOF reached)";
 			++errors;
 		}
 		// style==tCppComment: 
@@ -2575,10 +2568,10 @@ int File_Parser::Comment_Parser::_parse(int eof)
 					in_parse_end_statement*=2;
 				}
 				else if(rv.id==taScalar)
-				{  Error_Header() << "warning: ignoring " << 
+				{  Warning_Header() << "warning: ignoring " << 
 					(in_insert_statement ? "insert" : "parse") << " statement "
 					"for " << Ani_Type_Name(((AValue*)(rv.hook))->type) << 
-					" `" << rv.found << "\'." << std::endl;
+					" `" << rv.found << "\'.";
 				   in_insert_statement=0;  in_parse_end_statement=0;  }
 				else
 				{  _illegal_i_pe_statement();  }
@@ -2631,8 +2624,8 @@ int File_Parser::Comment_Parser::_parse(int eof)
 					expect_pos=*cc;  // where object name must be 
 				}
 				else if(fp->config.warn_uninterpreted_insert)
-				{  Error_Header() << "warning: possible insert statement "
-					"not interpreted." << std::endl;  }
+				{  Warning_Header() << "warning: possible insert statement "
+					"not interpreted.";  }
 			}
 			else if(rv.id==tpAniParse && cmd_space_ok)
 			{
@@ -2643,8 +2636,8 @@ int File_Parser::Comment_Parser::_parse(int eof)
 					expect_pos=*cc;  // where object name must be 
 				}
 				else if(fp->config.warn_uninterpreted_parse_end)
-				{  Error_Header() << "warning: possible object parse end "
-					"statement not interpreted." << std::endl;  }
+				{  Warning_Header() << "warning: possible object parse end "
+					"statement not interpreted.";  }
 			}
 		}
 		if(interprete_obj>1 && comment_begin && 
@@ -2670,9 +2663,9 @@ int File_Parser::Comment_Parser::_parse(int eof)
 					break;   // <- necessary to stay incomment_begin mode 
 				}
 				else if(rv.id==taScalar)
-				{  Error_Header() << "warning: name of " << 
+				{  Warning_Header() << "warning: name of " << 
 					Ani_Type_Name(tokID(rv.id)) << " `" << rv.found << "\' "
-					"in comment (ignored)." << std::endl;  }
+					"in comment (ignored).";  }
 			}
 		}
 		
@@ -2697,9 +2690,9 @@ int File_Parser::Comment_Parser::_parse(int eof)
 					if(fp->config.allow_nested_comments)
 					{
 						if(fp->config.warn_nested_comments)
-						{  Error_Header(cmt_start.line) << 
+						{  Warning_Header(cmt_start.line) << 
 							"warning: nested C-style comment; "
-							"next instance in line " << cc->line << std::endl;  }
+							"next instance in line " << cc->line;  }
 
 						Comment_Parser *cp=new Comment_Parser(fp,&rv);
 						// Nested comment: 
@@ -2709,9 +2702,9 @@ int File_Parser::Comment_Parser::_parse(int eof)
 						return(0);
 					}
 					else if(fp->config.warn_nested_comments)
-					{  Error_Header() << 
+					{  Warning_Header() << 
 						"warning: non-followed nested C-style comment beginning "
-						"on line " << cmt_start.line << std::endl;  }
+						"on line " << cmt_start.line;  }
 				}
 			}
 			else if(rv.id==tCClComment)
@@ -2822,7 +2815,7 @@ int File_Parser::Declare_Parser::parse(int eof)
 				(expect.name ? 
 					(std::string(" of `")+expect.name+"\'") : 
 					std::string("")) << _startline_str() << 
-				" terminated by EOF." << std::endl;
+				" terminated by EOF.";
 			++errors;
 			done=true;
 			if(expect.av)
@@ -2831,12 +2824,12 @@ int File_Parser::Declare_Parser::parse(int eof)
 		else if(fp->config.warn_object_eof_boundary)
 		  // object declarations may spread over several files 
 		{
-			Error_Header(dec_start.line) << "warning: " << 
+			Warning_Header(dec_start.line) << "warning: " << 
 				_dectype_of(expect.id) << "declaration" << 
 				(expect.name ? 
 					(std::string(" of `")+expect.name+"\'") : 
 					std::string("")) << _startline_str() << 
-				" expands across EOF boundary." << std::endl;
+				" expands across EOF boundary.";
 		}
 		return(0);
 	}
@@ -2877,10 +2870,9 @@ int File_Parser::Declare_Parser::parse(int eof)
 			if(rv.id==taScalar || rv.id==taObject)
 			{
 				if(!cc->only_wspace)
-				{  Error_Header() << "warning: in " << 
+				{  Warning_Header() << "warning: in " << 
 					_dectype_of(tokID(rv.id)) << "declaration: "
-					"garbage before identifier `" << rv.found << "\'." << 
-					std::endl;  }
+					"garbage before identifier `" << rv.found << "\'.";  }
 				if(expect.id==tNone)
 				{
 					expect.id=tokID(rv.id);
@@ -2890,22 +2882,21 @@ int File_Parser::Declare_Parser::parse(int eof)
 					{
 						Error_Header() << "cannot declare " << 
 							_dectype_of(expect.id) << "`" << expect.name << "\' " 
-							"inside an instace of itself. " << std::endl;
+							"inside an instace of itself. ";
 						Error_Header() << "Previous instance beginning in " << 
-							Rel_Pos(&dec_start) << "." << std::endl;
+							Rel_Pos(&dec_start) << ".";
 						++errors;
 						done=true;
 						return(0);  // keep that
 					}
 					if(expect.av->nfound && fp->config.scalar_multiple_decl)
-					{  Error_Header() << 
-						((fp->config.scalar_multiple_decl>1) ? 
-							"" : "warning: ") << "encountering " << 
+					{  ((fp->config.scalar_multiple_decl>1) ? Error_Header() : 
+							(Warning_Header() << "warning: ")) << "encountering " << 
 						(expect.av->nfound+1) << Num_Postfix(expect.av->nfound+1) << 
 						" declaration of " << _dectype_of(expect.id) << 
-						"`" << expect.name << "\'." << std::endl;
-					   Error_Header() << "         previous one begins at " << 
-						Rel_Pos(&expect.av->dec_start) << "." << std::endl;
+						"`" << expect.name << "\'.";
+					   Warning_Header() << "         previous one begins at " << 
+						Rel_Pos(&expect.av->dec_start) << ".";
 					   if(fp->config.scalar_multiple_decl>1)  ++errors;
 					}
 					expect.av->locked=true;
@@ -2917,8 +2908,7 @@ int File_Parser::Declare_Parser::parse(int eof)
 					if(!more_names_error)
 					{  Error_Header() << "woops: encountered more than one " << 
 						_dectype_of(expect.id) << "name (second: `" << rv.found << 
-						"\') in declaration" << _startline_str() << "." << 
-						std::endl;  }
+						"\') in declaration" << _startline_str() << ".";  }
 					++more_names_error;
 					++errors;
 				}
@@ -2927,7 +2917,7 @@ int File_Parser::Declare_Parser::parse(int eof)
 					_dectype_of(tokID(rv.id)) << "name `" << rv.found << 
 					"\' after " << _dectype_of(expect.id) << "name `" << 
 					expect.name << "\' in same declaration" << _startline_str() << 
-					"." << std::endl;
+					".";
 				   ++errors;  }
 			}
 			else if(rv.id==tAssign)
@@ -2947,17 +2937,16 @@ int File_Parser::Declare_Parser::parse(int eof)
 			{
 				// Empty declaration?!
 				if(expect.id!=tNone)
-				{  Error_Header() << "warning: " << _dectype_of(expect.id) << 
+				{  Warning_Header() << "warning: " << _dectype_of(expect.id) << 
 					"declaration of `" << expect.name << "\'" << 
-					_startline_str() << " is without assignment." << 
-					std::endl;  }
+					_startline_str() << " is without assignment.";  }
 				if(expect.id==taScalar)
 				{  goto scalar_decl_end;  /* ugly goto. */  }
 				else if(expect.id==taObject)
 				{
-					Error_Header() << "warning: empty declaration of " << 
+					Warning_Header() << "warning: empty declaration of " << 
 						Ani_Type_Name(expect.id) << " `" << expect.name << 
-						"\' ignored." << std::endl;
+						"\' ignored.";
 					// With scalars, we don't need the value, with objects we do. 
 					// And an object typically is not terminated by a `;'. 
 				}
@@ -2967,15 +2956,14 @@ int File_Parser::Declare_Parser::parse(int eof)
 			else 
 			{
 				if(rv.id==tpDeclare)
-				{  Error_Header() << "warning: declaration inside declaration" << 
-					_startline_str() << " (inner one processed)." << std::endl;  }
+				{  Warning_Header() << "warning: declaration inside declaration" << 
+					_startline_str() << " (inner one processed).";  }
 				else if(rv.id==tNumbersign || is_pp_command(&rv))
-				{  Error_Header() << "warning: preprocessor command inside "
-					"declaration" << _startline_str() << " (decl ignored)." << 
-					std::endl;  }
+				{  Warning_Header() << "warning: preprocessor command inside "
+					"declaration" << _startline_str() << " (decl ignored).";  }
 				else
-				{  Error_Header() << "warning: skipping wired declaration" << 
-					_startline_str() << "." << std::endl;  }
+				{  Warning_Header() << "warning: skipping wired declaration" << 
+					_startline_str() << ".";  }
 				Put_Back_Tok(&rv);
 				done=true;
 			}
@@ -2984,10 +2972,10 @@ int File_Parser::Declare_Parser::parse(int eof)
 		{
 			if(rv.id==tpDeclare)
 			{
-				Error_Header() << "warning: declaration inside declaration "
+				Warning_Header() << "warning: declaration inside declaration "
 					"of " << _dectype_of(expect.id) << "`" << expect.name << 
 					"\'" << _startline_str() << " (inner one processed; "
-					"missing `;\'?)." << std::endl;
+					"missing `;\'?).";
 				Put_Back_Tok(&rv);
 				done=true;
 			}
@@ -2995,8 +2983,7 @@ int File_Parser::Declare_Parser::parse(int eof)
 			{
 				Error_Header() << "preprocessor command inside declaration "
 					"rvalue of " << _dectype_of(expect.id) << "`" << 
-					expect.name << "\'" << _startline_str() << "." << 
-					std::endl;
+					expect.name << "\'" << _startline_str() << ".";
 				++errors;
 				Put_Back_Tok(&rv);
 				done=true;
@@ -3011,7 +2998,7 @@ int File_Parser::Declare_Parser::parse(int eof)
 					{
 						Error_Header() << "too few `}\' in scalar "
 							"declaration of `" << expect.name << "\'" << 
-							_startline_str() << "." << std::endl;
+							_startline_str() << ".";
 						++errors;
 						done=true;
 					}
@@ -3020,12 +3007,12 @@ int File_Parser::Declare_Parser::parse(int eof)
 					dec_end=*cc;  // semicolon already consumed 
 					
 					++expect.av->nfound;
-					if(verbose()>2)
-					{  vout() << "Found definition of " << 
+					if(verbose_level()>2)
+					{  verbose(3) << "Found definition of " << 
 						Ani_Type_Name(expect.av->type) << " `" << 
 						expect.name << "\' in " << 
 						Get_Path(dec_start.handle) << ":" << dec_start.line << 
-						"..." << dec_end.line << std::endl;  }
+						"..." << dec_end.line;  }
 					
 					AValue *av=expect.av;
 					assert(av->type==expect.id);
@@ -3043,9 +3030,9 @@ int File_Parser::Declare_Parser::parse(int eof)
 					{
 						if(!scalar_brace_warning)
 						{
-							Error_Header() << "warning: braces encountered in "
+							Warning_Header() << "warning: braces encountered in "
 								"scalar declaration of `" << expect.name << 
-								"\'" << _startline_str() << "." << std::endl;
+								"\'" << _startline_str() << ".";
 							scalar_brace_warning=true;
 						}
 						++nbraces;
@@ -3057,7 +3044,7 @@ int File_Parser::Declare_Parser::parse(int eof)
 						{
 							Error_Header() << "too many `}\' in scalar "
 								"declaration of `" << expect.name << "\'" << 
-								_startline_str() << "." << std::endl;
+								_startline_str() << ".";
 							++errors;
 							done=true;
 						}
@@ -3076,14 +3063,14 @@ int File_Parser::Declare_Parser::parse(int eof)
 				{
 					Error_Header() << "no object definition for `" << 
 						expect.name << "\' found in declaration" << 
-						_startline_str() << "." << std::endl;
+						_startline_str() << ".";
 					++errors;
 					done=true;
 				}
 				else if(rv.id==tClBrace)
 				{
 					Error_Header() << "object declaration" << _startline_str() << 
-						" begins with closing brace." << std::endl;
+						" begins with closing brace.";
 					++errors;
 					done=true;
 				}
@@ -3109,10 +3096,11 @@ int File_Parser::Declare_Parser::parse(int eof)
 		   cc->line!=dec_start.line)
 		{
 			bool err = (fp->config.multiline_scalar_decl>1);
-			Error_Header(dec_start.line) << (err ? "" : "warning: ") << 
+			(err ? Error_Header(dec_start.line) : 
+				(Warning_Header(dec_start.line) << "warning: " )) << 
 				"scalar declaration " << 
 				(expect.name ? (std::string("of `")+expect.name+"\' ") : "") << 
-				"exceeds one line. (Missing `;\'?)" << std::endl;
+				"exceeds one line. (Missing `;\'?)";
 			if(err)
 			{  ++errors;  done=true;  }
 			multiline_scalar_decl_warned=true;
@@ -3159,18 +3147,17 @@ int File_Parser::Declare_Parser::spdone(File_Parser::Sub_Parser *sb)
 			{
 				Error_Header() << "declaration of " << 
 					_dectype_of(expect.id) << "`" << expect.name << "\'" << 
-					_startline_str() << " has flags set more than once." << 
-					std::endl;
+					_startline_str() << " has flags set more than once.";
 				++errors;
 			}
 			else
 			{
 				expect.av->flags=cp->flags;
 				if(state==sAssign)
-				{  Error_Header() << "warning: should place flags comment "
+				{  Warning_Header() << "warning: should place flags comment "
 					"before assignment in declaration of " << 
 					_dectype_of(expect.id) << "`" << expect.name << "\'" << 
-					_startline_str() << "." << std::endl;  }
+					_startline_str() << ".";  }
 			}
 		}
 	}
@@ -3216,15 +3203,15 @@ int File_Parser::Object_Parser::parse(int eof)
 		if((eof==1 && fp->config.warn_object_eof_boundary>1) || eof==2)
 		{
 			Error_Header() << "declaration of object `" << obj_name << 
-				"\'" << _startline_str() << " terminated by EOF." << std::endl;
+				"\'" << _startline_str() << " terminated by EOF.";
 			++errors;
 			done=1;
 			return(0);
 		}
 		else if(fp->config.warn_object_eof_boundary)
-		{  Error_Header() << "warning: declaration of object `" << 
+		{  Warning_Header() << "warning: declaration of object `" << 
 			obj_name << "\'" << _startline_str() << 
-			" spreads across EOF boundary." << std::endl;  }
+			" spreads across EOF boundary.";  }
 	}
 	
 	Find_String::RV rv;
@@ -3251,7 +3238,7 @@ int File_Parser::Object_Parser::parse(int eof)
 			{
 				Error_Header() << "opening brace `{\' encountered after "
 					"parse.end statement in object declaration of `" << 
-					obj_name << "\'" << _startline_str() << "." << std::endl;
+					obj_name << "\'" << _startline_str() << ".";
 				++errors;
 				done=true;
 				Put_Back_Tok(&rv);
@@ -3265,7 +3252,7 @@ int File_Parser::Object_Parser::parse(int eof)
 			{
 				Error_Header() << "too many closing braces `}\' in object "
 					"declaration of `" << obj_name << "\'" << _startline_str() << 
-					"." << std::endl;
+					".";
 				++errors;
 				done=true;
 				Put_Back_Tok(&rv);
@@ -3281,13 +3268,12 @@ int File_Parser::Object_Parser::parse(int eof)
 				mat_pos.fileoff-=rv.found_len;
 				
 				++av->nfound;
-				if(verbose()>2)
-				{  vout() << "Found definition of " << Ani_Type_Name(av->type) << 
+				if(verbose_level()>2)
+				{  verbose(3) << "Found definition of " << Ani_Type_Name(av->type) << 
 					" `" << obj_name << "\' in " << 
 					Get_Path(obj_start.handle) << ":" << obj_start.line << 
 					" ... " <<
-					Get_Path(obj_end.handle) << ":" << obj_end.line <<
-					std::endl;  }
+					Get_Path(obj_end.handle) << ":" << obj_end.line;  }
 
 				av->dec_start=obj_start;
 				av->dec_end=obj_end;
@@ -3329,16 +3315,16 @@ int File_Parser::Object_Parser::spdone(File_Parser::Sub_Parser *sb)
 			{
 				Error_Header() << "object end statement of " << 
 					Ani_Type_Name(cp->av->type) << " `" << 
-					cp->av->ptn->get_name() << "\' found inside object "
+					cp->av->get_name() << "\' found inside object "
 					"declaration of `" << obj_name << "\'" << 
-					_startline_str() << "." << std::endl;
+					_startline_str() << ".";
 				if(cp->av->locked)
 				{
 					Error_Header() << "  object `" << obj_name << "\' "
 						"seems to be nested inside declaration of " << 
 						Ani_Type_Name(cp->av->type) << " `" << 
-						cp->av->ptn->get_name() << "\'" << 
-						Startpos_Str(&cp->av->dec_start) << "." << std::endl;
+						cp->av->get_name() << "\'" << 
+						Startpos_Str(&cp->av->dec_start) << ".";
 					// #warning should we set "done" for us and the parser having locked the AValue? Can we?
 				}
 				++errors;
@@ -3346,13 +3332,11 @@ int File_Parser::Object_Parser::spdone(File_Parser::Sub_Parser *sb)
 			else
 			{
 				if(!av->flags.has_end_statement)
-				{  Error_Header() << "warning: declaration of " << 
+				{  Warning_Header() << "warning: declaration of " << 
 					Ani_Type_Name(av->type) << " `" << obj_name << 
-					_startline_str() << " contains parse end statement." << 
-					std::endl;
+					_startline_str() << " contains parse end statement.";
 				   Error_Header() << "         probably you forgot to set "
-				    "the `E\' flag; trusting end statement for now." << 
-					std::endl;  }
+				    "the `E\' flag; trusting end statement for now.";  }
 				object_end_coming=true;
 			}
 		}

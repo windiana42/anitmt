@@ -26,6 +26,8 @@
 #include <iostream>
 #include <string>
 
+#include <message/message.hpp>
+
 namespace output_io
 {
 
@@ -42,7 +44,8 @@ class Buffered_Output_Stream;
  * modifying it nearly without any speed penalty. 
  */
 
-class Modification_Copy
+class Modification_Copy : 
+	public message::Message_Reporter
 {
 	public:
 		enum MCAction
@@ -101,16 +104,9 @@ class Modification_Copy
 		void _Copy_TillEOF(Input_Stream *inf,Output_Stream *outf,CopyBuffer *buf);
 		
 		void _Reset();
-		
-		int verbose;
-		std::ostream *_vout;
-		std::ostream &vout()  {  return(*_vout);  }
 	public:
-		Modification_Copy();
+		Modification_Copy(message::Message_Consultant *mcons);
 		~Modification_Copy();
-		
-		// Set verbosity level and verbose stream: 
-		void Set_Verbose(int verbose,std::ostream &vout);
 		
 		// Add a modification entry: 
 		// path: file to which to add the modification 

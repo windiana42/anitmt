@@ -133,6 +133,14 @@ namespace message
     // Destructor will be called and will write the message. 
   }
 
+  inline Message_Stream& Message_Stream::operator<<(_NewLine)
+  {
+    #warning Please fix me: (should be handled more cleverly)
+    if(enabled)
+      msg_stream << "\n";
+    return *this;
+  }
+
   // copy operator that disables the source message
   inline Message_Stream &Message_Stream::operator=( Message_Stream& src ) 
   {
@@ -190,6 +198,11 @@ namespace message
   inline bool Message_Reporter::is_verbose(int verbose_level )
   {
     return consultant->is_verbose( verbose_level );
+  }
+
+  inline int Message_Reporter::verbose_level()
+  {
+    return consultant->get_verbose_level();
   }
 
   inline Message_Consultant *Message_Reporter::get_consultant() const
