@@ -35,7 +35,7 @@ namespace message
 #include <strstream>
 
 // strstream message buffer size: 
-#define _Message_Buf_Size 1024
+#define _Message_Buf_Size  1024
 
 namespace message
 {

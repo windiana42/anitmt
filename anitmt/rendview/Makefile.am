@@ -2,9 +2,9 @@
 #CXXFLAGS = @CXXFLAGS@ -W -Wall -D_GNU_SOURCE
 
 OPTCXXFLAGS = -W -Wall -Wformat -Woverloaded-virtual \
-	-Os -march=i486 -fno-exceptions -fomit-frame-pointer \
+	-Os -march=i486 -fno-exceptions -fno-rtti -fomit-frame-pointer \
 	-malign-jumps=2 -malign-loops=2 -malign-functions=2 \
-	-DHLIB_SIZE_OPT=1 -D_GNU_SOURCE -fno-rtti 
+	-DHLIB_SIZE_OPT=1 -D_GNU_SOURCE
 OPTCFLAGS = -W -Wall -Wformat \
 	-Os -march=i486 -fomit-frame-pointer \
 	-malign-jumps=2 -malign-loops=2 -malign-functions=2 \

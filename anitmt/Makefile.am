@@ -9,11 +9,14 @@ all-wolfgang: FORCE
 	$(MAKE) -C lib CXXFLAGS="-Wno-non-template-friend -ftemplate-depth-33 -fmessage-length=$(COLUMNS) -D__CPLUSPLUS -DTHROW_NIL=\"throw()\" -DYYDEBUG -DWOLFGANG"
 	$(MAKE) -C anitmt-calc CXXFLAGS="-Wno-non-template-friend -ftemplate-depth-33 -fmessage-length=$(COLUMNS) -D__CPLUSPLUS -DTHROW_NIL=\"throw()\" -DYYDEBUG -DWOLFGANG"
 	$(MAKE) -C anitmt-view CFLAGS="" CXXFLAGS=""
+	$(MAKE) -C mkavi CFLAGS="" CXXFLAGS=""
 debug-wolfgang: FORCE
 	$(MAKE) -C hlib CXXFLAGS="-g" CFLAGS="-g" 
 	$(MAKE) -C rendview CXXFLAGS="-g"
 	$(MAKE) -C lib CXXFLAGS="-g -Wno-non-template-friend -ftemplate-depth-33 -fmessage-length=$(COLUMNS) -D__CPLUSPLUS -DTHROW_NIL=\"throw()\" -DYYDEBUG -DWOLFGANG"
 	$(MAKE) -C anitmt-calc CXXFLAGS="-O -g -Wno-non-template-friend -ftemplate-depth-33 -fmessage-length=$(COLUMNS) -D__CPLUSPLUS -DTHROW_NIL=\"throw()\" -DYYDEBUG -DWOLFGANG"
+	$(MAKE) -C anitmt-view CFLAGS="-g" CXXFLAGS="-g"
+	$(MAKE) -C mkavi CFLAGS="-g" CXXFLAGS="-g"
 
 FORCE:
 

@@ -71,7 +71,7 @@ namespace message
 
   Message_Stream::Message_Stream( _NoInit ni ) 
     : enabled(false),
-      msg_stream(message,_Message_Buf_Size)
+      msg_stream(message,_Message_Buf_Size-1)
   {
     assert( ni == noinit );
   }
@@ -83,7 +83,7 @@ namespace message
     : enabled(_enabled), 
       pos(p), position_detail(pos_detail), consultant(consult),
       mtype(message_type), 
-      msg_stream(message,_Message_Buf_Size),no_end(false) {}
+      msg_stream(message,_Message_Buf_Size-1),no_end(false) {}
 
   // Actually the source is non-const. But for the outside world, const 
   // is just the right thing here.
@@ -96,11 +96,11 @@ namespace message
       #if __GNUC__ < 3  /* there is a bug in gcc-2.95.x STL... */
       #define PCOUNT(src) const_cast<std::ostrstream*>(&src.msg_stream)->pcount()
       msg_stream(msg_strcpy(message,src.message,PCOUNT(src)),
-          _Message_Buf_Size-PCOUNT(src))
+          _Message_Buf_Size-1-PCOUNT(src))
       #undef PCOUNT
       #else  // gcc-3 does not have that bug in the STL:
       msg_stream(msg_strcpy(message,src.message,src.msg_stream.pcount()),
-          _Message_Buf_Size-src.msg_stream.pcount())
+          _Message_Buf_Size-1-src.msg_stream.pcount())
       #endif
   {
     Message_Stream *ssrc=const_cast<Message_Stream *>(&src);
@@ -134,7 +134,7 @@ namespace message
     // Should be something like that:
     //msg_stream=std::strstream(
     //    msg_strcpy(message,src.message,src.msg_stream.pcount()),
-    //    _Message_Buf_Size-src.msg_stream.pcount());
+    //    _Message_Buf_Size-1-src.msg_stream.pcount());
     #endif
     no_end = src.no_end;
 
@@ -163,7 +163,7 @@ namespace message
     // Should be something like that:
     /*const std::strstream tmp(
       msg_strcpy(dest.message,message,msg_stream.pcount()),
-      _Message_Buf_Size-msg_stream.pcount());*/
+      _Message_Buf_Size-1-msg_stream.pcount());*/
     //dest.msg_stream=tmp;
     #endif
     dest.no_end = no_end;
