@@ -5,7 +5,7 @@
  * data from / to a file descriptor. 
  * Works in cooperation with class FDManager. 
  * 
- * Copyright (c) 2002 by Wolfgang Wieser (wwieser@gmx.de) 
+ * Copyright (c) 2002--2003 by Wolfgang Wieser (wwieser@gmx.de) 
  * 
  * This file may be distributed and/or modified under the terms of the 
  * GNU General Public License version 2 as published by the Free Software 
@@ -561,6 +561,11 @@ class FDCopyPump :
 // This is the one you may use if you write your own FDCopyIO. 
 // If your FDCopyIO cannot provide such a function, you will probably 
 // have to write you own FDCopyPump as well. 
+// NOTE: You can copy buffers of zero size to an fd without trouble 
+//       but when reading into a buffer of size 0 you can run into 
+//       trouble if POLLIN will not occur because the network socket fd 
+//       has no more available data. Deadlock may occur. For this reason, 
+//       avoid reading into buffers of size 0. 
 class FDCopyPump_Simple : public FDCopyPump
 {
 	protected:

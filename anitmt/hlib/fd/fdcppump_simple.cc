@@ -4,7 +4,7 @@
  * Implementation of class FDCopyPump_Simple which works in 
  * cooperation with class FDCopyBase (and thus FDManager). 
  * 
- * Copyright (c) 2002 by Wolfgang Wieser (wwieser@gmx.de) 
+ * Copyright (c) 2002--2003 by Wolfgang Wieser (wwieser@gmx.de) 
  * 
  * This file may be distributed and/or modified under the terms of the 
  * GNU General Public License version 2 as published by the Free Software 
