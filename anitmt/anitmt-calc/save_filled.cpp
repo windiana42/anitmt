@@ -17,8 +17,6 @@
 #include <fstream>
 
 namespace anitmt {
-  //static const int WN_INDENT_WIDTH = 2;
-
   void write_node( std::ofstream &out, Prop_Tree_Node* node, int indent ){
     int i;
     // write type and name
@@ -32,7 +30,7 @@ namespace anitmt {
       {
 	for( i = 0; i < indent+WN_INDENT_WIDTH; i++ ) out << " ";
 	out << *cp << " ";	// write property name
-	out << *node->get_property( *cp ) << std::endl;
+	out << *node->get_property( *cp ) << ';' << std::endl;
       }
 
     // write childs recursive
@@ -49,10 +47,17 @@ namespace anitmt {
     out << "}" << std::endl;
   }
 
-  void save_filled( std::string filename, Prop_Tree_Node *root ){
+  void save_filled( std::string filename, Animation *root ){
     std::ofstream out( filename.c_str() );
 
-    write_node( out, root, 0 );
+    // write all scenes
+    std::list<Prop_Tree_Node*> childs = root->get_all_childs();
+    std::list<Prop_Tree_Node*>::iterator cc;
+    for( cc = childs.begin(); cc != childs.end(); cc++ )
+      {
+	// start recursive write 
+	write_node( out, *cc, 0 );
+      }
   }
 }
 

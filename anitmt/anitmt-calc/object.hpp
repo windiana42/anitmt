@@ -46,7 +46,7 @@ namespace anitmt{
   public:
     static std::string get_type_name();
 
-    Ani_Object( std::string name );
+    Ani_Object( std::string name, Animation *ani );
 
     Object_State get_return_value( values::Scalar t, 
 				   Object_State m = Object_State() );

@@ -21,14 +21,14 @@ namespace anitmt{
   //******************************************************************
 
   // type name identifier as string
-  const std::string Ani_Scene::type_name = "animation";
+  const std::string Ani_Scene::type_name = "scene";
 
   std::string Ani_Scene::get_type_name(){
     return type_name;
   }
 
-  Ani_Scene::Ani_Scene( std::string name ) 
-    : Prop_Tree_Node( type_name, name ),
+  Ani_Scene::Ani_Scene( std::string name, Animation *ani ) 
+    : Prop_Tree_Node( type_name, name, ani ),
       scalar(false,false), object(false,false) {
 
     add_property( "filename", &filename );

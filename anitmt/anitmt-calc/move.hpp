@@ -54,7 +54,7 @@ namespace anitmt{
   public:
     static std::string get_type_name();
 
-    Obj_Move( std::string name );
+    Obj_Move( std::string name, Animation *ani );
 
     values::Matrix get_return_value( values::Scalar t, 
 				     values::Matrix m = values::Matrix() );
@@ -98,7 +98,7 @@ namespace anitmt{
   public:
     static std::string get_type_name();
 
-    Obj_Move_Straight( std::string name );
+    Obj_Move_Straight( std::string name, Animation *ani );
     
     Position get_return_value( values::Scalar t, Position = Position() );
     Direction get_return_value( values::Scalar t, Direction = Direction() );

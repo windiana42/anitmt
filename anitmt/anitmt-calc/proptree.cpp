@@ -110,7 +110,7 @@ namespace anitmt{
       throw EX_child_type_unkown();
 
     // create node with factory found
-    Prop_Tree_Node *node = i->second->create( name );
+    Prop_Tree_Node *node = i->second->create( name, ani );
 
     if( first_child == 0 ) 
       {
@@ -189,9 +189,9 @@ namespace anitmt{
   //**************************
   // constructors / destructor
 
-  Prop_Tree_Node::Prop_Tree_Node( std::string t, std::string n ) 
+  Prop_Tree_Node::Prop_Tree_Node( std::string t, std::string n, Animation *a ) 
     : parent(0), prev(0), next(0), first_child(0), last_child(0), 
-      type(t), name(n) {}
+      type(t), name(n), ani(a) {}
 
   Prop_Tree_Node::~Prop_Tree_Node() {}
 

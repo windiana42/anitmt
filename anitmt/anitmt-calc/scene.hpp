@@ -45,7 +45,7 @@ namespace anitmt{
   public:
     static std::string get_type_name();
 
-    Ani_Scene( std::string name );
+    Ani_Scene( std::string name, Animation *ani );
 
     Scene_State get_return_value( values::Scalar t, 
 				  Scene_State s = Scene_State() );    

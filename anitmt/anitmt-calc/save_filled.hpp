@@ -17,10 +17,11 @@
 
 #include <string>
 #include "proptree.hpp"
+#include "animation.hpp"
 
 namespace anitmt {
   static const int WN_INDENT_WIDTH = 2;
-  void save_filled( std::string filename, Prop_Tree_Node *root );
+  void save_filled( std::string filename, Animation *root );
 }
 
 #endif

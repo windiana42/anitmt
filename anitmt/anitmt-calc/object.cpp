@@ -30,8 +30,8 @@ namespace anitmt{
     return type_name;
   }
 
-  Ani_Object::Ani_Object( std::string name ) 
-    : Prop_Tree_Node( type_name, name ),
+  Ani_Object::Ani_Object( std::string name, Animation *ani ) 
+    : Prop_Tree_Node( type_name, name, ani ),
       mat(false,false),
       pos(true,false),
       dir(true,false),

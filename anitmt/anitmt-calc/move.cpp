@@ -39,8 +39,8 @@ namespace anitmt{
   //    constuctor of Obj_Move
   //
   //
-  Obj_Move::Obj_Move( std::string name ) 
-    : Prop_Tree_Node( type_name, name ),
+  Obj_Move::Obj_Move( std::string name, Animation *ani ) 
+    : Prop_Tree_Node( type_name, name, ani ),
       pos(true,false),
       dir(true,false),
       up(true,false) {
@@ -103,8 +103,8 @@ namespace anitmt{
     return type_name;
   }
 
-  Obj_Move_Straight::Obj_Move_Straight( std::string name ) 
-    : Prop_Tree_Node( type_name, name ) {
+  Obj_Move_Straight::Obj_Move_Straight( std::string name, Animation *ani ) 
+    : Prop_Tree_Node( type_name, name, ani ) {
     new Accel_Solver( &s, &t, &a, &v0, &ve );
     new Diff_Solver( &t, &t0, &te );
     new Diff_Solver( &t_f, &t0_f, &te_f );

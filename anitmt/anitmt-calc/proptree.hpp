@@ -27,6 +27,8 @@ namespace anitmt{
 #include "val.hpp"
 #include "property.hpp"
 
+#include "animation_classes.hpp"
+
 namespace anitmt{
 
   //************************************************************
@@ -44,6 +46,8 @@ namespace anitmt{
     std::string type;		// type of this node
     std::string name;		// name for reference
 
+    Animation *ani;		// animation as root node
+
     // properties
     typedef std::map< std::string, Property* > properties_type;
     properties_type properties;
@@ -54,7 +58,7 @@ namespace anitmt{
     // abstract child factory:
     class Child_Factory{
     public:
-      virtual Prop_Tree_Node *create( std::string name ) = 0;
+      virtual Prop_Tree_Node *create( std::string name, Animation* ani ) = 0;
     };
 
     // map of child fatories associated to a name as string 
@@ -105,7 +109,7 @@ namespace anitmt{
     //**************************
     // constructors / destructor
 
-    Prop_Tree_Node( std::string type, std::string name );
+    Prop_Tree_Node( std::string type, std::string name, Animation *ani );
     virtual ~Prop_Tree_Node();
 
   };
@@ -117,7 +121,7 @@ namespace anitmt{
   template< class NT>
   class Node_Factory : public Prop_Tree_Node::Child_Factory{
   public:
-    virtual Prop_Tree_Node *create( std::string name );
+    virtual Prop_Tree_Node *create( std::string name, Animation *ani );
   };
 }
 

@@ -1,12 +1,19 @@
+#include "nodes.hpp"
+void test(){
+  anitmt::make_all_nodes_availible();
+}
+
 #include <iostream>
 
 #include "val.hpp"
 #include "property.hpp"
 #include "solver.hpp"
-#include "move.hpp"
+#include "animation.hpp"
 #include "scene.hpp"
-#include "nodes.hpp"
+#include "scalar.hpp"
+#include "move.hpp"
 #include "save_filled.hpp"
+
 
 using namespace std;
 using namespace anitmt;
@@ -48,9 +55,11 @@ int main()
   // tree create test
   //*****************
 
-  make_all_nodes_availible();
+  anitmt::make_all_nodes_availible();
 
-  Prop_Tree_Node *tscene = new Ani_Scene("testscene");
+  Animation *ani = new Animation("dummy_name");
+
+  Prop_Tree_Node *tscene = ani->add_child( "scene", "testscene" );
 
   Prop_Tree_Node *tscalar = tscene ->add_child( "scalar", "testval" );
   Prop_Tree_Node *tlinear = tscalar->add_child( "linear", "testlinear" );
@@ -62,7 +71,7 @@ int main()
   tlinear->set_property( "endvalue",   values::Scalar(2) );
   tlinear->set_property( "difference", values::Scalar(1) );
 
-  save_filled( "test.out", tscene );
+  save_filled( "test.out", ani );
 
   return 0;
 }

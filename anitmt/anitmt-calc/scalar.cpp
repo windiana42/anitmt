@@ -29,8 +29,8 @@ namespace anitmt{
     return type_name;
   }
 
-  Ani_Scalar::Ani_Scalar( std::string name ) 
-    : Prop_Tree_Node( type_name, name ),
+  Ani_Scalar::Ani_Scalar( std::string name, Animation *ani ) 
+    : Prop_Tree_Node( type_name, name, ani ),
       s(false,false) {
 
   }

@@ -26,8 +26,9 @@ namespace anitmt{
     return type_name;
   }
 
-  Scal_Linear::Scal_Linear( std::string name ) 
-    : Prop_Tree_Node( type_name, name ) {
+  Scal_Linear::Scal_Linear( std::string name, Animation *ani ) 
+    : Prop_Tree_Node( type_name, name, ani ) {
+
     new Diff_Solver( &d, &v0, &ve );
     new Diff_Solver( &t, &t0, &te );
     new Diff_Solver( &t_f, &t0_f, &te_f );

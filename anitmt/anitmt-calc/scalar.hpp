@@ -41,7 +41,7 @@ namespace anitmt{
   public:
     static std::string get_type_name();
 
-    Ani_Scalar( std::string name );
+    Ani_Scalar( std::string name, Animation *ani );
 
     Scalar_State get_return_value( values::Scalar t, 
 				   Scalar_State m = Scalar_State() );
