@@ -80,7 +80,7 @@ const char *HTime::PrintElapsed()
 		ptr+=snprintf(ptr,end-ptr,"%ldd ",hours/24);
 		hours%=24;
 	}
-	snprintf(ptr,end-ptr,"%02ld:%02ld:%02ld.%03d",
+	snprintf(ptr,end-ptr,"%02ld:%02ld:%02ld.%03ld",
 		(sec/3600),
 		(sec/60)%60,
 		sec%60,

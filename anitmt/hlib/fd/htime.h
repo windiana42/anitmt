@@ -47,8 +47,8 @@ class HTime
 		static const int64_t round_delta[];
 		static const double conv_factD[];
 		
-		inline void _Normalize(struct timeval *tv)
-		{  register long m=tv->tv_usec/1000000;  if(m<0)  --m;
+		static inline void _Normalize(struct timeval *tv)
+		{  register long m=tv->tv_usec/1000000;  if(tv->tv_usec<0)  --m;
 			tv->tv_sec+=m;  tv->tv_usec-=1000000*m;  }
 		
 		void _SetVal(long val,TimeSpec sp,timeval *tv);

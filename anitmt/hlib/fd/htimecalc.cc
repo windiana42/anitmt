@@ -18,15 +18,7 @@
 
 // NOTE on sec and usec values: 
 // True value is always sec+usec/1000000. 
-// Howeverm used is ALWAYS in range 0...999999; NEVER negative. 
-
-static inline void _normalize(struct timeval *tv)
-{
-	register long m=tv->tv_usec/1000000;
-	if(m<0)  --m;
-	tv->tv_sec+=m;
-	tv->tv_usec-=1000000*m;
-}
+// However, used is ALWAYS in range 0...999999; NEVER negative. 
 
 
 HTime HTime::operator-(const HTime &start) const
@@ -35,7 +27,7 @@ HTime HTime::operator-(const HTime &start) const
 	
 	r.tv.tv_sec= tv.tv_sec- start.tv.tv_sec;
 	r.tv.tv_usec=tv.tv_usec-start.tv.tv_usec;
-	_normalize(&r.tv);
+	_Normalize(&r.tv);
 	
 	return(r);
 }
@@ -44,7 +36,7 @@ HTime &HTime::operator-=(const HTime &start)
 {
 	tv.tv_sec-= start.tv.tv_sec;
 	tv.tv_usec-=start.tv.tv_usec;
-	_normalize(&tv);
+	_Normalize(&tv);
 	return(*this);
 }
 
@@ -55,7 +47,7 @@ HTime HTime::operator+(const HTime &start) const
 	
 	r.tv.tv_sec= tv.tv_sec+ start.tv.tv_sec;
 	r.tv.tv_usec=tv.tv_usec+start.tv.tv_usec;
-	_normalize(&r.tv);
+	_Normalize(&r.tv);
 	
 	return(r);
 }
@@ -64,6 +56,6 @@ HTime &HTime::operator+=(const HTime &start)
 {
 	tv.tv_sec+= start.tv.tv_sec;
 	tv.tv_usec+=start.tv.tv_usec;
-	_normalize(&tv);
+	_Normalize(&tv);
 	return(*this);
 }
