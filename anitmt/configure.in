@@ -14,7 +14,6 @@ AC_OUTPUT(
 	Makefile 
 	lib/Makefile 
 	lib/val/Makefile 
-	lib/val2/Makefile 
 	lib/utl/Makefile 
 	lib/par/Makefile 
 	lib/param/Makefile 
