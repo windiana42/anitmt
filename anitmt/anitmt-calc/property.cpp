@@ -58,6 +58,7 @@ namespace anitmt{
   Solve_Run_Info::id_type Solve_Run_Info::new_test_run_id(){
     test_run_id = current_default_test_run_id;
     valid_test_run_ids.insert( test_run_id );
+    ++current_default_test_run_id;
     return test_run_id;
   }
 
@@ -80,7 +81,7 @@ namespace anitmt{
   // Property: container for property values
   //****************************************
 
-  Property::Property() : last_test_run_id(-1) {}
+  Property::Property() : solved(false), last_test_run_id(-1) {}
 
   bool Property::is_solved() const { return solved; }
   // returns whether the property is solved in the current try

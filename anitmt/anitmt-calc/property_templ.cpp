@@ -42,7 +42,7 @@ namespace anitmt{
   // returns the value of the property
   template<class T>
   T Type_Property<T>::get() const{
-    assert( is_solved() );
+    //assert( is_solved() ); //!implicite convertion to double can't pass info!
     return v;
   }
 
@@ -61,7 +61,7 @@ namespace anitmt{
 				    Solve_Problem_Handler *problem_handler ){
     bool res;
 
-    Solve_Run_Info *info = new Solve_Run_Info( &default_handler );
+    Solve_Run_Info *info = new Solve_Run_Info( problem_handler );
 
     res = is_this_ok( v, 0, info );
     if( res ) use_it(0);
@@ -140,6 +140,16 @@ namespace anitmt{
   //  return s.write2stream( os );
   //}
 
+  /*
+  // force compilation of Specializations:
+  void all_property_specializations() {
+    Type_Property<values::Scalar> force_compilation_of_spec1;
+    Type_Property<values::Vector> force_compilation_of_spec2;
+    Type_Property<values::Matrix> force_compilation_of_spec3;
+    Type_Property<values::String> force_compilation_of_spec4;
+    Type_Property<values::Flag>   force_compilation_of_spec5;
+  }
+  */
 }
 
 #endif

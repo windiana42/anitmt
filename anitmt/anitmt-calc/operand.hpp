@@ -78,7 +78,10 @@ namespace anitmt{
 			   Solve_Problem_Handler *handler = &default_handler ) 
     { 
       Solve_Run_Info info( handler );
-      if(test_set_value(res,&info)) report_value(); 
+      if(test_set_value(res,&info)) {
+	report_value(); 
+	solved = true;
+      }
     }
 
     void init_reporter( Value_Reporter *reporter );
@@ -107,7 +110,7 @@ namespace anitmt{
     // calculates results of a solved Property (ID) and returns wheather
     // the solution is ok
     virtual bool check_prop_solution_and_results
-    ( Property *ID, Solve_Run_Info const *info ){}
+    ( Property *ID, Solve_Run_Info const *info ){ return true; }
 
   public:
     Store_Operand_to_Property( Operand<T> &op, Type_Property<T> *prop ); 
@@ -150,6 +153,8 @@ namespace anitmt{
     void init();
   public:
     Basic_Operator_for_1_param( Operand<T_Operand> &operand );
+
+    virtual ~Basic_Operator_for_1_param() {}
   };
 
   //***************************************************************
@@ -201,7 +206,7 @@ namespace anitmt{
     Basic_Operator_for_2_params( Operand<T_Op1> &operand1, 
 				 Operand<T_Op2> &operand2 ); 
 				// may throw exception if operands are not ok!
-    ~Basic_Operator_for_2_params();
+    virtual ~Basic_Operator_for_2_params();
   };
 
   //**********************************************

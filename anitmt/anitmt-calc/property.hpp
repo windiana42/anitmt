@@ -83,6 +83,9 @@ namespace anitmt{
   //**************************************************************
 
   class Solve_Run_Info {
+  public:
+    Solve_Problem_Handler *problem_handler;
+  private:
     typedef int id_type;
 
     static id_type current_default_test_run_id;
@@ -90,15 +93,13 @@ namespace anitmt{
     std::set<id_type> valid_test_run_ids;
     id_type test_run_id;
   public:
-    Solve_Problem_Handler *problem_handler;
-
-    inline bool is_id_valid( id_type id ) const; 
+    bool is_id_valid( id_type id ) const; 
 				// checks wheather an id belongs to curr. test
-    inline id_type get_test_run_id() const; // returns current test run ID
-    inline id_type new_test_run_id();	// adds a new test run ID
-    inline void add_test_run_id( id_type id ); // adds a test run ID
-    inline void remove_test_run_id( id_type id ); // removes a test run ID
-    inline void set_test_run_id( id_type id ); // sets active test run ID
+    id_type get_test_run_id() const; // returns current test run ID
+    id_type new_test_run_id();	// adds a new test run ID
+    void add_test_run_id( id_type id ); // adds a test run ID
+    void remove_test_run_id( id_type id ); // removes a test run ID
+    void set_test_run_id( id_type id ); // sets active test run ID
 
     Solve_Run_Info( Solve_Problem_Handler *handler, int id )
       : problem_handler( handler ), test_run_id( id ) {
@@ -179,7 +180,7 @@ namespace anitmt{
     operator T() const;		// implicite convertion to type (like get())
 
     // allow operator syntax to assign an Operand to a Property
-    inline void operator=( Operand<T> &operand ); 
+    void operator=( Operand<T> &operand ); 
 
     virtual std::ostream &write2stream( std::ostream& );
 

@@ -35,7 +35,16 @@ namespace anitmt{
     // was value already solved in test run?
     if( is_solved_in_try( info ) )
       {
-	return res == value;	// test ok, when same value
+	if( res == value )	// test ok, when same value
+	  {
+	    return true;
+	  }
+	else
+	  {
+	    std::list<Property*> bad_props;
+	    // !!! should add Operand and not property to bad_probs...
+	    info->problem_handler->property_collision_occured( bad_props );
+	  }
       }
     
     value = res; 

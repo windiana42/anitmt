@@ -107,7 +107,7 @@ namespace anitmt{
 
     // push starttime to previous endtime on level 2
     establish_Push_Connection( &ani->pri_sys, 
-			       4, &t0, prev_node, "endtime" );
+			       2, &t0, prev_node, "endtime" );
     // push startvalue to previous endvalue on level 4
     establish_Push_Connection( &ani->pri_sys, 
 			       4, &v0, prev_node, "endvalue" );
