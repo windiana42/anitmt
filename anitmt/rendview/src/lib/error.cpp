@@ -42,6 +42,10 @@ void InitRVOutputParams(int &argc,char **argv,char ** /*envp*/)
 		| VERBOSE_TSR1
 		| VERBOSE_TSLR
 		| VERBOSE_TSLLR
+#ifdef DEBUG
+		| VERBOSE_DBG    // comment out
+		| VERBOSE_DBGV   // comment out
+#endif
 #warning !!! REMOVE THE VERBOSE_0 and fix all errors which show up then. !!!
 		| VERBOSE_0
 		;

@@ -208,7 +208,7 @@ ssize_t LDRClient::_AtomicRecvData(LDRHeader *dest,size_t len,size_t min_len)
 	}
 	else if(!rd)
 	{
-		assert(len);
+		assert(len);  // Passing len=0 to this function is illegal. 
 		Error("Client %s: Disconnected unexpectedly.\n",
 			_ClientName().str());
 		return(-1);

@@ -108,6 +108,8 @@ CompleteTask::CompleteTask(int * failflag) :
 
 CompleteTask::~CompleteTask()
 {
+	Verbose(DBGV,"~CompleteTask[%d]...",frame_no);
+	
 	assert(!d.any());
 	DELETE(rt);
 	DELETE(ft);
@@ -116,6 +118,8 @@ CompleteTask::~CompleteTask()
 	assert(rt==NULL);  // can be removed 
 	LFree(radd.file);  radd.file=NULL;
 	LFree(fadd.file);  fadd.file=NULL;
+	
+	Verbose(DBGV,"done\n");
 }
 
 

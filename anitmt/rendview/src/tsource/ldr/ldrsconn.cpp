@@ -34,10 +34,11 @@ using namespace LDR;
 #endif
 
 
-static void _AllocFailure(int fail=-1)
+static void _AllocFailure(CompleteTask *ctsk_for_frame,int fail=-1)
 {
 	if(fail)
-	{  Error("LDR: Alloc failure.\n");  }
+	{  Error("LDR: Alloc failure [frame %d].\n",
+		ctsk_for_frame ? ctsk_for_frame->frame_no : (-1));  }
 }
 
 
@@ -51,6 +52,16 @@ inline TaskSourceFactory_LDR *TaskSource_LDR_ServerConn::P()
 {  return(back->P());  }
 inline ComponentDataBase *TaskSource_LDR_ServerConn::component_db()
 {  return(P()->component_db());  }
+
+
+void TaskSource_LDR_ServerConn::schedule_outpump_start()
+{
+	if(!outpump_scheduled)
+	{
+		UpdateTimer(schedule_tid,0,0);
+		outpump_scheduled=1;
+	}
+}
 
 
 // Actually send data; only do if you may POLLOUT. 
@@ -331,7 +342,7 @@ int TaskSource_LDR_ServerConn::_HandleReceivedHeader(LDRHeader *hdr)
 				if(rv==-2)
 				{  Error("LDR: Too long %s packet (header reports %u bytes)\n",
 					LDRCommandString(recv_cmd),hdr->length);  }
-				else _AllocFailure();
+				else _AllocFailure(NULL);
 				return(-1);
 			}
 			
@@ -367,6 +378,9 @@ void TaskSource_LDR_ServerConn::_TaskRequestComplete()
 // Called when the TaskManager finally got the task
 void TaskSource_LDR_ServerConn::TaskManagerGotTask()
 {
+	// ##FIXME##
+	// Is it possible that _ConnClose() was called until here?
+	
 	assert(tri.resp_code==TRC_Accepted && tri.ctsk && 
 	       tri.next_action==TRINA_Complete);
 	
@@ -375,7 +389,7 @@ void TaskSource_LDR_ServerConn::TaskManagerGotTask()
 	tri.ctsk=NULL;
 	tri.next_action=TRINA_Response;  // Send TaskResponse. 
 	
-	cpnotify_outpump_start();
+	schedule_outpump_start();
 }
 
 
@@ -383,6 +397,7 @@ void TaskSource_LDR_ServerConn::TaskManagerGotTask()
 //   0 -> OK
 //   1 -> error; disconnect
 //   2 -> error; send LDRTaskResponse and refuse task
+//   3 -> _ConnClose() was called for some other reason 
 int TaskSource_LDR_ServerConn::_ParseTaskRequest(RespBuf *buf)
 {
 	if(tri.resp_code!=-1 || tri.ctsk!=NULL)
@@ -398,7 +413,7 @@ int TaskSource_LDR_ServerConn::_ParseTaskRequest(RespBuf *buf)
 	switch(rv)
 	{
 		case -2:  return(1);
-		case -1:  _AllocFailure();  return(1);
+		case -1:  _AllocFailure(tri.ctsk);  return(1);
 		case  0:  break;
 		case  1:  return(1);
 		case  2:  assert(tri.resp_code>0);  return(2);
@@ -421,7 +436,8 @@ int TaskSource_LDR_ServerConn::_ParseTaskRequest(RespBuf *buf)
 	tri.req_file_idx=0;
 	tri.req_tfile=NULL;
 	
-	cpnotify_outpump_start();  // -> send file request
+	if(cpnotify_outpump_start()==1)  // -> send file request
+	{  return(3);  }
 	
 	return(0);
 }
@@ -430,11 +446,13 @@ int TaskSource_LDR_ServerConn::_ParseTaskRequest(RespBuf *buf)
 // Return value: 
 //   0 -> OL
 //  -1 -> alloc failure
+//  -2 -> format error (illegal data in packet) [error written]
 // assert on wrong size entry (input buffer too small) becuase 
 // this is checked earlier. 
 // Updated buf pointer returned in *buf. 
 int TaskSource_LDR_ServerConn::_GetFileInfoEntries(TaskFile::IOType iotype,
-	CompleteTask::AddFiles *dest,char **buf,char *bufend,int nent)
+	CompleteTask::AddFiles *dest,char **buf,char *bufend,int nent,
+	CompleteTask *ctsk_for_msg)
 {
 	assert(!dest->nfiles && !dest->file);  // appending currently not supported
 	                                       // (will currently not happen)
@@ -445,38 +463,44 @@ int TaskSource_LDR_ServerConn::_GetFileInfoEntries(TaskFile::IOType iotype,
 	for(TaskFile **i=dest->file,**iend=i+nent; i<iend; *(i++)=NULL);
 	
 	char *src=*buf;
+	int retval=0;
 	for(int i=0; i<nent; i++)
 	{
-		assert(src<=bufend-sizeof(LDRFileInfoEntry) && src>=*buf);
-		
 		TaskFile *tf=NEW2<TaskFile>(TaskFile::FTAdd,iotype);
-		if(!tf)  goto allocfail;
+		if(!tf)
+		{  retval=-1;  goto retfail;  }
 		dest->file[i]=tf;
 		
-		u_int16_t tmp16;
-		_memcpy16(&tmp16,&((LDRFileInfoEntry*)src)->name_slen);  // alignment issue...
-		size_t delta=sizeof(LDRFileInfoEntry)+ntohs(tmp16);
+		ssize_t rv=LDRGetFileInfoEntry(tf,(LDRFileInfoEntry*)src,bufend-src);
+		assert(rv!=-5);  // -5 -> buf too small
+		if(rv>=0)
+		{
+			src+=rv;
+			assert(src<=bufend);  // Must have been checked before. 
+			continue;
+		}
 		
-		char *osrc=src;
-		src+=delta;
-		assert(src<=bufend && src>=*buf);
-		
-		int rv=LDRGetFileInfoEntry(tf,(LDRFileInfoEntry*)osrc);
-		fprintf(stderr,"implement rv handling NOW\n");
-		assert(0);
+		// Error condition here. 
+		if(rv==-1)
+		{  retval=-1;  goto retfail;  }
+		Error("LDR: Server sends illegal file info entry "
+			"[frame %d] (iotype=%d, n=%d, rv=%d)\n",
+			ctsk_for_msg->frame_no,iotype,i,rv);
+		retval=-2;
+		goto retfail;
 	}
 	
 	// Store updated buffer pointer and return success: 
 	*buf=src;
 	return(0);
 	
-allocfail:;
+retfail:;
 	for(TaskFile **i=dest->file,**iend=i+nent; i<iend; i++)
 	{  DELETE(*i);  }
 	LFree(dest->file);
 	dest->file=NULL;
 	dest->nfiles=0;
-	return(-1);
+	return(retval);
 }
 
 // Internally used by _ParseTaskRequest(). 
@@ -684,10 +708,14 @@ int TaskSource_LDR_ServerConn::_ParseTaskRequest_Intrnl(
 			return(1);
 		}
 		rv=_GetFileInfoEntries(TaskFile::IOTRenderInput,&ctsk->radd,
-			&add_files_ptr,end_ptr,r_n_files);
-		if(rv==-1)
-		{  delete ctsk;  return(-1);  }
-		else assert(rv==0);  // Only rv=0 and rv=-1 known. 
+			&add_files_ptr,end_ptr,r_n_files,ctsk);
+		if(rv==-1 || rv==-2)
+		{
+			delete ctsk;
+			_AllocFailure(ctsk,rv==-1);
+			return(-1);
+		}
+		else assert(rv==0);  // Only rv=0, -1 and -2 known. 
 	}
 	if(fdesc)
 	{
@@ -703,44 +731,60 @@ int TaskSource_LDR_ServerConn::_ParseTaskRequest_Intrnl(
 			return(1);
 		}
 		rv=_GetFileInfoEntries(TaskFile::IOTFilterInput,&ctsk->fadd,
-			&add_files_ptr,end_ptr,f_n_files);
-		if(rv==-1)
-		{  delete ctsk;  return(-1);  }
-		else assert(rv==0);  // Only rv=0 and rv=-1 known. 
+			&add_files_ptr,end_ptr,f_n_files,ctsk);
+		if(rv==-1 || rv==-2)
+		{
+			delete ctsk;
+			_AllocFailure(ctsk,rv==-1);
+			return(-1);
+		}
+		else assert(rv==0);  // Only rv=0, -1 and -2 known. 
 	}
 	
-	#warning these are just quick hacks... (no error checking, too!!)
 	// Assign input and output files. 
-	if(ctsk->rt)
+	int _afail=1;
+	do {
+	#warning these are just quick hacks... 
+		if(ctsk->rt)
+		{
+			RenderTask *rt=(RenderTask*)ctsk->rt;
+			if(rt->wdir.set("."))  break;
+			RefString infile,outfile;
+			if(infile.sprintf(0,"f-%08x-%07d.a",ctsk->task_id,ctsk->frame_no))  break;
+			if(outfile.sprintf(0,"f-%08x-%07d.b",ctsk->task_id,ctsk->frame_no))  break;
+			rt->infile=NEW2<TaskFile>(TaskFile::FTFrame,
+				TaskFile::IOTRenderInput);
+			rt->outfile=NEW2<TaskFile>(TaskFile::FTImage,
+				TaskFile::IOTRenderOutput);
+			if(!rt->infile || !rt->outfile)  break;
+			rt->infile->SetHDPath(infile);
+			rt->outfile->SetHDPath(outfile);
+		}
+		if(ctsk->ft)
+		{
+			FilterTask *ft=(FilterTask*)ctsk->ft;
+			if(ft->wdir.set("."))  break;
+			RefString infile,outfile;
+			if(infile.sprintf(0,"f-%08x-%07d.b",ctsk->task_id,ctsk->frame_no))  break;
+			if(outfile.sprintf(0,"f-%08x-%07d.c",ctsk->task_id,ctsk->frame_no))  break;
+			ft->infile=NEW2<TaskFile>(TaskFile::FTImage,
+				TaskFile::IOTFilterInput);
+			ft->outfile=NEW2<TaskFile>(TaskFile::FTImage,
+				TaskFile::IOTFilterOutput);
+			if(!ft->infile || !ft->outfile)  break;
+			ft->infile->SetHDPath(infile);
+			ft->outfile->SetHDPath(outfile);
+		}
+		// infile,outfile,wdir (rt and ft)
+		// additional files (see above)
+		_afail=0;
+	} while(0);
+	if(_afail)
 	{
-		RenderTask *rt=(RenderTask*)ctsk->rt;
-		rt->wdir.set(".");  // error check! ##FIXME
-		RefString infile,outfile;
-		infile.sprintf(0,"f-%08x-%07d.a",ctsk->task_id,ctsk->frame_no);  // error check! ##FIXME
-		outfile.sprintf(0,"f-%08x-%07d.b",ctsk->task_id,ctsk->frame_no);  // error check! ##FIXME
-		rt->infile=NEW2<TaskFile>(TaskFile::FTFrame,
-			TaskFile::IOTRenderInput);  // error check! ##FIXME
-		rt->infile->SetHDPath(infile);
-		rt->outfile=NEW2<TaskFile>(TaskFile::FTImage,
-			TaskFile::IOTRenderOutput);  // error check! ##FIXME
-		rt->outfile->SetHDPath(outfile);
+		_AllocFailure(ctsk,/*fail=*/-1);
+		delete ctsk;
+		return(-1);
 	}
-	if(ctsk->ft)
-	{
-		FilterTask *ft=(FilterTask*)ctsk->ft;
-		ft->wdir.set(".");  // error check! ##FIXME
-		RefString infile,outfile;
-		infile.sprintf(0,"f-%08x-%07d.b",ctsk->task_id,ctsk->frame_no);  // error check! ##FIXME
-		outfile.sprintf(0,"f-%08x-%07d.c",ctsk->task_id,ctsk->frame_no);  // error check! ##FIXME
-		ft->infile=NEW2<TaskFile>(TaskFile::FTImage,
-			TaskFile::IOTFilterInput);  // error check! ##FIXME
-		ft->infile->SetHDPath(infile);
-		ft->outfile=NEW2<TaskFile>(TaskFile::FTImage,
-			TaskFile::IOTFilterOutput);  // error check! ##FIXME
-		ft->outfile->SetHDPath(outfile);
-	}
-	// infile,outfile,wdir (rt and ft)
-	// additional files
 	
 	#if 1
 	// Okay, dump to the user: 
@@ -786,7 +830,7 @@ Error("The following should not be dumped here, right?\n");
 
 // Return value: 
 //   0 -> okay, next request started. 
-//   1 -> 
+//   1 -> all requests done
 int TaskSource_LDR_ServerConn::_StartSendNextFileRequest()
 {
 	assert(tri.ctsk && tri.next_action==TRINA_FileReq);
@@ -836,11 +880,22 @@ int TaskSource_LDR_ServerConn::_StartSendNextFileRequest()
 	// Get the file we're requesting: 
 	TaskFile *tfile=GetTaskFileByEntryDesc(/*dir=*/-1,tri.ctsk,
 		tri.req_file_type,tri.req_file_idx);
-	// NOTE: We may not request a file which is unknown to out CompleteTask. 
+	// NOTE: We may not request a file which is unknown to our CompleteTask. 
 	// If this assert fails, then the chosen req_file_type,req_file_idx is 
 	// illegal because unknown. 
 	assert(tfile);
 	tri.req_tfile=tfile;
+	
+	if(tri.req_file_type==FRFT_AddRender || tri.req_file_type==FRFT_AddFilter)
+	{
+		Error("Implement check for file existance or time stamp.\n");
+		assert(0);  // ##########FIXME##
+		// NOTE: Only request files which we need (i.e.: if the already 
+		// exist, have proper time stamp and same size, then do not 
+		// transfer them. SAME MUST BE APPLIED TO RENDER SORUCE/DEST). 
+		// For proper time stamp testing, the server should send 
+		// LDRTime current_time with each task request. 
+	}
 	
 	int fail=1;
 	do {
@@ -987,15 +1042,11 @@ int TaskSource_LDR_ServerConn::_SendNextFileUploadHdr()
 		
 		fail=0;
 	} while(0);
-	static int warned=0;
-	if(!warned)
-	{  fprintf(stderr,"hack code to handle failure. (4)\n");  ++warned;  }
 	if(fail)
 	{
-		// Failure. 
-		#warning HANDLE FAILURE. 
-		Error("Cannot handle failure (HACK ME!)\n");
-		assert(0);
+		// Currently, only alloc failures can happen. 
+		_AllocFailure(tdi.done_ctsk,/*fail=*/1);
+		return(-1);
 	}
 	
 	return((tdi.upload_file_type==FRFT_None) ? 1 : 0);
@@ -1056,11 +1107,11 @@ int TaskSource_LDR_ServerConn::_ParseFileDownload(RespBuf *buf)
 	if(rv)
 	{
 		int errn=errno;
-		if(rv==-1)  _AllocFailure();
+		if(rv==-1)  _AllocFailure(tri.ctsk);
 		else if(rv==-2)
-		{  Error("LDR: Failed to start downloading requested file:\n"
+		{  Error("LDR: Failed to start downloading requested file [frame %d]:\n"
 			"LDR:    While opening \"%s\": %s\n",
-			path,strerror(errn));  }
+			tri.ctsk->frame_no,path,strerror(errn));  }
 		else assert(0);  // rv=-3 (fsize<0) checked above
 		return(-1);
 	}
@@ -1291,8 +1342,11 @@ int TaskSource_LDR_ServerConn::cpnotify_outpump_done(FDCopyBase::CopyInfo *cpi)
 		{
 			// out_active_cmd==Cmd_FileDownload -> TRINA_FileReq
 			
+			// Note: This assertion may never fail. 
+			// If it does, then the implementation is incomplete. 
+			// (I used that during development.) 
 			Error("cpnotify_outpump_done: hack on...\n");
-			assert(0);
+			assert(0);   // OKAY. 
 			
 			out.ioaction=IOA_None;
 			out_active_cmd=Cmd_NoCommand;
@@ -1345,13 +1399,12 @@ int TaskSource_LDR_ServerConn::cpnotify_outpump_start()
 			
 			fail=0;
 		} while(0);
-		fprintf(stderr,"hack code to handle failure (2).\n");
 		if(fail)
 		{
-			// Failure. 
-			#warning HANDLE FAILURE. 
-			Error("Cannot handle failure (HACK ME!)\n");
-			assert(0);
+			// Currently. only alloc failure can happen here. 
+			_AllocFailure(tri.ctsk);
+			_ConnClose(0);
+			return(1);
 		}
 	}
 	else if(!outpump_lock && 
@@ -1394,13 +1447,12 @@ int TaskSource_LDR_ServerConn::cpnotify_outpump_start()
 				
 				fail=0;
 			} while(0);
-			fprintf(stderr,"hack code to handle failure (3).\n");
 			if(fail)
 			{
-				// Failure. 
-				#warning HANDLE FAILURE. 
-				Error("Cannot handle failure (HACK ME!)\n");
-				assert(0);
+				// Currently. only alloc failure can happen here. 
+				_AllocFailure(tri.ctsk);
+				_ConnClose(0);
+				return(1);
 			}
 		}
 		else if(!outpump_lock && tdi.next_action==TDINA_FileSendH)
@@ -1416,8 +1468,9 @@ int TaskSource_LDR_ServerConn::cpnotify_outpump_start()
 			{  outpump_lock=IOPL_Upload;  }
 			else if(rv<0)
 			{
-				Error("handle error [if it can ever happen]!!\n");
-				assert(0);
+				// Message already written. 
+				_ConnClose(0);
+				return(1);
 			}
 		}
 		else if(tdi.next_action==TDINA_FileSendB)
@@ -1441,7 +1494,7 @@ int TaskSource_LDR_ServerConn::cpnotify_outpump_start()
 			if(rv)
 			{
 				if(rv==-1)
-				{  _AllocFailure();  }
+				{  _AllocFailure(tdi.done_ctsk);  }
 				else if(rv==-2)
 				{
 					int errn=errno;
@@ -1494,8 +1547,11 @@ int TaskSource_LDR_ServerConn::cpnotify_inpump(FDCopyBase::CopyInfo *cpi)
 			else if(rv==2)
 			{
 				assert(tri.resp_code>0);
-				cpnotify_outpump_start();
+				if(cpnotify_outpump_start()==1)
+				{  return(1);  }
 			}
+			else if(rv==3)
+			{  return(1);  }
 			else assert(rv==0);
 			
 			recv_buf.content=Cmd_NoCommand;
@@ -1545,7 +1601,10 @@ int TaskSource_LDR_ServerConn::cpnotify_inpump(FDCopyBase::CopyInfo *cpi)
 			
 			recv_buf.content=Cmd_NoCommand;
 			if(o_start)
-			{  cpnotify_outpump_start();  }
+			{
+				if(cpnotify_outpump_start()==1)
+				{  return(1);  }
+			}
 		} break;
 		default:
 			// This is an internal error. Only known packets may be accepted 
@@ -1589,20 +1648,44 @@ int TaskSource_LDR_ServerConn::cpnotify(FDCopyBase::CopyInfo *cpi)
 	// This is only used for auth: 
 	assert(next_send_cmd==Cmd_NoCommand);
 	
-	if(cpi->pump==in.pump_s || cpi->pump==in.pump_fd)
-	{
-		cpnotify_inpump(cpi);
-		// We're always listening to the server. 
-		if(in_active_cmd==Cmd_NoCommand)
-		{  _DoPollFD(POLLIN,0);  }
-	}
-	else if(cpi->pump==out.pump_s || cpi->pump==out.pump_fd)
-	{
-		if(!cpnotify_outpump_done(cpi))
+	do {
+		if(cpi->pump==in.pump_s || cpi->pump==in.pump_fd)
 		{
-			assert(out.ioaction==IOA_None);  // If FDCopyPump is running, we may not be here. 
-			cpnotify_outpump_start();
+			if(cpnotify_inpump(cpi))  break;  // _ConnClose() was called. 
+			
+			// We're always listening to the server. 
+			if(in_active_cmd==Cmd_NoCommand)
+			{  _DoPollFD(POLLIN,0);  }
 		}
+		else if(cpi->pump==out.pump_s || cpi->pump==out.pump_fd)
+		{
+			if(cpnotify_outpump_done(cpi))  break;  // _ConnClose() was called. 
+			
+			assert(out.ioaction==IOA_None);  // If FDCopyPump is running, we may not be here. 
+			if(cpnotify_outpump_start())  break;  // _ConnClose() was called. 
+		}
+		else assert(0);
+	} while(0);
+	
+	return(0);
+}
+
+
+int TaskSource_LDR_ServerConn::timernotify(FDBase::TimerInfo *ti)
+{
+	assert(ti->tid==schedule_tid);
+	assert(!DeletePending());
+	
+	UpdateTimer(schedule_tid,-1,0);
+	
+	if(outpump_scheduled)
+	{
+		outpump_scheduled=0;
+		
+		// Okay, do it: 
+		cpnotify_outpump_start();
+		// NOTE: Above function returns 1 if _ConnClose() was called. 
+		return(0);
 	}
 	else assert(0);
 	
@@ -1619,6 +1702,12 @@ void TaskSource_LDR_ServerConn::_ConnClose(int reason)
 	// We should not call ConnClose() twice. 
 	// This assert is the bug trap for that: 
 	assert(!DeletePending());
+	
+	if(outpump_scheduled)
+	{
+		outpump_scheduled=0;
+		UpdateTimer(schedule_tid,-1,0);
+	}
 	
 	if(sock_fd>=0)  // Otherwise: Not connected or already disconnected. 
 	{
@@ -1638,13 +1727,14 @@ void TaskSource_LDR_ServerConn::TellServerDoneTask(CompleteTask *ctsk)
 	// This is due to the fact that a task source can always only operate 
 	// on one request. 
 	assert(!tdi.done_ctsk);
+	// Hmmm.... Can DeletePending() be set here...? [_ConnClose()...]
 	assert(authenticated && !DeletePending());
 	
 	// Okay, begin with it...
 	tdi.done_ctsk=ctsk;
 	tdi.next_action=TDINA_SendDone;
 	
-	cpnotify_outpump_start();
+	schedule_outpump_start();
 }
 
 
@@ -1674,9 +1764,12 @@ TaskSource_LDR_ServerConn::TaskSource_LDR_ServerConn(TaskSource_LDR *_back,
 	NetworkIOBase_LDR(failflag),
 	addr(failflag)
 {
+	int failed=0;
+	
 	back=_back;
 	
 	authenticated=0;
+	outpump_scheduled=0;
 	
 	next_send_cmd=Cmd_NoCommand;
 	expect_cmd=Cmd_NoCommand;
@@ -1694,6 +1787,15 @@ TaskSource_LDR_ServerConn::TaskSource_LDR_ServerConn(TaskSource_LDR *_back,
 	tdi.upload_file=NULL;
 	
 	memset(expect_chresp,0,LDRChallengeLength);
+	
+	schedule_tid=InstallTimer(-1,0);
+	if(!schedule_tid)  ++failed;
+	
+	
+	if(failflag)
+	{  *failflag-=failed;  }
+	else if(failed)
+	{  ConstructorFailedExit("TaskSource_LDR_ServerConn");  }
 }
 
 TaskSource_LDR_ServerConn::~TaskSource_LDR_ServerConn()

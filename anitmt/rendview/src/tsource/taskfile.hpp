@@ -77,10 +77,17 @@ class TaskFile
 		
 		// Return the length of the base name (right of rightmost '/'). 
 		// Returns 0 if hdpath is unset. 
-		size_t BaseNameLength() const;
+		size_t BaseNameLength() const
+			{  const char *tmp=BaseNamePtr();  return(tmp ? strlen(tmp) : 0);  }
+		// Returns the pointer to the base name or NULL. 
+		// ONLY USE TO COPY IT. Pointer is internal RefString-data. 
+		const char *BaseNamePtr() const;
 		
 		// Return value: file length or -1 -> stat failed; -2 -> no hdpath
-		int64_t FileLength() const;
+		int64_t FileLength() const
+			{  return(FileLengthMTime(NULL));  }
+		// Extended function: Return file length and modification time: 
+		int64_t FileLengthMTime(HTime *mtime) const;
 		
 		// THESE FUNCTIONS MUST BE USED WITH CARE: 
 		void SetHDPath(RefString r)   {  hdpath=r;  }

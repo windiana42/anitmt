@@ -37,6 +37,9 @@ struct TaskSource_LDR_ServerConn :
 	private:
 		TaskSource_LDR *back;
 		
+		FDBase::TimerID schedule_tid;
+		int outpump_scheduled;
+		
 		union
 		{
 			char expect_chresp[LDRChallengeLength];
@@ -135,7 +138,8 @@ struct TaskSource_LDR_ServerConn :
 		
 		int _ParseTaskRequest(RespBuf *buf);
 		int _GetFileInfoEntries(TaskFile::IOType iotype,
-			CompleteTask::AddFiles *dest,char **buf,char *bufend,int nent);
+			CompleteTask::AddFiles *dest,char **buf,char *bufend,int nent,
+			CompleteTask *ctsk_for_error);
 		int _ParseTaskRequest_Intrnl(RespBuf *buf,TaskRequestInfo *tri);
 		
 		int _AuthSConnFDNotify(FDInfo *fdi);
@@ -143,10 +147,12 @@ struct TaskSource_LDR_ServerConn :
 		int cpnotify_outpump_done(FDCopyBase::CopyInfo *cpi);
 		int cpnotify_outpump_start();
 		int cpnotify_inpump(FDCopyBase::CopyInfo *cpi);
+		void schedule_outpump_start();
 		
 		// Overriding virtual from FDCopyBase: 
 		int fdnotify2(FDBase::FDInfo *fdi);
 		int cpnotify(FDCopyBase::CopyInfo *cpi);
+		int timernotify(FDBase::TimerInfo *ti);
 	public:  _CPP_OPERATORS_FF
 		TaskSource_LDR_ServerConn(TaskSource_LDR *back,int *failflag=NULL);
 		~TaskSource_LDR_ServerConn();

@@ -110,16 +110,40 @@ TaskFile *NetworkIOBase_LDR::GetTaskFileByEntryDesc(int dir,
 }
 
 
+// Return value: 
+//   0 -> OK
+//  -2 -> stat failed
 int NetworkIOBase_LDR::LDRStoreFileInfoEntry(LDR::LDRFileInfoEntry *dest,
 	const TaskFile *tf)
 {
-	fprintf(stderr,"Implement me.\n");
-	// BE CAREFUL! *dest is NOT aligned. 
-	assert(0);
-	return(-177);
+	// Name length without trailing '\0': 
+	size_t namelen=tf->BaseNameLength();
+	assert(namelen<0xffff && namelen>0);  // Name MUST be set (>=1 char). 
+	// If this assert fails due to namelen being 0, add a check somewhere 
+	// else (near the position where you read in the evil input). 
+	
+	HTime mtime;
+	int64_t size=tf->FileLengthMTime(&mtime);
+	if(size<0)
+	{  return(-2);  }
+	
+	// Note that *dest may not be aligned, so I use a temporary. 
+	LDRFileInfoEntry tmp;
+	tmp.name_slen=htons(namelen);
+	tmp.size=htonll(size);
+	HTime2LDRTime(&mtime,&tmp.mtime);
+	memcpy(dest,&tmp,sizeof(tmp));
+	// Copy file name without trailing '\0'. 
+	// tf->BaseNamePtr()!=NULL due to assert above. 
+	memcpy(dest->name,tf->BaseNamePtr(),namelen);
+	
+	return(0);
 }
 
 
+// Return value: 
+//  0    -> OK
+//  else -> see LDRStoreFileInfoEntry() 
 int NetworkIOBase_LDR::LDRStoreFileInfoEntries(char *destbuf,char *bufend,
 	const CompleteTask::AddFiles *ctf,int *err_elem)
 {
@@ -137,13 +161,58 @@ int NetworkIOBase_LDR::LDRStoreFileInfoEntries(char *destbuf,char *bufend,
 }
 
 
-int NetworkIOBase_LDR::LDRGetFileInfoEntry(TaskFile *tf,
-	LDR::LDRFileInfoEntry *src)
+// Return value: 
+//   >0 -> size of this LDRFileInfoEntry
+//   -1 -> alloc failure
+//   -2 -> illegal file name length entry (0 or too long)
+//   -3 -> illegal file name entry (containing forbidden chars 
+//         like '\0' and '/')
+//   -4 -> illegal file size entry
+//   -5 -> buflen < sizeof(LDR::LDRFileInfoEntry)
+ssize_t NetworkIOBase_LDR::LDRGetFileInfoEntry(TaskFile *tf,
+	LDR::LDRFileInfoEntry *_src,size_t buflen)
 {
+	if(buflen<sizeof(LDR::LDRFileInfoEntry))
+	{  return(-5);  }
+	
+	// Note that *src may not be aligned, so I use a temporary. 
+	LDR::LDRFileInfoEntry src;
+	memcpy(&src,_src,sizeof(src));
+	size_t namelen=ntohs(src.name_slen);
+	
+	if(!namelen || namelen+sizeof(LDR::LDRFileInfoEntry)>buflen)
+	{  return(-2);  }
+	
+	int64_t size=ntohll(src.size);
+	if(size<0)
+	{  return(-4);  }
+	
+	for(const char *s=(char*)_src->name,*e=s+namelen; s<e; s++)
+	{
+		if(*s=='\0' || *s=='/')
+		{  return(-3);  }
+	}
+	
+	// Copy name: 
+	RefString name;
+	if(name.set0((char*)_src->name,namelen))
+	{  return(-1);  }
+	
+	HTime mtime;
+	LDRTime2HTime(&src.mtime,&mtime);
+	
 	fprintf(stderr,"Implement me.\n");
-	// BE CAREFUL! *src is NOT aligned. 
+	// Missing: 
+	// Store information of the passed packet in some way. 
+	// Must make sure that we temporarily use the passed size 
+	// instead of the size obtained via stat() [because the file 
+	// does not yet exist] etc. 
+	// > name  [Add HD path!!]
+	// > mtime
+	// > size
 	assert(0);
-	return(-177);
+	
+	return(namelen+sizeof(LDR::LDRFileInfoEntry));
 }
 
 

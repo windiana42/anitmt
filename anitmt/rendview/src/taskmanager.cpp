@@ -27,6 +27,11 @@
 
 #define UnsetNegMagic  (-29649)
 
+#ifndef __LINE__
+# warning No __LINE__ info provided. 
+# define __LINE__ -1
+#endif
+
 // NOTE: 
 // TaskManager contains a highly non-trivial state machine. 
 // I expect that there are some bugs in it. 
@@ -137,6 +142,13 @@ void TaskManager::DontStartMoreTasks()
 	//       again and re-queue tasks from todo to done queue if needed. 
 	
 	dont_start_more_tasks=1;
+	if(GetTaskSourceType()==TST_Active)
+	{
+		// Tell active task source that we no longer take tasks. 
+Error("MISSING!!!!!!!!!!!! (taskmanager.cpp:%d)\n",__LINE__);
+		// (...still able to deliver done tasks...???)
+		//assert(0);
+	}
 	
 	_KillScheduledForStart();    // ALWAYS!
 	
@@ -145,6 +157,14 @@ void TaskManager::DontStartMoreTasks()
 		CompleteTask *i=_i;  _i=_i->next;
 		
 		assert(!i->d.any());   // Otherwise: belongs into proc list. 
+		
+		// If the next assert fails, then this probably means that there 
+		// is a fresh task in todo queue which has not yet been set up 
+		// using interface->DealWithNewTask(). This is a bug because if 
+		// we put a TaskDone - task into done queue it is regarded as 
+		// done completely but in fact it was not worked on yet. 
+		assert(i->state!=CompleteTask::TaskDone);
+		
 		if(!_ProcessedTask(i))  continue;
 		// Here: *i was processed and is currently not processed but 
 		// still in the todo list (i.e. *i rendered but not yet 
@@ -220,6 +240,10 @@ void TaskManager::HandleSuccessfulJob(CompleteTask *ctsk)
 // running_jobs: number of still running jobs; ONLY FOR emergency error handling. 
 void TaskManager::HandleFailedTask(CompleteTask *ctsk,int running_jobs)
 {
+	Verbose(DBGV,"HandleFailedTask([%d],%d,sfs=%s)\n",
+		ctsk->frame_no,running_jobs,
+		(ctsk==scheduled_for_start) ? "yes" : "no");
+	
 	// Read comment near _ActuallyQuit() for info. 
 	if(_actually_quit_step)
 	{  return;  }
@@ -232,11 +256,15 @@ void TaskManager::HandleFailedTask(CompleteTask *ctsk,int running_jobs)
 		// In this case, ctsk is still in tasklist.todo. 
 		#if TEST_TASK_LIST_MEMBERSHIP
 		// Test: see if task is actually in tasklist.proc: 
-		assert(tasklist.proc.find(ctsk));
+		assert(tasklist.todo.find(ctsk));
 		#endif
 		
 		// Also, we must kill scheduled for start: 
-		_KillScheduledForStart(/*was_launched=*/0);  // Yes, (0). 
+		_KillScheduledForStart();
+		
+		// In any case, we have to put the task into done queue. 
+		tasklist.todo.dequeue(ctsk);  --tasklist.todo_nelem;
+		tasklist.done.append(ctsk);   ++tasklist.done_nelem;
 	}
 	else
 	{
@@ -280,8 +308,21 @@ void TaskManager::HandleFailedTask(CompleteTask *ctsk,int running_jobs)
 		}
 		
 		DontStartMoreTasks();
-		schedule_quit=2;
-		ReSched();
+		
+		if(GetTaskSourceType()==TST_Active)
+		{
+			// For active task sources, we probably do not want to 
+			// schedule quit but recover instead. 
+			fprintf(stderr,"HACK ME...********* DO RECOVERY INSTEAD OF QUIT.\n");
+			//assert(0);
+			schedule_quit=2;
+		}
+		else
+		{
+			schedule_quit=2;
+		}
+		
+		ReSched(__LINE__);
 	}
 	
 	// This is definitely needed: 
@@ -326,8 +367,31 @@ void TaskManager::_TakeFreshTask(CompleteTask *ctsk,int /*from_take_task*/)
 	
 	// NOTE: ni->ctsk->state = TaskDone here. Must set up 
 	//       proper value now and set up TaskParams: 
-	interface->DealWithNewTask(ctsk);
+	int if_rv=interface->DealWithNewTask(ctsk);
 	// This called HandleFailedTask() on error. 
+	
+	// NOTE: IT IS IMPORTANT THAT we call interface->DealWithNewTask() 
+	//       before [-> proper setup of task state] and that we first 
+	//       queue the task in todo list (DontStartMoreTasks() will 
+	//       put it into done list again). 
+	if(dont_start_more_tasks)
+	{
+		if(if_rv)
+		{  assert(tasklist.todo.is_empty());  }
+		else
+		{
+			// Oops... We don't start any more new tasks. 
+			// So, we can put this task right back into the done queue. 
+			Warning("Fresh task [frame %d] immediately marked done unprocessed.\n",
+				ctsk->frame_no);
+			
+			DontStartMoreTasks();
+		}
+		
+		// Maybe we want to give it right back... 
+		_CheckStartExchange();
+		return;
+	}
 	
 	// Great. Task queued; now see if we want to start a job. 
 	_CheckStartTasks();
@@ -358,6 +422,13 @@ void TaskManager::PutBackTask(CompleteTask *ctsk)
 	// Re-queue at BEGINNING of todo list. 
 	tasklist.proc.dequeue(ctsk);  --tasklist.proc_nelem;
 	tasklist.todo.insert(ctsk);   ++tasklist.todo_nelem;
+	
+	// See also the note on the call to DontStartMoreTasks() in 
+	// HandleSuccessfulJob(). In case we no not start more tasks, 
+	// we may not bring the state machine in a situation where it 
+	// would have to. 
+	if(dont_start_more_tasks)
+	{  DontStartMoreTasks();  }
 }
 
 
@@ -380,6 +451,8 @@ CompleteTask *TaskManager::FindTaskByTaskID(u_int32_t task_id)
 
 int TaskManager::tsnotify(TSNotifyInfo *ni)
 {
+	Verbose(DBG,"--<tsnotify>--<%d>--\n",ni->action);
+	
 	// Read comment near _ActuallyQuit() for info. 
 	if(_actually_quit_step)
 	{  return(0);  }
@@ -445,7 +518,7 @@ int TaskManager::tsnotify(TSNotifyInfo *ni)
 					schedule_quit=2;
 					sched_kill_tasks=2;  // server error
 					kill_tasks_and_quit_now=1;
-					ReSched();
+					ReSched(__LINE__);
 				}
 				return(0);
 			}
@@ -480,7 +553,7 @@ int TaskManager::tsnotify(TSNotifyInfo *ni)
 				// Okay, schedule quit when all available tasks are done: 
 				if(!schedule_quit_after)
 				{  schedule_quit_after=1;  }
-				ReSched();
+				ReSched(__LINE__);
 			}
 			else if(ni->getstat==GTSEnoughTasks)
 			{
@@ -500,7 +573,7 @@ int TaskManager::tsnotify(TSNotifyInfo *ni)
 					Error("Task source thinks we have enough tasks but that's "
 						"not true.\n");
 					schedule_quit=2;
-					ReSched();
+					ReSched(__LINE__);
 				}
 				else
 				{
@@ -523,7 +596,7 @@ int TaskManager::tsnotify(TSNotifyInfo *ni)
 				{
 					Error("Failed task query was first one. Quitting.\n");
 					schedule_quit_after=2;
-					ReSched();
+					ReSched(__LINE__);
 				}
 				else
 				{
@@ -608,14 +681,14 @@ int TaskManager::tsnotify(TSNotifyInfo *ni)
 			{
 				// Make sure we schedule one time if needed: 
 				if(schedule_quit || schedule_quit_after || recovering)
-				{  ReSched();  }
+				{  ReSched(__LINE__);  }
 			}
 		}  break;
 		case AActive:
 		{
 			// Active task source only. 
 			// We must neither be connected to the task source to receive 
-			// this nor must we have send a query. 
+			// this nor must we have sent a query. 
 			if(ni->activestat==TASTakeTask)
 			{
 				_TakeFreshTask(ni->ctsk,1);
@@ -645,7 +718,7 @@ int TaskManager::tsnotify(TSNotifyInfo *ni)
 				// DO NOT SET THESE
 				// schedule_quit=1;  NO!
 				// sched_kill_tasks=2;  NO! // server error
-				ReSched();
+				ReSched(__LINE__);
 			}
 			else assert(0);
 		}  break;
@@ -768,7 +841,7 @@ void TaskManager::_ActOnSignal(int signo,int real_signal)
 		sched_kill_tasks=1;   // user interrupt
 	}
 	if(do_sched_quit || do_kill_tasks)
-	{  ReSched();  }  // -> quit now if nothing to do 
+	{  ReSched(__LINE__);  }  // -> quit now if nothing to do 
 }
 
 
@@ -776,11 +849,33 @@ void TaskManager::_schedule(TimerInfo *ti)
 {
 	assert(ti->tid==tid0);
 	
+	if(IsVerbose(DBG))
+	{
+		static HTime last(HTime::Curr);
+		HTime delta=(*ti->current-last);
+		Verbose(DBG,"--schedule--<%s>--\n",delta.PrintElapsed(1));
+		last=*ti->current;
+		
+		// This is the anti-repetiton schedule watchdog: 
+		// Note that you need to enable DBG verbosity to make this work. 
+		if(!_actually_quit_step)
+		{
+			static int zero_reps=0;
+			if(delta.Get(HTime::msec)>0)
+			{  zero_reps=0;  }
+			else if((++zero_reps)==5)
+			{
+				fprintf(stderr,"OOPS: TaskManager scheduler strangely busy.\n");
+				_DumpInternalState();
+			}
+		}
+	}
+	
 	// Read instructions near _ActuallyQuit() to understand what is 
 	// going on. 
 	if(_actually_quit_step)   // Initially 1. 
 	{
-		fprintf(stderr,"[%d]",_actually_quit_step);
+		Verbose(DBGV,"[%d]",_actually_quit_step);
 		switch(_actually_quit_step)
 		{
 			case 1:  break;  // do nothing
@@ -857,13 +952,16 @@ void TaskManager::_schedule(TimerInfo *ti)
 		//    GetTaskToStart() and here) or local if alloc failed. 
 		//    Try again. 
 		
-		if(rv)
-		{  assert(!scheduled_for_start->d.any());  }
-		else
-		{  assert(scheduled_for_start->d.any());  }
+		// NOTE: scheduled_for_start can be NULL here in case 
+		//       DontStartMoreTasks() or _KillScheduledForStart() 
+		//       was called by LaunchTask(). 
 		
-		int was_launched=((rv==1) ? 0 : 1);
-		_KillScheduledForStart(was_launched);
+		if(rv)
+		{  assert(!scheduled_for_start || !scheduled_for_start->d.any());  }
+		else
+		{  assert(scheduled_for_start && scheduled_for_start->d.any());  }
+		
+		_KillScheduledForStart();
 		
 		// See if we want to start more task(s): 
 		_CheckStartTasks();
@@ -911,7 +1009,7 @@ void TaskManager::_schedule(TimerInfo *ti)
 	}
 }
 
-inline void TaskManager::_KillScheduledForStart(int was_launched)
+inline void TaskManager::_KillScheduledForStart()
 {
 	if(!scheduled_for_start)  return;
 	
@@ -920,19 +1018,13 @@ inline void TaskManager::_KillScheduledForStart(int was_launched)
 	assert(tasklist.todo.find(scheduled_for_start));
 	#endif
 	
-	if(was_launched)
+	// Ugrmbl... Not sure about this: ###
+	// We can get this case with the LDR task driver interface. 
+	if(scheduled_for_start->d.any())
 	{
 		// Must put task into proc queue: 
 		tasklist.todo.dequeue(scheduled_for_start);  --tasklist.todo_nelem;
 		tasklist.proc.append(scheduled_for_start);   ++tasklist.proc_nelem;
-		
-		// This is only the case when the task was actually just launched 
-		// in schedule(). 
-		assert(scheduled_for_start->d.any());
-	}
-	else
-	{
-		assert(!scheduled_for_start->d.any());
 	}
 	
 	scheduled_for_start=NULL;
@@ -960,7 +1052,7 @@ int TaskManager::timernotify(TimerInfo *ti)
 			if(load_permits_starting)
 			{
 				UpdateTimer(tid_load_poll,-1,0);
-				ReSched();
+				ReSched(__LINE__);
 			}
 		}
 	}
@@ -1247,7 +1339,7 @@ fprintf(stderr,"todo-thresh: low=%d, high=%d [debug]\n",
 		int rv=TSGetTask();
 		assert(rv==0);
 		
-		ReSched();
+		ReSched(__LINE__);
 	}
 }
 
@@ -1265,7 +1357,7 @@ void TaskManager::_ActuallyQuit(int status)
 	assert(_actually_quit_step==0);  // HUGE bug otherwise
 	_actually_quit_status=status;
 	_actually_quit_step=1;
-	ReSched();
+	ReSched(__LINE__);
 }
 
 
@@ -1503,7 +1595,7 @@ void TaskManager::CheckStartNewJobs(int njobs_changed)
 		assert((schedule_quit || schedule_quit_after || recovering) && 
 			   tasklist.todo.is_empty() && tasklist.proc.is_empty());
 		
-		ReSched();
+		ReSched(__LINE__);
 		return;
 	}
 	
@@ -1536,7 +1628,7 @@ connections.
 				(schedule_quit || schedule_quit_after || recovering);
 			if(!just_quitting)
 			{  schedule_quit=2;  }
-			ReSched();
+			ReSched(__LINE__);
 			return;
 		}
 	}
@@ -1552,14 +1644,14 @@ connections.
 		{
 			if(schedule_quit<schedule_quit_after)
 			{  schedule_quit=schedule_quit_after;  }
-			ReSched();
+			ReSched(__LINE__);
 		}
 		if(recovering)
 		{
 			// Will this ever happen? - YES. For example when 
 			// the server disconnects while there are jobs running 
 			// and the job then terminates. 
-			ReSched();
+			ReSched(__LINE__);
 		}
 	}
 }
@@ -1592,7 +1684,7 @@ inline void TaskManager::_DoScheduleForStart(CompleteTask *startme)
 	scheduled_for_start=startme;
 	_DoCheckLoad();
 	if(load_permits_starting)
-	{  ReSched();  }  // start schedule timer
+	{  ReSched(__LINE__);  }  // start schedule timer
 	else
 	{  _StartLoadPolling();  }
 }
@@ -1633,7 +1725,7 @@ int TaskManager::_CheckStartExchange()
 	if(!must_connect)
 	{
 		if(tasklist.done_nelem>=interface->Get_done_thresh_high() ||
-		   (!schedule_quit_after &&
+		   (!schedule_quit_after && !dont_start_more_tasks && 
 			tasklist.todo_nelem<interface->Get_todo_thresh_low()) )   // NOT <= 
 		{  must_connect=1;  }
 	}
@@ -1643,7 +1735,7 @@ int TaskManager::_CheckStartExchange()
 	   tasklist.proc.is_empty() && 
 	   !tasklist.done.is_empty() )
 	{
-		if(schedule_quit_after)
+		if(schedule_quit_after || dont_start_more_tasks)
 		{  must_connect=1;  }
 		else assert(!recovering);
 		// NOTE: If recovering (dont_start_more_tasks is set), 
@@ -1865,7 +1957,7 @@ void TaskManager::_DisableLoadFeature()
 	load_permits_starting=true;
 	KillTimer(tid_load_poll);  tid_load_poll=NULL;
 	if(!ov || scheduled_for_start)
-	{  ReSched();  }
+	{  ReSched(__LINE__);  }
 }
 
 // Special function used by _PrintDoneInfo(): 
@@ -2055,6 +2147,11 @@ int TaskManager::CheckParams()
 	}
 	exec_timeout_spec.deref();
 	
+	if(_resched_interval<0)
+	{  _resched_interval=-1;  }  // This does NOT MAKE ANY SENSE, but well...
+	if(_resched_interval)
+	{  Warning("Schedule interval set to %ld msec.\n",_resched_interval);  }
+	
 	if(cyc_idle_timeout<0)
 	{  cyc_idle_timeout=-1;  }  // disabled;
 	
@@ -2114,6 +2211,9 @@ int TaskManager::_SetUpParams()
 		"with 100) is < than this value; 0 turns off load check feature",
 		&load_low_thresh);
 	AddParam("load-poll-msec","load value poll delay",&load_poll_msec);
+	
+	AddParam("schedule-delay","task manager schedule delay in msec; mainly "
+		"useful in debugging",&_resched_interval);
 	
 	#warning further params: delay_between_tasks, max_failed_jobs, \
 		dont_fail_on_failed_jobs, \
@@ -2281,6 +2381,8 @@ TaskManager::TaskManager(ComponentDataBase *cdb,int *failflag) :
 	
 	work_cycle_count=0;
 	cyc_idle_timeout=-1;   // disabled
+	
+	_resched_interval=0;
 	
 	int failed=0;
 	

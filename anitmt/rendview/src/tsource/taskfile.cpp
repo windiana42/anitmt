@@ -18,21 +18,21 @@
 #include "taskfile.hpp"
 
 
-int64_t TaskFile::FileLength() const
+int64_t TaskFile::FileLengthMTime(HTime *mtime) const
 {
 	#warning "REIMPLEMENT ME!!!"
 	if(!hdpath)
 	{  return(-2);  }
-	return(GetFileLength(hdpath.str(),NULL));
+	return(GetFileLength(hdpath.str(),mtime));
 }
 
 
-size_t TaskFile::BaseNameLength() const
+const char *TaskFile::BaseNamePtr() const
 {
-	if(!hdpath)  return(0);
+	if(!hdpath)  return(NULL);
 	const char *c=hdpath.str();
-	char *ptr=strrchr(c,'/');
-	return(strlen(ptr ? (ptr+1) : c));
+	const char *ptr=strrchr(c,'/');
+	return(ptr ? (ptr+1) : c);
 }
 
 

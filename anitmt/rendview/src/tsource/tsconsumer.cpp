@@ -77,7 +77,7 @@ char *TaskSourceConsumer::_TSTaskQueueStatStr(int special)
 	assert(!rv);
 	
 	static char tmp[48];
-	snprintf(tmp,48,"(task queue: todo=%d%s, proc=%d. done=%d)",
+	snprintf(tmp,48,"(task queue: todo=%d%s, proc=%d, done=%d)",
 		info.todo_queue,special==1 ? "+1" : "",
 		info.proc_queue,
 		info.done_queue);

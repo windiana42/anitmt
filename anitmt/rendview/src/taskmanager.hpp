@@ -167,7 +167,7 @@ class TaskManager :
 		
 		void _CheckStartTasks();
 		inline void _DoScheduleForStart(CompleteTask *ctsk);
-		inline void _KillScheduledForStart(int was_launched=0);
+		inline void _KillScheduledForStart();
 		int _CheckStartExchange();
 		
 		int _GetLoadValue();
@@ -181,8 +181,11 @@ class TaskManager :
 		// Do things which are said to be `scheduled'... 
 		// Called by timernotify(): 
 		void _schedule(TimerInfo *);
-		inline void ReSched()
-			{  UpdateTimer(tid0,0,0);  }
+		// NOTE: _resched_interval is 0 msec in normal operation; larger 
+		//       values are for debugging only. 
+		long _resched_interval;
+		inline void ReSched(int /*_lineno*/)  // _lineno: line number for debugging
+			{  UpdateTimer(tid0,_resched_interval,0);  }
 		
 		// These are called by _schedule(): 
 		int _StartProcessing();   // actually starts things 

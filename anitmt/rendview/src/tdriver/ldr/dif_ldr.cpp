@@ -120,6 +120,7 @@ void TaskDriverInterface_LDR::RecoveryDone()
 
 void TaskDriverInterface_LDR::StopContTasks(int signo)
 {
+	Error("Please implement me...\n");
 	assert(0);   // also: we might temporarily disable the reconnect trigger
 	
 	// send signal to the tasks: 
@@ -138,6 +139,7 @@ void TaskDriverInterface_LDR::StopContTasks(int signo)
 // Returns number of killed jobs. 
 int TaskDriverInterface_LDR::TermAllJobs(int reason)
 {
+	Error("Please implement me...\n");
 	assert(0 && reason);
 	
 	// Schedule TERM & KILL for all tasks. 

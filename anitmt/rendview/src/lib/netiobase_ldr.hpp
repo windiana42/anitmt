@@ -92,10 +92,13 @@ class NetworkIOBase_LDR :
 		static int LDRStoreFileInfoEntries(char *destbuf,char *bufend,
 			const CompleteTask::AddFiles *caf,int *err_elem);
 		
-		// The opposite of LDRStoreFileInfoEntry(); be sure that the source 
-		// buffer is long enough. 
-		// Return value: 0 -> OK; DOCUMENT ME!
-		static int LDRGetFileInfoEntry(TaskFile *af,LDR::LDRFileInfoEntry *src);
+		// The opposite of LDRStoreFileInfoEntry(); 
+		// buflen: size of input buffer (passed in *src) 
+		// Return value: 
+		//  <0  -> error (see netiobase_ldr.cpp)
+		//  >=0 -> size of this LDR::LDRFileInfoEntry (offset to next one)
+		static ssize_t LDRGetFileInfoEntry(TaskFile *af,
+			LDR::LDRFileInfoEntry *src,size_t buflen);
 		
 		// dir: +1 -> output; -1 -> input; 0 -> both
 		// Returns NULL if not available. 

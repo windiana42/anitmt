@@ -60,6 +60,8 @@ enum
 	VERBOSE_TSR1 =      0x000000b0,   // TaskSource runtime info level 1 (more important)
 	VERBOSE_TSLR =      0x00000100,   // local task source runtime info (file re-naming...)
 	VERBOSE_TSLLR =     0x00000200,   // LDR task source runtime info
+	VERBOSE_DBG =       0x01000000,   // DEBUG verbose
+	VERBOSE_DBGV =      0x03000000,   // DEBUG very verbose (implies ~_DBG)
 	VERBOSE_0 =         0x10000000
 };
 
@@ -74,10 +76,12 @@ extern void Warning(const char *fmt,...)  __attribute__ ((__format__ (__printf__
 extern void _Verbose(const char *fmt,...) __attribute__ ((__format__ (__printf__, 1, 2)));
 extern void VerboseSpecial(const char *fmt,...) __attribute__ ((__format__ (__printf__, 1, 2)));
 
+#define IsVerbose(vspec) (rv_oparams.vlevel_field & VERBOSE_##vspec)
+
 // Do the checking inline
 #define Verbose(vspec,fmt...)  \
 	do { \
-		if(rv_oparams.vlevel_field & VERBOSE_##vspec) \
+		if(IsVerbose(vspec)) \
 		{  _Verbose(fmt);  } \
 	} while(0)
 
