@@ -2,9 +2,9 @@
 /**   Message handling system (errors, warnings, verbose messages)	    **/
 /*****************************************************************************/
 /**									    **/
-/** Author: Martin Trautmann						    **/
+/** Authors: Martin Trautmann, Wolfgang Wieser				    **/
 /**									    **/
-/** EMail:   martintrautmann@gmx.de					    **/
+/** EMail:   martintrautmann@gmx.de, wwieser@gmx.de			    **/
 /**									    **/
 /** License: GPL - free and without any warranty - read COPYING             **/
 /**									    **/
@@ -12,8 +12,8 @@
 /**									    **/
 /*****************************************************************************/
 
-#ifndef __lib_Message_inline__
-#define __lib_Message_inline__
+#ifndef _lib_Message_inline_HPP_
+#define _lib_Message_inline_HPP_
 
 #include "message.hpp"
 
@@ -23,12 +23,13 @@ namespace message
   // Message managing classes
 
   inline void Message_Manager::message( Message_Type mtype,
-					Abstract_Position *pos, 
+					const Abstract_Position *pos, 
 					int position_detail, 
 					const std::string &message,
-					const Message_Source_Identifier &source )
+					const Message_Source_Identifier &source,
+					bool noend )
   {
-    Message_Handler::Message msg(mtype,pos,position_detail,message,source);
+    Message_Handler::Message msg(mtype,pos,position_detail,message,source,noend);
     handler->message( msg );
   }
 
@@ -59,18 +60,26 @@ namespace message
   }
 
   void Message_Consultant::message( Message_Type mtype,
-				    Abstract_Position *pos, 
+				    const Abstract_Position *pos, 
 				    int position_detail, 
-				    const std::string message )
+				    const std::string message,
+				    bool noend )
   {
     // there is no need to check verbose or warnings here as 
     // this is already done when calling the Message_Stream 
     // constructor. Why do things twice?
-    manager->message( mtype, pos, position_detail, message, msg_source );
+    manager->message( mtype, pos, position_detail, message, msg_source, noend );
   }
 
   //**************************************************************
   // Message streams
+
+  template<class T> inline Message_Stream& Message_Stream::operator<<(const T &v)
+  {
+    if( enabled ) 
+      msg_stream << v; 
+    return *this; 
+  }
 
   template<class T> inline Message_Stream& Message_Stream::operator<<(T v)
   {
@@ -79,11 +88,20 @@ namespace message
     return *this; 
   }
 
+  inline void Message_Stream::operator<<(_NoEnd)
+  {
+     no_end=true;
+     // Destructor will be called and will write the message. 
+  }
+
   //**************************************************************
   // Message reporting inline code: 
 
   inline Message_Reporter::Message_Reporter( Message_Consultant *c )
     : consultant(c) {}
+
+  inline Message_Reporter::~Message_Reporter()
+  {  consultant=NULL;  }
 
   //**************************************************************
   // Message Interface for error reporting code
@@ -98,7 +116,7 @@ namespace message
     return consultant->is_verbose( verbose_level );
   }
 
-  Message_Stream Message_Reporter::error( Abstract_Position *pos, 
+  Message_Stream Message_Reporter::error( const Abstract_Position *pos, 
 					  int position_detail )
   {
     Message_Stream ret( MT_Error, pos, position_detail, 
@@ -106,7 +124,7 @@ namespace message
     return ret;
   }
 
-  Message_Stream Message_Reporter::warn( Abstract_Position *pos, 
+  Message_Stream Message_Reporter::warn( const Abstract_Position *pos, 
 					 int position_detail )
   {
     Message_Stream ret( MT_Warning, pos, position_detail, 
@@ -115,7 +133,7 @@ namespace message
   }
 
   Message_Stream Message_Reporter::verbose ( int min_verbose_level,
-					     Abstract_Position *pos, 
+					     const Abstract_Position *pos, 
 					     int position_detail )
   {
     Message_Stream ret( MT_Verbose, pos, position_detail, 
@@ -125,4 +143,4 @@ namespace message
 
 }
 
-#endif
+#endif  /* _lib_Message_inline_HPP_ */

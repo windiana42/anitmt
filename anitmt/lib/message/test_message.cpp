@@ -2,6 +2,14 @@
 #include <iostream>
 #include "message.hpp"
 
+#define DoNoendTest 0
+
+#if DoNoendTest
+  // This is only needed for usleep() below. 
+  // Comment out if not available. 
+  #include <unistd.h>
+#endif
+
 using namespace message;
 
 class Test_Position : public Abstract_Position {
@@ -67,6 +75,19 @@ public:
 	verbose(0) << "...done";
    verbose(0, new File_Position("a-file-that-never-existed.txt", 73, 75))
 	   << "verbose output with a file position\n";
+
+    #if DoNoendTest
+    // Last check: noend: 
+    verbose() << "Doing some strange computation." << noend;
+    for(int i=0; i<5; i++)
+    {
+      // Use something else which takes some time if you do not have usleep(). 
+      usleep(100000);
+      verbose() << "." << noend;
+      if(i==2) error(new File_Position("here")) << "he!!";
+    }
+    verbose() << "done";
+    #endif
   }
   test( Message_Consultant *consultant, int level ) 
     : Message_Reporter( consultant ) 
