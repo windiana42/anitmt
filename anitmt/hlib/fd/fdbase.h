@@ -176,9 +176,6 @@ class FDBase
 		struct FDManager::TimerNode *sh_timer;  // shortest timer or NULL
 		int sh_timer_dirty;   // sh_timer NULL but has to be re-checked
 	protected:
-		// Returns a value >0 if DeleteMe() was called. 
-		int DeletePending()  const  {  return(deleted);  }
-		
 		// A timer expired. 
 		// TimerInfo memers: 
 		// - tid: timer ID of timer which expired 
@@ -231,6 +228,9 @@ class FDBase
 		// INDICATES AN ERROR. IMMEDIATELY DELETE THE CLASS. 
 		FDBase(int *failflag=NULL);
 		virtual ~FDBase();
+		
+		// Returns a value >0 if DeleteMe() was called. 
+		int DeletePending()  const  {  return(deleted);  }
 		
 		// Use this to get the FDManager: 
 		inline FDManager *fdmanager() const  {  return(FDManager::manager);  }
