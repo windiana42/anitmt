@@ -449,7 +449,7 @@ void ParameterSource::_FreeParamCopy(ParamCopy *pc)
 }
 
 // sn: NULL -> search it; else -> no need to look it up (already provided) 
-void ParameterSource::_RemoveParamCopy(ParamCopy *pc,SectionNode *sn=NULL)
+void ParameterSource::_RemoveParamCopy(ParamCopy *pc,SectionNode *sn)
 {
 	if(!pc)  return;
 	

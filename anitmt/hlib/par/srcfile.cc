@@ -316,7 +316,7 @@ void ParameterSource_File::_ResetLinebuf()
 }
 
 ParameterSource_File::ParameterSource_File(
-	ParameterManager *_manager,int *failflag=NULL) : 
+	ParameterManager *_manager,int *failflag) : 
 	ParameterSource(_manager,failflag)
 {
 	file_top_sect=NULL;

@@ -1134,7 +1134,7 @@ void ProcessManager::TermKillDelay(long msec)
 }
 
 
-int ProcessManager::GetTimeUsage(int who,ProcTimeUsage *dest,int normalize=1)
+int ProcessManager::GetTimeUsage(int who,ProcTimeUsage *dest,int normalize)
 {
 	if(!dest)  return(0);
 	
@@ -1176,7 +1176,7 @@ ProcessManager::Node *ProcessManager::_FindNode(pid_t pid)
 }
 
 
-inline ProcessManager::Node::Node(int * /*failflag*/=NULL) : 
+inline ProcessManager::Node::Node(int * /*failflag*/) : 
 	LinkedListBase<Node>(),
 	starttime() 
 {
@@ -1244,7 +1244,7 @@ int ProcessManager::noop(int x)
 {  return(x);  }
 
 
-ProcessManager::ProcessManager(char *const _envp[],int *failflag=NULL) : 
+ProcessManager::ProcessManager(char *const _envp[],int *failflag) : 
 	FDBase(failflag),
 	procs(failflag),
 	specialpb(failflag),

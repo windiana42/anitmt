@@ -31,6 +31,7 @@ class FDCopyBase :
 	private LinkedListBase<FDCopyBase>
 	#endif
 {
+	friend class LinkedList<FDCopyBase>;
 	friend class FDCopyManager;
 	public:
 		typedef FDCopyManager::CopyInfo CopyInfo;

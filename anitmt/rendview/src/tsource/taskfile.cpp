@@ -25,7 +25,7 @@ void TaskFile::_forbidden()
 }
 
 
-TaskFile::TaskFile(FType ft,IOType iot,int *failflag=NULL) : 
+TaskFile::TaskFile(FType ft,IOType iot,int *failflag) : 
 	hdpath(failflag)
 {
 	ftype=ft;

@@ -66,7 +66,7 @@ int GrowBuffer::set(const char *buf,size_t len)
 }
 
 
-int GrowBuffer::trunc(size_t newsize,int free_rest=0)
+int GrowBuffer::trunc(size_t newsize,int free_rest)
 {
 	if(newsize<_len)
 	{  _len=newsize;  }
@@ -77,7 +77,7 @@ int GrowBuffer::trunc(size_t newsize,int free_rest=0)
 	return(0);
 }
 
-int GrowBuffer::skip(size_t nbytes,int free_rest=0)
+int GrowBuffer::skip(size_t nbytes,int free_rest)
 {
 	if(nbytes>=_len)
 	{  _len=0;  }

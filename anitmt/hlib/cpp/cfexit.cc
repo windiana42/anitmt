@@ -16,7 +16,7 @@
 
 #include "cplusplus.h"
 
-void ConstructorFailedExit(const char *opt=NULL)
+void ConstructorFailedExit(const char *opt)
 {
 	fprintf(stderr,"%s: constructor (%s) failed\n",prg_name,opt ? opt : "");
 	abort();  // It might be better to abort than to exit as an aid in debugging. 

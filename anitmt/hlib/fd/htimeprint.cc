@@ -18,7 +18,7 @@
 
 static const char *_is_invalid_str="[invalid time]";
 
-const char *HTime::PrintTime(int local=1,int with_msec=0)
+const char *HTime::PrintTime(int local,int with_msec)
 {
 	// Negative times do not make sense here. 
 	// (Or should that be before 1970?!)

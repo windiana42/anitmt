@@ -18,7 +18,7 @@
 #include "../../database.hpp"
 
 
-RenderDesc::RenderDesc(int *failflag=NULL) :
+RenderDesc::RenderDesc(int *failflag) :
 	RF_DescBase(failflag),
 	binpath(failflag),
 	required_args(failflag),

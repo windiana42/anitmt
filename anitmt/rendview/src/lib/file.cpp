@@ -24,7 +24,7 @@
 
 
 // Check if a file exists and we have the passed permissions: 
-int CheckExistFile(RefString *f,int want_read,int want_write=0)
+int CheckExistFile(RefString *f,int want_read,int want_write)
 {
 	if(!f->str())
 	{  return(0);  }

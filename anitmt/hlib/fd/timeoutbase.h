@@ -44,6 +44,7 @@ class TimeoutBase :
 	private LinkedListBase<TimeoutBase>
 	#endif
 {
+	friend class LinkedList<TimeoutBase>;
 	friend class TimeoutManager;
 	public:
 		typedef TimeoutManager::TimeoutInfo TimeoutInfo;

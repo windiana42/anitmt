@@ -332,7 +332,7 @@ const char *TaskDriver::StartProcessErrorString(ProcessErrorInfo *pei)
 
 
 TaskDriver::TaskDriver(TaskDriverFactory *_f,TaskDriverInterface_Local *_tdif,
-	int *failflag=NULL) : 
+	int *failflag) : 
 	LinkedListBase<TaskDriver>(),
 	FDBase(failflag),
 	ProcessBase(failflag),

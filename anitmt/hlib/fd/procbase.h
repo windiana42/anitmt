@@ -37,6 +37,7 @@ class ProcessBase :
 	private LinkedListBase<ProcessBase>
 	#endif
 {
+	friend class LinkedList<ProcessBase>;
 	friend class ProcessManager;
 	private:
 		// Maintained by ProcessManager; stores special flags 

@@ -313,7 +313,7 @@ TaskDriverInterfaceFactory_LDR::~TaskDriverInterfaceFactory_LDR()
 
 /******************************************************************************/
 
-TaskDriverInterfaceFactory_LDR::ClientParam::ClientParam(int *failflag=NULL) : 
+TaskDriverInterfaceFactory_LDR::ClientParam::ClientParam(int *failflag) : 
 	name(failflag),
 	addr(failflag),
 	password(failflag)

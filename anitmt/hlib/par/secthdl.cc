@@ -20,7 +20,7 @@
 namespace par
 {
 
-int SectionParameterHandler::Attach(const char *section,Section *top=NULL)
+int SectionParameterHandler::Attach(const char *section,Section *top)
 {
 	Section *s=parmanager()->FindSection(section,top);
 	if(!s)  return(-1);

@@ -1064,7 +1064,7 @@ static void _fd_sigaction_failed()
 }
 
 
-FDManager::FDManager(int *failflag=NULL) : 
+FDManager::FDManager(int *failflag) : 
 	fdblist()
 {
 	int failed=0;

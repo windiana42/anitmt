@@ -200,7 +200,7 @@ PAR::ParamInfo::~ParamInfo()
 }
 
 
-PAR::ParamCopy::ParamCopy(int * /*failflag*/=NULL) : 
+PAR::ParamCopy::ParamCopy(int * /*failflag*/) : 
 	LinkedListBase<ParamCopy>(),
 	porigin(ParamArg::_FromNowhere,NULL,-1)
 {
@@ -210,7 +210,7 @@ PAR::ParamCopy::ParamCopy(int * /*failflag*/=NULL) :
 }
 
 
-PAR::SpecialHelpItem::SpecialHelpItem(int * /*failflag*/=NULL) : 
+PAR::SpecialHelpItem::SpecialHelpItem(int * /*failflag*/) : 
 	LinkedListBase<SpecialHelpItem>()
 {
 	optname=NULL;

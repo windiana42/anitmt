@@ -19,7 +19,7 @@
 
 
 
-ImageFormat::ImageFormat(int *failflag=NULL)
+ImageFormat::ImageFormat(int *failflag)
 {
 	fmtid=IF_None;
 	name=NULL;

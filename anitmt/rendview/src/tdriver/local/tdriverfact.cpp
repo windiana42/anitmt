@@ -52,7 +52,7 @@ TaskDriverFactory::TaskDriverFactory(
 	ComponentDataBase *_cdb,
 	const char *_driver_name,
 	TaskDriverType tdt,
-	int *failflag=NULL) : 
+	int *failflag) : 
 	LinkedListBase<TaskDriverFactory>(),
 	par::ParameterConsumer_Overloaded(_cdb->parmanager(),failflag),
 	dtype(tdt),
@@ -82,7 +82,7 @@ TaskDriverFactory::~TaskDriverFactory()
 
 /******************************************************************************/
 
-TaskParams::TaskParams(int *failflag=NULL) : 
+TaskParams::TaskParams(int *failflag) : 
 	add_args(failflag)
 {
 	dtype=DTNone;

@@ -360,7 +360,7 @@ short FDBase::FDEvents(int fd)
 }
 
 
-FDBase::FDBase(int *failflag=NULL)
+FDBase::FDBase(int *failflag)
 {
 	timers=NULL;
 	fds=NULL;

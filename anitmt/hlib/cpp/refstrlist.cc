@@ -114,7 +114,7 @@ void RefStrList::clear()
 	{  delete n;  }   // delete node with string ref
 }
 
-RefStrList::RefStrList(int * /*failflag*/=NULL) : list()
+RefStrList::RefStrList(int * /*failflag*/) : list()
 {
 }
 

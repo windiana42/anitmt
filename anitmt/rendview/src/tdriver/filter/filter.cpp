@@ -18,7 +18,7 @@
 #include "../../database.hpp"
 
 
-FilterDesc::FilterDesc(int *failflag=NULL) :
+FilterDesc::FilterDesc(int *failflag) :
 	RF_DescBase(failflag),
 	binpath(failflag),
 	required_args(failflag)

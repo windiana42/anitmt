@@ -611,7 +611,7 @@ RefString LDRClient::_ClientName()
 
 
 LDRClient::LDRClient(TaskDriverInterface_LDR *_tdif,
-	int *failflag=NULL) : 
+	int *failflag) : 
 	LinkedListBase<LDRClient>()
 {
 	int failed=0;
