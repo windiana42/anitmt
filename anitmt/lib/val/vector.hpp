@@ -126,41 +126,41 @@ public: // work around for the template friend problem
 		
 		// Stretches vector to length 1: 
 		Vector<N> &normalize()  {  x.normalize();  return(*this);  }
-		template<int n>friend Vector<n> normalize(const Vector<n> &v);
+		template<int n>friend Vector<n> vec_normalize(const Vector<n> &v);
 		
 		// Computes the angle between the two passed vectors; the returned 
 		// value is in range 0...PI. 
-		template<int n>friend Scalar angle(const Vector<n> &a,const Vector<n> &b);
+		template<int n>friend Scalar vec_angle(const Vector<n> &a,const Vector<n> &b);
 		inline Scalar angle(const Vector<N> &b) const  {  return(vect::angle(*this,b));  }
 		
 		// Member rotation functions; result overwrites *this. 
 		// Faster than the non-member functions. 
 		// (ONLY AVAILABLE FOR 3d VECTORS.)
-		Vector<N> &rotateX(double theta);
-		Vector<N> &rotateY(double theta);
-		Vector<N> &rotateZ(double theta);
+		Vector<N> &rotate_x(double theta);
+		Vector<N> &rotate_y(double theta);
+		Vector<N> &rotate_z(double theta);
 		// There are also non-member rotation functions defined below. 
 		
 		// Translation functions: 
 		// int xyz: x=0, y=1, z=2, ... no range check. 
 		// Member (modifying *this) and non-member version: 
 		Vector<N> &translate(double d,int xyz)  {  x.translate(d,xyz);  return(*this);  }
-		template<int n>friend Vector<n> translate(const Vector<n> &v,double delta,int xyz);
+		template<int n>friend Vector<n> vec_translate(const Vector<n> &v,double delta,int xyz);
 		
 		// Scalation functions: 
 		// int xyz: x=0, y=1, z=2, ... no range check. 
 		// Member (modifying *this) and non-member version: 
 		Vector<N> &scale(double f,int xyz)  {  x.scale(f,xyz);  return(*this);  }
-		template<int n>friend Vector<n> scale(const Vector<n> &v,double factor,int xyz);
+		template<int n>friend Vector<n> vec_scale(const Vector<n> &v,double factor,int xyz);
 		
 		// Mirror functions: 
 		// int xyz: x=0, y=1, z=2, ... no range check. 
 		// Member (modifying *this) and non-member version: 
 		Vector<N> &mirror(int xyz)  {  x.mirror(xyz);  return(*this);  }
-		template<int n>friend Vector<n> mirror(const Vector<n> &v,int xyz);
+		template<int n>friend Vector<n> vec_mirror(const Vector<n> &v,int xyz);
 		// Apply mirror to all components (works like unary operator-): 
 		Vector<N> &mirror()         {  x.neg();   return(*this);  }
-		template<int n>friend Vector<n> mirror(const Vector<n> &v);
+		template<int n>friend Vector<n> vec_mirror(const Vector<n> &v);
 		
 		// Conversion: spherical <-> rectangular coordinates: 
 		//           r,phi,theta <-> x,y,z  (in this order)
@@ -204,13 +204,13 @@ template<int N>inline bool operator==(const Vector<N> &a,const Vector<N> &b)
 template<int N>inline bool operator!=(const Vector<N> &a,const Vector<N> &b)
 	{  return(!a.x.compare_to(b.x,epsilon));  }
 template<int N>inline bool operator<(const Vector<N> &a,const Vector<N> &b)
-	{  return(abs2(a) < abs2(b));  }
+	{  return(a.abs2() < b.abs2());  }
 template<int N>inline bool operator>(const Vector<N> &a,const Vector<N> &b)
-	{  return(abs2(a) > abs2(b));  }
+	{  return(a.abs2() > b.abs2());  }
 template<int N>inline bool operator<=(const Vector<N> &a,const Vector<N> &b)
-	{  return(abs2(a) <= abs2(b));  }
+	{  return(a.abs2() <= b.abs2());  }
 template<int N>inline bool operator>=(const Vector<N> &a,const Vector<N> &b)
-	{  return(abs2(a) >= abs2(b));  }
+	{  return(a.abs2() >= b.abs2());  }
 
 // Operators comparing to Neutral0 (addition neutral): 
 template<int N>inline bool operator==(const Vector<N> &a,Neutral0)
@@ -224,26 +224,26 @@ template<int N>inline bool operator!=(Neutral0,const Vector<N> &a)
 
 // Computes the angle between the two passed vectors; the returned 
 // value is in range 0...PI. 
-template<int N>inline Scalar angle(const Vector<N> &a,const Vector<N> &b)
+template<int N>inline Scalar vec_angle(const Vector<N> &a,const Vector<N> &b)
 	{  return(internal_vect::angle(a.x,b.x));  }
 
-template<int N>inline Vector<N> normalize(const Vector<N> &v)
+template<int N>inline Vector<N> vec_normalize(const Vector<N> &v)
 	{  Vector<N> r(Vector<N>::noinit);  r.x.normalize(v.x);  return(r);  }
 
 // Non-member translation functions: 
-template<int N>inline Vector<N> translate(const Vector<N> &v,double delta,int xyz)
+template<int N>inline Vector<N> vec_translate(const Vector<N> &v,double delta,int xyz)
 	{  Vector<N> r(Vector<N>::noinit);  r.x.translate(v.x,delta,xyz);  return(r);  }
 
 // Non-member scalation functions: 
-template<int N>inline Vector<N> scale(const Vector<N> &v,double factor,int xyz)
+template<int N>inline Vector<N> vec_scale(const Vector<N> &v,double factor,int xyz)
 	{  Vector<N> r(Vector<N>::noinit);  r.x.scale(v.x,factor,xyz);  return(r);  }
 
 // Mirror functions: 
 // x=0, y=1, z=2, no range check. 
-template<int N>inline Vector<N> mirror(const Vector<N> &v,int xyz)
+template<int N>inline Vector<N> vec_mirror(const Vector<N> &v,int xyz)
 	{  Vector<N> r(Vector<N>::noinit);  r.x.mirror(v.x,xyz);  return(r);  }
 // apply mirror to all components
-template<int N>inline Vector<N> mirror(const Vector<N> &v)
+template<int N>inline Vector<N> vec_mirror(const Vector<N> &v)
 	{  Vector<N> r(Vector<N>::noinit);  r.x.neg(v.x);  return(r);  }
 
 template<int N>inline std::ostream& operator<<(std::ostream& s,const Vector<N> &v)
@@ -267,13 +267,13 @@ inline Vector<3> &Vector<3>::cross(const Vector<3> &b)
 	{  Vector<3> tmp(vect::cross(*this,b));  this->operator=(tmp);  return(*this);  }
 
 // Rotation functions. 
-extern Vector<3> rotateX(const Vector<3> &v,double theta);
-extern Vector<3> rotateY(const Vector<3> &v,double theta);
-extern Vector<3> rotateZ(const Vector<3> &v,double theta);
+extern Vector<3> vec_rotate_x(const Vector<3> &v,double theta);
+extern Vector<3> vec_rotate_y(const Vector<3> &v,double theta);
+extern Vector<3> vec_rotate_z(const Vector<3> &v,double theta);
 
 // Conversion functions
-extern Vector<3> to_spherical(const Vector<3> &v);
-extern Vector<3> to_rectangular(const Vector<3> &v);
+extern Vector<3> vec_to_spherical(const Vector<3> &v);
+extern Vector<3> vec_to_rectangular(const Vector<3> &v);
 
 //! Get the rotation from v1 to v2 around axis 
 extern double get_rotation_around(
@@ -283,7 +283,7 @@ extern double get_rotation_around(
     the first vectors of each pair will match exactly afterwards but the second
     may differ in the angle to the first one. They will be in the same plane
     then. The result are rotations about x-,y- and z-axis as a vector */
-extern Vector<3> Vrotate_pair_pair(
+extern Vector<3> vec_rotate_pair_pair(
 	const Vector<3> &vect1f,const Vector<3> &vect1u,
 	const Vector<3> &vect2f,const Vector<3> &vect2u);
 

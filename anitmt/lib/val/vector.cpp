@@ -20,7 +20,7 @@ namespace vect
 {
 
 // Vector rotation functions: 
-Vector<3> rotateX(const Vector<3> &v,double theta)
+Vector<3> vec_rotate_x(const Vector<3> &v,double theta)
 {
 	double sinval=sin(theta),cosval=cos(theta);
 	Vector<3> r(v);
@@ -30,7 +30,7 @@ Vector<3> rotateX(const Vector<3> &v,double theta)
 	return(r);
 }
 
-Vector<3> rotateY(const Vector<3> &v,double theta)
+Vector<3> vec_rotate_y(const Vector<3> &v,double theta)
 {
 	double sinval=sin(theta),cosval=cos(theta);
 	Vector<3> r(v);
@@ -40,7 +40,7 @@ Vector<3> rotateY(const Vector<3> &v,double theta)
 	return(r);
 }
 
-Vector<3> rotateZ(const Vector<3> &v,double theta)
+Vector<3> vec_rotate_z(const Vector<3> &v,double theta)
 {
 	double sinval=sin(theta),cosval=cos(theta);
 	Vector<3> r(v);
@@ -52,7 +52,7 @@ Vector<3> rotateZ(const Vector<3> &v,double theta)
 
 // Rotation member functions: faster than the functions above, 
 // but they change *this. 
-Vector<3> &Vector<3>::rotateX(double theta)
+Vector<3> &Vector<3>::rotate_x(double theta)
 {
 	double sinval=sin(theta),cosval=cos(theta);
 	double tmpy=x[1],tmpz=x[2];
@@ -61,7 +61,7 @@ Vector<3> &Vector<3>::rotateX(double theta)
 	return(*this);
 }
 
-Vector<3> &Vector<3>::rotateY(double theta)
+Vector<3> &Vector<3>::rotate_y(double theta)
 {
 	double sinval=sin(theta),cosval=cos(theta);
 	double tmpx=x[0],tmpz=x[2];
@@ -70,7 +70,7 @@ Vector<3> &Vector<3>::rotateY(double theta)
 	return(*this);
 }
 
-Vector<3> &Vector<3>::rotateZ(double theta)
+Vector<3> &Vector<3>::rotate_z(double theta)
 {
 	double sinval=sin(theta),cosval=cos(theta);
 	double tmpx=x[0],tmpy=x[1];
@@ -80,7 +80,7 @@ Vector<3> &Vector<3>::rotateZ(double theta)
 }
 
 // Coordinate system conversion functions: 
-Vector<3> to_spherical(const Vector<3> &v)
+Vector<3> vec_to_spherical(const Vector<3> &v)
 {
 	// x <- r     = v.abs();
 	// y <- phi   = atan(y/x);
@@ -92,7 +92,7 @@ Vector<3> to_spherical(const Vector<3> &v)
 	return(r);
 }
 
-Vector<3> to_rectangular(const Vector<3> &v)
+Vector<3> vec_to_rectangular(const Vector<3> &v)
 {
 	// x = r * sin(theta) * cos(phi)
 	// y = r * sin(theta) * sin(phi)
@@ -133,7 +133,7 @@ double get_rotation_around(
 {
 	// rotate both vectors so that axis maches z and v1 is 
 	// in the x-z-plain
-	Matrix<4,4> rot_easy=Mrotate_pair_pair(axis,v1,
+	Matrix<4,4> rot_easy=mat_rotate_pair_pair(axis,v1,
 		Vector<3>(0.0,0.0,1.0),Vector<3>(1.0,0.0,0.0));
 	Vector<3> easy_v2=rot_easy*v2;
 
@@ -147,12 +147,12 @@ double get_rotation_around(
 // the first vectors of each pair will mach exactly afterwards but the second
 // may differ in the angle to the first one. They will be in the same plane
 // then. The result are rotations about x-,y- and z-axis as a vector 
-Vector<3> Vrotate_pair_pair(
+Vector<3> vec_rotate_pair_pair(
 	const Vector<3> &vect1f,const Vector<3> &vect1u,
 	const Vector<3> &vect2f,const Vector<3> &vect2u)
 {
   //!!! lazy implementation !!!
-  Matrix<4,4> m = Mrotate_pair_pair( vect1f, vect1u, vect2f, vect2u );
+  Matrix<4,4> m = mat_rotate_pair_pair( vect1f, vect1u, vect2f, vect2u );
   Vector<3> res = get_rotate_component( m );
   return res;
 }

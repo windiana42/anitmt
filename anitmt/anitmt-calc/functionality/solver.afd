@@ -509,7 +509,7 @@ operators
     }
     versions
     {
-      vector normalize( vector );
+      vector vec_normalize( vector );
     }
   }
 
@@ -535,7 +535,7 @@ operators
   {
     calc_result( v1, v2 ) 
     {
-      return angle( v1, v2 );
+      return vec_angle( v1, v2 );
     }
     versions
     {

@@ -90,7 +90,7 @@ node object provides object_component, object_state
     {
       vector dest_front = [[ child.object_state.front( time t ) ]];
       vector dest_up_vector = [[ child.object_state.up_vector( time t ) ]];
-      vector rotate = Vrotate_pair_pair( [[ front ]], [[ up_vector ]], 
+      vector rotate = vec_rotate_pair_pair( [[ front ]], [[ up_vector ]], 
            dest_front, dest_up_vector );
       [[ return rotate ]];
     }

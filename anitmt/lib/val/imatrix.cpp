@@ -180,6 +180,21 @@ void matrix_invert_copy(double *m,int r,int c)
 }
 
 
+// // Transpose matrix: 
+void matrix_transpose(double *m,int mr,int mc)
+{
+	for(int r=1; r<mr; r++)
+	{
+		for(int c=0; c<r; c++)
+		{
+			register double tmp=SUB(m,mr,r,c);
+			SUB(m,mr,r,c)=SUB(m,mr,c,r);
+			SUB(m,mr,c,r)=tmp;
+		}
+	}
+}
+
+
 // Multiplication of matrix m (size mr,mc) with vector v (vn 
 // dimensions); result is stored in rv (rn elements). 
 // NOTE: If mc!=vn or mr!=rn, EX_Matrix_Illegal_VectMult is thrown. 

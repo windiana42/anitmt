@@ -177,7 +177,14 @@ public: // work around for the template friend problem
 		// These functions calculate the inverse matrix. 
 		Matrix<R,R> &invert()  {  x.invert();  return(*this);  }
 		#ifndef GCC_HACK
-		template<int N>friend Matrix<N,N> invert(const Matrix<N,N> &m);
+		template<int N>friend Matrix<N,N> mat_invert(const Matrix<N,N> &m);
+		#endif
+		
+		// Tramspose a matrix. Obviously, the member function can only 
+		// operate on quadratic matrices: 
+		Matrix<R,R> &transpose()  {  x.transpose();  return(*this);  }
+		#ifndef GCC_HACK
+		template<int r,int c>friend Matrix<r,c> mat_transpose(const Matrix<c,r> &m);
 		#endif
 		
 		#ifndef GCC_HACK
@@ -303,8 +310,11 @@ template<int R,int C>inline bool operator!=(Neutral1,const Matrix<R,C> &a)
 {  return(!a.is_ident());  }
 
 
-template<int N>inline Matrix<N,N> invert(const Matrix<N,N> &m)
+template<int N>inline Matrix<N,N> mat_invert(const Matrix<N,N> &m)
 {  Matrix<N,N> r(Matrix<N,N>::noinit);  r.x.invert(m.x);  return(r);  }
+
+template<int R,int C>inline Matrix<R,C> mat_transpose(const Matrix<C,R> &m)
+{  Matrix<R,C> r(Matrix<R,C>::noinit);  r.x.transpose(m.x);  return(r);  }
 
 template<int R,int C>inline std::ostream& operator<<(std::ostream& s,const Matrix<R,C> &m)
 {  return(internal_vect::operator<<(s,m.x));  }
@@ -312,40 +322,40 @@ template<int R,int C>inline std::ostream& operator<<(std::ostream& s,const Matri
 // **** Constructing matrices: ****
 // THIS IS ONLY AVAILABLE FOR 4x4 MATRICES: 
 // Scalation (?) matrices: 
-inline Matrix<4,4> MscaleX(double fact)  {  return(Matrix<4,4>(Matrix<4,4>::matscale,fact,0));  }
-inline Matrix<4,4> MscaleY(double fact)  {  return(Matrix<4,4>(Matrix<4,4>::matscale,fact,1));  }
-inline Matrix<4,4> MscaleZ(double fact)  {  return(Matrix<4,4>(Matrix<4,4>::matscale,fact,2));  }
-inline Matrix<4,4> Mscale(const Vector<3> &v)  {  return(Matrix<4,4>(Matrix<4,4>::matscale,v));  }
+inline Matrix<4,4> mat_scale_x(double fact)  {  return(Matrix<4,4>(Matrix<4,4>::matscale,fact,0));  }
+inline Matrix<4,4> mat_scale_y(double fact)  {  return(Matrix<4,4>(Matrix<4,4>::matscale,fact,1));  }
+inline Matrix<4,4> mat_scale_z(double fact)  {  return(Matrix<4,4>(Matrix<4,4>::matscale,fact,2));  }
+inline Matrix<4,4> mat_scale(const Vector<3> &v)  {  return(Matrix<4,4>(Matrix<4,4>::matscale,v));  }
 // Scale all axes: 
-inline Matrix<4,4> MScale(double fact)   {  return(Matrix<4,4>(Matrix<4,4>::matscale,fact));  }
+inline Matrix<4,4> mat_scale(double fact)   {  return(Matrix<4,4>(Matrix<4,4>::matscale,fact));  }
 // Translation matrices: 
-inline Matrix<4,4> MtranslateX(double d)  {  return(Matrix<4,4>(Matrix<4,4>::mattrans,d,0));  }
-inline Matrix<4,4> MtranslateY(double d)  {  return(Matrix<4,4>(Matrix<4,4>::mattrans,d,1));  }
-inline Matrix<4,4> MtranslateZ(double d)  {  return(Matrix<4,4>(Matrix<4,4>::mattrans,d,2));  }
-inline Matrix<4,4> Mtranslate(const Vector<3> &v)  {  return(Matrix<4,4>(Matrix<4,4>::mattrans,v));  }
+inline Matrix<4,4> mat_translate_x(double d)  {  return(Matrix<4,4>(Matrix<4,4>::mattrans,d,0));  }
+inline Matrix<4,4> mat_translate_y(double d)  {  return(Matrix<4,4>(Matrix<4,4>::mattrans,d,1));  }
+inline Matrix<4,4> mat_translate_z(double d)  {  return(Matrix<4,4>(Matrix<4,4>::mattrans,d,2));  }
+inline Matrix<4,4> mat_translate(const Vector<3> &v)  {  return(Matrix<4,4>(Matrix<4,4>::mattrans,v));  }
 // Rotation matrices: 
-inline Matrix<4,4> MrotateX(double angle)  {  return(Matrix<4,4>(Matrix<4,4>::matrotx,angle));  }
-inline Matrix<4,4> MrotateY(double angle)  {  return(Matrix<4,4>(Matrix<4,4>::matroty,angle));  }
-inline Matrix<4,4> MrotateZ(double angle)  {  return(Matrix<4,4>(Matrix<4,4>::matrotz,angle));  }
+inline Matrix<4,4> mat_rotate_x(double angle)  {  return(Matrix<4,4>(Matrix<4,4>::matrotx,angle));  }
+inline Matrix<4,4> mat_rotate_y(double angle)  {  return(Matrix<4,4>(Matrix<4,4>::matroty,angle));  }
+inline Matrix<4,4> mat_rotate_z(double angle)  {  return(Matrix<4,4>(Matrix<4,4>::matrotz,angle));  }
 // Rotates around x,y and z in this order; angles stored in v: 
-inline Matrix<4,4> Mrotate(const Vector<3> &v)
-	{  return(MrotateZ(v[2])*MrotateY(v[1])*MrotateX(v[0]));  }
+inline Matrix<4,4> mat_rotate(const Vector<3> &v)
+	{  return(mat_rotate_z(v[2])*mat_rotate_y(v[1])*mat_rotate_x(v[0]));  }
 
 
 /** FUNCTIONS FOR 3d VECTORS AND 4x4 MATRICES: **/
 //! rotates a specified angle around v 
-extern Matrix<4,4> Mrotate_around(const Vector<3> &v,double angle);
+extern Matrix<4,4> mat_rotate_around(const Vector<3> &v,double angle);
 //! rotates a vector to another
-extern Matrix<4,4> Mrotate_vect_vect(const Vector<3> &from,const Vector<3> &to);
+extern Matrix<4,4> mat_rotate_vect_vect(const Vector<3> &from,const Vector<3> &to);
 /*! rotates a vector to another by using a sperical rotation with the
     horizontal plane defined by the normal vector "up" */
-extern Matrix<4,4> Mrotate_vect_vect_up(const Vector<3> &from,
+extern Matrix<4,4> mat_rotate_vect_vect_up(const Vector<3> &from,
 	const Vector<3> &to,const Vector<3> &up);
 /*! rotates a vector pair to another
     the first vectors of each pair will match exactly afterwards but the second
     may differ in the angle to the first one. They will be in the same plane
     then. */
-extern Matrix<4,4> Mrotate_pair_pair(
+extern Matrix<4,4> mat_rotate_pair_pair(
 	const Vector<3> &vect1f,const Vector<3> &vect1u,
 	const Vector<3> &vect2f,const Vector<3> &vect2u);
 /*! spherical rotation with the horizontal plane defined through
@@ -353,7 +363,7 @@ extern Matrix<4,4> Mrotate_pair_pair(
     the x-coordinate of angles is used for the rotation around front
     the y-coordinate of angles is used for the rotation around up
     and the z-coordiante specifies the angle to go up from the plane */
-extern Matrix<4,4> Mrotate_spherical_pair(
+extern Matrix<4,4> mat_rotate_spherical_pair(
 	const Vector<3> &front,const Vector<3> &up,const Vector<3> &angles);
 
 /*! returns a vector which tells the resulting scalation of an x,y and z 

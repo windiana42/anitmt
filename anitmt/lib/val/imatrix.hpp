@@ -57,6 +57,9 @@ namespace internal
 		const double *m, int r, int c)  throw(internal_vect::EX_Matrix_Illegal_Invert);
 	extern void matrix_invert_copy(   // Returns inverted matrix in m. 
 		      double *m,int r,int c)  throw(internal_vect::EX_Matrix_Illegal_Invert);
+	
+	// Transpose matrix: 
+	extern void matrix_transpose(double *m,int r,int c);
 }
 
 
@@ -140,6 +143,10 @@ public: // work around for the template friend problem
 			{  set_ident();  internal::matrix_invert_copy(x[0],R,C,m.x[0],R,C);
 			   return(*this);  }
 		
+		// Transposes the matrix and assign it to *this: 
+		matrix<R,C> &transpose(const matrix<C,R> &m)
+			{  _mFOR(r,c)  x[r][c]=m.x[c][r];  return(*this);  }
+		
 		/**************************************************************/
 		/* Functions taking *this as argument a and overwriting *this */
 		/* with the result:                                           */
@@ -168,6 +175,11 @@ public: // work around for the template friend problem
 		//       EX_Matrix_Illegal_Invert is thrown. 
 		matrix<R,R> &invert()
 			{  internal::matrix_invert_copy(x[0],R,C);  return(*this);  }
+		
+		// Transposes the matrix *this. 
+		// Obviously, this only works on quadratic matrices. 
+		matrix<R,R> &transpose()
+			{  internal::matrix_transpose(x[0],R,C);  return(*this);  }
 		
 #ifndef GCC_HACK
 		// Function to multiply the vector v with matrix m, storing the 

@@ -68,8 +68,8 @@ int main()
 	
 	va=Vector(1.0,0.0,0.0);
 	vb=va;
-	cerr << "rotate(45):" << va << " -> " << rotateZ(rotateY(va,M_PI/4.0),M_PI/2.0) << "\n";
-	vb.rotateY(M_PI/4.0).rotateZ(M_PI/2.0);
+	cerr << "rotate(45):" << va << " -> " << vec_rotate_z(vec_rotate_y(va,M_PI/4.0),M_PI/2.0) << "\n";
+	vb.rotate_y(M_PI/4.0).rotate_z(M_PI/2.0);
 	cerr << "rotate(45):" << va << " -> " << vb << "\n";
 	
 	cerr << "Testing to_spherical/to_rectangular...";
@@ -78,8 +78,8 @@ int main()
 	for(int i=0; i<100; i++)
 	{
 		Vector vva(rand()/1000.0,rand()/1000.0,rand()/1000.0);
-		Vector sph1=to_spherical(vva);
-		Vector rec1=to_rectangular(sph1);
+		Vector sph1=vec_to_spherical(vva);
+		Vector rec1=vec_to_rectangular(sph1);
 		Vector sph2=vva;  sph2.to_spherical();
 		Vector rec2=sph2; rec2.to_rectangular();
 		if(sph1!=sph2)
@@ -107,8 +107,8 @@ int main()
 	va=Vector(2,4,5);
 	vb=va;
 	cerr << "normalize(" << va << ") = " << 
-		normalize(va) << " = " << vb.normalize() << "\n";
-	if(normalize(va) != vb || 
+		vec_normalize(va) << " = " << vb.normalize() << "\n";
+	if(vec_normalize(va) != vb || 
 	   abs(vb) != 1.0)
 	{  cerr << "*** ERROR!! normalize-abs=" << vb.abs() << "\n";  }
 	
@@ -123,10 +123,10 @@ int main()
 	vb=va;
 	cerr << "Vector: " << va << "\n";
 	cerr << "Mirrors: " << 
-		mirror(va,0) << 
-		mirror(va,1) << 
-		mirror(va,2) << 
-		mirror(va) << "\n";
+		vec_mirror(va,0) << 
+		vec_mirror(va,1) << 
+		vec_mirror(va,2) << 
+		vec_mirror(va) << "\n";
 	cerr << "Mirrors: " << 
 		va.mirror(0) << 
 		va.mirror(0).mirror(1) << 
@@ -135,9 +135,9 @@ int main()
 	
 	va=vb;
 	cerr << "Trans: " << 
-		translate(va,-6,0) << 
-		translate(va,-6,1) << 
-		translate(va,-6,2) << "\n";
+		vec_translate(va,-6,0) << 
+		vec_translate(va,-6,1) << 
+		vec_translate(va,-6,2) << "\n";
 	cerr << "Trans: " << 
 		va.translate(-6,0) << 
 		va.translate(6,0).translate(-6,1) << 
@@ -145,9 +145,9 @@ int main()
 	
 	va=vb;
 	cerr << "Scale: " << 
-		scale(va,-2,0) << 
-		scale(va,-2,1) << 
-		scale(va,-2,2) << "\n";
+		vec_scale(va,-2,0) << 
+		vec_scale(va,-2,1) << 
+		vec_scale(va,-2,2) << "\n";
 	cerr << "Scale: " << 
 		va.scale(-2,0) << 
 		va.scale(-0.5,0).scale(-2,1) << 
@@ -162,7 +162,7 @@ int main()
 		vc=cross(va,vb);
 		sa=va*vc;
 		sb=dot(vb,vc);
-		sc=abs(va)*abs(vb)*(sin(angle(va,vb)));
+		sc=abs(va)*abs(vb)*(sin(vec_angle(va,vb)));
 		if(sa!=0.0 || sb!=0.0)
 		{  cerr << "*** ERROR (scalar/vector mul) (" << 
 			sa << ", " << sb << ")\n";  ++nfailed;  }
@@ -226,7 +226,7 @@ int main()
 		if(ma*mc!=mb)
 		{  cerr << "\n*** ERROR in invert() (1).\n";  }
 		
-		ma=invert(mc);
+		ma=mat_invert(mc);
 		if(ma*mc!=mb)
 		{  cerr << "\n*** ERROR in invert() (2).\n";  }
 	}
