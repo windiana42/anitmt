@@ -806,9 +806,9 @@ inline void FDManager::_DeliverFDNotify(const HTime *fdtime)
 			#if TESTING
 			if(p->fd!=i->fd || p->events!=i->events)
 			{
-				fprintf(stderr,"%s: fd=%d,%d; events=0x%x,0x%x\n",
+				fprintf(stderr,"%s: fd=%d,%d; events=0x%x,0x%x; revents=%d\n",
 					fdlist_change_serial ? "FD: Hmmm...." : "FD: internal error",
-					p->fd,i->fd,p->events,i->events);
+					p->fd,i->fd,p->events,i->events,p->revents);
 				if(!fdlist_change_serial)  abort();
 			}
 			#endif
@@ -963,7 +963,7 @@ int FDManager::MainLoop()
 			{  fprintf(stderr,"FD: BUG!! pfd[-1] corrupt: %d,%d\n",
 				pfd[-1].fd,pfd[-1].events);  BUGACTION  }
 			#endif
-
+			
 			// Is this loop needed?? Not for linux (see fs/select.c). 
 			// Note: pfd[-1] is alloc base and internally used. 
 			//for(pollfd *p=pfd-1,*pend=&pfd[npfds]; p<pend; p++)
@@ -1554,6 +1554,8 @@ int FDManager::UpdateTimer(FDBase *fdb,TimerID tid,long msec,int align)
 	{  return(0);  }
 	if(!tid)   // -1 -> disabled. 
 	{  return(-2);  }
+	if(msec<-1)
+	{  return(-3);  }
 	
 	#if TESTING_CHECK
 	for(FDManager::TimerNode *i=fdb->timers; i; i=i->next)
@@ -1892,6 +1894,7 @@ if(events & ~(POLLIN | POLLOUT))
 			// This is a poll node marked for deletion and it happens 
 			// to have the right fd set. Use it if there is no other one. 
 			recycle=j;  continue;
+fprintf(stderr,"FD: RECYCLE (%d,%d)!!\n",j->fd,j->events);
 		}
 		if(ret_id)
 		{  *ret_id=(PollID)j;  }
@@ -1917,8 +1920,10 @@ if(events & ~(POLLIN | POLLOUT))
 		fdb->AddFDNode(n);
 		//fprintf(stderr,"_NewFDN(fd=%d,events=0x%x,idx=%d)\n",
 		//	n->fd,n->events,n->idx);
-		++fd_nnodes;
 	}
+	// fd_nnodes gets decreased before deleting it, so even if we 
+	// recycle, we must increase it here. 
+	++fd_nnodes;
 	if(n->events)
 	{
 		++pollnodes;
@@ -1962,10 +1967,15 @@ inline int FDManager::_iUnpollFD(FDBase *fdb,FDManager::FDNode *fdn)
 	#endif
 	// In case there is no array elem associated with that fd 
 	// node, the array keeps in sync. 
-	// Hmmm... no because that gives trouble if PollFD() gets 
-	// called right after UnpollFD() in an environment where 
-	// the fdlist is locked (-> fdn->idx=-2 by DeleteFDNode()). 
-	//if(fdn->idx>=0)
+	// There used to be NO check so that fdlist_change_serial gets 
+	// increased in any case but I think this it is only needed if 
+	// idx=>0 (i.e. there is an associated poll array element). 
+	#if 0
+	if(fdn->idx<0 && !fdlist_change_serial)
+	{  fprintf(stderr,"FD: CHECK THIS!!! (fd=%d,events=%d,ch_ser=%d) (is this a BUG???) "
+		"(line %d)\n",fdn->fd,fdn->events,fdlist_change_serial,__LINE__);  }
+	#endif
+	if(fdn->idx>=0)  // fdn->idx==-2 NOT possible here (check above)
 	{  ++fdlist_change_serial;  }
 	--fd_nnodes;
 	fdb->DeleteFDNode(fdn);

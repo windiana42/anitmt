@@ -28,9 +28,17 @@
 #define TESTING 1
 #endif
 
+// Do additional(time-comsuming checks): 
+#define TESTING_CHECK 1
+
 
 #if TESTING
 #warning TESTING switched on. 
+#else
+#ifdef TESTING_CHECK
+# undef TESTING_CHECK
+#endif
+#define TESTING_CHECK 0
 #endif
 
 
@@ -152,7 +160,8 @@ void FDBase::_MsecLeftChanged(FDManager::TimerNode *i,long old_msec_left)
 		{  fprintf(stderr,"FD:%d: OOPS! BUG! old_msec_left=%ld while i==sh_timer=%p\n",
 			__LINE__,old_msec_left,sh_timer);  abort();  }
 		#endif
-		if(i->msec_left>old_msec_left)
+		if(i->msec_left<0 ||  // sh_timer was disabled. 
+		   i->msec_left>old_msec_left )  // sh_timer now expires later
 		{  sh_timer_dirty=1;  }
 		fdmanager()->TimeoutChange();
 		return;

@@ -280,6 +280,7 @@ class FDBase
 		// UpdateTimer: Return value:
 		//     0 -> timer updated
 		//    -2 -> specified timer (TimerID) not valid (NULL)
+		//    -3 -> msec<-1 (-1 (disable) is valid)
 		//   Timer update for an existing (valid) TimerID never fails. 
 		TimerID InstallTimer(long msec,int align,const void *dptr=NULL)
 			{  return(fdmanager()->InstallTimer(this,msec,align,dptr));  }
