@@ -16,6 +16,8 @@
  * 
  */
 
+#include <hlib/prototypes.h>  /* MUST BE FIRST */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>

@@ -14,7 +14,6 @@
  * 
  */
 
-#include <hlib/prototypes.h>
 #include "growbuffer.h"
 
 // NOTE: len is not changed by this function 

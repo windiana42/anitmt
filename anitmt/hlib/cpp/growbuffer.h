@@ -31,6 +31,8 @@
 #ifndef _HLIB_GrowBuffer_H_
 #define _HLIB_GrowBuffer_H_ 1
 
+#include "cplusplus.h"
+
 #include <string.h>
 
 class GrowBuffer

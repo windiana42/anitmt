@@ -60,7 +60,7 @@ static const struct vpe_info
 int ParameterSource::ValueParseError(
 	ParParseState pps,
 	const ParamArg *arg,
-	ParamCopy *pc)
+	ParamCopy * /*pc*/)
 {
 	// Look error up: 
 	const vpe_info *vpe=NULL;

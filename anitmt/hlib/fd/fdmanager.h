@@ -19,11 +19,11 @@
 #ifndef _HLIB_FDManager_H_
 #define _HLIB_FDManager_H_ 1
 
-// requires <unistd.h>, <signal.h>, 
-//          <sys/socket.h> (for shutdown())
-
 #include <hlib/prototypes.h>
 #include "htime.h"
+
+// requires <unistd.h>, <signal.h>, 
+//          <sys/socket.h> (for shutdown())
 
 class FDBase;
 class HTime;

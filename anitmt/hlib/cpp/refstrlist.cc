@@ -14,8 +14,10 @@
  * 
  */
 
-#include <string.h>
 #include "refstrlist.h"
+
+#include <string.h>
+
 
 const RefStrList::Node *RefStrList::find(const char *str)
 {

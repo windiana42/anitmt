@@ -14,9 +14,10 @@
  * 
  */
 
+#include "cplusplus.h"
+
 #include <stdio.h>
 #include <stdlib.h>
-#include <hlib/cplusplus.h>
 
 void ConstructorFailedExit(const char *opt=NULL)
 {

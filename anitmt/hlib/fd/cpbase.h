@@ -19,6 +19,9 @@
 #ifndef _HLIB_FDCopyBase_H_
 #define _HLIB_FDCopyBase_H_ 1
 
+#include <hlib/prototypes.h>
+
+
 class HTime;
 
 class FDCopyBase : LinkedListBase<FDCopyBase>

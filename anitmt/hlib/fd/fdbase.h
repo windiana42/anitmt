@@ -19,10 +19,10 @@
 #ifndef _HLIB_FDBase_H_
 #define _HLIB_FDBase_H_ 1
 
+#include <hlib/prototypes.h>
+
 #include <errno.h>
 #include <sys/poll.h>
-
-#include <hlib/prototypes.h>
 
 /*
  * CHANGES / WHAT TO CHECK ON TROUBLE: 

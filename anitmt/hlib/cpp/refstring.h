@@ -17,9 +17,10 @@
 #ifndef _HLIB_RefString_H_
 #define _HLIB_RefString_H_ 1
 
+#include "cplusplus.h"
+
 #include <stddef.h>
 #include <string.h>
-#include "cplusplus.h"
 
 // How it works: Simply allocate a RefString on the stack and store 
 // any string in it. You may copy the RefString via the copy 

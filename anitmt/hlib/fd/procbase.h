@@ -19,10 +19,10 @@
 #ifndef _HLIB_ProcessBase_H_
 #define _HLIB_ProcessBase_H_ 1
 
-#include <sys/poll.h>
-
 // This also includes prototypes.h: 
-#include "intprocbase.h"
+#include "intprocbase.h"   /* MUST BE FIRST TO BE INCLUDED. */
+
+#include <sys/poll.h>
 
 // NOTE: ProcessBase needs ProcessManager which depends on FDManager; 
 //       see procmanager.h for details. 

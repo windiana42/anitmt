@@ -17,7 +17,6 @@
 #ifndef _INC_PAR_ParamArg_H_
 #define _INC_PAR_ParamArg_H_ 1
 
-#include <stddef.h>
 #include <hlib/refstring.h>
 
 namespace par

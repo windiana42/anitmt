@@ -16,9 +16,10 @@
  * 
  */
 
+#include <hlib/prototypes.h>
+
 #include <stdio.h>
 #include <stdarg.h>
-#include <hlib/prototypes.h>
 
 #ifndef _HLIB_SimpleIndentConsoleOutput_H_
 #define _HLIB_SimpleIndentConsoleOutput_H_ 1

@@ -21,6 +21,7 @@
 #include <string.h>
 #include <stdio.h>
 
+class RefStrList;
 
 namespace par
 {
@@ -56,6 +57,10 @@ class ParameterManager : public PAR
 		void _RecursivePrintHelp(Section *top,class SimpleIndentConsoleOutput &sico);
 		void _HelpPrintSectionHeader(Section *top,SimpleIndentConsoleOutput &sico);
 		void _HelpPrintParamInfo(ParamInfo *pi,SimpleIndentConsoleOutput &sico);
+		// Used to call the SectionParameterHandler to format its help text. 
+		// when (-1 or +1); see SectionParameterHandler. 
+		int _PrintSectionManagerHelp(SectionParameterHandler *sph,Section *sect,
+			int when,SimpleIndentConsoleOutput &sico);
 	protected:
 		const char *version_string;   // All these strings are not 
 		const char *package_name;     // copied and initialized 
@@ -65,6 +70,11 @@ class ParameterManager : public PAR
 		// This version info must be free'd via free() (NOT LFree()). 
 		// Note that this function returns NULL on malloc() failure. 
 		char *_GenVersionInfo();
+		
+		// Used to format at write the help strings passed through a string 
+		// List (see e.g. the special help in ParameterConsumer or the help 
+		// text which can be written by the SectionParameterHandler). 
+		void _PrintFormatStrListHelp(RefStrList *txtlst,SimpleIndentConsoleOutput &sico);
 	public:  _CPP_OPERATORS_FF
 		ParameterManager(int *failflag=NULL);
 		virtual ~ParameterManager();
@@ -150,6 +160,12 @@ class ParameterManager : public PAR
 		// (Leading `-' skipped.) 
 		Section *RegisterSection(ParameterConsumer *pc,
 			const char *name,const char *helptext=NULL,Section *top=NULL);
+		
+		// Remove all parameters of the specified parameter consumer 
+		// in and below the section *top. 
+		// Use only if you really need it
+		// Returns number of deleted parameters. 
+		void RecursiveDeleteParams(ParameterConsumer *pc,Section *top=NULL);
 		
 		// ParameterConsumer classes (un)register using these 
 		// functions. Used internally. 

@@ -18,6 +18,8 @@
 #ifndef _HLIB_LinkedList_H_
 #define _HLIB_LinkedList_H_ 1
 
+#include "cplusplus.h"
+
 #include <stddef.h>
 
 

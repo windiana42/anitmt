@@ -22,11 +22,11 @@
  */
 int InstallSignalHandler(int sig,void (*shandler)(int),int sa_flags)
 {
-    struct sigaction act;
-    sigemptyset(&act.sa_mask);
-    act.sa_handler=shandler;
-    act.sa_flags=sa_flags;
-    act.sa_restorer=NULL;
-    
-    return(sigaction(sig,&act,NULL));
+	struct sigaction act;
+	memset(&act,0,sizeof(act));
+	sigemptyset(&act.sa_mask);
+	act.sa_handler=shandler;
+	act.sa_flags=sa_flags;
+
+	return(sigaction(sig,&act,NULL));
 }

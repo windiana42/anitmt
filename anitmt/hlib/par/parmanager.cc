@@ -387,6 +387,15 @@ int ParameterManager::DelParam(ParamInfo *pi)
 }
 
 
+void ParameterManager::RecursiveDeleteParams(ParameterConsumer *pc,
+	Section *top)
+{
+	if(!pc)  return;
+	_ClearSection(top ? top : &topsect,pc);
+	_TidyUpSections();
+}
+
+
 PAR::Section *ParameterManager::RegisterSection(ParameterConsumer *pc,
 	const char *sect_name,const char *helptext,Section *top=NULL)
 {

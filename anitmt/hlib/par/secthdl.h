@@ -54,6 +54,23 @@ class SectionParameterHandler : public PAR
 		virtual int parse(SPHInfo *info)
 			{  return(1);  }
 		
+		// This gets called twice if help on the section is to be written. 
+		// Refer to ParameterConsumer on how to store the help text in the 
+		// passed string list. 
+		// Parameters: 
+		//   Section *:  which section we're talking about
+		//   RefStrList *: store the data to be written here. 
+		//   int when: 
+		//       -1 -> before the help text for the parameters in the 
+		//             section is written (i.e. directly below the section 
+		//             header)
+		//       +1 -> after the parameters before traversing the subsections
+		//       +2 -> after traversing the subesections 
+		//  NOTE: Check for `-1´ and `+1´, ... , because more values may 
+		//        be implemented later. 
+		// Return value: currently ignored; use 0. 
+		virtual int PrintSectionHelp(const Section *,RefStrList *,int /*when*/)
+			{  return(0);  }
 	public:  _CPP_OPERATORS_FF
 		SectionParameterHandler(ParameterManager *_manager,int * /*failflag*/=NULL)
 			{  manager=_manager;  }
@@ -73,7 +90,7 @@ class SectionParameterHandler : public PAR
 		// -2 -> there is already a section handler attached to that section
 		int Attach(Section *s)
 			{  return(parmanager()->SectionHandlerAttach(this,s));  }
-		int Subscribe(const char *section,Section *top=NULL);
+		int Attach(const char *section,Section *top=NULL);
 		
 		// Detach from a section or from all sections. 
 		void Detach(Section *s)

@@ -16,10 +16,10 @@
  */
 
 
+#include "cplusplus.h"
+
 #include <stdio.h>
 #include <stdlib.h>
-
-#include "cplusplus.h"
 
 #ifndef TESTING
 #define TESTING 1

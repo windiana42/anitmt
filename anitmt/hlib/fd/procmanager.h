@@ -20,7 +20,7 @@
 #define _HLIB_ProcessManager_H_ 1
 
 // This also includes prototypes.h: 
-#include "intprocbase.h"
+#include "intprocbase.h"   /* MUST BE FIRST TO BE INCLUDED. */
 #include <hlib/linkedlist.h>
 
 class ProcessBase;

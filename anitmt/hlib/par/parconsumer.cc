@@ -91,6 +91,11 @@ int ParameterConsumer::DelParam(ParamInfo *pi)
 	return(parmanager()->DelParam(pi));
 }
 
+void ParameterConsumer::RecursiveDeleteParams(Section *top=NULL)
+{
+	parmanager()->RecursiveDeleteParams(this,top);
+}
+
 
 int ParameterConsumer::SetSection(const char *sect_name,
 	const char *helptext,Section *top)

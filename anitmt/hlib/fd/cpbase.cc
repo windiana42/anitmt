@@ -16,17 +16,17 @@
  * 
  */
 
+#include <hlib/fdmanager.h>
+#include <hlib/fdbase.h>
+#include <hlib/cpmanager.h>
+#include <hlib/cpbase.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <signal.h>
 
 #include <sys/socket.h>
-
-#include <hlib/fdmanager.h>
-#include <hlib/fdbase.h>
-#include <hlib/cpmanager.h>
-#include <hlib/cpbase.h>
 
 
 #ifndef TESTING

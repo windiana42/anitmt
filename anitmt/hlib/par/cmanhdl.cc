@@ -23,6 +23,7 @@
 #include "parmanager.h"
 #include "parconsumer.h"
 #include "sindentcout.h"
+#include "secthdl.h"
 
 #include <hlib/refstrlist.h>
 
@@ -83,13 +84,26 @@ void ParameterManager::_RecursivePrintHelp(Section *top,
 	// I know, I don't check if sico()'s LMalloc() fails...
 	sico.SetIndent(indent+2);
 	
+	// Give section parameter handler a chance to write its text...
+	if(top->sect_hdl)
+	{  _PrintSectionManagerHelp(top->sect_hdl,top,/*when=*/-1,sico);  }
+	
 	for(ParamInfo *pi=top->pilist.first(); pi; pi=pi->next)
 	{
 		_HelpPrintParamInfo(pi,sico);
 		assert(pi->section==top);   // sanity check...
 	}
+	
+	// ...second chance...
+	if(top->sect_hdl)
+	{  _PrintSectionManagerHelp(top->sect_hdl,top,/*when=*/+1,sico);  }
+	
 	for(Section *s=top->sub.first(); s; s=s->next)
 	{  _RecursivePrintHelp(s,sico);  }
+	
+	// ...last chance. Finally. 
+	if(top->sect_hdl)
+	{  _PrintSectionManagerHelp(top->sect_hdl,top,/*when=*/+2,sico);  }
 	
 	sico.SetIndent(indent);
 }
@@ -159,6 +173,76 @@ int ParameterManager::PrintVersion(FILE *out)
 }
 
 
+void ParameterManager::_PrintFormatStrListHelp(RefStrList *txtlst,
+	SimpleIndentConsoleOutput &sico)
+{
+	int indent0=sico.GetIndent();
+	
+	int written=0;
+	int do_nl=0,next_nl=1;
+	for(const RefStrList::Node *s=txtlst->first(); s; s=s->next)
+	{
+		if(s->stype()==-1)  continue;   // NULL ref
+		assert(s->stype()==0);   // need '\0'-terminated strings
+		const char *txt=s->str();
+		
+		// Read in indent if passed: 
+		// Format:
+		// "\r"  [mod] indent [+] [colon]
+		// indent value is read in as integer; parsing is stopped at 
+		// first non-digit; if that is a colon ':', it is als skipped. 
+		// mod: '+': add indent 
+		//      '-': subtract indent
+		//       default: set indet
+		// "+": do not append a newline (``more to come'')
+		// Examples: 
+		// "\r4" "\r+2+"  "\r-3:"
+		if(*txt=='\r')
+		{
+			++txt;
+			
+			// Read in mod: 
+			int mod=0;
+			if(*txt=='+')
+			{  mod=+1;  ++txt;  }
+			else if(*txt=='-')
+			{  mod=-1;  ++txt;  }
+			
+			// Read in indent: 
+			char *end;
+			int indent=strtol(txt,&end,10);
+			if(end==txt)  indent=0;
+			txt=end;
+			
+			// Check for newline suppression:
+			if(*txt=='+')
+			{  next_nl=0;  ++txt;  }
+			
+			// Skip optional colon: 
+			if(*txt==':')
+			{  ++txt;  }
+			
+			if(mod)
+			{  sico.AddIndent(indent*mod);  }
+			else
+			{  sico.SetIndent(indent+indent0);  }
+		}
+		
+		if(do_nl)
+		{  sico.Puts("\n");  }
+		sico.Puts(txt);
+		++written;
+		
+		do_nl=next_nl;
+		next_nl=1;
+	}
+	
+	sico.SetIndent(indent0);
+	if(written)
+	{  sico.Puts("\n");  }
+}
+
+
 int ParameterManager::PrintSpecialHelp(ParameterConsumer *pc,
 	SpecialHelpItem *shi,FILE *out)
 {
@@ -166,64 +250,29 @@ int ParameterManager::PrintSpecialHelp(ParameterConsumer *pc,
 	sico.SetFile(out);
 	
 	if(shi->helptxt)
-	{  sico.Puts(shi->helptxt);  }
-	else
 	{
-		// new stuff: 
-		RefStrList txtlst;
-		pc->PrintSpecialHelp(&txtlst,shi);
-		for(const RefStrList::Node *s=txtlst.first(); s; s=s->next)
-		{
-			if(s->stype()==-1)  continue;   // NULL ref
-			assert(s->stype()==0);   // need '\0'-terminated strings
-			const char *txt=s->str();
-			
-			// Read in indent if passed: 
-			// Format:
-			// "\r"  [mod] indent [colon]
-			// indent value is read in as integer; parsing is stopped at 
-			// first non-digit; if that is a colon ':', it is als skipped. 
-			// mod: '+': add indent 
-			//      '-': subtract indent
-			//       default: set indet
-			// Examples: 
-			// "\r4" "\r+2"  "\r-3:"
-			if(*txt=='\r')
-			{
-				++txt;
-				
-				// Read in mod: 
-				int mod=0;
-				if(*txt=='+')
-				{  mod=+1;  ++txt;  }
-				else if(*txt=='-')
-				{  mod=-1;  ++txt;  }
-				
-				// Read in indent: 
-				char *end;
-				int indent=strtol(txt,&end,10);
-				if(end==txt)  indent=0;
-				txt=end;
-				
-				// Skip optional colon: 
-				if(*txt==':')
-				{  ++txt;  }
-				
-				if(mod)
-				{  sico.AddIndent(indent*mod);  }
-				else
-				{  sico.SetIndent(indent);  }
-			}
-			
-			if(s!=txtlst.first())
-			{  sico.Puts("\n");  }
-			sico.Puts(txt);
-		}
+		sico.Puts(shi->helptxt);
+		sico.Puts("\n");
+		return(0);
 	}
-	sico.SetIndent(0);
-	sico.Puts("\n");
 	
-	return(0);
+	// new stuff: 
+	RefStrList txtlst;
+	int rv=pc->PrintSpecialHelp(&txtlst,shi);
+	_PrintFormatStrListHelp(&txtlst,sico);
+	
+	return(rv);
+}
+
+
+int ParameterManager::_PrintSectionManagerHelp(SectionParameterHandler *sph,
+	Section *sect,int when,SimpleIndentConsoleOutput &sico)
+{
+	RefStrList txtlst;
+	int rv=sph->PrintSectionHelp(sect,&txtlst,when);
+	_PrintFormatStrListHelp(&txtlst,sico);
+	
+	return(rv);
 }
 
 

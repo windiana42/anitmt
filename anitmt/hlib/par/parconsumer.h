@@ -17,9 +17,9 @@
 #ifndef _INC_PAR_ParameterConsumer_H_
 #define _INC_PAR_ParameterConsumer_H_ 1
 
-#include <stddef.h>
-
 #include "valhdl.h"
+
+#include <stddef.h>
 
 
 class RefStrList;
@@ -86,18 +86,20 @@ class ParameterConsumer :
 		// value/depth. To change it, you may put a special magic sequence 
 		// at the beginning of any/each string in the list: 
 		// The format is: 
-		// "\r" [mod] indent [":"]
+		// "\r" [mod] indent [+] [":"]
 		// "\r" as the first character indicates that an indent spec is 
 		//      following. 
 		// mod: "+" -> add indent value
 		//      "-" -> subtract indent value
 		//      default: set indent value
 		// indent: indent value to add/subtract/set in decimal notation. 
+		// [+]  ("more to come") suppress output of newline at end of this 
+		//      string
 		// ":" -> optional colon. The parsing of the indent value is 
 		//      stopped at the first non-digit char; that's where the real 
 		//      beginning of the message is assumed. If this char is a 
 		//      colon, it is also skipped. (Useful e.g. if your message 
-		//      begins with a digit.)
+		//      begins with a digit or a `+´.)
 		// NOTE: You may need #include <hlib/refstrlist.h>. 
 		// Return value: currently unused; use 0. 
 		virtual int PrintSpecialHelp(RefStrList *,const SpecialHelpItem *)
@@ -221,6 +223,12 @@ class ParameterConsumer :
 		//   0 -> success
 		//   currently never fails. 
 		int DelParam(ParamInfo *pi);
+		
+		// Remove all parameters of this parameter consumer in and below 
+		// the section *top. 
+		// Use only if you really need it
+		// Returns number of deleted parameters. 
+		void RecursiveDeleteParams(Section *top=NULL);
 		
 		// Query if a parameter was set (better: how often it 
 		// was successfully overridden/added): 

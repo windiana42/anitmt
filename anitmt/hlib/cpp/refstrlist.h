@@ -17,8 +17,8 @@
 #ifndef _HLIB_RefStringList_H_
 #define _HLIB_RefStringList_H_ 1
 
-#include <stddef.h>
 #include "cplusplus.h"
+
 #include "linkedlist.h"
 #include "refstring.h"
 

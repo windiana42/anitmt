@@ -16,6 +16,11 @@
  * 
  */
 
+#include <hlib/fdmanager.h>
+#include <hlib/fdbase.h>
+#include <hlib/cpmanager.h>
+#include <hlib/cpbase.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -26,11 +31,6 @@
 #include <sys/poll.h>
 #include <sys/time.h>
 #include <sys/socket.h>   /* shutdown() */
-
-#include <hlib/fdmanager.h>
-#include <hlib/fdbase.h>
-#include <hlib/cpmanager.h>
-#include <hlib/cpbase.h>
 
 #ifndef TESTING
 #define TESTING 1

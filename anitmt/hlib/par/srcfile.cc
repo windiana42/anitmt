@@ -189,7 +189,7 @@ int ParameterSource_File::_ReadFile(const char *_file,int allow_recursion)
 			if(_ParseString(&sname,&slen,&end,&origin))
 			{  ++errors;  goto spdone;  }
 			while(isspace(*end))  ++end;
-			if(*end!='#')
+			if(*end && *end!='#')
 			{  PreprocessorError(PPWarningIgnoringGarbageAtEol,&origin,
 				curr_sect,NULL);  }
 			sname[slen]='\0';

@@ -4,7 +4,7 @@ libpar_a_SOURCES = \
 	sindentcout.cc \
 		parintrnl.cc defhdl.cc defstrhdl.cc defstrlsthdl.cc valhdl.cc \
 		paramarg.cc cmdline.cc \
-		parconsumer.cc parmanager.cc \
+		parconsumer.cc secthdl.cc parmanager.cc \
 		parsource.cc \
 		srcfile.cc srccmd.cc \
 		csrchdl.cc cmanhdl.cc csrcfilehdl.cc cconshdl.cc \

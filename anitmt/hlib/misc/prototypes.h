@@ -14,8 +14,8 @@
  * 
  */
 
-#ifndef _HLIB_MISC_PROTOTYPES_H
-#define _HLIB_MISC_PROTOTYPES_H 1
+#ifndef _HLIB_MISC_PROTOTYPES_H_
+#define _HLIB_MISC_PROTOTYPES_H_ 1
 
 /* include config */
 #include <hlib/hconfig.h>
@@ -114,4 +114,4 @@ extern char *prg_name;
 #ifdef __cplusplus
   }   /* extern "C" */
 #endif
-#endif  /* _HLIB_MISC_PROTOTYPES_H */
+#endif  /* _HLIB_MISC_PROTOTYPES_H_ */
