@@ -68,6 +68,7 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(-,root,root,755)
 %doc AUTHORS COPYING COPYING.GPL README NEWS ChangeLog BUILD
 %prefix/lib/*
+%prefix/include/hlib/
 
 #%changelog
 #* first version

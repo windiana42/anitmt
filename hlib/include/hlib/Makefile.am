@@ -13,6 +13,17 @@ HlibHeaders = hconfig.h hlib-config.h \
 	compress/base_cinfile.h compress/gzip_cinfile.h compress/bzip2_cinfile.h \
 		compress/pngwrite.h compress/pngread.h
 
+headersincludedir= $(pkgincludedir)/
+headersinclude_HEADERS = \
+	base64.h         defop.h         heap.h         notifierlist.h    parsource.h    refstrlist.h   timeoutmanager.h \
+	base_cinfile.h   fdbase.h        hlib-config.h  orderedarray.h    pngread.h      searchpath.h   valhdl.h \
+	binsearch.h      fdcopybase.h    hlib.h         paramarg.h        pngwrite.h     secthdl.h      valuehandler.h \
+	btree.h          fdfifobuf.h     htime.h        parbase.h         procbase.h     sindentcout.h \
+	bzip2_cinfile.h  fdmanager.h     intprocbase.h  parconsumer.h     procmanager.h  srccmd.h \
+	cdrecorder.h     growbuffer.h    linkedlist.h   parconsumerovl.h  prototypes.h   srcenv.h \
+	cmdline.h        gzip_cinfile.h  lmalloc.h      parintrnl.h       refstrhash.h   srcfile.h \
+	cplusplus.h      hconfig.h       parmanager.h      refstring.h    timeoutbase.h 
+
 all: LinkHeaders
 opt: LinkHeaders
 
