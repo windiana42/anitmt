@@ -42,6 +42,9 @@
 // 2) Add a new description of the parameter to the desc_<type> list 
 //    in this file. 
 // 3) Add a method to access the parameter to class Animation_Parameters. 
+//    ** BE SURE YOU KEEP THE LISTS SORTED IN THE SAME ORDER. **
+// 4) You may wish to add a check to Parameter_Checks() (this file below). 
+//    This is thought to check fps!=0, etc. 
 
 #include "params.hpp"
 
@@ -186,6 +189,66 @@ static Parameter_Description<stringlist> desc_stringlist[PID::_last_stringlist]=
 	  Default<stringlist>(),   PAT::Needed /*PAT::Replace*/, POT::Simple, 
 	  "Needed files to copy with the animation that were not detected." }
 };
+
+
+int Animation_Parameters::Parameter_Checks()
+{
+	// Check the parameters in *this: 
+	int errors=0;
+	
+	if(verbose()<0)
+	{
+		cerr << "Warning: verbose=" << verbose() << 
+			". You think that\'s funny?" << std::endl;
+		par_int[PID::verbose]=0;
+	}
+	
+	if(warnings())
+	{
+		if(startframe()<0 || starttime()<0)
+		{  cerr << "Warning: startframe=" << startframe() << 
+			", starttime=" << starttime() << std::endl;  }
+		else if(endframe()<0 || endtime()<0)
+		{  cerr << "Warning: endframe=" << endframe() << 
+			", endtime=" << endtime() << std::endl;  }
+		if(startframe() >= endframe())
+		{  cerr << "Warning: startframe (" << startframe() << 
+			") >= endframe (" << endframe() << ")" << std::endl;  }
+		else if(starttime() >= endtime())
+		{  cerr << "Warning: starttime (" << starttime() << 
+			") >= endtime (" << endtime() << ")" << std::endl;  }
+	}
+	
+	if(width()<=0 || height()<=0)
+	{
+		cerr << "Error: width=" << width() << ", height=" << height() << 
+			"; Sure you know what you\'re doing?" << std::endl;
+		++errors;
+	}
+	
+	if(fabs(fps())<0.000001)
+	{  cerr << "Error: fps=0" << std::endl;  ++errors;  }
+	else if(fps()<0.0 && warnings())
+	{
+		cerr << "Warning: fps=" << fps() << 
+			" < 0 (Expect funny results)" << std::endl;
+	}
+	
+	// Make sure ani_dir ends with "/". 
+	{
+		const char *ad=ani_dir().c_str();
+		size_t ad_len=strlen(ad);
+		if(!ad_len)
+		{
+			cerr << "Warning: ani_dir=\"\"; assuming \".\"" << endl;
+			par_string[PID::ani_dir].val.assign("./");
+		}
+		else if(ad[ad_len-1]!='/')
+		{  par_string[PID::ani_dir].val+="/";  }
+	}
+	
+	return(errors);
+}
 
 
 PID::Parameter_ID LastID_By_Type(bool*)    {  return(PID::_last_bool);    }

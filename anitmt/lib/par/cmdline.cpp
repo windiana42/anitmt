@@ -393,6 +393,9 @@ bool Animation_Parameters::Parse_Command_Line(Command_Line *cmd)
 		cout << endl;
 	}
 	
+	if(!errors)  // check necessary to ensure that all parameters are set. 
+	{  errors+=Parameter_Checks();  }
+	
 	return(errors ? false : true);
 }
 

@@ -274,6 +274,8 @@ class Animation_Parameters : String_Value_Converter
 		int Solve_TimeFrame_Net(Override_Pars *array,int npars,
 			ostream &os,bool warnings);
 		void Solve_TimeFrame_Done(/*ugly*/void *tmp);
+		
+		int Parameter_Checks();  // check fps!=0 etc. 
 	public:
 		Animation_Parameters();
 		~Animation_Parameters();
