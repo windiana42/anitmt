@@ -72,15 +72,16 @@ int main(int argc, char *argv[], char *envp[])
   // Okay, here we go...
   funcgen::yydebug=fgpar.yydebug;
   
+  #if 0
+  std::cout << "Infile: " << fgpar.in_file << std::endl;
+  std::cout << "Outfile: " << fgpar.out_basename << std::endl;
+  std::cout << "Namespace: " << fgpar.namesp << std::endl;
+  #endif
+  
   std::string in_file(fgpar.in_file);
   std::string out_basename(fgpar.out_basename);
   std::string namesp(fgpar.namesp); // namespace
   
-  #if 0
-  std::cout << "Infile: " << in_file << std::endl;
-  std::cout << "Outfile: " << out_basename << std::endl;
-  std::cout << "Namespace: " << namesp << std::endl;
-  #endif
   
   message::Stream_Message_Handler msg_handler(std::cerr,std::cout,std::cout);
   message::Message_Manager manager(&msg_handler);
