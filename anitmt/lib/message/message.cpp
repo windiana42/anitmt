@@ -15,6 +15,7 @@
 #include "message.hpp"
 
 #warning "Replace strstream header with a std::stringstream version (GCC 3.0)"
+#warning "Check warnings in message_inline.cpp... (about nl)"
 
 namespace message
 {

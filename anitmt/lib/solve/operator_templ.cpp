@@ -409,7 +409,7 @@ namespace solve
 
       // find solved operand
       operands_type::iterator op 
-	= operands.find( static_cast<Operand<OP>*>(ID) );
+	= operands.find( static_cast<Operand<OP>*>(const_cast<void*>(ID)) );
       assert( (*op)->is_solved_in_try(info) );
       OP val = (*op)->get_value( info );
       if( !is_op_ok(val,result) )
@@ -432,7 +432,7 @@ namespace solve
     {
       // find solved operand
       operands_type::iterator op 
-	= operands.find( static_cast<Operand<OP>*>(ID) );
+	= operands.find( static_cast<Operand<OP>*>(const_cast<void*>(ID)) );
       assert( (*op)->is_solved_in_try(info) );
       OP val = (*op)->get_value( info );
       if( !is_op_ok(val,result) ) return false;
