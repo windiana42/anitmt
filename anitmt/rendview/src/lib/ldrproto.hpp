@@ -201,13 +201,13 @@ enum // TaskResponseCode
 	TRC_TooManyTasks      // client thinks he already has enough tasks 
 	                      // (should never happen)
 };
+extern char *LDRTaskResponseString(int resp_code);
 
 struct LDRTaskResponse : LDRHeader
 {
 	u_int16_t resp_code;  // one of the TRC_* above
 	u_int32_t task_id;   // unique task ID
 };
-
 
 enum // FileRequestFileType
 {

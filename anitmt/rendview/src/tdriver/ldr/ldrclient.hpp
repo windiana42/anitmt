@@ -100,6 +100,7 @@ class LDRClient :
 		
 		int _HandleReceivedHeader(LDR::LDRHeader *hdr);
 		int _ParseFileRequest(RespBuf *buf);
+		int _ParseTaskResponse(RespBuf *buf);
 		
 		// Called on every error which results in a client disconnect. 
 		void _KickMe(int do_send_quit=0);

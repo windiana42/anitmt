@@ -793,6 +793,7 @@ int LDRClient::_HandleReceivedHeader(LDRHeader *hdr)
 // Return value: -1 -> call _KickMe(0)
 int LDRClient::_ParseFileRequest(RespBuf *buf)
 {
+	assert(buf->content==Cmd_FileRequest);
 	LDRFileRequest *freq=(LDRFileRequest *)(buf->data);
 	
 	if(!tri.scheduled_to_send || 
@@ -857,6 +858,57 @@ int LDRClient::_ParseFileRequest(RespBuf *buf)
 	tri.task_request_state=TRC_SendFileDownloadH;
 	// cpnotify_outpump_start() will be called. 
 	
+	return(0);
+}
+
+
+int LDRClient::_ParseTaskResponse(RespBuf *buf)
+{
+	assert(buf->content==Cmd_TaskResponse);
+	LDRTaskResponse *fresp=(LDRTaskResponse *)(buf->data);
+	
+	if(!tri.scheduled_to_send || 
+	   tri.scheduled_to_send->task_id!=ntohl(fresp->task_id) || 
+	   tri.task_request_state!=TRC_WaitForResponse )
+	{  Error("Client %s: Unexpected task response. (Kicking it)\n",
+		_ClientName().str());  return(-1);  }
+	
+	if(fresp->length!=sizeof(LDRTaskResponse))
+	{  Error("Client %s: Illegal-sized task response (%u/%u bytes)\n",
+		_ClientName().str(),fresp->length,sizeof(LDRTaskResponse));  return(-1);  }
+	
+	// Okay, parse task response: 
+	int rv=ntohs(fresp->resp_code);
+	Verbose(TDR,"Client %s: Received task reponse %s.\n",
+		LDRTaskResponseString(rv));
+	switch(rv)
+	{
+		case TRC_Accepted:  // Well, that's cool. 
+			tri.scheduled_to_send=NULL;
+			tri.task_request_state=TRC_None;
+			tri.req_tfile=NULL;
+			break;
+		case TRC_UnknownRender:
+		case TRC_UnknownFilter:
+		case TRC_UnknownROFormat:
+			// What shall we do with this one? 
+			// "Solution" for now: Kick it. 
+			fprintf(stderr,"****** KICKING CLIENT (FIXME!!! 1) *******\n");
+			return(-1);
+			break;
+		case TRC_TooManyTasks:
+			// What shall we do with this one? 
+			// "Solution" for now: Kick it. 
+			fprintf(stderr,"****** KICKING CLIENT (FIXME!!! 2) *******\n");
+			return(-1);
+			break;
+		default:
+			Error("Client %s: Illegal task response code %d.\n",
+				_ClientName().str(),rv);
+			return(-1);
+	}
+	
+	// cpnotify_outpump_start() will NOT be called. 
 	return(0);
 }
 
@@ -1160,6 +1212,21 @@ int LDRClient::cpnotify_outpump_start()
 // Return value: 1 -> called _KickMe(); 0 -> normal
 int LDRClient::cpnotify_inpump(FDCopyBase::CopyInfo *cpi)
 {
+	// NOTE: This looks like something strange but it is an 
+	// internal error if it fails. Because we tell the pump to 
+	// copy exactly LDRHeader->length - sizeof(LDRHeader) bytes 
+	// and if it reports SCLimit here, then they have to be 
+	// there. 
+	#if TESTING
+	if(cpi->pump==in.pump_s)
+	{
+		FDCopyIO_Buf *_dst=(FDCopyIO_Buf*)(cpi->pump->Dest());
+		if(_dst->bufdone+sizeof(LDRHeader)!=
+			((LDRHeader*)(recv_buf.data))->length)
+		{  assert(0);  }
+	}
+	#endif
+	
 	switch(in_active_cmd)
 	{
 		case Cmd_FileRequest:
@@ -1168,18 +1235,6 @@ int LDRClient::cpnotify_inpump(FDCopyBase::CopyInfo *cpi)
 			
 			in_active_cmd=Cmd_NoCommand;
 			in.ioaction=IOA_None;
-			
-			// NOTE: This looks like something strange but it is an 
-			// internal error if it fails. Because we tell the pump to 
-			// copy exactly LDRHeader->length - sizeof(LDRHeader) bytes 
-			// and if it reports SCLimit here, then they have to be 
-			// there. 
-			#if TESTING
-			FDCopyIO_Buf *_dst=(FDCopyIO_Buf*)(cpi->pump->Dest());
-			if(_dst->bufdone+sizeof(LDRHeader)!=
-				((LDRHeader*)(recv_buf.data))->length)
-			{  assert(0);  }
-			#endif
 			
 			int rv=_ParseFileRequest(&recv_buf);
 			if(rv<0)
@@ -1191,8 +1246,16 @@ int LDRClient::cpnotify_inpump(FDCopyBase::CopyInfo *cpi)
 		} break;
 		case Cmd_TaskResponse:
 		{
-			Error("Implement task response on server side.\n");
-			assert(0);
+			in_active_cmd=Cmd_NoCommand;
+			in.ioaction=IOA_None;
+			
+			int rv=_ParseTaskResponse(&recv_buf);
+			if(rv<0)
+			{  _KickMe(0);  return(1);  }
+			assert(rv==0);
+			
+			recv_buf.content=Cmd_NoCommand;
+			//cpnotify_outpump_start();
 		} break;
 		default:
 			// This is an internal error. Only known packets may be accepted 

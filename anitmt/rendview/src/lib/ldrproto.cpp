@@ -60,6 +60,20 @@ const char *LDRCommandString(LDRCommand c)
 }
 
 
+char *LDRTaskResponseString(int resp_code)
+{
+	switch(resp_code)
+	{
+		case TRC_Accepted:         return("task accepted (working)");
+		case TRC_UnknownRender:    return("unknown render desc");
+		case TRC_UnknownFilter:    return("unknown filter desc");
+		case TRC_UnknownROFormat:  return("unknown render output format");
+		case TRC_TooManyTasks:     return("too many tasks");
+	}
+	return("???");
+}
+
+
 // Time conversion. 
 // Note that LDRTime is always in network order. 
 void LDRTime2HTime(const LDRTime *t,HTime *h)
