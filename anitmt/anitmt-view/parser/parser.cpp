@@ -69,7 +69,7 @@ namespace parser{
     return stream->get_Line( terminator );
   }
 
-  void Parser::expect(std::string expected_word, errornums errnum=errExpected)
+  void Parser::expect(std::string expected_word, errornums errnum /*=errExpected*/)
     throw( Parser_Error ){
 
     std::string word = get_Word();

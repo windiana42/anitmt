@@ -408,7 +408,7 @@ Modification_Copy::CopyFile *Modification_Copy::_Ensure_FileNode(
 
 
 void Modification_Copy::MInsert(const std::string &path,size_t pos,
-	const char *txt,ssize_t len=-1)
+	const char *txt,ssize_t len /*=-1*/)
 {
 	if(len<0)  len=strlen(txt);
 	if(!len)  return;

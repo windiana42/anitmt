@@ -84,7 +84,7 @@ namespace anitmt
 
     // creates new tree node and makes it the current one
     void change_current_child( void *vptr_info, std::string type, 
-			       std::string name="" )
+			       std::string name )
     {
       adlparser_info *info = static_cast<adlparser_info*>(vptr_info);
 

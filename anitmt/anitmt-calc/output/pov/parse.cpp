@@ -612,8 +612,8 @@ void File_Parser::Parse_EOF(const Parse_Input_Buf *ib)
 
 int File_Parser::Include_File(const std::string &file,
 	size_t offset,size_t inclen,
-	bool honor_search_path=true,
-	int search_current_path=1)
+	bool honor_search_path /*=true*/,
+	int search_current_path /*=1*/)
 {
 	refill_buffer=true;  // must read on in other file 
 	return(Recursive_Input_Stream::Include_File(
