@@ -33,7 +33,7 @@ template<int R,int C> class matrix;
 class EX_Matrix {};
 // More detailed exceptions all derived from EX_Matrix: 
 class EX_Matrix_Illegal_Mult     : EX_Matrix { };
-class EX_Matrix_Illegal_Invert   : EX_Matrix { };
+class EX_Matrix_Illegal_Inverse  : EX_Matrix { };
 class EX_Matrix_Illegal_VectMult : EX_Matrix { };
 
 namespace internal

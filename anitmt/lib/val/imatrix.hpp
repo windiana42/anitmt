@@ -49,14 +49,15 @@ namespace internal
 		const double *bm,int br,int bc) throw(internal_vect::EX_Matrix_Illegal_Mult);
 	
 	// Inversion of a matrix: 
-	extern void matrix_invert(        // THIS MODIFIES m!!
+	// Return number of divisions by zero. 
+	extern int matrix_inverse(        // THIS MODIFIES m!!
 		      double *rm,int rr,int rc, 
-		      double *m, int r, int c)  throw(internal_vect::EX_Matrix_Illegal_Invert);
-	extern void matrix_invert_copy(   // Does not modify m. 
+		      double *m, int r, int c)  throw(internal_vect::EX_Matrix_Illegal_Inverse);
+	extern int matrix_inverse_copy(   // Does not modify m. 
 		      double *rm,int rr,int rc, 
-		const double *m, int r, int c)  throw(internal_vect::EX_Matrix_Illegal_Invert);
-	extern void matrix_invert_copy(   // Returns inverted matrix in m. 
-		      double *m,int r,int c)  throw(internal_vect::EX_Matrix_Illegal_Invert);
+		const double *m, int r, int c)  throw(internal_vect::EX_Matrix_Illegal_Inverse);
+	extern int matrix_inverse_copy(   // Returns inversed matrix in m. 
+		      double *m,int r,int c)  throw(internal_vect::EX_Matrix_Illegal_Inverse);
 	
 	// Transpose matrix: 
 	extern void matrix_transpose(double *m,int r,int c);
@@ -155,12 +156,12 @@ public: // work around for the template friend problem
 		matrix<R,C> &neg(const matrix<R,C> &a)
 			{  _mFOR(r,c)  x[r][c]=-a.x[r][c];  return(*this);  }
 		
-		// Inverts the matrix m and stores the inverted matrix in *this. 
-		// NOTE: Only quadratic matrices may be inverted; if R!=C, 
-		//       EX_Matrix_Illegal_Invert is thrown. 
+		// Inverses the matrix m and stores the inversed matrix in *this. 
+		// NOTE: Only quadratic matrices may be inversed; if R!=C, 
+		//       EX_Matrix_Illegal_Inverse is thrown. 
 		// (The identity-matrix initialisation is important.) 
-		matrix<R,R> &invert(const matrix<R,R> &m)
-			{  set_ident();  internal::matrix_invert_copy(x[0],R,C,m.x[0],R,C);
+		matrix<R,R> &inverse(const matrix<R,R> &m)
+			{  set_ident();  internal::matrix_inverse_copy(x[0],R,C,m.x[0],R,C);
 			   return(*this);  }
 		
 		// Transposes the matrix and assign it to *this: 
@@ -190,11 +191,11 @@ public: // work around for the template friend problem
 		matrix<R,C> &mul(const matrix<R,C> &b)
 			{  internal::matrix_mul(x[0],R,C,b.x[0],R,C);  return(*this);  }
 		
-		// Inverts the matrix *this. 
-		// NOTE: Only quadratic matrices may be inverted; if R!=C, 
-		//       EX_Matrix_Illegal_Invert is thrown. 
-		matrix<R,R> &invert()
-			{  internal::matrix_invert_copy(x[0],R,C);  return(*this);  }
+		// Inverses the matrix *this. 
+		// NOTE: Only quadratic matrices may be inversed; if R!=C, 
+		//       EX_Matrix_Illegal_Inverse is thrown. 
+		matrix<R,R> &inverse()
+			{  internal::matrix_inverse_copy(x[0],R,C);  return(*this);  }
 		
 		// Transposes the matrix *this. 
 		// Obviously, this only works on quadratic matrices. 

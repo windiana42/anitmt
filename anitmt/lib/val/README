@@ -301,8 +301,8 @@ Functions:
          the arguments passed to the template; normally 4,4). 
          (This function is only useful for auto-generated code.) 
   > Inversion and similar: 
-      * A matrix can be inverted using the invert() function available as 
-        mathod and as friend (mat_invert()). 
+      * A matrix can be inversed using the inverse() function available as 
+        mathod and as friend (mat_inverse()). 
         (If you multiply a matrix and the inverse matrix the result is the 
         identity matrix.)
       * Inversion is done using the Gauss-Jordan algorithm (elegant and 

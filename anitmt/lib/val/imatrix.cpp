@@ -98,20 +98,23 @@ void matrix_mul(double *rm,int rr,int rc,
 	_matrix_mul(rm,rr,rc, am,rr,rc, bm,br,bc);
 }
 
-// Invert a matrix. 
-// Matrix m (pointer m; size r, c) is inverted; the result is 
+// Inverse a matrix. 
+// Matrix m (pointer m; size r, c) is inversed; the result is 
 // stored in matrix r (pointer rm; size rr, rc).
 // NOTE: The result matrix r MUST BE SET TO THE IDENTITY MATRIX 
 //       BEFORE CALLING THIS FUNCTION. 
 // NOTE: Matrix inversion can only be done with quadratic matrices. 
 //       If r!=c or rr!=rc or c!=rc, an exception is thrown. 
-inline void _matrix_invert(double *rm,int rr,int rc,
+// Returns number of divisions by zero. 
+inline int _matrix_inverse(double *rm,int rr,int rc,
 		           double *m, int r, int c)
-		throw(internal_vect::EX_Matrix_Illegal_Invert)
+		throw(internal_vect::EX_Matrix_Illegal_Inverse)
 {
+	int nzd=0;  // number of zero divisions
+	
 	// Implementing the Gauss-Jordan algorithm. 
 	if(r!=c || rr!=rc || c!=rc)
-	{  throw internal_vect::EX_Matrix_Illegal_Invert();  }
+	{  throw internal_vect::EX_Matrix_Illegal_Inverse();  }
 
 	// m is the identiy matrix. 
 
@@ -119,6 +122,8 @@ inline void _matrix_invert(double *rm,int rr,int rc,
 	for(int k=0; k<n; k++)
 	{
 		double tmp=SUB(m,n,k,k);
+		if(fabs(tmp)<=1e-11)  // See if tmp is null 
+		{  ++nzd;  }
 		for(int j=0; j<n; j++)
 		{
 			SUB(m, n,k,j)/=tmp;
@@ -134,33 +139,34 @@ inline void _matrix_invert(double *rm,int rr,int rc,
 			}
 		}
 	}
+	
+	return(nzd);
 }
 
 // NOTE: m IS MODIFIED!! 
-void matrix_invert(double *rm,int rr,int rc,
-		           double *m, int r, int c)
-		throw(internal_vect::EX_Matrix_Illegal_Invert)
+int matrix_inverse(double *rm,int rr,int rc,
+		            double *m, int r, int c)
+		throw(internal_vect::EX_Matrix_Illegal_Inverse)
 {
-	_matrix_invert(rm,rr,rc,m,r,c);  // inline
+	return(_matrix_inverse(rm,rr,rc,m,r,c));  // inline
 }
 
 // m is copied; not modified. 
-void matrix_invert_copy(double *rm,int rr,int rc,
-		          const double *m, int r, int c)
-		throw(internal_vect::EX_Matrix_Illegal_Invert)
+int matrix_inverse_copy(double *rm,int rr,int rc,
+		           const double *m, int r, int c)
+		throw(internal_vect::EX_Matrix_Illegal_Inverse)
 {
-
 	double tmp[r*c];
 	for(int i=r*c-1; i>=0; i--)  // copy m to tmp
 	{  tmp[i]=m[i];  }
-	_matrix_invert(rm,rr,rc,tmp,r,c);  // inline 
+	
+	return(_matrix_inverse(rm,rr,rc,tmp,r,c));  // inline 
 }
 
 // m is argument and return value. 
-void matrix_invert_copy(double *m,int r,int c)
-		throw(internal_vect::EX_Matrix_Illegal_Invert)
+int matrix_inverse_copy(double *m,int r,int c)
+		throw(internal_vect::EX_Matrix_Illegal_Inverse)
 {
-
 	double tmp[r*c];
 	// copy m to tmp and set m to the identity matrix. 
 	double *src=m,*dest=tmp;
@@ -172,7 +178,8 @@ void matrix_invert_copy(double *m,int r,int c)
 			SUB(m,r,ir,ic) = (ir==ic) ? 1.0 : 0.0;
 		}
 	}
-	_matrix_invert(m,r,c,tmp,r,c);  // inline 
+	
+	return(_matrix_inverse(m,r,c,tmp,r,c));  // inline 
 }
 
 

@@ -36,8 +36,8 @@ namespace vect
 template<int R,int C>inline Matrix<R,C> mat_transpose(const Matrix<C,R> &m)
 {  Matrix<R,C> r(Matrix<R,C>::noinit);  r.x.transpose(m.x);  return(r);  }
 
-template<int N>inline Matrix<N,N> mat_invert(const Matrix<N,N> &m)
-{  Matrix<N,N> r(Matrix<N,N>::noinit);  r.x.invert(m.x);  return(r);  }
+template<int N>inline Matrix<N,N> mat_inverse(const Matrix<N,N> &m)
+{  Matrix<N,N> r(Matrix<N,N>::noinit);  r.x.inverse(m.x);  return(r);  }
 
 template<int N>inline double mat_determinant(const Matrix<N,N> &m)
 {  return(m.x.determinant());  }
@@ -244,9 +244,9 @@ public: // work around for the template friend problem
 		// non-member: operator==/!=(Neutral[01],const Matrix<r,c> &)
 		
 		// These functions calculate the inverse matrix. 
-		Matrix<R,R> &invert()  {  x.invert();  return(*this);  }
+		Matrix<R,R> &inverse()  {  x.inverse();  return(*this);  }
 		#ifndef GCC_HACK
-		template<int N>friend Matrix<N,N> mat_invert(const Matrix<N,N> &m);
+		template<int N>friend Matrix<N,N> mat_inverse(const Matrix<N,N> &m);
 		#endif
 		
 		// Tramspose a matrix. Obviously, the member function can only 

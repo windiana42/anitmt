@@ -204,7 +204,7 @@ int main()
 		{  cerr << "done\n";  }
 	}
 	
-	cerr << "Matrix*Matrix / invert test...";
+	cerr << "Matrix*Matrix / inverse test...";
 	for(int i=0; i<100; i++)
 	{
 		for(int r=0; r<4; r++)
@@ -222,13 +222,13 @@ int main()
 		
 		// mc = random;  ma = mc;  mb = identity matrix
 		
-		ma.invert();
+		ma.inverse();
 		if(ma*mc!=mb)
-		{  cerr << "\n*** ERROR in invert() (1).\n";  }
+		{  cerr << "\n*** ERROR in inverse() (1).\n";  }
 		
-		ma=mat_invert(mc);
+		ma=mat_inverse(mc);
 		if(ma*mc!=mb)
-		{  cerr << "\n*** ERROR in invert() (2).\n";  }
+		{  cerr << "\n*** ERROR in mat_inverse() (2).\n";  }
 	}
 	cerr << "done\n";
 	
@@ -311,12 +311,12 @@ int main()
 	#warning "** GCC-3.1 makes no trouble.              **"
 	#warning "********************************************"
 	#if 0
-		tr=t1;  tr.invert();
-		if(tr!=mat_invert(t1))
-		{  cerr << "ERROR in invert\n";  }
+		tr=t1;  tr.inverse();
+		if(tr!=mat_inverse(t1))
+		{  cerr << "ERROR in inverse\n";  }
 		
 		if(/*!mat_is_ident(tr*t1) ||*/ !(tr*t1).is_ident())
-		{  cerr << "ERROR in invert (2)\n";  }
+		{  cerr << "ERROR in inverse (2)\n";  }
 	#else
 	#warning "**** PLEASE ENABLE ME ****"
 	#endif
