@@ -19,6 +19,7 @@
 
 #include <assert.h>
 
+
 // NOTE: 
 // TaskManager contains a highly non-trivial state machine. 
 // I expect that there are some bugs in it. 
@@ -576,7 +577,7 @@ void TaskManager::_schedule(TimerInfo *ti)
 		   pending_action==ANone )
 		{
 			// Okay, we may actually quit. 
-			fdmanager()->Quit(cmpMAX(schedule_quit,schedule_quit_after)-1);
+			_DoQuit(cmpMAX(schedule_quit,schedule_quit_after)-1);
 			return;
 		}
 		
@@ -612,6 +613,21 @@ int TaskManager::timernotify(TimerInfo *ti)
 	{  assert(0);  }
 	
 	return(0);
+}
+
+
+// Simply call fdmanager()->Quit(status) and write 
+void TaskManager::_DoQuit(int status)
+{
+	Verbose("Now exiting with status=%s (%d)\n",
+		status ? "failure" : "success",status);
+	Verbose("  [FIXME: more info to come]\n");
+	HTime endtime(HTime::Curr);
+	Verbose("  exiting at (local): %s\n",endtime.PrintTime(1,1));
+	HTime elapsed=endtime-starttime;
+	Verbose("  elapsed time: %s\n",elapsed.PrintElapsed());
+	
+	fdmanager()->Quit(status);
 }
 
 
@@ -666,6 +682,18 @@ int TaskManager::_StartProcessing()
 		{  Warning("Adjusted high task queue threshold to %d (was %d)\n",
 			todo_thresh_high,oldval);  }
 	}
+	
+	// Write out useful verbose information: 
+	Verbose("Okay, beginning to work: njobs=%d (",njobs);
+	for(int i=0; i<_DTLast; i++)
+	{  Verbose("max-%s-jobs=%d%s",DTypeString(TaskDriverType(i)),maxjobs[i],
+		(i+1==_DTLast) ? ")\n" : "; ");  }
+	Verbose("  task-thresh: low=%d, high=%d; max-failed-in-seq=",
+		todo_thresh_low,todo_thresh_high);
+	if(max_failed_in_sequence)  Verbose("%d\n",max_failed_in_sequence);
+	else Verbose("OFF\n");
+	starttime.SetCurr();
+	Verbose("  starting at (local): %s\n",starttime.PrintTime(1,1));
 	
 	// Do start things up (yes, REALLY now): 
 	int rv=_CheckStartExchange();
@@ -790,8 +818,8 @@ int TaskManager::_CheckStartExchange()
 	// immediately (i.e. on the stack now). 
 	
 	// First, see what we CAN do: 
-	bool can_done=_TS_CanDo_DoneTask();
-	bool can_get=_TS_CanDo_GetTask(can_done);;
+	//bool can_done=_TS_CanDo_DoneTask();
+	//bool can_get=_TS_CanDo_GetTask(can_done);;
 	
 	int must_connect=-1;
 	if(dont_start_more_tasks || schedule_quit)
@@ -1021,10 +1049,49 @@ void TaskManager::UnregisterTaskDriver(TaskDriver *td)
 }
 
 
+int TaskManager::CheckParams()
+{
+	if(max_failed_in_sequence<0)
+	{  max_failed_in_sequence=0;  }
+	if(!max_failed_in_sequence)
+	{  Verbose("Note that max-failed-in-seq feature is disabled.\n");  }
+	
+	return(0);
+}
+
+// Return value: 0 -> OK; 1 -> error
+int TaskManager::_SetUpParams()
+{
+	if(SetSection(NULL))
+	{  return(1);  }
+	
+	AddParam("njobs","number of simultanious jobs",&njobs);
+	AddParam("max-render-jobs","max number of simultanious render jobs",&maxjobs[DTRender]);
+	AddParam("max-filter-jobs","max number of simultanious filter jobs",&maxjobs[DTFilter]);
+	AddParam("max-failed-in-seq|mfis",
+		"max number of jobs to fail in sequence until giving up "
+		"(0 to disable [NOT recommended])",&max_failed_in_sequence);
+	AddParam("task-thresh-low",
+		"start getting new tasks from the task source if there are less "
+		"than this number of non-completely processed tasks in the task "
+		"queue",&todo_thresh_low);
+	AddParam("task-thresh-high",
+		"never store more than this number of tasks in the local task queue",
+		&todo_thresh_high);
+	
+	#warning further params: delay_between_tasks, max_failed_jobs, \
+		dont_fail_on_failed_jobs, launch_if_load_smaller_than, \
+		brutal_on_first_sigint, ignore_sigint, signal_never_abort
+	
+	return(add_failed ? 1 : 0);
+}
+
 TaskManager::TaskManager(ComponentDataBase *cdb,int *failflag) :
 	FDBase(failflag),
 	ProcessBase(failflag),
 	TaskSourceConsumer(failflag),
+	par::ParameterConsumer_Overloaded(cdb->parmanager(),failflag),
+	starttime(),
 	joblist(failflag),
 	tasklist_todo(failflag),tasklist_done(failflag)
 {
@@ -1062,13 +1129,6 @@ TaskManager::TaskManager(ComponentDataBase *cdb,int *failflag) :
 	
 	int failed=0;
 	
-	#warning params (all optional; simple override): \
-		njobs, maxjobs[_DTLast], max_failed_in_sequence, \
-		todo_thresh_low, todo_thresh_high
-	#warning further params: delay_between_tasks, max_failed_jobs, \
-		dont_fail_on_failed_jobs, launch_if_load_smaller_than, \
-		brutal_on_first_sigint, ignore_sigint, signal_never_abort
-	
 	//if(FDBase::SetManager(1))
 	//{  ++failed;  }
 	
@@ -1077,6 +1137,9 @@ TaskManager::TaskManager(ComponentDataBase *cdb,int *failflag) :
 	// Install disabled timer for connect re-try: 
 	tid_ts_cwait=InstallTimer(-1,0);
 	if(!tid0 || !tid_ts_cwait)
+	{  ++failed;  }
+	
+	if(_SetUpParams())
 	{  ++failed;  }
 	
 	if(failflag)

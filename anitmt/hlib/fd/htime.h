@@ -82,6 +82,10 @@ class HTime
 		HTime &Add(long val,TimeSpec sp=msec);
 		HTime &Sub(long val,TimeSpec sp=msec);
 		
+		// Calc time differences: (*this = endtime)
+		HTime operator-(const HTime &start);
+		HTime &operator-=(const HTime &start);
+		
 		// To compare time values: 
 		inline int operator==(const HTime &h) const
 			{  return(tv.tv_sec==h.tv.tv_sec && tv.tv_usec==h.tv.tv_usec);  }
@@ -131,6 +135,19 @@ class HTime
 			{  return(msec_elapsed(&tv,NULL));  }
 		long MsecElapsedR() const
 			{  return(msec_elapsed_r(&tv,NULL));  }
+		
+		// Print standard time string for local / universal time: 
+		// local: 1 -> local time
+		//        0 -> universal (Greenwich) time
+		// with_msec: include msec spec
+		// Returns static buffer. 
+		// (No trailing '\n', of course...)
+		const char *PrintTime(int local=1,int with_msec=0);
+		
+		// This is useful to print elapsed times: 
+		// (You may use operator-() to calc elapsed time.) 
+		// Returns static buffer. 
+		const char *PrintElapsed();
 };
 
 #endif  /* _HLIB_HTime_H_ */

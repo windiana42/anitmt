@@ -25,7 +25,8 @@
 class TaskManager : 
 	public FDBase, 
 	public ProcessBase,
-	public TaskSourceConsumer
+	public TaskSourceConsumer,
+	public par::ParameterConsumer_Overloaded
 {
 	private:
 		ComponentDataBase *component_db;
@@ -35,6 +36,8 @@ class TaskManager :
 		
 		// Task source connect re-try timer: 
 		TimerID tid_ts_cwait;
+		
+		HTime starttime;
 		
 		// Note: all existing TaskDrivers are in this queue: 
 		LinkedList<TaskDriver> joblist;
@@ -122,11 +125,19 @@ class TaskManager :
 		int _LaunchJobForTask(CompleteTask *ctsk);
 		void _HandleFailedJob(CompleteTask *ctsk);
 		
+		// Initialisation of parameter stuff: 
+		int _SetUpParams();
+		
+		// Simply call fdmanager()->Quit(status) and write 
+		void _DoQuit(int status);
+		
 		// Overriding virtual from TaskSourceConsumer: 
 		int tsnotify(TSNotifyInfo *);
 		// Overriding virtual from FDBase: 
 		int signotify(const SigInfo *);
 		int timernotify(TimerInfo *);
+		// Overriding virtual from ParameterConsumer: 
+		int CheckParams();
 	public: _CPP_OPERATORS_FF
 		TaskManager(ComponentDataBase *cdb,int *failflag=NULL);
 		~TaskManager();
