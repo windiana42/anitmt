@@ -72,7 +72,7 @@ AC_TYPE_SIGNAL
 #AC_FUNC_STRTOD
 AC_CHECK_FUNCS([dup2 gettimeofday memmove memset pow setenv sqrt strcasecmp strchr strerror strrchr strtol strtoul])
 
-AC_CONFIG_SUBDIRS(hlib rendview)
+AC_CONFIG_SUBDIRS(hlib)
 
 AC_OUTPUT( Makefile
            anitmt-calc/Makefile
