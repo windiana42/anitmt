@@ -29,16 +29,16 @@ namespace anitmt{
     //*********
     // Solvers
 
-    Operand<values::Scalar> &fps = 
-      const_op( values::Scalar(ani->param.fps()) );
+    solve::Operand<values::Scalar> &fps = 
+      solve::const_op( values::Scalar(ani->param.fps()) );
 
-    sum_solver( ve, d, v0 ); // ve = d + v0
-    sum_solver( te, t, t0 );
-    sum_solver( te_f, t_f, t0_f );
-    product_solver( d, s, t ); // d = s * t 
-    product_solver( t_f,  t,  fps ); // t_f = t * fps 
-    product_solver( t0_f, t0, fps ); // t0_f = t0 * fps 
-    product_solver( te_f, te, fps ); // te_f = te * fps 
+    solve::sum_solver( ve, d, v0 ); // ve = d + v0
+    solve::sum_solver( te, t, t0 );
+    solve::sum_solver( te_f, t_f, t0_f );
+    solve::product_solver( d, s, t ); // d = s * t 
+    solve::product_solver( t_f,  t,  fps ); // t_f = t * fps 
+    solve::product_solver( t0_f, t0, fps ); // t0_f = t0 * fps 
+    solve::product_solver( te_f, te, fps ); // te_f = te * fps 
 
     //*********************
     // Register Properties
@@ -58,27 +58,28 @@ namespace anitmt{
     // Default Values
 
     // Default value 0 for slope on level 150 
-    establish_Default_Value( &ani->pri_sys, 150, s, 0 );
+    solve::establish_Default_Value( &ani->pri_sys, 150, s, 0 );
 
     // Default value 0 for differance on level 170 
-    establish_Default_Value( &ani->pri_sys, 170, d, 0 );
+    solve::establish_Default_Value( &ani->pri_sys, 170, d, 0 );
   }
 
   // initializes the first node on a level
   void Scal_Linear::init_first( Return<values::Scalar>* ) 
   {
     // Default value 0 for starttime on level 130 
-    establish_Default_Value( &ani->pri_sys, 130, t0, 0 );
+    solve::establish_Default_Value( &ani->pri_sys, 130, t0, 0 );
 
     // Default value 0 for startvalue on level 160
-    establish_Default_Value( &ani->pri_sys, 160, v0, 0 );
+    solve::establish_Default_Value( &ani->pri_sys, 160, v0, 0 );
   }
 
   // initializes the last node on a level
   void Scal_Linear::init_last( Return<values::Scalar>* ) 
   {
     //Default value <anim end> for endtime on level 131 
-    establish_Default_Value( &ani->pri_sys, 131, te, ani->param.endtime() );
+    solve::establish_Default_Value( &ani->pri_sys, 131, te, 
+				    ani->param.endtime() );
   }
 
   //********
@@ -90,11 +91,11 @@ namespace anitmt{
     Prop_Tree_Node *next_node = dynamic_cast< Prop_Tree_Node* >( next );
 
     // push endtime to next starttime on level 1
-    establish_Push_Connection( &ani->pri_sys, 
-			       1, te, next_node, "starttime" );
+    solve::establish_Push_Connection( &ani->pri_sys, 
+				      1, te, next_node, "starttime" );
     // push endvalue to next startvalue on level 5
-    establish_Push_Connection( &ani->pri_sys, 
-			       5, ve, next_node, "startvalue" );
+    solve::establish_Push_Connection( &ani->pri_sys, 
+				      5, ve, next_node, "startvalue" );
   }
 
   void Scal_Linear::init_prev( Return<values::Scalar> *prev ) 
@@ -102,11 +103,11 @@ namespace anitmt{
     Prop_Tree_Node *prev_node = dynamic_cast< Prop_Tree_Node* >( prev );
 
     // push starttime to previous endtime on level 2
-    establish_Push_Connection( &ani->pri_sys, 
-			       2, t0, prev_node, "endtime" );
+    solve::establish_Push_Connection( &ani->pri_sys, 
+				      2, t0, prev_node, "endtime" );
     // push startvalue to previous endvalue on level 6
-    establish_Push_Connection( &ani->pri_sys, 
-			       6, v0, prev_node, "endvalue" );
+    solve::establish_Push_Connection( &ani->pri_sys, 
+				      6, v0, prev_node, "endvalue" );
   }
     
   Scal_Linear::Optional_Return_Type Scal_Linear::get_return_value

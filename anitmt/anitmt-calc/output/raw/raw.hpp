@@ -15,13 +15,14 @@
 #ifndef __AniTMT_Raw_Output_Interface__
 #define __AniTMT_Raw_Output_Interface__
 
-#include "output.hpp"
+#include "../output.hpp"
 
 namespace anitmt
 {
   //! raw data output format
   class Raw_Output : public Output_Interface 
   {
+    Animation *ani;
   public:
     //! init interface (ex: check if scene file exists)
     virtual void init() throw( EX );
@@ -30,7 +31,7 @@ namespace anitmt
     //! process the resulting animation (ex: integrate it in scene description)
     virtual void process_results() throw( EX ); 
 
-    Raw_Output( Animation *ani ) : Output_Interface(ani) {}
+    Raw_Output( Animation *a ) : ani(a) {}
   };
 }
 

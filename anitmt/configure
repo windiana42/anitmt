@@ -1642,9 +1642,12 @@ trap 'rm -fr `echo "Makefile
 	lib/val/Makefile 
 	lib/utl/Makefile 
 	lib/par/Makefile 
-	lib/include/Makefile 
+	lib/param/Makefile 
+	lib/solve/Makefile 
+	lib/message/Makefile
 	anitmt-calc/Makefile 
-	anitmt-calc/parser/Makefile 
+	anitmt-calc/input/Makefile 
+	anitmt-calc/input/adl/Makefile 
 	anitmt-calc/output/Makefile 
 	anitmt-calc/output/lib/Makefile 
 	anitmt-calc/output/raw/Makefile 
@@ -1749,9 +1752,12 @@ CONFIG_FILES=\${CONFIG_FILES-"Makefile
 	lib/val/Makefile 
 	lib/utl/Makefile 
 	lib/par/Makefile 
-	lib/include/Makefile 
+	lib/param/Makefile 
+	lib/solve/Makefile 
+	lib/message/Makefile
 	anitmt-calc/Makefile 
-	anitmt-calc/parser/Makefile 
+	anitmt-calc/input/Makefile 
+	anitmt-calc/input/adl/Makefile 
 	anitmt-calc/output/Makefile 
 	anitmt-calc/output/lib/Makefile 
 	anitmt-calc/output/raw/Makefile 

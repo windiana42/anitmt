@@ -1,15 +1,17 @@
 #ifndef __ANITMT_CALC_PARSER_ADLPARSER_HPP
 #define __ANITMT_CALC_PARSER_ADLPARSER_HPP
 //-----------------------------------------------------------------------------
+#include <val/val.hpp>
+//!!! should be replaced by:
+//#include <message/message.hpp>
 #include <error.hpp>
-#include <val.hpp>
 #include <animation.hpp>
 
 #define yyFlexLexer ADLFlexLexer
 #include <FlexLexer.h>
 
 #include "support.hpp"
-#include "input.hpp"
+#include "input/input.hpp"
 
 //-----------------------------------------------------------------------------
 /*
@@ -79,6 +81,7 @@ namespace anitmt {
   class ADL_Input : public Input_Interface
   {
     std::string filename;
+    Animation *ani;
   public:
     //! create animation tree structure
     virtual void create_structure();

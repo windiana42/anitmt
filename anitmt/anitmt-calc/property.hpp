@@ -29,10 +29,10 @@ namespace anitmt
 #include <set>
 #include <iostream>
 
-#include "val.hpp"
-#include "error.hpp"
+#include <val/val.hpp>
+#include <solve/operand.hpp>
 
-#include "operand.hpp"
+#include "error.hpp"
 
 namespace anitmt
 {
@@ -74,7 +74,8 @@ namespace anitmt
   //***************************************************************
   // Type_Property: container for property values of a certain type
   //***************************************************************
-  template<class T> class Type_Property : public Property, public Operand<T>
+  template<class T> class Type_Property : public Property, 
+					  public solve::Operand<T>
   {
   public:	
     //!! shouldn't be convertable as Operand<> has its own operators !!
@@ -83,8 +84,8 @@ namespace anitmt
     //   throw( EX_property_not_solved );
 
     // connects another operand as a solution source
-    Operand<T>& operator=( Operand<T> &src ) throw(EX)
-    { return static_cast<Operand<T>&>(*this) = src; }
+    solve::Operand<T>& operator=( solve::Operand<T> &src ) throw(EX)
+    { return static_cast<solve::Operand<T>&>(*this) = src; }
 
     virtual std::ostream &write2stream( std::ostream& );
   };

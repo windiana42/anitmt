@@ -24,7 +24,7 @@
 #ifndef __AniTMT_Pov_Output_Interface__
 #define __AniTMT_Pov_Output_Interface__
 
-#include "output.hpp"
+#include "../output.hpp"
 #include "fdump.hpp"
 
 #include <list>
@@ -42,6 +42,7 @@ class Pov_Output :
 	public Output_Interface
 {
 	private:
+		Animation *ani;
 		output_io::POV::File_Parser *parser;
 		
 		struct Dump_Node

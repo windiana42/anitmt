@@ -23,7 +23,7 @@
 #include "pov.hpp"
 
 #include <assert.h>
-#include "val.hpp"
+#include <val/val.hpp>
 #include "tmttype.hpp"
 #include "scene.hpp"
 #include "proptree.hpp"
@@ -117,9 +117,7 @@ void Pov_Output::process_results() throw( EX )
 }
 
 
-Pov_Output::Pov_Output(Animation *ani) : 
-	Output_Interface(ani),
-	vout(cout)
+Pov_Output::Pov_Output(Animation *a) : ani(a), vout(cout)
 {
 	assert(ani!=NULL);
 	parser=NULL;

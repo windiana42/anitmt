@@ -19,7 +19,7 @@ namespace anitmt {
   class Ani_Obj;
 }
 
-#include "val.hpp"
+#include <val/val.hpp>
 #include "tmttype.hpp"
 #include "property.hpp"
 #include "proptree.hpp"

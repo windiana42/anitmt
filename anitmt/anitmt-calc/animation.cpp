@@ -1,5 +1,5 @@
 /*****************************************************************************/
-/**   This file offers the general animation tree node   			    **/
+/**   This file offers the general animation tree node   		    **/
 /*****************************************************************************/
 /**									    **/
 /** Author: Martin Trautmann						    **/
@@ -14,6 +14,9 @@
 
 #include "animation.hpp"
 
+#include "nodes.hpp"
+#include "save_filled.hpp"
+
 namespace anitmt{
 
   //********************************
@@ -25,6 +28,20 @@ namespace anitmt{
 
   std::string Animation::get_type_name(){
     return type_name;
+  }
+
+  void Animation::init()
+  {
+    // register animation tree nodes
+    make_all_nodes_available();
+  }
+
+  void Animation::finish_calculations()
+  {
+    pri_sys.invoke_all_Actions();
+
+    // !!! fixed filename for filled ADL output !!!
+    save_filled("filled.out", this );
   }
 
   Animation::Animation( std::string name ) 

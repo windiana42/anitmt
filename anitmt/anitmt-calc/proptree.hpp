@@ -24,8 +24,12 @@ namespace anitmt{
   template< class NT> class Node_Factory;
 }
 
-#include "val.hpp"
+#include <val/val.hpp>
+#include <solve/priority.hpp>
+
 #include "property.hpp"
+
+//!!! should be replaced!!!
 #include "error.hpp"
 
 #include "animation_classes.hpp"
@@ -172,12 +176,29 @@ namespace anitmt{
     virtual Prop_Tree_Node *create( std::string name, Animation *ani );
   };
 
+
   //***************
   // test function
   //***************
   int property_tree_test();
 }
 
+namespace solve
+{
+  //***************************
+  // Push to another tree node 
+  //***************************
+
+  // establishes push connection to operand of foreign tree node
+  // ( returnvalue false means: unknown operand )
+  template<class T>
+  bool establish_Push_Connection( Priority_System *sys, 
+				  Priority_System::level_type level,
+				  Operand<T> &src, 
+				  anitmt::Prop_Tree_Node   *dest_node,
+				  std::string dest_prop );
+
+}
 // force template generation of all used types
 #include "proptree_templ.cpp"
 

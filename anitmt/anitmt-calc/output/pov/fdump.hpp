@@ -25,7 +25,7 @@
 
 #include <string>
 
-#include "val.hpp"
+#include <val/val.hpp>
 #include "proptree.hpp"
 #include "scene.hpp"
 

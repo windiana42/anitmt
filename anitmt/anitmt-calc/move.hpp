@@ -24,10 +24,10 @@ namespace anitmt {
   class Obj_Move_Straight;
 }
 
-#include "val.hpp"
+#include <val/val.hpp>
+#include <solve/solver.hpp>
 #include "tmttype.hpp"
 #include "property.hpp"
-#include "solver.hpp"
 #include "proptree.hpp"
 #include "return.hpp"
 

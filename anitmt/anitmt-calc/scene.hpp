@@ -15,11 +15,13 @@
 #ifndef __AniTMT_Scene__
 #define __AniTMT_Scene__
 
+#include <map>
+
 namespace anitmt {
   class Ani_Scene;
 }
 
-#include "val.hpp"
+#include <val/val.hpp>
 #include "tmttype.hpp"
 #include "property.hpp"
 #include "proptree.hpp"

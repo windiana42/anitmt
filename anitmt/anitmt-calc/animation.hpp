@@ -17,15 +17,18 @@
 
 #include "animation_classes.hpp"
 
-#include "val.hpp"
+#include <val/val.hpp>
+
+// !!! parameter system should be changed
+#include <par/params.hpp>
+
+#include <solve/priority.hpp>
+
 #include "tmttype.hpp"
 #include "property.hpp"
-#include "priority.hpp"
 #include "proptree.hpp"
 #include "return.hpp"
 #include "scene.hpp"
-
-#include <params.hpp>
 
 namespace anitmt{
 
@@ -49,6 +52,9 @@ namespace anitmt{
 
     inline const Contain< Ani_Scene >& get_scenes() 
     { return scenes; }
+    
+    void init();
+    void finish_calculations();
 
     Animation( std::string name );
 
@@ -56,7 +62,7 @@ namespace anitmt{
     // semi global variables for the animation
 
     Animation_Parameters param;	// all options
-    Priority_System   pri_sys;	// priority system
+    solve::Priority_System   pri_sys;	// priority system
   };
 }
 #endif

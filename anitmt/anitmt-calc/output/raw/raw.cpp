@@ -16,7 +16,7 @@
 
 #include <assert.h>
 #include <fstream>
-#include "val.hpp"
+#include <val/val.hpp>
 #include "tmttype.hpp"
 #include "scene.hpp"
 #include "proptree.hpp"

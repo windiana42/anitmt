@@ -1,8 +1,5 @@
 #include <iostream>
 
-#include "operator.hpp"
-#include "solver.hpp"
-#include "priority.hpp"
 #include "proptree.hpp"
 
 using namespace std;
@@ -12,9 +9,6 @@ int test_anitmt()
 {
   try{
     int errors = 0;
-    errors += operator_test();
-    errors += solver_test();
-    errors += action_system_test();
     errors += property_tree_test();
     cout << "Done..." << endl;
     if( errors )

@@ -15,8 +15,7 @@
 #ifndef __AniTMT_types__
 #define __AniTMT_types__
 
-#include "val.hpp"
-#include "vector.hpp"
+#include <val/val.hpp>
 #include "return.hpp"
 
 namespace anitmt{

@@ -121,26 +121,26 @@ namespace anitmt{
     add_property( "startspeed", &v0 );
     add_property( "endspeed", &ve );
  
-    Operand<values::Scalar> &fps = 
-      const_op( values::Scalar(ani->param.fps()) );
+    solve::Operand<values::Scalar> &fps = 
+      solve::const_op( values::Scalar(ani->param.fps()) );
 
-    accel_solver( s, t, a, v0, ve );
-    equal_solver( d0, de );
-    equal_solver( u0, ue ); //!!! rot_up not recognized
-    sum_solver( te, t, t0 );
-    sum_solver( te_f, t_f, t0_f );
-    product_solver( t_f,  t,  fps ); // t_f = t * fps 
-    product_solver( t0_f, t0, fps ); // t0_f = t0 * fps 
-    product_solver( te_f, te, fps ); // te_f = te * fps 
+    solve::accel_solver( s, t, a, v0, ve );
+    solve::equal_solver( d0, de );
+    solve::equal_solver( u0, ue ); //!!! rot_up not recognized
+    solve::sum_solver( te, t, t0 );
+    solve::sum_solver( te_f, t_f, t0_f );
+    solve::product_solver( t_f,  t,  fps ); // t_f = t * fps 
+    solve::product_solver( t0_f, t0, fps ); // t0_f = t0 * fps 
+    solve::product_solver( te_f, te, fps ); // te_f = te * fps 
 
-    Operand<values::Vector> sdiff; // position difference
-    sum_solver( se, sdiff, s0 );
-    //product_solver( sdiff, d0,  s ); // sdiff = d0 * s 
+    solve::Operand<values::Vector> sdiff; // position difference
+    solve::sum_solver( se, sdiff, s0 );
+    //solve::product_solver( sdiff, d0,  s ); // sdiff = d0 * s 
     //!!! d0 has to be 1 in length !!!
 
     
-    //add_action( 3, new Default_Value<values::Scalar>( &a, 0, this ) );
-    // add_default_value( &a, values::Scalar(0), 3 );
+    //solve::add_action( 3, new Default_Value<values::Scalar>( &a, 0, this ) );
+    //solve::add_default_value( &a, values::Scalar(0), 3 );
   }
     
   std::pair<bool,Position> Obj_Move_Straight::get_return_value

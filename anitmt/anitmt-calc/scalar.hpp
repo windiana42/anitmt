@@ -19,13 +19,14 @@ namespace anitmt {
   class Ani_Scalar;
 }
 
-#include "val.hpp"
+#include <val/val.hpp>
 #include "tmttype.hpp"
 #include "property.hpp"
 #include "proptree.hpp"
 #include "return.hpp"
 
-namespace anitmt{
+namespace anitmt
+{
   //******************************************************************
   // Ani_Scalar: Animatable Scalar node 
   //******************************************************************

@@ -14,12 +14,10 @@
 
 #include "object.hpp"
 
-#include "val.hpp"
-#include "solver.hpp"
+#include <solve/solver.hpp>
 
-namespace anitmt{
-
-
+namespace anitmt
+{
   //******************************************************************
   // Ani_Object: Animatable Object node that returns the object state 
   //******************************************************************

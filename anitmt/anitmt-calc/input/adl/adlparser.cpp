@@ -159,7 +159,7 @@ void anitmt::ADL_Input::insert_values()
 }
 
 anitmt::ADL_Input::ADL_Input( std::string file, Animation *a ) 
-  : Input_Interface(a), filename(file) {}
+  : filename(file), ani(a) {}
 
 
 //-----------------------------------------------------------------------------

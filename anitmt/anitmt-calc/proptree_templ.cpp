@@ -66,7 +66,41 @@ namespace anitmt{
   Prop_Tree_Node *Node_Factory<NT>::create( std::string name, Animation *ani ){
     return new NT( name, ani );
   }
-
 }
 
+namespace solve
+{
+  //***************************
+  // Push to another tree node 
+  //***************************
+
+  // establishes push connection to property of foreign tree node
+  // ( returnvalue false means: unknown property )
+  template<class T>
+  bool establish_Push_Connection( Priority_System *sys, 
+				  Priority_System::level_type level,
+				  Operand<T> &src, 
+				  anitmt::Prop_Tree_Node *dest_node,
+				  std::string dest_prop ) {
+  
+    if( !dest_node ) return false;
+
+#ifdef __DEBUG__
+    std::cout << "try to establish push" << std::endl;
+#endif
+    Operand<T> *dest 
+      = dynamic_cast< Operand<T>* >
+      ( dest_node->get_property( dest_prop ) );
+
+    if( !dest ) return false;
+
+    establish_Push_Connection( sys, level, src, *dest );
+
+#ifdef __DEBUG__
+    std::cout << "push established on level " << level << std::endl;
+#endif
+
+    return true;
+  }
+}
 #endif

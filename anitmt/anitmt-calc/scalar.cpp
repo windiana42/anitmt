@@ -14,7 +14,7 @@
 
 #include "scalar.hpp"
 
-#include "solver.hpp"
+#include <solve/solver.hpp>
 
 namespace anitmt
 {

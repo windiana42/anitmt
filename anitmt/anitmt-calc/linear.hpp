@@ -19,11 +19,11 @@ namespace anitmt {
   class Scal_Linear;
 }
 
-#include "val.hpp"
+#include <val/val.hpp>
+#include <solve/solver.hpp>
+#include <solve/priority.hpp>
 #include "tmttype.hpp"
 #include "property.hpp"
-#include "solver.hpp"
-#include "priority.hpp"
 #include "proptree.hpp"
 #include "return.hpp"
 #include "animation.hpp"

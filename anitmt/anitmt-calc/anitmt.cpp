@@ -1,5 +1,5 @@
 /*****************************************************************************/
-/**   AniTMT main function                                        	    **/
+/**   Main AniTMT class	                                        	    **/
 /*****************************************************************************/
 /**									    **/
 /** Author: Martin Trautmann						    **/
@@ -12,92 +12,48 @@
 /**									    **/
 /*****************************************************************************/
 
-#include "proptree.hpp"
-#include "animation.hpp"
-#include "nodes.hpp"
-#include "save_filled.hpp"
-#include "input.hpp"
-#include "output.hpp"
+#include "anitmt.hpp"
 
-#include <params.hpp>
-#include <fstream>
-
-// input filters
-#include <adlparser.hpp>
-// output filters
-#include <oformats.hpp>
-
-using namespace anitmt;
-
-int main(int argc,char **argv,char **envp)
+namespace anitmt
 {
-  try
+  /*! Involks all function calls to process the animation 
+    (returns number of errors) */
+  int AniTMT::process()
   {
-    // commandline handler of libpar (params.hpp)
-    Command_Line cmd(argc,argv,envp);
-
-    Animation ani("noname");
-    if(!ani.param.Parse_Command_Line(&cmd) )
-      return -1;
-  
-    if(!cmd.Check_Unused() )
-      return -2;
-
-    // !!! memory leak and invariable output format !!!
-    //Output_Interface *output = new Raw_Output( &ani ); 
-    Output_Interface *output = new Pov_Output( &ani );
-
-    output->init();
-
     // init animation tree
-    make_all_nodes_available();
+    ani.init();
 
-    stringlist adlfiles = ani.param.adl();
-    if( adlfiles.is_empty() )
-    {
-      cerr << "Error: no animation descriptions specified" << endl;
-      return -3;
-    }
+    // get the parameters
+    param.read_parameters();
 
-    typedef std::list<Input_Interface*> input_type;
-    input_type input;
+    // initialize filters
+    input.init();
+    output.init();
 
-    for(stringlist::iterator i=adlfiles.begin(); i!=adlfiles.end(); i++)
-	{
-		input.push_back( new ADL_Input( *i, &ani ) );
-	}
+    // read input data 
+    input.read_structure();
+    // finish structure initialization
+    ani.hierarchy_final_init();	
+    // insert values
+    input.read_values();
 
-    // for all input interfaces
-    for( input_type::iterator i = input.begin(); i != input.end(); i++ )
-    {
-      (*i)->create_structure(); // let create tree node structure
-    }
+    // may already check, whether the components match to output 
+    output.check_components();
 
-    ani.hierarchy_final_init();	// finish structure initialization
-    output->check_components();
+    ani.finish_calculations();
 
-    // for all input interfaces
-    for( input_type::iterator i = input.begin(); i != input.end(); i++ )
-    {
-      (*i)->insert_expl_ref(); // insert user references between properties
-    }
-
-    // for all input interfaces
-    for( input_type::iterator i = input.begin(); i != input.end(); i++ )
-    {
-      (*i)->insert_values();	// insert concrete values for properties
-    }
-
-    ani.pri_sys.invoke_all_Actions();
-
-    save_filled("filled.out", &ani);
-
-    output->process_results();
+    output.process_results();
+    return 0;
   }
-  catch( EX e )
+
+  AniTMT::AniTMT( param::Parameter_Manager *par, 
+		  message::Message_Handler *msg_handler )
+    : ani("noname"), default_msg_consultant(&msg_manager, MID_AniTMT ),
+      input (par, &default_msg_consultant, &ani), 
+      output(par, &default_msg_consultant, &ani),
+      msg_manager(msg_handler), 
+      param(*par)
   {
-    cout << "Error: " << e.get_name() << endl;
-    return -1;
   }
-  return 0;
 }
+

@@ -14,8 +14,8 @@
 
 #include "scene.hpp"
 
-namespace anitmt{
-
+namespace anitmt
+{
   //******************************************************************
   // Ani_Scene: Animatable Scene node that returns the scene state 
   //******************************************************************
@@ -23,15 +23,12 @@ namespace anitmt{
   // type name identifier as string
   const std::string Ani_Scene::type_name = "scene";
 
-  std::string Ani_Scene::get_type_name(){
+  std::string Ani_Scene::get_type_name()
+  {
     return type_name;
   }
 
-  #warning *******************************************
-  #warning ** MAAAARRTIIINNN!!!!!!! PLEASE FIX THAT **
-  #warning *******************************************
-  #if 0
-  std::map<values::String,Object_Interface> Ani_Scene::get_objects()
+  std::map< values::String, Object_Interface > Ani_Scene::get_all_objects()
   {
     std::map<values::String,Object_Interface> ret;
 
@@ -40,14 +37,15 @@ namespace anitmt{
     Contain< Ani_Object >::content_type::const_iterator object;
     
     for( object = all_objects.begin(); object != all_objects.end(); ++object )
-      {
-	ret[ (*object)->get_name() ] = object;
-      }
+    {
+      ret.insert( std::pair<values::String, Object_Interface>
+		  ((*object)->get_name(), *object) );
+    }
 
     return ret;
   }
 
-  std::map< values::String, Scalar_Interface > Ani_Scene::get_scalars()
+  std::map< values::String, Scalar_Interface > Ani_Scene::get_all_scalars()
   {
     std::map<values::String,Scalar_Interface> ret;
 
@@ -56,13 +54,13 @@ namespace anitmt{
     Contain<Ani_Scalar>::content_type::const_iterator scalar;
     
     for( scalar = all_scalars.begin(); scalar != all_scalars.end(); ++scalar )
-      {
-	ret[ (*scalar)->get_name() ] = scalar;
-      }
+    {
+      ret.insert( std::pair<values::String, Scalar_Interface>
+		  ((*scalar)->get_name(), *scalar) );
+    }
 
     return ret;
   }
-  #endif
 
   Ani_Scene::Ani_Scene( std::string name, Animation *ani ) 
     : Prop_Tree_Node( type_name, name, ani ),
