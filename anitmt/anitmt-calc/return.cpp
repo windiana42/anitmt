@@ -26,22 +26,22 @@ namespace anitmt{
 
 
   template <class Return_Type>
-  Return_Type *Return<Return_Type>::get_prev( Return_Type ){
+  Return<Return_Type> *Return<Return_Type>::get_prev( Return_Type ){
     return prev;
   }
 
   template <class Return_Type>
-  Return_Type *Return<Return_Type>::get_next( Return_Type ){
+  Return<Return_Type> *Return<Return_Type>::get_next( Return_Type ){
     return next;
   }
 
   template <class Return_Type>
-  void Return<Return_Type>::set_prev( Return_Type* p ){
+  void Return<Return_Type>::set_prev( Return<Return_Type> *p ){
     prev = p;
   }
 
   template <class Return_Type>
-  void Return<Return_Type>::set_next( Return_Type* n ){
+  void Return<Return_Type>::set_next( Return<Return_Type> *n ){
     next = n;
   }
 
@@ -57,18 +57,24 @@ namespace anitmt{
   // tries to use the node as element for this container
   template <class Return_Type>
   bool Contain_Return<Return_Type>::try_add_child( Return<Return_Type> *node )
-    throw( exception_more_than_one_child() ) {
+    throw( exception_more_than_one_child ) {
+    
       if( !node )
 	return false;
       else
 	{
 	  if( unique_child && ( num_childs > 0 ) )
-	    throw( more_than_one_child() );
+	    throw exception_more_than_one_child();
 
-	  content.last().set_next( node );
-	  node.set_prev( content.last() );
+	  if( !content.empty() )
+	    {
+	      Return<Return_Type> *last = *(--content.end()) ;
+	      last->set_next( node );
+	      node->set_prev( last );
+	    }
 
 	  content.push_back( node );
+
 	  return true;
 	}
     }
@@ -76,7 +82,11 @@ namespace anitmt{
   // returns the result according to childs that are active at time t
   template <class Return_Type>
   Return_Type Contain_Return<Return_Type>::get_return_value( values::Scalar t,
-							     Return_Type ) {
+							     Return_Type ) 
+    throw( exception_essential_child_missing, exception_no_active_child ) {
+
+    if( essential_child && ( num_childs == 0 ) )
+      throw exception_essential_child_missing();
 
     for( content_type::iterator i = content.begin(); i != content.end(); i++ )
       {
@@ -87,6 +97,8 @@ namespace anitmt{
 	  continue;
 	}
       }
+
+    throw exception_no_active_child();
   }
 
   template <class Return_Type>

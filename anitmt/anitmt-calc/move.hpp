@@ -41,16 +41,21 @@ namespace anitmt{
 		   public Return<Position>,
 		   public Return<Direction>,
 		   public Return<Up_Vector> {
-    static std::string type_name;
+
+    static const std::string type_name;
     
     Contain_Return<Position>  pos;
     Contain_Return<Direction> dir;
     Contain_Return<Up_Vector> up;
 
     Vector_Property c;		// rotation center (?piveau? point)
+
+    bool try_add_child( Prop_Tree_Node *node );
   public:
+    static std::string get_type_name();
+
     Obj_Move( std::string name );
-    
+
     values::Matrix get_return_value( values::Scalar t, 
 				     values::Matrix m = values::Matrix() );
     Position get_return_value( values::Scalar t, 
@@ -69,7 +74,7 @@ namespace anitmt{
 			    public Return<Position>, 
 			    public Return<Direction>,
 			    public Return<Up_Vector> {
-    static std::string type_name;
+    static const std::string type_name;
 
     Vector_Property s0;		// startpos
     Vector_Property se;		// endpos
@@ -91,11 +96,15 @@ namespace anitmt{
     //...
   protected:
   public:
+    static std::string get_type_name();
+
     Obj_Move_Straight( std::string name );
     
     Position get_return_value( values::Scalar t, Position = Position() );
     Direction get_return_value( values::Scalar t, Direction = Direction() );
     Up_Vector get_return_value( values::Scalar t, Up_Vector = Up_Vector() );
+
+    bool try_add_child( Prop_Tree_Node *node );
   };
 }
 #endif

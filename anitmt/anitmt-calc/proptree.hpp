@@ -46,6 +46,7 @@ namespace anitmt{
     std::string type;		// type of this node
     std::string name;		// name for reference
 
+    //************
     // properties
     typedef std::map<std::string, Property*> properties_type;
     properties_type properties;
@@ -54,6 +55,20 @@ namespace anitmt{
     // neighbour nodes or like setting default values
     typedef std::vector< Priority_Action* > priority_levels_type;
     priority_levels_type priority_level;
+
+    //********
+    // childs
+    virtual bool try_add_child( Prop_Tree_Node *node ) = 0;
+
+    // abstract child factory:
+    class Child_Factory{
+    public:
+      virtual Prop_Tree_Node *create( std::string name ) = 0;
+    };
+
+    // map of child fatories associated to a name as string 
+    typedef std::map< std::string, Child_Factory* > child_factory_type;
+    static child_factory_type child_factory;
 
   protected:
     // Access functions for hiding data structure
@@ -66,6 +81,12 @@ namespace anitmt{
     }
 
   public:
+    // known exceptions
+    class exception_child_type_unkown {};
+    class exception_child_type_rejected {};
+    class exception_child_type_already_defined {};
+    class exception_unknown_property {};
+
     std::string	get_name();	// return name
     std::string get_type();	// return type
     Property *get_property( std::string name );	
@@ -77,21 +98,20 @@ namespace anitmt{
 				// return child with name
     std::list<Prop_Tree_Node*> get_all_childs();
 				// return all childs
-    virtual bool is_child_type_valid( std::string type ) = 0;
-				// check if type of child is valid
-    virtual Prop_Tree_Node *add_child( std::string type, 
-				       std::string name ) = 0;
+    Prop_Tree_Node *add_child( std::string type, std::string name )
+      throw( exception_child_type_unkown, exception_child_type_rejected );
 				// add child of type with name
     virtual Prop_Tree_Node *get_referenced_node( std::string ref );
 				// returns node by interpreting the hierachical
  				// reference string. 
 
+    static void add_child_factory( std::string name, Child_Factory* fac )
+      throw( exception_child_type_already_defined );
+
     Prop_Tree_Node( std::string type, std::string name );
     virtual ~Prop_Tree_Node();
 
     //-- Templates
-
-    class exception_unknown_property {}; // should be better integrated 
 
     // set property
     template< class T >  
@@ -105,6 +125,15 @@ namespace anitmt{
     }
   };
 
+  // child factory template
+  template< class NT>
+  class Node_Factory : public Prop_Tree_Node::Child_Factory{
+  public:
+    virtual Prop_Tree_Node *create( std::string name ){
+      return new NT( name );
+    }
+  };
+  
   class Priority_Action{
   public:
     virtual involve_list_type do_it() = 0;

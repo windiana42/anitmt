@@ -12,7 +12,7 @@
 /**									    **/
 /*****************************************************************************/
 
-#ifndef __AniTMT_types
+#ifndef __AniTMT_types__
 #define __AniTMT_types__
 
 #include "val.hpp"
