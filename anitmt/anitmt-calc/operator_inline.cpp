@@ -24,195 +24,290 @@ namespace anitmt
   // Not_Operator: operator for inverting operand
   //**********************************************
 
-  // ! Operator with operand type as result type
-  template< class T >
-  inline Operand<T>& operator!( Operand<T> &op ) 
+  // ! Operator for operand expression trees
+  inline Operand<bool>& operator!( Operand<bool> &op ) 
   {
-    return (new Not_Operator<T,T>( op ))->get_result();
+    return (new Not_Operator<bool,bool>( op ))->get_result();
+  }
+
+  // ! Operator for operand expression trees
+  inline Operand<bool>& operator!( Operand<values::Scalar> &op ) 
+  {
+    return (new Not_Operator<bool,values::Scalar>( op ))->get_result();
+  }
+
+  // ! Operator for operand expression trees
+  inline Operand<bool>& operator!( Operand<values::Vector> &op ) 
+  {
+    return (new Not_Operator<bool,values::Vector>( op ))->get_result();
+  }
+
+  // ! Operator for operand expression trees
+  inline Operand<bool>& operator!( Operand<values::Matrix> &op ) 
+  {
+    return (new Not_Operator<bool,values::Matrix>( op ))->get_result();
+  }
+
+  // ! Operator for operand expression trees
+  inline Operand<bool>& operator!( Operand<values::String> &op ) 
+  {
+    return (new Not_Operator<bool,values::String>( op ))->get_result();
   }
 
   //*****************************************************
   // Negative_Operator: operator for negative of operand 
   //*****************************************************
 
-  // ! Operator with operand type as result type
-  template< class T >
-  inline Operand<T>& operator-( Operand<T> &op ) 
+  // - Operator for operand expression trees
+  inline Operand<values::Scalar>& operator-( Operand<values::Scalar> &op ) 
   {
-    return (new Negative_Operator<T,T>( op ))->get_result();
+    return (new Negative_Operator<values::Scalar,values::Scalar>( op ))
+      ->get_result();
+  }
+
+  inline Operand<values::Vector>& operator-( Operand<values::Vector> &op ) 
+  {
+    return (new Negative_Operator<values::Vector,values::Vector>( op ))
+      ->get_result();
   }
 
   //*************************************************************************
   // Abs_Operator: operator for calculating the absolute value of an operand 
   //*************************************************************************
 
-  // ! Operator with operand type as result type
-  template< class T >
-  inline Operand<T>& abs( Operand<T> &op ) 
+  // abs Operator for operand expression trees
+  inline Operand<values::Scalar>& abs( Operand<values::Scalar> &op ) 
   {
-    return (new Abs_Operator<T,T>( op ))->get_result();
+    return (new Abs_Operator<values::Scalar,values::Scalar>( op ))
+      ->get_result();
+  }
+
+  inline Operand<values::Scalar>& abs( Operand<values::Vector> &op ) 
+  {
+    return (new Abs_Operator<values::Scalar,values::Vector>( op ))
+      ->get_result();
   }
 
   //*************************************************************************
   // Sqrt_Operator: operator for calculating the sqare root of an operand 
   //*************************************************************************
 
-  // ! Operator with operand type as result type
-  template< class T >
-  inline Operand<T>& sqrt( Operand<T> &op ) 
+  // sqrt function for operand expression trees
+  inline Operand<values::Scalar>& sqrt( Operand<values::Scalar> &op ) 
   {
-    return (new Sqrt_Operator<T,T>( op ))->get_result();
+    return (new Sqrt_Operator<values::Scalar,values::Scalar>( op ))
+      ->get_result();
   }
 
   //**********************************************************************
   // Add_Operator: operator for adding 2 operands of different types
   //**********************************************************************
 
-  template< class T1, class T2 >
-  inline Operand<T2>& operator+( Operand<T1> &op1, Operand<T2> &op2 ) 
+  // scalar + scalar
+  inline Operand<values::Scalar>& 
+  operator+( Operand<values::Scalar> &op1, Operand<values::Scalar> &op2 ) 
   {
-    return (new Add_Operator<T2,T1,T2>( op1, op2 ))->get_result();
+    return (new Add_Operator<values::Scalar,values::Scalar,values::Scalar>
+	    ( op1, op2 ))->get_result();
+  }
+  inline Operand<values::Scalar>& 
+  operator+( Operand<values::Scalar> &op1, const values::Scalar &op2 ) 
+  {
+    return (new Add_Operator<values::Scalar,values::Scalar,values::Scalar>
+	    ( op1, const_op(op2) ))->get_result();
+  }
+  inline Operand<values::Scalar>& 
+  operator+( const values::Scalar &op1, Operand<values::Scalar> &op2 ) 
+  {
+    return (new Add_Operator<values::Scalar,values::Scalar,values::Scalar>
+	    ( const_op(op1), op2 ))->get_result();
   }
 
-  template< class T1 >
-  inline Operand<T1>& operator+( Operand<T1> &op1, values::Scalar op2 ) 
+  // vector + vector
+  inline Operand<values::Vector>& 
+  operator+( Operand<values::Vector> &op1, Operand<values::Vector> &op2 ) 
   {
-    return (new Add_Operator<T1,T1,values::Scalar>
-      ( op1, *(new Constant<values::Scalar>(op2)) ))->get_result();
+    return (new Add_Operator<values::Vector,values::Vector,values::Vector>
+	    ( op1, op2 ))->get_result();
+  }
+  inline Operand<values::Vector>& 
+  operator+( Operand<values::Vector> &op1, const values::Vector &op2 ) 
+  {
+    return (new Add_Operator<values::Vector,values::Vector,values::Vector>
+	    ( op1, const_op(op2) ))->get_result();
+  }
+  inline Operand<values::Vector>& 
+  operator+( const values::Vector &op1, Operand<values::Vector> &op2 ) 
+  {
+    return (new Add_Operator<values::Vector,values::Vector,values::Vector>
+	    ( const_op(op1), op2 ))->get_result();
   }
 
-  template< class T2 >
-  inline Operand<T2>& operator+( values::Scalar op1, Operand<T2> &op2 ) 
+  // string + string
+  inline Operand<values::String>& 
+  operator+( Operand<values::String> &op1, Operand<values::String> &op2 ) 
   {
-    return (new Add_Operator<T2,values::Scalar,T2>
-      ( *(new Constant<values::Scalar>(op1)), op2 ))->get_result();
+    return (new Add_Operator<values::String,values::String,values::String>
+	    ( op1, op2 ))->get_result();
   }
-
-  template< class T1 >
-  inline Operand<T1>& operator+( Operand<T1> &op1, values::Vector op2 ) 
+  inline Operand<values::String>& 
+  operator+( Operand<values::String> &op1, const values::String &op2 ) 
   {
-    return (new Add_Operator<T1,T1,values::Vector>
-      ( op1, *(new Constant<values::Vector>(op2)) ))->get_result();
+    return (new Add_Operator<values::String,values::String,values::String>
+	    ( op1, const_op(op2) ))->get_result();
   }
-
-  template< class T2 >
-  inline Operand<T2>& operator+( values::Vector op1, Operand<T2> &op2 ) 
+  inline Operand<values::String>& 
+  operator+( const values::String &op1, Operand<values::String> &op2 ) 
   {
-    return (new Add_Operator<T2,values::Vector,T2>
-      ( *(new Constant<values::Vector>(op1)), op2 ))->get_result();
+    return (new Add_Operator<values::String,values::String,values::String>
+	    ( const_op(op1), op2 ))->get_result();
   }
 
   //**********************************************************************
   // Sub_Operator: operator for subing 2 operands of different types
   //**********************************************************************
 
-  template< class T1, class T2 >
-  inline Operand<T2>& operator-( Operand<T1> &op1, Operand<T2> &op2 ) 
+  // scalar - scalar
+  inline Operand<values::Scalar>& 
+  operator-( Operand<values::Scalar> &op1, Operand<values::Scalar> &op2 ) 
   {
-    return (new Sub_Operator<T2,T1,T2>( op1, op2 ))->get_result();
+    return (new Sub_Operator<values::Scalar,values::Scalar,values::Scalar>
+	    ( op1, op2 ))->get_result();
+  }
+  inline Operand<values::Scalar>& 
+  operator-( Operand<values::Scalar> &op1, const values::Scalar &op2 ) 
+  {
+    return (new Sub_Operator<values::Scalar,values::Scalar,values::Scalar>
+	    ( op1, const_op(op2) ))->get_result();
+  }
+  inline Operand<values::Scalar>& 
+  operator-( const values::Scalar &op1, Operand<values::Scalar> &op2 ) 
+  {
+    return (new Sub_Operator<values::Scalar,values::Scalar,values::Scalar>
+	    ( const_op(op1), op2 ))->get_result();
   }
 
-  template< class T1 >
-  inline Operand<T1>& operator-( Operand<T1> &op1, values::Scalar op2 ) 
+  // vector - vector
+  inline Operand<values::Vector>& 
+  operator-( Operand<values::Vector> &op1, Operand<values::Vector> &op2 ) 
   {
-    return (new Sub_Operator<T1,T1,values::Scalar>
-      ( op1, *(new Constant<values::Scalar>(op2)) ))->get_result();
+    return (new Sub_Operator<values::Vector,values::Vector,values::Vector>
+	    ( op1, op2 ))->get_result();
   }
-
-  template< class T2 >
-  inline Operand<T2>& operator-( values::Scalar op1, Operand<T2> &op2 ) 
+  inline Operand<values::Vector>& 
+  operator-( Operand<values::Vector> &op1, const values::Vector &op2 ) 
   {
-    return (new Sub_Operator<T2,values::Scalar,T2>
-      ( *(new Constant<values::Scalar>(op1)), op2 ))->get_result();
+    return (new Sub_Operator<values::Vector,values::Vector,values::Vector>
+	    ( op1, const_op(op2) ))->get_result();
   }
-
-  template< class T1 >
-  inline Operand<T1>& operator-( Operand<T1> &op1, values::Vector op2 ) 
+  inline Operand<values::Vector>& 
+  operator-( const values::Vector &op1, Operand<values::Vector> &op2 ) 
   {
-    return (new Sub_Operator<T1,T1,values::Vector>
-      ( op1, *(new Constant<values::Vector>(op2)) ))->get_result();
-  }
-
-  template< class T2 >
-  inline Operand<T2>& operator-( values::Vector op1, Operand<T2> &op2 ) 
-  {
-    return (new Sub_Operator<T2,values::Vector,T2>
-      ( *(new Constant<values::Vector>(op1)), op2 ))->get_result();
+    return (new Sub_Operator<values::Vector,values::Vector,values::Vector>
+	    ( const_op(op1), op2 ))->get_result();
   }
 
   //**********************************************************************
   // Mul_Operator: operator for muling 2 operands of different types
   //**********************************************************************
 
-  //*****************
   // scalar * scalar
-
   inline Operand<values::Scalar>& 
   operator*( Operand<values::Scalar> &op1, Operand<values::Scalar> &op2 ) 
   {
     return (new Mul_Operator<values::Scalar,values::Scalar,values::Scalar>
 	    ( op1, op2 ))->get_result();
   }
-
   inline Operand<values::Scalar>& 
-  operator*( Operand<values::Scalar> &op1, values::Scalar op2 ) 
+  operator*( Operand<values::Scalar> &op1, const values::Scalar &op2 ) 
   {
     return (new Mul_Operator<values::Scalar,values::Scalar,values::Scalar>
 	    ( op1, const_op(op2) ))->get_result();
   }
-
   inline Operand<values::Scalar>& 
-  operator*( values::Scalar op1, Operand<values::Scalar> &op2 ) 
+  operator*( const values::Scalar &op1, Operand<values::Scalar> &op2 ) 
   {
     return (new Mul_Operator<values::Scalar,values::Scalar,values::Scalar>
 	    ( const_op(op1), op2 ))->get_result();
   }
 
-  //*****************
   // scalar * vector
-
   inline Operand<values::Vector>& 
   operator*( Operand<values::Scalar> &op1, Operand<values::Vector> &op2 ) 
   {
     return (new Mul_Operator<values::Vector,values::Scalar,values::Vector>
 	    ( op1, op2 ))->get_result();
   }
-
   inline Operand<values::Vector>& 
-  operator*( Operand<values::Scalar> &op1, values::Vector op2 ) 
+  operator*( Operand<values::Scalar> &op1, const values::Vector &op2 ) 
   {
     return (new Mul_Operator<values::Vector,values::Scalar,values::Vector>
 	    ( op1, const_op(op2) ))->get_result();
   }
-
   inline Operand<values::Vector>& 
-  operator*( values::Scalar op1, Operand<values::Vector> &op2 ) 
+  operator*( const values::Scalar &op1, Operand<values::Vector> &op2 ) 
   {
     return (new Mul_Operator<values::Vector,values::Scalar,values::Vector>
 	    ( const_op(op1), op2 ))->get_result();
   }
 
-  //*****************
   // vector * scalar
-
   inline Operand<values::Vector>& 
   operator*( Operand<values::Vector> &op1, Operand<values::Scalar> &op2 ) 
   {
     return (new Mul_Operator<values::Vector,values::Vector,values::Scalar>
 	    ( op1, op2 ))->get_result();
   }
-
   inline Operand<values::Vector>& 
-  operator*( Operand<values::Vector> &op1, values::Scalar op2 ) 
+  operator*( Operand<values::Vector> &op1, const values::Scalar &op2 ) 
   {
     return (new Mul_Operator<values::Vector,values::Vector,values::Scalar>
 	    ( op1, const_op(op2) ))->get_result();
   }
-
   inline Operand<values::Vector>& 
-  operator*( values::Vector op1, Operand<values::Scalar> &op2 ) 
+  operator*( const values::Vector &op1, Operand<values::Scalar> &op2 ) 
   {
     return (new Mul_Operator<values::Vector,values::Vector,values::Scalar>
+	    ( const_op(op1), op2 ))->get_result();
+  }
+
+  // matrix * matrix
+  inline Operand<values::Matrix>& 
+  operator*( Operand<values::Matrix> &op1, Operand<values::Matrix> &op2 ) 
+  {
+    return (new Mul_Operator<values::Matrix,values::Matrix,values::Matrix>
+	    ( op1, op2 ))->get_result();
+  }
+  inline Operand<values::Matrix>& 
+  operator*( Operand<values::Matrix> &op1, const values::Matrix &op2 ) 
+  {
+    return (new Mul_Operator<values::Matrix,values::Matrix,values::Matrix>
+	    ( op1, const_op(op2) ))->get_result();
+  }
+  inline Operand<values::Matrix>& 
+  operator*( const values::Matrix &op1, Operand<values::Matrix> &op2 ) 
+  {
+    return (new Mul_Operator<values::Matrix,values::Matrix,values::Matrix>
+	    ( const_op(op1), op2 ))->get_result();
+  }
+
+  // matrix * vector
+  inline Operand<values::Vector>& 
+  operator*( Operand<values::Matrix> &op1, Operand<values::Vector> &op2 ) 
+  {
+    return (new Mul_Operator<values::Vector,values::Matrix,values::Vector>
+	    ( op1, op2 ))->get_result();
+  }
+  inline Operand<values::Vector>& 
+  operator*( Operand<values::Matrix> &op1, const values::Vector &op2 ) 
+  {
+    return (new Mul_Operator<values::Vector,values::Matrix,values::Vector>
+	    ( op1, const_op(op2) ))->get_result();
+  }
+  inline Operand<values::Vector>& 
+  operator*( const values::Matrix &op1, Operand<values::Vector> &op2 ) 
+  {
+    return (new Mul_Operator<values::Vector,values::Matrix,values::Vector>
 	    ( const_op(op1), op2 ))->get_result();
   }
 
@@ -220,77 +315,246 @@ namespace anitmt
   // Div_Operator: operator for diving 2 operands of different types
   //**********************************************************************
 
-  template< class T1, class T2 >
-  inline Operand<T2>& operator/( Operand<T1> &op1, Operand<T2> &op2 ) 
+  // scalar / scalar
+  inline Operand<values::Scalar>& 
+  operator/( Operand<values::Scalar> &op1, Operand<values::Scalar> &op2 ) 
   {
-    return (new Div_Operator<T2,T1,T2>( op1, op2 ))->get_result();
+    return (new Div_Operator<values::Scalar,values::Scalar,values::Scalar>
+	    ( op1, op2 ))->get_result();
+  }
+  inline Operand<values::Scalar>& 
+  operator/( Operand<values::Scalar> &op1, const values::Scalar &op2 ) 
+  {
+    return (new Div_Operator<values::Scalar,values::Scalar,values::Scalar>
+	    ( op1, const_op(op2) ))->get_result();
+  }
+  inline Operand<values::Scalar>& 
+  operator/( const values::Scalar &op1, Operand<values::Scalar> &op2 ) 
+  {
+    return (new Div_Operator<values::Scalar,values::Scalar,values::Scalar>
+	    ( const_op(op1), op2 ))->get_result();
   }
 
-  template< class T1 >
-  inline Operand<T1>& operator/( Operand<T1> &op1, values::Scalar op2 ) 
+  // vector / scalar
+  inline Operand<values::Vector>& 
+  operator/( Operand<values::Vector> &op1, Operand<values::Scalar> &op2 ) 
   {
-    return (new Div_Operator<T1,T1,values::Scalar>
-      ( op1, *(new Constant<values::Scalar>(op2)) ))->get_result();
+    return (new Div_Operator<values::Vector,values::Vector,values::Scalar>
+	    ( op1, op2 ))->get_result();
   }
-
-  template< class T2 >
-  inline Operand<T2>& operator/( values::Scalar op1, Operand<T2> &op2 ) 
+  inline Operand<values::Vector>& 
+  operator/( Operand<values::Vector> &op1, const values::Scalar &op2 ) 
   {
-    return (new Div_Operator<T2,values::Scalar,T2>
-      ( *(new Constant<values::Scalar>(op1)), op2 ))->get_result();
+    return (new Div_Operator<values::Vector,values::Vector,values::Scalar>
+	    ( op1, const_op(op2) ))->get_result();
   }
-
-  template< class T1 >
-  inline Operand<T1>& operator/( Operand<T1> &op1, values::Vector op2 ) 
+  inline Operand<values::Vector>& 
+  operator/( const values::Vector &op1, Operand<values::Scalar> &op2 ) 
   {
-    return (new Div_Operator<T1,T1,values::Vector>
-      ( op1, *(new Constant<values::Vector>(op2)) ))->get_result();
-  }
-
-  template< class T2 >
-  inline Operand<T2>& operator/( values::Vector op1, Operand<T2> &op2 ) 
-  {
-    return (new Div_Operator<T2,values::Vector,T2>
-      ( *(new Constant<values::Vector>(op1)), op2 ))->get_result();
+    return (new Div_Operator<values::Vector,values::Vector,values::Scalar>
+	    ( const_op(op1), op2 ))->get_result();
   }
 
   //***************************************************
   // Equal_Operator: operator for comparing 2 operands
   //***************************************************
 
-  template< class T1, class T2 >
-  inline Operand<bool>& operator==( Operand<T1> &op1, Operand<T2> &op2 ) 
+  // bool == bool
+  inline Operand<bool>& operator==( Operand<bool> &op1, Operand<bool> &op2 ) 
   {
-    return (new Equal_Operator<bool,T1,T2>( op1, op2 ))->get_result();
+    return (new Equal_Operator<bool,bool,bool>( op1, op2 ))->get_result();
+  }
+  inline Operand<bool>& operator==( Operand<bool> &op1, bool op2 ) 
+  {
+    return (new Equal_Operator<bool,bool,bool>( op1, const_op(op2) ))
+      ->get_result();
+  }
+  inline Operand<bool>& operator==( bool op1, Operand<bool> &op2 ) 
+  {
+    return (new Equal_Operator<bool,bool,bool>( const_op(op1), op2 ))
+      ->get_result();
   }
 
-  template< class T1 >
-  inline Operand<bool>& operator==( Operand<T1> &op1, values::Scalar op2 ) 
+  // scalar == scalar
+  inline Operand<bool>&
+  operator==( Operand<values::Scalar> &op1, Operand<values::Scalar> &op2 ) 
   {
-    return (new Equal_Operator<bool,T1,values::Scalar>
-      ( op1, *(new Constant<values::Scalar>(op2)) ))->get_result();
+    return (new Equal_Operator<bool,values::Scalar,values::Scalar>
+	    ( op1, op2 ))->get_result();
+  }
+  inline Operand<bool>&
+  operator==( Operand<values::Scalar> &op1, const values::Scalar &op2 ) 
+  {
+    return (new Equal_Operator<bool,values::Scalar,values::Scalar>
+	    ( op1, const_op(op2) ))->get_result();
+  }
+  inline Operand<bool>&
+  operator==( const values::Scalar &op1, Operand<values::Scalar> &op2 ) 
+  {
+    return (new Equal_Operator<bool,values::Scalar,values::Scalar>
+	    ( const_op(op1), op2 ))->get_result();
   }
 
-  template< class T2 >
-  inline Operand<bool>& operator==( values::Scalar op1, Operand<T2> &op2 ) 
+  // vector == vector
+  inline Operand<bool>&
+  operator==( Operand<values::Vector> &op1, Operand<values::Vector> &op2 ) 
   {
-    return (new Equal_Operator<bool,values::Scalar,T2>
-      ( *(new Constant<values::Scalar>(op1)), op2 ))->get_result();
+    return (new Equal_Operator<bool,values::Vector,values::Vector>
+	    ( op1, op2 ))->get_result();
+  }
+  inline Operand<bool>&
+  operator==( Operand<values::Vector> &op1, const values::Vector &op2 ) 
+  {
+    return (new Equal_Operator<bool,values::Vector,values::Vector>
+	    ( op1, const_op(op2) ))->get_result();
+  }
+  inline Operand<bool>&
+  operator==( const values::Vector &op1, Operand<values::Vector> &op2 ) 
+  {
+    return (new Equal_Operator<bool,values::Vector,values::Vector>
+	    ( const_op(op1), op2 ))->get_result();
   }
 
-  template< class T1 >
-  inline Operand<bool>& operator==( Operand<T1> &op1, values::Vector op2 ) 
+  // matrix == matrix
+  inline Operand<bool>&
+  operator==( Operand<values::Matrix> &op1, Operand<values::Matrix> &op2 ) 
   {
-    return (new Equal_Operator<bool,T1,values::Vector>
-      ( op1, *(new Constant<values::Vector>(op2)) ))->get_result();
+    return (new Equal_Operator<bool,values::Matrix,values::Matrix>
+	    ( op1, op2 ))->get_result();
+  }
+  inline Operand<bool>&
+  operator==( Operand<values::Matrix> &op1, const values::Matrix &op2 ) 
+  {
+    return (new Equal_Operator<bool,values::Matrix,values::Matrix>
+	    ( op1, const_op(op2) ))->get_result();
+  }
+  inline Operand<bool>&
+  operator==( const values::Matrix &op1, Operand<values::Matrix> &op2 ) 
+  {
+    return (new Equal_Operator<bool,values::Matrix,values::Matrix>
+	    ( const_op(op1), op2 ))->get_result();
   }
 
-  template< class T2 >
-  inline Operand<bool>& operator==( values::Vector op1, Operand<T2> &op2 ) 
+  // string == string
+  inline Operand<bool>&
+  operator==( Operand<values::String> &op1, Operand<values::String> &op2 ) 
   {
-    return (new Equal_Operator<bool,values::Vector,T2>
-      ( *(new Constant<values::Vector>(op1)), op2 ))->get_result();
+    return (new Equal_Operator<bool,values::String,values::String>
+	    ( op1, op2 ))->get_result();
   }
+  inline Operand<bool>&
+  operator==( Operand<values::String> &op1, const values::String &op2 ) 
+  {
+    return (new Equal_Operator<bool,values::String,values::String>
+	    ( op1, const_op(op2) ))->get_result();
+  }
+  inline Operand<bool>&
+  operator==( const values::String &op1, Operand<values::String> &op2 ) 
+  {
+    return (new Equal_Operator<bool,values::String,values::String>
+	    ( const_op(op1), op2 ))->get_result();
+  }
+
+  //***************************************************
+  // Unequal_Operator: operator for comparing 2 operands
+  //***************************************************
+
+  // bool != bool
+  inline Operand<bool>& operator!=( Operand<bool> &op1, Operand<bool> &op2 ) 
+  {
+    return (new Unequal_Operator<bool,bool,bool>( op1, op2 ))->get_result();
+  }
+  inline Operand<bool>& operator!=( Operand<bool> &op1, bool op2 ) 
+  {
+    return (new Unequal_Operator<bool,bool,bool>( op1, const_op(op2) ))
+      ->get_result();
+  }
+  inline Operand<bool>& operator!=( bool op1, Operand<bool> &op2 ) 
+  {
+    return (new Unequal_Operator<bool,bool,bool>( const_op(op1), op2 ))
+      ->get_result();
+  }
+
+  // scalar != scalar
+  inline Operand<bool>&
+  operator!=( Operand<values::Scalar> &op1, Operand<values::Scalar> &op2 ) 
+  {
+    return (new Unequal_Operator<bool,values::Scalar,values::Scalar>
+	    ( op1, op2 ))->get_result();
+  }
+  inline Operand<bool>&
+  operator!=( Operand<values::Scalar> &op1, const values::Scalar &op2 ) 
+  {
+    return (new Unequal_Operator<bool,values::Scalar,values::Scalar>
+	    ( op1, const_op(op2) ))->get_result();
+  }
+  inline Operand<bool>&
+  operator!=( const values::Scalar &op1, Operand<values::Scalar> &op2 ) 
+  {
+    return (new Unequal_Operator<bool,values::Scalar,values::Scalar>
+	    ( const_op(op1), op2 ))->get_result();
+  }
+
+  // vector != vector
+  inline Operand<bool>&
+  operator!=( Operand<values::Vector> &op1, Operand<values::Vector> &op2 ) 
+  {
+    return (new Unequal_Operator<bool,values::Vector,values::Vector>
+	    ( op1, op2 ))->get_result();
+  }
+  inline Operand<bool>&
+  operator!=( Operand<values::Vector> &op1, const values::Vector &op2 ) 
+  {
+    return (new Unequal_Operator<bool,values::Vector,values::Vector>
+	    ( op1, const_op(op2) ))->get_result();
+  }
+  inline Operand<bool>&
+  operator!=( const values::Vector &op1, Operand<values::Vector> &op2 ) 
+  {
+    return (new Unequal_Operator<bool,values::Vector,values::Vector>
+	    ( const_op(op1), op2 ))->get_result();
+  }
+
+  // matrix != matrix
+  inline Operand<bool>&
+  operator!=( Operand<values::Matrix> &op1, Operand<values::Matrix> &op2 ) 
+  {
+    return (new Unequal_Operator<bool,values::Matrix,values::Matrix>
+	    ( op1, op2 ))->get_result();
+  }
+  inline Operand<bool>&
+  operator!=( Operand<values::Matrix> &op1, const values::Matrix &op2 ) 
+  {
+    return (new Unequal_Operator<bool,values::Matrix,values::Matrix>
+	    ( op1, const_op(op2) ))->get_result();
+  }
+  inline Operand<bool>&
+  operator!=( const values::Matrix &op1, Operand<values::Matrix> &op2 ) 
+  {
+    return (new Unequal_Operator<bool,values::Matrix,values::Matrix>
+	    ( const_op(op1), op2 ))->get_result();
+  }
+
+  // string != string
+  inline Operand<bool>&
+  operator!=( Operand<values::String> &op1, Operand<values::String> &op2 ) 
+  {
+    return (new Unequal_Operator<bool,values::String,values::String>
+	    ( op1, op2 ))->get_result();
+  }
+  inline Operand<bool>&
+  operator!=( Operand<values::String> &op1, const values::String &op2 ) 
+  {
+    return (new Unequal_Operator<bool,values::String,values::String>
+	    ( op1, const_op(op2) ))->get_result();
+  }
+  inline Operand<bool>&
+  operator!=( const values::String &op1, Operand<values::String> &op2 ) 
+  {
+    return (new Unequal_Operator<bool,values::String,values::String>
+	    ( const_op(op1), op2 ))->get_result();
+  }
+
 }
 
 #endif

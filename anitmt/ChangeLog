@@ -65,3 +65,6 @@ a general list of all systems:
 	+ - - -	  Vector
 	+ - - -	  String
 
+more detailed ToDo:
+	solving system
+	  destruction of operand expression trees (with constants)

@@ -17,10 +17,12 @@ int test_anitmt()
     errors += action_system_test();
     errors += property_tree_test();
     cout << "Done..." << endl;
-    return 0;
+    if( errors )
+      cout << errors << " Errors occured" << endl;
+    return errors;
   }
   catch( EX e ){
-    cout << "Error: " << e.get_name() << endl;
+    cout << "Fatal Error: " << e.get_name() << endl;
     return -1;
   }
 }

@@ -17,6 +17,8 @@
 
 #include "operator.hpp"
 
+#include "val.hpp"
+
 namespace anitmt
 {
   //***************************************************************
@@ -188,6 +190,20 @@ namespace anitmt
   template<class T_Result, class T_Op1, class T_Op2>
   void Basic_Operator_for_2_Operands<T_Result,T_Op1,T_Op2>::init() throw( EX )
   {
+    if( operand1.is_solved() )
+      if( is_operand1_enough( operand1.get_value() ) )
+      {
+	result.set_value( calc_result_from_op1( operand1.get_value() ) ); 
+				// could throw exception !
+     }
+ 
+    if( operand2.is_solved() )
+      if( is_operand2_enough( operand2.get_value() ) )
+      {
+	result.set_value( calc_result_from_op2( operand2.get_value() ) ); 
+				// could throw exception !
+      }
+
     if( operand1.is_solved() && operand2.is_solved() ) 
     {
       result.set_value( calc_result( operand1.get_value(), 
@@ -208,19 +224,6 @@ namespace anitmt
     operand1.add_listener( this );
     operand2.add_listener( this );
 
-    if( operand1.is_solved() )
-      if( is_operand1_enough( operand1.get_value() ) )
-      {
-	result.set_value( calc_result_from_op1( operand1.get_value() ) ); 
-				// could throw exception !
-      }
- 
-    if( operand2.is_solved() )
-      if( is_operand2_enough( operand2.get_value() ) )
-      {
-	result.set_value( calc_result_from_op2( operand2.get_value() ) ); 
-				// could throw exception !
-      }
     // init() cannot be called here as it calls a virtual function
   }
 
@@ -364,14 +367,14 @@ namespace anitmt
   bool Mul_Operator<T_Result,T_Op1,T_Op2>
   ::is_operand1_enough( const T_Op1 &value1 ) 
   {
-    return !value1;
+    return !value1;		// return true if value1 is zero equivalent
   }
 
   template<class T_Result, class T_Op1, class T_Op2>
   bool Mul_Operator<T_Result,T_Op1,T_Op2>
   ::is_operand2_enough( const T_Op2 &value2 ) 
   {
-    return !value2;
+    return !value2;		// return true if value1 is zero equivalent
   }
 
   template<class T_Result, class T_Op1, class T_Op2>
@@ -414,14 +417,14 @@ namespace anitmt
   bool Div_Operator<T_Result,T_Op1,T_Op2>
   ::is_operand2_ok( const T_Op2 &value2 ) 
   {
-    return !(value2 == 0);
+    return !(!value2);		// value2 has to be different from zero
   }
 
   template<class T_Result, class T_Op1, class T_Op2>
   bool Div_Operator<T_Result,T_Op1,T_Op2>
   ::is_operand1_enough( const T_Op1 &value1 ) 
   {
-    return value1 == 0;		// if numerator is zero, result is also zero
+    return !value1;		// if numerator is zero, result is also zero
   }
 
   template<class T_Result, class T_Op1, class T_Op2>
@@ -429,7 +432,7 @@ namespace anitmt
   ::are_operands_ok( const T_Op1 &value1, const T_Op2 &value2 ) 
   {
     // something diff zero is infinite
-    if( !(value1 == 0) && (value2 == 0) ) return false;
+    if( (!(!value1)) && (!value2) ) return false;
     return true;
   }
 
@@ -438,7 +441,7 @@ namespace anitmt
   ::are_operands_enough( const T_Op1 &value1, const T_Op2 &value2 ) 
   {
     // zero diff zero isn't rejected, but the result cannot be calculated
-    return !(value2 == 0); 
+    return !!value2; 
   }
 
   /*! has to calculate result only with operand1 when is_operand1_enough 
@@ -447,8 +450,8 @@ namespace anitmt
   T_Result Div_Operator<T_Result,T_Op1,T_Op2>
   ::calc_result_from_op1( const T_Op1 &value1 ) 
   {
-    assert( value1 == 0 );
-    return 0;
+    assert( !value1 );
+    return T_Result();		// return zero equivalent
   }
 
   template<class T_Result, class T_Op1, class T_Op2>
@@ -474,6 +477,27 @@ namespace anitmt
 
   template<class T_Result, class T_Op1, class T_Op2>
   Equal_Operator<T_Result,T_Op1,T_Op2>::Equal_Operator
+  ( Operand<T_Op1> &operand1, Operand<T_Op2> &operand2 ) 
+    : Basic_Operator_for_2_Operands<T_Result,T_Op1,T_Op2>( operand1,
+							   operand2 ) 
+  {
+    init();
+  }
+
+  //***************************************************
+  // Unequal_Operator: operator for comparing 2 operands 
+  //***************************************************
+
+  // may throw exception!
+  template<class T_Result, class T_Op1, class T_Op2>
+  T_Result Unequal_Operator<T_Result,T_Op1,T_Op2>
+  ::calc_result( const T_Op1 &value1, const T_Op2 &value2 ) 
+  {
+    return value1 != value2;
+  }
+
+  template<class T_Result, class T_Op1, class T_Op2>
+  Unequal_Operator<T_Result,T_Op1,T_Op2>::Unequal_Operator
   ( Operand<T_Op1> &operand1, Operand<T_Op2> &operand2 ) 
     : Basic_Operator_for_2_Operands<T_Result,T_Op1,T_Op2>( operand1,
 							   operand2 ) 

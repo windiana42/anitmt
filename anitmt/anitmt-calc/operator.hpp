@@ -183,8 +183,12 @@ namespace anitmt
     Not_Operator( Operand<T_Operand> &operand1 );
   };
 
-  // ! Operator with operand type as result type
-  template< class T > inline Operand<T>& operator!( Operand<T> &op );
+  // ! Operator for operand expression trees
+  inline Operand<bool>& operator!( Operand<bool> &op );
+  inline Operand<bool>& operator!( Operand<values::Scalar> &op );
+  inline Operand<bool>& operator!( Operand<values::Vector> &op );
+  inline Operand<bool>& operator!( Operand<values::Matrix> &op );
+  inline Operand<bool>& operator!( Operand<values::String> &op );
 
   //*****************************************************
   // Negative_Operator: operator for negative of operand 
@@ -202,8 +206,9 @@ namespace anitmt
     Negative_Operator( Operand<T_Operand> &operand1 );
   };
 
-  // ! Operator with operand type as result type
-  template< class T > inline Operand<T>& operator-( Operand<T> &op );
+  // - Operator for operand expression trees
+  inline Operand<values::Scalar>& operator-( Operand<values::Scalar> &op );
+  inline Operand<values::Vector>& operator-( Operand<values::Vector> &op );
 
   //*************************************************************************
   // Abs_Operator: operator for calculating the absolute value of an operand 
@@ -221,8 +226,9 @@ namespace anitmt
     Abs_Operator( Operand<T_Operand> &operand1 );
   };
 
-  // ! Operator with operand type as result type
-  template< class T > inline Operand<T>& abs( Operand<T> &op );
+  // abs function for operand expression trees
+  inline Operand<values::Scalar>& abs( Operand<values::Scalar> &op );
+  inline Operand<values::Scalar>& abs( Operand<values::Vector> &op );
 
   //*************************************************************************
   // Sqrt_Operator: operator for calculating the square root of an operand 
@@ -242,8 +248,8 @@ namespace anitmt
     Sqrt_Operator( Operand<T_Operand> &operand1 );
   };
 
-  // ! Operator with operand type as result type
-  template< class T > inline Operand<T>& sqrt( Operand<T> &op );
+  // sqrt function for operand expression trees
+  inline Operand<values::Scalar>& sqrt( Operand<values::Scalar> &op );
 
   //**********************************************************************
   // Add_Operator: operator for adding 2 operands of different types
@@ -264,16 +270,29 @@ namespace anitmt
   //**********
   // Operators
 
-  template< class T1, class T2 >
-  inline Operand<T2>& operator+( Operand<T1> &op1, Operand<T2> &op2 );
-  template< class T1 >
-  inline Operand<T1>& operator+( Operand<T1> &op1, values::Scalar op2 );
-  template< class T2 >
-  inline Operand<T2>& operator+( values::Scalar op1, Operand<T2> &op2 );
-  template< class T1 >
-  inline Operand<T1>& operator+( Operand<T1> &op1, values::Vector op2 );
-  template< class T2 >
-  inline Operand<T2>& operator+( values::Vector op1, Operand<T2> &op2 );
+  // scalar + scalar
+  inline Operand<values::Scalar>& 
+  operator+( Operand<values::Scalar> &op1, Operand<values::Scalar> &op2 );
+  inline Operand<values::Scalar>& 
+  operator+( Operand<values::Scalar> &op1, const values::Scalar &op2 );
+  inline Operand<values::Scalar>& 
+  operator+( const values::Scalar &op1, Operand<values::Scalar> &op2 );
+
+  // vector + vector
+  inline Operand<values::Vector>& 
+  operator+( Operand<values::Vector> &op1, Operand<values::Vector> &op2 );
+  inline Operand<values::Vector>& 
+  operator+( Operand<values::Vector> &op1, const values::Vector &op2 );
+  inline Operand<values::Vector>& 
+  operator+( const values::Vector &op1, Operand<values::Vector> &op2 );
+
+  // string + string
+  inline Operand<values::String>& 
+  operator+( Operand<values::String> &op1, Operand<values::String> &op2 );
+  inline Operand<values::String>& 
+  operator+( Operand<values::String> &op1, const values::String &op2 );
+  inline Operand<values::String>& 
+  operator+( const values::String &op1, Operand<values::String> &op2 );
 
   //**********************************************************************
   // Sub_Operator: operator for subtracting 2 operands of different types
@@ -294,16 +313,21 @@ namespace anitmt
   //**********
   // Operators
 
-  template< class T1, class T2 >
-  inline Operand<T2>& operator-( Operand<T1> &op1, Operand<T2> &op2 );
-  template< class T1 >
-  inline Operand<T1>& operator-( Operand<T1> &op1, values::Scalar op2 );
-  template< class T2 >
-  inline Operand<T2>& operator-( values::Scalar op1, Operand<T2> &op2 );
-  template< class T1 >
-  inline Operand<T1>& operator-( Operand<T1> &op1, values::Vector op2 );
-  template< class T2 >
-  inline Operand<T2>& operator-( values::Vector op1, Operand<T2> &op2 );
+  // scalar - scalar
+  inline Operand<values::Scalar>& 
+  operator-( Operand<values::Scalar> &op1, Operand<values::Scalar> &op2 );
+  inline Operand<values::Scalar>& 
+  operator-( Operand<values::Scalar> &op1, const values::Scalar &op2 );
+  inline Operand<values::Scalar>& 
+  operator-( const values::Scalar &op1, Operand<values::Scalar> &op2 );
+
+  // vector - vector
+  inline Operand<values::Vector>& 
+  operator-( Operand<values::Vector> &op1, Operand<values::Vector> &op2 );
+  inline Operand<values::Vector>& 
+  operator-( Operand<values::Vector> &op1, const values::Vector &op2 );
+  inline Operand<values::Vector>& 
+  operator-( const values::Vector &op1, Operand<values::Vector> &op2 );
 
   //**********************************************************************
   // Mul_Operator: operator for multiplying 2 operands of different types
@@ -340,31 +364,45 @@ namespace anitmt
   inline Operand<values::Scalar>& 
   operator*( Operand<values::Scalar> &op1, Operand<values::Scalar> &op2 );
   inline Operand<values::Scalar>& 
-  operator*( Operand<values::Scalar> &op1, values::Scalar op2 );
+  operator*( Operand<values::Scalar> &op1, const values::Scalar &op2 );
   inline Operand<values::Scalar>& 
-  operator*( values::Scalar op1,           Operand<values::Scalar> &op2 );
+  operator*( const values::Scalar &op1, Operand<values::Scalar> &op2 );
 
   // scalar * vector
   inline Operand<values::Vector>& 
   operator*( Operand<values::Scalar> &op1, Operand<values::Vector> &op2 );
   inline Operand<values::Vector>& 
-  operator*( Operand<values::Scalar> &op1, values::Vector op2 );
+  operator*( Operand<values::Scalar> &op1, const values::Vector &op2 );
   inline Operand<values::Vector>& 
-  operator*( values::Scalar op1,           Operand<values::Vector> &op2 );
+  operator*( const values::Scalar &op1, Operand<values::Vector> &op2 );
 
   // vector * scalar
   inline Operand<values::Vector>& 
   operator*( Operand<values::Vector> &op1, Operand<values::Scalar> &op2 );
   inline Operand<values::Vector>& 
-  operator*( Operand<values::Vector> &op1, values::Scalar op2 );
+  operator*( Operand<values::Vector> &op1, const values::Scalar &op2 );
   inline Operand<values::Vector>& 
-  operator*( values::Vector op1,           Operand<values::Scalar> &op2 );
+  operator*( const values::Vector &op1, Operand<values::Scalar> &op2 );
+
+  // matrix * matrix
+  inline Operand<values::Matrix>& 
+  operator*( Operand<values::Matrix> &op1, Operand<values::Matrix> &op2 );
+  inline Operand<values::Matrix>& 
+  operator*( Operand<values::Matrix> &op1, const values::Matrix &op2 );
+  inline Operand<values::Matrix>& 
+  operator*( const values::Matrix &op1, Operand<values::Matrix> &op2 );
+
+  // matrix * vector
+  inline Operand<values::Vector>& 
+  operator*( Operand<values::Matrix> &op1, Operand<values::Vector> &op2 );
+  inline Operand<values::Vector>& 
+  operator*( Operand<values::Matrix> &op1, const values::Vector &op2 );
+  inline Operand<values::Vector>& 
+  operator*( const values::Matrix &op1, Operand<values::Vector> &op2 );
 
   //**********************************************************************
   // Div_Operator: operator for dividing 2 operands of different types
   //**********************************************************************
-
-  // !!! Div Operator might not work with some types !!!
 
   template<class T_Result, class T_Op1, class T_Op2>
   class Div_Operator
@@ -394,16 +432,21 @@ namespace anitmt
   //**********
   // Operators
 
-  template< class T1, class T2 >
-  inline Operand<T2>& operator/( Operand<T1> &op1, Operand<T2> &op2 );
-  template< class T1 >
-  inline Operand<T1>& operator/( Operand<T1> &op1, values::Scalar op2 );
-  template< class T2 >
-  inline Operand<T2>& operator/( values::Scalar op1, Operand<T2> &op2 );
-  template< class T1 >
-  inline Operand<T1>& operator/( Operand<T1> &op1, values::Vector op2 );
-  template< class T2 >
-  inline Operand<T2>& operator/( values::Vector op1, Operand<T2> &op2 );
+  // scalar / scalar
+  inline Operand<values::Scalar>& 
+  operator/( Operand<values::Scalar> &op1, Operand<values::Scalar> &op2 );
+  inline Operand<values::Scalar>& 
+  operator/( Operand<values::Scalar> &op1, const values::Scalar &op2 );
+  inline Operand<values::Scalar>& 
+  operator/( const values::Scalar &op1, Operand<values::Scalar> &op2 );
+
+  // vector / scalar
+  inline Operand<values::Vector>& 
+  operator/( Operand<values::Vector> &op1, Operand<values::Scalar> &op2 );
+  inline Operand<values::Vector>& 
+  operator/( Operand<values::Vector> &op1, const values::Scalar &op2 );
+  inline Operand<values::Vector>& 
+  operator/( const values::Vector &op1, Operand<values::Scalar> &op2 );
 
   //***************************************************
   // Equal_Operator: operator for comparing 2 operands 
@@ -424,16 +467,104 @@ namespace anitmt
   //**********
   // Operators
 
-  template< class T1, class T2 >
-  inline Operand<bool>& operator==( Operand<T1> &op1, Operand<T2> &op2 );
-  template< class T1 >
-  inline Operand<bool>& operator==( Operand<T1> &op1, values::Scalar op2 );
-  template< class T2 >
-  inline Operand<bool>& operator==( values::Scalar op1, Operand<T2> &op2 );
-  template< class T1 >
-  inline Operand<bool>& operator==( Operand<T1> &op1, values::Vector op2 );
-  template< class T2 >
-  inline Operand<bool>& operator==( values::Vector op1, Operand<T2> &op2 );
+  // bool == bool
+  inline Operand<bool>& 
+  operator==( Operand<bool> &op1, Operand<bool> &op2 );
+  inline Operand<bool>& 
+  operator==( Operand<bool> &op1, bool op2 );
+  inline Operand<bool>& 
+  operator==( bool op1, Operand<bool> &op2 );
+
+  // scalar == scalar
+  inline Operand<bool>&
+  operator==( Operand<values::Scalar> &op1, Operand<values::Scalar> &op2 );
+  inline Operand<bool>&
+  operator==( Operand<values::Scalar> &op1, const values::Scalar &op2 );
+  inline Operand<bool>&
+  operator==( const values::Scalar &op1, Operand<values::Scalar> &op2 );
+
+  // vector == vector
+  inline Operand<bool>&
+  operator==( Operand<values::Vector> &op1, Operand<values::Vector> &op2 );
+  inline Operand<bool>&
+  operator==( Operand<values::Vector> &op1, const values::Vector &op2 );
+  inline Operand<bool>&
+  operator==( const values::Vector &op1, Operand<values::Vector> &op2 );
+
+  // matrix == matrix
+  inline Operand<bool>&
+  operator==( Operand<values::Matrix> &op1, Operand<values::Matrix> &op2 );
+  inline Operand<bool>&
+  operator==( Operand<values::Matrix> &op1, const values::Matrix &op2 );
+  inline Operand<bool>&
+  operator==( const values::Matrix &op1, Operand<values::Matrix> &op2 );
+
+  // string == string
+  inline Operand<bool>&
+  operator==( Operand<values::String> &op1, Operand<values::String> &op2 );
+  inline Operand<bool>&
+  operator==( Operand<values::String> &op1, const values::String &op2 );
+  inline Operand<bool>&
+  operator==( const values::String &op1, Operand<values::String> &op2 );
+
+  //***************************************************
+  // Unequal_Operator: operator for comparing 2 operands 
+  //***************************************************
+
+  template<class T_Result=bool, class T_Op1, class T_Op2>
+  class Unequal_Operator
+    : public Basic_Operator_for_2_Operands<T_Result, T_Op1, T_Op2> 
+  {
+    /*! has to calculate the result when both is_operand_ok and 
+      is_operand_enough  return true */
+    virtual T_Result calc_result( const T_Op1 &value1, const T_Op2 &value2 ); 
+
+  public:
+    Unequal_Operator( Operand<T_Op1> &operand1, Operand<T_Op2> &operand2 );
+  };
+
+  //**********
+  // Operators
+
+  // bool != bool
+  inline Operand<bool>& 
+  operator!=( Operand<bool> &op1, Operand<bool> &op2 );
+  inline Operand<bool>& 
+  operator!=( Operand<bool> &op1, bool op2 );
+  inline Operand<bool>& 
+  operator!=( bool op1, Operand<bool> &op2 );
+
+  // scalar != scalar
+  inline Operand<bool>&
+  operator!=( Operand<values::Scalar> &op1, Operand<values::Scalar> &op2 );
+  inline Operand<bool>&
+  operator!=( Operand<values::Scalar> &op1, const values::Scalar &op2 );
+  inline Operand<bool>&
+  operator!=( const values::Scalar &op1, Operand<values::Scalar> &op2 );
+
+  // vector != vector
+  inline Operand<bool>&
+  operator!=( Operand<values::Vector> &op1, Operand<values::Vector> &op2 );
+  inline Operand<bool>&
+  operator!=( Operand<values::Vector> &op1, const values::Vector &op2 );
+  inline Operand<bool>&
+  operator!=( const values::Vector &op1, Operand<values::Vector> &op2 );
+
+  // matrix != matrix
+  inline Operand<bool>&
+  operator!=( Operand<values::Matrix> &op1, Operand<values::Matrix> &op2 );
+  inline Operand<bool>&
+  operator!=( Operand<values::Matrix> &op1, const values::Matrix &op2 );
+  inline Operand<bool>&
+  operator!=( const values::Matrix &op1, Operand<values::Matrix> &op2 );
+
+  // string != string
+  inline Operand<bool>&
+  operator!=( Operand<values::String> &op1, Operand<values::String> &op2 );
+  inline Operand<bool>&
+  operator!=( Operand<values::String> &op1, const values::String &op2 );
+  inline Operand<bool>&
+  operator!=( const values::String &op1, Operand<values::String> &op2 );
 
   //***************
   // test function

@@ -18,9 +18,9 @@ class stringlist : public std::list<std::string>
 		~stringlist()  {  clear();  }
 		
 		stringlist &operator=(const stringlist &sl)
-			{  clear();  _addlist(sl);  }
+			{  clear();  _addlist(sl); return(*this);  }
 		stringlist &operator+=(const stringlist &sl)
-			{  _addlist(sl);  }
+			{  _addlist(sl); return(*this); }
 		
 		bool is_empty()
 			{  return((begin()==end()) ? true : false);  }

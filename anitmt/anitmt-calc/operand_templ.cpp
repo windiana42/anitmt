@@ -103,6 +103,7 @@ namespace anitmt
   bool Store_Operand_to_Operand<T>::is_result_ok
   ( const void *ID, const Solve_Run_Info *info ) throw(EX)
   {
+    assert( ID == &source );
     return destination.test_set_value( source.get_value(info), info );
   }
 
@@ -110,6 +111,7 @@ namespace anitmt
   void Store_Operand_to_Operand<T>::use_result 
   ( const void *ID, const Solve_Run_Info *info ) throw(EX)
   {
+    assert( ID == &source );
     destination.use_test_value( info );
   }
 
@@ -121,11 +123,17 @@ namespace anitmt
 
   template<class T>
   Store_Operand_to_Operand<T>::Store_Operand_to_Operand
-  ( Operand<T> &src, Operand<T> &dest ) 
+  ( Operand<T> &src, Operand<T> &dest ) throw( EX )
     : source(src), destination(dest) 
   {
     // register to source Operand 
     src.add_listener( this );
+
+    if( src.is_solved() )
+    {
+      dest.set_value( src.get_value() );
+				// could throw exception !
+    }
   }
 }
 

@@ -77,8 +77,10 @@ namespace anitmt
   template<class T> class Type_Property : public Property, public Operand<T>
   {
   public:	
-    operator T() const		// implicite convertion to type (like get())
-      throw( EX_property_not_solved );
+    //!! shouldn't be convertable as Operand<> has its own operators !!
+    //!! user operator() to convert to type instead !!
+    // operator T() const	  // implicite convertion to type (like get()) 
+    //   throw( EX_property_not_solved );
 
     // connects another operand as a solution source
     Operand<T>& operator=( Operand<T> &src ) throw(EX)

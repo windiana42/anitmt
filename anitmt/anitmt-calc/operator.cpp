@@ -134,7 +134,6 @@ namespace anitmt
       }
     }
 
-
     // calc (!x) + 2 (x = 5)    
     {
       Operand<values::Scalar> x;
@@ -235,20 +234,20 @@ namespace anitmt
 	errors++;
       }
     }
-    // calc (!1) + 2 = 2
+    // calc !(1 + 2) = false
     {
-      Operand<values::Scalar> &op = 
-	!*(new Constant<values::Scalar>(1)) + 
-	*(new Constant<values::Scalar>(2));
+      Operand<bool> &op = 
+	!(*(new Constant<values::Scalar>(1)) + 
+	  *(new Constant<values::Scalar>(2)));
 
       if( op.is_solved() )
       {
-	cout << "  (!1) + 2 = " << op.get_value() << " (2)" << endl;
-	assert( op.get_value() == 2 );
+	cout << "  !(1 + 2) = " << op.get_value() << " (false)" << endl;
+	assert( op.get_value() == false );
       } 
       else
       {
-	cerr << "!!Error could not calc (!1) + 2 ;)!! " << endl;
+	cerr << "!!Error could not calc !(1 + 2) !! " << endl;
 	errors++;
       }
     }
@@ -307,14 +306,14 @@ namespace anitmt
     }
 
 
-    // calc (!x) + 2 (x = 5)    
+    // calc !(x(=5) - 5) 
     {
       Operand<values::Scalar> x;
-      Operand<values::Scalar> &op = (!x) + 2;
+      Operand<bool> &op = !(x - 5);
 
       if( op.is_solved() )
       {
-	cerr << "!!Error why can he solve (!x) + 2 without knowing x?!! " 
+	cerr << "!!Error why can he solve !(x - 5) without knowing x?!! " 
 	     << endl;
 	errors++;
       }
@@ -323,12 +322,12 @@ namespace anitmt
 
       if( op.is_solved() )
       {
-	cout << "  (!x(=5)) + 2 = " << op.get_value() << "(2)" << endl;
-	assert( op.get_value() == 2 );
+	cout << "  !(x(=5) - 5) = " << op.get_value() << "(true)" << endl;
+	assert( op.get_value() == true );
       }
       else
       {
-	cerr << "!!Error could not calc (!x) + 2 !!" << endl;
+	cerr << "!!Error could not calc !(x(=5) - 5) !!" << endl;
 	errors++;
       }
     }
@@ -379,9 +378,6 @@ namespace anitmt
 	errors++;
       }
     }
-
-    // property assignment test
-    cout << " Tests Operand assignment to Operand" << endl;
 
     // calc x + 2 (x = 5)    
     {
@@ -521,7 +517,7 @@ namespace anitmt
       {
 	cout << "  5 / x(=3) = " << op.get_value() 
 	     << " (1.666...)" <<  endl;
-	assert( op.get_value() == 5/3 );
+	assert( op.get_value() == 5./3. );
       }
       else
       {
@@ -533,7 +529,7 @@ namespace anitmt
     // calc 5 == x> 
     {
       Operand<values::Scalar> x; 
-      Operand<bool> &op = 5 == x;
+      Operand<bool> &op = (5 == x);
 
       if( op.is_solved() )
       {

@@ -29,6 +29,7 @@ namespace anitmt{
   //***************************************************************
 
   // implicite convertion to contained type
+  /* shouldn't be implemented (see property.hpp)
   template<class T>
   Type_Property<T>::operator T() const throw( EX_property_not_solved )
   { 
@@ -37,6 +38,7 @@ namespace anitmt{
 
     return get_value(); 
   }
+  */
 
   template<class T>
   std::ostream &Type_Property<T>::write2stream( std::ostream& os ) {

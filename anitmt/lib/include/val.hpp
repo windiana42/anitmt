@@ -17,6 +17,7 @@
 #include <string>
 
 #include "vect.hpp"
+#include <math.h>
 
 namespace values
 {
@@ -108,7 +109,11 @@ namespace values
     {  return(fabs(a.x-b)<=epsilon);  }
   inline bool operator!=(const Scalar &a,double b)
     {  return(fabs(a.x-b)>epsilon);  }
-  
+
+  inline Scalar abs(const Scalar &a)
+    {  return fabs(a); }
+  inline Scalar sqrt(const Scalar &a)
+    {  return sqrt( double(a) ); }
   
 /******************************************************************************/
 /*   VECTOR                                                                   */
@@ -177,7 +182,7 @@ namespace values
     friend Vector operator*(const Vector &a,const Matrix &b);
 
     // Unary operators: 
-    Vector  operator+() const  {  return(*this);  } //!!!should copy object!!!
+    Vector  operator+() const  {  return(*this);  }
     Vector  operator-() const {  Vector r(noinit);  r.x.neg(x);   return(r);  }
 
     // Operators comparing vectors (are using epsilon): 
@@ -433,7 +438,7 @@ namespace values
     Matrix &operator-=(const Matrix &b)  {  x.sub(b.x);  return(*this);  }
 
     // Unary operators: 
-    Matrix operator+() const {  return(*this);  }
+    Matrix operator+() const {  return(*this);  } 
     Matrix operator-() const {  Matrix r(noinit);  r.x.neg(x);   return(r);  }
 
     // Operators comparing matrices (are using epsilon): 
@@ -441,11 +446,11 @@ namespace values
     friend bool operator!=(const Matrix &,const Matrix &);
 
     // Returns 1, if this matrix is the identity-matrix (uses epsilon). 
-    bool operator!()  {  return(x.is_ident(epsilon));  }
-    bool is_ident()   {  return(x.is_ident(epsilon));  }
+    bool operator!() const {  return(x.is_ident(epsilon));  }
+    bool is_ident()  const {  return(x.is_ident(epsilon));  }
 
     // Returns 1, if this matrix is the null-matrix (uses epsilon). 
-    bool is_null()   {  return(x.is_null(epsilon));  }
+    bool is_null() const {  return(x.is_null(epsilon));  }
 
     // These functions calculate the inverse matrix. 
     Matrix &invert()  {  x.invert();  return(*this);  }
@@ -562,5 +567,8 @@ namespace values
     String(std::string s) : Valtype(Valtype::string),std::string(s) { }
     String(const String &s) : Valtype(Valtype::string),std::string(s) { }
   };
+
+  inline bool operator!(const String &a)
+    { return a == String(); }
 }
 #endif  /* __values_h__ */

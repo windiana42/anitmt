@@ -252,7 +252,7 @@ namespace anitmt
     virtual void disconnect( const void *ID );
 
   public:
-    Store_Operand_to_Operand( Operand<T> &src, Operand<T> &dest ); 
+    Store_Operand_to_Operand( Operand<T> &src, Operand<T> &dest ) throw( EX ); 
   };
 
 }
