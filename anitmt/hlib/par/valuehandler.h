@@ -113,8 +113,7 @@ struct OptionValueHandler : ValueHandler
 	size_t cpsize()             // May be copied via memcpy(); does not 
 	{  return(sizeof(int));  }  // need construction or destruction. 
 	
-	ParParseState parse(ParamInfo *,void * /*val*/,ParamArg *pa)
-	{  return(pa->assmode ? PPSIllegalAssMode : PPSSuccess);  }
+	ParParseState parse(ParamInfo *,void *val,ParamArg *pa);
 	
 	char *print(ParamInfo *pi,void *val,char *dest,size_t len);
 };

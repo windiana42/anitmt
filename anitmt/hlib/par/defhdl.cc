@@ -312,6 +312,17 @@ static OptionValueHandler static_option_handler;
 ValueHandler *default_option_handler=&static_option_handler;
 
 
+PAR::ParParseState OptionValueHandler::parse(PAR::ParamInfo *,void *val,ParamArg *pa)
+{
+	if(pa->assmode)
+	{  return(PPSIllegalAssMode);  }
+	
+	// Inc value...
+	++(*(int*)val);
+	
+	return(PPSSuccess);
+}
+
 char *OptionValueHandler::print(PAR::ParamInfo *,void *_val,char *dest,size_t len)
 {
 	int val=*(int*)_val;
