@@ -86,6 +86,8 @@ namespace anitmt{
 
     inline bool operator==( Scalar_Component_Interface scalar2 ) const
     { return scalar_component == scalar2.scalar_component; }
+    inline bool operator!=( Scalar_Component_Interface scalar2 ) const
+    { return scalar_component != scalar2.scalar_component; }
 
     Scalar_Component_Interface
     ( functionality::_container_scalar_component::elements_type::iterator 
@@ -102,6 +104,8 @@ namespace anitmt{
 
     inline bool operator==( Object_Component_Interface object2 ) const
     { return object_component == object2.object_component; }
+    inline bool operator!=( Object_Component_Interface object2 ) const
+    { return object_component != object2.object_component; }
 
     Object_Component_Interface
     ( functionality::_container_object_component::elements_type::iterator 
@@ -122,6 +126,8 @@ namespace anitmt{
 
     inline bool operator==( Scene_Interface scene2 ) const
     { return scene == scene2.scene; }
+    inline bool operator!=( Scene_Interface scene2 ) const
+    { return scene != scene2.scene; }
 
     Scene_Interface
     ( functionality::_container_scene_type::elements_type::iterator scene );
