@@ -23,4 +23,4 @@ YLWRAP  = 		$(top_srcdir)/ylwrap
 # A .cc-File is a must here. The ylwrap script doesn't accept other file
 # suffixes.
 scanner.cc:	$(srcdir)/scanner.ll $(srcdir)/support.hpp
-	$(SHELL) $(YLWRAP) "$(LEX)" scanner.ll lex.ADL.cc scanner.cc -- -PADL
+	$(SHELL) $(YLWRAP) "$(LEX)" $(srcdir)/scanner.ll lex.ADL.cc scanner.cc -- -PADL
