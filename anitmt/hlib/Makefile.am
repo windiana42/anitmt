@@ -10,7 +10,7 @@ OPTCFLAGS = -W -Wall -Wformat \
 	-malign-jumps=2 -malign-loops=2 -malign-functions=2 \
 	-DHLIB_SIZE_OPT=1 -D_GNU_SOURCE
 
-SUBDIRS = include cpp misc fd crypto par
+SUBDIRS = include cpp misc fd par
 
 noinst_LIBRARIES = libhlib.a
 libhlib_a_SOURCES = 

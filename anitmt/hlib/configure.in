@@ -10,5 +10,4 @@ AC_OUTPUT(
 	fd/Makefile
 	par/Makefile
 	misc/Makefile
-	crypto/Makefile 
 	Makefile )
