@@ -9,9 +9,8 @@ HlibHeaders = hconfig.h hlib-config.h \
 		par/parconsumerovl.h par/parmanager.h par/sindentcout.h par/srccmd.h par/srcfile.h par/srcenv.h \
 		par/valhdl.h par/valuehandler.h par/parbase.h par/secthdl.h \
 	misc/prototypes.h misc/hlib.h misc/lmalloc.h \
-	crypto/base64.h \
-	compress/base_cinfile.h compress/gzip_cinfile.h compress/bzip2_cinfile.h \
-		compress/pngwrite.h compress/pngread.h
+	crypto/base64.h 
+	
 
 all: LinkHeaders
 opt: LinkHeaders

@@ -17,6 +17,7 @@
 #include <message/message.hpp>
 #include <utl/stdextend.hpp>
 
+
 namespace proptree
 {
   //************************************************************
@@ -307,11 +308,53 @@ namespace proptree
 
   Prop_Tree_Node::~Prop_Tree_Node() 
   {
-    delete pos;
+    if(pos!=message::GLOB::no_position) delete pos;
     // bidirectional delete of delete hierarchy
     if( first_child ) delete first_child;
     if( next ) delete next;
   }
+
+  //**********************************************
+  // Child_Manager: provides hierarchy traversal. 
+  //**********************************************
+  
+  void Child_Manager::set_root_node( Prop_Tree_Node *node )
+  {
+    last_child.push(node);		// node is parent...
+    last_child.push(no_child);	// ... so add a virtual child
+    initialized = true;
+  }
+
+      Prop_Tree_Node *Child_Manager::get_child()
+  {
+    assert( initialized );	// there must be at least a no_child
+
+    Prop_Tree_Node *last = last_child.top(); // get last child
+    last_child.pop();		// remove old child
+    Prop_Tree_Node *new_child;
+    if( last != no_child )
+    {
+      new_child = last->get_next(); assert( new_child != 0 );
+    }
+    else
+    {
+      Prop_Tree_Node *parent = last_child.top();
+      new_child = parent->get_first_child();
+    }
+    last_child.push(new_child);
+    last_child.push(no_child);
+    return new_child;
+  }
+
+  void Child_Manager::child_finished()
+  {
+    assert( initialized );	// there must be at least a no_child
+
+    last_child.pop();
+    assert( !last_child.empty() ); // it's not allowed to finish root node
+  }
+  
+  Prop_Tree_Node *Child_Manager::no_child = 0; // static initialization
 
   //***************************************************************************
   // tree create test

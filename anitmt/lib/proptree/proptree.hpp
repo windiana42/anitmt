@@ -20,6 +20,7 @@
 #include <list>
 #include <map>
 #include <vector>
+#include <stack>
 
 namespace proptree
 {
@@ -201,6 +202,23 @@ namespace proptree
 	message::Message_Consultant *msg ) const;
     virtual typename Basic_Node_Factory<Provider_Type>::node_return_type cast( 
 	Prop_Tree_Node * ) const;
+  };
+
+  //**********************************************
+  // Child_Manager: provides hierarchy traversal. 
+  //**********************************************
+  class Child_Manager{
+    std::stack<proptree::Prop_Tree_Node*> last_child; 
+    static proptree::Prop_Tree_Node *no_child;
+    bool initialized;
+  public:
+    inline bool is_initialized() { return initialized; }
+
+    void set_root_node( proptree::Prop_Tree_Node *node );
+    proptree::Prop_Tree_Node *get_child();
+    void child_finished();
+
+    Child_Manager() : initialized(false) {}
   };
 
   /*

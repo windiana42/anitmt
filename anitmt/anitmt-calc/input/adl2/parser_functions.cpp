@@ -27,57 +27,7 @@ namespace anitmt
     // functions used by the parser
     //******************************
 
-    //***************
-    // Child Manager
-
-    // keeps track of the tree node hierarchy in pass2
-    class Child_Manager{
-      std::stack<proptree::Prop_Tree_Node*> last_child; 
-      static proptree::Prop_Tree_Node *no_child;
-      bool initialized;
-    public:
-      inline bool is_initialized() { return initialized; }
-
-      void set_root_node( proptree::Prop_Tree_Node *node )
-      {
-	last_child.push(node);		// node is parent...
-	last_child.push(no_child);	// ... so add a virtual child
-	initialized = true;
-      }
-
-      proptree::Prop_Tree_Node *get_child()
-      {
-	assert( initialized );	// there must be at least a no_child
-
-	proptree::Prop_Tree_Node *last = last_child.top(); // get last child
-	last_child.pop();		// remove old child
-	proptree::Prop_Tree_Node *new_child;
-	if( last != no_child )
-	{
-	  new_child = last->get_next(); assert( new_child != 0 );
-	}
-	else
-	{
-	  proptree::Prop_Tree_Node *parent = last_child.top();
-	  new_child = parent->get_first_child();
-	}
-	last_child.push(new_child);
-	last_child.push(no_child);
-	return new_child;
-      }
-
-      void child_finished()
-      {
-	assert( initialized );	// there must be at least a no_child
-
-	last_child.pop();
-	assert( !last_child.empty() ); // it's not allowed to finish root node
-      }
-      Child_Manager() : initialized(false) {}
-    };
-    proptree::Prop_Tree_Node *Child_Manager::no_child = 0; // static initialization
-
-    Child_Manager child_manager;
+    proptree::Child_Manager child_manager;
 
     //**************************
     // hierarchy move functions
