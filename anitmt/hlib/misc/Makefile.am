@@ -11,7 +11,7 @@ libmisc_a_SOURCES = \
 		llongstr.c ullongstr.c \
 		memfind.c \
 		msecelapsed.c msecelapsedr.c \
-		nonblock.c tcpnodelay.c sockerror.c \
+		nonblock.c tcpnodelay.c sockerror.c reuseaddr.c \
 		getprgname.c \
 		gettermsize.c \
 		getloadavg.c \

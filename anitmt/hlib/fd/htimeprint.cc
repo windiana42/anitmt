@@ -74,6 +74,9 @@ const char *HTime::PrintElapsed(int with_msec) const
 	}
 	if(msec>=1000)
 	{  --sec;  msec-=1000;  }
+	// Correct rounding. (sec>=0 here because negative case handeled above). 
+	if(!with_msec && msec>=500)
+	{  ++sec;  }
 	
 	long hours=(sec/3600);
 	if(hours>48)

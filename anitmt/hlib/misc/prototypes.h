@@ -116,6 +116,14 @@ extern char *prg_name;
    */
   extern int SetNonblocking(int fd);
 
+/* reuseaddr.c: */
+  /* Set SO_REUSEADDR on socket. 
+   * Return value: 
+   *   0 -> success
+   *  -1 -> setsockopt(SOL_SOCKET,SO_REUSEADDR) failed
+   */
+  extern int SocketReUseAddr(int fd);
+
 /* sockerror.c: */
   /* Get socket's pending error code. 
    * Return value: 
