@@ -24,16 +24,19 @@ void stringlist::_addlist(const stringlist &sl)
 
 stringlist::stringlist(const char *str0,...)  // NULL-terminated!!!
 {
-	add(str0);
-	va_list ap;
-	va_start(ap,str0);
-	for(;;)
+	if(str0)
 	{
-		const char *str=va_arg(ap,const char*);
-		if(!str)  break;
-		add(str);
+		add(str0);
+		va_list ap;
+		va_start(ap,str0);
+		for(;;)
+		{
+			const char *str=va_arg(ap,const char*);
+			if(!str)  break;
+			add(str);
+		}
+		va_end(ap);
 	}
-	va_end(ap);
 }
 
 
