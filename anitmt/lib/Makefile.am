@@ -1,1 +1,1 @@
-SUBDIRS = val utl par message param solve exparse flex
+SUBDIRS = message val solve proptree utl par param exparse flex

@@ -31,6 +31,7 @@ namespace funcgen
     std::string prefix_node_type; //! prefix for node types
     std::string prefix_prop_op; //! prefix for properties and operands
     std::string prefix_res_fun; //! prefix for result functions
+    std::string prefix_is_avail; //! prefix for is_avail operand
     std::string prefix_param_range; //! prefix for start_/end_param
     std::string prefix_container_type; //! prefix for container types
     std::string prefix_serial_container_type; //! prefix for serial containers
@@ -41,6 +42,7 @@ namespace funcgen
     virtual std::string base_type( std::string name );
     virtual std::string provider_type( std::string name );
     virtual std::string node_type( std::string name );
+    virtual std::string node_base_type();
     virtual std::string result_function_decl( std::string provider_type,
 					      std::string ret_type, 
 					      std::string par_type );
@@ -73,6 +75,15 @@ namespace funcgen
       std::string par );
     virtual std::string first_init( std::string provider_type );
     virtual std::string last_init( std::string provider_type );
+    virtual std::string is_avail( std::string provider_type,
+				  std::string ret_type,
+				  std::string par_type);
+    virtual std::string prev();
+    virtual std::string next();
+    virtual std::string parent();
+    virtual std::string first_child();
+    virtual std::string last_child();
+    virtual std::string get_child( int n );
 
     Cpp_Code_Translator();
   };

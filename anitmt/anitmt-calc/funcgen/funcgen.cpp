@@ -27,12 +27,16 @@ namespace funcgen
 
 int main(int argn, char *argc[])
 {
-  funcgen::yydebug = 1;
   if( argn <= 1 )
   {
-    std::cout << "usage: funcgen <filename>" << std::endl;
+    std::cout << "usage: funcgen <filename> [debug] [verbose] " << std::endl;
     return -1;
   }
+  if( argn >= 3 )
+  {
+    funcgen::yydebug = 1;
+  }
+
   message::Stream_Message_Handler msg_handler(std::cerr,std::cout,std::cout);
   message::Message_Manager manager(&msg_handler);
   message::Message_Consultant default_msg_consultant(&manager, 0);
@@ -40,16 +44,30 @@ int main(int argn, char *argc[])
   funcgen::Cpp_Code_Generator cpp;	  // C++ Code generator
   funcgen::AFD_Root afd( cpp.get_translator() ); // afd data root
   
-  std::cout << "Parsing " << argc[1] << "..." << std::endl;
+  std::cout << "Parsing... " << argc[1] << "..." << std::endl;
   funcgen::parse_afd( &afd, &default_msg_consultant, argc[1] );
   std::cout << std::endl;
 
-  if( argn >= 3 )
+  if( argn >= 4 )
   {
     std::cout << "Result: " << std::endl;
     afd.print();			// debug print data in structure
   }
+  std::cout << std::endl;
 
-  funcgen::code_gen_info info("functionality");
+  std::cout << manager.get_num_messages( message::MT_Error )
+	    << " Errors" << std::endl;
+  std::cout << manager.get_num_messages( message::MT_Warning )
+	    << " Warnings" << std::endl;
+  std::cout << std::endl;
+
+  std::cout << "Generating Code... " << std::endl;
+  funcgen::code_gen_info info("functionality", &default_msg_consultant);
   cpp.generate_code( &afd, &info ); // generate C++ Code
+
+  std::cout << manager.get_num_messages( message::MT_Error )
+	    << " Errors" << std::endl;
+  std::cout << manager.get_num_messages( message::MT_Warning )
+	    << " Warnings" << std::endl;
+
 }

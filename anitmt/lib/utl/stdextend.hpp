@@ -39,6 +39,16 @@ namespace std
   string operator+( const string &s, values::Vector v );
   string operator+( const string &s, values::Matrix v );
   //string &operator+( string, values::String v ); // obsolete
+
+  // append number formats to strings
+  string operator+=( const string &s, int );
+  string operator+=( const string &s, long );
+  string operator+=( const string &s, double );
+  string operator+=( const string &s, values::Flag v );
+  string operator+=( const string &s, values::Scalar v );
+  string operator+=( const string &s, values::Vector v );
+  string operator+=( const string &s, values::Matrix v );
+  //string &operator+=( string, values::String v ); // obsolete
 }
 #endif
 

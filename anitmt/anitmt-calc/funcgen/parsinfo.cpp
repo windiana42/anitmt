@@ -21,12 +21,19 @@ namespace funcgen
   //**********************************************************
 
   // open file to be read by the lexer
-  void afd_info::open_file( std::string filename )
+  bool afd_info::open_file( std::string filename )
   {
     file_pos.set_filename( filename );
     in_file.open( filename.c_str() );
+    if( !in_file )		// couldn't open file?
+    {
+      msg.error(message::GLOB::no_position) 
+	<< "fatal error: couldn't open input file " << filename;
+      return false;
+    }
     lexer->set_input_stream( in_file );
     lexer_uses_file_stream = true;
+    return true;
   }
   
   void afd_info::close_file()

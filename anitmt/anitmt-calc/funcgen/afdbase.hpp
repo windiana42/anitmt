@@ -48,9 +48,12 @@ namespace funcgen
 {
   class Base_Type
   {
+  private:
     bool structure;
     std::string type_name;
+  public:
     typedef std::map<std::string,std::string> element_types_type; 
+  private:
     element_types_type element_types; // map name->type
   public:
     //! add element type to structure
@@ -89,6 +92,7 @@ namespace funcgen
     typedef std::set<Result_Type> result_types_type;
     result_types_type result_types;
     bool serial;
+    message::Abstract_Position *pos;
 
     // special functions for identification
     bool operator==( Provider_Type& );
@@ -213,6 +217,7 @@ namespace funcgen
 
     void print( const Result_Type &type ) const; 
 				// print, just for debug purposes
+    Result_Code();
   };
 
   class Provided_Results
@@ -220,6 +225,7 @@ namespace funcgen
   public:
     std::map<Result_Type, Result_Code> results;
     Result_Code *current_result_code;
+    Provider_Type *type;	// provider type of these provided results
     void print() const;		// print, just for debug purposes
   };
 
@@ -230,9 +236,14 @@ namespace funcgen
     std::list<std::string> essentials;
     std::string code;		// reference code
 
-    void clear();
-    void add( std::string code );
-    void add_unchecked( std::string code );
+    // ** to store until next call
+    std::string provider_type;
+    std::string ret_type;
+    std::string par_type;
+    // ** access functions
+    void clear();		// clear reference
+    void add( std::string code ); // add checked reference element
+    void add_unchecked( std::string code ); // add unchecked reference element
 
     Property_Reference();
   };

@@ -65,11 +65,13 @@ qstring_err 	(\"([^\"\n]|\\\")*)
 
 "//".*\n  { info->file_pos.inc_line(); /* ignore one line comment */ }
 "/*"	  { inc_col(); yy_push_state(ML_COMMENT); }
-<ML_COMMENT>"*/"   { inc_col(); yy_pop_state(); }
-<ML_COMMENT>"/*"   { inc_col(); yy_push_state(ML_COMMENT); /*nested comm.*/ } 
-<ML_COMMENT>\n     { info->file_pos.inc_line(); }
-<ML_COMMENT>\r     { ; /*ignore DOS specific line end*/ }
-<ML_COMMENT>[^\n]* { inc_col(); /* ingore multiline comment */ }
+<ML_COMMENT>"*/" 	{ inc_col(); yy_pop_state(); }
+<ML_COMMENT>"/*" 	{ inc_col(); yy_push_state(ML_COMMENT); /*nested?*/ } 
+<ML_COMMENT>\n         	{ info->file_pos.inc_line(); }
+<ML_COMMENT>\r        	{ ; /*ignore DOS specific line end*/ }
+<ML_COMMENT>[^\n\*]* 	{ inc_col(); /* ingore multiline comment */ }
+<ML_COMMENT>[^\n\*]*\n 	{ info->file_pos.inc_line(); /*optimized*/ }
+<ML_COMMENT>.	 	{ inc_col(); /* singel '*' would fail otherwise */ }
 
 " "+	  { inc_col(); }    
 "\t"	  { info->file_pos.tab_inc_column(); } 
@@ -130,14 +132,16 @@ false		{ tok_pos(); return TAFD_false; }
 
 .	  { tok_pos(); return yytext[0]; }	/* one charater tokens */
 
-<COPY_CODE>"\t"	{ info->file_pos.tab_inc_column(); } 
-<COPY_CODE>"\n"	{ info->file_pos.inc_line(); }
+<COPY_CODE>"\t"	{ info->file_pos.tab_inc_column(); 
+		  copy_code_line( info, yytext,yyleng ); } 
+<COPY_CODE>"\n"	{ info->file_pos.inc_line(); 
+		  copy_code_line( info, yytext,yyleng ); }
 <COPY_CODE>"\r"	{ ; /*ignore DOS specific line end*/ }
 <COPY_CODE>"["	{ tok_pos(); code_block_escape(info); yy_pop_state(); 
 		  return yytext[0]; }
 <COPY_CODE>"}"	{ unput('}'); yy_pop_state(); return TAFD_CODE; }
 <COPY_CODE>[^\n\t\[}]+ 	{inc_col(); copy_code_line( info, yytext, yyleng ); }
-<COPY_CODE>[^\n\t\[}]+"\n" 	{ info->file_pos.inc_line(); 
+<COPY_CODE>[^\n\[}]+"\n" 	{ info->file_pos.inc_line(); 
 				  copy_code_line( info, yytext,yyleng ); }
 
 

@@ -43,7 +43,7 @@ namespace funcgen
     ~afd_info();
 
     // open file to be read by the lexer
-    void open_file( std::string filename );
+    bool open_file( std::string filename ); // false: couldn't open file
     void close_file();
 
     // open file to be read by the lexer

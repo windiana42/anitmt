@@ -1651,7 +1651,8 @@ yyerrhandle:
     afd_info info(afd,c);
     info.set_max_old_positions(MAX_OLD_POSITIONS);
      
-    info.open_file( filename );
+    if(!info.open_file( filename )) // did an error occur?
+      return -1;
     int ret = yyparse( static_cast<void*>(&info) );
     info.close_file();
       

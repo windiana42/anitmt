@@ -250,39 +250,39 @@ typedef unsigned char YY_CHAR;
 	*yy_cp = '\0'; \
 	yy_c_buf_p = yy_cp;
 
-#define YY_NUM_RULES 65
-#define YY_END_OF_BUFFER 66
-static yyconst short int yy_accept[265] =
+#define YY_NUM_RULES 67
+#define YY_END_OF_BUFFER 68
+static yyconst short int yy_accept[267] =
     {   0,
-        0,    0,    7,    7,    0,    0,   66,   57,    9,   10,
-       11,    8,   57,   14,   57,   57,   12,   57,   57,   57,
-       57,   56,   56,   56,   56,   56,   56,   56,   56,   56,
-       56,   56,   56,   56,   56,   56,   56,    7,    5,    6,
-        7,    7,   63,   58,   59,   60,   61,   62,    8,   16,
-       14,   13,   14,   12,    2,    0,   12,   12,   19,   18,
-       15,   17,   56,   56,   56,   56,   56,   56,   56,   56,
-       56,   56,   56,   56,   56,   56,   56,   56,   56,   56,
-       56,   56,   56,   56,   56,   56,   56,   56,   56,   56,
-        7,    3,    4,   63,   64,   13,    0,    0,    1,   56,
+        0,    0,    7,    7,    0,    0,   68,   59,   11,   12,
+       13,   10,   59,   16,   59,   59,   14,   59,   59,   59,
+       59,   58,   58,   58,   58,   58,   58,   58,   58,   58,
+       58,   58,   58,   58,   58,   58,   58,    7,    5,    6,
+        9,    7,   65,   60,   61,   62,   63,   64,   10,   18,
+       16,   15,   16,   14,    2,    0,   14,   14,   21,   20,
+       17,   19,   58,   58,   58,   58,   58,   58,   58,   58,
+       58,   58,   58,   58,   58,   58,   58,   58,   58,   58,
+       58,   58,   58,   58,   58,   58,   58,   58,   58,   58,
+        7,    8,    3,    4,   65,    0,   66,   15,    0,    0,
 
-       56,   56,   56,   56,   56,   56,   56,   56,   56,   56,
-       56,   56,   56,   56,   56,   56,   56,   56,   56,   56,
-       56,   56,   56,   56,   56,   56,   56,   56,   56,   56,
-        0,   12,   56,   56,   56,   56,   56,   56,   56,   56,
-       56,   56,   56,   56,   56,   56,   47,   38,   39,   45,
-       25,   56,   56,   44,   56,   56,   35,   56,   56,   56,
-       56,   56,   43,   54,   24,   56,   56,   56,   49,   56,
-       56,   56,   56,   56,   56,   56,   55,   46,   56,   56,
-       56,   56,   56,   56,   56,   56,   56,   56,   56,   56,
-       56,   56,   31,   56,   56,   56,   56,   56,   56,   56,
+        1,   58,   58,   58,   58,   58,   58,   58,   58,   58,
+       58,   58,   58,   58,   58,   58,   58,   58,   58,   58,
+       58,   58,   58,   58,   58,   58,   58,   58,   58,   58,
+       58,   58,    0,   14,   58,   58,   58,   58,   58,   58,
+       58,   58,   58,   58,   58,   58,   58,   58,   49,   40,
+       41,   47,   27,   58,   58,   46,   58,   58,   37,   58,
+       58,   58,   58,   58,   45,   56,   26,   58,   58,   58,
+       51,   58,   58,   58,   58,   58,   58,   58,   57,   48,
+       58,   58,   58,   58,   58,   58,   58,   58,   58,   58,
+       58,   58,   58,   58,   33,   58,   58,   58,   58,   58,
 
-       56,   56,   56,   48,   56,   56,   56,   56,   23,   56,
-       56,   34,   29,   56,   56,   56,   56,   36,   56,   27,
-       56,   20,   56,   56,   56,   40,   56,   56,   33,   56,
-       56,   56,   37,   56,   56,   56,   56,   30,   56,   26,
-       42,   56,   56,   56,   56,   56,   53,   56,   56,   56,
-       41,   56,   22,   56,   56,   56,   51,   28,   56,   32,
-       21,   50,   52,    0
+       58,   58,   58,   58,   58,   50,   58,   58,   58,   58,
+       25,   58,   58,   36,   31,   58,   58,   58,   58,   38,
+       58,   29,   58,   22,   58,   58,   58,   42,   58,   58,
+       35,   58,   58,   58,   39,   58,   58,   58,   58,   32,
+       58,   28,   44,   58,   58,   58,   58,   58,   55,   58,
+       58,   58,   43,   58,   24,   58,   58,   58,   53,   30,
+       58,   34,   23,   52,   54,    0
     } ;
 
 static yyconst int yy_ec[256] =
@@ -319,82 +319,82 @@ static yyconst int yy_ec[256] =
 
 static yyconst int yy_meta[47] =
     {   0,
-        1,    2,    3,    1,    1,    1,    1,    1,    1,    1,
+        1,    1,    2,    1,    1,    1,    1,    3,    1,    1,
         1,    4,    4,    1,    1,    1,    1,    4,    1,    1,
-        2,    1,    4,    4,    4,    4,    4,    4,    4,    4,
+        5,    1,    4,    4,    4,    4,    4,    4,    4,    4,
         4,    4,    4,    4,    4,    4,    4,    4,    4,    4,
-        4,    4,    4,    4,    4,    2
+        4,    4,    4,    4,    4,    5
     } ;
 
-static yyconst short int yy_base[272] =
+static yyconst short int yy_base[275] =
     {   0,
-        0,    0,   44,   46,   56,   59,  323,  324,  324,  324,
-      324,  317,  305,   44,   52,   45,   57,  306,  303,  302,
-      301,    0,   42,  292,   40,  287,   37,   50,  279,  289,
-       54,   51,  275,   49,  283,   56,   54,    0,  324,    0,
-      299,  301,  305,  324,  324,  304,  324,  324,  301,  324,
-       76,  324,   82,   83,  324,  302,   88,   97,  324,  324,
-      324,  324,    0,  263,  271,  262,  269,   78,   88,  273,
-      258,  265,  258,  270,  255,  250,  258,  248,  264,  262,
-      250,   87,  248,   80,  248,  253,  261,  252,  241,  245,
-        0,    0,    0,  278,  324,   99,  113,  277,  324,  247,
+        0,    0,   44,   46,   56,   59,  342,  343,  343,  343,
+      343,  336,  324,   44,   52,   45,   57,  325,  322,  321,
+      320,    0,   42,  311,   40,  306,   37,   50,  298,  308,
+       54,   51,  294,   49,  302,   56,   54,  326,  343,  325,
+      316,   86,   93,  323,  343,   98,  343,  343,  320,  343,
+       76,  343,   96,   94,  343,  321,   96,  100,  343,  343,
+      343,  343,    0,  282,  290,  281,  288,   85,   97,  292,
+      277,  284,  277,  289,  274,  269,  277,  267,  283,  281,
+      269,   89,  267,   89,  267,  272,  280,  271,  260,  264,
+      297,  343,  343,  343,  128,  296,  343,  114,  125,  295,
 
-      254,  249,  243,  241,   87,  241,  249,  249,  243,  230,
-      229,  235,  226,  253,  252,  223,  235,  223,  233,  217,
-       87,  228,  216,  215,  224,  212,  215,  213,  224,  223,
-      119,  121,  214,  209,  225,  220,  210,  204,  220,  219,
-      200,  204,  205,  211,  197,  195,  213,    0,    0,    0,
-        0,  211,  199,    0,  205,  200,    0,  199,  197,  205,
-      200,  186,    0,    0,    0,  191,  197,  183,    0,  188,
-      183,  189,  181,  186,  194,  190,    0,  193,  188,  188,
-      178,  171,  172,  183,  170,  167,  174,  167,  182,  164,
-      163,  157,    0,  177,  165,  175,  157,  158,  156,  169,
+      343,  265,  272,  267,  261,  259,   92,  259,  267,  267,
+      261,  248,  247,  253,  244,  271,  270,  241,  253,  241,
+      251,  235,   98,  246,  234,  233,  242,  230,  233,  231,
+      242,  241,  127,  130,  232,  227,  243,  238,  228,  222,
+      238,  237,  218,  222,  223,  229,  215,  213,  231,    0,
+        0,    0,    0,  229,  217,    0,  223,  218,    0,  217,
+      215,  223,  218,  204,    0,    0,    0,  209,  215,  201,
+        0,  206,  201,  207,  199,  204,  212,  208,    0,  211,
+      206,  206,  196,  189,  190,  201,  188,  185,  192,  185,
+      200,  182,  181,  175,    0,  195,  183,  193,  175,  176,
 
-      166,  162,  165,    0,  150,  162,  161,  156,    0,  147,
-      149,    0,    0,  148,  152,  143,  141,    0,  157,    0,
-      149,    0,  147,  138,  145,  136,  135,  139,    0,  149,
-      144,  136,    0,  138,  135,  136,  134,    0,  138,    0,
-        0,  135,  125,  123,  121,  125,    0,  127,  132,  112,
-        0,  125,    0,  105,   94,   92,    0,    0,   60,    0,
-        0,    0,    0,  324,  134,  138,  142,   86,  146,  150,
-      154
+      174,  187,  184,  180,  183,    0,  168,  180,  179,  174,
+        0,  165,  167,    0,    0,  166,  170,  161,  159,    0,
+      175,    0,  167,    0,  165,  156,  163,  154,  153,  157,
+        0,  167,  162,  154,    0,  156,  153,  154,  152,    0,
+      156,    0,    0,  153,  143,  141,  139,  143,    0,  145,
+      150,  121,    0,  131,    0,   88,   80,   84,    0,    0,
+       70,    0,    0,    0,    0,  343,  143,  148,  153,   86,
+      158,  163,  167,  171
     } ;
 
-static yyconst short int yy_def[272] =
+static yyconst short int yy_def[275] =
     {   0,
-      264,    1,  265,  265,  266,  266,  264,  264,  264,  264,
-      264,  264,  264,  267,  264,  264,  264,  264,  264,  264,
-      264,  268,  268,  268,  268,  268,  268,  268,  268,  268,
-      268,  268,  268,  268,  268,  268,  268,  269,  264,  269,
-      269,  269,  270,  264,  264,  270,  264,  264,  264,  264,
-      267,  264,  267,  264,  264,  271,  264,  264,  264,  264,
-      264,  264,  268,  268,  268,  268,  268,  268,  268,  268,
-      268,  268,  268,  268,  268,  268,  268,  268,  268,  268,
-      268,  268,  268,  268,  268,  268,  268,  268,  268,  268,
-      269,  269,  269,  270,  264,  267,  264,  271,  264,  268,
+      266,    1,  267,  267,  268,  268,  266,  266,  266,  266,
+      266,  266,  266,  269,  266,  266,  266,  266,  266,  266,
+      266,  270,  270,  270,  270,  270,  270,  270,  270,  270,
+      270,  270,  270,  270,  270,  270,  270,  271,  266,  271,
+      266,  271,  272,  273,  266,  272,  266,  266,  266,  266,
+      269,  266,  269,  266,  266,  274,  266,  266,  266,  266,
+      266,  266,  270,  270,  270,  270,  270,  270,  270,  270,
+      270,  270,  270,  270,  270,  270,  270,  270,  270,  270,
+      270,  270,  270,  270,  270,  270,  270,  270,  270,  270,
+      271,  266,  266,  266,  272,  273,  266,  269,  266,  274,
 
-      268,  268,  268,  268,  268,  268,  268,  268,  268,  268,
-      268,  268,  268,  268,  268,  268,  268,  268,  268,  268,
-      268,  268,  268,  268,  268,  268,  268,  268,  268,  268,
-      264,  264,  268,  268,  268,  268,  268,  268,  268,  268,
-      268,  268,  268,  268,  268,  268,  268,  268,  268,  268,
-      268,  268,  268,  268,  268,  268,  268,  268,  268,  268,
-      268,  268,  268,  268,  268,  268,  268,  268,  268,  268,
-      268,  268,  268,  268,  268,  268,  268,  268,  268,  268,
-      268,  268,  268,  268,  268,  268,  268,  268,  268,  268,
-      268,  268,  268,  268,  268,  268,  268,  268,  268,  268,
+      266,  270,  270,  270,  270,  270,  270,  270,  270,  270,
+      270,  270,  270,  270,  270,  270,  270,  270,  270,  270,
+      270,  270,  270,  270,  270,  270,  270,  270,  270,  270,
+      270,  270,  266,  266,  270,  270,  270,  270,  270,  270,
+      270,  270,  270,  270,  270,  270,  270,  270,  270,  270,
+      270,  270,  270,  270,  270,  270,  270,  270,  270,  270,
+      270,  270,  270,  270,  270,  270,  270,  270,  270,  270,
+      270,  270,  270,  270,  270,  270,  270,  270,  270,  270,
+      270,  270,  270,  270,  270,  270,  270,  270,  270,  270,
+      270,  270,  270,  270,  270,  270,  270,  270,  270,  270,
 
-      268,  268,  268,  268,  268,  268,  268,  268,  268,  268,
-      268,  268,  268,  268,  268,  268,  268,  268,  268,  268,
-      268,  268,  268,  268,  268,  268,  268,  268,  268,  268,
-      268,  268,  268,  268,  268,  268,  268,  268,  268,  268,
-      268,  268,  268,  268,  268,  268,  268,  268,  268,  268,
-      268,  268,  268,  268,  268,  268,  268,  268,  268,  268,
-      268,  268,  268,    0,  264,  264,  264,  264,  264,  264,
-      264
+      270,  270,  270,  270,  270,  270,  270,  270,  270,  270,
+      270,  270,  270,  270,  270,  270,  270,  270,  270,  270,
+      270,  270,  270,  270,  270,  270,  270,  270,  270,  270,
+      270,  270,  270,  270,  270,  270,  270,  270,  270,  270,
+      270,  270,  270,  270,  270,  270,  270,  270,  270,  270,
+      270,  270,  270,  270,  270,  270,  270,  270,  270,  270,
+      270,  270,  270,  270,  270,    0,  266,  266,  266,  266,
+      266,  266,  266,  266
     } ;
 
-static yyconst short int yy_nxt[371] =
+static yyconst short int yy_nxt[390] =
     {   0,
         8,    9,   10,   11,   12,   13,   14,    8,    8,   15,
        16,   17,   17,   18,   19,   20,   21,   22,   22,   22,
@@ -404,41 +404,43 @@ static yyconst short int yy_nxt[371] =
        52,   41,   55,   41,   42,   56,   42,   44,   45,   46,
        44,   45,   46,   54,   54,   53,   57,   64,   58,   58,
        67,   70,   81,   72,   65,   68,   47,   76,   78,   47,
-       71,   73,   52,   85,   88,   77,   79,   82,   96,   63,
-       83,   86,   89,  263,   54,   54,   87,   53,   90,   54,
+       71,   73,   52,   85,   88,   77,   79,   82,   92,   63,
+       83,   86,   89,   94,   96,   97,   87,   53,   90,   96,
 
-       54,   48,   97,   53,   48,   52,   57,   97,   58,   58,
-       97,  104,  105,  106,  120,   97,  107,  123,  262,  124,
-       53,  131,  121,  155,  132,  132,  138,  139,  261,  156,
-      132,  132,  132,  132,   38,   38,   38,   38,   43,   43,
-       43,   43,   51,   51,  260,   51,   91,   91,  259,   91,
-       94,  258,   94,   94,   98,   98,   98,   98,  257,  256,
+       97,   48,   98,  265,   48,   54,   54,   54,   54,   57,
+      264,   58,   58,   99,  263,   99,  122,   53,  106,  107,
+       52,   99,  108,   99,  123,  109,  125,  262,  126,   96,
+       97,  140,  141,  133,  157,   53,  134,  134,  134,  134,
+      158,  134,  134,   38,   38,   38,   38,   38,   43,   43,
+       43,   43,   43,   51,  261,   51,   51,   51,   91,   91,
+      260,   91,   91,   95,   95,   95,   95,   96,   96,   96,
+       96,  100,  100,  100,  100,  100,  259,  258,  257,  256,
       255,  254,  253,  252,  251,  250,  249,  248,  247,  246,
       245,  244,  243,  242,  241,  240,  239,  238,  237,  236,
+
       235,  234,  233,  232,  231,  230,  229,  228,  227,  226,
       225,  224,  223,  222,  221,  220,  219,  218,  217,  216,
-
       215,  214,  213,  212,  211,  210,  209,  208,  207,  206,
       205,  204,  203,  202,  201,  200,  199,  198,  197,  196,
       195,  194,  193,  192,  191,  190,  189,  188,  187,  186,
       185,  184,  183,  182,  181,  180,  179,  178,  177,  176,
       175,  174,  173,  172,  171,  170,  169,  168,  167,  166,
-      165,  164,  163,  162,  161,  160,  159,  158,  157,  154,
+      165,  164,  163,  162,  161,  160,  159,  156,  155,  154,
       153,  152,  151,  150,  149,  148,  147,  146,  145,  144,
-      143,  142,  141,  140,  137,  136,  135,  134,  133,   99,
-       95,  130,  129,  128,  127,  126,  125,  122,  119,  118,
-      117,  116,  115,  114,  113,  112,  111,  110,  109,  108,
+      143,  142,  139,  138,  137,  136,  135,  101,   97,   92,
 
-      103,  102,  101,  100,   99,   49,   95,   95,   93,   92,
-       84,   80,   75,   74,   69,   66,   62,   61,   60,   59,
-       50,   49,  264,    7,  264,  264,  264,  264,  264,  264,
-      264,  264,  264,  264,  264,  264,  264,  264,  264,  264,
-      264,  264,  264,  264,  264,  264,  264,  264,  264,  264,
-      264,  264,  264,  264,  264,  264,  264,  264,  264,  264,
-      264,  264,  264,  264,  264,  264,  264,  264,  264,  264
+      132,  131,  130,  129,  128,  127,  124,  121,  120,  119,
+      118,  117,  116,  115,  114,  113,  112,  111,  110,  105,
+      104,  103,  102,  101,   49,   97,   93,   92,   92,   84,
+       80,   75,   74,   69,   66,   62,   61,   60,   59,   50,
+       49,  266,    7,  266,  266,  266,  266,  266,  266,  266,
+      266,  266,  266,  266,  266,  266,  266,  266,  266,  266,
+      266,  266,  266,  266,  266,  266,  266,  266,  266,  266,
+      266,  266,  266,  266,  266,  266,  266,  266,  266,  266,
+      266,  266,  266,  266,  266,  266,  266,  266,  266
     } ;
 
-static yyconst short int yy_chk[371] =
+static yyconst short int yy_chk[390] =
     {   0,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
@@ -448,38 +450,40 @@ static yyconst short int yy_chk[371] =
        14,    3,   16,    4,    3,   16,    4,    5,    5,    5,
         6,    6,    6,   15,   15,   14,   17,   23,   17,   17,
        25,   27,   34,   28,   23,   25,    5,   31,   32,    6,
-       27,   28,   51,   36,   37,   31,   32,   34,   53,  268,
-       34,   36,   37,  259,   54,   54,   36,   51,   37,   57,
+       27,   28,   51,   36,   37,   31,   32,   34,   42,  270,
+       34,   36,   37,   42,   43,   43,   36,   51,   37,   46,
 
-       57,    5,   54,   53,    6,   96,   58,   57,   58,   58,
-       54,   68,   68,   69,   82,   57,   69,   84,  256,   84,
-       96,   97,   82,  121,   97,   97,  105,  105,  255,  121,
-      131,  131,  132,  132,  265,  265,  265,  265,  266,  266,
-      266,  266,  267,  267,  254,  267,  269,  269,  252,  269,
-      270,  250,  270,  270,  271,  271,  271,  271,  249,  248,
-      246,  245,  244,  243,  242,  239,  237,  236,  235,  234,
-      232,  231,  230,  228,  227,  226,  225,  224,  223,  221,
-      219,  217,  216,  215,  214,  211,  210,  208,  207,  206,
-      205,  203,  202,  201,  200,  199,  198,  197,  196,  195,
+       46,    5,   53,  261,    6,   54,   54,   57,   57,   58,
+      258,   58,   58,   54,  257,   57,   82,   53,   68,   68,
+       98,   54,   69,   57,   82,   69,   84,  256,   84,   95,
+       95,  107,  107,   99,  123,   98,   99,   99,  133,  133,
+      123,  134,  134,  267,  267,  267,  267,  267,  268,  268,
+      268,  268,  268,  269,  254,  269,  269,  269,  271,  271,
+      252,  271,  271,  272,  272,  272,  272,  273,  273,  273,
+      273,  274,  274,  274,  274,  274,  251,  250,  248,  247,
+      246,  245,  244,  241,  239,  238,  237,  236,  234,  233,
+      232,  230,  229,  228,  227,  226,  225,  223,  221,  219,
 
-      194,  192,  191,  190,  189,  188,  187,  186,  185,  184,
-      183,  182,  181,  180,  179,  178,  176,  175,  174,  173,
-      172,  171,  170,  168,  167,  166,  162,  161,  160,  159,
-      158,  156,  155,  153,  152,  147,  146,  145,  144,  143,
-      142,  141,  140,  139,  138,  137,  136,  135,  134,  133,
-      130,  129,  128,  127,  126,  125,  124,  123,  122,  120,
+      218,  217,  216,  213,  212,  210,  209,  208,  207,  205,
+      204,  203,  202,  201,  200,  199,  198,  197,  196,  194,
+      193,  192,  191,  190,  189,  188,  187,  186,  185,  184,
+      183,  182,  181,  180,  178,  177,  176,  175,  174,  173,
+      172,  170,  169,  168,  164,  163,  162,  161,  160,  158,
+      157,  155,  154,  149,  148,  147,  146,  145,  144,  143,
+      142,  141,  140,  139,  138,  137,  136,  135,  132,  131,
+      130,  129,  128,  127,  126,  125,  124,  122,  121,  120,
       119,  118,  117,  116,  115,  114,  113,  112,  111,  110,
-      109,  108,  107,  106,  104,  103,  102,  101,  100,   98,
-       94,   90,   89,   88,   87,   86,   85,   83,   81,   80,
-       79,   78,   77,   76,   75,   74,   73,   72,   71,   70,
+      109,  108,  106,  105,  104,  103,  102,  100,   96,   91,
 
-       67,   66,   65,   64,   56,   49,   46,   43,   42,   41,
-       35,   33,   30,   29,   26,   24,   21,   20,   19,   18,
-       13,   12,    7,  264,  264,  264,  264,  264,  264,  264,
-      264,  264,  264,  264,  264,  264,  264,  264,  264,  264,
-      264,  264,  264,  264,  264,  264,  264,  264,  264,  264,
-      264,  264,  264,  264,  264,  264,  264,  264,  264,  264,
-      264,  264,  264,  264,  264,  264,  264,  264,  264,  264
+       90,   89,   88,   87,   86,   85,   83,   81,   80,   79,
+       78,   77,   76,   75,   74,   73,   72,   71,   70,   67,
+       66,   65,   64,   56,   49,   44,   41,   40,   38,   35,
+       33,   30,   29,   26,   24,   21,   20,   19,   18,   13,
+       12,    7,  266,  266,  266,  266,  266,  266,  266,  266,
+      266,  266,  266,  266,  266,  266,  266,  266,  266,  266,
+      266,  266,  266,  266,  266,  266,  266,  266,  266,  266,
+      266,  266,  266,  266,  266,  266,  266,  266,  266,  266,
+      266,  266,  266,  266,  266,  266,  266,  266,  266
     } ;
 
 /* The intent behind this definition is that it'll catch
@@ -534,7 +538,7 @@ static yyconst short int yy_chk[371] =
 #define ML_COMMENT 1
 #define COPY_CODE 2
 
-#line 538 "lex.funcgen_.cc"
+#line 542 "lex.funcgen_.cc"
 
 /* Macros after this point can all be overridden by user definitions in
  * section 1.
@@ -670,7 +674,7 @@ YY_DECL
 #undef YY_NO_TOP_STATE 
 
 
-#line 674 "lex.funcgen_.cc"
+#line 678 "lex.funcgen_.cc"
 
 	if ( yy_init )
 		{
@@ -721,13 +725,13 @@ yy_match:
 			while ( yy_chk[yy_base[yy_current_state] + yy_c] != yy_current_state )
 				{
 				yy_current_state = (int) yy_def[yy_current_state];
-				if ( yy_current_state >= 265 )
+				if ( yy_current_state >= 267 )
 					yy_c = yy_meta[(unsigned int) yy_c];
 				}
 			yy_current_state = yy_nxt[yy_base[yy_current_state] + (unsigned int) yy_c];
 			++yy_cp;
 			}
-		while ( yy_base[yy_current_state] != 324 );
+		while ( yy_base[yy_current_state] != 343 );
 
 yy_find_action:
 		yy_act = yy_accept[yy_current_state];
@@ -771,7 +775,7 @@ YY_RULE_SETUP
 case 4:
 YY_RULE_SETUP
 #line 69 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
-{ inc_col(); yy_push_state(ML_COMMENT); /*nested comm.*/ } 
+{ inc_col(); yy_push_state(ML_COMMENT); /*nested?*/ } 
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
@@ -790,299 +794,311 @@ YY_RULE_SETUP
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 74 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
-{ inc_col(); }    
+#line 73 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
+{ info->file_pos.inc_line(); /*optimized*/ }
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 75 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
-{ info->file_pos.tab_inc_column(); } 
+#line 74 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
+{ inc_col(); /* singel '*' would fail otherwise */ }
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
 #line 76 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
-{ info->file_pos.inc_line(); }
+{ inc_col(); }    
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
 #line 77 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
-{ ; /*ignore DOS specific line end*/ }
+{ info->file_pos.tab_inc_column(); } 
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 79 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
-{ tok_pos(); yylval->u.scalar=atof(yytext);return TAFD_SCALAR; }
+#line 78 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
+{ info->file_pos.inc_line(); }
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 80 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
-{ tok_pos(); yylval->string = strip_quotes(yytext); 
-	        return TAFD_QSTRING; }
+#line 79 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
+{ ; /*ignore DOS specific line end*/ }
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 82 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
-{ llerr(info) << "unterminated string"; tok_pos();
-		return TAFD_ERROR; }
+#line 81 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
+{ tok_pos(); yylval->u.scalar=atof(yytext);return TAFD_SCALAR; }
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 85 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
-{ tok_pos(); return TAFD_IS_EQUAL; } /* multi character operators */
+#line 82 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
+{ tok_pos(); yylval->string = strip_quotes(yytext); 
+	        return TAFD_QSTRING; }
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 86 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
-{ tok_pos(); return TAFD_NOT_EQUAL; }
+#line 84 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
+{ llerr(info) << "unterminated string"; tok_pos();
+		return TAFD_ERROR; }
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
 #line 87 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
-{ tok_pos(); return TAFD_MORE_EQUAL; }
+{ tok_pos(); return TAFD_IS_EQUAL; } /* multi character operators */
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
 #line 88 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
-{ tok_pos(); return TAFD_LESS_EQUAL; }
+{ tok_pos(); return TAFD_NOT_EQUAL; }
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 90 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
-{ tok_pos(); return TAFD_NS_CONCAT; }
+#line 89 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
+{ tok_pos(); return TAFD_MORE_EQUAL; }
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 92 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
-{ tok_pos(); return TAFD_include; }
+#line 90 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
+{ tok_pos(); return TAFD_LESS_EQUAL; }
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 93 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
-{ tok_pos(); return TAFD_declaration; }
+#line 92 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
+{ tok_pos(); return TAFD_NS_CONCAT; }
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
 #line 94 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
-{ tok_pos(); return TAFD_base_types; }
+{ tok_pos(); return TAFD_include; }
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
 #line 95 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
-{ tok_pos(); return TAFD_serial; }
+{ tok_pos(); return TAFD_declaration; }
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
 #line 96 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
-{ tok_pos(); return TAFD_type; }
+{ tok_pos(); return TAFD_base_types; }
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
 #line 97 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
-{ tok_pos(); return TAFD_node; }
+{ tok_pos(); return TAFD_serial; }
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
 #line 98 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
-{ tok_pos(); return TAFD_provides; }
+{ tok_pos(); return TAFD_type; }
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
 #line 99 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
-{ tok_pos(); return TAFD_extends; }
+{ tok_pos(); return TAFD_node; }
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
 #line 100 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
-{ tok_pos(); return TAFD_properties; }
+{ tok_pos(); return TAFD_provides; }
 	YY_BREAK
 case 29:
 YY_RULE_SETUP
 #line 101 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
-{ tok_pos(); return TAFD_aliases; }
+{ tok_pos(); return TAFD_extends; }
 	YY_BREAK
 case 30:
 YY_RULE_SETUP
 #line 102 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
-{ tok_pos(); return TAFD_operands; }
+{ tok_pos(); return TAFD_properties; }
 	YY_BREAK
 case 31:
 YY_RULE_SETUP
 #line 103 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
-{ tok_pos(); return TAFD_common; }
+{ tok_pos(); return TAFD_aliases; }
 	YY_BREAK
 case 32:
 YY_RULE_SETUP
 #line 104 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
-{ tok_pos(); return TAFD_constraints; }
+{ tok_pos(); return TAFD_operands; }
 	YY_BREAK
 case 33:
 YY_RULE_SETUP
 #line 105 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
-{ tok_pos(); return TAFD_solvers; }
+{ tok_pos(); return TAFD_common; }
 	YY_BREAK
 case 34:
 YY_RULE_SETUP
 #line 106 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
-{ tok_pos(); return TAFD_actions; }
+{ tok_pos(); return TAFD_constraints; }
 	YY_BREAK
 case 35:
 YY_RULE_SETUP
 #line 107 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
-{ tok_pos(); return TAFD_push; }
+{ tok_pos(); return TAFD_solvers; }
 	YY_BREAK
 case 36:
 YY_RULE_SETUP
 #line 108 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
-{ tok_pos(); return TAFD_default; }
+{ tok_pos(); return TAFD_actions; }
 	YY_BREAK
 case 37:
 YY_RULE_SETUP
 #line 109 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
-{ tok_pos(); return TAFD_contains; }
+{ tok_pos(); return TAFD_push; }
 	YY_BREAK
 case 38:
 YY_RULE_SETUP
 #line 110 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
-{ tok_pos(); return TAFD_max1; }
+{ tok_pos(); return TAFD_default; }
 	YY_BREAK
 case 39:
 YY_RULE_SETUP
 #line 111 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
-{ tok_pos(); return TAFD_min1; }
+{ tok_pos(); return TAFD_contains; }
 	YY_BREAK
 case 40:
 YY_RULE_SETUP
 #line 112 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
-{ tok_pos(); return TAFD_provide; }
+{ tok_pos(); return TAFD_max1; }
 	YY_BREAK
 case 41:
 YY_RULE_SETUP
 #line 113 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
-{ tok_pos(); return TAFD_resulting; }
+{ tok_pos(); return TAFD_min1; }
 	YY_BREAK
 case 42:
 YY_RULE_SETUP
 #line 114 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
-{ tok_pos(); return TAFD_requires; }
+{ tok_pos(); return TAFD_provide; }
 	YY_BREAK
 case 43:
 YY_RULE_SETUP
 #line 115 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
-{ tok_pos(); return TAFD_this; }
+{ tok_pos(); return TAFD_resulting; }
 	YY_BREAK
 case 44:
 YY_RULE_SETUP
 #line 116 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
-{ tok_pos(); return TAFD_prev; }
+{ tok_pos(); return TAFD_requires; }
 	YY_BREAK
 case 45:
 YY_RULE_SETUP
 #line 117 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
-{ tok_pos(); return TAFD_next; }
+{ tok_pos(); return TAFD_this; }
 	YY_BREAK
 case 46:
 YY_RULE_SETUP
 #line 118 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
-{ tok_pos(); return TAFD_first; }
+{ tok_pos(); return TAFD_prev; }
 	YY_BREAK
 case 47:
 YY_RULE_SETUP
 #line 119 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
-{ tok_pos(); return TAFD_last; }
+{ tok_pos(); return TAFD_next; }
 	YY_BREAK
 case 48:
 YY_RULE_SETUP
 #line 120 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
-{ tok_pos(); return TAFD_parent; }
+{ tok_pos(); return TAFD_first; }
 	YY_BREAK
 case 49:
 YY_RULE_SETUP
 #line 121 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
-{ tok_pos(); return TAFD_child; }
+{ tok_pos(); return TAFD_last; }
 	YY_BREAK
 case 50:
 YY_RULE_SETUP
 #line 122 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
-{ tok_pos(); return TAFD_first_child; }
+{ tok_pos(); return TAFD_parent; }
 	YY_BREAK
 case 51:
 YY_RULE_SETUP
 #line 123 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
-{ tok_pos(); return TAFD_last_child; }
+{ tok_pos(); return TAFD_child; }
 	YY_BREAK
 case 52:
 YY_RULE_SETUP
 #line 124 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
-{ tok_pos(); return TAFD_start_param; }
+{ tok_pos(); return TAFD_first_child; }
 	YY_BREAK
 case 53:
 YY_RULE_SETUP
 #line 125 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
-{ tok_pos(); return TAFD_end_param; }
+{ tok_pos(); return TAFD_last_child; }
 	YY_BREAK
 case 54:
 YY_RULE_SETUP
 #line 126 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
-{ tok_pos(); return TAFD_true; }
+{ tok_pos(); return TAFD_start_param; }
 	YY_BREAK
 case 55:
 YY_RULE_SETUP
 #line 127 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
-{ tok_pos(); return TAFD_false; }
+{ tok_pos(); return TAFD_end_param; }
 	YY_BREAK
 case 56:
 YY_RULE_SETUP
-#line 129 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
-{ tok_pos(); yylval->string = yytext; return TAFD_IDENTIFIER; }
+#line 128 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
+{ tok_pos(); return TAFD_true; }
 	YY_BREAK
 case 57:
 YY_RULE_SETUP
-#line 131 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
-{ tok_pos(); return yytext[0]; }	/* one charater tokens */
+#line 129 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
+{ tok_pos(); return TAFD_false; }
 	YY_BREAK
 case 58:
 YY_RULE_SETUP
-#line 133 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
-{ info->file_pos.tab_inc_column(); } 
+#line 131 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
+{ tok_pos(); yylval->string = yytext; return TAFD_IDENTIFIER; }
 	YY_BREAK
 case 59:
 YY_RULE_SETUP
-#line 134 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
-{ info->file_pos.inc_line(); }
+#line 133 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
+{ tok_pos(); return yytext[0]; }	/* one charater tokens */
 	YY_BREAK
 case 60:
 YY_RULE_SETUP
 #line 135 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
-{ ; /*ignore DOS specific line end*/ }
+{ info->file_pos.tab_inc_column(); 
+		  copy_code_line( info, yytext,yyleng ); } 
 	YY_BREAK
 case 61:
 YY_RULE_SETUP
-#line 136 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
-{ tok_pos(); code_block_escape(info); yy_pop_state(); 
-		  return yytext[0]; }
+#line 137 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
+{ info->file_pos.inc_line(); 
+		  copy_code_line( info, yytext,yyleng ); }
 	YY_BREAK
 case 62:
 YY_RULE_SETUP
-#line 138 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
-{ unput('}'); yy_pop_state(); return TAFD_CODE; }
+#line 139 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
+{ ; /*ignore DOS specific line end*/ }
 	YY_BREAK
 case 63:
 YY_RULE_SETUP
-#line 139 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
-{inc_col(); copy_code_line( info, yytext, yyleng ); }
+#line 140 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
+{ tok_pos(); code_block_escape(info); yy_pop_state(); 
+		  return yytext[0]; }
 	YY_BREAK
 case 64:
 YY_RULE_SETUP
-#line 140 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
-{ info->file_pos.inc_line(); 
-				  copy_code_line( info, yytext,yyleng ); }
+#line 142 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
+{ unput('}'); yy_pop_state(); return TAFD_CODE; }
 	YY_BREAK
 case 65:
 YY_RULE_SETUP
+#line 143 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
+{inc_col(); copy_code_line( info, yytext, yyleng ); }
+	YY_BREAK
+case 66:
+YY_RULE_SETUP
 #line 144 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
+{ info->file_pos.inc_line(); 
+				  copy_code_line( info, yytext,yyleng ); }
+	YY_BREAK
+case 67:
+YY_RULE_SETUP
+#line 148 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
 ECHO;
 	YY_BREAK
-#line 1086 "lex.funcgen_.cc"
+#line 1102 "lex.funcgen_.cc"
 case YY_STATE_EOF(INITIAL):
 case YY_STATE_EOF(ML_COMMENT):
 case YY_STATE_EOF(COPY_CODE):
@@ -1457,7 +1473,7 @@ yy_state_type yyFlexLexer::yy_get_previous_state()
 		while ( yy_chk[yy_base[yy_current_state] + yy_c] != yy_current_state )
 			{
 			yy_current_state = (int) yy_def[yy_current_state];
-			if ( yy_current_state >= 265 )
+			if ( yy_current_state >= 267 )
 				yy_c = yy_meta[(unsigned int) yy_c];
 			}
 		yy_current_state = yy_nxt[yy_base[yy_current_state] + (unsigned int) yy_c];
@@ -1487,11 +1503,11 @@ yy_state_type yyFlexLexer::yy_try_NUL_trans( yy_state_type yy_current_state )
 	while ( yy_chk[yy_base[yy_current_state] + yy_c] != yy_current_state )
 		{
 		yy_current_state = (int) yy_def[yy_current_state];
-		if ( yy_current_state >= 265 )
+		if ( yy_current_state >= 267 )
 			yy_c = yy_meta[(unsigned int) yy_c];
 		}
 	yy_current_state = yy_nxt[yy_base[yy_current_state] + (unsigned int) yy_c];
-	yy_is_jam = (yy_current_state == 264);
+	yy_is_jam = (yy_current_state == 266);
 
 	return yy_is_jam ? 0 : yy_current_state;
 	}
@@ -1891,7 +1907,7 @@ int main()
 	return 0;
 	}
 #endif
-#line 144 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
+#line 148 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./scanner.ll"
 
 
 // strips strings from quotes

@@ -30,7 +30,7 @@ namespace solve{
 		     Operand<values::Scalar> &ve )
   {
     message::Message_Consultant *msg = s.get_consultant();
-    // ve = v0 + a*t
+    //ve = v0 + a*t
     Operand<values::Scalar> &at = *new Operand<values::Scalar>(msg);
     product_solver( at, a, t );	// x = a*t
     sum_solver( ve, v0, at );	// ve = v0 + x
@@ -43,7 +43,7 @@ namespace solve{
     sum_solver( v0ve, v0, ve );	// v0ve = v0 + ve
     Operand<values::Scalar> &vt = *new Operand<values::Scalar>(msg);
     product_solver( vt, v0ve, t ); // vt = v0ve * t
-    // s = 0.5 * prod
+    //  s = 0.5 * prod
     product_solver( s, const_op(values::Scalar(0.5),msg), vt ); 
     
     //ve^2 = v0^2 + 2*a*s  

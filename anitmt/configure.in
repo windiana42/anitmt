@@ -28,14 +28,13 @@ AC_CONFIG_SUBDIRS(hlib)
 AC_OUTPUT(
 	Makefile 
 	lib/Makefile 
+	lib/message/Makefile 
 	lib/val/Makefile 
+	lib/solve/Makefile 
+	lib/proptree/Makefile
 	lib/utl/Makefile 
 	lib/par/Makefile 
 	lib/param/Makefile 
-	lib/solve/Makefile 
-	lib/message/Makefile 
-	lib/exparse/Makefile 
-	lib/exparse2/Makefile
 	lib/flex/Makefile
 	anitmt-calc/Makefile 
 	anitmt-calc/input/Makefile 
@@ -45,6 +44,8 @@ AC_OUTPUT(
 	anitmt-calc/output/lib/Makefile 
 	anitmt-calc/output/raw/Makefile 
 	anitmt-calc/output/pov/Makefile 
+	anitmt-calc/funcgen/Makefile 
+	anitmt-calc/functionality/Makefile 
 	anitmt-view/Makefile 
 	anitmt-view/parser/Makefile 
 	mkavi/Makefile 

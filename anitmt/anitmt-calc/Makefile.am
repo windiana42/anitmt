@@ -1,5 +1,5 @@
 INCLUDES=		-I$(srcdir)/../lib/ 
-SUBDIRS=		input output
+SUBDIRS=		input output funcgen functionality
 noinst_LIBRARIES=	libanitmt.a
 bin_PROGRAMS=		anitmt-calc
 check_PROGRAMS=		test_core

@@ -17,6 +17,8 @@
 
 #include <string>
 
+#include <message/message.hpp>
+
 namespace funcgen
 {
   //! additional information for the code generation
@@ -36,10 +38,11 @@ namespace funcgen
   class code_gen_info
   {
   public:
+    message::Message_Reporter msg; // for reporting errors
     std::string base_name;	// base filename for the generated file
     std::string id_name;	// base filename for the generated file
 
-    code_gen_info( std::string name );
+    code_gen_info( std::string name, message::Message_Consultant *c );
   };
 
   //! translates code peaces
@@ -51,6 +54,7 @@ namespace funcgen
     virtual std::string base_type( std::string name ) = 0;
     virtual std::string provider_type( std::string name ) = 0;
     virtual std::string node_type( std::string name ) = 0;
+    virtual std::string node_base_type() = 0;
     virtual std::string result_function_decl( std::string provider_type,
 					      std::string ret_type, 
 					      std::string par_type ) = 0;
@@ -83,6 +87,15 @@ namespace funcgen
       std::string par ) = 0;
     virtual std::string first_init( std::string provider_type ) = 0;
     virtual std::string last_init( std::string provider_type ) = 0;
+    virtual std::string is_avail( std::string provider_type,
+				  std::string ret_type,
+				  std::string par_type) = 0;
+    virtual std::string prev() = 0;
+    virtual std::string next() = 0;
+    virtual std::string parent() = 0;
+    virtual std::string first_child() = 0;
+    virtual std::string last_child() = 0;
+    virtual std::string get_child( int n ) = 0;
 
     virtual ~Code_Translator(){}
   };

@@ -84,5 +84,63 @@ namespace std
     return s + append;
   }
   //string &operator+( const string &s, values::String v ); // obsolete
+
+  // append number formats to strings 
+  string &operator+=( string &s, int v )
+  {
+    char append[_max_digits];
+    ostrstream os(append, _max_digits );
+    os << v;
+    os << '\0';
+    s += append; return s;
+  }
+  string &operator+=( string &s, long v )
+  {
+    char append[_max_digits];
+    ostrstream os(append, _max_digits );
+    os << v;
+    os << '\0';
+    s += append; return s;
+  }
+  string &operator+=( string &s, double v )
+  {
+    char append[_max_digits];
+    ostrstream os(append, _max_digits );
+    os << v;
+    os << '\0';
+    s += append; return s;
+  }
+  string &operator+=( string &s, values::Flag v )
+  {
+    char append[_max_digits];
+    ostrstream os(append, _max_digits );
+    os << v;
+    os << '\0';
+    s += append; return s;
+  }
+  string &operator+=( string &s, values::Scalar v )
+  {
+    char append[_max_digits];
+    ostrstream os(append, _max_digits );
+    os << v;
+    os << '\0';
+    s += append; return s;
+  }
+  string &operator+=( string &s, values::Vector v )
+  {
+    char append[_max_digits];
+    ostrstream os(append, _max_digits );
+    os << v;
+    os << '\0';
+    s += append; return s;
+  }
+  string &operator+=( string &s, values::Matrix v )
+  {
+    char append[_max_digits];
+    ostrstream os(append, _max_digits );
+    os << v;
+    os << '\0';
+    s += append; return s;
+  }
 }
 

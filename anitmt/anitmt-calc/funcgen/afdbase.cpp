@@ -99,7 +99,9 @@ namespace funcgen
   //! for insertion in set/map containers:
   bool Result_Type::operator<( const Result_Type &rt ) const
   {
-    return return_type <  rt.return_type;
+    return (return_type < rt.return_type) 
+      || ( (return_type == rt.return_type) 
+	   && (parameter_type < rt.parameter_type) );
   }
 
   /*! Result_Type uses pair as subclass to inherit comparison behaviour for 
@@ -388,9 +390,14 @@ namespace funcgen
 		  << "this." << c->first << "." << c->second.return_type 
 		  << "( " << c->second.parameter_type << ")";
     }
-
+    std::cout << "    {" << std::endl;
     std::cout << code << std::endl;
+    std::cout << "    }" << std::endl;
   }
+
+  Result_Code::Result_Code()
+    : defined(false)
+  {}
 
   //! print, just for debug purposes
   void Provided_Results::print() const
