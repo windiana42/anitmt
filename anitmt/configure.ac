@@ -130,44 +130,48 @@ AC_CHECK_LIB([m],[sqrt])
 #AC_CHECK_LIB([efence], [main])
 # FIXME: Replace `main' with a function in `-lstdc':
 #AC_CHECK_LIB([stdc], [main])
-
-##------------------------------------------------
-# Okay; we need hlib, so check for hlib-config: 
-hlib_build_dir="<unset>"
-AC_ARG_WITH(hlib,AC_HELP_STRING([--with-hlib],[path to hlib build directory]),
-	[if test "$withval" = "no" ; then 
-		AC_MSG_ERROR([Cannot switch off use of hlib, AniTMT depends on it.])
-	elif test "$withval" != "yes"; then
-		hlib_build_dir="$withval" 
-	fi ])
-AC_MSG_CHECKING([for hlib])
-hlibdir=""
-checkdirs="./hlib ./hlib-* ../hlib ../hlib-*"
-if test "$hlib_build_dir" != "<unset>" ; then
-	checkdirs="$hlib_build_dir $hlib_build_dir/hlib $hlib_build_dir/.."
+INSTALLED_HLIB="no";
+AC_CHECK_LIB([hlib], [msec_elapsed], INSTALLED_HLIB="yes")
+export ADD_HLIB="-lhlib"
+ADD_TEST="-lhlib"
+if test "$INSTALLED_HLIB" == "no"; then
+	##------------------------------------------------
+	# Okay; we need hlib, so check for hlib-config: 
+	hlib_build_dir="<unset>"
+	AC_ARG_WITH(hlib,AC_HELP_STRING([--with-hlib],[path to hlib build directory]),
+		[if test "$withval" = "no" ; then 
+			AC_MSG_ERROR([Cannot switch off use of hlib, AniTMT depends on it.])
+		elif test "$withval" != "yes"; then
+			hlib_build_dir="$withval" 
+		fi ])
+	AC_MSG_CHECKING([for hlib])
+	hlibdir=""
+	checkdirs="./hlib ./hlib-* ../hlib ../hlib-*"
+	if test "$hlib_build_dir" != "<unset>" ; then
+		checkdirs="$hlib_build_dir $hlib_build_dir/hlib $hlib_build_dir/.."
+	fi
+	hlibversion="none"
+	for i in $checkdirs ; do
+	  test -x "$i/HConfigVars" || continue
+	  hlibversion="$($i/HConfigVars VERSION)"
+	  case "x$hlibversion" in
+	    x1.0.0)  hlibdir="$i" ; break ;;
+	  esac
+	done
+	if test "x$hlibdir" = "x" ; then
+		AC_MSG_RESULT([failed])
+		AC_MSG_ERROR([Unable to find hlib (need: 1.0.0, found: $hlibversion). Giving up.])
+	else
+		AC_MSG_RESULT([$hlibdir, version $hlibversion])
+	fi
+	
+	#AC_SUBST(hlibdir)
+	if test "$hlibdir" != "./hlib" -a "$hlibdir" != "hlib" ; then
+		test -e "hlib" && rm "hlib"
+		ln -s "$hlibdir" "hlib"
+	fi
+	##------------------------------------------------
 fi
-hlibversion="none"
-for i in $checkdirs ; do
-  test -x "$i/HConfigVars" || continue
-  hlibversion="$($i/HConfigVars VERSION)"
-  case "x$hlibversion" in
-    x1.0.0)  hlibdir="$i" ; break ;;
-  esac
-done
-if test "x$hlibdir" = "x" ; then
-	AC_MSG_RESULT([failed])
-	AC_MSG_ERROR([Unable to find hlib (need: 1.0.0, found: $hlibversion). Giving up.])
-else
-	AC_MSG_RESULT([$hlibdir, version $hlibversion])
-fi
-
-#AC_SUBST(hlibdir)
-if test "$hlibdir" != "./hlib" -a "$hlibdir" != "hlib" ; then
-	test -e "hlib" && rm "hlib"
-	ln -s "$hlibdir" "hlib"
-fi
-##------------------------------------------------
-
 # Checks for header files.
 AC_HEADER_STDC
 AC_CHECK_HEADERS([errno.h limits.h malloc.h memory.h stddef.h stdlib.h string.h])

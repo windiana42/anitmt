@@ -1,6 +1,7 @@
-if test "x$top_build_dir" == "x"; then
-  top_build_dir="..";
+if test "x$top_builddir" == "x"; then
+  top_builddir="..";
 fi
+echo top_builddir = $top_builddir
 
 # if AniTMT was build in $top_build_dir 
 # and current working directory is example/

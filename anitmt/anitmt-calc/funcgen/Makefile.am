@@ -18,7 +18,7 @@ funcgen_SOURCES=	gen_code.hpp gen_code.cpp gen_cpp.cpp gen_cpp.hpp \
 			params.cpp params.hpp \
 			funcgen.cpp
 
-funcgen_LDADD=		../../lib/message/libmessage.a ../../hlib/libhlib.a 
+funcgen_LDADD=		../../lib/message/libmessage.a -lhlib -L../../hlib/ 
 
 #also includes old adl/libadlparser.a for libanitmt
 
