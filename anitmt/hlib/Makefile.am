@@ -19,7 +19,6 @@ noinst_LIBRARIES = libhlib.a
 libhlib_a_SOURCES = 
 
 EXTRA_DIST = BUILD config.h.in hconfig.h
-# why isn't  config.h.in in make dist otherwise?
 
 libhlib.a: FORCE
 	@objs="" ; for i in $(SUBDIRS) ; do \
