@@ -353,7 +353,8 @@ namespace funcgen
     Context *context = static_cast<afd_info*>(info)->afd->get_context();
     if( context )
     {
-      if( context->is_property(name) )
+      //   +---- `!' added by senior bug tracking officer Wolfgang :)
+      if( !context->is_property(name) )
       {
 	context->property_list.push_back( Property(name,type) );
 	context->properties[name] = &context->property_list.back();

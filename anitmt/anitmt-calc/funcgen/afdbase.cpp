@@ -171,6 +171,7 @@ namespace funcgen
     if( properties.find(name) != properties.end() )
       return true;
     if( parent ) return parent->is_property(name);
+	return(false);
   }
   Property *Context::get_property( std::string name )
   {
@@ -187,6 +188,7 @@ namespace funcgen
     if( operands.find(name) != operands.end() )
       return true;
     if( parent ) return parent->is_operand(name);
+	return(false);
   }
   Operand *Context::get_operand( std::string name )
   {
