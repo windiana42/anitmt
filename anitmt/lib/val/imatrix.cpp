@@ -35,22 +35,17 @@ namespace internal
 // Suffix 2 for 2-dim array (matrix). 
 std::ostream& stream_write_array2(std::ostream& s,const double *x,int R,int C)
 {
-	static int warned=0;
-	if(!warned)
-	{
-		s << "[please implement vect::internal::stream_write_array2()]\n";
-		++warned;
-	}
-
+	s << "[ ";
 	for(int r=0; r<R; r++)
 	{
-		s << "| ";
+		s << "[";
 		for(int c=0; c<C; c++)
 		{
-			s << SUB(x,R,r,c) << " ";
+			s << SUB(x,R,r,c) << (c==C-1 ? "" : ",");
 		}
-		s << "|\n";
+		s << "]" << (r==R-1 ? "" : ", ");
 	}
+	s << " ]";
 
 	return(s);
 }
@@ -180,7 +175,7 @@ void matrix_invert_copy(double *m,int r,int c)
 }
 
 
-// // Transpose matrix: 
+// Transpose matrix: 
 void matrix_transpose(double *m,int mr,int mc)
 {
 	for(int r=1; r<mr; r++)
@@ -192,6 +187,50 @@ void matrix_transpose(double *m,int mr,int mc)
 			SUB(m,mr,c,r)=tmp;
 		}
 	}
+}
+
+
+// Calculate determinant: 
+double matrix_det(const double *m,int n)
+{
+	#warning remove this assert: 
+	assert(n>2);  // n<=2 done inline 
+	
+	// Copy it: 
+	double tmp[n*n];
+	for(int i=0,nn=n*n; i<nn; i++)
+	{  tmp[i]=m[i];  }
+	
+	for(int r=0,n1=n-1; r<n1; r++)
+	{
+		//stream_write_array2(std::cerr,tmp,n,n);  std::cerr << std::endl;
+		double fn=SUB(tmp,n,r,r);
+		if(fabs(fn)<=1e-11)  // See if fn is null before dividing. 
+		{
+			// Find next row (below) which is non-null at this position: 
+			int fr=r+1;
+			for(; fr<n; fr++)
+			{  if(fabs(SUB(tmp,n,fr,r))>1e-11)  goto found;  }
+			return(0.0);  // det is 0. 
+			found:;
+			// Add row (only the last n-r elems since the other ones are 0): 
+			for(int i=r; i<n; i++)
+			{  SUB(tmp,n,r,i)+=SUB(tmp,n,fr,i);  }
+			fn=SUB(tmp,n,r,r);
+		}
+		for(int cr=r+1; cr<n; cr++)
+		{
+			double f=SUB(tmp,n,cr,r)/fn;
+			for(int cc=r; cc<n; cc++)
+			{  SUB(tmp,n,cr,cc)-=f*SUB(tmp,n,r,cc);  }
+		}
+	}
+	//stream_write_array2(std::cerr,tmp,n,n);  std::cerr << std::endl;
+	
+	double det=1.0;
+	for(int i=0; i<n; i++)
+	{  det*=SUB(tmp,n,i,i);  }
+	return(det);
 }
 
 

@@ -166,8 +166,9 @@ Operators:
 
 Functions: 
   > General:
-       * dimension() returns the dimenson of the vector (that's the 
+       * get_dimension() returns the dimenson of the vector (that's the 
          argument passed to the template; normally 3). 
+         (This function is only useful for auto-generated code.) 
   > Length: 
        * Method abs() returns the length of the vector *this as a double, 
          abs2() returns the square of its length (which is much faster as 
@@ -295,7 +296,11 @@ Operators:
         the method is not faster than the friend. 
 
 Functions: 
-  > Inversion: 
+  > General:
+       * get_ncolumns(), get_nrows() return the size of the matrix (that's 
+         the arguments passed to the template; normally 4,4). 
+         (This function is only useful for auto-generated code.) 
+  > Inversion and similar: 
       * A matrix can be inverted using the invert() function available as 
         mathod and as friend (mat_invert()). 
         (If you multiply a matrix and the inverse matrix the result is the 
@@ -305,6 +310,11 @@ Functions:
       * A matrix can be transposed using transpose() member function which 
         only operates on quadratic matrices for obvious reason. Using the 
         nen-member friend mat_transpose() you can transpose any matrix. 
+      * determinant() returns the determinant of the matrix which is obviously 
+        only possible for quadratic matrices. 
+      * track() returns the track of a matrix, that's the sum of the elements 
+        of the elements in the diagonal of the matrix. Also works only on 
+        quadratic matrices. 
   > Matrix Construction: 
       * You may construct matrices for scaling using mat_scale_x(), 
         mat_scale_y(), mat_scale_z(). 

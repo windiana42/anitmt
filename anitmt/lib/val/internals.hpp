@@ -36,16 +36,6 @@ class EX_Matrix_Illegal_Mult     : EX_Matrix { };
 class EX_Matrix_Illegal_Invert   : EX_Matrix { };
 class EX_Matrix_Illegal_VectMult : EX_Matrix { };
 
-// Multiply matrix * matrix: 
-template<int M,int L,int N> void mult(matrix<M,L> &r,const matrix<L,N> &a,const matrix<M,N> &b);
-// Multiply matrix * vector: 
-void mult(vector<3> &r,const matrix<4,4> &m,const vector<3> &v); // special
-template<int R,int C> void mult(vector<R> &r,const matrix<R,C> &m,const vector<C> &v);
-
-// Write vector and matrix to ostream: 
-template<int N> std::ostream& operator<<(std::ostream &s,const vector<N> &v);
-template<int R,int C> std::ostream& operator<<(std::ostream &s,const matrix<R,C> &m);
-
 namespace internal
 {
 	// Multiplication of a matrix with a vector: 

@@ -60,7 +60,27 @@ namespace internal
 	
 	// Transpose matrix: 
 	extern void matrix_transpose(double *m,int r,int c);
+	
+	// Calculate determinant: 
+	extern double matrix_det(const double *m,int n);
 }
+
+
+// Function to multiply the two matrices a and b storing the result in r. 
+template<int M,int L,int N> inline 
+	void mult(matrix<M,L> &r,const matrix<M,N> &a,const matrix<N,L> &b)
+	{  internal::matrix_mul(r.x[0],M,L,a.x[0],M,N,b.x[0],N,L);  }
+
+template<int R,int C> inline 
+	std::ostream& operator<<(std::ostream &s,const matrix<R,C> &m)
+	{  return(internal::stream_write_array2(s,m.x[0],R,C));  }
+
+template<int N> inline double track(const matrix<N,N> &m)
+	{  double s=0.0;  for(int i=0; i<N; i++) s+=m.x[i][i];  return(s);  }
+
+// General determinant function (there are extra-ones for 1x1 and 2x2): 
+template<int N> double determinant(const matrix<N,N> &m)
+	{  return(internal::matrix_det(m.x[0],N));  }
 
 
 // used by matrix::operator[]. 
@@ -190,9 +210,11 @@ public: // work around for the template friend problem
 		
 		// Matrix multiplication friend: 
 		template<int M,int L,int N>friend void mult(matrix<M,L> &r,
-			const matrix<L,N> &a,const matrix<M,N> &b);
+			const matrix<M,N> &a,const matrix<N,L> &b);
 		
-		template<int r,int c>friend std::ostream& operator<<(std::ostream &s,const matrix<r,c> &m);
+		/**************************************************************/
+		/* Other functions not modifying the matrix in *this          */
+		/*                                                            */
 		
 		// Comparing matrices: 
 		// Returns 1, if a is equal to *this (or each component pair does not 
@@ -211,17 +233,27 @@ public: // work around for the template friend problem
 					return(0);
 			return(1);
 		}
+		
+		// Calc track and determinant (quadratic matrices only): 
+		double track() const  {  return(internal_vect::track(*this));  }
+		double determinant() const  {  return(internal_vect::determinant(*this));  }
+#ifndef GCC_HACK
+		template<int N>friend double track(const matrix<N,N> &m);
+		template<int N>friend double determinant(const matrix<N,N> &m);
+		friend double determinant(const matrix<1,1> &m);
+		friend double determinant(const matrix<2,2> &m);
+#endif
+		
+		template<int r,int c>friend std::ostream& operator<<(std::ostream &s,const matrix<r,c> &m);
 };
 
 
-// Function to multiply the two matrices a and b storing the result in r. 
-template<int M,int L,int N> inline 
-	void mult(matrix<M,L> &r,const matrix<L,N> &a,const matrix<M,N> &b)
-	{  internal::matrix_mul(r.x[0],M,L,a.x[0],L,N,b.x[0],M,N);  }
+// Special version for matrices of size 1 and 2: 
+inline double determinant(const matrix<1,1> &m)
+	{  return(m.x[0][0]);  }
+inline double determinant(const matrix<2,2> &m)
+	{  return(m.x[0][0]*m.x[1][1] - m.x[0][1]*m.x[1][0]);  }
 
-template<int R,int C> inline 
-	std::ostream& operator<<(std::ostream &s,const matrix<R,C> &m)
-	{  return(internal::stream_write_array2(s,m.x[0],R,C));  }
 
 }  /* end of namespace */
 

@@ -32,6 +32,70 @@
 namespace vect
 {
 
+
+template<int R,int C>inline Matrix<R,C> mat_transpose(const Matrix<C,R> &m)
+{  Matrix<R,C> r(Matrix<R,C>::noinit);  r.x.transpose(m.x);  return(r);  }
+
+template<int N>inline Matrix<N,N> mat_invert(const Matrix<N,N> &m)
+{  Matrix<N,N> r(Matrix<N,N>::noinit);  r.x.invert(m.x);  return(r);  }
+
+template<int N>inline double mat_determinant(const Matrix<N,N> &m)
+{  return(m.x.determinant());  }
+
+template<int N>inline double mat_track(const Matrix<N,N> &m)
+{  return(m.x.track());  }
+
+
+// MATRIX * SCALAR: 
+template<int R,int C>inline Matrix<R,C> operator*(const Matrix<R,C> &a,Scalar b)
+{  Matrix<R,C> r(Matrix<R,C>::noinit);  r.x.mul(a.x,b);  return(r);  }
+template<int R,int C>inline Matrix<R,C> operator*(Scalar a,const Matrix<R,C> &b)
+{  Matrix<R,C> r(Matrix<R,C>::noinit);  r.x.mul(b.x,a);  return(r);  }
+template<int R,int C>inline Matrix<R,C> operator/(const Matrix<R,C> &a,Scalar b)
+{  Matrix<R,C> r(Matrix<R,C>::noinit);  r.x.div(a.x,b);  return(r);  }
+
+// MATRIX * VECTOR is in vector.hpp. 
+
+// MATRIX * MATRIX: 
+template<int M,int L,int N>inline 
+	Matrix<M,L> operator*(const Matrix<M,N> &a,const Matrix<N,L> &b)
+{  Matrix<M,L> r(Matrix<M,L>::noinit);  internal_vect::mult(r.x,a.x,b.x);  return(r);  }
+
+template<int R,int C>inline Matrix<R,C> operator+(const Matrix<R,C> &a,const Matrix<R,C> &b)
+{  Matrix<R,C> r(Matrix<R,C>::noinit);  r.x.add(a.x,b.x);   return(r);  }
+template<int R,int C>inline Matrix<R,C> operator-(const Matrix<R,C> &a,const Matrix<R,C> &b)
+{  Matrix<R,C> r(Matrix<R,C>::noinit);  r.x.sub(a.x,b.x);   return(r);  }
+
+template<int R,int C>inline bool operator==(const Matrix<R,C> &a,const Matrix<R,C> &b)
+{  return(a.x.compare_to(b.x,epsilon));  }
+template<int R,int C>inline bool operator!=(const Matrix<R,C> &a,const Matrix<R,C> &b)
+{  return(!a.x.compare_to(b.x,epsilon));  }
+
+// Neutral compare functions (also using epsilon): 
+// Neutral0: compare against null matrix
+// Neutral1: compare against identity matrix
+template<int R,int C>inline bool operator==(const Matrix<R,C> &a,Neutral0)
+{  return(a.is_null());  }
+template<int R,int C>inline bool operator==(const Matrix<R,C> &a,Neutral1)
+{  return(a.is_ident());  }
+template<int R,int C>inline bool operator==(Neutral0,const Matrix<R,C> &a)
+{  return(a.is_null());  }
+template<int R,int C>inline bool operator==(Neutral1,const Matrix<R,C> &a)
+{  return(a.is_ident());  }
+template<int R,int C>inline bool operator!=(const Matrix<R,C> &a,Neutral0)
+{  return(!a.is_null());  }
+template<int R,int C>inline bool operator!=(const Matrix<R,C> &a,Neutral1)
+{  return(!a.is_ident());  }
+template<int R,int C>inline bool operator!=(Neutral0,const Matrix<R,C> &a)
+{  return(!a.is_null());  }
+template<int R,int C>inline bool operator!=(Neutral1,const Matrix<R,C> &a)
+{  return(!a.is_ident());  }
+
+
+template<int R,int C>inline std::ostream& operator<<(std::ostream& s,const Matrix<R,C> &m)
+{  return(internal_vect::operator<<(s,m.x));  }
+
+
 template<int R=4,int C=4>class Matrix
 {
 	private:
@@ -87,6 +151,11 @@ public: // work around for the template friend problem
 		
 		//operator internal_vect::matrix<R,C>() const  {  return(x);  }
 		
+		// Get matrix size (that's the template argument; this function is 
+		// only useful for auto-generated code): 
+		int get_nrows()    const  {  return(R);  }
+		int get_ncolumns() const  {  return(C);  }
+		
 		/************************************/
 		/* ROWS    -> r -> ``Y coordinate'' */
 		/* COLUMNS -> c -> ``X coordinate'' */
@@ -128,7 +197,7 @@ public: // work around for the template friend problem
 		#ifndef GCC_HACK
 		// Multiplication of a matrix and a matrix: 
 		template<int M,int L,int N>friend Matrix<M,L> operator*(
-			const Matrix<L,N> &a,const Matrix<M,N> &b);
+			const Matrix<M,N> &a,const Matrix<N,L> &b);
 		#endif
 		// Version changing *this and returning it: 
 		// (only for quadratic matrices -> use of <R,R> instead of <R,C>)
@@ -185,6 +254,22 @@ public: // work around for the template friend problem
 		Matrix<R,R> &transpose()  {  x.transpose();  return(*this);  }
 		#ifndef GCC_HACK
 		template<int r,int c>friend Matrix<r,c> mat_transpose(const Matrix<c,r> &m);
+		#endif
+		
+		// Calculate the determinant of a matrix: 
+		// Only operates on quadratic matrices. 
+		// (Will give compile error for non-quadratic matrices in imatrix.hpp.)
+		double determinant() const  {  return(x.determinant());  }
+		#ifndef GCC_HACK
+		template<int N>friend double mat_determinant(const Matrix<N,N> &m);
+		#endif
+		
+		// Return the track of the matrix (the sum of the diagonal 
+		// elements). Works only for quadratic matrices. 
+		// (Will give compile error for non-quadratic matrices in imatrix.hpp.)
+		double track() const  {  return(x.track());  }
+		#ifndef GCC_HACK
+		template<int N>friend double mat_track(const Matrix<N,N> &m);
 		#endif
 		
 		#ifndef GCC_HACK
@@ -250,74 +335,16 @@ inline Matrix<4,4>::Matrix(enum MatTrans,const Vector<3> &v) : x(0)
 }
 #endif
 
-template<int R,int C>inline Matrix<R,C> operator*(const Matrix<R,C> &a,Scalar b)
-{  Matrix<R,C> r(Matrix<R,C>::noinit);  r.x.mul(a.x,b);  return(r);  }
-template<int R,int C>inline Matrix<R,C> operator*(Scalar a,const Matrix<R,C> &b)
-{  Matrix<R,C> r(Matrix<R,C>::noinit);  r.x.mul(b.x,a);  return(r);  }
-template<int R,int C>inline Matrix<R,C> operator/(const Matrix<R,C> &a,Scalar b)
-{  Matrix<R,C> r(Matrix<R,C>::noinit);  r.x.div(a.x,b);  return(r);  }
 
-template<int R,int C>inline Vector<R> operator*(const Matrix<R,C> &m,const Vector<C> &v)
-{  Vector<R> r(Vector<R>::noinit);  internal_vect::mult(r.x,m.x,v.x);  return(r);  }
-template<int R,int C>inline Vector<R> operator*(const Vector<C> &v,const Matrix<R,C> &m)
-{  Vector<R> r(Vector<R>::noinit);  internal_vect::mult(r.x,m.x,v.x);  return(r);  }
 // Special versions: 
 inline Vector<3> operator*(const Matrix<4,4> &m,const Vector<3> &v)
 {  Vector<3> r(Vector<3>::noinit);  internal_vect::mult(r.x,m.x,v.x);  return(r);  }
 inline Vector<3> operator*(const Vector<3> &v,const Matrix<4,4> &m)
 {  Vector<3> r(Vector<3>::noinit);  internal_vect::mult(r.x,m.x,v.x);  return(r);  }
 
-template<int R,int C>inline Matrix<R,C> operator+(const Matrix<R,C> &a,const Matrix<R,C> &b)
-{  Matrix<R,C> r(Matrix<R,C>::noinit);  r.x.add(a.x,b.x);   return(r);  }
-template<int R,int C>inline Matrix<R,C> operator-(const Matrix<R,C> &a,const Matrix<R,C> &b)
-{  Matrix<R,C> r(Matrix<R,C>::noinit);  r.x.sub(a.x,b.x);   return(r);  }
-
-// This one must use a temporary: (returns void for speed increase) 
-template<int N>inline void operator*=(Vector<N> &v,const Matrix<N,N> &m)
-{  Vector<N> tmp(Vector<N>::noinit); internal_vect::mult(tmp.x,m.x,v.x);  v=tmp;  }
-// Special version:
 inline void operator*=(Vector<3> &v,const Matrix<4,4> &m)
 {  Vector<3> tmp(Vector<3>::noinit); internal_vect::mult(tmp.x,m.x,v.x);  v=tmp;  }
 
-template<int M,int L,int N>inline Matrix<M,L> operator*(
-	const Matrix<L,N> &a,const Matrix<M,N> &b)
-{  Matrix<M,L> r(Matrix<M,L>::noinit);  internal_vect::mult(r.x,a.x,b.x);  return(r);  }
-
-
-template<int R,int C>inline bool operator==(const Matrix<R,C> &a,const Matrix<R,C> &b)
-{  return(a.x.compare_to(b.x,epsilon));  }
-template<int R,int C>inline bool operator!=(const Matrix<R,C> &a,const Matrix<R,C> &b)
-{  return(!a.x.compare_to(b.x,epsilon));  }
-
-// Neutral compare functions (also using epsilon): 
-// Neutral0: compare against null matrix
-// Neutral1: compare against identity matrix
-template<int R,int C>inline bool operator==(const Matrix<R,C> &a,Neutral0)
-{  return(a.is_null());  }
-template<int R,int C>inline bool operator==(const Matrix<R,C> &a,Neutral1)
-{  return(a.is_ident());  }
-template<int R,int C>inline bool operator==(Neutral0,const Matrix<R,C> &a)
-{  return(a.is_null());  }
-template<int R,int C>inline bool operator==(Neutral1,const Matrix<R,C> &a)
-{  return(a.is_ident());  }
-template<int R,int C>inline bool operator!=(const Matrix<R,C> &a,Neutral0)
-{  return(!a.is_null());  }
-template<int R,int C>inline bool operator!=(const Matrix<R,C> &a,Neutral1)
-{  return(!a.is_ident());  }
-template<int R,int C>inline bool operator!=(Neutral0,const Matrix<R,C> &a)
-{  return(!a.is_null());  }
-template<int R,int C>inline bool operator!=(Neutral1,const Matrix<R,C> &a)
-{  return(!a.is_ident());  }
-
-
-template<int N>inline Matrix<N,N> mat_invert(const Matrix<N,N> &m)
-{  Matrix<N,N> r(Matrix<N,N>::noinit);  r.x.invert(m.x);  return(r);  }
-
-template<int R,int C>inline Matrix<R,C> mat_transpose(const Matrix<C,R> &m)
-{  Matrix<R,C> r(Matrix<R,C>::noinit);  r.x.transpose(m.x);  return(r);  }
-
-template<int R,int C>inline std::ostream& operator<<(std::ostream& s,const Matrix<R,C> &m)
-{  return(internal_vect::operator<<(s,m.x));  }
 
 // **** Constructing matrices: ****
 // THIS IS ONLY AVAILABLE FOR 4x4 MATRICES: 

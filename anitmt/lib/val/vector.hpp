@@ -23,7 +23,94 @@
 namespace vect
 {
 
+template<int N>inline Vector<N> operator+(const Vector<N> &a,const Vector<N> &b)
+	{  Vector<N> r(Vector<N>::noinit);  r.x.add(a.x,b.x);   return(r);  }
+template<int N>inline Vector<N> operator-(const Vector<N> &a,const Vector<N> &b)
+	{  Vector<N> r(Vector<N>::noinit);  r.x.sub(a.x,b.x);   return(r);  }
+
+// Multiplication/Division of a vector by a Scalar: 
+template<int N>inline Vector<N> operator*(const Vector<N> &a,Scalar b)
+	{  Vector<N> r(Vector<N>::noinit);  r.x.mul(a.x,b);   return(r);  }
+template<int N>inline Vector<N> operator*(Scalar a,const Vector<N> &b)
+	{  Vector<N> r(Vector<N>::noinit);  r.x.mul(b.x,a);   return(r);  }
+template<int N>inline Vector<N> operator/(const Vector<N> &a,Scalar b)
+	{  Vector<N> r(Vector<N>::noinit);  r.x.div(a.x,b);   return(r);  }
+
+// SCALAR multiplication:
+template<int N>inline Scalar operator*(const Vector<N> &a,const Vector<N> &b)
+	{  return(Scalar(internal_vect::scalar_mul(a.x,b.x)));  }
+template<int N>inline Scalar dot(const Vector<N> &a,const Vector<N> &b)
+	{  return(Scalar(internal_vect::scalar_mul(a.x,b.x)));  }
+
+// VECTOR product: 
 template<int N> Vector<N> cross(const Vector<N> &a,const Vector<N> &b);
+
+// MATRIX * VECTOR: 
+template<int R,int C>inline Vector<R> operator*(const Matrix<R,C> &m,const Vector<C> &v)
+{  Vector<R> r(Vector<R>::noinit);  internal_vect::mult(r.x,m.x,v.x);  return(r);  }
+template<int R,int C>inline Vector<R> operator*(const Vector<C> &v,const Matrix<R,C> &m)
+{  Vector<R> r(Vector<R>::noinit);  internal_vect::mult(r.x,m.x,v.x);  return(r);  }
+
+// This one must use a temporary: (returns void for speed increase) 
+template<int N>inline void operator*=(Vector<N> &v,const Matrix<N,N> &m)
+{  Vector<N> tmp(Vector<N>::noinit); internal_vect::mult(tmp.x,m.x,v.x);  v=tmp;  }
+
+// Computes the square of the length of the specified vector: 
+template<int N>inline Scalar abs2(const Vector<N> &v)  {  return(Scalar(v.abs2()));  }
+// Computes length of vector: 
+template<int N>inline Scalar abs(const Vector<N> &v)  {  return(Scalar(v.abs()));  }
+
+// (using epsilon)
+template<int N>inline bool operator==(const Vector<N> &a,const Vector<N> &b)
+	{  return(a.x.compare_to(b.x,epsilon));  }
+template<int N>inline bool operator!=(const Vector<N> &a,const Vector<N> &b)
+	{  return(!a.x.compare_to(b.x,epsilon));  }
+template<int N>inline bool operator<(const Vector<N> &a,const Vector<N> &b)
+	{  return(a.abs2() < b.abs2());  }
+template<int N>inline bool operator>(const Vector<N> &a,const Vector<N> &b)
+	{  return(a.abs2() > b.abs2());  }
+template<int N>inline bool operator<=(const Vector<N> &a,const Vector<N> &b)
+	{  return(a.abs2() <= b.abs2());  }
+template<int N>inline bool operator>=(const Vector<N> &a,const Vector<N> &b)
+	{  return(a.abs2() >= b.abs2());  }
+
+// Operators comparing to Neutral0 (addition neutral): 
+template<int N>inline bool operator==(const Vector<N> &a,Neutral0)
+	{  return(a.is_null());  }
+template<int N>inline bool operator==(Neutral0,const Vector<N> &a)
+	{  return(a.is_null());  }
+template<int N>inline bool operator!=(const Vector<N> &a,Neutral0)
+	{  return(!a.is_null());  }
+template<int N>inline bool operator!=(Neutral0,const Vector<N> &a)
+	{  return(!a.is_null());  }
+
+// Computes the angle between the two passed vectors; the returned 
+// value is in range 0...PI. 
+template<int N>inline Scalar vec_angle(const Vector<N> &a,const Vector<N> &b)
+	{  return(internal_vect::angle(a.x,b.x));  }
+
+template<int N>inline Vector<N> vec_normalize(const Vector<N> &v)
+	{  Vector<N> r(Vector<N>::noinit);  r.x.normalize(v.x);  return(r);  }
+
+// Non-member translation functions: 
+template<int N>inline Vector<N> vec_translate(const Vector<N> &v,double delta,int xyz)
+	{  Vector<N> r(Vector<N>::noinit);  r.x.translate(v.x,delta,xyz);  return(r);  }
+
+// Non-member scalation functions: 
+template<int N>inline Vector<N> vec_scale(const Vector<N> &v,double factor,int xyz)
+	{  Vector<N> r(Vector<N>::noinit);  r.x.scale(v.x,factor,xyz);  return(r);  }
+
+// Mirror functions: 
+// x=0, y=1, z=2, no range check. 
+template<int N>inline Vector<N> vec_mirror(const Vector<N> &v,int xyz)
+	{  Vector<N> r(Vector<N>::noinit);  r.x.mirror(v.x,xyz);  return(r);  }
+// apply mirror to all components
+template<int N>inline Vector<N> vec_mirror(const Vector<N> &v)
+	{  Vector<N> r(Vector<N>::noinit);  r.x.neg(v.x);  return(r);  }
+
+template<int N>inline std::ostream& operator<<(std::ostream& s,const Vector<N> &v)
+{  return(internal_vect::operator<<(s,v.x));  }
+
 
 template<int N=3>class Vector
 {
@@ -57,6 +144,10 @@ public: // work around for the template friend problem
 		~Vector()  {}
 		
 		//operator internal_vect::vector<N>() const  {  return(x);  }
+		
+		// Get dimension (that's the template argument; this function is 
+		// only useful for auto-generated code): 
+		int get_dimension() const  {  return(N);  }
 		
 		// This returns the i-th row value of the vector. 
 		// For a 3d-vector, i must be in range 0...2. 
@@ -174,80 +265,6 @@ public: // work around for the template friend problem
 		template<int n>friend std::ostream& operator<<(std::ostream& s,const Vector<n> &v);
 };
 
-template<int N>inline Vector<N> operator+(const Vector<N> &a,const Vector<N> &b)
-	{  Vector<N> r(Vector<N>::noinit);  r.x.add(a.x,b.x);   return(r);  }
-template<int N>inline Vector<N> operator-(const Vector<N> &a,const Vector<N> &b)
-	{  Vector<N> r(Vector<N>::noinit);  r.x.sub(a.x,b.x);   return(r);  }
-
-// Multiplication/Division of a vector by a Scalar: 
-template<int N>inline Vector<N> operator*(const Vector<N> &a,Scalar b)
-	{  Vector<N> r(Vector<N>::noinit);  r.x.mul(a.x,b);   return(r);  }
-template<int N>inline Vector<N> operator*(Scalar a,const Vector<N> &b)
-	{  Vector<N> r(Vector<N>::noinit);  r.x.mul(b.x,a);   return(r);  }
-template<int N>inline Vector<N> operator/(const Vector<N> &a,Scalar b)
-	{  Vector<N> r(Vector<N>::noinit);  r.x.div(a.x,b);   return(r);  }
-
-// SCALAR multiplication:
-template<int N>inline Scalar operator*(const Vector<N> &a,const Vector<N> &b)
-	{  return(Scalar(internal_vect::scalar_mul(a.x,b.x)));  }
-template<int N>inline Scalar dot(const Vector<N> &a,const Vector<N> &b)
-	{  return(Scalar(internal_vect::scalar_mul(a.x,b.x)));  }
-
-// Computes the square of the length of the specified vector: 
-template<int N>inline Scalar abs2(const Vector<N> &v)  {  return(Scalar(v.abs2()));  }
-// Computes length of vector: 
-template<int N>inline Scalar abs(const Vector<N> &v)  {  return(Scalar(v.abs()));  }
-
-// (using epsilon)
-template<int N>inline bool operator==(const Vector<N> &a,const Vector<N> &b)
-	{  return(a.x.compare_to(b.x,epsilon));  }
-template<int N>inline bool operator!=(const Vector<N> &a,const Vector<N> &b)
-	{  return(!a.x.compare_to(b.x,epsilon));  }
-template<int N>inline bool operator<(const Vector<N> &a,const Vector<N> &b)
-	{  return(a.abs2() < b.abs2());  }
-template<int N>inline bool operator>(const Vector<N> &a,const Vector<N> &b)
-	{  return(a.abs2() > b.abs2());  }
-template<int N>inline bool operator<=(const Vector<N> &a,const Vector<N> &b)
-	{  return(a.abs2() <= b.abs2());  }
-template<int N>inline bool operator>=(const Vector<N> &a,const Vector<N> &b)
-	{  return(a.abs2() >= b.abs2());  }
-
-// Operators comparing to Neutral0 (addition neutral): 
-template<int N>inline bool operator==(const Vector<N> &a,Neutral0)
-	{  return(a.is_null());  }
-template<int N>inline bool operator==(Neutral0,const Vector<N> &a)
-	{  return(a.is_null());  }
-template<int N>inline bool operator!=(const Vector<N> &a,Neutral0)
-	{  return(!a.is_null());  }
-template<int N>inline bool operator!=(Neutral0,const Vector<N> &a)
-	{  return(!a.is_null());  }
-
-// Computes the angle between the two passed vectors; the returned 
-// value is in range 0...PI. 
-template<int N>inline Scalar vec_angle(const Vector<N> &a,const Vector<N> &b)
-	{  return(internal_vect::angle(a.x,b.x));  }
-
-template<int N>inline Vector<N> vec_normalize(const Vector<N> &v)
-	{  Vector<N> r(Vector<N>::noinit);  r.x.normalize(v.x);  return(r);  }
-
-// Non-member translation functions: 
-template<int N>inline Vector<N> vec_translate(const Vector<N> &v,double delta,int xyz)
-	{  Vector<N> r(Vector<N>::noinit);  r.x.translate(v.x,delta,xyz);  return(r);  }
-
-// Non-member scalation functions: 
-template<int N>inline Vector<N> vec_scale(const Vector<N> &v,double factor,int xyz)
-	{  Vector<N> r(Vector<N>::noinit);  r.x.scale(v.x,factor,xyz);  return(r);  }
-
-// Mirror functions: 
-// x=0, y=1, z=2, no range check. 
-template<int N>inline Vector<N> vec_mirror(const Vector<N> &v,int xyz)
-	{  Vector<N> r(Vector<N>::noinit);  r.x.mirror(v.x,xyz);  return(r);  }
-// apply mirror to all components
-template<int N>inline Vector<N> vec_mirror(const Vector<N> &v)
-	{  Vector<N> r(Vector<N>::noinit);  r.x.neg(v.x);  return(r);  }
-
-template<int N>inline std::ostream& operator<<(std::ostream& s,const Vector<N> &v)
-{  return(internal_vect::operator<<(s,v.x));  }
 
 // VECTOR CONSTRUCTION: 
 inline Vector<2>::Vector(double _0,double _1) : x(/*no init*/)

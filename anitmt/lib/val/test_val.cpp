@@ -261,6 +261,102 @@ int main()
 	}
 	cerr << "done\n";
 	
+	cerr << "Track ";
+	for(int t=1; t<10; t++)
+	{
+		vect::Matrix<10,10> t;
+		double s=0.0;
+		for(int i=0; i<10; i++)
+		{
+			for(int j=0; j<10; j++)
+			{
+				double v=rand()/10000.0;
+				t[i][j]=v;
+				if(i==j)
+				{  s+=v;  }
+			}
+		}
+		if(Scalar(s)!=t.track() || Scalar(s)!=mat_track(t))
+		{  cerr << "*** ERROR in track()\n";  }
+		else
+		{  cerr << ".";  }
+	}
+	cerr << " done\n";
+	
+	cerr << "Determinant/transpose ";
+	for(int t=1; t<30; t++)
+	{
+		vect::Matrix<10,10> t1,t2,tr;
+		for(int i=0; i<t1.get_nrows(); i++)
+		{
+			for(int j=0; j<t1.get_ncolumns(); j++)
+			{
+				int rv=rand();
+				double v=((rv/2)/double(RAND_MAX/3)) * ((rv%2) ? (-1) : (+1));
+				t1[i][j]=v;
+			}
+		}
+		t2=mat_transpose(t1);
+		if(t2!=t2.transpose().transpose())
+		{  cerr << "ERROR in transpose\n";  continue;  }
+		
+		Scalar d1=t1.determinant();
+		double d2=mat_determinant(t2);
+		if(d1!=d2)
+		{  cerr << "ERROR in determinant: " << d1 << " != " << d2 << "\n";
+			continue;  }
+		
+	#warning "********************************************"
+	#warning "** GCC-3.0.5 will SIGSEGV with this code. **"
+	#warning "** GCC-3.1 makes no trouble.              **"
+	#warning "********************************************"
+	#if 0
+		tr=t1;  tr.invert();
+		if(tr!=mat_invert(t1))
+		{  cerr << "ERROR in invert\n";  }
+		
+		if(/*!mat_is_ident(tr*t1) ||*/ !(tr*t1).is_ident())
+		{  cerr << "ERROR in invert (2)\n";  }
+	#else
+	#warning "**** PLEASE ENABLE ME ****"
+	#endif
+		
+		cerr << ".";
+	}
+	cerr << " done\n";
+	
+	/*********************************************/
+	
+	// Well, this is not a test suite, this is just to see if things compile. 
+	{
+		vect::Vector<10> V1,V2,V3;
+		vect::Vector<5> V5;
+		vect::Matrix<10,10> m10x10;
+		vect::Matrix<5,10> m5x10;
+		vect::Matrix<10,5> m10x5;
+		
+		V1=V2+V3;  V1=V2-V3;
+		V1-=V2;  V1+=V2;
+		double x=V1*V2;
+		V1=-V2;  V1=+V2;
+		V1.normalize(); V1.abs(); V1.abs2();
+		vec_normalize(V1);  abs(V1);  abs2(V1);
+		
+		if(V1==V2);
+		if(V1!=V2);
+		if(V1.is_null());
+		if(V1==Neutral0());
+		if(V1!=Neutral0());
+		
+		m10x10*=m10x10;
+		m10x10=m10x5*m5x10;
+		m5x10=m5x10*m10x10;
+		
+		#warning ENABLE ME!!!
+		//V5=m5x10*V1;
+		//V1*=m10x10;
+	}
+	
 	/*********************************************/
 	
 	cerr << "Some more test (assertions on failure)...";
