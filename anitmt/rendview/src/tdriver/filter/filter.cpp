@@ -36,6 +36,8 @@ FilterTaskParams::FilterTaskParams(int *failflag) :
 	TaskParams(failflag)
 {
 	dtype=DTFilter;
+	
+	stderr_fd=-1;
 }
 
 FilterTaskParams::~FilterTaskParams()

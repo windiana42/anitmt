@@ -72,25 +72,61 @@ static int _UnfinishedName(RefString *f)
 }
 
 
+// dtype: DTRender -> render job; DTFilter -> filter job. 
 // Return value: 
-//   0 -> OK (render it) [or: check tobe_rendered!]
-//   1 -> error; do not render and also do not filter it if that is planned. 
-//   2 -> no more tasks
+//   0 -> OK (render/filter it) [or: check tobe_{rendered,filtered}!]
+//   1 -> error; do not [render and also do not] filter it [if that is planned]. 
+//   2 -> no more tasks (only DTRender) 
 //  -1 -> allocation failure
-int TaskSource_Local::_FillInRenderJobFiles(FrameToProcessInfo *ftpi)
+int TaskSource_Local::_FillInJobFiles(TaskDriverType dtype,FrameToProcessInfo *ftpi)
 {
-	assert(ftpi->fi && ftpi->fi->rdesc);  // else: we may not be here
-	assert(ftpi->tobe_rendered);
+	assert(dtype==DTRender || dtype==DTFilter);
+	if(dtype==DTRender)
+	{	assert(ftpi->fi && ftpi->fi->rdesc);  // else: we may not be here
+		assert(ftpi->tobe_rendered);
+	} else {
+		assert(ftpi->fi && ftpi->fi->fdesc);  // else: we may not be here
+		assert(ftpi->tobe_filtered);
+	}
 	
 	const PerFrameTaskInfo *fi=ftpi->fi;
 	
-	if(ftpi->r_infile.sprintf(0,fi->rinfpattern,ftpi->frame_no))  return(-1);
-	if(ftpi->r_outfile.sprintf(0,fi->routfpattern,ftpi->frame_no))  return(-1);
+	// inf, outf: paths for RendView (rdir (to be) prepended)
+	RefString inf,outf;
+	if(dtype==DTRender)
+	{
+		if(ftpi->r_infile.sprintf(0,fi->rinfpattern,ftpi->frame_no))  return(-1);
+		if(ftpi->r_outfile.sprintf(0,fi->routfpattern,ftpi->frame_no))  return(-1);
+		inf=ftpi->r_infile;
+		outf=ftpi->r_outfile;
+	} else {
+		if(ftpi->f_infile.sprintf(0,fi->routfpattern,ftpi->frame_no))  return(-1);
+		if(ftpi->f_outfile.sprintf(0,fi->foutfpattern,ftpi->frame_no))  return(-1);
+		inf=ftpi->f_infile;
+		outf=ftpi->f_outfile;
+	}
+	assert(inf.str() && outf.str());  // otherwise we should have returned some lines above
 	
-	// inf, outf: paths for RendView (rdir prepended)
-	RefString inf(ftpi->r_infile),outf(ftpi->r_outfile);
-	assert(inf.str() && outf.str());  // otherwise we should have returned one line above
-	if(fi->rdir.str())  // NOTE!!! SIMILAR CODE IN param.cpp (if(nframes<0 && fjump<0))
+	// Prepend rdir (DTRender) or rdir/fdir (DTFilter): 
+	// NOTE!!! SIMILAR CODE IN param.cpp (if(nframes<0 && fjump<0))
+	if(dtype==DTFilter)
+	{
+		if(fi->rdir.str())   // YES!!! THIS IS rdir NOT fdir!!!
+		{
+			assert(fi->rdir.str()[fi->rdir.len()-1]=='/');  // FinalInit() should append '/'
+			// Prepend rdir if not absolute path: 
+			if(inf.str()[0]!='/')
+			{  if(inf.prepend(fi->rdir))  return(-1);  }
+		}
+		if(fi->fdir.str())
+		{
+			assert(fi->fdir.str()[fi->fdir.len()-1]=='/');  // FinalInit() should append '/'
+			// Prepend fdir if not absolute path: 
+			if(outf.str()[0]!='/')
+			{  if(outf.prepend(fi->fdir))  return(-1);  }
+		}
+	}
+	else if(/*dtype==DTRender && */ fi->rdir.str())
 	{
 		assert(fi->rdir.str()[fi->rdir.len()-1]=='/');  // FinalInit() should append '/'
 		// Prepend rdir if not absolute path: 
@@ -100,11 +136,12 @@ int TaskSource_Local::_FillInRenderJobFiles(FrameToProcessInfo *ftpi)
 		{  if(outf.prepend(fi->rdir))  return(-1);  }
 	}
 	
-	// Check if inf exists: 
-	if(!CheckExistFile(&inf,1))
+	// Check if inf exists: (Filter input file will most likely not 
+	// yet exist.) 
+	if(dtype==DTRender && !CheckExistFile(&inf,1))
 	{
-		Error("Local: Access check failed on input file \"%s\": %s\n",
-			inf.str(),strerror(errno));
+		Error("Local: Access check failed on %s input file \"%s\": %s\n",
+			DTypeString(dtype),inf.str(),strerror(errno));
 		++nonexist_in_seq;
 		if(nonexist_in_seq>=3)
 		{
@@ -123,54 +160,65 @@ int TaskSource_Local::_FillInRenderJobFiles(FrameToProcessInfo *ftpi)
 	
 	// Okay, now some logic: 
 	char unf_action='\0';  // rename, delete, <nothing>
-	char frame_action='\0'; // skip, render, continue
+	char frame_action='\0'; // skip, render/filter, continue
 	if(p->cont_flag)
 	{
 		// Check if finished frame exists: 
 		int o_exists=CheckExistFile(&outf,1);
 		
-		if(fi->render_resume_flag)
+		if(dtype==DTRender)
 		{
-			// Okay, render resume switched on. If the file to resume 
-			// exists, rename it back to the original file name: 
-			if(o_unf_exists && o_exists)
+			if(fi->render_resume_flag)
 			{
-				// Check which one is the newer one: 
-				int rv=_FirstIsNewer(&unf_tmp,&outf,ftpi->frame_no);
-				if(rv==1)   // unf_tmp is newer. Take it. 
-				{  unf_action='r';  frame_action='c';  }  // rename
-				else if(rv==0)  // outf is newer; skip frame, delete unfinished: 
-				{  unf_action='d';  frame_action='s';  }
-				else  // Error. Delete unfinished, (re)render 
-				{  unf_action='d';  frame_action='r';  }
+				// Okay, render resume switched on. If the file to resume 
+				// exists, rename it back to the original file name: 
+				if(o_unf_exists && o_exists)
+				{
+					// Check which one is the newer one: 
+					int rv=_FirstIsNewer(&unf_tmp,&outf,ftpi->frame_no);
+					if(rv==1)   // unf_tmp is newer. Take it. 
+					{  unf_action='r';  frame_action='c';  }  // rename
+					else if(rv==0)  // outf is newer; skip frame, delete unfinished: 
+					{  unf_action='d';  frame_action='s';  }
+					else  // Error. Delete unfinished, (re)render 
+					{  unf_action='d';  frame_action='r';  }
+				}
+				else if(o_unf_exists)
+				{  unf_action='r';  frame_action='c';  }
 			}
-			else if(o_unf_exists)
-			{  unf_action='r';  frame_action='c';  }
+			else
+			{
+				// If render_resume_flag (rcont) is switched off, we delete the 
+				// unfinished file: 
+				if(o_unf_exists)
+				{  unf_action='d';  }
+			}
 		}
 		else
-		{
-			// If render_resume_flag (rcont) is switched off, we delete the 
-			// unfinished file: 
-			if(o_unf_exists)
-			{  unf_action='d';  }
-		}
+		{  fprintf(stderr,"*** hack unfinished file support for filter ***\n");  }
+		
 		// This is the same for cont with and without render resume: 
 		if(frame_action=='\0')
 		{
-			if(o_exists)
-			{
-				// See if we re-render it: 
-				if(_FirstIsNewer(&inf,&outf,ftpi->frame_no)!=0)  // inf newer or error
-				{  frame_action='r';  }
-				else
-				{  frame_action='s';  }
-			}
-			else
+			if(!o_exists)
 			{  frame_action='r';  }
+			// See if we re-render it: 
+			else if(_FirstIsNewer(&inf,&outf,ftpi->frame_no)!=0)  // inf newer or error
+			{  frame_action='r';  }
+			else
+			{  frame_action='s';  }
 		}
 	}
 	else
 	{  frame_action='r';  }
+	
+	// Now, if we re-render a frame then we also have to re-filter 
+	// it in any case: 
+	if(dtype==DTFilter && ftpi->tobe_rendered)
+	{  frame_action='r';  }
+	
+// Resume not implemented for filter. 
+assert(dtype!=DTFilter || (frame_action!='c' && unf_action=='\0'));
 	
 	// Okay, do it: 
 	if(unf_action=='r')  // rename
@@ -187,46 +235,33 @@ int TaskSource_Local::_FillInRenderJobFiles(FrameToProcessInfo *ftpi)
 	}
 	assert(unf_action=='\0');
 	
-	int retval=1;
+	int retval=1;   // Will never be returned (due to assert(0) in else branch). 
 	
 	// Check what to do with the frame: 
 	if(frame_action=='r' || frame_action=='c')
 	{
-		Verbose(TSLR,"Local: %s frame %d (job %s -> %s).\n",
-			(frame_action=='r') ? 
-				"Completely rendering" : "Continuing to render",
+		Verbose(TSLR,"Local: %s %s%s frame %d (job %s -> %s).\n",
+			(frame_action=='r') ? "Completely" : "Continuing to",
+			DTypeString(dtype),(frame_action=='r') ? "ing" : "",
 			ftpi->frame_no,inf.str(),outf.str());
 		if(frame_action=='c')
-		{  ftpi->resume_flag=1;  }
-		retval=0;  // render frame
+		{  ftpi->r_resume_flag=1;  }
+		retval=0;  // render/filter frame
 	}
 	else if(frame_action=='s')
 	{
-		Verbose(TSLR,"Local: Not re-rendering frame %d (job %s -> %s).\n",
-			ftpi->frame_no,inf.str(),outf.str());
-		ftpi->tobe_rendered=0;
-		retval=0;  // render frame; nothing will be done as tobe_rendered=0. 
-	}
+		Verbose(TSLR,"Local: Not re-%sing frame %d (job %s -> %s).\n",
+			DTypeString(dtype),ftpi->frame_no,inf.str(),outf.str());
+		if(dtype==DTRender)  ftpi->tobe_rendered=0;
+		else                 ftpi->tobe_filtered=0;
+		retval=0;  // render/filter frame; nothing will be done as 
+	}	           // tobe_rendered/filtered=0. 
 	else assert(0);
 	
 	// Reset nonexistant file counter: 
-	if(retval!=1)
+	if(retval!=1 && dtype==DTRender)
 	{  nonexist_in_seq=0;  }
 	return(retval);
-}
-
-
-int TaskSource_Local::_FillInFilterJobFiles(FrameToProcessInfo *ftpi)
-{
-	assert(ftpi->fi && ftpi->fi->fdesc);  // else: we may not be here
-	assert(ftpi->tobe_filtered);
-	
-	const PerFrameTaskInfo *fi=ftpi->fi;
-	
-	Error("Please hack me. aborting()\n");
-	abort();
-	
-	return(1);
 }
 
 
@@ -285,7 +320,7 @@ int TaskSource_Local::_GetNextFTPI_FillInFiles(FrameToProcessInfo *ftpi)
 		
 		if(ftpi->tobe_rendered)
 		{
-			rv=_FillInRenderJobFiles(ftpi);
+			rv=_FillInJobFiles(DTRender,ftpi);
 			if(rv==2)  return(1);  // no more tasks
 			if(rv==1)  continue;   // file not found error
 			if(rv<0)  return(-1);  // alloc failure
@@ -293,9 +328,9 @@ int TaskSource_Local::_GetNextFTPI_FillInFiles(FrameToProcessInfo *ftpi)
 		
 		if(ftpi->tobe_filtered)
 		{
-			rv=_FillInRenderJobFiles(ftpi);
-			#warning ERROR CODE!!!
-			Error("hack me; aborting\n");  assert(0); abort();
+			rv=_FillInJobFiles(DTFilter,ftpi);
+			assert(rv!=2);   // may never happen
+			assert(rv!=1);   // file not found has no sense here and may not be returned. 
 			if(rv<0)  return(-1);  // alloc failure
 		}
 		
@@ -362,7 +397,7 @@ void TaskSource_Local::_ProcessGetTask(TSNotifyInfo *ni)
 			
 			rt->wdir=fi->rdir;
 			
-			rt->resume=ftpi.resume_flag;
+			rt->resume=ftpi.r_resume_flag;
 		}
 		
 		if(ftpi.tobe_filtered)
@@ -374,7 +409,7 @@ void TaskSource_Local::_ProcessGetTask(TSNotifyInfo *ni)
 			ft->fdesc=fi->fdesc;
 			assert(fi->fdesc);   // Otherwise tobe_filtered may not be set
 			
-			ft->infile=NEW2<TaskFile>(TaskFile::FTImage,TaskFile::IOTRenderOutput);
+			ft->infile=NEW2<TaskFile>(TaskFile::FTImage,TaskFile::IOTFilterInput);
 			if(!ft->infile)  break;
 			ft->infile->SetHDPath(ftpi.f_infile);
 			
@@ -623,7 +658,7 @@ TaskSource_Local::FrameToProcessInfo::FrameToProcessInfo(int *failflag) :
 	fi=NULL;
 	
 	frame_no=-1;
-	resume_flag=0;
 	tobe_rendered=0;
 	tobe_filtered=0;
+	r_resume_flag=0;
 }

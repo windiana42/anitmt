@@ -66,7 +66,7 @@ class TaskSourceFactory_Local :
 			// Filter stuff: 
 			const FilterDesc *fdesc;     // filter to use
 			RefStrList fadd_args;        // additional args for the filter
-			RefString fdir;              // cd into rdir before calling filter
+			RefString fdir;              // cd into fdir before calling filter
 			RefString foutfpattern;      // filter output file name pattern
 			
 			// NOTE: as long as ii!=NULL, the information in *this 

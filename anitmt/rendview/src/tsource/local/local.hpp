@@ -34,7 +34,7 @@ class TaskSource_Local :
 			int frame_no;
 			int tobe_rendered : 1;
 			int tobe_filtered : 1;
-			int resume_flag : 1;  // shall resume be passed to renderer?
+			int r_resume_flag : 1;  // shall resume be passed to renderer?
 			int : (sizeof(int)*8 - 3);   // <-- Use modulo if more than 16 bits. 
 			
 			// Render and filte input/output: 
@@ -72,8 +72,7 @@ class TaskSource_Local :
 		void _ProcessGetTask(TSNotifyInfo *ni);
 		void _ProcessDoneTask(TSNotifyInfo *ni);
 		
-		int _FillInRenderJobFiles(FrameToProcessInfo *ftpi);
-		int _FillInFilterJobFiles(FrameToProcessInfo *ftpi);
+		int _FillInJobFiles(TaskDriverType dtype,FrameToProcessInfo *ftpi);
 		int _GetNextFTPI_FillInFiles(FrameToProcessInfo *ftpi);
 		int _GetNextFrameToProcess(FrameToProcessInfo *ftpi);
 		

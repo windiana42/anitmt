@@ -193,9 +193,10 @@ int TaskDriver::StartProcess(
 	if(pinfo.args.append(sp_a))
 	{  return(-1);  }
 	
-	// Copy other info: 
-	pinfo.tsb=tsb;
-	pinfo.tp=tp;
+	// This info is already set by TaskDriverInterface::LaunchTask() 
+	// (as it is also needed for error reporting): 
+	assert(pinfo.tsb==tsb);
+	assert(pinfo.tp==tp);
 	
 	// Okay, tell the driver that we're starting: 
 	_SendProcessError(PEI_Starting);
@@ -211,9 +212,15 @@ int TaskDriver::StartProcess(
 	// Well, at least it seems to work...
 	estat=ESRunning;
 	esdetail=EDLaunched;
+	
 	// Start timeout timer: 
-	if(tp && tp->timeout>=0)
-	{  UpdateTimer(tid_timeout,tp->timeout,/*align=*/0);  }
+	long timeout=-1;
+	if(tp && tp->timeout>0)
+	{  timeout=tp->timeout;  }
+	if(tsb->timeout>0 && timeout>tsb->timeout)
+	{  timeout=tsb->timeout;  }  // Another timeout. Take shorter one. 
+	if(timeout>0)
+	{  UpdateTimer(tid_timeout,timeout,/*align=*/0);  }
 	
 	// Okay, tell the driver that it seems to work...
 	_SendProcessError(PEI_StartSuccess);
@@ -242,6 +249,7 @@ void TaskDriver::_StartProcess_ErrorPart(int save_errno)
 		case SPS_AccessFailed:    pinfo.tes.signal=JK_FailedToExec;     break;
 		case SPSi_OpenInFailed:   pinfo.tes.signal=JK_FailedToOpenIn;   break;
 		case SPSi_OpenOutFailed:  pinfo.tes.signal=JK_FailedToOpenOut;  break;
+		case SPSi_NotSupported:   pinfo.tes.signal=JK_NotSupported;     break;
 		default:  /* ... rest is internal error */
 			pinfo.tes.signal=JK_InternalError;  break;
 	}
@@ -266,6 +274,8 @@ int TaskDriver::_SendProcessError(ProcessErrorType pet,
 	pei.pinfo=&pinfo;
 	pei.ps=ps;
 	pei.errno_val=errno_val;
+	pei.is_last_call=(estat==ESDone);
+	
 	// Call the virtual function: 
 	return(ProcessError(&pei));
 }
@@ -346,11 +356,16 @@ const char *TaskDriver::StartProcessErrorString(ProcessErrorInfo *pei)
 		case SPSi_IllegalParams:
 			return("internal error");
 		case SPSi_OpenInFailed:
+		// The next two are supposed to be dealt with in a 
+		// custom function (XYZDriver::ProcessError()) anyway so 
+		// it is okay if they don't give too much info. 
 		case SPSi_OpenOutFailed:
 			snprintf(tmp,80,"failed to open %s file: %s",
 				(pei->pinfo->pid==SPSi_OpenInFailed) ? "input" : "output",
 				strerror(pei->errno_val));
 			break;
+		case SPSi_NotSupported:
+			return("requested action not supported");
 		default:  // including SPSi_Success: 
 		{
 			int etmp=errno;
@@ -360,6 +375,177 @@ const char *TaskDriver::StartProcessErrorString(ProcessErrorInfo *pei)
 		}  break;
 	}
 	return(tmp);
+}
+
+
+// Helper function: print command to be executed.
+// print_cmd: 
+//    0 -> do nothing 
+//    1 -> print using Error() 
+//    2 -> print using Verbose() 
+void TaskDriver::ProcessError_PrintCommand(int print_cmd,
+	const char *prefix,const char * /*prg_name*/,
+	ProcessErrorInfo *pei)
+{
+		// Uh, yes this is an ugly code duplication: 
+	if(!pei->pinfo)
+	{  print_cmd=0;  }
+	if(print_cmd==1)
+	{
+		Error("%s:   Command:",prefix);
+		for(const RefStrList::Node *i=pei->pinfo->args.first(); i; i=i->next)
+		{  Error(" %s",i->str());  }
+		Error("\n");
+		
+		if(pei->pinfo->tsb)
+		{  const char *tmp=pei->pinfo->tsb->wdir.str();
+			Error("%s:   Working dir: %s\n",prefix,tmp ? tmp : "[cwd]");  }
+	}
+	else if(print_cmd==2)
+	{
+		Verbose(0,"%s:   Command:",prefix);
+		for(const RefStrList::Node *i=pei->pinfo->args.first(); i; i=i->next)
+		{  Verbose(0," %s",i->str());  }
+		Verbose(0,"\n");
+		
+		if(pei->pinfo->tsb)
+		{  const char *tmp=pei->pinfo->tsb->wdir.str();
+			Verbose(0,"%s:   Working dir: %s\n",prefix,tmp ? tmp : "[cwd]");  }
+	}
+}
+
+
+// This outputs the primary reason message (i.e. the first line of the 
+// errors / status messages). 
+// Also used by ProcessErrorStdMessage(). 
+// ("Failed to start <prg_name> [frame xyz]", etc.)
+// Returns value for print_cmd (0 -> no; 1 -> error; 2 -> verbose). 
+//   (NOTE: Return value is 0 for PEI_StartFailed, PEI_ExecFailed and 
+//    PEI_RunFailed)
+int TaskDriver::ProcessError_PrimaryReasonMessage(
+	const char *prefix,const char *prg_name,
+	ProcessErrorInfo *pei)
+{
+	int print_cmd=0;
+	
+	char _frame_no_str[24];
+	if(pei->pinfo && pei->pinfo->ctsk && pei->pinfo->ctsk->frame_no>=0)
+	{  snprintf(_frame_no_str,24,"%d",pei->pinfo->ctsk->frame_no);  }
+	else
+	{  strcpy(_frame_no_str,"???");  }
+	
+	switch(pei->reason)
+	{
+		// *** verbose messages: ***
+		case PEI_Starting:
+			Verbose(0,"%s: Starting %s [frame %s].\n",
+				prefix,prg_name,_frame_no_str);
+			print_cmd=2;
+			break;
+		case PEI_StartSuccess:
+			Verbose(0,"%s: Forked to launch %s [frame %s]...\n",
+				prefix,prg_name,_frame_no_str);
+			break;
+		case PEI_ExecSuccess:
+			Verbose(0,"%s: %s started successfully [frame %s].\n",
+				prefix,prg_name,_frame_no_str);
+			break;
+		case PEI_RunSuccess:
+			Verbose(0,"%s: %s terminated successfully [frame %s].\n",
+				prefix,prg_name,_frame_no_str);
+			break;
+		
+		// *** warning/error messages (as you like to define it): ***
+		case PEI_Timeout:
+			Error("%s: %s [frame %s] exceeded time limit.\n",
+				prefix,prg_name,_frame_no_str);
+			print_cmd=1;
+			break;
+		
+		// *** error messages: ***
+		case PEI_StartFailed:
+			Error("%s: Failed to start %s [frame %s].\n",
+				prefix,prg_name,_frame_no_str);
+			break;
+		case PEI_ExecFailed:
+			Error("%s: Failed to execute %s [frame %s].\n",
+				prefix,prg_name,_frame_no_str);
+			break;
+		case PEI_RunFailed:
+			Error("%s: %s [frame %s] execution failed.\n",
+				prefix,prg_name,_frame_no_str);
+			break;
+	}
+	
+	return(print_cmd);
+}
+
+
+// Special functions printing the standard messages for Timeout, etc.
+// Used by implementations overriding ProcessError() virtual. 
+// Return value: print_cmd. 
+int TaskDriver::ProcessErrorStdMessage_Timeout(
+	const char *prefix,const char *prg_name,
+	ProcessErrorInfo *pei)
+{
+	const TaskStructBase *tsb = pei->pinfo ? pei->pinfo->tsb : NULL;
+	const TaskParams *tp = pei->pinfo ? pei->pinfo->tp : NULL;
+	
+	int written=0;
+	if(tsb && tsb->timeout>=0)
+	{
+		Error("%s:   Timeout: %ld seconds  (timeout from task source)\n",
+			prefix,(tsb->timeout+500)/1000);
+		++written;
+	}
+	if(tp && tp->timeout>=0)
+	{
+		Error("%s:   Timeout: %ld seconds  (local timeout)\n",
+			prefix,(tp->timeout+500)/1000);
+		++written;
+	}
+	assert(written);
+	
+	return(1);
+}
+
+int TaskDriver::ProcessErrorStdMessage_ExecFailed(
+	const char *prefix,const char *prg_name,
+	ProcessErrorInfo *pei)
+{
+	Error("%s:   Failure: %s\n",
+		prefix,PSFailedErrorString(pei));
+	return(0);
+}
+
+int TaskDriver::ProcessErrorStdMessage_RunFailed(
+	const char *prefix,const char * /*prg_name*/,
+	ProcessErrorInfo *pei)
+{
+	Error("%s:   Failure: ",prefix);
+	int print_cmd=0;
+	switch(pei->ps->detail)
+	{
+		case PSExited:
+			Error("Exited with non-zero status %d.\n",
+				pei->ps->estatus);
+			print_cmd=1;
+			break;
+		case PSKilled:
+			Error("Killed by signal %d (pid %ld)\n",
+				pei->ps->estatus,long(pei->pinfo->pid));
+			break;
+		case PSDumped:
+			Error("Dumped (pid %ld, signal %d)\n",
+				long(pei->pinfo->pid),pei->ps->estatus);
+			print_cmd=1;
+			break;
+		default:
+			Error("???\n");
+			abort();
+			break;
+	}
+	return(print_cmd);
 }
 
 

@@ -22,41 +22,92 @@
 
 #include <assert.h>
 
-#include <fcntl.h>
 
-
-// Open input/output file. 
-// dir: direction: -1 -> input; +1 -> output 
-// Return value: 
-//    >=0 -> valid FD
-//     -1 -> file or file->str() NULL or dir==0
-//     -2 -> open( failed (see errno)
-int FilterDriver::OpenIOFile(RefString *file,int dir)
+// This outputs the primary reason message (i.e. the first line of the 
+// errors / status messages). See tdriver.cpp for more info. 
+// Return value: print_cmd. 
+int FilterDriver::ProcessError_PrimaryReasonMessage(
+	const char *prefix,const char *prg_name,
+	ProcessErrorInfo *pei)
 {
-	#warning should be moved to lib/; then remove the "#include <fcntl.h>"
-	if(!file || !file->str())
-	{  return(-1);  }
+	return(TaskDriver::ProcessError_PrimaryReasonMessage(prefix,prg_name,pei));
+}
+
+
+// Helper function: print command to be executed.
+// print_cmd: 
+//    0 -> do nothing 
+//    1 -> print using Error() 
+//    2 -> print using Verbose() 
+void FilterDriver::ProcessError_PrintCommand(int print_cmd,
+	const char *prefix,const char *prg_name,
+	ProcessErrorInfo *pei)
+{
+	TaskDriver::ProcessError_PrintCommand(print_cmd,prefix,prg_name,pei);
+}
+
+
+// Can be called by ProcessError() function (from lowest level, 
+// e.g. generic filter driver) to output standard messages. 
+// prefix: put at beginning of line, e.g. "GFD"
+// prg_name: name of program to be executed in some fany manner, 
+//           e.g. "invert-filter". 
+// Both MAY NOT be NULL. 
+void FilterDriver::ProcessErrorStdMessage(
+	const char *prefix,const char *prg_name,
+	ProcessErrorInfo *pei)
+{
+	// Print primary reason (first line only): 
+	int print_cmd=ProcessError_PrimaryReasonMessage(prefix,prg_name,pei);
 	
-	int fd=-1;
-	if(dir<0)  // Open for input: 
-	{  fd=open(file->str(),O_RDONLY);  }
-	else if(dir>0)  // Open for output: 
-	{  fd=open(file->str(),O_WRONLY | O_CREAT | O_TRUNC,0666);  }
-	else
-	{  return(-1);  }
+	const FilterTaskParams *ftp = pei->pinfo ? 
+		(const FilterTaskParams*)pei->pinfo->tp : NULL;
+	const FilterTask *ft = pei->pinfo ? 
+		(const FilterTask *)pei->pinfo->tsb : NULL;
 	
-assert(0);
-	if(fd<0)
+	switch(pei->reason)
 	{
-		int tmp=errno;
+		// *** verbose messages: ***
+		case PEI_Starting:      // This is...
+		case PEI_StartSuccess:  // ...all handeled...
+		case PEI_ExecSuccess:   // ...by ProcessError_PrimaryReasonMessage(). 
+		case PEI_RunSuccess:   break;
 		
-		#warning report error
+		// *** warning/error messages (as you like to define it): ***
+		case PEI_Timeout:
+			print_cmd=TaskDriver::ProcessErrorStdMessage_Timeout(
+				prefix,prg_name,pei);
+			break;
 		
-		errno=tmp;
-		return(-2);
+		// *** error messages: ***
+		case PEI_StartFailed:
+			Error("%s:   Error: %s\n",prefix,StartProcessErrorString(pei));
+			if(ft)
+			{
+				Error("%s:   Binary: %s\n",prefix,ft->fdesc->binpath.str());
+				Error("%s:   Working dir: %s\n",prefix,
+					ft->wdir.str() ? ft->wdir.str() : "[cwd]");
+				Error("%s:   Search path:",prefix);
+				for(const RefStrList::Node *i=component_db()->GetBinSearchPath(
+					ft->dtype)->first(); i; i=i->next)
+				{  Error(" %s",i->str());  }
+				Error("\n");
+				if(ft->fdesc->binpath[0]=='/')
+				{  Error("%s:   Note: search path not used as binary "
+					"contains absolute path\n",prefix);  }
+			}
+			break;
+		case PEI_ExecFailed:
+			print_cmd=TaskDriver::ProcessErrorStdMessage_ExecFailed(
+				prefix,prg_name,pei);
+			break;
+		case PEI_RunFailed:
+			print_cmd=TaskDriver::ProcessErrorStdMessage_RunFailed(
+				prefix,prg_name,pei);
+			break;
 	}
 	
-	return(fd);
+	ProcessError_PrintCommand(print_cmd,prefix,prg_name,pei);
 }
 
 

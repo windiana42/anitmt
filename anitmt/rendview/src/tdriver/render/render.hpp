@@ -90,14 +90,14 @@ class RenderDriver : public TaskDriver
 			ProcessBase::ProcEnv  *sp_e)
 		{  return(TaskDriver::StartProcess(rt,rtp,sp_p,sp_a,sp_m,sp_f,sp_e));  }
 		
-		// Can be called by ProcessError() function (from lowest level, 
-		// e.g. POVRayDriver) to output standard messages. 
-		// prefix: put at beginning of line, e.g. "POV"
-		// prg_name: name of program to be executed in some fany manner, 
-		//           e.g. "POVRay". 
-		// Both MAY NOT be NULL. 
-		// Return value: 0. 
-		int ProcessErrorStdMessage(const char *prefix,const char *prg_name,
+		// Useful for ProcessError() in derived classes. 
+		// See driver.cpp for more info on these: 
+		// Return value: print_cmd. 
+		int ProcessError_PrimaryReasonMessage(const char *prefix,
+			const char *prg_name,ProcessErrorInfo *pei);
+		void ProcessError_PrintCommand(int print_cmd,const char *prefix,
+			const char *prg_name,ProcessErrorInfo *pei);
+		void ProcessErrorStdMessage(const char *prefix,const char *prg_name,
 			ProcessErrorInfo *pei);
 	public:  _CPP_OPERATORS_FF
 		// Driver name copied into RefString. 

@@ -100,7 +100,7 @@ CompleteTask::CompleteTask(int * failflag) :
 	d.ldrc=NULL;
 	assert(!d.any());
 	rt=NULL;   ft=NULL;
-	ftp=NULL;  ftp=NULL;
+	rtp=NULL;  ftp=NULL;
 }
 
 CompleteTask::~CompleteTask()

@@ -438,7 +438,7 @@ int LDRClient::_DoAuthHandshake(FDBase::FDInfo *fdi)
 			// why sould it fail here. 
 			// If you get "Unknown error" then proably getspockopt() 
 			// failed...
-			Error("Client %s: %s\n",strerror(errval));
+			Error("Client %s: %s\n",_ClientName().str(),strerror(errval));
 			return(1);
 		}
 		else

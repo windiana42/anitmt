@@ -23,68 +23,70 @@
 #include <assert.h>
 
 
+// This outputs the primary reason message (i.e. the first line of the 
+// errors / status messages). See tdriver.cpp for more info. 
+// Return value: print_cmd. 
+int RenderDriver::ProcessError_PrimaryReasonMessage(
+	const char *prefix,const char *prg_name,
+	ProcessErrorInfo *pei)
+{
+	return(TaskDriver::ProcessError_PrimaryReasonMessage(prefix,prg_name,pei));
+}
+
+
+// Helper function: print command to be executed.
+// print_cmd: 
+//    0 -> do nothing 
+//    1 -> print using Error() 
+//    2 -> print using Verbose() 
+void RenderDriver::ProcessError_PrintCommand(int print_cmd,
+	const char *prefix,const char *prg_name,
+	ProcessErrorInfo *pei)
+{
+	TaskDriver::ProcessError_PrintCommand(print_cmd,prefix,prg_name,pei);
+}
+
+
 // Can be called by ProcessError() function (from lowest level, 
 // e.g. POVRayDriver) to output standard messages. 
 // prefix: put at beginning of line, e.g. "POV"
 // prg_name: name of program to be executed in some fany manner, 
 //           e.g. "POVRay". 
 // Both MAY NOT be NULL. 
-// Return value: 0. 
-int RenderDriver::ProcessErrorStdMessage(const char *prefix,const char *prg_name,
+void RenderDriver::ProcessErrorStdMessage(
+	const char *prefix,const char *prg_name,
 	ProcessErrorInfo *pei)
 {
-	int print_cmd=0;
+	// Print primary reason (first line only): 
+	int print_cmd=ProcessError_PrimaryReasonMessage(prefix,prg_name,pei);
 	
-	char _frame_no_str[24];
-	if(pei->pinfo && pei->pinfo->ctsk && pei->pinfo->ctsk->frame_no>=0)
-	{  snprintf(_frame_no_str,24,"%d",pei->pinfo->ctsk->frame_no);  }
-	else
-	{  strcpy(_frame_no_str,"???");  }
-	
-	//const RenderTaskParams *rtp=(const RenderTaskParams*)pei->pinfo->tp;
+	const RenderTaskParams *rtp = pei->pinfo ? 
+		(const RenderTaskParams*)pei->pinfo->tp : NULL;
 	const RenderTask *rt = pei->pinfo ? 
 		(const RenderTask *)pei->pinfo->tsb : NULL;
 	
 	switch(pei->reason)
 	{
 		// *** verbose messages: ***
-		case PEI_Starting:
-			Verbose(0,"%s: Starting %s [frame %s].\n",
-				prefix,prg_name,_frame_no_str);
-			print_cmd=2;
-			break;
-		case PEI_StartSuccess:
-			Verbose(0,"%s: Forked to launch %s [frame %s]...\n",
-				prefix,prg_name,_frame_no_str);
-			break;
-		case PEI_ExecSuccess:
-			Verbose(0,"%s: %s started successfully [frame %s].\n",
-				prefix,prg_name,_frame_no_str);
-			break;
-		case PEI_RunSuccess:
-			Verbose(0,"%s: %s terminated successfully [frame %s].\n",
-				prefix,prg_name,_frame_no_str);
-			break;
+		case PEI_Starting:      // This is...
+		case PEI_StartSuccess:  // ...all handeled...
+		case PEI_ExecSuccess:   // ...by ProcessError_PrimaryReasonMessage(). 
+		case PEI_RunSuccess:   break;
 		
 		// *** warning/error messages (as you like to define it): ***
 		case PEI_Timeout:
-			Error("%s: %s [frame %s] exceeded time limit (%ld s).\n",
-				prefix,prg_name,
-				_frame_no_str,(pei->pinfo->tp->timeout+500)/1000);
-			#warning THERE ARE 2 TIMEOUTS!!!! pinfo->tp MAY BE NULL???
-			print_cmd=1;
+			print_cmd=TaskDriver::ProcessErrorStdMessage_Timeout(
+				prefix,prg_name,pei);
 			break;
 		
 		// *** error messages: ***
 		case PEI_StartFailed:
-			Error("%s: Failed to start %s [frame %s].\n",
-				prefix,prg_name,_frame_no_str);
 			Error("%s:   Error: %s\n",prefix,StartProcessErrorString(pei));
 			if(rt)
 			{
 				Error("%s:   Binary: %s\n",prefix,rt->rdesc->binpath.str());
 				Error("%s:   Working dir: %s\n",prefix,
-					pei->pinfo->tsb->wdir.str() ? pei->pinfo->tsb->wdir.str() : "[cwd]");
+					rt->wdir.str() ? rt->wdir.str() : "[cwd]");
 				Error("%s:   Search path:",prefix);
 				for(const RefStrList::Node *i=component_db()->GetBinSearchPath(
 					rt->dtype)->first(); i; i=i->next)
@@ -96,66 +98,16 @@ int RenderDriver::ProcessErrorStdMessage(const char *prefix,const char *prg_name
 			}
 			break;
 		case PEI_ExecFailed:
-			Error("%s: Failed to execute %s [frame %s].\n",
-				prefix,prg_name,_frame_no_str);
-			Error("%s:   Failure: %s\n",
-				prefix,PSFailedErrorString(pei));
+			print_cmd=TaskDriver::ProcessErrorStdMessage_ExecFailed(
+				prefix,prg_name,pei);
 			break;
 		case PEI_RunFailed:
-			Error("%s: %s [frame %s] execution failed.\n",
-				prefix,prg_name,_frame_no_str);
-			Error("%s:   Failure: ",prefix);
-			switch(pei->ps->detail)
-			{
-				case PSExited:
-					Error("Exited with non-zero status %d.\n",
-						pei->ps->estatus);
-					print_cmd=1;
-					break;
-				case PSKilled:
-					Error("Killed by signal %d (pid %ld)\n",
-						pei->ps->estatus,long(pei->pinfo->pid));
-					break;
-				case PSDumped:
-					Error("Dumped (pid %ld, signal %d)\n",
-						long(pei->pinfo->pid),pei->ps->estatus);
-					print_cmd=1;
-					break;
-				default:
-					Error("???\n");
-					abort();
-					break;
-			}
+			print_cmd=TaskDriver::ProcessErrorStdMessage_RunFailed(
+				prefix,prg_name,pei);
 			break;
 	}
 	
-	// Uh, yes this is an ugly code duplication: 
-	if(!pei->pinfo)
-	{  print_cmd=0;  }
-	if(print_cmd==1)
-	{
-		Error("%s:   Command:",prefix);
-		for(const RefStrList::Node *i=pei->pinfo->args.first(); i; i=i->next)
-		{  Error(" %s",i->str());  }
-		Error("\n");
-		
-		if(pei->pinfo->tsb)
-		{  const char *tmp=pei->pinfo->tsb->wdir.str();
-			Error("%s:   Working dir: %s\n",prefix,tmp ? tmp : "[cwd]");  }
-	}
-	else if(print_cmd==2)
-	{
-		Verbose(0,"%s:   Command:",prefix);
-		for(const RefStrList::Node *i=pei->pinfo->args.first(); i; i=i->next)
-		{  Verbose(0," %s",i->str());  }
-		Verbose(0,"\n");
-		
-		if(pei->pinfo->tsb)
-		{  const char *tmp=pei->pinfo->tsb->wdir.str();
-			Verbose(0,"%s:   Working dir: %s\n",prefix,tmp ? tmp : "[cwd]");  }
-	}
-	
-	return(0);
+	ProcessError_PrintCommand(print_cmd,prefix,prg_name,pei);
 }
 
 

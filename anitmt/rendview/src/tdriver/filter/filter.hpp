@@ -45,6 +45,8 @@ struct FilterTask : public TaskStructBase
 
 struct FilterTaskParams : public TaskParams
 {
+	int stderr_fd;      // fd to direct renderer's stderr to (or -1)
+	
 	_CPP_OPERATORS_FF
 	FilterTaskParams(int *failflag=NULL);
 	~FilterTaskParams();
@@ -66,14 +68,6 @@ class FilterDriver : public TaskDriver
 			const TaskStructBase *tsb,
 			const TaskParams *tp);
 	protected:
-		// Open input/output file. 
-		// dir: direction: -1 -> input; +1 -> output 
-		// Return value: 
-		//    >=0 -> valid FD
-		//     -1 -> file or file->str() NULL or dir==0
-		//     -2 -> open( failed (see errno)
-		int OpenIOFile(RefString *file,int dir);
-		
 		// Called by derived class: 
 		int StartProcess(
 			const FilterTask *ft,
@@ -84,6 +78,17 @@ class FilterDriver : public TaskDriver
 			ProcessBase::ProcFDs  *sp_f,
 			ProcessBase::ProcEnv  *sp_e)
 		{  return(TaskDriver::StartProcess(ft,ftp,sp_p,sp_a,sp_m,sp_f,sp_e));  }
+		
+		// Useful for ProcessError() in derived classes. 
+		// See driver.cpp for more info on these: 
+		// Return value: print_cmd. 
+		int ProcessError_PrimaryReasonMessage(const char *prefix,
+			const char *prg_name,ProcessErrorInfo *pei);
+		void ProcessError_PrintCommand(int print_cmd,const char *prefix,
+			const char *prg_name,ProcessErrorInfo *pei);
+		void ProcessErrorStdMessage(const char *prefix,const char *prg_name,
+			ProcessErrorInfo *pei);
+		
 	public:  _CPP_OPERATORS_FF
 		// Driver name copied into RefString. 
 		FilterDriver(TaskDriverFactory *f,TaskDriverInterface_Local *tdif,int *failflag=NULL);

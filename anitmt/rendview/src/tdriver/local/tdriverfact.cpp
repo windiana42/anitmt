@@ -21,6 +21,9 @@
 
 #include <tsource/taskfile.hpp>
 
+#include <assert.h>
+
+
 
 // Returns string representation of TaskDriverType: 
 char *DTypeString(TaskDriverType dt)
@@ -90,11 +93,23 @@ TaskParams::TaskParams(int *failflag) :
 	niceval=NoNice;
 	call_setsid=false;
 	timeout=-1;
+	
+	hook=NULL;
 };
 
 TaskParams::~TaskParams()
 {
-
+	if(hook)
+	{
+		delete hook;
+		hook=NULL;
+		// If you get this assert, then there is a BUG!!
+		// This is probably caused because the task manager does not call 
+		// the apropriate execution-is-done cleanp function to free the 
+		// hook (and do other things like deleting temp files, closing FDs, 
+		// etc.) The hook MUST be tidied up by the mentioned function. 
+		assert(0);
+	}
 }
 
 
@@ -160,6 +175,7 @@ const char *TaskExecutionStatus::JK_String(int jk_value)
 		case JK_FailedToOpenOut: return("failed to open output file");
 		case JK_FailedToExec:    return("failed to start job");
 		case JK_InternalError:   return("internal error");
+		case JK_NotSupported:    return("action not supported");
 	}
 	return("???");
 }

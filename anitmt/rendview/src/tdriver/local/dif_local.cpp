@@ -156,6 +156,10 @@ int TaskDriverInterface_Local::_DoLaunchTask(CompleteTask *ctsk,TaskDriver **td)
 		return(1);
 	}
 	
+	// We "copy" this info as it is needed for error reporting, too. 
+	(*td)->pinfo.tsb=tsb;
+	(*td)->pinfo.tp=tp;
+	
 	// Already set ctsk; task driver removes it again if an error occurs: 
 	(*td)->pinfo.ctsk=ctsk;
 	int rv=(*td)->Run(tsb,tp);
@@ -173,7 +177,8 @@ int TaskDriverInterface_Local::_DoLaunchTask(CompleteTask *ctsk,TaskDriver **td)
 		if((*td)->pinfo.ctsk)
 		{
 			// Valid return codes in this case: 
-			// SPSi_Open{In,Out}Failed, SPSi_IllegalParams, SPS_LMallocFailed 
+			// SPSi_Open{In,Out}Failed, SPSi_IllegalParams, 
+			// SPSi_NotSupported, SPS_LMallocFailed 
 			(*td)->pinfo.pid=rv;
 			(*td)->_StartProcess_ErrorPart(errno);  // sets pinfo.ctsk=NULL
 		}
@@ -321,8 +326,9 @@ int TaskDriverInterface_Local::_DoDealWithNewTask(CompleteTask *ctsk)
 		ctsk->ftp=NEW<FilterTaskParams>();
 		if(!ctsk->ftp)  return(1);
 		
-		Error("Cannot yet deal with filter.\n");
-		abort();
+		// Setup special fields for filter: 
+		if(prm[DTFilter].quiet)
+		{  ctsk->ftp->stderr_fd=dev_null_fd;  }
 	}
 	
 	// Set up common fields in TaskParams:
@@ -352,8 +358,6 @@ int TaskDriverInterface_Local::_DoDealWithNewTask(CompleteTask *ctsk)
 			}
 		}
 		tp->timeout=(p->timeout<=0) ? (-1) : p->timeout;
-		if(tsb->timeout>0 && tp->timeout>tsb->timeout)
-		{  tp->timeout=tsb->timeout;  }  // Another timeout. Take shorter one. 
 		tp->call_setsid=p->call_setsid ? 1 : 0;
 	}
 	

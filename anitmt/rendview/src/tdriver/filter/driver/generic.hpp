@@ -49,6 +49,17 @@ class GenericFilterDriver :
 	public FilterDriver
 {
 	private:
+		struct DataHook : TaskParams::DriverHook
+		{
+			// These are needed because they have to be closed 
+			// after fork & exec: 
+			int infd;
+			int outfd;
+			
+			DataHook(int *failflag);
+			~DataHook();
+		};
+		
 		// Parameter/Settings pointer: settings only allocated once 
 		// and can be modified by command line, etc. 
 		// They can be accessed via (GenericFilterDriverFactory *)f;

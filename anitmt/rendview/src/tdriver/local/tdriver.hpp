@@ -40,7 +40,9 @@ enum
 	JK_FailedToOpenIn,   // failed to open requied input file
 	JK_FailedToOpenOut,  // failed to open requied output file
 	JK_FailedToExec,     // failed to exec job because access(X_OK) / execve failed
-	JK_InternalError     // any other reason
+	JK_InternalError,    // any other reason
+	JK_NotSupported      // failed because requested action is not suported 
+	                     // (e.g. wrong image format) 
 };
 
 struct TaskExecutionStatus
@@ -76,13 +78,25 @@ struct TaskParams
 {
 	enum { NoNice=-32000 };
 	
+	struct DriverHook
+	{
+		_CPP_OPERATORS_FF
+		DriverHook(int * /*failflag*/) { }
+		virtual ~DriverHook() { }
+	};
+	
 	// THIS MUST BE FILLED IN [By Render/FilterTaskParams]: 
 	TaskDriverType dtype;
 	
 	RefStrList add_args;   // additional cmd line args
 	int niceval;        // nice value (process priority) (or NoNice)
 	int call_setsid;    // call setsid() (recommended)
-	long timeout;       // render timeout; -1 for none
+	long timeout;       // render timeout (local); -1 for none
+	
+	// Hook for lowest driver level to hang any data on. 
+	// (FDs to be closed, temporary files to be removed...)
+	// (Must be derived from TaskParams::DriverHook.) 
+	DriverHook *hook;
 	
 	_CPP_OPERATORS_FF
 	TaskParams(int *failflag=NULL);
@@ -232,15 +246,21 @@ class TaskDriver :
 			const ProcStatus *ps;
 			// Only used for PEI_StartFailed [because then ps=NULL]: 
 			int errno_val;  // value of errno; else 0
+			// Is this the last call to ProcessError() (info for 
+			// lowest driver level)? 
+			unsigned int is_last_call : 1;
+			unsigned int  : (sizeof(unsigned int)*8-1);  /* padding */
 		};
 		enum
 		{
 			// BE SURE THAT THESE DO NOT COLLIDE WITH THE SPS_* FROM 
 			// ProcessManager:  
 			SPSi_Success=0,
-			SPSi_IllegalParams=1,
-			SPSi_OpenInFailed=2,
-			SPSi_OpenOutFailed=3
+			SPSi_IllegalParams=-32010,   // = internal error (BUG)
+			SPSi_OpenInFailed,
+			SPSi_OpenOutFailed,
+			SPSi_NotSupported     // e.g. requested image format not supported 
+			                      //      by the used renderer 
 		};
 	private:
 		enum ExecStatus
@@ -323,6 +343,20 @@ class TaskDriver :
 		// Print error when ProcessBase::PSFailed occurs. 
 		const char *PSFailedErrorString(ProcessErrorInfo *pei);
 		
+		// Can be used by implementations overriding ProcessError() virtual: 
+		int ProcessError_PrimaryReasonMessage(const char *prefix,
+			const char *prg_name,ProcessErrorInfo *pei);
+		void ProcessError_PrintCommand(int print_cmd,const char *prefix,
+			const char *prg_name,ProcessErrorInfo *pei);
+		// More special functions: (return print_cmd)
+		int ProcessErrorStdMessage_Timeout(const char *prefix,
+			const char *prg_name,ProcessErrorInfo *pei);
+		int ProcessErrorStdMessage_ExecFailed(const char *prefix,
+			const char *prg_name,ProcessErrorInfo *pei);
+		int ProcessErrorStdMessage_RunFailed(const char *prefix,
+			const char *prg_name,ProcessErrorInfo *pei);
+		
+		
 		// Downcall:
 		// gets called on error or to notify driver of things (for 
 		// verbose messages). 
@@ -350,6 +384,8 @@ class TaskDriver :
 		// Return value: 
 		//   SPSi_Open{In,Out}Failed  -> failed to open required file
 		//   SPSi_IllegalParams -> invalid TaskStructBase / TaskParams
+		//   SPSi_NotSupported  -> some action is not supported (e.g. wrong 
+		//                         image format)
 		//   SPSi_Success (0)   -> success
 		//   <0 -> see ProcessBase::StartProcess() (SPS_*)
 		//   SPS_LMallocFailed  -> allocation failure 

@@ -22,6 +22,10 @@
 # include <sys/stat.h>
 #endif
 
+/*#if HAVE_FCNTL_H*/
+# include <fcntl.h>
+/*#endif*/
+
 
 // Check if a file exists and we have the passed permissions: 
 int CheckExistFile(RefString *f,int want_read,int want_write)
@@ -87,4 +91,28 @@ int RenameFile(RefString *old_name,RefString *new_name,
 		old_name->str(),new_name->str(),strerror(errno));
 	return(-1);
 }
+
+
+// Open input/output file. 
+// dir: direction: -1 -> input; +1 -> output 
+// Return value: 
+//    >=0 -> valid FD
+//     -1 -> file or file->str() NULL or dir==0
+//     -2 -> open( failed (see errno)
+int OpenIOFile(RefString *file,int dir)
+{
+	if(!file || !file->str())
+	{  return(-1);  }
+	
+	int fd=-1;
+	if(dir<0)  // Open for input: 
+	{  fd=open(file->str(),O_RDONLY);  }
+	else if(dir>0)  // Open for output: 
+	{  fd=open(file->str(),O_WRONLY | O_CREAT | O_TRUNC,0666);  }
+	else
+	{  return(-1);  }
+	
+	return(fd<0 ? (-2) : fd);
+}
+
 

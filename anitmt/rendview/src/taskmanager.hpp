@@ -148,8 +148,8 @@ class TaskManager :
 		int _DealWithNewTask(CompleteTask *ctsk);
 		
 		void _PrintTaskExecStatus(TaskExecutionStatus *tes);
-		void _DoPrintTaskExecuted(TaskParams *tsb,const char *binpath,
-			bool was_processed);
+		void _DoPrintTaskExecuted(TaskParams *tsb,TaskStructBase *tp,
+			const char *binpath,bool was_processed);
 		void _PrintDoneInfo(CompleteTask *ctsk);
 		
 		// Initialisation of parameter stuff: 

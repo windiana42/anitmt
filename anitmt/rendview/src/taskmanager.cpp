@@ -118,14 +118,23 @@ void TaskManager::HandleSuccessfulJob(CompleteTask *ctsk)
 	// Reset this counter: 
 	jobs_failed_in_sequence=0;
 	
-	if(ctsk->state==CompleteTask::TaskDone)
+	switch(ctsk->state)
 	{
-		// Good, task is done completely. 
-		tasklist_todo.dequeue(ctsk);
-		tasklist_done.append(ctsk);
-		// See if we have to connect to the task source and schedule 
-		// that if needed: 
-		_CheckStartExchange();
+		case CompleteTask::TaskDone:
+			// Good, task is done completely. 
+			tasklist_todo.dequeue(ctsk);
+			tasklist_done.append(ctsk);
+			// See if we have to connect to the task source and schedule 
+			// that if needed: 
+			_CheckStartExchange();
+			break;
+		case CompleteTask::ToBeFiltered:
+			// Okay, task was rendered and has to be filtered now. 
+			// [[Seems there is nothing to do.]]
+			/* _CheckStartTasks(); */
+			break;
+		case CompleteTask::ToBeRendered:  // fall through
+		default:  assert(0);  break;
 	}
 }
 
@@ -1022,7 +1031,7 @@ int TaskManager::_CheckStartExchange()
 	
 	// (Note that we do NOT need the tid0 / _schedule() - stuff here, 
 	// as the task source is guaranteed not to call tsnotify() 
-	// immediately (i.e. on the stack now). 
+	// immediately (i.e. on the stack now).) 
 	
 	// First, see what we CAN do: 
 	//bool can_done=_TS_CanDo_DoneTask();
@@ -1049,6 +1058,10 @@ int TaskManager::_CheckStartExchange()
 	}
 	if(must_connect<0)
 	{  must_connect=0;  }
+	
+	if(!must_connect && schedule_quit_after && 
+	   tasklist_todo.is_empty() && !tasklist_done.is_empty())
+	{  must_connect=1;  }
 	
 	// Now, let's see...
 	if(must_connect)
@@ -1258,10 +1271,17 @@ void TaskManager::_PrintTaskExecStatus(TaskExecutionStatus *tes)
 	Verbose(TDR,"      Started: %s\n",tes->starttime.PrintTime(1,1));
 	Verbose(TDR,"      Done:    %s\n",tes->endtime.PrintTime(1,1));
 	HTime duration=tes->endtime-tes->starttime;
-	Verbose(TDR,"      Elapsed: %s  (%.2f%% CPU)\n",
-		duration.PrintElapsed(),
-		100.0*(tes->utime.GetD(HTime::seconds)+tes->stime.GetD(HTime::seconds))/
-			duration.GetD(HTime::seconds));
+	
+	char cpu_tmp[24];
+	double dur_sec=duration.GetD(HTime::seconds);
+	double dur_pc=100.0*(tes->utime.GetD(HTime::seconds)+
+		tes->stime.GetD(HTime::seconds))/dur_sec;
+	if(dur_sec>=0.01 && dur_pc<10000.0)
+	{  snprintf(cpu_tmp,24,"  (%.2f%% CPU)",dur_pc);  }
+	else
+	{  cpu_tmp[0]='\0';  }
+	Verbose(TDR,"      Elapsed: %s%s\n",duration.PrintElapsed(),cpu_tmp);
+	
 	char tmp[48];
 	snprintf(tmp,48,"%s",tes->utime.PrintElapsed());
 	Verbose(TDR,"      Time in mode: user: %s; system: %s\n",
@@ -1269,24 +1289,36 @@ void TaskManager::_PrintTaskExecStatus(TaskExecutionStatus *tes)
 }
 
 // Special function used by _PrintDoneInfo(): 
-void TaskManager::_DoPrintTaskExecuted(TaskParams *tp,const char *binpath,
-	bool was_processed)
+void TaskManager::_DoPrintTaskExecuted(TaskParams *tp,TaskStructBase *tsb,
+	const char *binpath,bool was_processed)
 {
 	if(!was_processed)
 	{  VerboseSpecial("    Executed: [not processed]");  return;  }
+	
 	char tmpA[32];
-	char tmpB[32];
 	if(tp)
 	{
 		if(tp->niceval==TaskParams::NoNice)  strcpy(tmpA,"(none)");
 		else  snprintf(tmpA,32,"%d",tp->niceval);
-		if(tp->timeout<0)  strcpy(tmpB,"(none)");
-		else  snprintf(tmpB,32,"%ld sec",(tp->timeout+500)/1000);
 	}
 	else
-	{  strcpy(tmpA,"??");  strcpy(tmpB,"??");  }
+	{  strcpy(tmpA,"??");  }
+	
+	long timeout=-1;
+	char timeout_char='\0';
+	if(tp && tp->timeout>0)
+	{  timeout=tp->timeout;  timeout_char='L';  }
+	if(tsb->timeout>0 && timeout>tsb->timeout)
+	{  timeout=tsb->timeout;  timeout_char='T';  }  // Another timeout. Take shorter one. 
+	
+	char tmpB[32];
+	if(timeout<=0)  strcpy(tmpB,"(none)");
+	else
+	{  snprintf(tmpB,32,"%ld sec (%s)",(timeout+500)/1000,
+		timeout_char=='L' ? "loc" : "TS");  }
+	
 	Verbose(TDR,"    Executed: %s (nice value: %s; timeout: %s; tty: %s)\n",
-		binpath,tmpA,tmpB,tp->call_setsid ? "no" : "yes");
+		binpath,tmpA,tmpB,(tp && tp->call_setsid) ? "no" : "yes");
 }
 
 void TaskManager::_PrintDoneInfo(CompleteTask *ctsk)
@@ -1311,11 +1343,13 @@ void TaskManager::_PrintDoneInfo(CompleteTask *ctsk)
 			ctsk->rt->rdesc->name.str(),ctsk->rt->rdesc->dfactory->DriverName());
 		Verbose(TDR,"    Input file:  hd path: %s\n",
 			ctsk->rt->infile ? ctsk->rt->infile->HDPath().str() : NULL);
-		Verbose(TDR,"    Output file: hd path: %s; size %dx%d; format: %s\n",
+		Verbose(TDR,"    Output file: hd path: %s; size %dx%d; format: %s (%d bpc)\n",
 			ctsk->rt->outfile ? ctsk->rt->outfile->HDPath().str() : NULL,
 			ctsk->rt->width,ctsk->rt->height,
-			ctsk->rt->oformat ? ctsk->rt->oformat->name : NULL);
-		_DoPrintTaskExecuted(ctsk->rtp,ctsk->rt->rdesc->binpath.str(),
+			ctsk->rt->oformat ? ctsk->rt->oformat->name : NULL,
+			ctsk->rt->oformat ? ctsk->rt->oformat->bits_p_rgb : 0);
+		#warning more info?
+		_DoPrintTaskExecuted(ctsk->rtp,ctsk->rt,ctsk->rt->rdesc->binpath.str(),
 			IsARenderedTask(ctsk) || IsPartlyRenderedTask(ctsk));
 		_PrintTaskExecStatus(&ctsk->rtes);
 	}
@@ -1324,10 +1358,14 @@ void TaskManager::_PrintDoneInfo(CompleteTask *ctsk)
 	
 	if(ctsk->ft)
 	{
-		Verbose(TDR,"  Filter task: %s (%s driver)\n",NULL,NULL);
-		Error("** Filter task info not yet supported. [FIXME!] **\n");
-		
-		_DoPrintTaskExecuted(ctsk->ftp,ctsk->ft->fdesc->binpath.str(),
+		Verbose(TDR,"  Filter task: %s (%s driver)\n",
+			ctsk->ft->fdesc->name.str(),ctsk->ft->fdesc->dfactory->DriverName());
+		Verbose(TDR,"    Input file:  hd path: %s\n",
+			ctsk->ft->infile ? ctsk->ft->infile->HDPath().str() : NULL);
+		Verbose(TDR,"    Output file: hd path: %s\n",
+			ctsk->ft->outfile ? ctsk->ft->outfile->HDPath().str() : NULL);
+		#warning more info?
+		_DoPrintTaskExecuted(ctsk->ftp,ctsk->ft,ctsk->ft->fdesc->binpath.str(),
 			IsAFilteredTask(ctsk) || IsPartlyFilteredTask(ctsk));
 		_PrintTaskExecStatus(&ctsk->ftes);
 	}

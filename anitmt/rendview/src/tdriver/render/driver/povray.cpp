@@ -25,17 +25,83 @@
 // Overriding virtual; gets called by TaskDriver on an error 
 // or to notify driver of things (for verbose messages): 
 // Return value: currently ignored; use 0. 
+// SEE ALSO: Comments to Execute(). 
+// Note: Useful functions: 
+//    RenderDriver::ProcessErrorStdMessage() standard handler which 
+//       probably works for most messages. 
+//    ProcessError_PrintCommand() can be used to print the command to 
+//       be executed. 
+//    ProcessError_PrimaryReasonMessage() prints the primary reason 
+//       (should always be used; is also used by :ProcessErrorStdMessage()). 
+// Return value: 
+//   0    -> OK
+//   else -> something failed (cleaning up the hook (i.e. output FD, 
+//           temp file)
 int POVRayDriver::ProcessError(ProcessErrorInfo *pei)
 {
-	// This is all done by the standard function in RenderDriver. 
-	return(RenderDriver::ProcessErrorStdMessage("POV","POVRay",pei));
+	static const char *defname="POVRay";
+	const char *prg_name=defname;
+	if(pei->pinfo && pei->pinfo->tsb)
+	{
+		const RenderTask *rt = (const RenderTask *)pei->pinfo->tsb;
+		if(rt->rdesc->name.str())
+		{  prg_name=rt->rdesc->name.str();  }
+		else if(rt->rdesc->binpath.str())
+		{
+			prg_name=rt->rdesc->binpath.str();
+			char *tmp=strrchr(prg_name,'/');
+			if(tmp)  prg_name=tmp+1;
+		}
+	}
+	
+	if(pei->reason==PEI_StartFailed && 
+	   pei->pinfo->pid==SPSi_NotSupported)
+	{
+		ProcessError_PrimaryReasonMessage("POV",prg_name,pei);
+		
+		const RenderTask *rt = pei->pinfo ? 
+			(const RenderTask *)pei->pinfo->tsb : NULL;
+		assert(rt);   // Yes, this MUST be !=NULL here. 
+		
+		Error("POV:   Error: requested image format %s/%dbpp not supported\n",
+			rt->oformat->name,rt->oformat->bits_p_rgb); 
+		
+		return(0);
+	}
+	
+	// The rest is all done by the standard function in RenderDriver. 
+	RenderDriver::ProcessErrorStdMessage("POV",prg_name,pei);
+	
+	return(0);
 }
 
 
+// Okay, execute must actually do the lowest level job and put together the 
+// command line etc. 
+// All that info is then passed up to RenderDriver::StartProcess(). 
+// This function returns 0 on success, !=0 on error. 
+// Return valze of Execute(): 
+//   That of RenderDriver::StartProcess() or in case something fails: 
+//     SPSi_IllegalParams -> internal error with params
+//     SPSi_NotSupported -> error with params: not supported (e.g. wrong 
+//             image format) 
+//     SPS_LMallocFailed -> self-explaining
+//     SPS_SPSi_Open{In,Out}Failed -> failed to open required I/O file 
+//             (Primarily useful for filters or in case the driver reads 
+//              in an additional config file.)
+// POVRayDriver::Execute() Need not write any errors. For error handling, 
+//   ProcessError() is called. You can use RenderDriver::ProcessErrorStdMessage() 
+//   for most of the messages but if there are special messages (especially 
+//   for SPSi_NotSupported, SPS_SPSi_Open{In,Out}Failed) then these should be 
+//   handeled in ProcessError(). 
 int POVRayDriver::Execute(
 	const RenderTask *rt,
 	const RenderTaskParams *rtp)
 {
+// Failure simulation code ;-)
+//static int _frames=0;
+//if(++_frames==4)  return(SPSi_IllegalParams);
+	
 	// Check for illegal *rp: 
 	if(!rt->rdesc || !rt->oformat || 
 	   !rt->infile || !rt->outfile || 
@@ -61,12 +127,7 @@ int POVRayDriver::Execute(
 	char Ftmp[8];
 	int failed=_FillOutputFormat(Ftmp,8,rt->oformat) ? 1 : 0;
 	if(failed)
-	{
-		if(failed>0)
-		{  Error("POV: Requested image format %s/%dbpp not supported.\n",
-			rt->oformat->name,rt->oformat->bits_p_rgb);  }
-		return(SPS_LMallocFailed);
-	}
+	{  return(SPSi_NotSupported);  }
 	
 	RefStrList args(&failed);
 	RefStrList lib_args(&failed);
