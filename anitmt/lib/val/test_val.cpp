@@ -352,7 +352,7 @@ int main()
 		m10x10=m10x5*m5x10;
 		m5x10=m5x10*m10x10;
 		
-		#warning ENABLE ME!!!
+		#warning "**** PLEASE ENABLE ME, TOO ****"
 		//V5=m5x10*V1;
 		//V1*=m10x10;
 	}
