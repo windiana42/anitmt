@@ -113,10 +113,10 @@ void *LMalloc(size_t size)
 		{  ++lmu.limit_failures;  return(NULL);  }
 	}
 	++lmu.malloc_calls;
-	++lmu.used_chunks;
 	ptr=malloc(size);
 	if(ptr)
 	{
+		++lmu.used_chunks;
 		lmu.curr_used+=malloc_usable_size(ptr);
 		if(lmu.max_used<lmu.curr_used)
 		{  lmu.max_used=lmu.curr_used;  }
