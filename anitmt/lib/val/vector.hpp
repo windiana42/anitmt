@@ -144,8 +144,8 @@ public: // work around for the template friend problem
 		// Translation functions: 
 		// int xyz: x=0, y=1, z=2, ... no range check. 
 		// Member (modifying *this) and non-member version: 
-		Vector<N> &trans(double d,int xyz)  {  x.trans(d,xyz);  return(*this);  }
-		template<int n>friend Vector<n> trans(const Vector<n> &v,double delta,int xyz);
+		Vector<N> &translate(double d,int xyz)  {  x.translate(d,xyz);  return(*this);  }
+		template<int n>friend Vector<n> translate(const Vector<n> &v,double delta,int xyz);
 		
 		// Scalation functions: 
 		// int xyz: x=0, y=1, z=2, ... no range check. 
@@ -231,8 +231,8 @@ template<int N>inline Vector<N> normalize(const Vector<N> &v)
 	{  Vector<N> r(Vector<N>::noinit);  r.x.normalize(v.x);  return(r);  }
 
 // Non-member translation functions: 
-template<int N>inline Vector<N> trans(const Vector<N> &v,double delta,int xyz)
-	{  Vector<N> r(Vector<N>::noinit);  r.x.trans(v.x,delta,xyz);  return(r);  }
+template<int N>inline Vector<N> translate(const Vector<N> &v,double delta,int xyz)
+	{  Vector<N> r(Vector<N>::noinit);  r.x.translate(v.x,delta,xyz);  return(r);  }
 
 // Non-member scalation functions: 
 template<int N>inline Vector<N> scale(const Vector<N> &v,double factor,int xyz)

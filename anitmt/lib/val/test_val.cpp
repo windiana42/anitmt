@@ -135,13 +135,13 @@ int main()
 	
 	va=vb;
 	cerr << "Trans: " << 
-		trans(va,-6,0) << 
-		trans(va,-6,1) << 
-		trans(va,-6,2) << "\n";
+		translate(va,-6,0) << 
+		translate(va,-6,1) << 
+		translate(va,-6,2) << "\n";
 	cerr << "Trans: " << 
-		va.trans(-6,0) << 
-		va.trans(6,0).trans(-6,1) << 
-		va.trans(6,1).trans(-6,2) << "\n";
+		va.translate(-6,0) << 
+		va.translate(6,0).translate(-6,1) << 
+		va.translate(6,1).translate(-6,2) << "\n";
 	
 	va=vb;
 	cerr << "Scale: " << 

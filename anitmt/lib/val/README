@@ -34,9 +34,9 @@ has the same function name; the friend takes one additional argument
 instead). While the member function usually returns a reference to *this, 
 the friends normally return a new object (allocated on the stack, of 
 course). This often makes the methods faster. Examples: 
-Method:                          Friend:
-Vector &normalize();             Vector normalize(const Vector &v);
-Vector &trans(double d,int i);   Vector trans(const Vector &v,double d,int i);
+Method:                              Friend:
+Vector &normalize();                 Vector normalize(const Vector &v);
+Vector &translate(double d,int i);   Vector translate(const Vector &v,double d,int i);
 
 
 1. NEUTRAL0, NEUTRAL1
@@ -186,13 +186,13 @@ Functions:
          the friend angle(Vector a,Vector b) calculates the angle between 
          the vectors a and b. 
   > Translation: 
-       * The function trans() can be used to translate a vector. 
+       * The function translate() can be used to translate a vector. 
          Both methods and friends are available for this job (see the 
          introduction on the difference between them). 
-         The translation method takes two arguments: trans(double d,int xyz)
+         The translation method takes two arguments: translate(double d,int xyz)
          d is the value to be added to the vector component indexed xyz 
          (in range 0...2 with no range check). 
-         v.trans(d,xyz) or trans(v,d,xyz) is like adding d to v[xyz]. 
+         v.translate(d,xyz) or translate(v,d,xyz) is like adding d to v[xyz]. 
   > Scalation: 
        * As for translation, there are also functions to scale the vector. 
          Both methods and friends are available (see the introduction on 

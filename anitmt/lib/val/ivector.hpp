@@ -95,7 +95,7 @@ template<int N> class vector
 		
 		// Translation (copies vector, adds value delta to component 
 		// with index n). 
-		vector<N> &trans(const vector<N> &v,double delta,int n)
+		vector<N> &translate(const vector<N> &v,double delta,int n)
 			{  _vFOR(i)  x[i]=v.x[i];  x[n]+=delta;  return(*this);  }
 		
 		// Scale vector (copies vector, then multiplies value f to 
@@ -127,7 +127,7 @@ template<int N> class vector
 			{  _vFORP(p)  *p=-(*p);  return(*this);  }
 		
 		// Translation (adds value delta to component with index n). 
-		vector<N> &trans(double delta,int n)
+		vector<N> &translate(double delta,int n)
 			{  x[n]+=delta;  return(*this);  }
 		
 		// Scale vector (multiplies value f to component with index n). 
