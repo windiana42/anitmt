@@ -113,7 +113,7 @@ namespace values
   inline Scalar abs(const Scalar &a)
     {  return fabs(a); }
   inline Scalar sqrt(const Scalar &a)
-    {  return sqrt( double(a) ); }
+    {  return ::sqrt( double(a) ); }
   
 /******************************************************************************/
 /*   VECTOR                                                                   */

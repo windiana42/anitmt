@@ -136,7 +136,6 @@ namespace anitmt
       }
     }
 
-    /*
     // calc (!x) + 2 (x = 5)    
     {
       Operand<values::Scalar> x;
@@ -165,7 +164,7 @@ namespace anitmt
 	errors++;
       }
     }
-    */
+    
 
     // calc <1,2,3> + <5,4,7>     
     {
@@ -335,15 +334,14 @@ namespace anitmt
       }
     }
 
-    // calc abs(v(=<1.1,2.2,3.3>)) 
+    // calc sqrt(abs(v(=<1.1,2.2,3.3>)))
     {
       Operand<values::Vector> x;
       Operand<values::Scalar> &op = sqrt(abs(x));
 
       if( op.is_solved() )
       {
-	cerr << "!!Error: why can he solve abs(v(=<1.1,2.2,3.3>)) without" 
-	  " knowing x?!! " 
+	cerr << "!!Error: why can he solve sqrt(abs(v)) without knowing v?!! " 
 	     << endl;
 	errors++;
       }
@@ -352,10 +350,10 @@ namespace anitmt
 
       if( op.is_solved() )
       {
-	cout << "  abs(v(=<1.1,2.2,3.3>)) = " << op.get_value() 
-	     << "(4,115823125451)"
+	cout << "  sqrt(abs(v(=<1.1,2.2,3.3>))) = " << op.get_value() 
+	     << "(2,02875)"
 	     << endl;
-	assert( op.get_value() == ::sqrt(1.1*1.1+2.2*2.2+3.3*3.3) );
+	assert( op.get_value() == ::sqrt(::sqrt(1.1*1.1+2.2*2.2+3.3*3.3)) );
       }
       else
       {
@@ -423,7 +421,7 @@ namespace anitmt
 
       if( op.is_solved() )
       {
-	cout << "  sqrt(abs(x(=123.45))) = " << op.get_value() << "(11,11081)"
+	cout << "  sqrt(abs(x(=123.45))) = " << op.get_value() << "(11,1108)"
 	     << endl;
 	assert( op.get_value() == ::sqrt(123.45) );
       }
@@ -617,7 +615,7 @@ namespace anitmt
       if( op.is_solved() )
       {
 	cout << "  5 / x(=3) = " << op.get_value() 
-	     << " (1.666...)" <<  endl;
+	     << " (1.66667)" <<  endl;
 	assert( op.get_value() == 5./3. );
       }
       else

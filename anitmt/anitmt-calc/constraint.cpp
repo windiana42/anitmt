@@ -27,7 +27,7 @@ namespace anitmt
   {
     assert( ID == &check );
     assert( check.is_solved_in_try(info) );
-    return check.get_value(info); // only true expressions are accepted
+    return check.get_value(info) == true; // only true expressions are accepted
   }
 
   // tells to use the result calculated by is_result_ok()
@@ -47,6 +47,7 @@ namespace anitmt
   Constraint_Checker::Constraint_Checker( Operand<bool> &op )
     : check(op)
   {
+    op.add_listener(this);
     if( op.is_solved() )
     {
       if( op.get_value() == false )

@@ -72,9 +72,10 @@ namespace anitmt
   void Basic_Operator_for_1_Operand<T_Result,T_Operand>::init()
     throw( EX )
   {
-    T_Operand op = operand.get_value();
     if( operand.is_solved() ) 
       {
+	const T_Operand &op = operand.get_value();
+
 	if( !is_operand_ok(op) )
 	  throw EX_Initial_Operand_Not_Valid();
 	if( is_operand_enough(op) )
@@ -110,7 +111,7 @@ namespace anitmt
     assert( ID == &operand );
     just_solved = false;
 
-    T_Operand op = operand.get_value( info );
+    const T_Operand &op = operand.get_value( info );
     if( !is_operand_ok( op ) ) 
       return false;
 
@@ -300,18 +301,25 @@ namespace anitmt
   void Basic_Operator_for_2_Operands<T_Result,T_Op1,T_Op2>::init() throw( EX )
   {
     if( operand1.is_solved() )
-      if( is_operand1_enough( operand1.get_value() ) )
+    {
+      const T_Op1 &op1 = operand1.get_value();
+
+      if( is_operand1_enough( op1 ) )
       {
-	result.set_value( calc_result_from_op1( operand1.get_value() ) ); 
-				// could throw exception !
-     }
- 
-    if( operand2.is_solved() )
-      if( is_operand2_enough( operand2.get_value() ) )
-      {
-	result.set_value( calc_result_from_op2( operand2.get_value() ) ); 
+	result.set_value( calc_result_from_op1( op1 ) ); 
 				// could throw exception !
       }
+    }
+ 
+    if( operand2.is_solved() )
+    {
+      const T_Op2 &op2 = operand2.get_value();
+      if( is_operand2_enough( op2 ) )
+      {
+	result.set_value( calc_result_from_op2( op2 ) ); 
+				// could throw exception !
+      }
+    }
 
     if( operand1.is_solved() && operand2.is_solved() ) 
     {
