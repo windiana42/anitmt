@@ -1,5 +1,5 @@
 scene testscene {
-	filename "test.scene";
+	filename "test.pov";
 	scalar testval {
 		linear {}
 		linear testlinear1 {
