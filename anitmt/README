@@ -1,37 +1,43 @@
 This is AniTMT, a program which aids you creating photo-realistic 
 animations. 
 
-
-Legal stuff
------------
-
-This program may be distributed and/or modified under the terms of the 
-GNU General Public License version 2 as published by the Free Software 
-Foundation. 
-It is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
-WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
-Read COPYING for details. 
+* Contact 
+  -------
+    anitmt-programmers@fs.net
+	FIX ME!!
+	Also have a look at AUTHORS. 
 
 
-AniTMT authors
---------------
-
-The authors' names and e-mail addresses can be viewed in AUTHORS. 
-
-
-Building anitmt
----------------
-
-Read BUILD for detailed build instructions. 
-anitmt can be build as easy as nearly any other GNU program. 
-
-If you build anitmt from CVS sources and you are new to CVS, you 
-may want to have a look at README.CVS. 
+* Legal stuff
+  -----------
+	This program may be distributed and/or modified under the terms of the 
+	GNU General Public License version 2 as published by the Free Software 
+	Foundation. 
+	It is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
+	WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
+	Read COPYING for details. 
 
 
-Reporting bugs
---------------
+* Building anitmt
+  ---------------
+	Read BUILD for detailed build instructions. 
+	anitmt can be build as easy as nearly any other GNU program. 
 
-Please read BUGS for details on reporing bugs. 
+	If you build anitmt from CVS sources and you are new to CVS, you 
+	may want to have a look at README.CVS. 
 
 
+* Reporting bugs
+  --------------
+	Please read BUGS for details on reporing bugs. 
+
+
+* Frequently Asked Questions
+  --------------------------
+	We compiled a file of frequently asked quesions about anitmt. 
+	Read FAQ in this directory. 
+
+
+Have fun and feel free to send us any feedback including any 
+issues you whish to express. 
+-- the anitmt team. 
