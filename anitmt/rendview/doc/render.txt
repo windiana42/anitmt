@@ -1,3 +1,0 @@
-If you are using Povray on an Athlon system, I recommend compiling PovRay with 
-CFLAGS="-O3 -fomit-frame-pointer -march=athlon -ffast-math" 
-This will be slightly more than 20% faster than standard "-O2". 
