@@ -16,6 +16,6 @@ libval_a_SOURCES = internals.hpp \
 
 check_PROGRAMS = test_val
 test_val_SOURCES = test_val.cpp
-test_val_LDADD = libval.a -lstdc++ -lm
+test_val_LDADD = libval.a 
 
 EXTRA_DIST = README

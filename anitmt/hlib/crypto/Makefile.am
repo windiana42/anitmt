@@ -1,10 +1,6 @@
 if HAVE_GMP
-RSA_SRC_C = rsa.cc primetable.cc gmpalloc.cc
-RSA_SRC_H = rsa.h primetable.h gmpalloc.h
 GMP_CHECK_LDADD = /usr/lib/libgmp.a
 else
-RSA_SRC_C = 
-RSA_SRC_H = 
 GMP_CHECK_LDADD = 
 endif
 
@@ -16,7 +12,7 @@ libcrypto_a_SOURCES = \
 
 check_PROGRAMS = check_crypto
 check_crypto_SOURCES = check_crypto.cc
-check_crypto_LDADD = ../libhlib.a $(GMP_CHECK_LDADD) -lm
+check_crypto_LDADD = ../libhlib.a $(GMP_CHECK_LDADD) $(LIBS)
 
 check: check_crypto$(EXEEXT) ../libhlib.a  xFORCE
 	./check_crypto$(EXEEXT)

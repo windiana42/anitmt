@@ -66,6 +66,14 @@ AC_CHECK_TYPES([struct pollfd],, \
 
 ## AC_CHECK_MEMBERS([struct stat.st_blksize])
 
+# Check for libraries.
+
+# Check if socket is in -lsocket: 
+AC_CHECK_LIB([socket],[socket])
+
+# If needed: Check if sqrt is in -lm: 
+#AC_CHECK_LIB([m],[sqrt])
+
 # Checks for library functions.
 AC_FUNC_ERROR_AT_LINE
 AC_PROG_GCC_TRADITIONAL
@@ -99,17 +107,15 @@ NOTE: Applications may not work as expected.
 
 # Finnally, check if CLD_EXITED is defined, otherwise all that 
 # siginfo_t stuff is useless for ProcessManager. 
-AC_TRY_COMPILE([#include <signal.h>
-	#include <sys/signal.h>],\
+AC_MSG_CHECKING([for CLD_EXITED])
+  AC_TRY_COMPILE([#include <signal.h>
+	#include <sys/signal.h>],
 	[siginfo_t x;
-	 if(x.si_code==CLD_EXITED);],\
-	[echo "checking for CLD_EXITED... yes"],
-	[echo "checking for CLD_EXITED... no"
+	 if(x.si_code==CLD_EXITED);],
+	[AC_MSG_RESULT([yes])],
+	[AC_MSG_RESULT([no])
 	 AC_MSG_NOTICE([You are lacking CLD_EXITED. Not using it...])
 	 AC_DEFINE(HLIB_PROCMAN_USE_LESS_SIGINFO_T,,[Defined, if CLD_EXITED was not found])])
-
-# Check if socket is in -lsocket: 
-AC_CHECK_LIB([socket],[socket])
 
 # Finally write files: 
 AC_CONFIG_FILES([include/Makefile \
@@ -121,4 +127,3 @@ AC_CONFIG_FILES([include/Makefile \
 	crypto/Makefile \
 	Makefile])
 AC_OUTPUT
-

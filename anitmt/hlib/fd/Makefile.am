@@ -16,7 +16,7 @@ EXTRA_DIST = depend.txt
 
 check_PROGRAMS = check_fd
 check_fd_SOURCES = check_fd.cc
-check_fd_LDADD = ../libhlib.a $(LIBS) -lm
+check_fd_LDADD = ../libhlib.a $(LIBS) 
 
 check: check_fd$(EXEEXT) ../libhlib.a  xFORCE
 	./check_fd$(EXEEXT)
