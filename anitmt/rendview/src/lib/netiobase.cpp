@@ -317,11 +317,10 @@ static inline void _KillControl(FDCopyPump *p)
 {
 	if(p && p->IsActive())
 	{
-		// I think that this will not happen. In case it does, then 
-		// this should not be a problem and the following line should 
-		// be the apropriate action. 
-		assert(0);
+		// This does happen e.g. if we shut down while file download 
+		// is in progress. 
 		p->Control(FDCopyPump::CC_Kill);
+		// NOTE that this calls cpnotify(SCKilled) on the stack (ignored). 
 	}
 }
 

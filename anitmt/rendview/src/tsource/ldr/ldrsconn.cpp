@@ -1619,7 +1619,7 @@ int TaskSource_LDR_ServerConn::cpnotify_inpump(FDCopyBase::CopyInfo *cpi)
 
 int TaskSource_LDR_ServerConn::cpnotify(FDCopyBase::CopyInfo *cpi)
 {
-	fprintf(stderr,"cpnotify(scode=0x%x (final=%s; limit=%s), err_no=%d (%s), %s)\n",
+	Verbose(DBG,"--<cpnotify>--<scode=0x%x (final=%s; limit=%s), err_no=%d (%s), %s>--\n",
 		cpi->scode,
 		(cpi->scode & FDCopyPump::SCFinal) ? "yes" : "no",
 		(cpi->scode & FDCopyPump::SCLimit) ? "yes" : "no",
@@ -1636,6 +1636,12 @@ int TaskSource_LDR_ServerConn::cpnotify(FDCopyBase::CopyInfo *cpi)
 	// We are only interested in FINAL codes. 
 	if(!(cpi->scode & FDCopyPump::SCFinal))
 	{  return(0);  }
+	
+	if((cpi->scode & FDCopyPump::SCKilled))
+	{
+		// Killed? Dann wird's das schon gebraucht haben! ;)
+		return(0);
+	}
 	
 	if( ! (cpi->scode & FDCopyPump::SCLimit) )
 	{
