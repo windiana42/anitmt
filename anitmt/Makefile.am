@@ -1,5 +1,5 @@
 SUBDIRS = lib hlib anitmt-calc utils example
-EXTRA_DIST = BUILD FAQ autogen.sh
+EXTRA_DIST = BUILD FAQ autogen.sh anitmt.spec
 
 # Special make rules building only a subset: 
 # Mainly interesting for developers. 

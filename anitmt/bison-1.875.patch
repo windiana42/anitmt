@@ -1,0 +1,32 @@
+diff -Naur bison-1.875/data/yacc.c bison-1.875-mychange/data/yacc.c
+--- bison-1.875/data/yacc.c	2002-12-28 09:36:02.000000000 +0100
++++ bison-1.875-mychange/data/yacc.c	2004-08-26 13:11:50.868763664 +0200
+@@ -251,7 +251,7 @@
+ 	 || (]b4_location_if([YYLTYPE_IS_TRIVIAL && ])[YYSTYPE_IS_TRIVIAL)))
+ 
+ /* A type that is properly aligned for any stack member.  */
+-union yyalloc
++struct yyalloc
+ {
+   short yyss;
+   YYSTYPE yyvs;
+@@ -260,7 +260,7 @@
+ [};
+ 
+ /* The size of the maximum gap between one aligned stack and the next.  */
+-# define YYSTACK_GAP_MAXIMUM (sizeof (union yyalloc) - 1)
++# define YYSTACK_GAP_MAXIMUM (sizeof (struct yyalloc) - 1)
+ 
+ /* The size of an array large to enough to hold all stacks, each with
+    N elements.  */
+@@ -852,8 +852,8 @@
+ 
+       {
+ 	short *yyss1 = yyss;
+-	union yyalloc *yyptr =
+-	  (union yyalloc *) YYSTACK_ALLOC (YYSTACK_BYTES (yystacksize));
++	struct yyalloc *yyptr =
++	  (struct yyalloc *) YYSTACK_ALLOC (YYSTACK_BYTES (yystacksize));
+ 	if (! yyptr)
+ 	  goto yyoverflowlab;
+ 	YYSTACK_RELOCATE (yyss);
