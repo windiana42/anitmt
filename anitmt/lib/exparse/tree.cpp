@@ -104,7 +104,7 @@ int ExpressionTree::_GenFuncRecursive(
 		cout << "FuncRec ";
 		_WriteOperator(cout,func->op) << "[ ";
 		_WriteExpression(cout,exp);
-		cout << " ]" << std::endl;
+		cout << " ]";
 	}
 	
 	int errors=0;
@@ -117,7 +117,7 @@ int ExpressionTree::_GenFuncRecursive(
 		// If the subexpression is just a value, we can 
 		// return immediately. 
 		if(verbose>1)
-		{  cout << "(FAST)";  }
+		{  cout << " (FAST)" << std::endl;  }
 		OperatorNode *on=exp->popfirst();
 		errors+=_FuncAddChild(func,on->op);
 		garbage->append(on);
@@ -125,6 +125,8 @@ int ExpressionTree::_GenFuncRecursive(
 	else
 	{
 		// This is the slow path...
+		if(verbose>1)
+		{  cout << std::endl;  }
 		
 		if(correct_parser_ambiguities)
 		{  _CorrectGVAmbiguity(exp,&errors,/*respect_brackets=*/true);  }
@@ -220,7 +222,7 @@ int ExpressionTree::_GenTreeRecursive(
 	{
 		cout << "TreeRec[ ";
 		_WriteExpression(cout,exp);
-		cout << " ]" << std::endl;
+		cout << " ]";
 	}
 	
 	if(exp->first() && 
@@ -231,10 +233,12 @@ int ExpressionTree::_GenTreeRecursive(
 		// If the subexpression is just a value, we can 
 		// return immediately. 
 		if(verbose>1)
-		{  cout << "(FAST)";  }
+		{  cout << " (FAST)" << std::endl;  }
 		garbage->append(exp->popfirst());  // store subtree root 
 		return(0);                         // done. 
 	}
+	else if(verbose>1)
+	{  cout << std::endl;  }
 	
 	int errors=0;
 	if(correct_parser_ambiguities)
@@ -357,9 +361,6 @@ int ExpressionTree::_GenTreeLinear(
 		_WriteExpression(cout,exp);
 		cout << " ]" << std::endl;
 	}
-	
-	if(verbose)
-		printf("Linear tree creation...");
 	
 	if(exp->is_empty())
 	{
@@ -599,8 +600,6 @@ int ExpressionTree::_GenTreeLinear(
 		assert(on->done || errors);
 	}
 	
-	if(verbose)
-		printf("%d errors\n",errors);
 	return(errors);
 }
 
@@ -626,14 +625,14 @@ int ExpressionTree::_TreeAddBranch(OperatorNode *top,
 			top->op->function() ? top->op->function()->name : top->op->desc()->name);
 		return(1);
 	}
-	if(verbose)
+	if(verbose>4)  // VERY verbose; must re-write this using _WriteOperator(). 
 		printf("Adding <%s,%d> (%p) as child %d of <%s,%d> (%p): ",
 			on->op->desc()->name,on->op->type(),on->op,
 			top->op->NChld(),
 			top->op->desc()->name,top->op->type(),top->op);
 	int rv=top->op->AddChild(on->op);
 	garbage->append(exp->dequeue(on));
-	if(verbose)
+	if(verbose>4)
 		printf("%d\n",rv);
 	if(rv)
 	{
