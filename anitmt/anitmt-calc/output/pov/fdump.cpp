@@ -96,7 +96,7 @@ char *Frame_Dump::Node::_Dump_Scalar2Str(char *d,char *dend,Frame_Dump::Context 
 	++ctx->nscalars;
 	for(char *s=str; *s; s++)
 	{  *(d++)=*s;  }
-	Scalar_Component_Interface *scl=(Scalar_Component_Interface*)cif;
+	Scalar_Component_Interface *scl=cif.CVScalar();
 	std::pair<bool,values::Scalar> ret=scl->get_value(ctx->t);
 	
 	bool defined=ret.first;
@@ -127,17 +127,15 @@ char *Frame_Dump::Node::_Dump_Object2Str(char *d,char *dend,Frame_Dump::Context 
 	
 	++ctx->nobjects;
 	
-	Object_Component_Interface *obj=(Object_Component_Interface*)cif;
+	Object_Component_Interface *obj=cif.CVObject();
 	std::pair<bool,Object_State> ret=
 		obj->get_state(ctx->t);
 	
 	bool defined=ret.first;
-	#warning Object_State lacks is_avtive member. DONE (Martin)!!! 
+	// (FIXME) If there was an is_active member, then use 
+	// active=ret.second.is_active; instead of
+	// active=ret.first; 
 	bool active=ret.first;  //ret.second.is_active;
-	{ static int complained=0;
-	  if(complained<10)
-	  {  cout << "Object_State lacks is_avtive member. FIXME!!!" << 
-	  std::endl;  ++complained;  } }
 	
 	if(ctx->msgrep->verbose_level()>3)  // YES!
 	{  ctx->msgrep->verbose(4) << "object: " << obj->get_name() << 
@@ -233,10 +231,10 @@ char *Frame_Dump::Node::_Dump_Object2Str(char *d,char *dend,Frame_Dump::Context 
 
 inline char *Frame_Dump::Node::write(char *dest,char *dend,Context *ctx)
 {
-	switch(type)
+	switch(cif.GetType())
 	{
-		case NT_Scalar:  return(_Dump_Scalar2Str(dest,dend,ctx));
-		case NT_Object:  return(_Dump_Object2Str(dest,dend,ctx));
+		case taScalar:  return(_Dump_Scalar2Str(dest,dend,ctx));
+		case taObject:  return(_Dump_Object2Str(dest,dend,ctx));
 	}
 	assert(0);   // actually never happens...
 	return(dest);
@@ -437,76 +435,25 @@ int Frame_Dump::Write(const std::string &file,values::Scalar t,int frame)
 }
 
 
-//namespace { template<class Dest> void *cast_void(Prop_Tree_Node *ptn)
-//{
-//	Dest *d=dynamic_cast<Dest *>(ptn);
-//	assert(d);
-//	return(d);
-//} }
-
-
-// *sif allocated (and freed lateron) by higher level (e.g. File_Parser)
-void Frame_Dump::Add_Entry(Scalar_Component_Interface *sif)
-{
-	size_t len=sif->get_name().length();
-	if(len>longest_identifier_len)
-	{  longest_identifier_len=len;  }
-	
-	Node *n=new Node(NT_Scalar,sif,Dump_Flags(0),0);
-	(last ? last->next : first) = n;
-	last=n;
-}
-
-// *oif allocated (and freed lateron) by higher level (e.g. File_Parser)
-void Frame_Dump::Add_Entry(Object_Component_Interface *oif,
+void Frame_Dump::Add_Entry(const ComponentInterface &cif,
 	Dump_Flags flags,unsigned int id)
 {
+	if(cif.GetType()==taScalar)
+	{
+		size_t len=cif.get_name().length();
+		if(len>longest_identifier_len)
+		{  longest_identifier_len=len;  }
+	}
+	
 	// Tweak flags: 
 	if(flags & DF_Obj_Scale)  (int)flags|=DF_Obj_AScale;
 	if(flags & DF_Obj_Rot)    (int)flags|=DF_Obj_ARot;
 	if(flags & DF_Obj_Trans)  (int)flags|=DF_Obj_ATrans;
 	
-	Node *n=new Node(NT_Object,oif,flags,id);
+	Node *n=new Node(cif,flags,id);
 	(last ? last->next : first) = n;
 	last=n;
 }
-
-#warning To be removed: 
-#if 0  // ####
-void Frame_Dump::Add_Entry(NType type,Prop_Tree_Node *ptn,Dump_Flags flags,
-	unsigned int id)
-{
-	// Special hack...
-	void *ptr=NULL;
-	switch(type)
-	{
-		case NT_Scalar:
-		{
-			ptr=cast_void<Ani_Scalar>(ptn);
-			size_t len=ptn->get_name().length();
-			if(len>longest_identifier_len)
-			{  longest_identifier_len=len;  }
-		}  break;
-		case NT_Object:
-			ptr=cast_void<Ani_Object>(ptn);
-			break;
-		// default: ptr stays NULL and will trap the assertion. 
-	}
-	assert(ptr);
-	
-	// Tweak flags: 
-	if(flags & DF_Obj_Scale)  (int)flags|=DF_Obj_AScale;
-	if(flags & DF_Obj_Rot)    (int)flags|=DF_Obj_ARot;
-	if(flags & DF_Obj_Trans)  (int)flags|=DF_Obj_ATrans;
-	
-	Node *n=new Node(type,ptr,flags,id);
-	if(last)
-	{  last->next=n;  }
-	else
-	{  first=n;  }
-	last=n;
-}
-#endif
 
 static char *NewStr(const char *str)
 {
@@ -556,37 +503,33 @@ char *Frame_Dump::Node::_Alloc_Object_Str(
 }
 
 
-Frame_Dump::Node::Node(NType _type,void *_cif,Dump_Flags _flags,unsigned int id)
+Frame_Dump::Node::Node(const ComponentInterface &_cif,Dump_Flags _flags,unsigned int id)
 {
 	next=NULL;
-	type=_type;
 	flags=_flags;
 	cif=_cif;
 	str=NULL;
 	str_len=0;
 	
-	switch(type)
+	switch(cif.GetType())
 	{
-		case NT_Scalar:
-			str=_Alloc_Scalar_Str((Scalar_Component_Interface*)cif);
+		case taScalar:
+			str=_Alloc_Scalar_Str(cif.CVScalar());
 			str_len=strlen(str);
 			break;
-		case NT_Object:
-			str=_Alloc_Object_Str((Object_Component_Interface*)cif,id);
+		case taObject:
+			str=_Alloc_Object_Str(cif.CVObject(),id);
 			str_len=strlen(str);
 			break;
-		default:
-			std::cerr << "Frame_Dump: Illegal type " << int(type) << "." << std::endl;
-			abort();
+		default:  assert(0);  break;
 	}
 }
 
 
 Frame_Dump::Node::~Node()
 {
-	if(str)  delete str;  str=NULL;
-	// do not delete cif, just NULL it: 
-	cif=NULL;
+	if(str)
+	{  delete str;  str=NULL;  }
 }
 
 
@@ -606,8 +549,7 @@ Frame_Dump::Context::Context(double _t,int _ndigits,
 }
 
 
-void Frame_Dump::Clear(anitmt::Animation *new_ani,
-	anitmt::Scene_Interface &new_scene_if)
+void Frame_Dump::_Clear()
 {
 	while(first)
 	{
@@ -619,6 +561,12 @@ void Frame_Dump::Clear(anitmt::Animation *new_ani,
 	longest_identifier_len=0;
 	include_me="";
 	outp=NULL;
+}
+
+void Frame_Dump::Clear(anitmt::Animation *new_ani,
+	anitmt::Scene_Interface &new_scene_if)
+{
+	_Clear();
 	
 	ani=new_ani;
 	scene_if=new_scene_if;
@@ -647,10 +595,10 @@ Frame_Dump::Frame_Dump(
 
 Frame_Dump::~Frame_Dump()
 {
-	Clear(NULL,*(Scene_Interface*)NULL);
+	_Clear();
 	
-	if(buf)  delete buf;
-	buf=NULL;
+	if(buf)
+	{  delete buf;  buf=NULL;  }
 	
 	ani=NULL;
 }

@@ -303,7 +303,7 @@ class File_Parser::Comment_Parser : public Sub_Parser
 		
 		// Read in flags and AValue: 
 		AValue *av;
-		const char *obj_name;  // av->get_name()
+		const char *obj_name;  // av->cif.get_name()
 		bool name_valid;  // obj_name valid?
 		Object_Flags flags;
 		bool flags_valid;
@@ -885,8 +885,8 @@ void File_Parser::Insert_Statement(AValue *av,Position *pos,char type)
 		++av->curr_active;  // we enter an if(active) statement
 		if(av->curr_active>1 && config.warn_active_mismatch)
 		{  Warning_Header() << "warning: nested #if(active) statement for " << 
-			Ani_Type_Name(av->type) << " `" << av->get_name() << 
-			"\' (use insert." << av->get_name() << ".actend "
+			Ani_Type_Name(av->type()) << " `" << av->cif.get_name() << 
+			"\' (use insert." << av->cif.get_name() << ".actend "
 			"instead of #end)";  }
 	}
 	if(type=='s' || type=='i')
@@ -922,8 +922,8 @@ void File_Parser::Insert_Statement(AValue *av,Position *pos,char type)
 		strcpy(end,"#end ");  end+=5;
 		--av->curr_active;
 		if(av->curr_active==-1 && config.warn_active_mismatch)
-		{  Warning_Header() << "warning: more insert." << av->get_name() << 
-			".actend statements than insert." << av->get_name() << 
+		{  Warning_Header() << "warning: more insert." << av->cif.get_name() << 
+			".actend statements than insert." << av->cif.get_name() << 
 			".active.";  }
 	}
 	
@@ -941,7 +941,7 @@ bool File_Parser::Process_AValue(AValue *av)
 	bool retval=true;
 	
 	assert(av->locked);  // be sure the Sub_Parsers do proper locking 
-	if(av->type==taScalar)
+	if(av->type()==taScalar)
 	{
 		// Be sure the values are set properly: 
 		assert(!av->dec_start.unset());
@@ -955,7 +955,7 @@ bool File_Parser::Process_AValue(AValue *av)
 		assert(av->dec_start.fileoff<=av->dec_end.fileoff);
 		
 		if(verbose_level()>3)
-		{  verbose(4) << "Deleting scalar declaration of `" << av->get_name() << 
+		{  verbose(4) << "Deleting scalar declaration of `" << av->cif.get_name() << 
 			"\' in " << 
 			Get_Path(av->dec_start.handle) << ":" << av->dec_start.line << 
 			" ... " << 
@@ -971,7 +971,7 @@ bool File_Parser::Process_AValue(AValue *av)
 		
 		++av->need_active;
 	}
-	else if(av->type==taObject)
+	else if(av->type()==taObject)
 	{
 		assert(!av->dec_start.unset());
 		assert(!av->dec_end.unset());
@@ -989,7 +989,7 @@ bool File_Parser::Process_AValue(AValue *av)
 		
 		if(verbose_level()>3)
 		{  verbose(4) << "Inserting pov commands for object `" << 
-			av->get_name() << "\' "
+			av->cif.get_name() << "\' "
 			"(start: " << Get_Path(av->dec_start.handle) << ":" << av->dec_start.line << 
 			"; matrix: " << Get_Path(av->mat_pos.handle) << ":" << av->mat_pos.line << 
 			"; end: " << Get_Path(av->dec_end.handle) << ":" << av->dec_end.line << 
@@ -1085,26 +1085,10 @@ void File_Parser::Comment_Cutout(Position *start,Position *end)
 }
 
 
-int File_Parser::_Finder_Check_Copy_Name(void *cif,tokID id,unsigned int *counter)
+int File_Parser::_Finder_Check_Copy_Name(const ComponentInterface &cif,
+	unsigned int *counter)
 {
-	const char *name=NULL;
-	void *copy_cif;
-	switch(id)
-	{
-		case taScalar:
-		{
-			Scalar_Component_Interface *sif=(Scalar_Component_Interface*)cif;
-			name=sif->get_name().c_str();
-			copy_cif = new Scalar_Component_Interface(*sif);
-		}  break;
-		case taObject:
-		{
-			Object_Component_Interface *oif=(Object_Component_Interface*)cif;
-			name=oif->get_name().c_str();
-			copy_cif = new Object_Component_Interface(*oif);
-		}  break;
-		// default: not needed as name=NULL handled below. 
-	}
+	const char *name=cif.get_name_c();
 	
 	// Check if the name is valid: 
 	if(!(*name))
@@ -1112,6 +1096,7 @@ int File_Parser::_Finder_Check_Copy_Name(void *cif,tokID id,unsigned int *counte
 		error() << "Error: Object or scalar without a name (ignored).";
 		return(1);
 	}
+	
 	bool allowed=allowed_name_char0(*name);
 	if(allowed)
 		for(const char *c=name+1; *c; c++)
@@ -1129,13 +1114,14 @@ int File_Parser::_Finder_Check_Copy_Name(void *cif,tokID id,unsigned int *counte
 	if(verbose_level()>2)
 	{  verbose(3) << name << " " << message::noend;  }
 	
+	// Store AValue in list: 
 	AValue av;
-	av.type=id;
-	av.cif=copy_cif;
+	av.cif=cif;
 	av.serial=*counter;
 	AValue *avp=av_list.Add(av);
-	av_finder->Copy_String(name,id,avp);
+	av_finder->Copy_String(name,cif.GetType(),avp);
 	++(*counter);
+	
 	return(0);
 }
 
@@ -1185,7 +1171,8 @@ int File_Parser::_Set_Up_Finder(Animation * /*ani*/,Scene_Interface &scene_if)
 	     scalar != scene_if.get_scalar_end();
 	     scalar = scalar.get_next() )
 	{
-		if(_Finder_Check_Copy_Name(&scalar,taScalar,&count))
+		ComponentInterface cif(scalar);
+		if(_Finder_Check_Copy_Name(cif,&count))
 		{  ++errors;  }
 	}
 	verbose(2) << "[" << count << " nodes]";
@@ -1197,7 +1184,8 @@ int File_Parser::_Set_Up_Finder(Animation * /*ani*/,Scene_Interface &scene_if)
 	     object != scene_if.get_object_end();
 	     object = object.get_next() )
 	{
-		if(_Finder_Check_Copy_Name(&object,taObject,&count))
+		ComponentInterface cif(object);
+		if(_Finder_Check_Copy_Name(cif,&count))
 		{  ++errors;  }
 	}
 	verbose(2) << "[" << count << " nodes]";
@@ -1295,27 +1283,21 @@ int File_Parser::Setup_Frame_Dump(Frame_Dump *fdump)
 	{
 		bool dump_it=false;
 		int dflags=0;
-		switch(av->type)
+		switch(av->cif.GetType())
 		{
 			case taScalar:
 			{
-				Scalar_Component_Interface *sif=(Scalar_Component_Interface *)av->cif;
 				dump_it=(config.frame_dump_all_scalars || av->need_active);
 				
 				// This should be the case for scalars...?!
 				assert(av->need_active==av->nfound);
 				
-				if(dump_it)
-				{
-					fdump->Add_Entry(sif/*,(Frame_Dump::Dump_Flags)dflags,av->serial*/);
-					++nent;
-				}
-				
+				if(verbose_level()>=4)
+				{  verbose(4) << "Scalar \"" << av->cif.get_name_c() << "\": dump=" << 
+					(dump_it ? "yes" : "no");  }
 			} break;
 			case taObject:
 			{
-				Object_Component_Interface *oif=(Object_Component_Interface *)av->cif;
-				
 				if(config.frame_dump_object_info>2)  // all info
 				{  dflags = Frame_Dump::DF_Obj_Mat | Frame_Dump::DF_Obj_Active;  }
 				else if(config.frame_dump_object_info==1)
@@ -1342,13 +1324,18 @@ int File_Parser::Setup_Frame_Dump(Frame_Dump *fdump)
 				
 				dump_it=(dflags ? true : false);
 				
-				if(dump_it)
-				{
-					fdump->Add_Entry(oif,(Frame_Dump::Dump_Flags)dflags,av->serial);
-					++nent;
-				}
+				if(verbose_level()>=4)
+				{  verbose(4) << "Object \"" << av->cif.get_name_c() << "\": dump=" << 
+					(dump_it ? "yes" : "no") << "; "
+					"flags=" << int(dflags) << "; serial=" << av->serial;  }
 			} break;
 			default:  assert(0);  break;
+		}
+		
+		if(dump_it)
+		{
+			fdump->Add_Entry(av->cif,(Frame_Dump::Dump_Flags)dflags,av->serial);
+			++nent;
 		}
 	}
 	
@@ -1369,8 +1356,8 @@ Frame_Dump *File_Parser::Transfer_FDump()
 // Return 0 on success; !=0 on error 
 int File_Parser::Go(Animation *ani,Scene_Interface &scene_if)
 {
-	// Scene name: sc.get_name()
-	// Scene file: sc.get_filename()
+	// Scene name: scene_if.get_name()
+	// Scene file: scene_if.get_filename()
 	// Animation_Parameters: ani->GLOB.param 
 	
 	_Cleanup();
@@ -1394,7 +1381,7 @@ int File_Parser::Go(Animation *ani,Scene_Interface &scene_if)
 		errors+=_Set_Up_FDump(ani,scene_if);
 		_Set_Up_SPS();
 		
-		verbose(1) << "starting to parse primary file \"" << file << 
+		verbose(1) << "Starting to parse primary file \"" << file << 
 			"\" (scene \"" << scene_if.get_name() << "\").";
 		
 		Recursive_Input_Stream::warn_multiple_include=config.warn_multiple_include;
@@ -1445,8 +1432,11 @@ int File_Parser::Go(Animation *ani,Scene_Interface &scene_if)
 			#endif
 		}
 		
+		fprintf(stderr,">>>>>>>>>>>>>>>>>>>>\n");
 		av_list.Warn_Unused(warn());
+		fprintf(stderr,"--------------------\n");
 		Warn_Active_Mismatch();
+		fprintf(stderr,"<<<<<<<<<<<<<<<<<<<<\n");
 		
 		// This function writes a verbose message itself: 
 		Setup_Frame_Dump(fdump);
@@ -1493,15 +1483,15 @@ int File_Parser::Warn_Active_Mismatch()
 	bool header_written=false;
 	for(AValue *av=av_list.first; av; av=av->next)
 	{
-		if(av->type==taScalar)  continue;
+		if(av->type()==taScalar)  continue;
 		if(av->curr_active<=0) continue;
 		++warnings;
 		if(!config.warn_active_mismatch)  continue;
 		if(!header_written)
 		{  warn() << "warning: more if(active) then end statements: " << 
-				av->get_name() << message::noend;  header_written=true;  }
+				av->cif.get_name() << message::noend;  header_written=true;  }
 		else
-		{  warn() << ", " << av->get_name() << message::noend;  }
+		{  warn() << ", " << av->cif.get_name() << message::noend;  }
 	}
 	if(header_written)
 	{  warn() << "";  }  // <-- newline
@@ -1509,15 +1499,15 @@ int File_Parser::Warn_Active_Mismatch()
 	header_written=false;
 	for(AValue *av=av_list.first; av; av=av->next)
 	{
-		if(av->type==taScalar)  continue;
+		if(av->type()==taScalar)  continue;
 		if(av->curr_active>=0) continue;
 		++warnings;
 		if(!config.warn_active_mismatch)  continue;
 		if(!header_written)
 		{  warn() << "warning: less if(active) then end statements: " << 
-			av->get_name() << message::noend;  header_written=true;  }
+			av->cif.get_name() << message::noend;  header_written=true;  }
 		else
-		{  warn() << ", " << av->get_name() << message::noend;  }
+		{  warn() << ", " << av->cif.get_name() << message::noend;  }
 	}
 	if(header_written)
 	{  warn() << "";  }  // <-- newline
@@ -1537,7 +1527,8 @@ int File_Parser::Warn_Active_Mismatch()
 
 
 File_Parser::File_Parser(message::Message_Consultant *mcon) : 
-	Recursive_Input_Stream(mcon)
+	Recursive_Input_Stream(mcon),
+	config(this)
 {
 	mcopy=NULL;
 	pp_finder=NULL;
@@ -1582,7 +1573,7 @@ File_Parser::~File_Parser()
 }
 
 
-File_Parser::Config::Config()
+File_Parser::Config::Config(Message_Reporter *msg_rep)
 {
 	// Set up default config: 
 	allow_nested_comments=true;  // povray allows them. 
@@ -1603,15 +1594,15 @@ File_Parser::Config::Config()
 	max_wspace_cmt_2_name=0;  // 0 -> unlimited
 	warn_uninterpreted_insert=true;
 	warn_uninterpreted_parse_end=true;
-	#warning next val should be true: 
-	warn_multiple_include=false;
+	//#warning next val should be true: 
+	warn_multiple_include=true;
 	warn_active_mismatch=true;
 	frame_dump_object_info=0;  // okay
 	parser_stack_limit=1000;   // enough?!?!
 	#warning next val should probably be true: 
-	cmd_interprete_first_line=false;
+	cmd_interprete_first_line=true;   // false;
 	
-	dump_tokens=0;
+	dump_tokens=(msg_rep->verbose_level()>3);
 }
 
 
@@ -1626,22 +1617,9 @@ inline void File_Parser::Object_Flags::reset(int val)
 }
 
 
-inline std::string File_Parser::AValue::get_name()
-{
-	if(cif) switch(type)
-	{
-		case taScalar:  return(((Scalar_Component_Interface*)cif)->get_name());
-		case taObject:  return(((Object_Component_Interface*)cif)->get_name());
-		default:  assert(0);
-	}
-	return(std::string("(null)"));
-}
-
-inline File_Parser::AValue::AValue()
+inline File_Parser::AValue::AValue() : cif()
 {
 	next=NULL;
-	type=tNone;
-	cif=NULL;
 	nfound=0;
 	serial=0;   // NOT -1 as unsigned. 
 	locked=false;
@@ -1653,18 +1631,32 @@ inline File_Parser::AValue::AValue()
 	curr_active=0;
 }
 
+inline File_Parser::AValue::AValue(const AValue &src) : cif(src.cif)
+{
+	next=NULL;
+	
+	nfound=src.nfound;
+	serial=src.serial;   // NOT -1 as unsigned. 
+	
+	// If this assert fails, that might be ok; I'm just not 
+	// aware that this will happen: 
+	assert(!src.locked);
+	locked=false;
+	
+	dec_start=src.dec_start;
+	dec_end=src.dec_end;
+	mat_pos=src.mat_pos;
+	
+	flags=src.flags;
+	need_active=src.need_active;
+	need_scale=src.need_scale;  need_scale_act=src.need_scale_act;
+	need_rot=  src.need_rot;    need_rot_act=  src.need_rot_act;
+	need_trans=src.need_trans;  need_trans_act=src.need_trans_act;
+	curr_active=src.curr_active;
+}
+
 inline File_Parser::AValue::~AValue()
 {
-	if(cif)  // free/delete cif:
-	{
-		switch(type)
-		{
-			case taScalar:  delete ((Scalar_Component_Interface*)cif);  break;
-			case taObject:  delete ((Object_Component_Interface*)cif);  break;
-			default:  assert(0);  break;
-		}
-		cif=NULL;
-	}
 }
 
 void File_Parser::Current_Context::reset()
@@ -1712,15 +1704,15 @@ int File_Parser::AValue_List::_Warn_Unused(message::Message_Stream os,tokID type
 	bool header_written=false;
 	for(AValue *av=first; av; av=av->next)
 	{
-		if(av->nfound || av->type!=type)  continue;
+		if(av->nfound || av->type()!=type)  continue;
 		if(!header_written)
 		{
 			os << "warning: unused " << Ani_Type_Name(type) << "s: " << 
-				av->get_name() << message::noend;
+				av->cif.get_name() << message::noend;
 			header_written=true;
 		}
 		else
-		{  os << ", " << av->get_name() << message::noend;  }
+		{  os << ", " << av->cif.get_name() << message::noend;  }
 		++nunused;
 	}
 	if(nunused)
@@ -1733,6 +1725,10 @@ int File_Parser::AValue_List::Warn_Unused(message::Message_Stream os)
 	int nunused=0;
 	nunused+=_Warn_Unused(os,taScalar);
 	nunused+=_Warn_Unused(os,taObject);
+	fprintf(stderr,"HEEPPP?!\n");
+	os << "hep?!";
+	if(!nunused)  // <- Make sure no empty "warning:" line appears. 
+	{  os << message::killmsg;  }
 	return(nunused);
 }
 
@@ -2018,9 +2014,9 @@ int File_Parser::Toplevel_Parser::spdone(File_Parser::Sub_Parser *sb)
 		{
 			assert(cp->av);
 			Warning_Header() << "warning: encountered stray parse.end "
-				"statement for " << Ani_Type_Name(cp->av->type) << " `" << 
-				cp->av->get_name() << "\'.";
-			Warning_Header() << "         `" << cp->av->get_name() << 
+				"statement for " << Ani_Type_Name(cp->av->type()) << " `" << 
+				cp->av->cif.get_name() << "\'.";
+			Warning_Header() << "         `" << cp->av->cif.get_name() << 
 				"\' was" << Prev_Decl_Loc_Str(cp->av);
 		}
 		if(TL_Parse_Object(cp))  // only if cp->name_valid
@@ -2442,7 +2438,7 @@ int File_Parser::Comment_Parser::_parse_insert_which()
 	{  _illegal_i_pe_statement();  return(0);  }
 	
 	if(verbose_level()>3)
-	{  verbose(4) << "Insert statement for " << Ani_Type_Name(av->type) << 
+	{  verbose(4) << "Insert statement for " << Ani_Type_Name(av->type()) << 
 		" `" << obj_name << "\' of type >" << type << "<.";  }
 	fp->Insert_Statement(av,&cmt_start,type);
 	in_insert_statement=0;  // done. 
@@ -2470,7 +2466,7 @@ int File_Parser::Comment_Parser::_parse_parse_end_which()
 	{
 		encountered_parse_end=true;
 		if(verbose_level()>3)
-		{  verbose(4) << "Parse end statement for " << Ani_Type_Name(av->type) << 
+		{  verbose(4) << "Parse end statement for " << Ani_Type_Name(av->type()) << 
 			" `" << obj_name << "\' found.";  }
 	}
 	else
@@ -2570,7 +2566,7 @@ int File_Parser::Comment_Parser::_parse(int eof)
 				else if(rv.id==taScalar)
 				{  Warning_Header() << "warning: ignoring " << 
 					(in_insert_statement ? "insert" : "parse") << " statement "
-					"for " << Ani_Type_Name(((AValue*)(rv.hook))->type) << 
+					"for " << Ani_Type_Name(((AValue*)(rv.hook))->type()) << 
 					" `" << rv.found << "\'.";
 				   in_insert_statement=0;  in_parse_end_statement=0;  }
 				else
@@ -3009,13 +3005,13 @@ int File_Parser::Declare_Parser::parse(int eof)
 					++expect.av->nfound;
 					if(verbose_level()>2)
 					{  verbose(3) << "Found definition of " << 
-						Ani_Type_Name(expect.av->type) << " `" << 
+						Ani_Type_Name(expect.av->type()) << " `" << 
 						expect.name << "\' in " << 
 						Get_Path(dec_start.handle) << ":" << dec_start.line << 
 						"..." << dec_end.line;  }
 					
 					AValue *av=expect.av;
-					assert(av->type==expect.id);
+					assert(av->type()==expect.id);
 					av->dec_start=dec_start;
 					av->dec_end=dec_end;
 					// Insert positions are not needed for scalar 
@@ -3269,7 +3265,7 @@ int File_Parser::Object_Parser::parse(int eof)
 				
 				++av->nfound;
 				if(verbose_level()>2)
-				{  verbose(3) << "Found definition of " << Ani_Type_Name(av->type) << 
+				{  verbose(3) << "Found definition of " << Ani_Type_Name(av->type()) << 
 					" `" << obj_name << "\' in " << 
 					Get_Path(obj_start.handle) << ":" << obj_start.line << 
 					" ... " <<
@@ -3314,16 +3310,16 @@ int File_Parser::Object_Parser::spdone(File_Parser::Sub_Parser *sb)
 			if(cp->av!=av)
 			{
 				Error_Header() << "object end statement of " << 
-					Ani_Type_Name(cp->av->type) << " `" << 
-					cp->av->get_name() << "\' found inside object "
+					Ani_Type_Name(cp->av->type()) << " `" << 
+					cp->av->cif.get_name() << "\' found inside object "
 					"declaration of `" << obj_name << "\'" << 
 					_startline_str() << ".";
 				if(cp->av->locked)
 				{
 					Error_Header() << "  object `" << obj_name << "\' "
 						"seems to be nested inside declaration of " << 
-						Ani_Type_Name(cp->av->type) << " `" << 
-						cp->av->get_name() << "\'" << 
+						Ani_Type_Name(cp->av->type()) << " `" << 
+						cp->av->cif.get_name() << "\'" << 
 						Startpos_Str(&cp->av->dec_start) << ".";
 					// #warning should we set "done" for us and the parser having locked the AValue? Can we?
 				}
@@ -3333,7 +3329,7 @@ int File_Parser::Object_Parser::spdone(File_Parser::Sub_Parser *sb)
 			{
 				if(!av->flags.has_end_statement)
 				{  Warning_Header() << "warning: declaration of " << 
-					Ani_Type_Name(av->type) << " `" << obj_name << 
+					Ani_Type_Name(av->type()) << " `" << obj_name << 
 					_startline_str() << " contains parse end statement.";
 				   Error_Header() << "         probably you forgot to set "
 				    "the `E\' flag; trusting end statement for now.";  }

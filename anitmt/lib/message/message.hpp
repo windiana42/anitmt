@@ -201,6 +201,7 @@ namespace message
   // Message streams
   enum _NoEnd   {  noend  };
   enum _NewLine {  nl  };
+  enum _KillMsg {  killmsg  };
   enum _NoInit  {  noinit  };
   
   class Message_Stream {
@@ -231,6 +232,9 @@ namespace message
     //! This is used to end messaged using noend. For obvious 
     //! reason, thid returns void. 
     inline void operator<<(_NoEnd v);
+    //! This is used to kill a message i.e. preventing from 
+    //! being reported. Returns void for obvious reason. 
+    inline void operator<<(_KillMsg v);
     //! This is used to insert a newline in a message: 
     inline Message_Stream &operator<<(_NewLine v);
     

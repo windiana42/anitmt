@@ -7,6 +7,4 @@ camera{ // testobj
 
 }
 
-
-
 #warning s

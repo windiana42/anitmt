@@ -32,43 +32,12 @@
 
 #include <animation.hpp>
 
+#include "compif.hpp"
 
 namespace output_io
 {
 namespace POV
 {
-
-enum tokID
-{
-	// *** WHEN ADDING TOKENS, REMEMBER TO TAKE ***
-	// *** A LOOK AT File_Parser::Find_Tok().   ***
-	// General tokens
-	tNone=-1,   // keep that
-	tString=0,
-	tMaskedString,   // \"
-	tCOpComment,
-	tCClComment,
-	tCppComment,
-	t_Comment,   // special for tCOpComment and tCppComment
-	tNewline,
-	tOpBrace,
-	tClBrace,
-	tAssign,
-	tSemicolon,
-	tNumbersign,
-	tColon,
-	
-	// POV-Ray tokens
-	tpDeclare,
-	tpInclude,
-	tpFileIdentifier,
-	tpAniInsert,  // insert.obj.xx
-	tpAniParse,   // parse.obj.xx
-	
-	// anitmt tokens
-	taObject,
-	taScalar   // adjust need_delim() if you add identifiers here 
-};
 
 class File_Parser : 
 	public Recursive_Input_Stream
@@ -198,7 +167,8 @@ class File_Parser :
 			
 			bool dump_tokens;  // dump 'em to cerr? 
 			
-			Config();
+			// Config() needs *msg_rep for verbose setting...
+			Config(message::Message_Reporter *msg_rep);
 			~Config() { }
 		};
 		struct Object_Flags
@@ -217,8 +187,7 @@ class File_Parser :
 		{
 			AValue *next;  // AValue_List queuing; do not modify 
 			
-			tokID type;   // taScalar or taObject
-			void *cif;   // *_Component_Interface (allocated by us)
+			ComponentInterface cif;
 			
 			int nfound;  // how often found in POV/.. file
 			unsigned int serial;  // the _aniTMT_???_ value
@@ -244,10 +213,11 @@ class File_Parser :
 			int curr_active;
 			
 			AValue();
+			AValue(const AValue &av);
 			~AValue();
 			
-			// Returns name of stored *_Component_Interface
-			std::string get_name();
+			inline tokID type()
+				{  return(cif.GetType());  }
 		};
 		
 	private:
@@ -299,7 +269,7 @@ class File_Parser :
 		Find_String *av_finder;   // includig object/scalar names 
 		size_t pp_find_longest;  // longest str +1 
 		
-		int _Finder_Check_Copy_Name(void *cif,tokID id,unsigned int *counter);
+		int _Finder_Check_Copy_Name(const ComponentInterface &cif,unsigned int *counter);
 		void _Set_Up_Finder_Const();
 		int _Set_Up_Finder(anitmt::Animation *ani,anitmt::Scene_Interface &scene_if);
 		int _Set_Up_MCopy(anitmt::Animation *ani,anitmt::Scene_Interface &scene_if);

@@ -133,6 +133,12 @@ namespace message
     // Destructor will be called and will write the message. 
   }
 
+  inline void Message_Stream::operator<<(_KillMsg)
+  {
+    enabled=false;
+    // Destructor will be called now and message will disappear. 
+  }
+
   inline Message_Stream& Message_Stream::operator<<(_NewLine)
   {
     /*!!! #warning Please fix me: (should be handled more cleverly) !!!*/

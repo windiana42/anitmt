@@ -28,6 +28,8 @@
 #include <val/val.hpp>
 #include <proptree/proptree.hpp>
 
+#include "compif.hpp"
+
 
 namespace output_io
 {
@@ -42,8 +44,6 @@ class Frame_Dump :
 	public message::Message_Reporter
 {
 	public:
-		enum NType
-		{ NT_Scalar,NT_Object };
 		enum Dump_Flags
 		{
 			DF_Obj_Scale= 0x01,  // always needed
@@ -76,16 +76,14 @@ class Frame_Dump :
 		struct Node 
 		{
 			Node *next;
-			NType type;
 			Dump_Flags flags;
-			void *cif;  // new-allocated copy of 
-			            // anitmt::Scalar/Object_Component_Interface
+			ComponentInterface cif;
 			char *str;  // scalar: name; object: identifier
 			size_t str_len;
 			
 			inline char *write(char *dest,char *dend,Context *ctx);
 			
-			Node(NType type,void *cif,Dump_Flags flags,unsigned int id);
+			Node(const ComponentInterface &cif,Dump_Flags flags,unsigned int id);
 			~Node();
 			
 			private:
@@ -117,6 +115,8 @@ class Frame_Dump :
 		
 		void _Write_Header(values::Scalar t,int frame);
 		void _Write_End();
+		
+		void _Clear();
 	public:
 		Frame_Dump(anitmt::Animation *ani,
 			anitmt::Scene_Interface &scene_if,
@@ -136,8 +136,8 @@ class Frame_Dump :
 		//     needed for NT_Scalar. 
 		// dump_flags: what shall be dumped; see enum 
 		//     Dump_Flags above. 
-		void Add_Entry(anitmt::Scalar_Component_Interface *sif);
-		void Add_Entry(anitmt::Object_Component_Interface *oif,
+		// ComponentInterface copied...
+		void Add_Entry(const ComponentInterface &cif,
 			Dump_Flags dump_flags,unsigned int id=0);
 		
 		// Delete all entries. 
