@@ -101,10 +101,10 @@ int ExpressionTree::_GenFuncRecursive(
 {
 	if(verbose>1)
 	{
-		cout << "FuncRec ";
-		_WriteOperator(cout,func->op) << "[ ";
-		_WriteExpression(cout,exp);
-		cout << " ]";
+		std::cout << "FuncRec ";
+		_WriteOperator(std::cout,func->op) << "[ ";
+		_WriteExpression(std::cout,exp);
+		std::cout << " ]";
 	}
 	
 	int errors=0;
@@ -117,7 +117,7 @@ int ExpressionTree::_GenFuncRecursive(
 		// If the subexpression is just a value, we can 
 		// return immediately. 
 		if(verbose>1)
-		{  cout << " (FAST)" << std::endl;  }
+		{  std::cout << " (FAST)" << std::endl;  }
 		OperatorNode *on=exp->popfirst();
 		errors+=_FuncAddChild(func,on->op);
 		garbage->append(on);
@@ -126,7 +126,7 @@ int ExpressionTree::_GenFuncRecursive(
 	{
 		// This is the slow path...
 		if(verbose>1)
-		{  cout << std::endl;  }
+		{  std::cout << std::endl;  }
 		
 		if(correct_parser_ambiguities)
 		{  _CorrectGVAmbiguity(exp,&errors,/*respect_brackets=*/true);  }
@@ -220,9 +220,9 @@ int ExpressionTree::_GenTreeRecursive(
 {
 	if(verbose>1)
 	{
-		cout << "TreeRec[ ";
-		_WriteExpression(cout,exp);
-		cout << " ]";
+		std::cout << "TreeRec[ ";
+		_WriteExpression(std::cout,exp);
+		std::cout << " ]";
 	}
 	
 	if(exp->first() && 
@@ -233,12 +233,12 @@ int ExpressionTree::_GenTreeRecursive(
 		// If the subexpression is just a value, we can 
 		// return immediately. 
 		if(verbose>1)
-		{  cout << " (FAST)" << std::endl;  }
+		{  std::cout << " (FAST)" << std::endl;  }
 		garbage->append(exp->popfirst());  // store subtree root 
 		return(0);                         // done. 
 	}
 	else if(verbose>1)
-	{  cout << std::endl;  }
+	{  std::cout << std::endl;  }
 	
 	int errors=0;
 	if(correct_parser_ambiguities)
@@ -357,9 +357,9 @@ int ExpressionTree::_GenTreeLinear(
 {
 	if(verbose>1)
 	{
-		cout << "TreeLin[ ";
-		_WriteExpression(cout,exp);
-		cout << " ]" << std::endl;
+		std::cout << "TreeLin[ ";
+		_WriteExpression(std::cout,exp);
+		std::cout << " ]" << std::endl;
 	}
 	
 	if(exp->is_empty())
@@ -736,9 +736,9 @@ int ExpressionTree::_CorrectGVAmbiguity(
 	
 	if(changed && !errors && verbose>1)
 	{
-		cout << "AMBIG->TreeRec[ ";
-		_WriteExpression(cout,exp);
-		cout << " ]" << std::endl;
+		std::cout << "AMBIG->TreeRec[ ";
+		_WriteExpression(std::cout,exp);
+		std::cout << " ]" << std::endl;
 	}
 	
 	(*_errors)+=errors;
@@ -777,9 +777,9 @@ int ExpressionTree::Create(
 {
 	if(verbose>1)
 	{
-		cout << "CREATE[ ";
-		_WriteExpression(cout,exp);
-		cout << " ]" << std::endl;
+		std::cout << "CREATE[ ";
+		_WriteExpression(std::cout,exp);
+		std::cout << " ]" << std::endl;
 	}
 	
 	Clear();

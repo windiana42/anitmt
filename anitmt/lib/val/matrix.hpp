@@ -59,7 +59,7 @@ namespace vect
 namespace internal
 {
 	// Suffix 2 for two-dim array (matrix). 
-	extern ostream& stream_write_array2(ostream& s,const double *x,int c,int r);
+	extern std::ostream& stream_write_array2(std::ostream& s,const double *x,int c,int r);
 	
 	// Multiplication of two matrices: 
 	extern void matrix_mul(
@@ -201,7 +201,7 @@ template<int C,int R> class matrix
 		friend void mult<>(vector<R> &r,const matrix<C,R> &m,const vector<C> &v);
 		friend void mult(vector<3> &r,const matrix<4,4> &m,const vector<3> &v);
 		
-		friend ostream& operator<< <>(ostream &s,const matrix<C,R> &m);
+		friend std::ostream& operator<< <>(std::ostream &s,const matrix<C,R> &m);
 		
 		// Comparing matrices: 
 		// Returns 1, if a is equal to *this (or each component pair does not 
@@ -229,7 +229,7 @@ template<int M,int L,int N> inline
 	{  internal::matrix_mul(r._get_ptr(),L,M,a._get_ptr(),N,L,b._get_ptr(),N,M);  }
 
 template<int C,int R> inline 
-	ostream& operator<<(ostream &s,const matrix<C,R> &m)
+	std::ostream& operator<<(std::ostream &s,const matrix<C,R> &m)
 	{  return(internal::stream_write_array2(s,m.x[0],C,R));  }
 
 }  /* end of namespace */

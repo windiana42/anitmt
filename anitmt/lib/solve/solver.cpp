@@ -65,804 +65,804 @@ namespace solve{
   {
     int errors = 0;
 
-    cout << endl;
-    cout << "--------------" << endl;
-    cout << "Solver Test..." << endl;
-    cout << "--------------" << endl;
+    std::cout << std::endl;
+    std::cout << "--------------" << std::endl;
+    std::cout << "Solver Test..." << std::endl;
+    std::cout << "--------------" << std::endl;
 
     {
       //**********************************************************************
-      cout << " Testing Sum Solver... (a = b + c) [12 = 5 + 7]" << endl;
+      std::cout << " Testing Sum Solver... (a = b + c) [12 = 5 + 7]" << std::endl;
       {
-	cout << "  solve for a: ";
+	std::cout << "  solve for a: ";
 	Operand<values::Scalar> a,b,c ; 
 	sum_solver( a, b, c );
 	if(!b.set_value( 5 ) )
 	{
-	  cerr << "Error: could not set b!!! Anyway  a="; 
+	  std::cerr << "Error: could not set b!!! Anyway  a="; 
 	  errors++;
 	}
 	if( a.is_solved() )
 	{
-	  cerr << "Error: a solved without knowing c!!! a="; 
+	  std::cerr << "Error: a solved without knowing c!!! a="; 
 	  errors++;
 	}
 	if(!c.set_value( 7 ) )
 	{
-	  cerr << "Error: could not set c!!! Anyway  a="; 
+	  std::cerr << "Error: could not set c!!! Anyway  a="; 
 	  errors++;
 	}
 	if( !a.is_solved() )
 	{
-	  cerr << "Error: a unsolved!!!" << endl; 
+	  std::cerr << "Error: a unsolved!!!" << std::endl; 
 	  errors++;
 	}
 	else
 	{
-	  cout << a;
+	  std::cout << a;
 	  if( a.get_value() == 12 )
-	    cout << " OK" << endl;
+	    std::cout << " OK" << std::endl;
 	  else
 	  {
-	    cout << " False!!!" << endl;
+	    std::cout << " False!!!" << std::endl;
 	    errors++;
 	  }
 	}
       }
       {
-	cout << "  solve for b: ";
+	std::cout << "  solve for b: ";
 	Operand<values::Scalar> a,b,c ; 
 	sum_solver( a, b, c );
 	if(!a.set_value( 12 ) )
 	{
-	  cerr << "Error: could not set a!!! Anyway  b="; 
+	  std::cerr << "Error: could not set a!!! Anyway  b="; 
 	  errors++;
 	}
 	if( b.is_solved() )
 	{
-	  cerr << "Error: b solved without knowing c!!! b="; 
+	  std::cerr << "Error: b solved without knowing c!!! b="; 
 	  errors++;
 	}
 	if(!c.set_value( 7 ) )
 	{
-	  cerr << "Error: could not set c!!! Anyway  b="; 
+	  std::cerr << "Error: could not set c!!! Anyway  b="; 
 	  errors++;
 	}
 	if( !b.is_solved() )
 	{
-	  cerr << "Error: b unsolved!!!" << endl; 
+	  std::cerr << "Error: b unsolved!!!" << std::endl; 
 	  errors++;
 	}
 	else
 	{
-	  cout << b;
+	  std::cout << b;
 	  if( b.get_value() == 5 )
-	    cout << " OK" << endl;
+	    std::cout << " OK" << std::endl;
 	  else
 	  {
-	    cout << " False!!!" << endl;
+	    std::cout << " False!!!" << std::endl;
 	    errors++;
 	  }
 	}
       }
       {
-	cout << "  solve for c: ";
+	std::cout << "  solve for c: ";
 	Operand<values::Scalar> a,b,c ; 
 	sum_solver( a, b, c );
 	if(!a.set_value( 12 ) )
 	{
-	  cerr << "Error: could not set a!!! Anyway  c="; 
+	  std::cerr << "Error: could not set a!!! Anyway  c="; 
 	  errors++;
 	}
 	if( c.is_solved() )
 	{
-	  cerr << "Error: c solved without knowing b!!! c="; 
+	  std::cerr << "Error: c solved without knowing b!!! c="; 
 	  errors++;
 	}
 	if(!b.set_value( 5 ) )
 	{
-	  cerr << "Error: could not set b!!! Anyway  c="; 
+	  std::cerr << "Error: could not set b!!! Anyway  c="; 
 	  errors++;
 	}
 	if( !c.is_solved() )
 	{
-	  cerr << "Error: c unsolved!!!" << endl; 
+	  std::cerr << "Error: c unsolved!!!" << std::endl; 
 	  errors++;
 	}
 	else
 	{
-	  cout << c;
+	  std::cout << c;
 	  if( c.get_value() == 7 )
-	    cout << " OK" << endl;
+	    std::cout << " OK" << std::endl;
 	  else
 	  {
-	    cout << " False!!!" << endl;
+	    std::cout << " False!!!" << std::endl;
 	    errors++;
 	  }
 	}
       }
       //**********************************************************************
-      cout << " Testing Product Solver... (a = b * c) [35 = 5 * 7]" << endl;
+      std::cout << " Testing Product Solver... (a = b * c) [35 = 5 * 7]" << std::endl;
       {
-	cout << "  solve for a: ";
+	std::cout << "  solve for a: ";
 	Operand<values::Scalar> a,b,c ; 
 	product_solver( a, b, c );
 	if(!b.set_value( 5 ) )
 	{
-	  cerr << "Error: could not set b!!! Anyway  a="; 
+	  std::cerr << "Error: could not set b!!! Anyway  a="; 
 	  errors++;
 	}
 	if( a.is_solved() )
 	{
-	  cerr << "Error: a solved without knowing c!!! a="; 
+	  std::cerr << "Error: a solved without knowing c!!! a="; 
 	  errors++;
 	}
 	if(!c.set_value( 7 ) )
 	{
-	  cerr << "Error: could not set c!!! Anyway  a="; 
+	  std::cerr << "Error: could not set c!!! Anyway  a="; 
 	  errors++;
 	}
 	if( !a.is_solved() )
 	{
-	  cerr << "Error: a unsolved!!!" << endl; 
+	  std::cerr << "Error: a unsolved!!!" << std::endl; 
 	  errors++;
 	}
 	else
 	{
-	  cout << a;
+	  std::cout << a;
 	  if( a.get_value() == 35 )
-	    cout << " OK" << endl;
+	    std::cout << " OK" << std::endl;
 	  else
 	  {
-	    cout << " False!!!" << endl;
+	    std::cout << " False!!!" << std::endl;
 	    errors++;
 	  }
 	}
       }
       {
-	cout << "  solve for b: ";
+	std::cout << "  solve for b: ";
 	Operand<values::Scalar> a,b,c ; 
 	product_solver( a, b, c );
 	if(!a.set_value( 35 ) )
 	{
-	  cerr << "Error: could not set a!!! Anyway  b="; 
+	  std::cerr << "Error: could not set a!!! Anyway  b="; 
 	  errors++;
 	}
 	if( b.is_solved() )
 	{
-	  cerr << "Error: b solved without knowing c!!! b="; 
+	  std::cerr << "Error: b solved without knowing c!!! b="; 
 	  errors++;
 	}
 	if(!c.set_value( 7 ) )
 	{
-	  cerr << "Error: could not set c!!! Anyway  b="; 
+	  std::cerr << "Error: could not set c!!! Anyway  b="; 
 	  errors++;
 	}
 	if( !b.is_solved() )
 	{
-	  cerr << "Error: b unsolved!!!" << endl; 
+	  std::cerr << "Error: b unsolved!!!" << std::endl; 
 	  errors++;
 	}
 	else
 	{
-	  cout << b;
+	  std::cout << b;
 	  if( b.get_value() == 5 )
-	    cout << " OK" << endl;
+	    std::cout << " OK" << std::endl;
 	  else
 	  {
-	    cout << " False!!!" << endl;
+	    std::cout << " False!!!" << std::endl;
 	    errors++;
 	  }
 	}
       }
       {
-	cout << "  solve for c: ";
+	std::cout << "  solve for c: ";
 	Operand<values::Scalar> a,b,c ; 
 	product_solver( a, b, c );
 	if(!a.set_value( 35 ) )
 	{
-	  cerr << "Error: could not set a!!! Anyway  c="; 
+	  std::cerr << "Error: could not set a!!! Anyway  c="; 
 	  errors++;
 	}
 	if( c.is_solved() )
 	{
-	  cerr << "Error: c solved without knowing b!!! c="; 
+	  std::cerr << "Error: c solved without knowing b!!! c="; 
 	  errors++;
 	}
 	if(!b.set_value( 5 ) )
 	{
-	  cerr << "Error: could not set b!!! Anyway  c="; 
+	  std::cerr << "Error: could not set b!!! Anyway  c="; 
 	  errors++;
 	}
 	if( !c.is_solved() )
 	{
-	  cerr << "Error: c unsolved!!!" << endl; 
+	  std::cerr << "Error: c unsolved!!!" << std::endl; 
 	  errors++;
 	}
 	else
 	{
-	  cout << c;
+	  std::cout << c;
 	  if( c.get_value() == 7 )
-	    cout << " OK" << endl;
+	    std::cout << " OK" << std::endl;
 	  else
 	  {
-	    cout << " False!!!" << endl;
+	    std::cout << " False!!!" << std::endl;
 	    errors++;
 	  }
 	}
       }
       //**********************************************************************
-      cout << " Testing Product Solver... (a = b * c) [0 = 0 * 7]" 
-	   << endl;
+      std::cout << " Testing Product Solver... (a = b * c) [0 = 0 * 7]" 
+	   << std::endl;
       {
-	cout << "  solve for a: ";
+	std::cout << "  solve for a: ";
 	Operand<values::Scalar> a,b,c ; 
 	product_solver( a, b, c );
 	if(!b.set_value( 0 ) )
 	{
-	  cerr << "Error: could not set b!!! Anyway  a="; 
+	  std::cerr << "Error: could not set b!!! Anyway  a="; 
 	  errors++;
 	}
 	if( a.is_solved() )
 	{
-	  cout << a;
+	  std::cout << a;
 	  if( a.get_value() == 0 )
-	    cout << " OK" << endl;
+	    std::cout << " OK" << std::endl;
 	  else
 	  {
-	    cout << " False!!!" << endl;
+	    std::cout << " False!!!" << std::endl;
 	    errors++;
 	  }
 	}
 	else
 	{
-	  cerr << "Error: b=0 is not enough!!! Anyway  a="; 
+	  std::cerr << "Error: b=0 is not enough!!! Anyway  a="; 
 	  errors++;
 
 	  if(!c.set_value( 7 ) )
 	  {
-	    cerr << "Error: could not set c!!! Anyway  a="; 
+	    std::cerr << "Error: could not set c!!! Anyway  a="; 
 	    errors++;
 	  }
 	  if(!a.is_solved() )
 	  {
-	    cerr << "Error: a unsolved!!!" << endl; 
+	    std::cerr << "Error: a unsolved!!!" << std::endl; 
 	    errors++;
 	  }
 	  else
 	  {
-	    cout << a;
+	    std::cout << a;
 	    if( a.get_value() == 0 )
-	      cout << " OK" << endl;
+	      std::cout << " OK" << std::endl;
 	    else
 	    {
-	      cout << " False!!!" << endl;
+	      std::cout << " False!!!" << std::endl;
 	      errors++;
 	    }
 	  }
 	}
       }
       {
-	cout << "  solve for b: ";
+	std::cout << "  solve for b: ";
 	Operand<values::Scalar> a,b,c ; 
 	product_solver( a, b, c );
 	if(!c.set_value( 7 ) )
 	{
-	  cerr << "Error: could not set c!!! Anyway  b="; 
+	  std::cerr << "Error: could not set c!!! Anyway  b="; 
 	  errors++;
 	}
 	if( b.is_solved() )
 	{
-	  cerr << "Error: b solved without knowing c!!! b="; 
+	  std::cerr << "Error: b solved without knowing c!!! b="; 
 	  errors++;
 	}
 	if(!a.set_value( 0 ) )
 	{
-	  cerr << "Error: could not set a!!! Anyway  b="; 
+	  std::cerr << "Error: could not set a!!! Anyway  b="; 
 	  errors++;
 	}
 	if( !b.is_solved() )
 	{
-	  cerr << "Error: b unsolved!!!" << endl; 
+	  std::cerr << "Error: b unsolved!!!" << std::endl; 
 	  errors++;
 	}
 	else
 	{
-	  cout << b;
+	  std::cout << b;
 	  if( b.get_value() == 0 )
-	    cout << " OK" << endl;
+	    std::cout << " OK" << std::endl;
 	  else
 	  {
-	    cout << " False!!!" << endl;
+	    std::cout << " False!!!" << std::endl;
 	    errors++;
 	  }
 	}
       }
       {
-	cout << "  solve for c: ";
+	std::cout << "  solve for c: ";
 	Operand<values::Scalar> a,b,c ; 
 	product_solver( a, b, c );
 	if(!b.set_value( 0 ) )
 	{
-	  cerr << "Error: could not set b!!! Anyway  c="; 
+	  std::cerr << "Error: could not set b!!! Anyway  c="; 
 	  errors++;
 	}
 	if( c.is_solved() )
 	{
-	  cerr << "Error: c solved without knowing b!!! c="; 
+	  std::cerr << "Error: c solved without knowing b!!! c="; 
 	  errors++;
 	}
 	if(!a.set_value( 0 ) )
 	{
-	  cerr << "Error: could not set a!!! Anyway  c="; 
+	  std::cerr << "Error: could not set a!!! Anyway  c="; 
 	  errors++;
 	}
 	if( !c.is_solved() )
 	{
-	  cout << "cannot be solved: OK" << endl; 
+	  std::cout << "cannot be solved: OK" << std::endl; 
 	}
 	else
 	{
-	  cerr << "Error: c unsolvable!!! c="; 
+	  std::cerr << "Error: c unsolvable!!! c="; 
 	  errors++;
 
-	  cout << c;
+	  std::cout << c;
 	  if( c.get_value() == 7 )
-	    cout << " OK, Hä??? ;)" << endl;
+	    std::cout << " OK, Hä??? ;)" << std::endl;
 	  else
 	  {
-	    cout << " False!!!" << endl;
+	    std::cout << " False!!!" << std::endl;
 	    errors++;
 	  }
 	}
       }
       //**********************************************************************
-      cout << " Testing Product Solver... (a = b * c) [35 = 5 * 7] {reversed}" 
-	   << endl;
+      std::cout << " Testing Product Solver... (a = b * c) [35 = 5 * 7] {reversed}" 
+	   << std::endl;
       {
-	cout << "  solve for a: ";
+	std::cout << "  solve for a: ";
 	Operand<values::Scalar> a,b,c ; 
 	product_solver( a, b, c );
 	if(!c.set_value( 7 ) )
 	{
-	  cerr << "Error: could not set c!!! Anyway  a="; 
+	  std::cerr << "Error: could not set c!!! Anyway  a="; 
 	  errors++;
 	}
 	if( a.is_solved() )
 	{
-	  cerr << "Error: a solved without knowing c!!! a="; 
+	  std::cerr << "Error: a solved without knowing c!!! a="; 
 	  errors++;
 	}
 	if(!b.set_value( 5 ) )
 	{
-	  cerr << "Error: could not set b!!! Anyway  a="; 
+	  std::cerr << "Error: could not set b!!! Anyway  a="; 
 	  errors++;
 	}
 	if( !a.is_solved() )
 	{
-	  cerr << "Error: a unsolved!!!" << endl; 
+	  std::cerr << "Error: a unsolved!!!" << std::endl; 
 	  errors++;
 	}
 	else
 	{
-	  cout << a;
+	  std::cout << a;
 	  if( a.get_value() == 35 )
-	    cout << " OK" << endl;
+	    std::cout << " OK" << std::endl;
 	  else
 	  {
-	    cout << " False!!!" << endl;
+	    std::cout << " False!!!" << std::endl;
 	    errors++;
 	  }
 	}
       }
       {
-	cout << "  solve for b: ";
+	std::cout << "  solve for b: ";
 	Operand<values::Scalar> a,b,c ; 
 	product_solver( a, b, c );
 	if(!c.set_value( 7 ) )
 	{
-	  cerr << "Error: could not set c!!! Anyway  b="; 
+	  std::cerr << "Error: could not set c!!! Anyway  b="; 
 	  errors++;
 	}
 	if( b.is_solved() )
 	{
-	  cerr << "Error: b solved without knowing c!!! b="; 
+	  std::cerr << "Error: b solved without knowing c!!! b="; 
 	  errors++;
 	}
 	if(!a.set_value( 35 ) )
 	{
-	  cerr << "Error: could not set a!!! Anyway  b="; 
+	  std::cerr << "Error: could not set a!!! Anyway  b="; 
 	  errors++;
 	}
 	if( !b.is_solved() )
 	{
-	  cerr << "Error: b unsolved!!!" << endl; 
+	  std::cerr << "Error: b unsolved!!!" << std::endl; 
 	  errors++;
 	}
 	else
 	{
-	  cout << b;
+	  std::cout << b;
 	  if( b.get_value() == 5 )
-	    cout << " OK" << endl;
+	    std::cout << " OK" << std::endl;
 	  else
 	  {
-	    cout << " False!!!" << endl;
+	    std::cout << " False!!!" << std::endl;
 	    errors++;
 	  }
 	}
       }
       {
-	cout << "  solve for c: ";
+	std::cout << "  solve for c: ";
 	Operand<values::Scalar> a,b,c ; 
 	product_solver( a, b, c );
 	if(!b.set_value( 5 ) )
 	{
-	  cerr << "Error: could not set b!!! Anyway  c="; 
+	  std::cerr << "Error: could not set b!!! Anyway  c="; 
 	  errors++;
 	}
 	if( c.is_solved() )
 	{
-	  cerr << "Error: c solved without knowing b!!! c="; 
+	  std::cerr << "Error: c solved without knowing b!!! c="; 
 	  errors++;
 	}
 	if(!a.set_value( 35 ) )
 	{
-	  cerr << "Error: could not set a!!! Anyway  c="; 
+	  std::cerr << "Error: could not set a!!! Anyway  c="; 
 	  errors++;
 	}
 	if(!c.is_solved() )
 	{
-	  cerr << "Error: c unsolved!!!" << endl; 
+	  std::cerr << "Error: c unsolved!!!" << std::endl; 
 	  errors++;
 	}
 	else
 	{
-	  cout << c;
+	  std::cout << c;
 	  if( c.get_value() == 7 )
-	    cout << " OK" << endl;
+	    std::cout << " OK" << std::endl;
 	  else
 	  {
-	    cout << " False!!!" << endl;
+	    std::cout << " False!!!" << std::endl;
 	    errors++;
 	  }
 	}
       }
       //**********************************************************************
-      cout << " Testing Product Solver... (a = b * c) [0 = 0 * 7] {reversed}" 
-	   << endl;
+      std::cout << " Testing Product Solver... (a = b * c) [0 = 0 * 7] {reversed}" 
+	   << std::endl;
       {
-	cout << "  solve for a: ";
+	std::cout << "  solve for a: ";
 	Operand<values::Scalar> a,b,c ; 
 	product_solver( a, b, c );
 	if(!c.set_value( 7 ) )
 	{
-	  cerr << "Error: could not set c!!! Anyway  a="; 
+	  std::cerr << "Error: could not set c!!! Anyway  a="; 
 	  errors++;
 	}
 	if( a.is_solved() )
 	{
-	  cerr << "Error: a solved without knowing b!!! c="; 
+	  std::cerr << "Error: a solved without knowing b!!! c="; 
 	  errors++;
 	}
 	if(!b.set_value( 0 ) )
 	{
-	  cerr << "Error: could not set b!!! Anyway  a="; 
+	  std::cerr << "Error: could not set b!!! Anyway  a="; 
 	  errors++;
 	}
 	if(!a.is_solved() )
 	{
-	  cerr << "Error: a unsolved!!!" << endl; 
+	  std::cerr << "Error: a unsolved!!!" << std::endl; 
 	  errors++;
 	}
 	else
 	{
-	  cout << a;
+	  std::cout << a;
 	  if( a.get_value() == 0 )
-	    cout << " OK" << endl;
+	    std::cout << " OK" << std::endl;
 	  else
 	  {
-	    cout << " False!!!" << endl;
+	    std::cout << " False!!!" << std::endl;
 	    errors++;
 	  }
 	}
       }
       {
-	cout << "  solve for b: ";
+	std::cout << "  solve for b: ";
 	Operand<values::Scalar> a,b,c ; 
 	product_solver( a, b, c );
 	if(!c.set_value( 7 ) )
 	{
-	  cerr << "Error: could not set c!!! Anyway  b="; 
+	  std::cerr << "Error: could not set c!!! Anyway  b="; 
 	  errors++;
 	}
 	if( b.is_solved() )
 	{
-	  cerr << "Error: b solved without knowing c!!! b="; 
+	  std::cerr << "Error: b solved without knowing c!!! b="; 
 	  errors++;
 	}
 	if(!a.set_value( 0 ) )
 	{
-	  cerr << "Error: could not set a!!! Anyway  b="; 
+	  std::cerr << "Error: could not set a!!! Anyway  b="; 
 	  errors++;
 	}
 	if( !b.is_solved() )
 	{
-	  cerr << "Error: b unsolved!!!" << endl; 
+	  std::cerr << "Error: b unsolved!!!" << std::endl; 
 	  errors++;
 	}
 	else
 	{
-	  cout << b;
+	  std::cout << b;
 	  if( b.get_value() == 0 )
-	    cout << " OK" << endl;
+	    std::cout << " OK" << std::endl;
 	  else
 	  {
-	    cout << " False!!!" << endl;
+	    std::cout << " False!!!" << std::endl;
 	    errors++;
 	  }
 	}
       }
       {
-	cout << "  solve for c: ";
+	std::cout << "  solve for c: ";
 	Operand<values::Scalar> a,b,c ; 
 	product_solver( a, b, c );
 	if(!b.set_value( 0 ) )
 	{
-	  cerr << "Error: could not set b!!! Anyway  c="; 
+	  std::cerr << "Error: could not set b!!! Anyway  c="; 
 	  errors++;
 	}
 	if( c.is_solved() )
 	{
-	  cerr << "Error: c solved without knowing b!!! c="; 
+	  std::cerr << "Error: c solved without knowing b!!! c="; 
 	  errors++;
 	}
 	if(!a.set_value( 0 ) )
 	{
-	  cerr << "Error: could not set a!!! Anyway  c="; 
+	  std::cerr << "Error: could not set a!!! Anyway  c="; 
 	  errors++;
 	}
 	if( !c.is_solved() )
 	{
-	  cout << "cannot be solved: OK" << endl; 
+	  std::cout << "cannot be solved: OK" << std::endl; 
 	}
 	else
 	{
-	  cerr << "Error: c unsolvable!!! c="; 
+	  std::cerr << "Error: c unsolvable!!! c="; 
 	  errors++;
 
-	  cout << c;
+	  std::cout << c;
 	  if( c.get_value() == 7 )
-	    cout << " OK, Hä??? ;)" << endl;
+	    std::cout << " OK, Hä??? ;)" << std::endl;
 	  else
 	  {
-	    cout << " False!!!" << endl;
+	    std::cout << " False!!!" << std::endl;
 	    errors++;
 	  }
 	}
       }
       //**********************************************************************
-      cout << " Testing combined Solver... (a = (b+c) * d) [77 = (5+6) * 7]" 
-	   << endl;
+      std::cout << " Testing combined Solver... (a = (b+c) * d) [77 = (5+6) * 7]" 
+	   << std::endl;
       {
-	cout << "  inserting... ";
+	std::cout << "  inserting... ";
 	Operand<values::Scalar> a,b,c,d,sum ; 
 	sum_solver( sum, b, c );     // sum = b + c
 	product_solver( a, sum, d ); // a = sum * d
 	if(!c.set_value( 6 ) )
 	{
-	  cerr << "Error: could not set c!!!,"; 
+	  std::cerr << "Error: could not set c!!!,"; 
 	  errors++;
 	}
 	else
 	{
-	  cout << "c=6,";
+	  std::cout << "c=6,";
 	}
 	if(!d.set_value( 7 ) )
 	{
-	  cerr << "Error: could not set d!!!,"; 
+	  std::cerr << "Error: could not set d!!!,"; 
 	  errors++;
 	}
 	else
 	{
-	  cout << "d=7,";
+	  std::cout << "d=7,";
 	}
 	if( a.is_solved() )
 	{
-	  cerr << "Error: a solved too early!!!,"; 
+	  std::cerr << "Error: a solved too early!!!,"; 
 	  errors++;
 	}
 
 	if(!b.set_value( 5 ) )
 	{
-	  cerr << "Error: could not set b!!! "; 
+	  std::cerr << "Error: could not set b!!! "; 
 	  errors++;
 	}
 	else
 	{
-	  cout << "b=5 ";
+	  std::cout << "b=5 ";
 	}
 
 	if(!a.is_solved() )
 	{
-	  cerr << "Error: a unsolved!!!" << endl; 
+	  std::cerr << "Error: a unsolved!!!" << std::endl; 
 	  errors++;
 	}
 	else
 	{
-	  cout << "-> a=" << a;
+	  std::cout << "-> a=" << a;
 	  if( a.get_value() == 77 )
-	    cout << " OK" << endl;
+	    std::cout << " OK" << std::endl;
 	  else
 	  {
-	    cout << " False!!!" << endl;
+	    std::cout << " False!!!" << std::endl;
 	    errors++;
 	  }
 	}
       }
       {
-	cout << "  inserting... ";
+	std::cout << "  inserting... ";
 	Operand<values::Scalar> a,b,c,d,sum ; 
 	sum_solver( sum, b, c );     // sum = b + c
 	product_solver( a, sum, d ); // a = sum * d
 	if(!d.set_value( 7 ) )
 	{
-	  cerr << "Error: could not set d!!!,"; 
+	  std::cerr << "Error: could not set d!!!,"; 
 	  errors++;
 	}
 	else
 	{
-	  cout << "d=7,";
+	  std::cout << "d=7,";
 	}
 	if(!c.set_value( 6 ) )
 	{
-	  cerr << "Error: could not set c!!!,"; 
+	  std::cerr << "Error: could not set c!!!,"; 
 	  errors++;
 	}
 	else
 	{
-	  cout << "c=6,";
+	  std::cout << "c=6,";
 	}
 	if( b.is_solved() )
 	{
-	  cerr << "Error: b solved too early!!!,"; 
+	  std::cerr << "Error: b solved too early!!!,"; 
 	  errors++;
 	}
 
 	if(!a.set_value( 77 ) )
 	{
-	  cerr << "Error: could not set a!!! "; 
+	  std::cerr << "Error: could not set a!!! "; 
 	  errors++;
 	}
 	else
 	{
-	  cout << "a=77 ";
+	  std::cout << "a=77 ";
 	}
 
 	if(!b.is_solved() )
 	{
-	  cerr << "Error: b unsolved!!!" << endl; 
+	  std::cerr << "Error: b unsolved!!!" << std::endl; 
 	  errors++;
 	}
 	else
 	{
-	  cout << "-> b=" << b;
+	  std::cout << "-> b=" << b;
 	  if( b.get_value() == 5 )
-	    cout << " OK" << endl;
+	    std::cout << " OK" << std::endl;
 	  else
 	  {
-	    cout << " False!!!" << endl;
+	    std::cout << " False!!!" << std::endl;
 	    errors++;
 	  }
 	}
       }
       {
-	cout << "  inserting... ";
+	std::cout << "  inserting... ";
 	Operand<values::Scalar> a,b,c,d,sum ; 
 	sum_solver( sum, b, c );     // sum = b + c
 	product_solver( a, sum, d ); // a = sum * d
 	if(!a.set_value( 77 ) )
 	{
-	  cerr << "Error: could not set a!!! "; 
+	  std::cerr << "Error: could not set a!!! "; 
 	  errors++;
 	}
 	else
 	{
-	  cout << "a=77 ";
+	  std::cout << "a=77 ";
 	}
 	if(!d.set_value( 7 ) )
 	{
-	  cerr << "Error: could not set d!!!,"; 
+	  std::cerr << "Error: could not set d!!!,"; 
 	  errors++;
 	}
 	else
 	{
-	  cout << "d=7,";
+	  std::cout << "d=7,";
 	}
 	if( c.is_solved() )
 	{
-	  cerr << "Error: c solved too early!!!,"; 
+	  std::cerr << "Error: c solved too early!!!,"; 
 	  errors++;
 	}
 
 	if(!b.set_value( 5 ) )
 	{
-	  cerr << "Error: could not set b!!!,"; 
+	  std::cerr << "Error: could not set b!!!,"; 
 	  errors++;
 	}
 	else
 	{
-	  cout << "b=5,";
+	  std::cout << "b=5,";
 	}
 
 	if(!c.is_solved() )
 	{
-	  cerr << "Error: c unsolved!!!" << endl; 
+	  std::cerr << "Error: c unsolved!!!" << std::endl; 
 	  errors++;
 	}
 	else
 	{
-	  cout << "-> c=" << c;
+	  std::cout << "-> c=" << c;
 	  if( c.get_value() == 6 )
-	    cout << " OK" << endl;
+	    std::cout << " OK" << std::endl;
 	  else
 	  {
-	    cout << " False!!!" << endl;
+	    std::cout << " False!!!" << std::endl;
 	    errors++;
 	  }
 	}
       }
       {
-	cout << "  inserting... ";
+	std::cout << "  inserting... ";
 	Operand<values::Scalar> a,b,c,d,sum ; 
 	sum_solver( sum, b, c );     // sum = b + c
 	product_solver( a, sum, d ); // a = sum * d
 	if(!c.set_value( 6 ) )
 	{
-	  cerr << "Error: could not set c!!!,"; 
+	  std::cerr << "Error: could not set c!!!,"; 
 	  errors++;
 	}
 	else
 	{
-	  cout << "c=6,";
+	  std::cout << "c=6,";
 	}
 	if(!a.set_value( 77 ) )
 	{
-	  cerr << "Error: could not set a!!! "; 
+	  std::cerr << "Error: could not set a!!! "; 
 	  errors++;
 	}
 	else
 	{
-	  cout << "a=77 ";
+	  std::cout << "a=77 ";
 	}
 	if( d.is_solved() )
 	{
-	  cerr << "Error: d solved too early!!!,"; 
+	  std::cerr << "Error: d solved too early!!!,"; 
 	  errors++;
 	}
 
 	if(!b.set_value( 5 ) )
 	{
-	  cerr << "Error: could not set b!!!,"; 
+	  std::cerr << "Error: could not set b!!!,"; 
 	  errors++;
 	}
 	else
 	{
-	  cout << "b=5,";
+	  std::cout << "b=5,";
 	}
 
 	if(!d.is_solved() )
 	{
-	  cerr << "Error: d unsolved!!!" << endl; 
+	  std::cerr << "Error: d unsolved!!!" << std::endl; 
 	  errors++;
 	}
 	else
 	{
-	  cout << "-> d=" << d;
+	  std::cout << "-> d=" << d;
 	  if( d.get_value() == 7 )
-	    cout << " OK" << endl;
+	    std::cout << " OK" << std::endl;
 	  else
 	  {
-	    cout << " False!!!" << endl;
+	    std::cout << " False!!!" << std::endl;
 	    errors++;
 	  }
 	}
@@ -882,25 +882,25 @@ namespace solve{
       accel_solver( s, t, a, v0, ve );
       sum_solver( se, s, s0 );
 
-      cout << "s0=" << s0 << " s=" << s << " se=" << se << " t=" <<  t 
-	   << " a=" << a << " v0=" << v0 << " ve=" << ve << endl;
+      std::cout << "s0=" << s0 << " s=" << s << " se=" << se << " t=" <<  t 
+	   << " a=" << a << " v0=" << v0 << " ve=" << ve << std::endl;
     
-      cout << "startstretch ok?" << s0.set_value(0) << endl; 
+      std::cout << "startstretch ok?" << s0.set_value(0) << std::endl; 
 
-      cout << "s0=" << s0 << " s=" << s << " se=" << se << " t=" <<  t 
-	   << " a=" << a << " v0=" << v0 << " ve=" << ve << endl;
+      std::cout << "s0=" << s0 << " s=" << s << " se=" << se << " t=" <<  t 
+	   << " a=" << a << " v0=" << v0 << " ve=" << ve << std::endl;
 
-      cout << "startspeed 2 m/s ok?" << v0.set_value(2) << endl; 
-      cout << "s0=" << s0 << " s=" << s << " se=" << se << " t=" <<  t 
-	   << " a=" << a << " v0=" << v0 << " ve=" << ve << endl;
+      std::cout << "startspeed 2 m/s ok?" << v0.set_value(2) << std::endl; 
+      std::cout << "s0=" << s0 << " s=" << s << " se=" << se << " t=" <<  t 
+	   << " a=" << a << " v0=" << v0 << " ve=" << ve << std::endl;
 
-      cout << "acceleration 1 m/s^2 ok?" << a.set_value(1) << endl;
-      cout << "s0=" << s0 << " s=" << s << " se=" << se << " t=" <<  t 
-	   << " a=" << a << " v0=" << v0 << " ve=" << ve << endl;
+      std::cout << "acceleration 1 m/s^2 ok?" << a.set_value(1) << std::endl;
+      std::cout << "s0=" << s0 << " s=" << s << " se=" << se << " t=" <<  t 
+	   << " a=" << a << " v0=" << v0 << " ve=" << ve << std::endl;
 
-      cout << "duration 2 ok?" << t.set_value(2) << endl; 
-      cout << "s0=" << s0 << " s=" << s << " se=" << se << " t=" <<  t 
-	   << " a=" << a << " v0=" << v0 << " ve=" << ve << endl;
+      std::cout << "duration 2 ok?" << t.set_value(2) << std::endl; 
+      std::cout << "s0=" << s0 << " s=" << s << " se=" << se << " t=" <<  t 
+	   << " a=" << a << " v0=" << v0 << " ve=" << ve << std::endl;
     }
     return errors;
   }

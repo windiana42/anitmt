@@ -87,7 +87,7 @@ namespace
 		int Calc_All();
 		void Set_Array(NamedAParameter **array);  // array of 7 pointers 
 		void Add_Pars(TFPars *toadd);
-		void Print_Set_Pars(ostream &os,int verbose);
+		void Print_Set_Pars(std::ostream &os,int verbose);
 	};
 	
 	TFPars::TFPars() : 
@@ -184,7 +184,7 @@ namespace
 		for(int change;change;)
 		{
 			change=0;
-			//Print_Set_Pars(cerr,verbose());  cerr << "\n";
+			//Print_Set_Pars(std::cerr,verbose());  std::cerr << "\n";
 			
 			change+=SetIfUnset(starttime,sub(endtime,duration));
 			change+=SetIfUnset(starttime,div(startframe,fps));
@@ -247,7 +247,7 @@ namespace
 	// levelname: config, ini, ...
 	// warn: 1 -> warning; 0 -> error
 	// Returns 1 on error; 0 on warning or no error 
-	int Solve_Tell_User(ostream &os,int rv,TFPars *tfp,
+	int Solve_Tell_User(std::ostream &os,int rv,TFPars *tfp,
 		const char *levelname,bool warn,int verbose)
 	{
 		if(!rv)  return(0);
@@ -256,11 +256,11 @@ namespace
 			Calc_Stat_Str(rv) <<
 			" parameter set (";
 		tfp->Print_Set_Pars(os,verbose);
-		os << ")" << endl;
+		os << ")" << std::endl;
 		return(warn ? 0 : 1);
 	}
 	
-	void TFPars::Print_Set_Pars(ostream &os,int verbose)
+	void TFPars::Print_Set_Pars(std::ostream &os,int verbose)
 	{
 		NamedAParameter *nap[7];
 		Set_Array(nap);
@@ -295,10 +295,10 @@ namespace
 // Solves start/endtime, start/endframe, duration, frames, fps 
 // Returns 0 on success. 
 int Animation_Parameters::Solve_TimeFrame_Net(Override_Pars *ovp,int nlevels,
-	ostream &os,bool warnings)
+	std::ostream &os,bool warnings)
 {
 	int errors=0;
-	ostream &vstream=cerr;  // verbose stream
+	std::ostream &vstream=std::cerr;  // verbose stream
 	
 	// We need our pars and we need them all double (against 
 	// integer rounding). 
@@ -335,7 +335,7 @@ int Animation_Parameters::Solve_TimeFrame_Net(Override_Pars *ovp,int nlevels,
 	//**TFPars tfpar;
 	TFPars accup;  //**
 	if(verbose())
-	{  vstream << "Solving dependent parameters (time/frame/fps):" << endl;  }
+	{  vstream << "Solving dependent parameters (time/frame/fps):" << std::endl;  }
 	for(int calclevel=nlevels-1; calclevel>=0; --calclevel)
 	{
 		//**TFPars accup;
@@ -352,17 +352,17 @@ int Animation_Parameters::Solve_TimeFrame_Net(Override_Pars *ovp,int nlevels,
 		{
 			vstream << "[" << ovp[calclevel].type << "]   \t";
 			before_calc.Print_Set_Pars(vstream,verbose());
-			vstream << "  (" << Calc_Stat_Str(rv) << ")" << endl;
+			vstream << "  (" << Calc_Stat_Str(rv) << ")" << std::endl;
 			vstream << "[" << ovp[calclevel].type << "]==>\t";
 			accup.Print_Set_Pars(vstream,verbose());
-			vstream << endl;
+			vstream << std::endl;
 		}
 		
 		if(rv==0)   // Okay, we have it. 
 		{
 			Solve_TimeFrame_Done(&accup);   // Copy pars into *this 
 			if(verbose())
-			{  vstream << "Solving time/frame/fps done." << endl;  }
+			{  vstream << "Solving time/frame/fps done." << std::endl;  }
 			return(errors);
 		}
 		else if(rv==1 || rv==2)  // overdetermined / wrong set 
@@ -380,7 +380,7 @@ int Animation_Parameters::Solve_TimeFrame_Net(Override_Pars *ovp,int nlevels,
 	// If we reach here, the pars are underdetermined. 
 	os << "Error: time/frame/fps underdetermined (computed: "; 
 	accup.Print_Set_Pars(os,verbose());
-	os << ")" << endl;
+	os << ")" << std::endl;
 	++errors;
 	
 	return(errors);

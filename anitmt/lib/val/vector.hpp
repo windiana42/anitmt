@@ -56,7 +56,7 @@ namespace vect
 namespace internal
 {
 	// Suffix 1 for one-dim array (vector). 
-	extern ostream& stream_write_array1(ostream& s,const double *x,int n);
+	extern std::ostream& stream_write_array1(std::ostream& s,const double *x,int n);
 }
 
 template<int N> class vector
@@ -170,7 +170,7 @@ template<int N> class vector
 		
 		/****************************************************************/
 		
-		friend ostream& operator<< <>(ostream &s,const vector<N> &v);
+		friend std::ostream& operator<< <>(std::ostream &s,const vector<N> &v);
 		
 		// Returns 1, if a is equal to *this (or each component pair does not 
 		// differ more than epsilon). 
@@ -200,7 +200,7 @@ inline vector<3> &vector<3>::vector_mul(const vector<3> &a,const vector<3> &b)
 	return(*this);
 }
 		
-template<int N> inline ostream& operator<<(ostream &s,const vector<N> &v)
+template<int N> inline std::ostream& operator<<(std::ostream &s,const vector<N> &v)
 {  return(internal::stream_write_array1(s,v.x,N));  }
 
 }  /* end of namespace */

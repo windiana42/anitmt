@@ -817,7 +817,7 @@ void _InitBindDir(int *bdarray,int sz)
 
 void _OopsOTypeRange(OperatorType otype)
 {
-	cerr << "Oops: otype (" << int(otype) << ") out of range." << std::endl;
+	std::cerr << "Oops: otype (" << int(otype) << ") out of range." << std::endl;
 }
 
 }  // end of `static' namespace

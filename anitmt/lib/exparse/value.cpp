@@ -180,7 +180,7 @@ int Value::can_convert(ValueType vt) const
 }
 
 
-ostream &operator<<(ostream &os,const Value &v)
+std::ostream &operator<<(std::ostream &os,const Value &v)
 {
 	using namespace values;
 	switch(v.vtype)

@@ -21,6 +21,7 @@
 #define __values_h__
 
 #include <string>
+#include <iostream>
 
 #include "vect.hpp"
 #include <math.h>
@@ -67,11 +68,11 @@ namespace values
     operator bool() const  {  return(x);  }
     bool val() const  {  return(x);  }
 	
-	friend ostream& operator<<(ostream& s,const Flag &m);
+	friend std::ostream& operator<<(std::ostream& s,const Flag &m);
   };
 
   extern const char *_YesNo(bool val);
-  inline ostream& operator<<(ostream& s,const Flag &m)
+  inline std::ostream& operator<<(std::ostream& s,const Flag &m)
     {  s << _YesNo(m.x);  return(s);  }
 /******************************************************************************/
 /*   SCALAR                                                                   */
@@ -94,6 +95,10 @@ namespace values
     friend bool operator!=(const Scalar &,double);
     friend bool operator==(double,const Scalar &);
     friend bool operator!=(double,const Scalar &);
+    friend bool operator==(const Scalar &,int);
+    friend bool operator!=(const Scalar &,int);
+    friend bool operator==(int,const Scalar &);
+    friend bool operator!=(int,const Scalar &);
 
     // Returns 1, if this scalar is 0 (exactly: if |this->x| <= epsilon )
     bool operator!() const {  return(fabs(x)<=epsilon);  }
@@ -107,7 +112,7 @@ namespace values
     Scalar &operator*=(double a)  {  x*=a;  return(*this);  }
     Scalar &operator/=(double a)  {  x/=a;  return(*this);  }
 	
-	friend ostream& operator<<(ostream& s,const Scalar &m);
+	friend std::ostream& operator<<(std::ostream& s,const Scalar &m);
   };
   
   // Operators comparing scalars are using epsilon: 
@@ -125,13 +130,21 @@ namespace values
     {  return(fabs(a.x-b)<=epsilon);  }
   inline bool operator!=(const Scalar &a,double b)
     {  return(fabs(a.x-b)>epsilon);  }
+  inline bool operator==(int a,const Scalar &b)
+    {  return(fabs(double(a)-b.x)<=epsilon);  }
+  inline bool operator!=(int a,const Scalar &b)
+    {  return(fabs(double(a)-b.x)>epsilon);  }
+  inline bool operator==(const Scalar &a,int b)
+    {  return(fabs(a.x-double(b))<=epsilon);  }
+  inline bool operator!=(const Scalar &a,int b)
+    {  return(fabs(a.x-double(b))>epsilon);  }
 
   inline Scalar abs(const Scalar &a)
     {  return fabs(a); }
   inline Scalar sqrt(const Scalar &a)
     {  return ::sqrt( double(a) ); }
   
-  inline ostream& operator<<(ostream& s,const Scalar &m)
+  inline std::ostream& operator<<(std::ostream& s,const Scalar &m)
   	{  s << m.x;  return(s);  }
   
 /******************************************************************************/
@@ -288,7 +301,7 @@ namespace values
     Vector &to_rectangular();
 
     // Print vector to stream: 
-    friend ostream& operator<<(ostream& s,const Vector &v);
+    friend std::ostream& operator<<(std::ostream& s,const Vector &v);
   };
 
   inline Vector operator+(const Vector &a,const Vector &b)
@@ -372,7 +385,7 @@ namespace values
   extern Vector to_spherical(const Vector &v);
   extern Vector to_rectangular(const Vector &v);
 
-  inline ostream& operator<<(ostream& s,const Vector &v)
+  inline std::ostream& operator<<(std::ostream& s,const Vector &v)
     {  return(vect::operator<<(s,v.x));  }
 
 
@@ -484,7 +497,7 @@ namespace values
     friend Matrix invert(const Matrix &m);
 
     // Print matrix to stream: 
-    friend ostream& operator<<(ostream& s,const Matrix &m);
+    friend std::ostream& operator<<(std::ostream& s,const Matrix &m);
   };
 
   inline Matrix operator*(const Matrix &a,Scalar b)
@@ -519,7 +532,7 @@ namespace values
   inline Matrix invert(const Matrix &m)
     {  Matrix r(Matrix::noinit);  r.x.invert(m.x);  return(r);  }
 
-  inline ostream& operator<<(ostream& s,const Matrix &m)
+  inline std::ostream& operator<<(std::ostream& s,const Matrix &m)
     {  return(vect::operator<<(s,m.x));  }
 
   // **** Constructing matrices: ****

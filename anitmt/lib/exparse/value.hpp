@@ -49,7 +49,7 @@ enum ValueState
 
 class Value;
 
-extern ostream &operator<<(ostream &os,const Value &v);
+extern std::ostream &operator<<(std::ostream &os,const Value &v);
 
 class Value
 {
@@ -170,7 +170,7 @@ class Value
 		//! Return value: 1 -> can convert; 0 -> cannot convert. 
 		int can_convert(ValueType vt) const;
 		
-		friend ostream &operator<<(ostream &os,const Value &v);
+		friend std::ostream &operator<<(std::ostream &os,const Value &v);
 };
 
 }  // namespace end 

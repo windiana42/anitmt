@@ -141,10 +141,10 @@ namespace solve
   {
     int errors = 0;
 
-    cout << endl;
-    cout << "-------------------------------" << endl;
-    cout << "Priority Action System Test..." << endl;
-    cout << "-------------------------------" << endl;
+    std::cout << std::endl;
+    std::cout << "-------------------------------" << std::endl;
+    std::cout << "Priority Action System Test..." << std::endl;
+    std::cout << "-------------------------------" << std::endl;
 
     Operand<values::Scalar> s0; // start stretch
     Operand<values::Scalar> se; // end stretch
@@ -154,30 +154,30 @@ namespace solve
     Operand<values::Scalar> v0; // startspeed
     Operand<values::Scalar> ve; // endspeed
 
-    cout << " beginning" << endl;
-    cout << "  s0="<< s0 << " se=" << se << " s=" << s << " t=" <<  t << " a=" << a << " v0=" << v0 << " ve=" << ve << endl;
+    std::cout << " beginning" << std::endl;
+    std::cout << "  s0="<< s0 << " se=" << se << " s=" << s << " t=" <<  t << " a=" << a << " v0=" << v0 << " ve=" << ve << std::endl;
 
     accel_solver( s, t, a, v0, ve );
     sum_solver( se, s, s0 );
 
     Priority_System sys;
     
-    cout << " Actions:" << endl;
-    cout << "  Level  5:  a= 0.5" << endl;
-    cout << "  Level  7:  t=  s0" << endl;
-    cout << "  Level 10: s0=   1" << endl;
+    std::cout << " Actions:" << std::endl;
+    std::cout << "  Level  5:  a= 0.5" << std::endl;
+    std::cout << "  Level  7:  t=  s0" << std::endl;
+    std::cout << "  Level 10: s0=   1" << std::endl;
     establish_Default_Value( &sys,  5, a, values::Scalar(0.5) );
     establish_Default_Value( &sys, 10, s0, values::Scalar(1) );
     establish_Push_Connection( &sys, 7, s0, t ); // push just for fun
 
-    cout << " unset status" << endl;
-    cout << "  s0="<< s0 << " se=" << se << " s=" << s << " t=" <<  t << " a=" << a << " v0=" << v0 << " ve=" << ve << endl;
+    std::cout << " unset status" << std::endl;
+    std::cout << "  s0="<< s0 << " se=" << se << " s=" << s << " t=" <<  t << " a=" << a << " v0=" << v0 << " ve=" << ve << std::endl;
     v0.set_value( 0 );
-    cout << " after v0=0" << endl;
-    cout << "  s0="<< s0 << " se=" << se << " s=" << s << " t=" <<  t << " a=" << a << " v0=" << v0 << " ve=" << ve << endl;
+    std::cout << " after v0=0" << std::endl;
+    std::cout << "  s0="<< s0 << " se=" << se << " s=" << s << " t=" <<  t << " a=" << a << " v0=" << v0 << " ve=" << ve << std::endl;
     sys.invoke_all_Actions();
-    cout << " after result of actions" << endl;
-    cout << "  s0="<< s0 << " se=" << se << " s=" << s << " t=" <<  t << " a=" << a << " v0=" << v0 << " ve=" << ve << endl;
+    std::cout << " after result of actions" << std::endl;
+    std::cout << "  s0="<< s0 << " se=" << se << " s=" << s << " t=" <<  t << " a=" << a << " v0=" << v0 << " ve=" << ve << std::endl;
 
     return errors;
   }

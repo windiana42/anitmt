@@ -46,7 +46,7 @@ namespace vect
 	namespace internal
 	{
 		// Suffix 1 for 1-dim array (vector). 
-		ostream& stream_write_array1(ostream& s,const double *x,int n)
+		std::ostream& stream_write_array1(std::ostream& s,const double *x,int n)
 		{
 			s << "<";
 			if(n>0)
@@ -66,7 +66,7 @@ namespace vect
 		#define SUB(array,C,c,r)  array[c*C+r]
 		
 		// Suffix 2 for 2-dim array (matrix). 
-		ostream& stream_write_array2(ostream& s,const double *x,int C,int R)
+		std::ostream& stream_write_array2(std::ostream& s,const double *x,int C,int R)
 		{
 			static int warned=0;
 			if(!warned)
@@ -237,7 +237,6 @@ namespace vect
 		// The exception is thrown if the 4th element of the result is 
 		// different from 1. 
 		void matrix_mul_vect343(double *rv,const double *m,const double *v)
-			throw(vect::EX_Matrix_34_Problem)
 		{
 			for(int r=0; r<3; r++)
 			{
@@ -249,6 +248,7 @@ namespace vect
 				         SUB(m,4,2,3)*v[2] + SUB(m,4,3,3) /* *1 */;
 			if(fabs(tmp-1.0)>0.00001)  // gonna throw the exception, damn!!
 			{
+				#if 0
 				EX_Matrix_34_Problem exc;
 				for(int c=0; c<4; c++)
 					for(int r=0; r<4; r++)
@@ -256,6 +256,9 @@ namespace vect
 				for(int i=0; i<3; i++)  exc.v3(i,v[i]);
 				for(int i=0; i<3; i++)  exc.v4(i,rv[i]);  exc.v4(3,tmp);
 				throw(exc);
+				#endif
+				std::cerr << "*** Matrix<4,4>*Vector<3> multiplication problem?!?!"
+					" (Please tell Wolfgang when you see that.)" << std::endl;
 			}
 		}
 		
