@@ -6,6 +6,7 @@ bin_PROGRAMS=		funcgen
 CXXFLAGS =		@CXXFLAGS@ -Wno-non-template-friend -ftemplate-depth-30
 
 BUILT_SOURCES=		scanner.cc parser.cc tokens.h 
+CLEANFILES=		$(BUILT_SOURCES)
 funcgen_SOURCES=	gen_code.hpp gen_code.cpp gen_cpp.cpp gen_cpp.hpp \
 			afdbase.hpp afdbase.cpp parser.yy tokens.h token.hpp \
 			flexlexer_public.h flexlexer_global.h scanner.ll \
@@ -22,9 +23,6 @@ funcgen_LDADD=		../../lib/message/libmessage.a ../../hlib/libhlib.a
 #also includes old adl/libadlparser.a for libanitmt
 
 YLWRAP  = 		$(top_srcdir)/ylwrap
-
-clean:
-	rm -f $(BUILT_SOURCES)
 
 #-- Scanner
 # A .cc-File is a must here. The ylwrap script doesn't accept other file

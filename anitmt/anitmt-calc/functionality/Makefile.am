@@ -2,6 +2,7 @@
 INCLUDES=		-I$(top_srcdir)/lib -I$(srcdir) -I$(builddir)
 
 noinst_LIBRARIES=	libfunctionality.a
+
 BUILT_SOURCES=		solver.hpp solver.cpp \
 			base_func.hpp base_func.cpp \
 			scene_base.hpp scene_base.cpp \
@@ -10,6 +11,22 @@ BUILT_SOURCES=		solver.hpp solver.cpp \
 			object_base.hpp object_base.cpp \
 			object.hpp object.cpp \
 			complex_solver.hpp complex_solver.cpp 
+CLEANFILES = 		solver.hpp solver.cpp \
+			solver_prototypes.hpp solver_parser.yy solver_scanner.ll \
+			base_func.hpp base_func.cpp \
+			base_func_prototypes.hpp base_func_parser.yy base_func_scanner.ll \
+			scene_base.hpp scene_base.cpp \
+			scene_base_prototypes.hpp scene_base_parser.yy scene_base_scanner.ll \
+			scalar_base.hpp scalar_base.cpp \
+			scalar_base_prototypes.hpp scalar_base_parser.yy scalar_base_scanner.ll \
+			scalar.hpp scalar.cpp \
+			scalar_prototypes.hpp scalar_parser.yy scalar_scanner.ll \
+			object_base.hpp object_base.cpp \
+			object_base_prototypes.hpp object_base_parser.yy object_base_scanner.ll \
+			object.hpp object.cpp \
+			object_prototypes.hpp object_parser.yy object_scanner.ll \
+			complex_solver.hpp complex_solver.cpp \
+			complex_solver_prototypes.hpp complex_solver_parser.yy complex_solver_scanner.ll 
 nodist_libfunctionality_a_SOURCES= solver.hpp solver.cpp \
 			complex_solver.hpp complex_solver.cpp \
 			base_func.hpp base_func.cpp \
@@ -38,9 +55,6 @@ test_functionality_LDADD= \
 			../../lib/val/libval.a \
 			../../lib/solve/libsolve.a \
 			../../lib/proptree/libproptree.a 
-
-clean:
-	rm -f $(BUILT_SOURCES)
 
 FUNCGEN=../funcgen/funcgen
 #FUNCGEN_DEBUG=-d -s
