@@ -9,7 +9,7 @@ AC_PROG_YACC
 AM_PROG_LEX
 if test "$LEX" != "flex"; then echo "Warning: You need flex to generate new lexer sources!"; LEX=; fi
 if test "$YACC" != "bison -y"; then echo "Warning: You need "bison -y" to generate new parser source!"; export YACC=; fi
-AC_CONFIG_SUBDIRS(hlib rendview)
+AC_CONFIG_SUBDIRS(hlib)
 AC_OUTPUT(
 	Makefile 
 	lib/Makefile 
