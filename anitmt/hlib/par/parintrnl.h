@@ -15,7 +15,7 @@
 namespace par
 {
 
-class ParameterConsumerBase;
+class ParameterConsumer;
 struct ValueHandler;
 
 
@@ -61,11 +61,11 @@ struct PAR  // This serves as a namespace and a base class.
 	
 	struct ParamInfo : LinkedListBase<ParamInfo>
 	{
-		ParameterConsumerBase *pc;  // whose param is this? 
+		ParameterConsumer *pc;  // whose param is this? 
 		Section *section;     // corresponding section 
 		const char *name;     // name of the parameter (without sections; NOT 
 		                      // copied; containing all synonymns separated by 
-		                      // `/' and indexed by synpos[]. 
+		                      // `|' and indexed by synpos[]. 
 		int *synpos;          // synonyme name start in name[]; last elem <0. 
 		                      // array allocated at (char*)(this+1). 
 		const char *helptext; // help text (not copied) or NULL. 
@@ -74,7 +74,7 @@ struct PAR  // This serves as a namespace and a base class.
 		int exclusive_vhdl;   // vhdl exclusively allocated for this param; free 
 		                      // on destruction if param
 		void *valptr;         // pointer to the original var (as specified 
-		                      // by the ParameterConsumerBase-derived class) 
+		                      // by the ParameterConsume-derived class) 
 		int is_set;           // Value set? AddParam sets this to 1 if there 
 		                      // is a default value, else to 0. 
 		int locked;           // parameter locked (may not get modified?)

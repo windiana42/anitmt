@@ -14,9 +14,6 @@
 namespace par
 {
 
-// NOTE: Make sure that no parameters get deleted at the manager 
-//       while a ParameterSource holds a copy of them. 
-
 int ParameterSource::Override(const ParameterSource *below)
 {
 	int errors=0;

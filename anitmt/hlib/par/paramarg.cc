@@ -9,6 +9,28 @@
 namespace par
 {
 
+extern const char *_three_qm;  // "???"
+
+// Convert origin spec into a RefString: 
+RefString ParamArg::Origin::OriginStr() const
+{
+	RefString str;
+	switch(otype)
+	{
+		case FromFile:
+			str.sprintf(0,"%s:%d",origin.str(),opos);
+			break;
+		case FromCmdLine:
+			str.sprintf(0,"[cmdline]:%d",opos);
+			break;
+		default:
+			str.sprintf(0,_three_qm);
+			break;
+	}
+	return(str);
+}
+
+
 static inline bool is_trim(char c)
 {  return(isspace(c));  }
 

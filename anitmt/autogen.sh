@@ -29,7 +29,8 @@ fi
 # no problem yet
 
 topdir="`pwd`"
-for i in . hlib ; do 
+for i in . hlib rendview ; do 
+test -d $i || continue
 echo "-----<entering directory $i>-----"
 cd $i
 
@@ -57,9 +58,9 @@ if test -n "$1" -o ! -f Makefile.in; then
 fi
 
 cd "$topdir" 
+echo
 done
 
-echo
 echo "Now you may run \"./configure\" to configure the source code,"
 echo "followed by \"make\" to build it."
 echo "If you want to install it, type \"make install\" after all."

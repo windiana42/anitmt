@@ -1,5 +1,5 @@
-#ifndef _INC_PAR_ParConsumerBase_H_
-#define _INC_PAR_ParConsumerBase_H_ 1
+#ifndef _INC_PAR_ParameterConsumer_H_
+#define _INC_PAR_ParameterConsumer_H_ 1
 
 #include <stddef.h>
 
@@ -10,57 +10,24 @@ namespace par
 
 class ParameterManager;
 
-#warning REMOVE ME. 
-class GlobalParameterHandler
-{
-	friend class ParameterParser;
-	protected:
-		// Gets called before this arg is parsed to get approval. 
-		// [CMD line and parameter file]
-		// Return value: 
-		//  0 -> approved; 
-		//  n<0 -> skip n args marking them as unused
-		//         (use only for cmd line args)
-		//  n>0 -> skip n args marking them as used
-		virtual int approve(const ParamArg *)  {  return(0);  }
-		
-		// Gets called for all args considered files specified on 
-		// the cmd line (as naked files, not as parameters). 
-		// [CMD line only]
-		// Return value: 
-		//  0 -> okay; 1 -> unused (++ error counter) 
-		virtual int filearg(const char * /*file*/)  {  return(1);  }
-		
-		// Gets called for all unknwon arg names during parsing. 
-		// These might be a global one-letter arg string or 
-		// misspelled/illegal arg names. 
-		// [CMD line and parameter file]
-		// Return value: 
-		//    0 -> if arg->used it set, the arg is used; (if 
-		//         arg->next->used is set, the next arg is also used...) 
-		//         if arg->used is not set: unknown arg; 
-		//         increase error counter and write error
-		//    1 -> unknown arg; increase error counter; message 
-		//         already written 
-		virtual int unknown(const ParamArg *)  {  return(0);  }
-	public:  _CPP_OPERATORS_FF
-		GlobalParameterHandler(int *failflag=NULL);
-		virtual ~GlobalParameterHandler();
-};
 
-
-
-class ParameterConsumerBase : 
-	private LinkedListBase<ParameterConsumerBase>, 
+// A ParameterConsumer is a class derived from ParameterConsumer. 
+// A ParameterConsumer may register parameters at the parameter system; 
+// these parameters can then be set in different ways by different 
+// ParameterSources. If you need to know/deal with all parameters which 
+// are inside a special section (or you even want to do you own parameter 
+// handling for all params below a section, have a look at 
+// SectionParameterHandler). 
+class ParameterConsumer : 
+	private LinkedListBase<ParameterConsumer>, 
 	public PAR
 {
 	friend class ParameterManager;
-	friend class LinkedList<ParameterConsumerBase>;
+	friend class LinkedList<ParameterConsumer>;
 	private:
 		Section *curr_section;  // Set by SetSection(). 
 		ParameterManager *manager;
 	protected:
-		
 		// This is called when ParameterManager::CheckParams() is called, 
 		// normally that is when all the parameters are set up and before 
 		// the program actually does its job. 
@@ -69,10 +36,11 @@ class ParameterConsumerBase :
 		//   1 -> errors written (must stop)
 		virtual int CheckParams()
 			{  return(0);  }
+		
 	public:  _CPP_OPERATORS_FF
-		ParameterConsumerBase(ParameterManager *manager,
+		ParameterConsumer(ParameterManager *manager,
 			int *failflag=NULL);
-		virtual ~ParameterConsumerBase();
+		virtual ~ParameterConsumer();
 		
 		// Returns pointer to the parameter manager: 
 		ParameterManager *parmanager()
@@ -119,7 +87,7 @@ class ParameterConsumerBase :
 		// name: parameter name (without sections and without leading 
 		//       `-'). name is NOT copied. 
 		//       A paremeter may have any number of synonyms separated 
-		//       by `/', e.g. "w/width/imagewidth". The first one 
+		//       by `|', e.g. "w|width|imagewidth". The first one 
 		//       specified is the name printed commonly in errors.  
 		//   YOU MAY NOT specify the same value pointer/parameter 
 		//   more than once. In case one of the specified names is 
@@ -127,7 +95,7 @@ class ParameterConsumerBase :
 		//   CHECK if you use the same value twice, e.g. 
 		//   AddParam("w",&width); AddParam("width",&width) 
 		//   yields straight into trouble. 
-		//  Oh, and don't use nastices like "w//width" or "w/"...
+		//  Oh, and don't use nastices like "w||width" or "w|"...
 		// ptype: parameter type (see enum ParameterType)
 		// helptext: Help text (description) for the option. Set this 
 		//           to NULL if there is no help text (option hidden). 
@@ -177,7 +145,11 @@ class ParameterConsumerBase :
 		inline ParameterType NoDefault(ParameterType ptype) const
 			{  return(ParameterType(ptype | PTNoDefault));  }
 		
-		#warning should add DelParam();
+		// Hardly needed but you can use that to delete a parameter: 
+		// Return value: 
+		//   0 -> success
+		//   currently never fails. 
+		int DelParam(ParamInfo *pi);
 		
 		// Query if a parameter was set (better: how often it 
 		// was successfully overridden/added): 
@@ -195,4 +167,4 @@ class ParameterConsumerBase :
 
 }  // namespace end 
 
-#endif  /* _INC_PAR_ParConsumerBase_H_ */
+#endif  /* _INC_PAR_ParameterConsumer_H_ */

@@ -8,9 +8,21 @@
 namespace par
 {
 
-// NOTE: Make sure that no parameters get deleted at the manager 
-//       while a ParameterSource holds a copy of them. 
-
+// A ParameterSource is a class derived from ParameterSource. 
+// A ParameterSource reads in parameters (from files / command line) and 
+// stores each of them temporarily in a parameter copy (if you specify a 
+// param twice, they are both put into the same copy or overwrite the 
+// previous value in the copy). 
+// Say you have more than one ParameterSource (e.g. one for the config 
+// file and one for the command line args). You allocate two 
+// ParameterSources and let them read in their parameters. After that, 
+// the tow sources have the parameter stored (they are not yet accsessible 
+// by the parameter consumers). Now, you call the override function to 
+// merge the parameters into one ParameterSource and the finally call 
+// the write funtion to store the parameters at the parameter consumers 
+// and thus make them available. 
+// If you did all that, you should call CheckParams() at the parameter 
+// manager to check if all required params are there, etc. 
 class ParameterSource : 
 	private LinkedListBase<ParameterSource>, 
 	public PAR
@@ -182,6 +194,10 @@ class ParameterSource :
 		// ParameterManager. 
 		ParameterSource(ParameterManager *manager,int *failflag=NULL);
 		virtual ~ParameterSource();
+		
+		// Get pointer to the parameter manager: 
+		ParameterManager *parmanager()
+			{  return(manager);  }
 		
 		// Search a ParamInfo corresponding to a parameter name (with 
 		// or without sections) at the ParameterManager: 

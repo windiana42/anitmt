@@ -192,6 +192,7 @@ int ParameterSource_File::_ReadFile(const char *_file,int allow_recursion)
 				// Go to subsection with specified name: 
 				// This must be an immediate subsection of the current 
 				// section (newsect->up==curr_sect). 
+				#warning also allow deeper subsections
 				Section *down=manager->FindSection(sname,curr_sect);
 				if(!down)
 				{  PreprocessorError(PPUnknownSection,&origin,
@@ -206,7 +207,7 @@ int ParameterSource_File::_ReadFile(const char *_file,int allow_recursion)
 				}
 			}
 		}
-		else if(stype==3)
+		else if(stype==3)  // #end
 		{
 			char *sname=&line[special];
 			while(isspace(*sname))  ++sname;
@@ -216,11 +217,15 @@ int ParameterSource_File::_ReadFile(const char *_file,int allow_recursion)
 			// Process end statement: 
 			// We must go one section up but not beyond the file top 
 			// section (file_top_sect)
-			if(curr_sect==file_top_sect)
-			{   PreprocessorError(PPTooManyEndStatements,&origin,
-				curr_sect,NULL);  ++errors;  }
-			curr_sect=curr_sect->up;
-			assert(curr_sect);
+			#warning also allow deeper subsections
+			for(int i=0; i<1; i++)
+			{
+				if(curr_sect==file_top_sect)
+				{   PreprocessorError(PPTooManyEndStatements,&origin,
+					curr_sect,NULL);  ++errors;  break;  }
+				curr_sect=curr_sect->up;
+				assert(curr_sect);
+			}
 		}
 		spdone:;
 		
@@ -247,6 +252,7 @@ int ParameterSource_File::_ReadFile(const char *_file,int allow_recursion)
 
 // *str=beginning of string
 // Return value: 0 -> OK; >0 -> error
+// NOT used for parameters, only used for #section, #include. 
 int ParameterSource_File::_ParseString(char **str,size_t *retlen,char **end,
 	const ParamArg::Origin *origin)
 {
@@ -292,10 +298,12 @@ int ParameterSource_File::Parse(ParamArg *pa,Section *topsect)
 	if(pa->pdone)
 	{  return(1);  }
 	
+	if(!topsect)
+	{  topsect=manager->TopSection();  }
+	
 	ParamInfo *pi=manager->FindParam(pa->name,pa->namelen,topsect);
 	if(!pi)
-	{  ParameterError(PETUnknown,pa,pi/*=NULL*/,
-		topsect ? topsect : manager->TopSection());  return(-1);  }
+	{  ParameterError(PETUnknown,pa,pi/*=NULL*/,topsect);  return(-1);  }
 	
 	// This will copy the param call error handler if necessary 
 	// and warn the user if it will be set more than once. 

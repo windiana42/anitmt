@@ -5,7 +5,7 @@
 #include <string.h>
 
 #include "parmanager.h"
-#include "parconsumerbase.h"
+#include "parconsumer.h"
 #include "sindentcout.h"
 
 

@@ -7,7 +7,7 @@ namespace par
 {
 
 // Frequently needed string constant...
-static const char *_three_qm="???";
+const char *_three_qm="???";
 
 
 int ParameterSource::OverrideError(ParamCopy * /*thiscopy*/,
@@ -64,10 +64,12 @@ int ParameterSource::ValueParseError(
 		{  vpe=&_vpe_info[idx];  break;  }
 	}
 	
-	#warning waiting to get implemented. 
-	fprintf(stderr,"ValueParseError: %s (%.*s; %s)\n",
-		vpe ? vpe->str : _three_qm,
-		int(arg->namelen),arg->name,pc->info->name);
+	RefString ostr=arg->origin.OriginStr();
+	fprintf(stderr,"%s: %s%.*s in %s: %s\n",
+		prg_name,pps<0 ? "warning: " : "",
+		int(arg->namelen),arg->name,
+		ostr.str(),
+		vpe ? vpe->str : _three_qm);
 	
 	return(0);
 }
@@ -77,21 +79,73 @@ int ParameterSource::WarnAlreadySet(
 	const ParamArg *arg,
 	ParamCopy *pc)
 {
-	#warning waiting to get implemented. 
-	fprintf(stderr,"WarnAlreadySet: %s (%s,%d)\n",
-		arg->name,pc->porigin.origin.str(),pc->porigin.opos);
+	RefString ostr=arg->origin.OriginStr();
+	RefString pstr=pc->porigin.OriginStr();
+	fprintf(stderr,"%s: warning: %.*s in %s previously set in %s\n",
+		prg_name,
+		int(arg->namelen),arg->name,
+		ostr.str(),pstr.str());
 	
 	return(0);
+}
+
+
+#define cps_size 6
+static const struct cps_info
+{
+	ParameterSource::CopyParamState cps;
+	const char *str;
+} _cps_info[cps_size]=
+{
+	{ ParameterSource::CPSAlreadyCopied,  "parameter already copied" },
+	{ ParameterSource::CPSSuccess,        "success" },
+	{ ParameterSource::CPSAllocFailed,    "allocation failure" },
+	{ ParameterSource::CPSInvalidPI,      "invalid paramter info" },
+	{ ParameterSource::CPSValAllocFailed, "value allocation failed" },
+	{ ParameterSource::CPSCopyingFailed,  "copying failed" }
+};
+
+
+const char *_cprv_str(int cprv)
+{
+	static char tmp[24];
+	switch(cprv)
+	{
+		case  0:  return("(success)");
+		case -1:  return("(allocation failure)");
+		case -2:  return("(operation not supported)");
+		// default: fall through
+	}
+	snprintf(tmp,24,"(errcode %d)",cprv);
+	return(tmp);
 }
 
 
 int ParameterSource::ParamCopyError(
 	CopyParamState cps,
 	int cprv,
-	ParamInfo * /*pi*/)
+	ParamInfo *pi)
 {
-	#warning waiting to get implemented. 
-	fprintf(stderr,"ParamCopyError: %d,%d\n",cps,cprv);
+	const char *err_str=_three_qm;
+	
+	// look error up in list (last-to-first) 
+	for(int idx=0; idx<cps_size; idx++)
+	{
+		if(_cps_info[idx].cps==cps)
+		{  err_str=_cps_info[idx].str;  break;  }
+	}
+	
+	// Get full parameter name: 
+	size_t len=parmanager()->FullParamName(pi,NULL,0);
+	char tmp[len+1];
+	parmanager()->FullParamName(pi,tmp,len+1);
+	
+	const char *add_str="";
+	if(cps==ParameterSource::CPSCopyingFailed)
+	{  add_str=_cprv_str(cprv);  }
+	
+	fprintf(stderr,"%s: copying parameter %s: %s%s\n",
+		prg_name,tmp,err_str,add_str);
 	
 	return(0);
 }
@@ -113,9 +167,12 @@ int ParameterSource::ParameterError(
 	const char *pet_str = 
 		(pet<0 || pet>=_PETLast) ? _three_qm : pet_error_str[pet];
 	
-	#warning waiting to get implemented. 
-	fprintf(stderr,"ParameterError: %s: %.*s\n",
-		pet_str,int(arg->namelen),arg->name);
+	RefString ostr=arg->origin.OriginStr();
+	fprintf(stderr,"%s: %.*s in %s: %s\n",
+		prg_name,
+		int(arg->namelen),arg->name,
+		ostr.str(),
+		pet_str);
 	
 	return(0);
 }

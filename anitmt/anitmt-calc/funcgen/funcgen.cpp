@@ -59,9 +59,9 @@ FuncgenParameters::FuncgenParameters(par::ParameterManager *manager) :
   AddOpt("p/yydebug","enable parser debugging output (LOTS of text)",&yydebug);
   AddOpt("s/stdebug","dump structure debug output",&stdebug);
   
-  AddParam("i/input","input file",&in_file);
-  AddParam("o/output","output basename",&out_basename);
-  AddParam("n/namespace","namespace",&namesp);
+  AddParam("i|input","input file",&in_file);
+  AddParam("o|output","output basename",&out_basename);
+  AddParam("n|namespace","namespace",&namesp);
   AddParam("I","include path (use -I+=path to add a path)",&include_path);
 }
 

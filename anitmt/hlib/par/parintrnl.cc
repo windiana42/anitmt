@@ -119,7 +119,7 @@ PAR::ParamInfo *PAR::ParamInfo::NewPi(const char *name)
 	// Count the synonyms...
 	int n=1;
 	for(const char *c=name; *c; c++)
-	{  if(*c=='/')  ++n;  }
+	{  if(*c=='|')  ++n;  }
 	
 	// sympos[] is of type int... but with GNU C++ we don't relay on that. 
 	#if __GNUC__
@@ -141,7 +141,7 @@ PAR::ParamInfo *PAR::ParamInfo::NewPi(const char *name)
 		const char *c=name;
 		for(n=0; *c; c++)
 		{
-			if(*c=='/')
+			if(*c=='|')
 			{  pi->synpos[n++]=(c-name+1);  }
 		}
 		pi->synpos[n]=-(c-name+1);

@@ -3,7 +3,7 @@
 #include <string.h>
 
 #include "parmanager.h"
-#include "parconsumerbase.h"
+#include "parconsumer.h"
 #include "parsource.h"
 
 #ifndef TESTING
@@ -57,7 +57,7 @@ int ParameterManager::_CountParams(Section *top)
 int ParameterManager::CheckParams()
 {
 	int rv=0;
-	for(ParameterConsumerBase *pc=pclist.first(); pc; pc=pc->next)
+	for(ParameterConsumer *pc=pclist.first(); pc; pc=pc->next)
 	{
 		if(pc->CheckParams())
 		{  ++rv;  }
@@ -104,13 +104,15 @@ size_t ParameterManager::FullSectionName(Section *s,char *dest,size_t len)
 // length (without '\0' at the end!) is returned. 
 // The full parameter name does not have a leading `-'. 
 // Return value: length of the name. 
-size_t ParameterManager::FullParamName(ParamInfo *pi,char *dest,size_t len)
+size_t ParameterManager::FullParamName(ParamInfo *pi,char *dest,size_t len,
+	int with_synp)
 {
 	if(!pi)  return(0);
 	size_t sectlen=FullSectionName(pi->section,dest,len);
 	// Get size for name: synpos[0] is too large by 1 char 
 	//                    but that is `-' here. 
-	size_t namelen=ABS(*pi->synpos);
+	#warning UNTESTED!!! TEST FullParamName(...,with_synp=1)
+	size_t namelen=with_synp ? (strlen(pi->name)+1) : ABS(*pi->synpos);
 	assert(namelen);
 	if(!pi->section->up)  // if the param is in the top section, we 
 	{  --namelen;  }      // dont need the leading `-'. 
@@ -128,7 +130,7 @@ size_t ParameterManager::FullParamName(ParamInfo *pi,char *dest,size_t len)
 }
 
 
-PAR::ParamInfo *ParameterManager::AddParam(ParameterConsumerBase *pc,
+PAR::ParamInfo *ParameterManager::AddParam(ParameterConsumer *pc,
 	_AddParInfo *api)
 {
 	ParamInfo *pi=NULL;
@@ -179,7 +181,24 @@ PAR::ParamInfo *ParameterManager::AddParam(ParameterConsumerBase *pc,
 }
 
 
-PAR::Section *ParameterManager::RegisterSection(ParameterConsumerBase *pc,
+// Tell parameter sources and delete: 
+inline void ParameterManager::_DelParam(Section *s,ParamInfo *pi)
+{
+	_DelParamNotifySources(s,pi);
+	s->pilist.dequeue(pi);
+	ParamInfo::DelPi(pi);  // delete pi. 
+}
+
+int ParameterManager::DelParam(ParamInfo *pi)
+{
+	if(!pi)  return(0);
+	
+	_DelParam(pi->section,pi);
+	return(0);
+}
+
+
+PAR::Section *ParameterManager::RegisterSection(ParameterConsumer *pc,
 	const char *sect_name,const char *helptext,Section *top=NULL)
 {
 	if(!pc)  return(NULL);
@@ -282,7 +301,7 @@ PAR::ParamInfo *ParameterManager::FindParam(const char *name,
 
 
 // Return value: 0 -> okay; 1 -> already registered. 
-int ParameterManager::RegisterParameterConsumerBase(ParameterConsumerBase *ps)
+int ParameterManager::RegisterParameterConsumer(ParameterConsumer *ps)
 {
 	if(!ps)  return(0);
 	
@@ -293,10 +312,10 @@ int ParameterManager::RegisterParameterConsumerBase(ParameterConsumerBase *ps)
 	return(0);
 }
 
-void ParameterManager::UnregisterParameterConsumerBase(ParameterConsumerBase *ps)
+void ParameterManager::UnregisterParameterConsumer(ParameterConsumer *ps)
 {
 	if(!ps)  return;
-	// Check if he can be in the list (otherwise RegisterParameterConsumerBase() 
+	// Check if he can be in the list (otherwise RegisterParameterConsumer() 
 	// probably failed). 
 	if(pclist.first()!=ps && !ps->prev)  return;
 	
@@ -454,16 +473,14 @@ inline void ParameterManager::_DelParamNotifySources(Section *s,ParamInfo *pi)
 	{  psrc->ParamGetsDeleted(s,pi);  }
 }
 
-void ParameterManager::_ZapParams(Section *s,ParameterConsumerBase *pc)
+void ParameterManager::_ZapParams(Section *s,ParameterConsumer *pc)
 {
 	for(ParamInfo *_pi=s->pilist.first(); _pi; )
 	{
 		ParamInfo *pi=_pi;
 		_pi=_pi->next;
 		if(pc && pi->pc!=pc)  continue;
-		_DelParamNotifySources(s,pi);
-		s->pilist.dequeue(pi);
-		ParamInfo::DelPi(pi);  // delete pi. 
+		_DelParam(s,pi);
 	}
 }
 
@@ -471,13 +488,13 @@ void ParameterManager::_ZapParams(Section *s,ParameterConsumerBase *pc)
 // Clear the sections by removing all parameters added by the 
 // passed consumer. If ps==NULL, match for all sources (clean up 
 // everything). 
-void ParameterManager::_ClearSections(ParameterConsumerBase *pc)
+void ParameterManager::_ClearSections(ParameterConsumer *pc)
 {
 	_ClearSection(&topsect,pc);
 	_TidyUpSections();
 }
 
-void ParameterManager::_ClearSection(Section *s,ParameterConsumerBase *pc)
+void ParameterManager::_ClearSection(Section *s,ParameterConsumer *pc)
 {
 	_ZapParams(s,pc);
 	

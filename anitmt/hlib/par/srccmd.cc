@@ -27,8 +27,8 @@ int ParameterSource_CmdLine::ReadCmdLine(CmdLineArgs *cmd,
 	{
 		ParamArg *pa=&cmd->args[i];
 		#warning introduce ParamArg::ignore; must call ParamSource::approve() \
-			delete global handler. 
-		#warning should introduce possibility for custom virtual parser in ParConsumerBase 
+			[delete global handler]. 
+		#warning should introduce possibility for custom virtual parser in SectionParameterHandler 
 		
 		int rv=Parse(pa,_topsect);
 		if(rv<0)

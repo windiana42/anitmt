@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "parconsumerbase.h"
+#include "parconsumer.h"
 #include "parmanager.h"
 
 #ifndef TESTING
@@ -24,7 +24,7 @@ namespace par
 {
 
 
-PAR::ParamInfo *ParameterConsumerBase::AddParam(
+PAR::ParamInfo *ParameterConsumer::AddParam(
 	const char *name,
 	ParameterType ptype,
 	const char *helptext,
@@ -47,8 +47,13 @@ PAR::ParamInfo *ParameterConsumerBase::AddParam(
 	return(parmanager()->AddParam(this,&info));
 }
 
+int ParameterConsumer::DelParam(ParamInfo *pi)
+{
+	return(parmanager()->DelParam(pi));
+}
 
-int ParameterConsumerBase::SetSection(const char *sect_name,
+
+int ParameterConsumer::SetSection(const char *sect_name,
 	const char *helptext,Section *top)
 {
 	Section *s=parmanager()->RegisterSection(this,
@@ -60,13 +65,13 @@ int ParameterConsumerBase::SetSection(const char *sect_name,
 }
 
 
-PAR::Section *ParameterConsumerBase::FindSection(const char *name,Section *top)
+PAR::Section *ParameterConsumer::FindSection(const char *name,Section *top)
 {
 	return(parmanager()->FindSection(name,top));
 }
 
 
-ParameterConsumerBase::ParameterConsumerBase(ParameterManager *_manager,
+ParameterConsumer::ParameterConsumer(ParameterManager *_manager,
 	int *failflag)
 {
 	int failed=0;
@@ -74,7 +79,7 @@ ParameterConsumerBase::ParameterConsumerBase(ParameterManager *_manager,
 	manager=_manager;
 	curr_section=NULL;
 	
-	if(parmanager()->RegisterParameterConsumerBase(this))
+	if(parmanager()->RegisterParameterConsumer(this))
 	{  --failed;  }
 	
 	if(failflag)
@@ -84,32 +89,12 @@ ParameterConsumerBase::ParameterConsumerBase(ParameterManager *_manager,
 }
 
 
-ParameterConsumerBase::~ParameterConsumerBase()
+ParameterConsumer::~ParameterConsumer()
 {
-	parmanager()->UnregisterParameterConsumerBase(this);
+	parmanager()->UnregisterParameterConsumer(this);
 	
 	manager=NULL;
 }
-
-#warning delete me
-#if 0
-GlobalParameterHandler::GlobalParameterHandler(int *failflag)
-{
-	int failed=0;
-	if(parmanager()->RegisterGlobalHandler(this))
-	{  --failed;  }
-	
-	if(failflag)
-	{  *failflag+=failed;  }
-	else if(failed)
-	{  ConstructorFailedExit();  }
-}
-
-GlobalParameterHandler::~GlobalParameterHandler()
-{
-	parmanager()->UnregisterGlobalHandler(this);
-}
-#endif
 
 
 #warning hack me...
@@ -118,7 +103,7 @@ GlobalParameterHandler::~GlobalParameterHandler()
 
 #warning REMOVE ME. 
 #if 0
-inline ParParseState ParameterConsumerBase::_CallParseFunc(
+inline ParParseState ParameterConsumer::_CallParseFunc(
 	IParDesc *ipd,ParamArg *arg)
 {
 	return((ipd->parser) ? 
@@ -126,7 +111,7 @@ inline ParParseState ParameterConsumerBase::_CallParseFunc(
 		( this->parse(ipd,arg) ) );
 }
 
-ParParseState ParameterConsumerBase::_ParseArg(
+ParParseState ParameterConsumer::_ParseArg(
 	IParDesc *ipd,ParamArg *arg,bool /*switch_only*/)
 {
 	// ipd->name is arg->name here. 
@@ -172,13 +157,6 @@ ParParseState ParameterConsumerBase::_ParseArg(
 }
 
 
-int ParameterConsumerBase::ValParseError(
-	ParDesc *pd,ParamArg *arg,ParParseState pps)
-{
-	return(ParameterParser::manager->ValParseError(pd,arg,pps));
-}
-
-
 		// You will normally not have to call this function; it is normally 
 		// called by the parser: 
 		// par_name is the name of the parameter with all recognized 
@@ -189,25 +167,6 @@ int ParameterConsumerBase::ValParseError(
 		ParParseState LookupParse(ParamArg *arg,const char *par_name,
 			bool switch_only);
 		
-// par_name is the name of the parameter with all recognized 
-// sections skipped. 
-ParParseState ParameterConsumerBase::LookupParse(
-	ParamArg *arg,const char *par_name,bool switch_only)
-{
-	#error #######not needed any more; replacement already hacked. 
-	size_t par_name_len=arg->name+arg->namelen-par_name;
-	for(IParDesc *i=pdlist.first(); i; i=i->next)
-	{
-		//fprintf(stderr,"<%s> -- <%s>\n",i->name,par_name);
-		if(switch_only && i->ptype!=PTSwitch)  continue;
-		if(strncmp(i->name,par_name,par_name_len))  continue;
-		if(i->name[par_name_len]!='\0')  continue;
-		// Found the IParDesc corresponding to the passed *arg. 
-		return(_ParseArg(i,arg,switch_only));
-	}
-	return(PPSUnknown);
-}
-
 
 		#if 0
 	protected:

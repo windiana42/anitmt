@@ -2,7 +2,7 @@ HlibHeaders = hconfig.h \
 	cpp/cplusplus.h cpp/refstring.h cpp/linkedlist.h cpp/refstrlist.h cpp/growbuffer.h \
 	fd/procbase.h fd/procmanager.h fd/fdmanager.h fd/htime.h fd/intprocbase.h fd/fdbase.h \
 		fd/cpbase.h fd/cpmanager.h \
-	par/cmdline.h par/parsource.h par/parintrnl.h par/paramarg.h par/parconsumerbase.h \
+	par/cmdline.h par/parsource.h par/parintrnl.h par/paramarg.h par/parconsumer.h \
 		par/parconsumerovl.h par/parmanager.h par/sindentcout.h par/srccmd.h par/srcfile.h \
 		par/valhdl.h par/valuehandler.h par/parbase.h \
 	misc/prototypes.h misc/hlib.h 

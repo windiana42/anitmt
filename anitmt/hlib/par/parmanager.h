@@ -19,8 +19,8 @@ class ParameterManager : public PAR
 		// Static global manager: 
 		//static ParameterManager *manager;
 	private:
-		// List of registered ParameterConsumerBases: 
-		LinkedList<ParameterConsumerBase> pclist;
+		// List of registered ParameterConsumer: 
+		LinkedList<ParameterConsumer> pclist;
 		
 		// List of registered ParameterSources: 
 		LinkedList<ParameterSource> psrclist;
@@ -33,10 +33,11 @@ class ParameterManager : public PAR
 		inline void _TidyUpSections();
 		void _FreeSection(Section *s);
 		void _DelParamNotifySources(Section *s,ParamInfo *pi);
-		void _ZapParams(Section *s,ParameterConsumerBase *pc=NULL);
-		void _ClearSections(ParameterConsumerBase *pc);
-		void _ClearSection(Section *s,ParameterConsumerBase *pc=NULL);
+		void _ZapParams(Section *s,ParameterConsumer *pc=NULL);
+		void _ClearSections(ParameterConsumer *pc);
+		void _ClearSection(Section *s,ParameterConsumer *pc=NULL);
 		int _CountParams(Section *top);
+		inline void _DelParam(Section *s,ParamInfo *pi);  // del and tell par sources
 		
 		void _RecursivePrintHelp(Section *top,class SimpleIndentConsoleOutput &sico);
 		void _HelpPrintSectionHeader(Section *top,SimpleIndentConsoleOutput &sico);
@@ -91,28 +92,31 @@ class ParameterManager : public PAR
 		// small, the name is _not_ copied (or partly) and the actual 
 		// length (without '\0' at the end!) is returned. #
 		// The full parameter name does not have a leading `-'. 
+		// with_syns: include synonymes?
 		// Return value: length of the name. 
-		size_t FullParamName(ParamInfo *pi,char *dest,size_t len);
+		size_t FullParamName(ParamInfo *pi,char *dest,size_t len,
+			int with_syns=0);
 		
 		// These are used primarily by ParameterSource: 
 		// Counts the number of parameters in and below *top. 
 		int CountParams(Section *top=NULL)
 			{  return(_CountParams(top ? top : &topsect));  }
 		
-		// Description: See ParameterConsumerBase. 
-		ParamInfo *AddParam(ParameterConsumerBase *pc,_AddParInfo *api);
+		// Description: See ParameterConsumer. 
+		ParamInfo *AddParam(ParameterConsumer *pc,_AddParInfo *api);
+		int DelParam(ParamInfo *pi);
 		
-		// Description: See ParameterConsumerBase. 
+		// Description: See ParameterConsumer. 
 		// If the section already exists, the one it returned; 
 		// else a new section is allocated. 
 		// (Leading `-' skipped.) 
-		Section *RegisterSection(ParameterConsumerBase *pc,
+		Section *RegisterSection(ParameterConsumer *pc,
 			const char *name,const char *helptext=NULL,Section *top=NULL);
 		
-		// ParameterConsumerBase classes (un)register using these 
+		// ParameterConsumer classes (un)register using these 
 		// functions. Used internally. 
-		int RegisterParameterConsumerBase(ParameterConsumerBase *ps);
-		void UnregisterParameterConsumerBase(ParameterConsumerBase *ps);
+		int RegisterParameterConsumer(ParameterConsumer *ps);
+		void UnregisterParameterConsumer(ParameterConsumer *ps);
 		
 		// ParameterSource classes (un)register using these functions. 
 		// Used internally. 
@@ -145,7 +149,7 @@ class ParameterManager : public PAR
 		// appended to the output of the (topsection) -help/--help 
 		// option. You usually set bug e-mail address/author/nothing 
 		// here. The string is not copied. 
-		// Refer to ParameterConsumerBase::AddParam() on help text format. 
+		// Refer to ParameterConsumer::AddParam() on help text format. 
 		void AdditionalHelpText(const char *str)
 			{  add_help_text=str;  }
 };

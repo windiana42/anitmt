@@ -48,6 +48,9 @@ class ParamArg
 			RefString origin;  // file name; NULL for cmd line arg 
 			int opos;          // file: line number; cmd line: arg number 
 			
+			// Convert origin spec to string: 
+			RefString OriginStr() const;
+			
 			// (may fail)
 			Origin(OriginType _otype,const char *_origin,int _opos,
 				int *failflag=NULL) : origin(_origin,failflag) 
