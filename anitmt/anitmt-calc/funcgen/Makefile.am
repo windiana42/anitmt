@@ -3,7 +3,7 @@ INCLUDES=		-I$(top_srcdir)/lib -I$(top_srcdir)/lib/flex \
 			-I$(top_builddir)/hlib/include -I$(top_srcdir)
 
 bin_PROGRAMS=		funcgen
-CXXFLAGS =		@CXXFLAGS@ -Wno-non-template-friend -ftemplate-depth-30
+AM_CXXFLAGS =		-Wno-non-template-friend -ftemplate-depth-30
 
 BUILT_SOURCES=		scanner.cc parser.cc tokens.h 
 CLEANFILES=		$(BUILT_SOURCES)
@@ -18,7 +18,12 @@ funcgen_SOURCES=	gen_code.hpp gen_code.cpp gen_cpp.cpp gen_cpp.hpp \
 			params.cpp params.hpp \
 			funcgen.cpp
 
-funcgen_LDADD=		../../lib/message/libmessage.a -lhlib -L../../hlib/ 
+funcgen_LDADD=		../../lib/message/libmessage.la 
+if USE_INSTALLED_HLIB
+funcgen_LDADD+=		-lhlib 
+else !USE_INSTALLED_HLIB
+funcgen_LDADD+=		../../hlib/libhlib.a
+endif
 
 #also includes old adl/libadlparser.a for libanitmt
 

@@ -1,6 +1,7 @@
 INCLUDES = 		-I$(srcdir)/../../lib/ -I$(srcdir)/../ -I../ \
 			-I../functionality -I$(srcdir)/../functionality
 SUBDIRS = 		adl2
-CXXFLAGS = 		@CXXFLAGS@ -Wno-non-template-friend
-noinst_LIBRARIES =	libinput.a
-libinput_a_SOURCES =	input.hpp input.cpp
+AM_CXXFLAGS = 		-Wno-non-template-friend
+noinst_LTLIBRARIES =	libinput.la
+libinput_la_SOURCES =	input.hpp input.cpp
+libinput_la_LIBADD =	adl2/libadlparser.la 

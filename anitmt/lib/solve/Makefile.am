@@ -1,11 +1,11 @@
-CPPFLAGS=		-I$(top_srcdir)/lib \
+INCLUDES=		-I$(top_srcdir)/lib \
 			-I$(top_srcdir)/anitmt-calc \
 			-I$(top_srcdir)/anitmt-calc/functionality \
 			-I$(top_builddir)/anitmt-calc \
 			-I$(top_builddir)/anitmt-calc/functionality 
-CXXFLAGS =		@CXXFLAGS@ -Wno-non-template-friend
-noinst_LIBRARIES=	libsolve.a
-libsolve_a_SOURCES= 	\
+AM_CXXFLAGS =		-Wno-non-template-friend
+noinst_LTLIBRARIES=	libsolve.la
+libsolve_la_SOURCES= 	\
 	operand.hpp operand.cpp operand_inline.cpp operand_templ.cpp \
 	operator.hpp operator.cpp operator_inline.cpp operator_templ.cpp \
 	solver.hpp solver.cpp solver_templ.cpp \
@@ -14,14 +14,14 @@ libsolve_a_SOURCES= 	\
 	priority.hpp priority.cpp priority_templ.cpp \
 	caller.hpp caller.cpp \
 	reference.hpp reference.cpp reference_templ.cpp 
-
 check_PROGRAMS=		test_solve
+TESTS=			$(check_PROGRAMS)
 test_solve_SOURCES=	test_solve.cpp
-test_solve_LDADD=	libsolve.a \
-			../message/libmessage.a \
-			../../anitmt-calc/functionality/libfunctionality.a \
-			../proptree/libproptree.a \
-			../val/libval.a \
-			../utl/libutl.a \
-			libsolve.a
+test_solve_LDADD=	libsolve.la \
+			../message/libmessage.la \
+			../../anitmt-calc/functionality/libfunctionality.la \
+			../proptree/libproptree.la \
+			../val/libval.la \
+			../utl/libutl.la \
+			libsolve.la
 EXTRA_DIST=		README

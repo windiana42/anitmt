@@ -1,9 +1,9 @@
 INCLUDES = 		-I$(srcdir)/.. -I$(srcdir)/../.. -I../../ \
 			-I$(srcdir)/../../../lib/ \
 			-I../../functionality -I$(srcdir)/../../functionality
-noinst_LIBRARIES = 	liboutput.a
-CXXFLAGS = 		@CXXFLAGS@ -Wno-non-template-friend
-liboutput_a_SOURCES = 	compif.hpp compif.cpp \
+noinst_LTLIBRARIES = 	liboutpututl.la
+AM_CXXFLAGS = 		-Wno-non-template-friend
+liboutpututl_la_SOURCES =compif.hpp compif.cpp \
 			binstr.cpp binstr.hpp \
 			boutstr.cpp boutstr.hpp \
 			convtoa.cpp convtoa.hpp \

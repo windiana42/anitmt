@@ -50,20 +50,20 @@ namespace anitmt
       Any_Type &operator=( const Any_Type &op ); 
       Any_Type &operator=( Any_Type &op ); // empties original value
 
-      inline bool has_value() const			{ return value; }
-      inline values::Valtype::Types get_type() const	{ return type; }
-      inline bool is_operand() const			{ return operand; }
+      bool has_value() const			{ return value; }
+      values::Valtype::Types get_type() const	{ return type; }
+      bool is_operand() const			{ return operand; }
 
-      inline values::Flag   get_flag()   const;
-      inline values::Scalar get_scalar() const;
-      inline values::Vector get_vector() const;
-      inline values::Matrix get_matrix() const;
-      inline values::String get_string() const;
-      inline solve::Operand<values::Flag>   &get_op_flag()   const;
-      inline solve::Operand<values::Scalar> &get_op_scalar() const;
-      inline solve::Operand<values::Vector> &get_op_vector() const;
-      inline solve::Operand<values::Matrix> &get_op_matrix() const;
-      inline solve::Operand<values::String> &get_op_string() const;
+      values::Flag   get_flag()   const;
+      values::Scalar get_scalar() const;
+      values::Vector get_vector() const;
+      values::Matrix get_matrix() const;
+      values::String get_string() const;
+      solve::Operand<values::Flag>   &get_op_flag()   const;
+      solve::Operand<values::Scalar> &get_op_scalar() const;
+      solve::Operand<values::Vector> &get_op_vector() const;
+      solve::Operand<values::Matrix> &get_op_matrix() const;
+      solve::Operand<values::String> &get_op_string() const;
 
       ~Any_Type();
     private: 
@@ -150,6 +150,8 @@ namespace anitmt
   }
 }
 
+#ifdef EXTREME_INLINE
 #include "expression_inline.cpp"
+#endif
 
 #endif

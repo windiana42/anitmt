@@ -11,8 +11,9 @@ AC_PROG_CC
 AC_PROG_CPP
 AC_PROG_INSTALL
 AC_PROG_MAKE_SET
-AC_PROG_RANLIB
+#AC_PROG_RANLIB obsolete because of PROG_LIBTOOL
 AC_PROG_YACC
+AM_PROG_LIBTOOL
 #AC_PROG_LEX
 AM_PROG_LEX	# replaced for automake
 
@@ -130,20 +131,27 @@ AC_CHECK_LIB([m],[sqrt])
 #AC_CHECK_LIB([efence], [main])
 # FIXME: Replace `main' with a function in `-lstdc':
 #AC_CHECK_LIB([stdc], [main])
+
+##------------------------------------------------
+# Okay; we need hlib, so check for hlib-config: 
+hlib_build_dir="<unset>"
+AC_ARG_WITH(hlib,AC_HELP_STRING([--with-hlib],[path to hlib build directory]),
+	[if test "$withval" = "no" ; then 
+		AC_MSG_ERROR([Cannot switch off use of hlib, AniTMT depends on it.])
+	elif test "$withval" != "yes"; then
+		hlib_build_dir="$withval" 
+	fi ])
+
+# check for installed version of hlib
 INSTALLED_HLIB="no";
 AC_CHECK_LIB([hlib], [msec_elapsed], INSTALLED_HLIB="yes")
-export ADD_HLIB="-lhlib"
-ADD_TEST="-lhlib"
-if test "$INSTALLED_HLIB" == "no"; then
-	##------------------------------------------------
-	# Okay; we need hlib, so check for hlib-config: 
-	hlib_build_dir="<unset>"
-	AC_ARG_WITH(hlib,AC_HELP_STRING([--with-hlib],[path to hlib build directory]),
-		[if test "$withval" = "no" ; then 
-			AC_MSG_ERROR([Cannot switch off use of hlib, AniTMT depends on it.])
-		elif test "$withval" != "yes"; then
-			hlib_build_dir="$withval" 
-		fi ])
+
+if test "$hlib_build_dir" == "<unset>" && test "$INSTALLED_HLIB" == "yes"; then
+	# use installed hlib version if installed and no --with-hlib specified
+	USE_INSTALLED_HLIB="yes";
+	AC_MSG_NOTICE([using installed hlib version (specifying --with-hlib may change this)])
+else
+	USE_INSTALLED_HLIB="no";
 	AC_MSG_CHECKING([for hlib])
 	hlibdir=""
 	checkdirs="./hlib ./hlib-* ../hlib ../hlib-*"
@@ -167,11 +175,14 @@ if test "$INSTALLED_HLIB" == "no"; then
 	
 	#AC_SUBST(hlibdir)
 	if test "$hlibdir" != "./hlib" -a "$hlibdir" != "hlib" ; then
-		test -e "hlib" && rm "hlib"
-		ln -s "$hlibdir" "hlib"
+		test -e "hlib" && rm "hlib";
+		ln -s "$hlibdir" "hlib";
 	fi
 	##------------------------------------------------
 fi
+# define USE_INSTALLED_HLIB conditional for Makefile.am files
+AM_CONDITIONAL([USE_INSTALLED_HLIB], [test $USE_INSTALLED_HLIB = "yes"] )
+
 # Checks for header files.
 AC_HEADER_STDC
 AC_CHECK_HEADERS([errno.h limits.h malloc.h memory.h stddef.h stdlib.h string.h])

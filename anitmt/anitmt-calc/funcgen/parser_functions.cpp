@@ -25,6 +25,63 @@ namespace funcgen
 
   Available_Basic_Operators available_operators;
 
+  //*************************
+  // interfaces to messages
+  //*************************
+
+  message::Message_Stream yyerr( void* vinfo, int back )
+  {
+    afd_info *info = static_cast<afd_info*>(vinfo);
+      
+    message::Abstract_Position *pos = 0;
+    if( back >= 0 )		// shall I report an old position?
+      pos = info->get_old_pos(back);
+    if( !pos )		// still no position set
+      pos = info->get_pos();	// use current position
+    message::Message_Stream msg(message::noinit);
+    info->msg.error( pos ).copy_to(msg);
+    return msg;
+  }
+
+  message::Message_Stream yywarn( void* vinfo, int back )
+  {
+    afd_info *info = static_cast<afd_info*>(vinfo);
+
+    message::Abstract_Position *pos = 0;
+    if( back >= 0 )		// shall I report an old position?
+      pos = info->get_old_pos(back);
+    if( !pos )		// still no position set
+      pos = info->get_pos();	// use current position
+
+    message::Message_Stream msg(message::noinit);
+    info->msg.warn( pos ).copy_to(msg);
+    return msg;
+  }
+
+  message::Message_Stream yyverbose( void* vinfo, int back, 
+				     bool with_position, 
+				     int vlevel, int detail )
+  {
+    afd_info *info = static_cast<afd_info*>(vinfo);
+
+    message::Message_Stream msg(message::noinit);
+    if( with_position )
+      {
+	message::Abstract_Position *pos = 0;
+	if( back >= 0 )		// shall I report an old position?
+	  pos = info->get_old_pos(back);
+	if( !pos )		// still no position set
+	  pos = info->get_pos();	// use current position
+
+	info->msg.verbose( vlevel, pos, detail ).copy_to(msg);
+      }
+    else
+      info->msg.verbose( vlevel, message::GLOB::no_position, detail ).
+	copy_to(msg);
+      
+    return msg;
+  }
+
   // ******************************
   // functions used by the parser and lexer
   // ******************************

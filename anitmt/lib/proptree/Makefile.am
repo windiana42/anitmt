@@ -4,9 +4,9 @@
 #   - libsolve
 #   - libutl
 INCLUDES=		-I$(srcdir)/..
-CXXFLAGS =		@CXXFLAGS@ -Wno-non-template-friend
-noinst_LIBRARIES=	libproptree.a
-libproptree_a_SOURCES=	property.hpp property_inline.cpp property_templ.cpp \
+AM_CXXFLAGS =		-Wno-non-template-friend
+noinst_LTLIBRARIES=	libproptree.la
+libproptree_la_SOURCES=	property.hpp property_inline.cpp property_templ.cpp \
 			property.cpp \
 			proptree.hpp proptree_inline.cpp proptree_templ.cpp \
 			proptree.cpp 

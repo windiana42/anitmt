@@ -1,8 +1,7 @@
 INCLUDES = -I$(srcdir)/..
-# CXX = gcc -V3.0 -I/usr/include/g++-3/ 
-CXXFLAGS = @CXXFLAGS@ -Wno-non-template-friend #-fmessage-length=$$COLUMNS
-noinst_LIBRARIES = libval.a
-libval_a_SOURCES = internals.hpp \
+AM_CXXFLAGS = -Wno-non-template-friend #-fmessage-length=$$COLUMNS
+noinst_LTLIBRARIES = libval.la
+libval_la_SOURCES = internals.hpp \
 	imatrix.cpp imatrix.hpp \
 	ivector.cpp ivector.hpp \
 	flag.hpp flag.cpp \
@@ -13,9 +12,9 @@ libval_a_SOURCES = internals.hpp \
 	string.hpp \
 	support.cpp support.hpp \
 	val.hpp 
-
 check_PROGRAMS = test_val
+TESTS = $(check_PROGRAMS)
 test_val_SOURCES = test_val.cpp
-test_val_LDADD = libval.a 
+test_val_LDADD = libval.la 
 
 EXTRA_DIST = README

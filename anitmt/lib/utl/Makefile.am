@@ -1,4 +1,4 @@
 INCLUDES=		-I$(srcdir)/..
-CXXFLAGS =		@CXXFLAGS@ -Wno-non-template-friend
-noinst_LIBRARIES=	libutl.a
-libutl_a_SOURCES=	utl.cpp utl.hpp stdextend.hpp stdextend.cpp
+AM_CXXFLAGS =		-Wno-non-template-friend
+noinst_LTLIBRARIES=	libutl.la
+libutl_la_SOURCES=	utl.cpp utl.hpp stdextend.hpp stdextend.cpp

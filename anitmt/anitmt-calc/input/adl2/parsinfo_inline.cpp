@@ -18,6 +18,12 @@
 #include "parsinfo.hpp"
 #include <assert.h>
 
+#ifdef EXTREME_INLINE
+#define _INLINE_ inline
+#else
+#define _INLINE_
+#endif
+
 namespace anitmt
 {
   namespace adlparser
@@ -26,7 +32,7 @@ namespace anitmt
     // adlparser_info: stores information needed by the parser and scanner
     //*********************************************************************
 
-    inline void adlparser_info::set_pass( pass_type p )
+    _INLINE_ void adlparser_info::set_pass( pass_type p )
     {
       pass = p;
     }
@@ -50,7 +56,7 @@ namespace anitmt
     }
 
     //! store position for later access
-    inline void adlparser_info::store_pos()
+    _INLINE_ void adlparser_info::store_pos()
     {
       while( old_positions.size() >= max_old_positions )
       {
@@ -60,12 +66,12 @@ namespace anitmt
       old_positions.push_front( get_pos() );
     }
     //! get current position (must be deleted!)
-    inline message::Abstract_Position *adlparser_info::get_pos()
+    _INLINE_ message::Abstract_Position *adlparser_info::get_pos()
     {
       return file_pos.duplicate();
     }
     //! get stored position n (n=0: last) (must be deleted!)
-    inline message::Abstract_Position *adlparser_info::get_old_pos( unsigned n)
+    _INLINE_ message::Abstract_Position *adlparser_info::get_old_pos( unsigned n)
     {
       // too few elements availible?
       if( old_positions.size() <= n ) return 0;
@@ -73,7 +79,7 @@ namespace anitmt
       return old_positions[n];
     }
     //! set maximum number of stored positions
-    inline void adlparser_info::set_max_old_positions( unsigned n )
+    _INLINE_ void adlparser_info::set_max_old_positions( unsigned n )
     {
       max_old_positions = n;
       while( old_positions.size() > max_old_positions )
@@ -84,4 +90,6 @@ namespace anitmt
     }
   }
 }
+#undef _INLINE_
+
 #endif

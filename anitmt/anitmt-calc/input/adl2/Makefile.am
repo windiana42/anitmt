@@ -3,13 +3,14 @@ INCLUDES=		-I$(top_srcdir) -I$(top_srcdir)/lib		\
 			-I$(top_srcdir)/lib/flex			\
 			-I$(srcdir)/../ -I$(srcdir)/../../ -I../../	\
 			-I$(builddir)/../../functionality/ -I$(srcdir)/../../functionality/
-noinst_LIBRARIES=	libadlparser.a
+noinst_LTLIBRARIES=	libadlparser.la
 check_PROGRAMS=		testadlparser
-CXXFLAGS =		@CXXFLAGS@ -Wno-non-template-friend 
+TESTS=			$(check_PROGRAMS)
+AM_CXXFLAGS=		-Wno-non-template-friend 
 
 BUILT_SOURCES=		scanner.cc parser.cc tokens.h 
 CLEANFILES=		$(BUILT_SOURCES)
-libadlparser_a_SOURCES=	parser.yy tokens.h\
+libadlparser_la_SOURCES=parser.yy tokens.h\
 			parser_functions.hpp parser_functions.cpp \
 			parser_functions_inline.cpp \
 			adlparser.hpp adlparser.cpp adlparser_inline.cpp \
@@ -19,18 +20,16 @@ libadlparser_a_SOURCES=	parser.yy tokens.h\
 
 testadlparser_SOURCES=	testadlparser.cpp expression.hpp expression.cpp \
 			expression_inline.cpp
-testadlparser_LDADD=	libadlparser.a \
-			../../libanitmt.a \
-			../../../lib/val/libval.a \
-			../../../lib/par/libpar.a \
-			../../../lib/utl/libutl.a \
-			../../../lib/solve/libsolve.a \
-			../../../lib/message/libmessage.a \
-			../libinput.a \
-			../../output/lib/liboutput.a \
-			../../output/raw/librawout.a \
-			../../output/pov/libpovout.a \
-			../../functionality/libfunctionality.a 
+testadlparser_LDADD=	libadlparser.la \
+			../../libanitmt.la \
+			../../../lib/val/libval.la \
+			../../../lib/par/libpar.la \
+			../../../lib/utl/libutl.la \
+			../../../lib/solve/libsolve.la \
+			../../../lib/message/libmessage.la \
+			../libinput.la \
+			../../output/liboutput.la \
+			../../functionality/libfunctionality.la 
 
 #			-lefence
 

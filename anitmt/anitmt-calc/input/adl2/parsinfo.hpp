@@ -78,7 +78,7 @@ namespace anitmt
       ~adlparser_info();
 
       // sets the passage number (1 or 2)
-      inline void set_pass( pass_type n );	
+      void set_pass( pass_type n );	
 
       // open file to be read by the lexer
       void open_file( std::string filename );
@@ -105,18 +105,18 @@ namespace anitmt
       bool lexer_uses_file_stream; // whether lexer is created for in_file
 
       // access/modify functions to tree node (for parser)
-      inline proptree::Prop_Tree_Node *get_current_tree_node();
-      inline void set_new_tree_node( proptree::Prop_Tree_Node *node );
-      inline void tree_node_done();
+      proptree::Prop_Tree_Node *get_current_tree_node();
+      void set_new_tree_node( proptree::Prop_Tree_Node *node );
+      void tree_node_done();
 
       //! store position for later access
-      inline void store_pos();
+      void store_pos();
       //! get current position (must be deleted!)
-      inline message::Abstract_Position *get_pos();
+      message::Abstract_Position *get_pos();
       //! get stored position n (n=0: last) (must be deleted!)
-      inline message::Abstract_Position *get_old_pos( unsigned n );
+      message::Abstract_Position *get_old_pos( unsigned n );
       //! set maximum number of stored positions
-      inline void set_max_old_positions( unsigned n );
+      void set_max_old_positions( unsigned n );
     };
 
   }
@@ -129,7 +129,9 @@ namespace anitmt
 #endif
 
 //include inline implementation
+#ifdef EXTREME_INLINE
 #include "parsinfo_inline.cpp"
+#endif
 
 #endif
 

@@ -16,8 +16,13 @@ fi
 echo SRCDIR = $srcdir
 echo BUILDDIR = $builddir
 echo Workingdirectory = $origdir
-echo $top_srcdir
-echo $top_builddir
+echo TOP_SRCDIR = $top_srcdir
+echo TOP_BUILDDIR = $top_builddir
+
+ANITMT_CALC=$builddir/../anitmt-calc/anitmt-calc
+RENDER=$srcdir/../utils/render
+TGA2AVI=$builddir/../utils/tga2avi/tga2avi
+MKAVI=$builddir/../utils/mkavi/mkavi
 
 # ================ Example: test ====================================
 DIR=test
@@ -29,14 +34,14 @@ GENFILM_ARG="-f 5 -e 150"
 echo "ani_dir=$builddir/$DIR/$ANI_DIR/" > $builddir/$DIR/__TMP_ANI_DIR__
 cat $srcdir/$DIR/$INI $builddir/$DIR/__TMP_ANI_DIR__ > $builddir/$DIR/__TMP_INI__.ini
 cd $srcdir/$DIR/ || exit 1
-$builddir/../anitmt-calc/anitmt-calc $builddir/$DIR/__TMP_INI__.ini
+$ANITMT_CALC $builddir/$DIR/__TMP_INI__.ini
 cd $origdir # just in case of srcdir/builddir being relative pathes
 rm $builddir/$DIR/__TMP_ANI_DIR__ $builddir/$DIR/__TMP_INI__.ini
 
 cd $builddir/$DIR/$ANI_DIR/ || exit 1
-$srcdir/../utils/render $RENDER_ARG || exit -1
-$builddir/../utils/tga2avi/tga2avi $GENFILM_ARG -o film-raw.avi || exit -2
-$builddir/../utils/mkavi/mkavi $GENFILM_ARG -o film-cram.avi || exit -3
+$RENDER $RENDER_ARG || exit -1
+$TGA2AVI $GENFILM_ARG -o film-raw.avi || exit -2
+$MKAVI $GENFILM_ARG -o film-cram.avi || exit -3
 cd $origdir 
 
 # ================ Example: myrobot ====================================
@@ -49,14 +54,14 @@ GENFILM_ARG="-f 1 -e 14"
 echo "ani_dir=$builddir/$DIR/$ANI_DIR/" > $builddir/$DIR/__TMP_ANI_DIR__
 cat $srcdir/$DIR/$INI $builddir/$DIR/__TMP_ANI_DIR__ > $builddir/$DIR/__TMP_INI__.ini
 cd $srcdir/$DIR/ || exit 1
-$builddir/../anitmt-calc/anitmt-calc $builddir/$DIR/__TMP_INI__.ini
+$ANITMT_CALC $builddir/$DIR/__TMP_INI__.ini
 cd $origdir # just in case of srcdir/builddir being relative pathes
 rm $builddir/$DIR/__TMP_ANI_DIR__ $builddir/$DIR/__TMP_INI__.ini
 
 cd $builddir/$DIR/$ANI_DIR/ || exit 1
-$srcdir/../utils/render $RENDER_ARG || exit -1
-$builddir/../utils/tga2avi/tga2avi $GENFILM_ARG -o film-raw.avi || exit -2
-$builddir/../utils/mkavi/mkavi $GENFILM_ARG -o film-cram.avi || exit -3
+$RENDER $RENDER_ARG || exit -1
+$TGA2AVI $GENFILM_ARG -o film-raw.avi || exit -2
+$MKAVI $GENFILM_ARG -o film-cram.avi || exit -3
 cd $origdir 
 
 # ================ Example: circles ====================================
@@ -69,14 +74,14 @@ GENFILM_ARG="-f 1 -e 14"
 echo "ani_dir=$builddir/$DIR/$ANI_DIR/" > $builddir/$DIR/__TMP_ANI_DIR__
 cat $srcdir/$DIR/$INI $builddir/$DIR/__TMP_ANI_DIR__ > $builddir/$DIR/__TMP_INI__.ini
 cd $srcdir/$DIR/ || exit 1
-$builddir/../anitmt-calc/anitmt-calc $builddir/$DIR/__TMP_INI__.ini
+$ANITMT_CALC $builddir/$DIR/__TMP_INI__.ini
 cd $origdir # just in case of srcdir/builddir being relative pathes
 rm $builddir/$DIR/__TMP_ANI_DIR__ $builddir/$DIR/__TMP_INI__.ini
 
 cd $builddir/$DIR/$ANI_DIR/ || exit 1
-$srcdir/../utils/render $RENDER_ARG || exit -1
-$builddir/../utils/tga2avi/tga2avi $GENFILM_ARG -o film-raw.avi || exit -2
-$builddir/../utils/mkavi/mkavi $GENFILM_ARG -o film-cram.avi || exit -3
+$RENDER $RENDER_ARG || exit -1
+$TGA2AVI $GENFILM_ARG -o film-raw.avi || exit -2
+$MKAVI $GENFILM_ARG -o film-cram.avi || exit -3
 cd $origdir 
 
 cd $builddir

@@ -41,12 +41,13 @@ namespace proptree
   //******************
   // access functions
   
-  std::string			Property::get_name() { return name; }
-  message::Abstract_Position*	Property::get_position() { return pos; }
-  values::Valtype::Types	Property::get_type() { return type; }
-  Prop_Tree_Node*		Property::get_node() 
+  inline std::string		Property::get_name() { return name; }
+  inline message::Abstract_Position* Property::get_position() { return pos; }
+  inline values::Valtype::Types	Property::get_type() { return type; }
+  inline Prop_Tree_Node*	Property::get_node() 
   { 
-    assert( node != 0 ); return node; 
+    assert( node != 0 ); 
+    return node; 
   }	
 
 }

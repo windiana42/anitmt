@@ -19,11 +19,17 @@
 
 #include <assert.h>
 
+#ifdef EXTREME_INLINE
+#define _INLINE_ inline
+#else
+#define _INLINE_
+#endif
+
 namespace anitmt
 {
   namespace adlparser
   {
-    values::Flag   Any_Type::get_flag() const
+    _INLINE_ values::Flag   Any_Type::get_flag() const
     {
       assert( value == true );
       assert( type == values::Valtype::flag );
@@ -31,7 +37,7 @@ namespace anitmt
 
       return *u.flag;
     }
-    values::Scalar Any_Type::get_scalar() const
+    _INLINE_ values::Scalar Any_Type::get_scalar() const
     {
       assert( value == true );
       assert( type == values::Valtype::scalar );
@@ -39,7 +45,7 @@ namespace anitmt
 
       return *u.scalar;
     }
-    values::Vector Any_Type::get_vector() const
+    _INLINE_ values::Vector Any_Type::get_vector() const
     {
       assert( value == true );
       assert( type == values::Valtype::vector );
@@ -47,7 +53,7 @@ namespace anitmt
 
       return *u.vector;
     }
-    values::Matrix Any_Type::get_matrix() const
+    _INLINE_ values::Matrix Any_Type::get_matrix() const
     {
       assert( value == true );
       assert( type == values::Valtype::matrix );
@@ -55,7 +61,7 @@ namespace anitmt
 
       return *u.matrix;
     }
-    values::String Any_Type::get_string() const
+    _INLINE_ values::String Any_Type::get_string() const
     {
       assert( value == true );
       assert( type == values::Valtype::string );
@@ -63,7 +69,7 @@ namespace anitmt
 
       return *u.string;
     }
-    solve::Operand<values::Flag>   &Any_Type::get_op_flag() const
+    _INLINE_ solve::Operand<values::Flag>   &Any_Type::get_op_flag() const
     {
       assert( value == true );
       assert( type == values::Valtype::flag );
@@ -71,7 +77,7 @@ namespace anitmt
 
       return *u.op_flag;
     }
-    solve::Operand<values::Scalar> &Any_Type::get_op_scalar() const
+    _INLINE_ solve::Operand<values::Scalar> &Any_Type::get_op_scalar() const
     {
       assert( value == true );
       assert( type == values::Valtype::scalar );
@@ -79,7 +85,7 @@ namespace anitmt
 
       return *u.op_scalar;
     }
-    solve::Operand<values::Vector> &Any_Type::get_op_vector() const
+    _INLINE_ solve::Operand<values::Vector> &Any_Type::get_op_vector() const
     {
       assert( value == true );
       assert( type == values::Valtype::vector );
@@ -87,7 +93,7 @@ namespace anitmt
 
       return *u.op_vector;
     }
-    solve::Operand<values::Matrix> &Any_Type::get_op_matrix() const
+    _INLINE_ solve::Operand<values::Matrix> &Any_Type::get_op_matrix() const
     {
       assert( value == true );
       assert( type == values::Valtype::matrix );
@@ -95,7 +101,7 @@ namespace anitmt
 
       return *u.op_matrix;
     }
-    solve::Operand<values::String> &Any_Type::get_op_string() const
+    _INLINE_ solve::Operand<values::String> &Any_Type::get_op_string() const
     {
       assert( value == true );
       assert( type == values::Valtype::string );
@@ -105,5 +111,6 @@ namespace anitmt
     }
   }
 }
+#undef _INLINE_
 
 #endif

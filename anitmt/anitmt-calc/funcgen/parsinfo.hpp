@@ -63,13 +63,13 @@ namespace funcgen
     int depth_counter;		// depth counter for the scanner
 
     //! store position for later access
-    inline void store_pos();
+    void store_pos();
     //! get current position (must be deleted!)
-    inline message::Abstract_Position *get_pos();
+    message::Abstract_Position *get_pos();
     //! get stored position n (n=0: last) (must be deleted!)
-    inline message::Abstract_Position *get_old_pos( unsigned n );
+    message::Abstract_Position *get_old_pos( unsigned n );
     //! set maximum number of stored positions
-    inline void set_max_old_positions( unsigned n );
+    void set_max_old_positions( unsigned n );
   };
 
 }
@@ -81,7 +81,9 @@ namespace funcgen
 #endif
 
 //include inline implementation
+#ifdef EXTREME_INLINE
 #include "parsinfo_inline.cpp"
+#endif
 
 #endif
 

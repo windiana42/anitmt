@@ -7,7 +7,7 @@ Release: %rel
 
 Summary: AniTMT is an Animation System for generating films with povray
 Copyright: GPL
-Group: Application/3D/
+Group: Productivity/Graphics/Visualization/Raytracers
 Vendor: Martin Trautmann <martintrautmann@gmx.de>
 Packager: Martin Trautmann <martintrautmann@gmx.de>
 Url: http://anitmt.sourceforge.net/
@@ -50,6 +50,7 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(-,root,root,755)
 %doc AUTHORS COPYING COPYING.GPL COPYING.LGPL README NEWS ChangeLog TODO FAQ
 %prefix/bin/*
+%prefix/lib/*
 %prefix/share/anitmt/example/
 
 #%changelog

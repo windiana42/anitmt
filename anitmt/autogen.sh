@@ -46,6 +46,10 @@ if test -n "$1" -o ! -f configure; then
     autoconf || exit 2;
 fi
 
+# support for libtool
+libtoolize --force --copy || exit 2
+
+# Make config.h.in
 if test -n "$1" -o ! -f config.h.in; then
     echo "Creating config.h.in.";
     autoheader || exit 2
@@ -56,6 +60,7 @@ if test -n "$1" -o ! -f Makefile.in; then
     echo "Creating Makefile.ins.";
     automake -a || exit 2;
 fi
+
 
 cd "$topdir" 
 echo

@@ -102,17 +102,17 @@ namespace solve
       solve run */
     valid_test_run_ids_type valid_test_run_ids;
   public:
-    inline bool is_id_valid( id_type id ) const; 
+    bool is_id_valid( id_type id ) const; 
 				// checks wheather an id belongs to curr. test
-    inline id_type get_test_run_id() const; // returns current test run ID
-    inline id_type new_test_run_id();	// adds and returns a new test run ID
-    inline void set_test_run_id( id_type id ); // sets current (valid) run ID
-    inline void add_test_run_id( id_type id ); // adds a test run ID
-    inline void remove_test_run_id( id_type id ); // removes test run ID and 
+    id_type get_test_run_id() const; // returns current test run ID
+    id_type new_test_run_id();	// adds and returns a new test run ID
+    void set_test_run_id( id_type id ); // sets current (valid) run ID
+    void add_test_run_id( id_type id ); // adds a test run ID
+    void remove_test_run_id( id_type id ); // removes test run ID and 
 						  // newer ones
-    inline void set_trial_run( bool trial ); 
-    inline bool is_trial_run();
-    inline id_type get_inivalid_id() const; // get a definitely invalid id
+    void set_trial_run( bool trial ); 
+    bool is_trial_run();
+    id_type get_inivalid_id() const; // get a definitely invalid id
 
     Solve_Run_Info( Solve_Problem_Handler *handler, int id );
     Solve_Run_Info( Solve_Problem_Handler *handler );
@@ -173,15 +173,15 @@ namespace solve
     typedef std::list<Operand_Listener*> listeners_type;
     listeners_type listeners; 
 
-    inline void report_value( Solve_Run_Info *info ) 
+    void report_value( Solve_Run_Info *info ) 
       throw();
-    inline bool test_report_value( Solve_Run_Info *info ) 
+    bool test_report_value( Solve_Run_Info *info ) 
       throw();
   public:	
     bool is_solved() const;
-    inline const T& get_value() const;
-    inline const T& operator()() const;	// same as get_value
-    inline bool set_value( T res, 
+    const T& get_value() const;
+    const T& operator()() const;	// same as get_value
+    bool set_value( T res, 
 			   Solve_Problem_Handler *handler = &default_handler )
       throw();
 
@@ -202,10 +202,10 @@ namespace solve
     //*************************************************
     // for functions in solve system (with correct info)
     bool is_solved_in_try( const Solve_Run_Info *info ) const;
-    inline const T& get_value( const Solve_Run_Info *info ) const;
-    inline bool test_set_value( T val, Solve_Run_Info *info )
+    const T& get_value( const Solve_Run_Info *info ) const;
+    bool test_set_value( T val, Solve_Run_Info *info )
       throw();
-    inline bool test_set_value( T val, 
+    bool test_set_value( T val, 
 				Solve_Problem_Handler *handler = 
 				&default_handler )
       throw();
@@ -270,7 +270,9 @@ namespace solve
 #include "operand_templ.cpp"
 
 // include implementation to enable inline functions to be expanded
+#ifdef EXTREME_INLINE
 #include "operand_inline.cpp"
+#endif
 
 #endif
 

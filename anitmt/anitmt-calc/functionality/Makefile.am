@@ -1,7 +1,7 @@
 # Makefile.am for test functionality
 INCLUDES=		-I$(top_srcdir)/lib -I$(srcdir)
 
-noinst_LIBRARIES=	libfunctionality.a
+noinst_LTLIBRARIES=	libfunctionality.la
 
 BUILT_SOURCES=		solver.hpp solver.cpp \
 			base_func.hpp base_func.cpp \
@@ -27,7 +27,7 @@ CLEANFILES = 		solver.hpp solver.cpp \
 			object_prototypes.hpp object_parser.yy object_scanner.ll \
 			complex_solver.hpp complex_solver.cpp \
 			complex_solver_prototypes.hpp complex_solver_parser.yy complex_solver_scanner.ll 
-nodist_libfunctionality_a_SOURCES= solver.hpp solver.cpp \
+nodist_libfunctionality_la_SOURCES= solver.hpp solver.cpp \
 			complex_solver.hpp complex_solver.cpp \
 			base_func.hpp base_func.cpp \
 			scene_base.hpp scene_base.cpp \
@@ -35,7 +35,7 @@ nodist_libfunctionality_a_SOURCES= solver.hpp solver.cpp \
 			scalar.hpp scalar.cpp \
 			object_base.hpp object_base.cpp \
 			object.hpp object.cpp 
-libfunctionality_a_SOURCES= solver.afd base_func.afd scene_base.afd   \
+libfunctionality_la_SOURCES= solver.afd base_func.afd scene_base.afd   \
 			scalar_base.afd scalar.afd  object_base.afd   \
 			object.afd complex_solver.afd \
 			sp_curve.hpp sp_curve.cpp \
@@ -44,17 +44,18 @@ libfunctionality_a_SOURCES= solver.afd base_func.afd scene_base.afd   \
 			break_point.cpp break_point.hpp
 
 check_PROGRAMS=		test_functionality
-CXXFLAGS =		@CXXFLAGS@ -Wno-non-template-friend -Wno-unused\
+TESTS=			$(check_PROGRAMS)
+AM_CXXFLAGS =		-Wno-non-template-friend -Wno-unused \
 			-ftemplate-depth-30
 
 test_functionality_SOURCES= \
 			test_functionality.cpp
 
 test_functionality_LDADD= \
-			../../lib/message/libmessage.a \
-			../../lib/val/libval.a \
-			../../lib/solve/libsolve.a \
-			../../lib/proptree/libproptree.a 
+			../../lib/message/libmessage.la \
+			../../lib/val/libval.la \
+			../../lib/solve/libsolve.la \
+			../../lib/proptree/libproptree.la 
 
 FUNCGEN=../funcgen/funcgen
 #FUNCGEN_DEBUG=-d -s

@@ -14,6 +14,7 @@
 
 #include "token.hpp"
 
+#include "tokens.h"		// a lot of declarations TOK_...
 #include <assert.h>
 
 namespace anitmt
@@ -44,7 +45,7 @@ namespace anitmt
     // Token: Type for lexer tokens
     //******************************
 
-    inline void _internal_assign( Token &dest, const Token &src )
+    void _internal_assign( Token &dest, const Token &src )
     {
       switch( src.get_type() )
 	{
@@ -68,6 +69,36 @@ namespace anitmt
 	default: assert(0);
 	};
       dest.type = src.get_type();
+    }
+
+    // delete stored token
+    int Token::consumed()
+    {
+      if( type == TOK_INVALID_ID ) return -1; // no value stored ?!?
+
+      switch( type )
+      {
+      case TOK_IDENTIFIER: assert( u.ptr != 0 ); delete u.identifier; break;
+      case TOK_FLAG:   assert( u.ptr != 0 ); delete u.flag;   break;
+      case TOK_SCALAR: assert( u.ptr != 0 ); delete u.scalar; break;
+      case TOK_VECTOR: assert( u.ptr != 0 ); delete u.vector; break;
+      case TOK_MATRIX: assert( u.ptr != 0 ); delete u.matrix; break;
+      case TOK_STRING: assert( u.ptr != 0 ); delete u.string; break;
+	// don't delete operands and properties
+      case TOK_OP_FLAG:   assert( u.ptr != 0 ); break;
+      case TOK_OP_SCALAR: assert( u.ptr != 0 ); break;
+      case TOK_OP_VECTOR: assert( u.ptr != 0 ); break;
+      case TOK_OP_MATRIX: assert( u.ptr != 0 ); break;
+      case TOK_OP_STRING: assert( u.ptr != 0 ); break;
+      case TOK_PROP_FLAG:   assert( u.ptr != 0 ); break;
+      case TOK_PROP_SCALAR: assert( u.ptr != 0 ); break;
+      case TOK_PROP_VECTOR: assert( u.ptr != 0 ); break;
+      case TOK_PROP_MATRIX: assert( u.ptr != 0 ); break;
+      case TOK_PROP_STRING: assert( u.ptr != 0 ); break;
+      default: assert(0);
+      };
+      type = TOK_INVALID_ID;
+      return 0;
     }
 
     //************
