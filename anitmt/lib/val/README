@@ -386,4 +386,3 @@ deg2rad()   conversion degrees -> radians
 rad2deg()   conversion radians -> degrees
 
 angle_range()     bring passed angle back into range 0..2*PI
-angle_range360()  the same for angles measured 0..360

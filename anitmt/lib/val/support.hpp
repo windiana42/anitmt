@@ -42,12 +42,6 @@ inline double angle_range(double x)
 	double tmp=fmod(x,2.0*M_PI);
 	return(tmp<0.0 ? (tmp + 2.0*M_PI) : tmp);
 }
-// This brings the passed angle back into range [0..360). 
-inline double angle_range360(double x)
-{
-	double tmp=fmod(x,360.0);
-	return(tmp<0.0 ? (tmp+360.0) : tmp);
-}
 
 
 // Template forward declarations: 
