@@ -1555,7 +1555,13 @@ int FDManager::UpdateTimer(FDBase *fdb,TimerID tid,long msec,int align)
 	if(!tid)   // -1 -> disabled. 
 	{  return(-2);  }
 	if(msec<-1)
-	{  return(-3);  }
+	{
+		#if TESTING
+		fprintf(stderr,"FD: UpdateTimer(%p,msec=%ld,align=%d): "
+			"Fix your application!\n",tid, msec,align);
+		#endif
+		return(-3);
+	}
 	
 	#if TESTING_CHECK
 	for(FDManager::TimerNode *i=fdb->timers; i; i=i->next)
