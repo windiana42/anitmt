@@ -1,2 +1,3 @@
-subdirs 	test myrobot circles
-EXTRA_DIST=	README	mpeg.par
+SUBDIRS = 	test myrobot circles
+EXTRA_DIST =	README	mpeg.par
+
