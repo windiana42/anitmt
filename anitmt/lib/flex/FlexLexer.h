@@ -45,6 +45,10 @@
 // * added possibility to add members of FlexLexer in flexlexer_public.h 
 // * added possibility to add global declarations in flexlexer_global.h 
 
+#ifdef __FLEX_LEXER_H
+#warning Multiple include of Flexlexer.h
+#endif
+
 #ifndef __FLEX_LEXER_H
 // Never included before - need to define base class.
 #define __FLEX_LEXER_H
@@ -61,10 +65,6 @@ typedef int yy_state_type;
 
 class FlexLexer {
 public:
-  //-- changed by Martin Trautmann
-#include "flexlexer_public.h"
-  //-- end of change 2
-
 	virtual ~FlexLexer()	{ }
 
 	const char* YYText()	{ return yytext; }
@@ -114,6 +114,10 @@ protected:
 
 class yyFlexLexer : public FlexLexer {
 public:
+  //-- changed by Martin Trautmann
+#include "flexlexer_public.h"
+  //-- end of change 2
+
 	// arg_yyin and arg_yyout default to the cin and cout, but we
 	// only make that assignment when initializing in yylex().
 	yyFlexLexer( istream* arg_yyin = 0, ostream* arg_yyout = 0 );

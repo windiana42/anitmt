@@ -36,10 +36,12 @@ namespace anitmt
 #include <solve/operand.hpp>
 
 #include "error.hpp"
-#include "proptree.hpp"
 
 namespace anitmt
 {
+  // forward declaration for class in "proptree.hpp"
+  class Prop_Tree_Node;
+
   //************
   // Exceptions
   //************
@@ -65,6 +67,12 @@ namespace anitmt
 				// position where it is defined (by user)
 
     values::Valtype::Types type;
+
+    friend class Prop_Tree_Node;
+    inline void set_name( std::string );
+    inline void set_node( Prop_Tree_Node* );
+    inline void set_position( message::Abstract_Position* );
+    inline void set_type( values::Valtype::Types );
   public:
     //***********
     // modifiers
@@ -145,6 +153,7 @@ namespace anitmt
     // constructor
 
     Scalar_Property( std::string name, Prop_Tree_Node *node );
+    Scalar_Property();
   };
 
   //******************************************************
@@ -157,6 +166,7 @@ namespace anitmt
     // constructor
 
     Vector_Property( std::string name, Prop_Tree_Node *node );
+    Vector_Property();
   };
 
   //******************************************************
@@ -169,6 +179,7 @@ namespace anitmt
     // constructor
 
     Matrix_Property( std::string name, Prop_Tree_Node *node );
+    Matrix_Property();
   };
 
   //******************************************************
@@ -181,6 +192,7 @@ namespace anitmt
     // constructor
 
     String_Property( std::string name, Prop_Tree_Node *node );
+    String_Property();
   };
 
   //**************************************************
@@ -193,6 +205,7 @@ namespace anitmt
     // constructor
 
     Flag_Property( std::string name, Prop_Tree_Node *node );
+    Flag_Property();
   };
 
 }
@@ -200,6 +213,7 @@ namespace anitmt
 // include implementation to make sure that all specializations of the
 // templates are compiled 
 #include "property_templ.cpp"
+#include "property_inline.cpp"
 
 #endif
 

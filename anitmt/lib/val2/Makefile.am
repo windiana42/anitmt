@@ -1,6 +1,6 @@
 INCLUDES = -I$(srcdir)/..
 # CXX = gcc -V3.0 -I/usr/include/g++-3/ 
-CXXFLAGS = @CXXFLAGS@ -Wno-non-template-friend -fmessage-length=$$COLUMNS
+CXXFLAGS = @CXXFLAGS@ -Wno-non-template-friend #-fmessage-length=$$COLUMNS
 noinst_LIBRARIES = libval.a
 libval_a_SOURCES = internals.hpp \
 	imatrix.cpp imatrix.hpp \

@@ -53,6 +53,14 @@ namespace anitmt{
   //  return s.write2stream( os );
   //}
 
+  //*************
+  // constructor
+
+  template<class T>
+  Type_Property<T>::Type_Property( std::string name, Prop_Tree_Node *node, 
+				   values::Valtype::Types type )
+    : Property( name, node, type ) {}
+
   /*
   // force compilation of Specializations:
   void all_property_specializations() {
@@ -63,6 +71,7 @@ namespace anitmt{
     Type_Property<values::Flag>   force_compilation_of_spec5;
   }
   */
+
 }
 
 #endif

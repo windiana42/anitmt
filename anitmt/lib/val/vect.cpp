@@ -43,6 +43,11 @@
 
 namespace vect
 {
+// Special functions: 
+  void mult(vector<3> &r,const matrix<4,4> &m,const vector<3> &v)
+  {  internal::matrix_mul_vect343(r._get_ptr(),m.x[0],v._get_ptr());  }
+
+
 	namespace internal
 	{
 		// Suffix 1 for 1-dim array (vector). 

@@ -224,12 +224,15 @@ namespace message
     inline bool is_warning();
     inline bool is_verbose(int verbose_level);
 
-    inline Message_Stream error   ( const Abstract_Position *pos, 
+    inline Message_Stream error   ( const Abstract_Position *pos
+				    =GLOB::no_position, 
 				    int position_detail=2 );
-    inline Message_Stream warn    ( const Abstract_Position *pos, 
+    inline Message_Stream warn    ( const Abstract_Position *pos 
+				    =GLOB::no_position, 
 				    int position_detail=2 );
     inline Message_Stream verbose ( int min_verbose_level = 1,
-				    const Abstract_Position *pos =GLOB::no_position, 
+				    const Abstract_Position *pos 
+				    =GLOB::no_position, 
 				    int position_detail = 2 );
 
     //! Functions to change the verbose indent level of this 

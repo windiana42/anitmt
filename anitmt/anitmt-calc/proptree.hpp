@@ -76,10 +76,7 @@ namespace anitmt{
     Animation *ani;		// animation as root node
 
     // Access functions for hiding data structure
-    inline void add_property( std::string name, Property *prop )
-    {
-      properties[ name ] = prop;
-    }
+    inline void add_property( std::string name, Property *prop );
 
   public:
     //*****************
@@ -209,6 +206,7 @@ namespace solve
 }
 // force template generation of all used types
 #include "proptree_templ.cpp"
+#include "proptree_inline.cpp"
 
 #endif
 

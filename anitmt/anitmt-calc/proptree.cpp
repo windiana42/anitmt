@@ -53,9 +53,9 @@ namespace anitmt{
       
     properties_type::iterator i;
     for( i = properties.begin(); i != properties.end(); i++ )
-      {
-	ret.push_back( i->first );
-      }
+    {
+      ret.push_back( i->first );
+    }
 
     return ret;
   }
@@ -64,10 +64,10 @@ namespace anitmt{
     Prop_Tree_Node *n;
 
     for( n = first_child; n != 0; n = n->next )
-      {
-	if( n->get_name() == name )
-	  return n;
-      }
+    {
+      if( n->get_name() == name )
+	return n;
+    }
     return 0;
   }
 
@@ -77,9 +77,9 @@ namespace anitmt{
     Prop_Tree_Node *n;
 
     for( n = first_child; n != 0; n = n->next )
-      {
-	ret.push_back( n );
-      }
+    {
+      ret.push_back( n );
+    }
 
     return ret;
   }
@@ -92,29 +92,37 @@ namespace anitmt{
     child_factory_type::iterator i = child_factory.find( type );
     // if type not found
     if( i == child_factory.end() )
-      throw EX_child_type_unknown();
+    {
+      #warning !!! should be replaced by new message system !!!
+      std::cerr << "unknown child type \"" << type << "\"" << std::endl;
+      return 0;
+    }
 
     // create node with factory found
     Prop_Tree_Node *node = i->second->create( name, ani );
 
     if( first_child == 0 ) 
-      {
-	assert( last_child == 0 );
+    {
+      assert( last_child == 0 );
 
-	first_child = node;
-	last_child = node;
-      }
+      first_child = node;
+      last_child = node;
+    }
     else
-      {
-	// connect with last child
-	node->prev = last_child;
-	last_child->next = node;
-	// replace last child
-	last_child = node;
-      }
+    {
+      // connect with last child
+      node->prev = last_child;
+      last_child->next = node;
+      // replace last child
+      last_child = node;
+    }
 
     if( !try_add_child( node ) )
-      throw EX_child_type_rejected();
+    {
+      std::cerr << "child type \"" << type << "\" not allowed here" 
+		<< std::endl;
+      return 0;
+    }
 
     return node;
   }
@@ -124,18 +132,18 @@ namespace anitmt{
   inline std::string get_next_part( std::string &str, char separator ){
     std::string::size_type i = str.find( separator );
     if( i == std::string::npos ) // separator not found -> i = eos
-      {
-	std::string ret = str;  // return whole string
-	str = "";		// empty
-	return ret;
-      }
+    {
+      std::string ret = str;  // return whole string
+      str = "";		// empty
+      return ret;
+    }
     else
-      {
-	std::string ret = str.substr( 0, i ); 
-				// return string before separator
-	str = str.substr( i+1 );// erase part to return 
-	return ret;
-      }    
+    {
+      std::string ret = str.substr( 0, i ); 
+      // return string before separator
+      str = str.substr( i+1 );// erase part to return 
+      return ret;
+    }    
   }
 
 
@@ -144,18 +152,18 @@ namespace anitmt{
   inline std::string get_last_part( std::string &str, char separator ){
     std::string::size_type i = str.rfind( separator );
     if( i == std::string::npos ) // separator not found -> i = eos
-      {
-	std::string ret = str;  // return whole string
-	str = "";		// empty
-	return ret;
-      }
+    {
+      std::string ret = str;  // return whole string
+      str = "";		// empty
+      return ret;
+    }
     else
-      {
-	std::string ret = str.substr( i+1 ); 
-				// return string after separator
-	str = str.substr( 0, i );// erase part to return 
-	return ret;
-      }    
+    {
+      std::string ret = str.substr( i+1 ); 
+      // return string after separator
+      str = str.substr( 0, i );// erase part to return 
+      return ret;
+    }    
   }
 
 
@@ -163,32 +171,47 @@ namespace anitmt{
   Prop_Tree_Node *Prop_Tree_Node::get_referenced_node( std::string ref,
 						       char separator='.' )
   {
+    std::string whole_ref = ref;
     Prop_Tree_Node *cur = this;
     std::string part;
     // ref is always reduced by part
-    while( (part = get_next_part(ref,separator)) != "" ){
+    while( (part = get_next_part(ref,separator)) != "" )
+    {
       // interprete part
       if( part == "parent" )
+      {
+	cur = cur->parent;
+	if( cur == 0 )
 	{
-	  cur = cur->parent;
-	  if( cur == 0 )
-	    throw EX_invalid_reference();
-	  continue;
+  #warning should output better error messages
+	  std::cerr << "invalid reference \"" << whole_ref << "\"" 
+		    << std::endl;
+	  return 0;
 	}
+	continue;
+      }
       if( part == "next" )
+      {
+	cur = cur->next;
+	if( cur == 0 )
 	{
-	  cur = cur->next;
-	  if( cur == 0 )
-	    throw EX_invalid_reference();
-	  continue;
+	  std::cerr << "invalid reference \"" << whole_ref << "\"" 
+		    << std::endl;
+	  return 0;
 	}
+	continue;
+      }
       if( part == "prev" )
+      {
+	cur = cur->prev;
+	if( cur == 0 )
 	{
-	  cur = cur->prev;
-	  if( cur == 0 )
-	    throw EX_invalid_reference();
-	  continue;
+	  std::cerr << "invalid reference \"" << whole_ref << "\"" 
+		    << std::endl;
+	  return 0;
 	}
+	continue;
+      }
       // part is no keyword -> assume it being child name
       Prop_Tree_Node *test = cur->get_child( part );
       if( test != 0 )
@@ -201,26 +224,42 @@ namespace anitmt{
 	// if no match of part -> try to go on with parent level
 	cur = cur->parent;
 	if( cur == 0 )
-	  throw EX_invalid_reference();
+	{
+	  std::cerr << "invalid reference \"" << whole_ref << "\"" 
+		    << std::endl;
+	  return 0;
+	}
 	continue;
       }
 
-      throw EX_invalid_reference();
+      std::cerr << "invalid reference \"" << whole_ref << "\"" 
+		<< std::endl;
+      return 0;
     }
+    return cur;
   }
 
 
   // find node according to referencing string
   Property *Prop_Tree_Node::get_referenced_property( std::string ref,
-							   char separator='.' )
+						     char separator='.' )
   {
+    std::string whole_ref = ref;
     // reduce ref by last part and save it as the name of the property
     std::string property_name = get_last_part( ref, separator );
-    Prop_Tree_Node *node = get_referenced_node( ref, separator );
+    Prop_Tree_Node *node;
+    if( ref == "" ) // no remaining node?
+      node = this;
+    else
+      node = get_referenced_node( ref, separator );
+    if( node == 0 ) return 0;	// error should have been already reported
     Property *prop = node->get_property( property_name );
 
     if( prop == 0 )
-      throw EX_invalid_reference();
+    {
+      std::cerr << "invalid reference \"" << whole_ref << "\"" << std::endl;
+      return 0;
+    }
 
     return prop;
   }
@@ -245,9 +284,9 @@ namespace anitmt{
 
     Prop_Tree_Node *n;
     for( n = first_child; n != 0; n = n->next )
-      {
-	n->hierarchy_final_init();
-      }    
+    {
+      n->hierarchy_final_init();
+    }    
   }
 
 
@@ -319,3 +358,4 @@ namespace anitmt{
 
 }
 
+  

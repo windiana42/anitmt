@@ -46,7 +46,7 @@ namespace anitmt{
     : Prop_Tree_Node( type_name, name, ani ),
       pos(true,false),
       dir(true,false),
-      up(true,false) 
+      up(true,false)
   {
     add_property( "center", &c );
   }
@@ -102,7 +102,8 @@ namespace anitmt{
   }
 
   Obj_Move_Straight::Obj_Move_Straight( std::string name, Animation *ani ) 
-    : Prop_Tree_Node( type_name, name, ani ) 
+    : Prop_Tree_Node( type_name, name, ani )
+      
   {
     add_property( "length", &s );
     add_property( "startpos", &s0 );
@@ -133,6 +134,7 @@ namespace anitmt{
     solve::product_solver( t0_f, t0, fps ); // t0_f = t0 * fps 
     solve::product_solver( te_f, te, fps ); // te_f = te * fps 
 
+
     solve::Operand<values::Vector> sdiff; // position difference
     solve::sum_solver( se, sdiff, s0 );
     //solve::product_solver( sdiff, d0,  s ); // sdiff = d0 * s 
@@ -147,7 +149,7 @@ namespace anitmt{
   ( values::Scalar global_time, Position& ) throw( EX_user_error )
   {
     // if not active
-    if( (t > te()) || (t < t0()) ) 
+    if( (global_time > te()) || (global_time < t0()) ) 
       return std::pair<bool,Position>( false, Position() );
 
     values::Scalar t = (global_time-t0());

@@ -13,6 +13,7 @@ AC_OUTPUT(
 	Makefile 
 	lib/Makefile 
 	lib/val/Makefile 
+	lib/val2/Makefile 
 	lib/utl/Makefile 
 	lib/par/Makefile 
 	lib/param/Makefile 
@@ -24,6 +25,7 @@ AC_OUTPUT(
 	anitmt-calc/Makefile 
 	anitmt-calc/input/Makefile 
 	anitmt-calc/input/adl/Makefile 
+	anitmt-calc/input/adl2/Makefile 
 	anitmt-calc/output/Makefile 
 	anitmt-calc/output/lib/Makefile 
 	anitmt-calc/output/raw/Makefile 

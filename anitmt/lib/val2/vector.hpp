@@ -32,6 +32,7 @@ template<int N>class Vector
 		enum NoInit { noinit };
 		// This constructor is fast as it does no initialisation: 
 		Vector(NoInit) : x() {}
+ 
 	public:
 		// Copy constructors: 
 		Vector(const Vector<N> &v) : x(v.x)  {}
@@ -82,7 +83,7 @@ template<int N>class Vector
 		// VECTOR multiplication: (3d vectors only, linker error for others)
 		friend Vector<N> cross(const Vector<N> &a,const Vector<N> &b);
 		// (Member function not faster than non-member friend.)
-		Vector<N> &cross(const Vector<N> &b);
+  		Vector<N> &cross(const Vector<N> &b);
 		
 		// Multiplication of a vector with a matrix (resulting in a vector). 
 		// This returns void for speed increase. 

@@ -60,10 +60,12 @@ namespace vect
 	class EX_Matrix_Illegal_VectMult : EX_Matrix {};
 	
 	// Multiply matrix * matrix: 
-	template<int M,int L,int N> void mult(matrix<L,M> &r,const matrix<N,L> &a,const matrix<N,M> &b);
+  //	template<int M,int L,int N> void mult(matrix<L,M> &r,const matrix<N,L> &a,const matrix<N,M> &b);
+  /*
 	// Multiply matrix * vector: 
 	void mult(vector<3> &r,const matrix<4,4> &m,const vector<3> &v); // special
 	template<int C,int R> void mult(vector<R> &r,const matrix<C,R> &m,const vector<C> &v);
+  */
 	
 	// Write vector and matrix to std::ostream: 
 	template<int N> std::ostream& operator<<(std::ostream &s,const vector<N> &v);
@@ -91,16 +93,17 @@ namespace vect
 
 namespace vect
 {
-
+  /*
 // Function to multiply the vector v with matrix m, storing the resulting 
 // vector in r. 
 template<int C,int R> inline 
 	void mult(vector<R> &r,const matrix<C,R> &m,const vector<C> &v)
 	{  internal::matrix_mul_vect(r._get_ptr(),R,m.x[0],C,R,v._get_ptr(),C);  }
-
+*/
+  
 // Special functions: 
-inline void mult(vector<3> &r,const matrix<4,4> &m,const vector<3> &v)
-{  internal::matrix_mul_vect343(r._get_ptr(),m.x[0],v._get_ptr());  }
+  void mult(vector<3> &r,const matrix<4,4> &m,const vector<3> &v);
+
 
 } /* end of namespace vect */
 
