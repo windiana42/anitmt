@@ -40,7 +40,7 @@ struct RVOutputParams
 	// Used to switch on/off colored output: (Initially 0)
 	int enable_color_stdout : 1;
 	int enable_color_stderr : 1;
-	int : 30;
+	int : (sizeof(int)*8 - 2);   // <-- Use modulo if more than 16 bits. 
 	
 	// Verbose level field. See VERBOSE_xxx for bitmask. 
 	u_int32_t vlevel_field;

@@ -114,7 +114,7 @@ static int MAIN(int argc,char **argv,char **envp)
 		"changed/not-yet-done frames. Further features include resuming "
 		"partly-rendered images, load control and lots of informative "
 		"output.\n"
-		"NOTE: Pressig ^C (SIGINT) on the terminal will tell RendView to "
+		"NOTE: Pressig ^C on the terminal (SIGINT) will tell RendView to "
 		"start no more processes and wait for all current jobs to "
 		"exit; pressing ^C twice will kill all jobs. In either way "
 		"rendview exits cleanly. Pressing ^C three times makes "
@@ -123,7 +123,7 @@ static int MAIN(int argc,char **argv,char **envp)
 		"bg in bash) makes them continue all again.\n"
 		"NOTE: COLORED OUTPUT is automatically switched off for non-ttys "
 		"but you can manually force it off/on using --nocolor/--color."
-		"\n\n** JUST DO NOT TRY TO DO ANYTHING WITH FILTERS NOW**");
+		"\n\n** JUST DO NOT TRY TO DO ANYTHING WITH FILTERS & LDR NOW**");
 		// ...as well as only rendering changed frames or resuming operation
 		// ...and later create a film of them...
 	

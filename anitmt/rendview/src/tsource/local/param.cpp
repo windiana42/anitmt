@@ -619,8 +619,7 @@ int TaskSourceFactory_Local::FinalInit()
 				continue;
 			}
 			
-			Error("Check if it is possible to create invalid per-frame block if no action for master block (or invalid data for master block such as wicth=-1)\n");
-			abort();
+			Error("*** Check if it is possible to create invalid per-frame block if no action for master block (or invalid data for master block such as wicth=-1) ***\n");
 			
 		}
 	}
@@ -721,9 +720,162 @@ int TaskSourceFactory_Local::CheckParams()
 	{  response_delay=0;  }
 	
 	if(response_delay)
-	{  Warning("Local: You set resonse delay %ld msec.\n",response_delay);  }
+	{  Warning("Local: You set response delay %ld msec.\n",response_delay);  }
 	
 	return(failed ? 1 : 0);
+}
+
+
+// Additional help (called via section handler) 
+int TaskSourceFactory_Local::PrintSectionHelp(const Section *sect,
+	RefStrList * /*dest*/,int when)
+{
+	if(sect!=fi_topsect)  return(0);
+	
+	if(when==-1)
+	{
+		// Register the parameters, so that help text on 
+		// them can be written: 
+		assert(!_i_help_dummy);
+		_CheckAllocFail(SetSection("<fff>:<nnn>",
+			"Per-frame block for <nnn> frames beginning with frame <fff>. "
+			"Leave away (the <fff>:<nnn>) for the master frame block.",
+			fi_topsect));
+		if(!_RegisterFrameInfoParams(NULL,1))
+		{  _i_help_dummy=CurrentSection();  }
+	}
+	else if(when==+2)
+	{
+		// Must clean up the parameters for help text again: 
+		if(_i_help_dummy)
+		{
+			RecursiveDeleteParams(_i_help_dummy);
+			_i_help_dummy=NULL;
+		}
+	}
+	
+	return(0);
+}
+
+
+// Section handler parse routine:
+int TaskSourceFactory_Local::parse(const Section * /*s*/,PAR::SPHInfo *info)
+{
+	if(info->sect!=fi_topsect)  return(2);
+	
+	// Okay, we're getting info about a new per-frame info block, so 
+	// quickly add the parameters...
+	// But first, to some checking. 
+	const char *xname=NULL;
+	size_t xnamelen=0;
+	if(info->arg)
+	{
+		// Okay, this is more tricky, we have to find where the 
+		// name of the section ends. 
+		int illegal=1;
+		const char *e=NULL;
+		const char *saw_colon=NULL;
+		for(const char *c=info->nend; c<info->name_end; c++)
+		{
+			if(isdigit(*c))  continue;
+			if(*c==':')
+			{
+				if(saw_colon || c==info->nend)  break;
+				saw_colon=c;
+			}
+			else if(*c=='-')
+			{
+				if(saw_colon+1<c)
+				{  illegal=0;  e=c;  break;  }
+				break;
+			}
+			else break;
+		}
+		if(illegal)  return(1);  // go on parsing... (and possibly report error)
+		xname=info->nend;
+		xnamelen=e-xname;
+	}
+	else
+	{
+Error("*** Please check that code if it does what we want. ***\n");
+assert(0);
+		
+		// Okay, there was a `#section xyz´ ot sth like that. 
+		int illegal=0;
+		for(const char *c=info->nend; c<info->name_end; c++)
+		{
+			//if(*c=='-' || isspace(*c))
+			if(!isdigit(*c) && *c!=':')
+			{  ++illegal;  break;  }
+		}
+		xname=info->nend;
+		xnamelen=info->name_end-xname;
+		/*if(info->name_end<=info->nend || illegal)
+		{
+			#warning fixme: cannot report <SOMEWHERE> as location...
+			Error("In <SOMEWHERE - FIXME>: %s \"%.*s\".\n",
+				ipfss,
+				info->name_end>xname ? info->name_end-xname : 10,xname);
+			return(-1);
+		}*/
+		return(1);
+	}
+	
+	int fail_req=0;
+	
+	// Okay, now we have the per-frame spec. Parse it: 
+	PerFrameTaskInfo *new_fi=NULL;
+	{
+		int illegal=1;
+		int f0=-1,nf=-1;
+		do {
+			if(xnamelen>=256)  break;
+			
+			char buf[xnamelen+1];
+			strncpy(buf,xname,xnamelen);
+			buf[xnamelen]='\0';
+			
+			char *end;
+			f0=strtol(buf,&end,10);
+			if(end<=buf || *end!=':' || f0<0)  break;
+			char *b=end+1;
+			nf=strtol(b,&end,10);
+			if(end<=buf || *end || nf<0)  break;
+			
+			illegal=0;
+			
+			// Do it here because we have buf() here. 
+			if(SetSection(buf,NULL,fi_topsect,SSkipInHelp))
+			{  ++fail_req;  }
+		} while(0);
+		if(illegal)  return(1);  // will report illegal parameter...
+		
+		// Okay, since things seem to be valid, alloc a per frame block: 
+		new_fi=NEW<PerFrameTaskInfo>();
+		if(!new_fi)  _CheckAllocFail(-1);
+		new_fi->first_frame_no=f0;
+		new_fi->nframes=nf;
+		fi_list.append(new_fi);  // sorted lateron
+	}
+	
+	Verbose(0,"Adding new per-frame block %d:%d (last frame: %d).\n",
+		new_fi->first_frame_no,new_fi->nframes,
+		new_fi->first_frame_no+new_fi->nframes);
+	
+	if(_RegisterFrameInfoParams(new_fi))
+	{
+		delete fi_list.dequeue(new_fi);
+		fail_req=1;
+	}
+	
+	if(fail_req)
+	{
+		Error("Failed to register section for per-frame block %.*s.\n",
+			int(xnamelen),xname);
+		return(-1);
+	}
+	
+	return(1);  // okay, accepted. 
 }
 
 
@@ -747,16 +899,36 @@ int TaskSourceFactory_Local::_RegisterParams()
 	AddParam("response-delay","local task source response delay in msec; "
 		"mainly useful in debugging",&response_delay);
 	
+	if(add_failed)  return(-1);
+	
 	// Master frame info params: 
+	if(_RegisterFrameInfoParams(&master_fi))
+	{  return(-1);  }
+	
+	fi_topsect=CurrentSection();
+	if(SectionParameterHandler::Attach(fi_topsect))
+	{  ++add_failed;  }
+	
+	return(0);
+}
+
+
+int TaskSourceFactory_Local::_RegisterFrameInfoParams(PerFrameTaskInfo *fi,
+	int show_in_help)
+{
+	int flags = show_in_help ? 0 : PSkipInHelp;
+	
+	add_failed=0;
+	
 	AddParam("size|s","size (WWWxHHH) of created images",
-		&master_fi.ii->size_string);
+		fi ? &fi->ii->size_string : NULL,flags);
 	AddParam("oformat","image output format (must be supported by "
-		"render/filter driver)",&master_fi.ii->oformat_string);
+		"render/filter driver)",fi ? &fi->ii->oformat_string : NULL,flags);
 	AddParam("renderer|rd","renderer to use (render DESC name)",
-		&master_fi.ii->rdesc_string);
+		fi ? &fi->ii->rdesc_string : NULL,flags);
 	AddParam("rargs","additional args to be passed to the renderer",
-		&master_fi.radd_args);
-	master_fi.ii->render_resume_pi=AddParam("rcont",
+		fi ? &fi->radd_args : NULL,flags);
+	ParamInfo *tmp=AddParam("rcont",
 		"resume cont; This switch enables/disables render continue "
 		"feature: If enabled, interrupted files are named *-unfinished "
 		"and rendering resumes at the position where it stopped; "
@@ -764,28 +936,34 @@ int TaskSourceFactory_Local::_RegisterParams()
 		"to be rendered completely the next time.\nNOTE: this just selects "
 		"the operation mode; you must use -cont to actuallly continue. "
 		"(Default: yes, if driver supports it)",
-		&master_fi.render_resume_flag,PNoDefault);
+		fi ? &fi->render_resume_flag : NULL,PNoDefault | flags);
+	if(fi)  fi->ii->render_resume_pi=tmp;
 	
 	AddParam("rdir","chdir to this directory before calling renderer",
-		&master_fi.rdir);
+		fi ? &fi->rdir : NULL,flags);
 	AddParam("rifpattern","render input file pattern (e.g. f%07d.pov) "
 		"(relative to rdir)",
-		&master_fi.rinfpattern);
+		fi ? &fi->rinfpattern : NULL,flags);
 	AddParam("rofpattern","render output file pattern (e.g. f%07d); extension "
 		"added according to output format (relative to rdir)",
-		&master_fi.routfpattern);
+		fi ? &fi->routfpattern : NULL,flags);
 	
 	AddParam("filter|fd","filter to use (filter DESC name)",
-		&master_fi.ii->fdesc_string);
+		fi ? &fi->ii->fdesc_string : NULL,flags);
 	AddParam("fargs","additional args to be passed to the filter",
-		&master_fi.fadd_args);
+		fi ? &fi->fadd_args : NULL,flags);
 	AddParam("fdir","chdir to this directory before calling filter",
-		&master_fi.fdir);
+		fi ? &fi->fdir : NULL,flags);
 	AddParam("fofpattern","filter output file pattern (e.g. f%07d-f.png) "
 		"(relative to fdir)",
-		&master_fi.foutfpattern);
+		fi ? &fi->foutfpattern : NULL,flags);
 	
-	return(add_failed ? (-1) : 0);
+	if(add_failed)
+	{
+		RecursiveDeleteParams(CurrentSection());
+		return(-1);
+	}
+	return(0);
 }
 
 
@@ -808,6 +986,7 @@ int TaskSourceFactory_Local::init(ComponentDataBase *cdb)
 TaskSourceFactory_Local::TaskSourceFactory_Local(
 	ComponentDataBase *cdb,int *failflag) : 
 	TaskSourceFactory("local",cdb,failflag),
+	par::SectionParameterHandler(cdb->parmanager(),failflag),
 	master_fi(failflag),
 	fi_list(failflag)
 {
@@ -820,6 +999,9 @@ TaskSourceFactory_Local::TaskSourceFactory_Local(
 	cont_flag=false;
 	
 	response_delay=0;
+	
+	fi_topsect=NULL;
+	_i_help_dummy=NULL;
 	
 	int failed=0;
 	

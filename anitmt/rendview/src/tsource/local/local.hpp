@@ -35,7 +35,7 @@ class TaskSource_Local :
 			int tobe_rendered : 1;
 			int tobe_filtered : 1;
 			int resume_flag : 1;  // shall resume be passed to renderer?
-			int : 29;
+			int : (sizeof(int)*8 - 3);   // <-- Use modulo if more than 16 bits. 
 			
 			// Render and filte input/output: 
 			RefString r_infile;

@@ -90,7 +90,7 @@ class TaskManager :
 		int exec_stopped : 1;
 		
 		// Padding bits: 
-		int _pad : 12;
+		int : ((100*sizeof(int)*8 - 20)%(sizeof(int)*8));
 		
 		// Set by parameters, default to values set by program name: 
 		RefString tsource_name;

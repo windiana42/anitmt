@@ -53,7 +53,7 @@ class TaskDriverInterface_LDR :
 		int already_started_processing : 1;  // ReallyStartProcessing() called?
 		int shall_quit : 1;   // Was PleaseQuit() called?
 		
-		int : 30;  // padding
+		int : (sizeof(int)*8 - 2);   // <-- Use modulo if more than 16 bits. 
 		
 		void _WriteStartProcInfo(const char *msg);
 		void _WriteProcInfoUpdate();

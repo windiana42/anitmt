@@ -385,7 +385,7 @@ int ComponentDataBase::parse(const Section *s,PAR::SPHInfo *info)
 	
 	if(fail_reg)
 	{
-		Error("failed to register section for %s \"%s\".\n",
+		Error("Failed to register section for %s \"%s\".\n",
 			DTypeString(dt),name.str());
 		return(-1);
 	}
@@ -624,7 +624,7 @@ int ComponentDataBase::CheckParams()
 }
 
 
-// Special case: if rd==NULL -> this is called for help text stuff only. 
+// Special case: if d==NULL -> this is called for help text stuff only. 
 int ComponentDataBase::_RegisterDescParams(TaskDriverType dtype,RF_DescBase *d)
 {
 	assert(!d || d->dtype==dtype);
@@ -634,7 +634,8 @@ int ComponentDataBase::_RegisterDescParams(TaskDriverType dtype,RF_DescBase *d)
 	
 	if(SetSection(d ? d->name.str() : "<name>",
 		sdti->_sh_sect_desc_str,
-		dti->i_section))
+		dti->i_section,
+		d ? SSkipInHelp : 0))
 	{  return(-1);  }
 	
 	add_failed=0;

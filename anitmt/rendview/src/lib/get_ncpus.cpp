@@ -67,7 +67,7 @@ int GetNumberOfCPUs()
 		n=1;
 	}
 	else
-	{  Verbose(MiscInfo,"Okay, system reports %d CPU%s.\n",n,n>1 ? "s" : "");  }
+	{  Verbose(MiscInfo,"Okay, system has %d CPU%s.\n",n,n>1 ? "s" : "");  }
 	
 	return(n);
 }

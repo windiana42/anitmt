@@ -24,7 +24,8 @@ class FilterDesc;
 
 
 class TaskSourceFactory_Local : 
-	public TaskSourceFactory
+	public TaskSourceFactory,
+	par::SectionParameterHandler
 {
 	friend class TaskSource_Local;
 	public:
@@ -50,7 +51,7 @@ class TaskSourceFactory_Local :
 			int first_frame_no,nframes;
 			int tobe_rendered : 1;
 			int tobe_filtered : 1;
-			int : 30;
+			int : (sizeof(int)*8 - 2);   // <-- Use modulo if more than 16 bits. 
 			
 			// Render stuff: 
 			int width,height;            // image size
@@ -117,7 +118,13 @@ class TaskSourceFactory_Local :
 		void _VPrintFrameInfo(PerFrameTaskInfo *fi,
 			const PerFrameTaskInfo *compare_to);
 		
+		Section *fi_topsect;      // per-frame block section root
+		Section *_i_help_dummy;   // internal use for special help
 		int _RegisterParams();
+		int _RegisterFrameInfoParams(PerFrameTaskInfo *fi,int show_in_help=0);
+		// overriding virtual from par::SectionParameterHandler: 
+		int parse(const Section *s,PAR::SPHInfo *info);
+		int PrintSectionHelp(const Section *sect,RefStrList *dest,int when);
 		
 		// Overriding virtuial from ParameterConsumer: 
 		int CheckParams();

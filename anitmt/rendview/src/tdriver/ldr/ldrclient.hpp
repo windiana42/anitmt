@@ -47,7 +47,7 @@ class LDRClient :
 		int auth_passed : 1;
 		int _counted_as_client : 1;  // USED BY TaskDriverInterface_LDR
 		int send_quit_cmd : 3;  // 1 -> must send; 2 -> sent; 3 -> done
-		int : 26;  // padding
+		int : (sizeof(int)*8 - 8);   // <-- Use modulo if more than 16 bits. 
 		
 		// Next command to send to client: 
 		LDR::LDRCommand next_send_cmd;
