@@ -1,15 +1,19 @@
 *************************************************
-**     Vector library -- brief description     **
+**     Value library -- brief description      **
 **                                             **
 ** Copyright (c) 2000--2001 by Wolfgang Wieser **
 ** Bugs, suggestions to wwieser@gmx.de         **
 *************************************************
+
+*FIXME THIS DOCU NEEDS WORK SINCE THE Library now uses templates*
 
 Content: 
  0. Introduction
  1. class Scalar
  2. class Vector
  3. class Matrix
+ 4. class Flag
+ 5. class String
 
 --------------------------------------------------------------------------------
 
@@ -78,9 +82,7 @@ Operators:
 2. VECTOR
 ~~~~~~~~~~
 
-Vector implements a three-dimensional (row) vector. 
-Vector::get_type() returns Valtype::vector 
-(of type enum Valtype::Types). 
+Vector<R> implements a R-dimensional (row) vector. 
 
 Constructors: 
   * Vecror()       constructs a null vector. 
@@ -202,9 +204,7 @@ Functions:
 3. MATRIX
 ~~~~~~~~~~
 
-Matrix implements a 3x3-matrix. 
-Matrix::get_type() returns Valtype::matrix 
-(of type enum Valtype::Types). 
+Matrix<C,R> implements a RxC-matrix. 
 
 Constructors: 
   * Matrix()               constructs an identity-matrix. 
@@ -309,3 +309,18 @@ Functions:
 	translation as vector, that is done to a vector when being multipied 
 	with the Matrix m
 	To reproduce the effet of m, scale, then rotate and finally translate
+
+
+4. FLAG
+~~~~~~~
+
+Flag implements a simple bool true/false value. 
+
+
+5. STRING
+~~~~~~~~~
+
+String implements a simple string and is publically derived 
+from std::string to be easy to use with all the STL string 
+operations. 
+

@@ -3,7 +3,7 @@
  *
  * Routines to test value library. 
  *
- * Copyright (c) 2000 by Wolfgang Wieser. 
+ * Copyright (c) 2000--2001 by Wolfgang Wieser. 
  *
  * This is a top-secret file..\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b
  * Use this file for anything you want.

@@ -4,36 +4,16 @@
  * Header file containing an internally used matrix template. 
  * Quite likely, you are looking for matrix.hpp...
  *
- * Copyright (c) 2000--2001 by Wolfgang Wieser
- * Bugs, suggestions to wwieser@gmx.de. 
- *
- * Permission to use, copy, modify, and distribute this software and its
- * documentation for any purpose and without fee is hereby granted,
- * provided that the above copyright notice appear in all copies and that
- * both that copyright notice and this permission notice appear in
- * supporting documentation.
+ * Copyright (c) 2000--2001 by Wolfgang Wieser (wwieser@gmx.de) 
  * 
- * This file is provided AS IS with no warranties of any kind.  The author
- * shall have no liability with respect to the infringement of copyrights,
- * trade secrets or any patents by this file or any part thereof.  In no
- * event will the author be liable for any lost revenue or profits or
- * other special, indirect and consequential damages.
+ * This file may be distributed and/or modified under the terms of the 
+ * GNU General Public License version 2 as published by the Free Software 
+ * Foundation. 
  * 
- * This program is distributed in the hope that it will be 
- * useful, but WITHOUT ANY WARRANTY; without even the 
- * implied warranty of MERCHANTABILITY or FITNESS _mFOR A PARTICULAR
- * PURPOSE.
+ * This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
+ * WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  * 
- * See the GNU General Public License for details.
- * If you have not received a copy of the GNU General Public License,
- * write to the 
- * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- * 
- * Revision History:
- *   Dec 2000   started writing
- *
  */
-
 
 #ifndef _NS_internal_vect_imatrix_HPP_
 #define _NS_internal_vect_imatrix_HPP_ 1
