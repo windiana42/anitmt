@@ -29,6 +29,9 @@ test_functionality_LDADD= \
 FUNCGEN=../funcgen/funcgen
 FUNCGEN_CODE=$(srcdir)/../funcgen/gen_cpp.cpp
 
+clean:
+	rm -f $(BUILT_SOURCES)
+
 # exec funcgen...
 # base_func isn't regenerated when funcgen is changed
 base_func.cpp \
