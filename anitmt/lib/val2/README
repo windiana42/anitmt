@@ -1,0 +1,311 @@
+*************************************************
+**     Vector library -- brief description     **
+**                                             **
+** Copyright (c) 2000--2001 by Wolfgang Wieser **
+** Bugs, suggestions to wwieser@gmx.de         **
+*************************************************
+
+Content: 
+ 0. Introduction
+ 1. class Scalar
+ 2. class Vector
+ 3. class Matrix
+
+--------------------------------------------------------------------------------
+
+0. INTRODUCTION
+~~~~~~~~~~~~~~~~
+
+This library is intended to provide low-level routines dealing with 
+scalars, vectors and matrices. 
+
+Lots of functions are available as member functions (methods) and 
+non-member functions (called friends here). 
+The purpose is mostly the same: While methods change their object 
+(*this), friends do not. 
+I always use the same style: A methods and its corresponding friend 
+has the same function name; the friend takes one additional argument 
+(always the first argument; it is the one which the method uses *this 
+instead). While the member function usually returns a reference to *this, 
+the friends normally return a new object (allocated on the stack, of 
+course). This often makes the methods faster. Examples: 
+Method:                          Friend:
+Vector &normalize();             Vector normalize(const Vector &v);
+Vector &trans(double d,int i);   Vector trans(const Vector &v,double d,int i);
+
+
+1. SCALAR
+~~~~~~~~~~
+
+Scalar implements a single floating point value. 
+Scalar::get_type() returns Valtype::scalar 
+(of type enum Valtype::Types). 
+
+Constructors: 
+  * Scalar(double s)  constructs a scalar containing the value i. 
+  * Scalar()          constructs a scalar set up to 0.0 .
+  * The copy constructor is implemented. 
+
+Operators:
+  > Assignment: 
+      * The assignment operator is implemented (operator=)
+  > Conversion:
+      * A Scalar is implicitly converted to a double by 
+        operator double(). 
+  > Comparison:
+      * Scalars can be compared to scalars and to double values. 
+        Both possibilities (Scalar,double) and (double,Scalar) are 
+        implemented. 
+      * Both the operators == and != are implemented. 
+      * The logical not (operator!()) returns true (1), if the 
+        scalar is 0. 
+      * All comparisons use the global value values::epsilon: 
+        If two scalars a and b should be compared, they are considered 
+        equal, if  fabs(a-b)<=epsilon . 
+        NOTE that this might not be what you want, if you are comparing 
+             two really big values as their difference will almost 
+             certainly be larger than epsilon. 
+  > Arithmetics: 
+      * Operators for +=, -=, *= and /= are implemented taking a 
+        double as their argument. 
+        As a Scalar gets implicitly converted to a double, all other 
+        arithmetical operators (+,-,*,/) need not be implemented. 
+  > Output: 
+      * A scalar can be written to a stream using the usual stream 
+        operator taking a double argument. 
+
+
+2. VECTOR
+~~~~~~~~~~
+
+Vector implements a three-dimensional (row) vector. 
+Vector::get_type() returns Valtype::vector 
+(of type enum Valtype::Types). 
+
+Constructors: 
+  * Vecror()       constructs a null vector. 
+  * Vector(x,y,z)  constructs a vector set up to x,y,z. 
+  * The copy constructor is implemented. 
+
+Operators:
+  > Assignment: 
+      * The assignment operator is implemented (operator=)
+  > Conversion:
+      * There is no implicit conversion implemented. 
+  > Access/Modification:
+      * The elements of the vector can be accessed via operator[]. 
+        The passed argument must be of an integer type; 0 refers to 
+        the x component, 2 to the z component. 
+        NOTE: For speed increase, there is no range check performed 
+              on the argument. 
+      * The elements of the vector can not be set via operator[]. 
+        To set an element, use operator()(i,val). 
+        The first argument (integer type) specifies the element index 
+        of the component to be modified (0 -> x .. 2 -> z), the second 
+        argument is the new value for the component. 
+  > Comparison:
+      * Vectors can be compared to other vectors. 
+      * Both operator!= and operator== are implemented. 
+      * The operators use values::epsilon (see Scalar/Comparison). 
+      * Operator!() returns true (1) if the vector *this is the null vector. 
+        Alternatively, you can use the method is_null(). 
+  > Arithmetics: 
+      * Vectors can be added to and subtracted from vectors. 
+        Both operator+/operator- and operator+=/operator-= are implemented. 
+      * The unary + and - operators are implemented; operator+() just 
+        returns *this. 
+      * Given a vector, you cannot add/subtract a scalar. 
+      * Vectors can be multiplied with and divided by scalars. 
+        Both operator*,operator/ and operator*=,operator/= are implemented. 
+      * Two vectors can be multiplied in two different ways: 
+      -- scalar multiplication --
+        Operator* implements the scalar multiplication (resulting in a 
+        Scalar) just as the function 
+        Scalar dot(Vector,Vector). 
+      -- vector multiplication --
+        The vector product is calculated by cross(). 
+        You can use the member function 
+        Vector &Vector::cross(const Vector &b) 
+          which multiplies *this with b, stores the result in *this and 
+          returns *this
+        or you can use the friend
+        Vector cross(const Vector &a,const Vector &b)
+          which calculates the vector product of a and b and returns it. 
+      * You can multiply a Vector with a Matrix resulting in a Vector. 
+        For this purpose, operator*(Matrix,Vector), operator*(Vector,Matrix) 
+        and Vector::operator*=(Matrix) are implemented. 
+        NOTE that the member operator (*=) is not faster than the friends 
+             as it needs a temporary. 
+  > Output: 
+      * The output stream operator << is implemented. The vector (x,y,z) 
+        is written as <x,y,z> (povray notation). [MIGHT BE CHANGED]
+
+Functions: 
+  > Length: 
+       * Method abs() returns the length of the vector *this as a double, 
+         abs2() returns the square of its length (which is much faster as 
+         no sqrt() has to be calculated). 
+       * To get a Scalar as result, you can use the friends abs(Vector) 
+         and abs2(Vector). 
+       * normalize() stretches the vector so that the resulting vector 
+         has the length 1. 
+         You can use the method normalize() to normalize *this, or 
+         you can use the friend Vector normalize(Vector) which does not 
+         modify the passed vector. 
+  > Angle: 
+       * To calculate the angle between two vectors, you can use angle(). 
+         This function returns the angle as Scalar in range 0...PI 
+         (i.e. 0...180 degrees and NOT 0...90 degrees). 
+         There are two versions of the function: 
+         The method angle(Vector b) returns the angle between *this and b, 
+         the friend angle(Vector a,Vector b) calculates the angle between 
+         the vectors a and b. 
+  > Translation: 
+       * The function trans() can be used to translate a vector. 
+         Both methods and friends are available for this job (see the 
+         introduction on the difference between them). 
+         The translation method takes two arguments: trans(double d,int xyz)
+         d is the value to be added to the vector component indexed xyz 
+         (in range 0...2 with no range check). 
+         v.trans(d,xyz) or trans(v,d,xyz) is like adding d to v[xyz]. 
+  > Scalation: 
+       * As for translation, there are also functions to scale the vector. 
+         Both methods and friends are available (see the introduction on 
+         the difference between them). 
+         The method scale(double f,int xyz) takes two arguments: 
+         xyz selects the component to multiply with f. 
+  > Mirror: 
+       * The mirror function mirror(int xyz) (available as member and as 
+         friend) changes the sign of the component indexed by xyz (in range 
+         0...2 with no range check). 
+       * The method mirror(void) changes the sign of all components (like 
+         unary operator-). 
+  > Rotation:
+       * Three methods for basic rotation are provided: 
+         rotateX(), rotateY(), rotateZ(). They all take one argument 
+         specifying the angle of rotation (in radians, of course). 
+         There are methods and friends available. 
+  > Coordinate conversion: 
+       * The methods to_spherical() and to_rectangular() can be used to 
+         convert the coordinates (changing the content of the vector 
+         components, of course): to_spherical() converts a vector in 
+         rectangular notation to spherical notation; to_rectangular() 
+         does right the opposite. Thus, to_rectangular(to_spherical(v))=v. 
+       * There are members and friends available (the friends are slower). 
+       * The rectangular coordinates are stored as x,y,z; the spherical 
+         ones as r,phi,theta:
+           [0]  x    r
+           [1]  y   phi
+           [2]  z  theta
+
+
+3. MATRIX
+~~~~~~~~~~
+
+Matrix implements a 3x3-matrix. 
+Matrix::get_type() returns Valtype::matrix 
+(of type enum Valtype::Types). 
+
+Constructors: 
+  * Matrix()               constructs an identity-matrix. 
+  * Matrix(Matrix::ident)  also sets up an identity-matrix. 
+  * Matrix(Matrix::null)   constructs a null-matrix (all elements 0). 
+  * The copy constructor is implemented. 
+
+Operators: 
+  > Assignment:
+      * The assignment operator is implemented (operator=)
+  > Conversion:
+      * There is no implicit conversion implemented. 
+  > Access/Modification:
+      * The elements of the matrix can be accessed via 2x operator[]. 
+        Matrix::operator[](int c) returns the matrix column indexed c 
+        as a vect::matrix_column<3>; its operator[](int r) returns the 
+        double value in row r in the column. 
+        The passed column/row index must be in range 0...2; there is no 
+        range check performed. 
+        Example: mat[0][2] returns the element of mat at column 0 and 
+                 row 2. 
+        NOTE: THE FIRST ARGUMENT IS THE COLUMN (X-direction), THE SECOND 
+              ONE IS THE ROW (Y-direction). 
+      * The elements of the vector can not be set via operator[]. 
+        To set an element, use operator()(c,r,val). 
+        The first argument specifies the column index, the second one 
+        the row index of the component to be modified, the third argument 
+        is the new value for the component. 
+  > Comparison:
+      * You can compare a matrix to another one. The matrices are simply 
+        compared component-wise with respect to values::epsilon. 
+      * Both operator== and operator!= are implemented. 
+      * operator!() and is_ident() return true, if the matrix is the 
+        identity matrix (with respect to values::epsilon). 
+      * is_null() returns true if the matrix is the null-matrix (with 
+        respecto to values::epsilon). 
+  > Arthmetics: 
+      * Matrices can be added to and subtracted from matrices. 
+        This is done by adding/subtracting the element of one matrix to/from 
+        the corresponding one in the other matrix. 
+        Both operator+/operator- and operator+=/operator-= are implemented. 
+      * The unary + and - operators are implemented; operator+() just 
+        returns *this, operator- changes the sign of every matrix element. 
+    -- Matrix and Scalar: --
+      * A Matrix can be multiplied with a Scalar, resulting in a Matrix. 
+        The multiplication is done by multiplying every matrix element 
+        with the scalar. 
+        Both operator*(Matrix,Scalar) and operator*(Scalar,Matrix) are 
+        implemented. 
+      * You can divide a matrix by a scalar; this works like the 
+        multiplication. Note that you cannot divide a scalar by a matrix. 
+      * For scalars operator*= and operator/= are implemented. 
+    -- Matrix and Vector: --
+      * A matrix can be multiplied with a vector resulting in a vector: 
+        see the vector section for that. 
+    -- Matrix and Matrix: --
+      * You may multiply a Matrix with a Matrix resulting in a Matrix. 
+        Both operator* and operator*= are implemented; due to the temporary, 
+        the method is not faster than the friend. 
+
+Functions: 
+  > Inversion: 
+      * A matrix can be inverted using the invert() function available as 
+        mathod and as friend. 
+        (If you multiply a matrix and the inverse matrix the result is the 
+        identity matrix.)
+      * Inversion is done using the Gauss-Jordan algorithm (elegant and 
+        exact). 
+  > Matrix Construction: 
+      * You may construct matrices for scaling using MscaleX(), MscaleY(), 
+        MscaleZ(). Each of these functions takes a double argument being 
+        the scale factor. 
+        You may also use Mscale(Vector) using x,y,z from the vector. 
+      * You may construct matrices for rotation around an axis using 
+        MrotateX(), MrotateY(), MrotateZ(). The double argument is the 
+        rotation ange (in radians, of course). 
+        You may also use Mrotate(Vector) using x,y,z angles from the vector. 
+        in the given order (x, then y, then z). 
+      * You may construct matrices for translation using MtranslateX(), 
+        MtranslateY() and MtranslateZ(). 
+        You may also use Mtranslate(Vector) using x,y,z from the vector. 
+      * To rotate around the x, the y and the z axis in this order, you 
+        may use Mrotate(Vector v). The elements of the vector specify the 
+        rotation angles. 
+      * Mrotate_around(Vector,angle) constructs a matrix for a rotation 
+        around the specified vector. angle is the rotation angle. 
+      * Mrotate_vect_vect(Vector from,to) rotates the first vector to 
+        the second and returns the rotation matrix which can do that. 
+      * Mrotate_vect_vect_up(Vector from,to,up) rotates the first vector 
+        to the second using a spherical rotation with (along?) the horizontal 
+        plane defined by the normal vector up (third arg). 
+      * Mrotate_pair_pair() ... see val.hpp ... or ask Matrin
+      * Mrotate_spherical_pair() ... see Mrotate_pair_pair() :)
+      * get_scale_component(Matrix m) returns a vector which tells the resulting
+        scalation of an x,y and z vector when multipied with Matrix m.
+	To reproduce the effet of m, scale, then rotate and finally translate
+      * get_rotation_component(Matrix m) returns a vector representing the
+	rotation around the x, y and finally the z axis that are done to a 
+        vector when being multiplied with the Matrix m.
+	To reproduce the effet of m, scale, then rotate and finally translate
+      * get_translate_component(Matrix m) returns the position independant 
+	translation as vector, that is done to a vector when being multipied 
+	with the Matrix m
+	To reproduce the effet of m, scale, then rotate and finally translate
