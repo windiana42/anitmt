@@ -25,27 +25,27 @@ if test "$LEX" != "flex"; then echo "Warning: You need flex to generate new lexe
 if test "$YACC" != "bison -y"; then echo "Warning: You need "bison -y" to generate new parser source!"; export YACC=; fi
 AC_CONFIG_SUBDIRS(hlib)
 AC_OUTPUT(
-	Makefile 
-	lib/Makefile 
-	lib/message/Makefile 
-	lib/val/Makefile 
-	lib/solve/Makefile 
+	Makefile
+	lib/Makefile
+	lib/message/Makefile
+	lib/val/Makefile
+	lib/solve/Makefile
 	lib/proptree/Makefile
-	lib/utl/Makefile 
-	lib/par/Makefile 
-	lib/param/Makefile 
+	lib/utl/Makefile
+	lib/par/Makefile
+	lib/param/Makefile
 	lib/flex/Makefile
-	anitmt-calc/Makefile 
-	anitmt-calc/input/Makefile 
-	anitmt-calc/input/adl/Makefile 
-	anitmt-calc/input/adl2/Makefile 
-	anitmt-calc/output/Makefile 
-	anitmt-calc/output/lib/Makefile 
-	anitmt-calc/output/raw/Makefile 
-	anitmt-calc/output/pov/Makefile 
-	anitmt-calc/funcgen/Makefile 
-	anitmt-calc/functionality/Makefile 
-	anitmt-view/Makefile 
-	anitmt-view/parser/Makefile 
-	mkavi/Makefile 
+	lib/exparse2/Makefile
+	anitmt-calc/Makefile
+	anitmt-calc/input/Makefile
+	anitmt-calc/input/adl2/Makefile
+	anitmt-calc/output/Makefile
+	anitmt-calc/output/lib/Makefile
+	anitmt-calc/output/raw/Makefile
+	anitmt-calc/output/pov/Makefile
+	anitmt-calc/funcgen/Makefile
+	anitmt-calc/functionality/Makefile
+	anitmt-view/Makefile
+	anitmt-view/parser/Makefile
+	mkavi/Makefile
 	test/Makefile )
