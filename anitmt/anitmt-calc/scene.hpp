@@ -24,24 +24,25 @@ namespace anitmt {
 #include "property.hpp"
 #include "proptree.hpp"
 #include "return.hpp"
+#include "scalar.hpp"
+#include "object.hpp"
 
-namespace anitmt{
-
+namespace anitmt
+{
   //******************************************************************
   // Ani_Scene: general Scene node 
   //******************************************************************
-  class Ani_Scene: public Prop_Tree_Node, 
-		   public Return< Scene_State > {
-
+  class Ani_Scene: public Prop_Tree_Node 
+  {
     static const std::string type_name;
 
     String_Property filename;
     String_Property scene_type;
 
     //! all scalar components in the scene 
-    Contain_Return< Scalar_State > scalars;
+    Contain< Ani_Scalar > scalars;
     //! all scalar components in the scene 
-    Contain_Return< Object_State > objects;
+    Contain< Ani_Object > objects;
 
     bool try_add_child( Prop_Tree_Node *node );
 
@@ -49,18 +50,14 @@ namespace anitmt{
     //! function of the return type container
     virtual void final_init();
   public:
-    inline const Contain_Return<Scalar_State>& get_scalars() 
-    { return scalars; }
-    inline const Contain_Return<Object_State>& get_objects() 
-    { return objects; }
-
     static std::string get_type_name();
 
-    Ani_Scene( std::string name, Animation *ani );
+    inline const Contain< Ani_Scalar >& get_scalars() 
+    { return scalars; }
+    inline const Contain< Ani_Object >& get_objects() 
+    { return objects; }
 
-    Optional_Return_Type get_return_value( values::Scalar t, 
-					   Scene_State s = Scene_State() ) 
-      throw( EX_user_error );    
+    Ani_Scene( std::string name, Animation *ani );
   };
   
 }

@@ -535,7 +535,12 @@ namespace values
   extern double get_rotation_around(
     const Vector &v1,const Vector &v2,const Vector &axis);
 
-
+  //! returns the scale components of each axis as vector, caused by Matrix
+  extern Vector get_scale_component( const Matrix &mat );
+  //! returns the translation caused by transformation Matrix
+  extern Vector get_translation_component( const Matrix &mat );
+  //! returns the rotations about X,Y and Z axes as vector, caused by Matrix
+  extern Vector get_rotation_component( const Matrix &mat );
 /******************************************************************************/
 /*   STRING                                                                   */
 /******************************************************************************/

@@ -52,19 +52,19 @@ namespace anitmt{
   }
 
   std::pair<bool, Position> Obj_Move::get_return_value( values::Scalar t, 
-							Position ) 
+							Position& ) 
     throw( EX_user_error )
   {
     return pos.get_return_value( t );
   }
   std::pair<bool, Direction> Obj_Move::get_return_value( values::Scalar t, 
-							 Direction ) 
+							 Direction& ) 
     throw( EX_user_error )
   {
     return dir.get_return_value( t );
   }
   std::pair<bool, Up_Vector> Obj_Move::get_return_value( values::Scalar t, 
-							 Up_Vector ) 
+							 Up_Vector& ) 
     throw( EX_user_error )
   {
     return up.get_return_value( t );
@@ -72,14 +72,10 @@ namespace anitmt{
 
   bool Obj_Move::try_add_child( Prop_Tree_Node *node )
   {
-    Return<Position>  *p = dynamic_cast< Return<Position>*  >( node );
-    Return<Direction> *d = dynamic_cast< Return<Direction>* >( node );
-    Return<Up_Vector> *u = dynamic_cast< Return<Up_Vector>* >( node );
-
     bool res = false;
-    if( p ) res = res || pos.try_add_child( p );
-    if( d ) res = res || dir.try_add_child( d );
-    if( u ) res = res || up.try_add_child( u );
+    res |= pos.try_add_child( node );
+    res |= dir.try_add_child( node );
+    res |= up.try_add_child ( node );
     
     return res;
   }
@@ -108,36 +104,53 @@ namespace anitmt{
   Obj_Move_Straight::Obj_Move_Straight( std::string name, Animation *ani ) 
     : Prop_Tree_Node( type_name, name, ani ) 
   {
+    add_property( "length", &s );
+    add_property( "startpos", &s0 );
+    add_property( "endpos", &se );
+    add_property( "startdir", &d0 );
+    add_property( "enddir", &de );
+    add_property( "startup", &u0 );
+    add_property( "endup", &ue );
+    add_property( "duration", &t );
+    add_property( "starttime", &t0 );
+    add_property( "endtime", &te );
+    add_property( "frames", &t_f );
+    add_property( "startframe", &t0_f );
+    add_property( "endframe", &te_f );
+    add_property( "acceleration", &a );
+    add_property( "startspeed", &v0 );
+    add_property( "endspeed", &ve );
+ 
     Operand<values::Scalar> &fps = 
       const_op( values::Scalar(ani->param.fps()) );
 
     establish_accel_solver( s, t, a, v0, ve );
+    establish_equal_solver( d0, de );
+    establish_equal_solver( u0, ue ); //!!! rot_up not recognized
     establish_sum_solver( te, t, t0 );
     establish_sum_solver( te_f, t_f, t0_f );
     establish_product_solver( t_f,  t,  fps ); // t_f = t * fps 
     establish_product_solver( t0_f, t0, fps ); // t0_f = t0 * fps 
     establish_product_solver( te_f, te, fps ); // te_f = te * fps 
+
+    Operand<values::Vector> sdiff; // position difference
+    establish_sum_solver( se, sdiff, s0 );
+    //establish_product_solver( sdiff, d0,  s ); // sdiff = d0 * s 
+    //!!! d0 has to be 1 in length !!!
+
     
-    add_property( "startpos", &s0 );
-    add_property( "startpos", &s0 );
-    add_property( "endpos", &se );
-    add_property( "length", &s );
-    add_property( "duration", &t );
-    add_property( "acceleration", &a );
-    add_property( "startspeed", &v0 );
-    add_property( "endspeed", &ve );
- 
     //add_action( 3, new Default_Value<values::Scalar>( &a, 0, this ) );
     // add_default_value( &a, values::Scalar(0), 3 );
   }
     
   std::pair<bool,Position> Obj_Move_Straight::get_return_value
-  ( values::Scalar t, Position ) throw( EX_user_error )
+  ( values::Scalar global_time, Position& ) throw( EX_user_error )
   {
     // if not active
     if( (t > te()) || (t < t0()) ) 
       return std::pair<bool,Position>( false, Position() );
 
+    values::Scalar t = (global_time-t0());
     values::Scalar s_t = v0() * t + 0.5 * a() * t*t;
     values::Scalar rel_pos = s() / s_t;
 
@@ -145,7 +158,7 @@ namespace anitmt{
   }
 
   std::pair<bool,Direction> Obj_Move_Straight::get_return_value
-  ( values::Scalar t, Direction ) throw( EX_user_error )
+  ( values::Scalar t, Direction& ) throw( EX_user_error )
   {
     // if not active
     if( (t > te()) || (t < t0()) ) 
@@ -156,7 +169,7 @@ namespace anitmt{
   }
 
   std::pair<bool,Up_Vector> Obj_Move_Straight::get_return_value
-  ( values::Scalar t, Up_Vector ) throw( EX_user_error )
+  ( values::Scalar t, Up_Vector& ) throw( EX_user_error )
   {
     // if not active
     if( (t > te()) || (t < t0()) ) 

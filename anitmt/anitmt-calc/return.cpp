@@ -24,9 +24,11 @@ namespace anitmt
   // Return: interface for tree nodes with a special return type
   //************************************************************
 
+  template <class Return_Type>
+  Return_Type Return<Return_Type>::type_id;
 
   template <class Return_Type>
-  Return<Return_Type> *Return<Return_Type>::get_prev( Return_Type )
+  Return<Return_Type> *Return<Return_Type>::get_prev( Return_Type& )
   {
 #ifdef __DEBUG__
     std::cout << "return prev node: " << prev << std::endl;
@@ -35,7 +37,7 @@ namespace anitmt
   }
 
   template <class Return_Type>
-  Return<Return_Type> *Return<Return_Type>::get_next( Return_Type )
+  Return<Return_Type> *Return<Return_Type>::get_next( Return_Type& )
   {
 #ifdef __DEBUG__
     std::cout << "return next node: " << next << std::endl;
@@ -63,7 +65,7 @@ namespace anitmt
 
   //! function that is called after hierarchy was set up for each node
   template <class Return_Type>
-  void Return<Return_Type>::hierarchy_final_init( Return_Type type_ID )
+  void Return<Return_Type>::hierarchy_final_init( Return_Type& )
   {
     if( !next ) init_last( this );
   }
@@ -76,14 +78,17 @@ namespace anitmt
 
   //******************************************************************
   // << template <Return_Type> >>
-  // Contain_Return_Type: Contains Tree nodes of the same return type
+  // Contain_Return: Contains Tree nodes of the same return type
   //******************************************************************
 
   //! tries to use the node as element for this container
   template <class Return_Type>
-  bool Contain_Return<Return_Type>::try_add_child( Return<Return_Type> *node )
+  bool Contain_Return<Return_Type>::try_add_child( Prop_Tree_Node *prop_node )
     throw( EX_more_than_one_child ) 
-  {    
+  {  
+    Return<Return_Type> *node 
+      = dynamic_cast< Return<Return_Type>* >( prop_node );
+  
     if( !node )
       return false;
     else
@@ -105,6 +110,7 @@ namespace anitmt
       }
 
       content.push_back( node );
+      num_children++;
 
       return true;
     }
@@ -113,15 +119,9 @@ namespace anitmt
   //! returns the result according to children that are active at time t
   template <class Return_Type>
   Contain_Return<Return_Type>::Optional_Return_Type 
-  Contain_Return<Return_Type>::get_return_value( values::Scalar t, 
-						 Return_Type ) 
+  Contain_Return<Return_Type>::get_return_value( values::Scalar t ) 
     throw( EX_essential_child_missing, EX_user_error ) 
   {
-    /* !!! may be removed here !!! */
-    if( essential_child && ( num_children == 0 ) )
-      throw EX_essential_child_missing();
-    /* !!! --- !!! */
-
     Optional_Return_Type ret;
     for( content_type::iterator i = content.begin(); i != content.end(); i++ )
     {
@@ -135,20 +135,65 @@ namespace anitmt
 
   //! function that is called after hierarchy was set up for each node
   template <class Return_Type>
-  void Contain_Return<Return_Type>::hierarchy_final_init( Return_Type )
+  void Contain_Return<Return_Type>::hierarchy_final_init()
   {
-    //!!! should be checked here
-    //if( essential_child && ( num_children == 0 ) )
-    //  throw EX_essential_child_missing();
+    if( essential_child && ( num_children == 0 ) )
+      throw EX_essential_child_missing();
 
     for( content_type::iterator i = content.begin(); i != content.end(); i++ )
     {
-      (*i)->hierarchy_final_init( Return_Type() );
+      (*i)->hierarchy_final_init( Return<Return_Type>::type_id );
     }    
   }
 
   template <class Return_Type>
   Contain_Return<Return_Type>::Contain_Return( bool essential, bool unique ) 
+    : essential_child( essential ), unique_child( unique ), num_children(0) {}
+
+
+  //******************************************************************
+  // << template <Element_Type> >>
+  // Contain: Contains Tree nodes of the same return type
+  //******************************************************************
+
+  //! tries to use the node as element for this container
+  template <class Element_Type>
+  bool Contain<Element_Type>::try_add_child( Prop_Tree_Node *prop_node )
+    throw( EX_more_than_one_child ) 
+  {  
+    Element_Type *node = dynamic_cast< Element_Type* >( prop_node );
+  
+    if( !node )
+      return false;
+    else
+    {
+      if( unique_child && ( num_children > 0 ) )
+	throw EX_more_than_one_child();
+
+      content.push_back( node );
+      num_children++;
+
+      return true;
+    }
+  }
+
+  //! function that is called after hierarchy was set up for each node
+  template <class Element_Type>
+  void Contain<Element_Type>::hierarchy_final_init()
+  {
+    if( essential_child && ( num_children == 0 ) )
+      throw EX_essential_child_missing();
+
+    /* content is invoked by proptree hierarchy
+    for( content_type::iterator i = content.begin(); i != content.end(); i++ )
+    {
+      (*i)->hierarchy_final_init();
+    } 
+    */   
+  }
+
+  template <class Element_Type>
+  Contain<Element_Type>::Contain( bool essential, bool unique ) 
     : essential_child( essential ), unique_child( unique ), num_children(0) {}
 
 }

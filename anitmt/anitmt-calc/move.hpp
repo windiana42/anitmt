@@ -60,11 +60,14 @@ namespace anitmt{
     Obj_Move( std::string name, Animation *ani );
 
     std::pair<bool,Position>  get_return_value
-    ( values::Scalar t, Position m = Position() ) throw( EX_user_error );
+    ( values::Scalar t, Position &m = Return<Position>::type_id ) 
+      throw( EX_user_error );
     std::pair<bool,Direction> get_return_value
-    ( values::Scalar t, Direction m = Direction() ) throw( EX_user_error );
+    ( values::Scalar t, Direction &m = Return<Direction>::type_id ) 
+      throw( EX_user_error );
     std::pair<bool,Up_Vector> get_return_value
-    ( values::Scalar t, Up_Vector m = Up_Vector() ) throw( EX_user_error );
+    ( values::Scalar t, Up_Vector &m = Return<Up_Vector>::type_id ) 
+      throw( EX_user_error );
   };
   
 
@@ -105,14 +108,14 @@ namespace anitmt{
 
     Obj_Move_Straight( std::string name, Animation *ani );
     
-    std::pair<bool,Position> get_return_value( values::Scalar t, 
-					       Position = Position() )
+    std::pair<bool,Position> get_return_value
+    ( values::Scalar t, Position& = Return<Position>::type_id )
       throw( EX_user_error );
-    std::pair<bool,Direction> get_return_value( values::Scalar t, 
-						Direction = Direction() )
+    std::pair<bool,Direction> get_return_value
+    ( values::Scalar t, Direction& = Return<Direction>::type_id )
       throw( EX_user_error );
-    std::pair<bool,Up_Vector> get_return_value( values::Scalar t, 
-						Up_Vector = Up_Vector() )
+    std::pair<bool,Up_Vector> get_return_value
+    ( values::Scalar t, Up_Vector& = Return<Up_Vector>::type_id )
       throw( EX_user_error );
 
     bool try_add_child( Prop_Tree_Node *node );

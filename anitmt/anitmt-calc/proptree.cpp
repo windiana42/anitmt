@@ -24,27 +24,6 @@ namespace anitmt{
   // Prop_Tree_Node: provides tree structure for property groups
   //************************************************************
 
-  //************
-  // exceptions
-
-  class Prop_Tree_Node::EX_child_type_unknown : public EX {
-  public:
-    EX_child_type_unknown() : EX( "child type unknown" ) {}
-  };
-  class Prop_Tree_Node::EX_child_type_rejected : public EX {
-  public:
-    EX_child_type_rejected() : EX( "child type rejected" ) {}
-  };
-  class Prop_Tree_Node::EX_child_type_already_defined : public EX {
-  public:
-    EX_child_type_already_defined() : EX( "child_type_already_defined" ) {}
-  };
-  class Prop_Tree_Node::EX_invalid_reference : public EX {
-  public:
-    EX_invalid_reference() : EX( "invalid reference" ) {}
-  };
-
-
   //**********
   // constants
 

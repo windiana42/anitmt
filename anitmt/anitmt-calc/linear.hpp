@@ -64,7 +64,7 @@ namespace anitmt{
     virtual void init_last ( Return<values::Scalar>* );
 
     Optional_Return_Type get_return_value( values::Scalar t, 
-					   values::Scalar = values::Scalar() )
+					   values::Scalar &s = type_id )
       throw( EX_user_error );
 
     bool try_add_child( Prop_Tree_Node *node );

@@ -23,24 +23,6 @@ namespace anitmt{
   // Prop_Tree_Node: provides tree structure for property groups
   //************************************************************
 
-  //************
-  // exceptions
-
-  class Prop_Tree_Node::EX_property_rejected : public EX {
-  public:
-    EX_property_rejected() : EX( "property rejected" ) {}
-  };
-  class Prop_Tree_Node::EX_property_type_rejected : public EX {
-  public:
-    EX_property_type_rejected(/* std::string wrong_type, std::string right_type*/ )
-      : EX( /*right_type + " expected. " + wrong_type + " found instead"*/ "wrong property type" ) {}
-  };
-  class Prop_Tree_Node::EX_property_unknown : public EX {
-  public:
-    EX_property_unknown( /*std::string prop_name*/ ) 
-      : EX( "unknown property" /*+ prop_name*/ ) {}
-  };
-
   //*******************
   // template functions
   

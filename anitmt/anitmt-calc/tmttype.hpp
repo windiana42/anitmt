@@ -54,8 +54,6 @@ namespace anitmt{
   // State types
   //************
 
-  class Scene_State {};
-
   class Object_State 
   {
   public:

@@ -81,19 +81,51 @@ namespace anitmt{
     //*****************
     // known exceptions
 
-    class EX_child_type_unknown;
-    class EX_child_type_rejected;
-    class EX_child_type_already_defined;
-    class EX_property_unknown;
-    class EX_property_rejected;
-    class EX_property_type_rejected;
-    class EX_invalid_reference;
+    class EX_child_type_unknown : public EX 
+    {
+    public:
+      EX_child_type_unknown() : EX( "child type unknown" ) {}
+    };
+    class EX_child_type_rejected : public EX 
+    {
+    public:
+      EX_child_type_rejected() : EX( "child type rejected" ) {}
+    };
+    class EX_child_type_already_defined : public EX 
+    {
+    public:
+      EX_child_type_already_defined() : EX( "child_type_already_defined" ) {}
+    };
+    class EX_invalid_reference : public EX 
+    {
+    public:
+      EX_invalid_reference() : EX( "invalid reference" ) {}
+    };
+    class EX_property_rejected : public EX 
+    {
+    public:
+      EX_property_rejected() : EX( "property rejected" ) {}
+    };
+    class EX_property_type_rejected : public EX 
+    {
+    public:
+      EX_property_type_rejected(/* std::string wrong_type, 
+				   std::string right_type*/ )
+	: EX( /*right_type + " expected. " + wrong_type + " found instead"*/ 
+	     "wrong property type" ) {}
+    };
+    class EX_property_unknown : public EX {
+    public:
+      EX_property_unknown( /*std::string prop_name*/ ) 
+	: EX( "unknown property" /*+ prop_name*/ ) {}
+    };
+
 
     //***********
     // functions
 
-    std::string	get_name();	// return name
-    std::string get_type();	// return type
+    virtual std::string	get_name();	// return name
+    virtual std::string get_type();	// return type
     Property *get_property( std::string name );	
 				// return property (0 = unknown name)
     template< class T > 

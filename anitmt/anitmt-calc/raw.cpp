@@ -36,46 +36,44 @@ namespace anitmt
   //! process the resulting animation (ex: integrate it in scene description)
   void Raw_Output::process_results() throw( EX )
   {
-    std::list<Prop_Tree_Node*> scenes = ani->get_all_children();
-    std::list<Prop_Tree_Node*>::iterator s;
+    const Contain<Ani_Scene>::content_type &scenes 
+      = ani->get_scenes().get_content();
+    Contain<Ani_Scene>::content_type::const_iterator scene;
 
+    std::string dir = ani->param.ani_dir();
     std::string basename = "raw_", extension = ".out";
     int startf = ani->param.startframe();
     int endf   = ani->param.endframe();
 
     for( int f = startf; f <= endf; f++ /*f += ani->param.jump()*/ )
     {
-      char str_num[15];
-      sprintf( str_num, "%04u", f );
+      char str_num[20];
+      sprintf( str_num, "%04d", f );
       assert( ani->param.fps() != 0 );
       values::Scalar t = f / ani->param.fps();
       
-      std::string filename = basename + str_num + extension;
+      std::string filename = dir + basename + str_num + extension;
       ofstream out( filename.c_str() );
 
       out << "time " << t << ";" << std::endl;
-      for( s = scenes.begin(); s != scenes.end(); ++s )
+      for( scene = scenes.begin(); scene != scenes.end(); ++scene )
       {
-	out << "scene " << (*s)->get_name() << std::endl;
+	out << "scene " << (*scene)->get_name() << std::endl;
 	out << "{" << std::endl;
-	
-	Ani_Scene *scene = dynamic_cast<Ani_Scene*>( *s );
-	assert( scene != 0 );
 	
 	//*************************
 	// output scalar components
 
-	const Contain_Return<Scalar_State>::content_type &scalars = 
-	  scene->get_scalars().get_content();
-	
-	Contain_Return<Scalar_State>::content_type::const_iterator scal;
-	for( scal = scalars.begin(); scal != scalars.end(); ++scal )
+	const Contain< Ani_Scalar >::content_type &scalars = 
+	  (*scene)->get_scalars().get_content();
+	Contain< Ani_Scalar >::content_type::const_iterator scalar;
+
+	for( scalar = scalars.begin(); scalar != scalars.end(); ++scalar )
 	{
-	  Prop_Tree_Node *node = dynamic_cast<Prop_Tree_Node*>( *scal );
-	  out << "  scalar " << node->get_name() << std::endl;
+	  out << "  scalar " << (*scalar)->get_name() << std::endl;
 	  out << "  {" << std::endl;
 	  
-	  std::pair<bool,Scalar_State> ret = (*scal)->get_return_value( t );
+	  std::pair<bool,Scalar_State> ret = (*scalar)->get_return_value( t );
 	  if( ret.first )
 	    out << "    val " << ret.second.val << ";" << std::endl;
 	  else
@@ -86,6 +84,33 @@ namespace anitmt
 
 	//*************************
 	// output object components
+
+	const Contain< Ani_Object >::content_type &objects = 
+	  (*scene)->get_objects().get_content();
+	Contain< Ani_Object >::content_type::const_iterator object;
+
+	for( object = objects.begin(); object != objects.end(); ++object )
+	{
+	  out << "  object " << (*object)->get_name() << std::endl;
+	  out << "  {" << std::endl;
+	  
+	  std::pair<bool,Object_State> ret = (*object)->get_return_value( t );
+	  if( ret.first )
+	  {
+	    out << "    matrix " << ret.second.mat << ";" << std::endl;
+	    out << "    // equals: " << endl;
+	    out << "    scale "     << get_scale_component(ret.second.mat) 
+		<< ";" << std::endl;
+	    out << "    translate " << get_translation_component(ret.second.mat)
+		<< ";" << std::endl;
+	    out << "    rotate "    << get_rotation_component(ret.second.mat)
+		<< ";" << std::endl;
+	  }
+	  else
+	    out << "    val <undefined>;" << endl;
+	  
+	  out << "  }" << std::endl;
+	}
 
 
 	out << "}" << std::endl;

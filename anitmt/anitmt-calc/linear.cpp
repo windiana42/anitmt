@@ -110,7 +110,7 @@ namespace anitmt{
   }
     
   Scal_Linear::Optional_Return_Type Scal_Linear::get_return_value
-  ( values::Scalar t, values::Scalar ) throw( EX_user_error )
+  ( values::Scalar t, values::Scalar& ) throw( EX_user_error )
   {
     // if not active
     if( (t > te()) || (t < t0()) ) 

@@ -23,6 +23,7 @@
 #include "priority.hpp"
 #include "proptree.hpp"
 #include "return.hpp"
+#include "scene.hpp"
 
 #include <params.hpp>
 
@@ -36,7 +37,7 @@ namespace anitmt{
 
     static const std::string type_name;
 
-    Contain_Return< Scene_State > scene;
+    Contain< Ani_Scene > scenes;
 
     bool try_add_child( Prop_Tree_Node *node );
 
@@ -45,6 +46,9 @@ namespace anitmt{
     virtual void final_init();
   public:
     static std::string get_type_name();
+
+    inline const Contain< Ani_Scene >& get_scenes() 
+    { return scenes; }
 
     Animation( std::string name );
 

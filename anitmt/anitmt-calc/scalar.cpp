@@ -16,8 +16,8 @@
 
 #include "solver.hpp"
 
-namespace anitmt{
-
+namespace anitmt
+{
   //******************************************************************
   // Ani_Scalar: Animatable Scalar node that returns the scalar state 
   //******************************************************************
@@ -38,7 +38,7 @@ namespace anitmt{
   }
 
   Ani_Scalar::Optional_Return_Type Ani_Scalar::get_return_value
-  ( values::Scalar t, Scalar_State ) throw( EX_user_error )
+  ( values::Scalar t, Scalar_State& ) throw( EX_user_error )
   {
     // return the value of my child in any case
     return s.get_return_value(t);
@@ -46,11 +46,8 @@ namespace anitmt{
 
   bool Ani_Scalar::try_add_child( Prop_Tree_Node *node )
   {
-    Return<values::Scalar>  *scal = 
-      dynamic_cast< Return<values::Scalar>*  >( node );
-
     bool res = false;
-    if( scal ) res = res || s.try_add_child( scal );
+    res |= s.try_add_child( node );
     
     return res;
   }

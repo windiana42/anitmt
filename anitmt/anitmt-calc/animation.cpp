@@ -29,17 +29,14 @@ namespace anitmt{
 
   Animation::Animation( std::string name ) 
     : Prop_Tree_Node( type_name, name, this /*this is THE animation*/ ),
-      scene(true,false) {
+      scenes(true,false) {
   }
 
   bool Animation::try_add_child( Prop_Tree_Node *node ){
-
-    Return<Scene_State>  *s = 
-      dynamic_cast< Return<Scene_State>*  >( node );
-
     bool res = false;
-    if( s ) res = res || scene.try_add_child( s );
-    
+
+    res |= scenes.try_add_child( node );
+
     return res;
   }
 
@@ -47,7 +44,7 @@ namespace anitmt{
   //! function of the return type container
   void Animation::final_init() 
   {
-    scene.hierarchy_final_init();
+    scenes.hierarchy_final_init();
   }
 }
 

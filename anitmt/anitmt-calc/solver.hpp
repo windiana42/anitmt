@@ -37,6 +37,48 @@ namespace anitmt{
 namespace anitmt{
 
   //*************************************************************************
+  // Basic_Solver_for_2_Operands: base class for solvers that can solve each
+  //                              of the three operands from the other two
+  //*************************************************************************
+
+  template< class T_A, class T_B >
+  class Basic_Solver_for_2_Operands : public Operand_Listener
+  {
+    Operand<T_A> &a;
+    Operand<T_B> &b;
+
+    bool just_solving;           // is set while testing result of solved value
+    bool just_solved_a, just_solved_b;
+
+    //**********************************
+    // Virtual Operand_Listener methods
+
+    // has to check the result of the operand with ID as pointer to operand
+    bool is_result_ok( const void *ID, const Solve_Run_Info *info ) throw(EX);
+    // tells to use the result calculated by is_result_ok()
+    void use_result( const void *ID, const Solve_Run_Info *info ) throw(EX);
+    // disconnect operand
+    void disconnect( const void *ID );
+
+    //*************************************
+    // Virtual methods for concrete solvers
+
+    virtual T_A calc_a( const T_B &b ) = 0;
+    virtual T_B calc_b( const T_A &a ) = 0;
+
+    virtual bool is_a_ok( const T_A &a, const T_B &b, bool avail_b ) 
+    { return true; }
+    virtual bool is_b_ok( const T_A &a, const T_B &b, bool avail_a ) 
+    { return true; }
+
+    virtual bool is_a_calcable( const T_B & ) { return true; }
+    virtual bool is_b_calcable( const T_A & ) { return true; }
+
+  public:
+    Basic_Solver_for_2_Operands( Operand<T_A> &a, Operand<T_B> &b );
+  };
+
+  //*************************************************************************
   // Basic_Solver_for_3_Operands: base class for solvers that can solve each
   //                              of the three operands from the other two
   //*************************************************************************
@@ -88,14 +130,36 @@ namespace anitmt{
 
     virtual T_A calc_a_from_b( const T_B &/*b*/ ) { assert(0); }
     virtual T_A calc_a_from_c( const T_C &/*c*/ ) { assert(0); }
-    virtual T_A calc_b_from_a( const T_A &/*a*/ ) { assert(0); }
-    virtual T_A calc_b_from_c( const T_C &/*c*/ ) { assert(0); }
-    virtual T_A calc_c_from_a( const T_A &/*a*/ ) { assert(0); }
-    virtual T_A calc_c_from_b( const T_B &/*b*/ ) { assert(0); }
+    virtual T_B calc_b_from_a( const T_A &/*a*/ ) { assert(0); }
+    virtual T_B calc_b_from_c( const T_C &/*c*/ ) { assert(0); }
+    virtual T_C calc_c_from_a( const T_A &/*a*/ ) { assert(0); }
+    virtual T_C calc_c_from_b( const T_B &/*b*/ ) { assert(0); }
   public:
     Basic_Solver_for_3_Operands( Operand<T_A> &a, Operand<T_B> &b,
 				 Operand<T_C> &c );
     };
+
+  //************************************************
+  // Equal_Solver: solves a = b + c in any direction
+  //************************************************
+
+  template< class T_A, class T_B >
+  class Equal_Solver : public Basic_Solver_for_2_Operands<T_A,T_B>
+  {
+    virtual T_A calc_a( const T_B &b ) { return b; }
+    virtual T_B calc_b( const T_A &a ) { return a; }
+  public:
+    // Equal solver a = b
+    Equal_Solver( Operand<T_A> &a, Operand<T_B> &b )
+      : Basic_Solver_for_2_Operands<T_A,T_B>(a,b) {}
+  };
+
+  // a = b 
+  template< class T_A, class T_B >
+  void establish_equal_solver( Operand<T_A> &a, Operand<T_B> &b )
+  {
+    new Equal_Solver<T_A,T_B>( a, b );
+  }
 
   //************************************************
   // Sum_Solver: solves a = b + c in any direction

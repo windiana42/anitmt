@@ -104,8 +104,8 @@ namespace PID
 		_last_double,  //  must be largest double ID 
 	// Type: STRING (first entry must be set to 0)
 		renderer=0,
-		ani_dir,
 		name,		// animation name
+		ani_dir,	// destination directory for the animation
 		
 		
 		_last_string,  //  must be largest string ID 

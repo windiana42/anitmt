@@ -42,7 +42,7 @@ namespace anitmt{
   }
 
   Ani_Object::Optional_Return_Type Ani_Object::get_return_value
-  ( values::Scalar t, Object_State ) throw( EX_user_error )
+  ( values::Scalar t, Object_State& ) throw( EX_user_error )
   {
     values::Matrix ret;
 
@@ -58,23 +58,19 @@ namespace anitmt{
     values::Vector up_vector = u.second;
 
     // !!! 
-    //ret *= values::Matrix::Mtranslate( -c() );
-    //ret *= values::Matrix::Mtranslate( position );
-    //ret *= values::Matrix::Mrotate_pair_pair
-    //   ( values::Vector(1,0,0), values::Vector(0,1,0), direction , up_vector );
+    ret *= values::Mtranslate( -c() );
+    ret *= values::Mtranslate( position );
+    ret *= values::Mrotate_pair_pair
+      ( values::Vector(1,0,0), values::Vector(0,1,0), direction , up_vector );
 
     return Ani_Object::Optional_Return_Type( true, ret );
   }
 
   bool Ani_Object::try_add_child( Prop_Tree_Node *node ){
-    Return<Position>  *p = dynamic_cast< Return<Position>*  >( node );
-    Return<Direction> *d = dynamic_cast< Return<Direction>* >( node );
-    Return<Up_Vector> *u = dynamic_cast< Return<Up_Vector>* >( node );
-
     bool res = false;
-    if( p ) res = res || pos.try_add_child( p );
-    if( d ) res = res || dir.try_add_child( d );
-    if( u ) res = res || up.try_add_child( u );
+    res |= pos.try_add_child( node );
+    res |= dir.try_add_child( node );
+    res |= up.try_add_child ( node );
     
     return res;
   }

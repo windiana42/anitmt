@@ -443,5 +443,59 @@ namespace values
 		
 		return(z_angle);
 	}
-	
+
+  //! returns the scale factors of each axis as vector, caused by Matrix
+  Vector get_scale_component( const Matrix &mat )
+  {
+    Vector x(1,0,0);
+    Vector y(0,1,0);
+    Vector z(0,0,1);
+
+    x *= mat;
+    y *= mat;
+    z *= mat;
+
+    return Vector( abs(x), abs(y), abs(z) );
+  }
+
+  //! returns the translation caused by transformation Matrix
+  Vector get_translation_component( const Matrix &mat )
+  {
+    return mat * Vector(0,0,0);
+  }
+
+  /*! returns the rotations about X,Y and Z axes in radians as vector, 
+    that is caused by Matrix */
+  Vector get_rotation_component( const Matrix &mat )
+  {
+    Vector x(1,0,0);
+    Vector y(0,1,0);
+    Vector trans = get_translation_component( mat );
+
+    // get rotated vectors
+    Vector x_rot = mat * x - trans; 
+    Vector y_rot = mat * y - trans;
+
+    // calc rotation by rerotating them to x and y
+
+    // get z-rotation by rotating x_rot in x-z plain
+    double z_angle = atan2( x_rot[1], x_rot[0] ); 
+    x_rot.rotateZ(-z_angle);
+    y_rot.rotateZ(-z_angle);
+
+    // get y-rotation by rotating x_rot in x-direction
+    double y_angle = -atan2( x_rot[2], x_rot[0] ); // get angle 
+    /**/x_rot.rotateY(-y_angle);
+    y_rot.rotateY(-y_angle);
+
+    // get x-rotation by rotating y_rot in y-direction
+    double x_angle = atan2( y_rot[2], y_rot[1] );
+    /**/x_rot.rotateX(-x_angle);
+    /**/y_rot.rotateX(-x_angle);
+
+    /**/assert( x_rot == x );assert( y_rot == y );
+
+    return Vector( x_angle, y_angle, z_angle );
+  }  
+
 }

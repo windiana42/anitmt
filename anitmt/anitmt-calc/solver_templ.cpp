@@ -28,6 +28,146 @@ namespace anitmt{
   // Virtual Operand_Listener methods
 
   // has to check the result of the operand with ID as pointer to operand
+  template< class T_A, class T_B >
+  bool Basic_Solver_for_2_Operands<T_A,T_B>::is_result_ok
+  ( const void *ID, const Solve_Run_Info *info ) throw(EX)
+  {
+    T_A _a;
+    T_B _b;
+    bool avail_a = a.is_solved_in_try(info);
+    bool avail_b = b.is_solved_in_try(info);
+    if( avail_a ) _a = a.get_value(info);
+    if( avail_b ) _b = b.get_value(info);
+
+    if( !just_solving )
+    {
+      just_solving = true;	
+      if( ID == &a )
+      {
+	assert( avail_a );
+	if( !is_a_ok( _a, _b, avail_b ) )
+	{ 
+	  just_solving = false;	
+	  return false; 
+	}
+	
+	if( is_b_calcable( _a ) )
+	{
+	  if( avail_b )	// is b already availible
+	  {
+	    if( _b != calc_b(_a) ) // check b and calculated b
+	    {
+	      just_solving = false;
+	      return false;
+	    }
+	  }
+	  else
+	  {
+	    just_solved_b = b.test_set_value( calc_b(_a), info );
+	    just_solving = false;	
+	    return just_solved_b;
+	  }
+	}
+      }
+      if( ID == &b )
+      {
+	assert( avail_b );
+	if( !is_b_ok( _a, _b, avail_a ) )
+	{ 
+	  just_solving = false;	
+	  return false; 
+	}
+	
+	if( is_a_calcable( _b ) )
+	{
+	  if( avail_a )	// is a already availible
+	  {
+	    if( _a != calc_a(_b) ) // check a and calculated a
+	    {
+	      just_solving = false;
+	      return false;
+	    }
+	  }
+	  else
+	  {
+	    just_solved_a = a.test_set_value( calc_a(_b), info );
+	    just_solving = false;	
+	    return just_solved_a;
+	  }
+	}
+      }
+      just_solving = false;	
+      return true;
+    }
+    else
+    {
+      if( ID == &a ) { return is_a_ok( _a, _b, avail_b ); }
+      if( ID == &b ) { return is_b_ok( _a, _b, avail_a ); }
+      assert( 0 );		// any operand pointer should equal ID
+    }
+    return true;
+  }
+
+  // tells to use the result calculated by is_result_ok()
+  template< class T_A, class T_B >
+  void Basic_Solver_for_2_Operands<T_A,T_B>::use_result
+  ( const void *ID, const Solve_Run_Info *info ) throw(EX)
+  {
+    assert( ID==&a || ID==&b );
+
+    if( !just_solving )
+    {
+      just_solving = true;	// solving or removing...
+      if( just_solved_a ){ a.use_test_value( info ); just_solved_a=false; }
+      if( just_solved_b ){ b.use_test_value( info ); just_solved_b=false; }
+      just_solving = false;
+    }
+  }
+   
+  // disconnect operand
+  template< class T_A, class T_B >
+  void Basic_Solver_for_2_Operands<T_A,T_B>::disconnect( const void *ID )
+  {
+    if( !just_solving )
+    {
+      just_solving = true;	// solving or removing...
+      if( ID == &a ) 
+      {
+	b.rm_listener( this );
+      }
+      else if( ID == &b ) 
+      {
+	a.rm_listener( this );
+      }
+      else
+	assert(0);
+
+      just_solving = false;	// solving or removing...
+
+      delete this;		// !!! no further commands !!!
+    }
+  }
+
+  template< class T_A, class T_B >
+  Basic_Solver_for_2_Operands<T_A,T_B>::Basic_Solver_for_2_Operands
+  ( Operand<T_A> &op_a, Operand<T_B> &op_b )
+    : a(op_a), b(op_b), just_solving(false), 
+      just_solved_a(false), just_solved_b(false)
+  {
+    a.add_listener( this );
+    b.add_listener( this );
+  }
+
+
+  //*************************************************************************
+  // Basic_Solver_for_3_Operands: base class for solvers that can solve each
+  //                              of the three operands from the other two
+  //*************************************************************************
+
+  //**********************************
+  // Virtual Operand_Listener methods
+
+  // has to check the result of the operand with ID as pointer to operand
   template< class T_A, class T_B, class T_C >
   bool Basic_Solver_for_3_Operands<T_A,T_B,T_C>::is_result_ok
   ( const void *ID, const Solve_Run_Info *info ) throw(EX)
