@@ -19,8 +19,9 @@
 #include <iostream>
 
 namespace anitmt{
-  class Property;
+  class Solve_Problem_Handler;
 
+  class Property;
   class Scalar_Property;
   class Vector_Property;
   class String_Property;
@@ -37,6 +38,18 @@ namespace anitmt{
   //************
   
   class EX_value_conflict {};
+
+  //*********************************************************
+  // Solve_Problem_Handler: handles problems in solve system
+  //*********************************************************
+  
+  class Solve_Problem_Handler {
+  public:
+    enum problem_type{ have_to_wait_for_prop, prop_colission }
+
+    virtual problem_occured( std::list< Property* > bad_props, 
+			     problem_type type ) = 0;
+  };
 
   //****************************************
   // Property: container for property values
@@ -81,10 +94,10 @@ namespace anitmt{
 
   public:	
     T get() const;		// returns the value
-    bool set_if_ok( T v, bool force_usage = true ); 
+    bool set_if_ok( T v, Solve_Problem_Handler *problem_handler = 0 ); 
 				// tries to set the value and returns whether
 				// the attempt was successful (true) or not.
-				// force_usage is for explizite user inputs
+				// problem_handler is for explizite user inputs
 
     operator T() const;		// implicite convertion to type (like get())
 
@@ -96,7 +109,8 @@ namespace anitmt{
 
     // This is called to try if this value might be valid for this property
     // returns true if value is acceptable
-    bool is_this_ok( T v, Solver *caller, bool force_usage )
+    bool is_this_ok( T v, Solver *caller, 
+		     Solve_Problem_Handler *problem_handler )
       throw( EX_value_conflict );
     // Solver call this when the given value was ok
     void use_it( Solver *caller );

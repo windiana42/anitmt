@@ -37,8 +37,9 @@ namespace anitmt{
 
   // tries to set the property and returns whether it was successful (true)
   template<class T>
-  bool Type_Property<T>::set_if_ok( T v, bool force_usage ){
-    bool res = is_this_ok( v, 0, force_usage );
+  bool Type_Property<T>::set_if_ok( T v, 
+				    Solve_Problem_Handler *problem_handler ){
+    bool res = is_this_ok( v, 0, problem_handler );
     if( res ) use_it(0);
     cur_try_id++;		// change try_id for next time
     return res;
@@ -55,7 +56,7 @@ namespace anitmt{
   // !!! may be recursive
   template<class T>
   bool Type_Property<T>::is_this_ok( T v_to_try, Solver *caller, 
-				     bool force_usage ) 
+				     Solve_Problem_Handler *problem_handler ) 
     throw( EX_value_conflict ){
     
     bool res = true;
@@ -67,11 +68,15 @@ namespace anitmt{
 	if( (v == v_to_try) )
 	  return true;
 
-	// return error or exception
-	if( force_usage )
-	  throw EX_value_conflict();
-	else
-	  return false;
+	// report problem
+	if( problem_handler ) 
+	  {
+	    std::list< Property* > l; l.push_back( this );
+	    problem_handler->
+	      problem_occured( l, Solve_Problem_Handler::prop_colission );
+	  }
+
+	return false;
       }
 
     try_id = cur_try_id;	// mark this property to be solved in this try
@@ -83,7 +88,7 @@ namespace anitmt{
 	// skip the solver who gave the solution
 	if( (*i) == caller ) continue;
 
-	if( !((*i)->is_prop_solution_ok( this, force_usage )) )
+	if( !((*i)->is_prop_solution_ok( this, problem_handler )) )
 	  {
 	    res = false;
 	    break;

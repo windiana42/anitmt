@@ -35,7 +35,8 @@ namespace anitmt{
     // Properties call that if they were solved
     virtual void prop_was_solved( Property *ID ) = 0;
     // Properties call that if they want to validate their results
-    virtual bool is_prop_solution_ok( Property *ID, bool force_usage ) = 0;
+    virtual bool is_prop_solution_ok
+    ( Property *ID, Solve_Problem_Handler *problem_handler ) = 0;
 
     // Property that caused the last rejection of a solve run
     static Property *rejection_cause;
@@ -70,7 +71,8 @@ namespace anitmt{
     // Properties call that if they were solved
     virtual void prop_was_solved( Property *ID );
     // Properties call that if they want to validate their results
-    virtual bool is_prop_solution_ok( Property *ID, bool force_usage );
+    virtual bool is_prop_solution_ok( Property *ID, 
+				      Solve_Problem_Handler *problem_handler );
 
     Accel_Solver( Scalar_Property *d, Scalar_Property *t, Scalar_Property *a,
 		  Scalar_Property *v0, Scalar_Property *ve );
@@ -90,7 +92,7 @@ namespace anitmt{
     // Properties call that if they were solved
     virtual void prop_was_solved( Property *ID );
     // Properties call that if they want to validate their results
-    virtual bool is_prop_solution_ok( Property *ID, bool force_usage );
+    virtual bool is_prop_solution_ok( Property *ID, Solve_Problem_Handler *problem_handler );
 
     Diff_Solver( Scalar_Property *d, Scalar_Property *s, Scalar_Property *e );
   };
@@ -106,7 +108,7 @@ namespace anitmt{
     // Properties call that if they were solved
     virtual void prop_was_solved( Property *ID );
     // Properties call that if they want to validate their results
-    virtual bool is_prop_solution_ok( Property *ID, bool force_usage );
+    virtual bool is_prop_solution_ok( Property *ID, Solve_Problem_Handler *problem_handler );
 
     Relation_Solver( Scalar_Property *q, Scalar_Property *n, 
 		     Scalar_Property *d );
