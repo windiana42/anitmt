@@ -123,6 +123,12 @@ struct TaskSource_NAMESPACE
 		//EC_
 	};
 	
+	enum TaskSourceType
+	{
+		TST_Passive,  // like local source
+		TST_Active    // like LDR source (tells manager when to start processing) 
+	};
+	
 	struct TSNotifyInfo
 	{
 		TSAction action;          // why this was called 
@@ -155,6 +161,10 @@ struct TaskSource_NAMESPACE
 class TaskSource : public TaskSource_NAMESPACE
 {
 	protected:
+		// Important: this defaults to TST_Passive, so active task sources 
+		// must set that to a proper value: 
+		TaskSourceType tstype;
+		
 		// Pointer to component data base: 
 		ComponentDataBase *component_db;
 		
@@ -187,6 +197,10 @@ class TaskSource : public TaskSource_NAMESPACE
 		// Does it make sense to re-try if the Connect() call fails? 
 		// (Returns delay in msec or 0 if you should not re-try.)
 		virtual long ConnectRetryMakesSense() HL_PureVirt(-1);
+		
+		// Get TaskSourceType: 
+		TaskSourceType GetTaskSourceType()
+			{  return(tstype);  }
 };
 
 
@@ -276,6 +290,10 @@ class TaskSourceConsumer : public TaskSource_NAMESPACE
 		// (Returns delay in msec or 0 if you should not re-try.) 
 		long TSConnectRetryMakesSense()
 			{  return(tsource->ConnectRetryMakesSense());  }
+		
+		// Query TaskSourceType: 
+		TaskSourceType GetTaskSourceType()
+			{  return(tsource->GetTaskSourceType());  }
 };
 
 #endif  /* _RNDV_TASKSOURCE_HPP_ */

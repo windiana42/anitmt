@@ -18,19 +18,40 @@
 #define _RNDV_TSOURCE_LOCAL_HPP_ 1
 
 #include "../tasksource.hpp"
+#include "param.hpp"
 
-
-class TaskSourceFactory_Local;
 
 class TaskSource_Local : 
 	public TaskSource,
 	public FDBase
 {
+	public:
+		typedef TaskSourceFactory_Local::PerFrameTaskInfo PerFrameTaskInfo;
+		struct FrameToProcessInfo
+		{
+			const PerFrameTaskInfo *fi;
+			
+			int frame_no;
+			int tobe_rendered : 1;
+			int tobe_filtered : 1;
+			int resume_flag : 1;  // shall resume be passed to renderer?
+			int : 29;
+			
+			// Render and filte input/output: 
+			RefString r_infile;
+			RefString r_outfile;
+			RefString f_infile;
+			RefString f_outfile;
+			
+			_CPP_OPERATORS_FF
+			FrameToProcessInfo(int *failflag=NULL);
+			~FrameToProcessInfo()  {  fi=NULL;  }
+		};
 	private:
 		// Our parameters: 
 		TaskSourceFactory_Local *p;
 		
-		// Response 0msec timer: 
+		// Response (normally 0 msec) timer: 
 		TimerID rtid;
 		
 		// What we're currently doing: 
@@ -44,16 +65,22 @@ class TaskSource_Local :
 		
 		// What we're currently doing: 
 		int next_frame_no;
+		// This is needed for detection of nonexistant frames: 
+		int nonexist_in_seq;
 		
 		// Do some actaul work: 
 		void _ProcessGetTask(TSNotifyInfo *ni);
 		void _ProcessDoneTask(TSNotifyInfo *ni);
 		
-		int _GetNextFiles(RefString *inf,RefString *outf,int *resume_flag);
+		int _FillInRenderJobFiles(FrameToProcessInfo *ftpi);
+		int _FillInFilterJobFiles(FrameToProcessInfo *ftpi);
+		int _GetNextFTPI_FillInFiles(FrameToProcessInfo *ftpi);
+		int _GetNextFrameToProcess(FrameToProcessInfo *ftpi);
 		
 		// Update/start rtid timer: 
-		inline void _Start0msecTimer();
-		inline void _Stop0msecTimer();
+		inline void _StartRTimer();
+		inline void _StopRTimer()
+			{  UpdateTimer(rtid,-1,0);  }
 		
 		// overriding virtuals from FDbase: 
 		int timernotify(TimerInfo *);

@@ -89,7 +89,7 @@ TaskSourceFactory *ComponentDataBase::_FindSourceFactoryByName(const char *name)
 	{
 		const char *dn=n->TaskSourceName();
 		if(strlen(dn)!=nlen)  continue;
-		if(strcmp(dn,name))  continue;
+		if(strcasecmp(dn,name))  continue;
 		return(n);
 	}
 	return(NULL);
@@ -499,6 +499,15 @@ int ComponentDataBase::CheckParams()
 		
 		if(!err_failed && !warn_failed)
 		{  Verbose("%d entries] ",nent);  }
+		
+		// And, get delete the parameters (par:: stuff)...
+		// They are no longer needed. 
+		for(Section *_s=dti->i_section->sub.first(); _s; )
+		{
+			Section *s=_s;
+			_s=_s->next;
+			RecursiveDeleteParams(s);
+		}
 	}
 	
 	if(!err_failed && !warn_failed)

@@ -64,6 +64,7 @@ int TaskSource::call_tsnotify(TaskSourceConsumer *cons,TSNotifyInfo *ni)
 
 TaskSource::TaskSource(ComponentDataBase *cdb,int * /*failflag*/)
 {
+	tstype=TST_Passive;  // pre-set default
 	component_db=cdb;
 	cclient=NULL;
 }

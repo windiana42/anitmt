@@ -15,9 +15,12 @@
  */
 
 
+#include <lib/prototypes.hpp>
+
 #include "tsfactory.hpp"
 
 #include "local/param.hpp"
+#include "ldr/param.hpp"
 
 
 // Called on program start to set up the TaskSourceFactory classes, 
@@ -30,9 +33,9 @@ int TaskSourceFactory::init_factories(ComponentDataBase *cdb)
 	
 	Verbose("Initializing task sources: ");
 	
-	// List the init function of all drivers here. 
-	// Currently the POVRay driver is feeling lonely...
+	// List the init function of all task sources here. 
 	failed+=TaskSourceFactory_Local::init(cdb);
+	failed+=TaskSourceFactory_LDR::init(cdb);
 	
 	Verbose(failed ? "FAILED\n" : "OK\n");
 	

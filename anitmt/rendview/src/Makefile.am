@@ -17,6 +17,8 @@ rendview_LDADD = \
 	render/librender.a \
 	tsource/libtsource.a \
 	tsource/local/libtsource_local.a \
+	tsource/ldr/libtsource_ldr.a \
 	tsource/libtsource.a \
-	imgfmt/libimgfmt.a 
+	imgfmt/libimgfmt.a \
+	lib/libsupport.a
 

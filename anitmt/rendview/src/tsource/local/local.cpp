@@ -15,41 +15,20 @@
  */
 
 #include "local.hpp"
-#include "param.hpp"
 
 #include "../taskfile.hpp"
 
 #include <assert.h>
-#include <unistd.h>
-#include <sys/stat.h>
 
 
-inline void TaskSource_Local::_Start0msecTimer()
+inline void TaskSource_Local::_StartRTimer()
 {
-	// Well, actually, these timers need not be 0msec. 
+	// Well, actually, these timers need not be 0 msec. 
 	// It's an easy simultation of task sources which tend to not return 
 	// immedialtely to use a little delay: 
 	UpdateTimer(rtid,p->response_delay,0);
 }
 
-inline void TaskSource_Local::_Stop0msecTimer()
-{
-	UpdateTimer(rtid,-1,0);
-}
-
-
-// Check if a file exists and we have the passed permissions: 
-static int _CheckExist(RefString *f,int want_read,int want_write=0)
-{
-	if(!f->str())
-	{  return(0);  }
-	int af=0;
-	if(want_read)  af|=R_OK;
-	if(want_write)  af|=W_OK;
-	if(!access(f->str(),af))
-	{  return(1);  }
-	return(0);
-}
 
 // Check if the first file is newer than the second one 
 // (both should exist)
@@ -60,51 +39,31 @@ static int _CheckExist(RefString *f,int want_read,int want_write=0)
 // Pass -1 if re-rendering message shall not be written on error. 
 static int _FirstIsNewer(RefString *a,RefString *b,int frame_no)
 {
-	struct stat a_st,b_st;
-	const char *sfile=a->str();
-	if(stat(sfile,&a_st))  goto error;
-	sfile=b->str();
-	if(stat(sfile,&b_st))  goto error;
-	return((a_st.st_mtime>b_st.st_mtime) ? 1 : 0);
-error:;
-	// ...or should this be a warning?
-	Error("Local: stat() failed on \"%s\": %s\n",
-		sfile,strerror(errno));
-	if(frame_no>=0)
+	int rv=FirstFileIsNewer(a,b,"Local: ");
+	if(rv<0 && frame_no>=0)
 	{  Warning("Local:   (rendering frame %d to be sure but expect trouble)\n",
 		frame_no);  }
-	return(-1);
+	return(rv);
 }
 
 
-static void _DeleteFile(RefString path,int may_not_exist,
-	const char *desc)
+static void _DeleteFile(RefString path,int may_not_exist,const char *desc)
 {
-	if(!path.str())  return;
-	if(!unlink(path.str()))
-	{
-		Verbose("Local: Deleted %s: %s\n",desc,path.str());
-		return;
-	}
-	if(errno==ENOENT && may_not_exist)  return;
-	Warning("Failed to unlink \"%s\": %s\n",path.str(),strerror(errno));
+	int rv=DeleteFile(&path,may_not_exist,"Local: ");
+	if(!rv)
+	{  Verbose("Local: Deleted %s: %s\n",desc,path.str());  }
 }
 
 // Return val: <0 -> error; 0 -> okay; 1 -> ENOENT && may_not_exist
 static int _RenameFile(RefString old_name,RefString new_name,int may_not_exist)
 {
-	if(!old_name.str() || !new_name.str())  return(-1);
-	if(!rename(old_name.str(),new_name.str()))
-	{
-		Verbose("Local: Renamed unfinished frame: %s -> %s\n",
-			old_name.str(),new_name.str());
-		return(0);
-	}
-	if(errno==ENOENT && may_not_exist)  return(1);
-	Warning("Local: Failed to rename \"%s\" -> \"%s\": %s\n",
-		old_name.str(),new_name.str(),strerror(errno));
-	return(-1);
+	int rv=RenameFile(&old_name,&new_name,may_not_exist,"Local: ");
+	if(!rv)
+	{  Verbose("Local: Renamed unfinished frame: %s -> %s\n",
+			old_name.str(),new_name.str());  }
+	return(rv);
 }
+
 
 static int _UnfinishedName(RefString *f)
 {
@@ -113,133 +72,241 @@ static int _UnfinishedName(RefString *f)
 
 
 // Return value: 
+//   0 -> OK (render it) [or: check tobe_rendered!]
+//   1 -> error; do not render and also do not filter it if that is planned. 
+//   2 -> no more tasks
+//  -1 -> allocation failure
+int TaskSource_Local::_FillInRenderJobFiles(FrameToProcessInfo *ftpi)
+{
+	assert(ftpi->fi && ftpi->fi->rdesc);  // else: we may not be here
+	assert(ftpi->tobe_rendered);
+	
+	const PerFrameTaskInfo *fi=ftpi->fi;
+	
+	if(ftpi->r_infile.sprintf(0,fi->rinfpattern,ftpi->frame_no))  return(-1);
+	if(ftpi->r_outfile.sprintf(0,fi->routfpattern,ftpi->frame_no))  return(-1);
+	
+	// inf, outf: paths for RendView (rdir prepended)
+	RefString inf(ftpi->r_infile),outf(ftpi->r_outfile);
+	assert(inf.str() && outf.str());  // otherwise we should have returned one line above
+	if(fi->rdir.str())
+	{
+		assert(fi->rdir.str()[fi->rdir.len()-1]=='/');  // FinalInit() should append '/'
+		// Prepend rdir if not absolute path: 
+		if(inf.str()[0]!='/')
+		{  if(inf.prepend(fi->rdir))  return(-1);  }
+		if(outf.str()[0]!='/')
+		{  if(outf.prepend(fi->rdir))  return(-1);  }
+	}
+	
+	// Check if inf exists: 
+	if(!CheckExistFile(&inf,1))
+	{
+		Error("Local: Access check failed on input file \"%s\": %s\n",
+			inf.str(),strerror(errno));
+		++nonexist_in_seq;
+		if(nonexist_in_seq>=3)
+		{
+			Error("Local: Access check failed for last %d files. "
+				"Assuming no more files (done).\n",nonexist_in_seq);
+			return(2);  // no more tasks
+		}
+		return(1);   // error
+	}
+	
+	// Check if unfinished frame exists (always do that): 
+	RefString unf_tmp;
+	unf_tmp=outf;
+	if(_UnfinishedName(&unf_tmp))  return(-1);
+	int o_unf_exists=CheckExistFile(&unf_tmp,1);
+	
+	// Okay, now some logic: 
+	char unf_action='\0';  // rename, delete, <nothing>
+	char frame_action='\0'; // skip, render, continue
+	if(p->cont_flag)
+	{
+		// Check if finished frame exists: 
+		int o_exists=CheckExistFile(&outf,1);
+		
+		if(fi->render_resume_flag)
+		{
+			// Okay, render resume switched on. If the file to resume 
+			// exists, rename it back to the original file name: 
+			if(o_unf_exists && o_exists)
+			{
+				// Check which one is the newer one: 
+				int rv=_FirstIsNewer(&unf_tmp,&outf,ftpi->frame_no);
+				if(rv==1)   // unf_tmp is newer. Take it. 
+				{  unf_action='r';  frame_action='c';  }  // rename
+				else if(rv==0)  // outf is newer; skip frame, delete unfinished: 
+				{  unf_action='d';  frame_action='s';  }
+				else  // Error. Delete unfinished, (re)render 
+				{  unf_action='d';  frame_action='r';  }
+			}
+			else if(o_unf_exists)
+			{  unf_action='r';  frame_action='c';  }
+		}
+		else
+		{
+			// If render_resume_flag (rcont) is switched off, we delete the 
+			// unfinished file: 
+			if(o_unf_exists)
+			{  unf_action='d';  }
+		}
+		// This is the same for cont with and without render resume: 
+		if(frame_action=='\0')
+		{
+			if(o_exists)
+			{
+				// See if we re-render it: 
+				if(_FirstIsNewer(&inf,&outf,ftpi->frame_no)!=0)  // inf newer or error
+				{  frame_action='r';  }
+				else
+				{  frame_action='s';  }
+			}
+			else
+			{  frame_action='r';  }
+		}
+	}
+	else
+	{  frame_action='r';  }
+	
+	// Okay, do it: 
+	if(unf_action=='r')  // rename
+	{
+		unf_action='\0';
+		int rv=_RenameFile(unf_tmp,outf,0);
+		if(rv)  // failed? - then (try to) delete it: 
+		{  unf_action='d';  }
+	}
+	if(unf_action=='d')
+	{
+		_DeleteFile(unf_tmp,0,"unfinished frame file");
+		unf_action='\0';
+	}
+	assert(unf_action=='\0');
+	
+	int retval=1;
+	
+	// Check what to do with the frame: 
+	if(frame_action=='r' || frame_action=='c')
+	{
+		Verbose("Local: %s frame %d (job %s -> %s).\n",
+			(frame_action=='r') ? 
+				"Completely rendering" : "Continuing to render",
+			ftpi->frame_no,inf.str(),outf.str());
+		if(frame_action=='c')
+		{  ftpi->resume_flag=1;  }
+		retval=0;  // render frame
+	}
+	else if(frame_action=='s')
+	{
+		Verbose("Local: Not re-rendering frame %d (job %s -> %s).\n",
+			ftpi->frame_no,inf.str(),outf.str());
+		ftpi->tobe_rendered=0;
+		retval=0;  // render frame; nothing will be done as tobe_rendered=0. 
+	}
+	else assert(0);
+	
+	// Reset nonexistant file counter: 
+	if(retval!=1)
+	{  nonexist_in_seq=0;  }
+	return(retval);
+}
+
+
+int TaskSource_Local::_FillInFilterJobFiles(FrameToProcessInfo *ftpi)
+{
+	assert(ftpi->fi && ftpi->fi->fdesc);  // else: we may not be here
+	assert(ftpi->tobe_filtered);
+	
+	const PerFrameTaskInfo *fi=ftpi->fi;
+	
+	Error("Please hack me. aborting()\n");
+	abort();
+	
+	return(1);
+}
+
+
+// Just fills in the correct frame number and tobe_rendered/filtered 
+// flags of the next frame which either should be rendered or filtered. 
+// No check if we actually have to do that (because of -cont or whatever) 
+// and the paths are NOT filled in. 
+// Return value: 
+//  0 -> okay, this frame has to be processed. 
+//  1 -> no more frames to process
+int TaskSource_Local::_GetNextFrameToProcess(FrameToProcessInfo *ftpi)
+{
+	const PerFrameTaskInfo *fi;
+	for(;;next_frame_no+=p->fjump)
+	{
+		fi=p->GetPerFrameTaskInfo(next_frame_no);
+		if(!fi)  break;  // out of range; must stop: no more frames to process
+		
+		// See what has to be done: 
+		ftpi->tobe_rendered=fi->rdesc ? 1 : 0;
+		ftpi->tobe_filtered=fi->fdesc ? 1 : 0;
+		if(!ftpi->tobe_rendered && !ftpi->tobe_filtered)
+		{
+			Warning("Local: Frame %d shall neither be rendered nor filtered.\n",
+				next_frame_no);
+			continue;
+		}
+		ftpi->fi=fi;
+		ftpi->frame_no=next_frame_no;
+		
+		// Make sure no paths are left: 
+		ftpi->r_infile.deref();
+		ftpi->r_outfile.deref();
+		ftpi->f_infile.deref();
+		ftpi->f_outfile.deref();
+		
+		// Finally, switch on one frame: 
+		next_frame_no+=p->fjump;
+		return(0);
+	}
+	return(1);
+}
+
+
+// Return value: 
 //  0 -> okay, render this frame. 
 //  1 -> no more tasks
 // -1 -> alloc failure
-int TaskSource_Local::_GetNextFiles(RefString *inf,RefString *outf,
-	int *resume_flag)
+int TaskSource_Local::_GetNextFTPI_FillInFiles(FrameToProcessInfo *ftpi)
 {
-	int nonexist_in_seq=0;
-	
-	for(;;next_frame_no+=p->fjump)
+	for(;;)
 	{
-		if(p->nframes>=0)  // <0 -> unlimited
+		int rv=_GetNextFrameToProcess(ftpi);
+		if(rv==1)  // no more tasks
+		{  return(1);  }
+		
+		if(ftpi->tobe_rendered)
 		{
-			if( (p->fjump>0 && next_frame_no>=p->nframes+p->startframe) || 
-			    (p->fjump<0 && next_frame_no<p->startframe ) )
-			{  return(1);  }
+			rv=_FillInRenderJobFiles(ftpi);
+			if(rv==2)  return(1);  // no more tasks
+			if(rv==1)  continue;   // file not found error
+			if(rv<0)  return(-1);  // alloc failure
 		}
 		
-		if(inf->sprintf(0,p->inp_frame_pattern,next_frame_no))  return(-1);
-		
-		if(outf->sprintf(0,p->outp_frame_pattern,next_frame_no))  return(-1);
-		
-		// Check if *inf exists: 
-		if(!_CheckExist(inf,1))
+		if(ftpi->tobe_filtered)
 		{
-			Error("Local: Access check failed on input file \"%s\": %s\n",
-				inf->str(),strerror(errno));
-			++nonexist_in_seq;
-			if(nonexist_in_seq>=3)
-			{
-				Error("Local: Access check failed for last %d files. "
-					"Assuming no more files (done).\n",nonexist_in_seq);
-				return(1);
-			}
+			rv=_FillInRenderJobFiles(ftpi);
+			#warning ERROR CODE!!!
+			Error("hack me; aborting\n");  assert(0); abort();
+			if(rv<0)  return(-1);  // alloc failure
+		}
+		
+		// Okay, see if we really have to do something: 
+		if(!ftpi->tobe_rendered && !ftpi->tobe_filtered)
+		{
+			// No, okay, let's take next frame...
 			continue;
 		}
 		
-		// Check if unfinished frame exists (always do that): 
-		RefString unf_tmp;
-		unf_tmp=*outf;
-		if(_UnfinishedName(&unf_tmp))  return(-1);
-		int o_unf_exists=_CheckExist(&unf_tmp,1);
-		
-		// Okay, now some logic: 
-		char unf_action='\0';  // rename, delete, <nothing>
-		char frame_action='\0'; // skip, render, continue
-		if(p->cont_flag)
-		{
-			// Check if finished frame exists: 
-			int o_exists=_CheckExist(outf,1);
-			
-			// Okay, render resume switched on. If the file to resume 
-			// exists, rename it back to the original file name: 
-			if(p->render_resume_flag)
-			{
-				if(o_unf_exists && o_exists)
-				{
-					// Check which one is the newer one: 
-					int rv=_FirstIsNewer(&unf_tmp,outf,next_frame_no);
-					if(rv==1)   // unf_tmp is newer. Take it. 
-					{  unf_action='r';  frame_action='c';  }  // rename
-					else if(rv==0)  // *outf is newer; skip frame, delete unfinished: 
-					{  unf_action='d';  frame_action='s';  }
-					else  // Error. Delete unfinished, (re)render 
-					{  unf_action='d';  frame_action='r';  }
-				}
-				else if(o_unf_exists)
-				{  unf_action='r';  frame_action='c';  }
-			}
-			else
-			{
-				// If render_resume_flag (rcont) is switched off, we delete the 
-				// unfinished file: 
-				if(o_unf_exists)
-				{  unf_action='d';  }
-			}
-			// This is the same for cont with and without render resume: 
-			if(frame_action=='\0')
-			{
-				if(o_exists)
-				{
-					// See if we re-render it: 
-					if(_FirstIsNewer(inf,outf,next_frame_no)!=0)  // inf newer or error
-					{  frame_action='r';  }
-					else
-					{  frame_action='s';  }
-				}
-				else
-				{  frame_action='r';  }
-			}
-		}
-		else
-		{  frame_action='r';  }
-		
-		// Okay, do it: 
-		if(unf_action=='r')  // rename
-		{
-			unf_action='\0';
-			int rv=_RenameFile(unf_tmp,*outf,0);
-			if(rv)  // failed? - then (try to) delete it: 
-			{  unf_action='d';  }
-		}
-		if(unf_action=='d')
-		{
-			_DeleteFile(unf_tmp,0,"unfinished frame file");
-			unf_action='\0';
-		}
-		assert(unf_action=='\0');
-		
-		// Check what to do with the frame: 
-		if(frame_action=='r' || frame_action=='c')
-		{
-			Verbose("Local: %s frame %d (job %s -> %s).\n",
-				(frame_action=='r') ? 
-					"Completely rendering" : "Continuing to render",
-				next_frame_no,inf->str(),outf->str());
-			if(frame_action=='c')
-			{  *resume_flag=1;  }
-			break;  // render frame
-		}
-		if(frame_action=='s')
-		{
-			Verbose("Local: Not re-rendering frame %d (job %s -> %s).\n",
-				next_frame_no,inf->str(),outf->str());
-		}
-		else assert(0);
-		
-		// Switch on one frame: done in for() statement. 
+		// Well, we've found a frame to process. 
+		break;
 	}
 	return(0);
 }
@@ -248,54 +315,81 @@ int TaskSource_Local::_GetNextFiles(RefString *inf,RefString *outf,
 void TaskSource_Local::_ProcessGetTask(TSNotifyInfo *ni)
 {
 	int fflag=0;
-	RefString intmp(&fflag),outtmp(&fflag);
+	FrameToProcessInfo ftpi(&fflag);
 	if(fflag)
 	{  ni->getstat=GTSAllocFailed;  return;  }
 	
-	int resume=0;
-	int rv=_GetNextFiles(&intmp,&outtmp,&resume);
-	switch(rv)
+	switch(_GetNextFTPI_FillInFiles(&ftpi))
 	{
 		case -1:  ni->getstat=GTSAllocFailed;  return;
 		case  0:  break;
 		case  1:  ni->getstat=GTSNoMoreTasks;  return;
 	}
 	
+	const PerFrameTaskInfo *fi=ftpi.fi;
+	assert(fi);
+	
+	// Okay, set up a CompleteTask structure: 
 	CompleteTask *ctsk=NULL;
 	do {
 		ctsk=NEW<CompleteTask>();
 		if(!ctsk)  break;
 		
-		ctsk->frame_no=next_frame_no;
+		ctsk->frame_no=ftpi.frame_no;
 		
-		RenderTask *rt=NEW<RenderTask>();
-		if(!rt)  break;
-		ctsk->rt=rt;
+		if(ftpi.tobe_rendered)
+		{
+			RenderTask *rt=NEW<RenderTask>();
+			if(!rt)  break;
+			ctsk->rt=rt;
+			
+			rt->rdesc=fi->rdesc;
+			assert(fi->rdesc);   // Otherwise tobe_rendered may not be set
+			rt->width=fi->width;
+			rt->height=fi->height;
+			rt->oformat=fi->oformat;
+			
+			rt->infile=NEW2<TaskFile>(TaskFile::FTFrame,TaskFile::IOTRenderInput);
+			if(!rt->infile)  break;
+			rt->infile->SetHDPath(ftpi.r_infile);
+			
+			rt->outfile=NEW2<TaskFile>(TaskFile::FTImage,TaskFile::IOTRenderOutput);
+			if(!rt->outfile)  break;
+			rt->outfile->SetHDPath(ftpi.r_outfile);
+			
+			if(rt->add_args.append(&fi->radd_args))  break;
+			
+			rt->wdir=fi->rdir;
+			
+			rt->resume=ftpi.resume_flag;
+		}
 		
-		rt->rdesc=p->rdesc;
-		assert(p->rdesc);   // Otherwise FinalInit() should have failed. 
-		rt->width=p->width;
-		rt->height=p->height;
-		rt->oformat=p->oformat;
-		
-		rt->infile=NEW2<TaskFile>(TaskFile::FTFrame,TaskFile::IOTRenderInput);
-		if(!rt->infile)  break;
-		rt->infile->SetHDPath(intmp);
-		
-		rt->outfile=NEW2<TaskFile>(TaskFile::FTImage,TaskFile::IOTRenderOutput);
-		if(!rt->outfile)  break;
-		rt->outfile->SetHDPath(outtmp);
-		
-		if(rt->add_args.append(&p->radd_args))  break;
-		
-		rt->resume=resume;
+		if(ftpi.tobe_filtered)
+		{
+			FilterTask *ft=NEW<FilterTask>();
+			if(!ft)  break;
+			ctsk->ft=ft;
+			
+			ft->fdesc=fi->fdesc;
+			assert(fi->fdesc);   // Otherwise tobe_filtered may not be set
+			
+			ft->infile=NEW2<TaskFile>(TaskFile::FTImage,TaskFile::IOTRenderOutput);
+			if(!ft->infile)  break;
+			ft->infile->SetHDPath(ftpi.f_infile);
+			
+			ft->outfile=NEW2<TaskFile>(TaskFile::FTImage,TaskFile::IOTFilterOutput);
+			if(!ft->outfile)  break;
+			ft->outfile->SetHDPath(ftpi.f_outfile);
+			
+			if(ft->add_args.append(&fi->fadd_args))  break;
+			
+			ft->wdir=fi->fdir;
+		}
 		
 		ni->ctsk=ctsk;
 		ni->getstat=GTSGotTask;
 		
 		// Okay, nothing failed till now. 
-		// Switch on one frame: 
-		next_frame_no+=p->fjump;
 		return;
 	} while(0);
 	
@@ -312,8 +406,11 @@ void TaskSource_Local::_ProcessGetTask(TSNotifyInfo *ni)
 
 void TaskSource_Local::_ProcessDoneTask(TSNotifyInfo *ni)
 {
-	fprintf(stderr,"***DoneTask(%s)***\n",
-		done_task->rt->infile->HDPath().str());
+	const PerFrameTaskInfo *fi=p->GetPerFrameTaskInfo(done_task->frame_no);
+	assert(fi);  // HUGE internal bug if that fails. 
+	
+	Verbose("  Done task [frame %d] was from per-frame block %s.\n",
+		done_task->frame_no,p->_FrameInfoLocationString(fi));
 	
 	// See if successful: 
 	if(done_task->rt && done_task->rtes.status!=TTR_Unset && 
@@ -325,18 +422,38 @@ void TaskSource_Local::_ProcessDoneTask(TSNotifyInfo *ni)
 		if(done_task->rt->outfile)
 		{
 			int remove=1;  // YES!
-			if(p->render_resume_flag)
+			// We always delete it unless user interrupt or timeout 
+			// was the reason for failure. 
+			// And only if render_resume_flag (-rcont) is active. 
+			if(fi->render_resume_flag && 
+			   done_task->rtes.status==TTR_JobTerm && 
+			   (done_task->rtes.signal==JK_UserInterrupt || 
+			    done_task->rtes.signal==JK_Timeout) )
 			{
-				int fail=0;
-				RefString tmp(&fail);
-				if(!fail)  tmp=done_task->rt->outfile->HDPath();
-				if(!fail)  fail=_UnfinishedName(&tmp);
-				if(!fail)  fail=(_RenameFile(done_task->rt->outfile->HDPath(),tmp,1)<0);
-				if(!fail)  remove=0;
+				if(fi->render_resume_flag)
+				{
+					int fail=0;
+					RefString tmp(&fail);
+					if(!fail)  tmp=done_task->rt->outfile->HDPath();
+					if(!fail)  fail=_UnfinishedName(&tmp);
+					if(!fail)  fail=(_RenameFile(done_task->rt->outfile->HDPath(),tmp,1)<0);
+					if(!fail)  remove=0;
+				}
 			}
 			if(remove)
 			{  _DeleteFile(done_task->rt->outfile->HDPath(),1,
-				"output file of failed task");  }
+				"output file of failed render task");  }
+		}
+	}
+	if(done_task->ft && done_task->ftes.status!=TTR_Unset && 
+	   done_task->ftes.status!=TTR_Success )
+	{
+		// Filter task was not successful. 
+		// Delete it if dest file is there: 
+		if(done_task->ft->outfile)
+		{
+			_DeleteFile(done_task->ft->outfile->HDPath(),1,
+				"output file of failed filter task");
 		}
 	}
 	
@@ -352,7 +469,7 @@ int TaskSource_Local::timernotify(TimerInfo *ti)
 {
 	assert(ti->tid==rtid);
 	
-	_Stop0msecTimer();
+	_StopRTimer();
 	
 	TSNotifyInfo ni;
 	ni.action=pending;
@@ -403,7 +520,7 @@ int TaskSource_Local::srcConnect(TaskSourceConsumer *cons)
 	// Okay, then let's connect...
 	pending=AConnect;
 	cclient=cons;
-	_Start0msecTimer();
+	_StartRTimer();
 	return(0);
 }
 
@@ -414,7 +531,7 @@ int TaskSource_Local::srcGetTask(TaskSourceConsumer *cons)
 	
 	pending=AGetTask;
 	cclient=cons;
-	_Start0msecTimer();
+	_StartRTimer();
 	return(0);
 }
 
@@ -426,7 +543,7 @@ int TaskSource_Local::srcDoneTask(TaskSourceConsumer *cons,CompleteTask *ct)
 	pending=ADoneTask;
 	cclient=cons;
 	done_task=ct;
-	_Start0msecTimer();
+	_StartRTimer();
 	return(0);
 }
 
@@ -438,7 +555,7 @@ int TaskSource_Local::srcDisconnect(TaskSourceConsumer *cons)
 	// Okay, then let's disconnect...
 	pending=ADisconnect;
 	cclient=cons;
-	_Start0msecTimer();
+	_StartRTimer();
 	return(0);
 }
 
@@ -455,6 +572,9 @@ TaskSource_Local::TaskSource_Local(TaskSourceFactory_Local *tsf,int *failflag) :
 	TaskSource(tsf->component_db(),failflag),
 	FDBase(failflag)
 {
+	// Set TaskSourceType (to be sure): 
+	tstype=TST_Passive;
+	
 	p=tsf;
 	pending=ANone;
 	connected=0;
@@ -470,6 +590,8 @@ TaskSource_Local::TaskSource_Local(TaskSourceFactory_Local *tsf,int *failflag) :
 		int njumps=(p->nframes+jv-1)/jv - 1;
 		next_frame_no = p->startframe + njumps*jv;
 	}
+	
+	nonexist_in_seq=0;
 	
 	int failed=0;
 	
@@ -488,4 +610,21 @@ TaskSource_Local::~TaskSource_Local()
 	assert(pending==ANone);
 	assert(!connected);
 	assert(!done_task);
+}
+
+
+/******************************************************************************/
+
+TaskSource_Local::FrameToProcessInfo::FrameToProcessInfo(int *failflag) : 
+	r_infile(failflag),
+	r_outfile(failflag),
+	f_infile(failflag),
+	f_outfile(failflag)
+{
+	fi=NULL;
+	
+	frame_no=-1;
+	resume_flag=0;
+	tobe_rendered=0;
+	tobe_filtered=0;
 }

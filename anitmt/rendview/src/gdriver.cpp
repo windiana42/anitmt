@@ -60,7 +60,7 @@ int TaskDriver::timernotify(TimerInfo *ti)
 		_SendProcessError(PEI_Timeout);
 		
 		// Kill process: 
-		KillProcess(TTR_Timeout,/*detail=*/0);
+		KillProcess(JK_Timeout);
 	}
 	else
 	{  assert(0);  }
@@ -148,7 +148,7 @@ void TaskDriver::procnotify(const ProcStatus *ps)
 		assert(tmp_ttr!=TTR_Unset);
 		
 		// Fill in info: 
-		if(pinfo.tes.status==TTR_Unset)  // may be TTR_Timeout
+		if(pinfo.tes.status==TTR_Unset)  // may be TTR_JobTerm / JK_Timeout
 		{
 			pinfo.tes.status=tmp_ttr;
 			pinfo.tes.signal=tmp_signal;
@@ -255,11 +255,11 @@ int TaskDriver::_SendProcessError(ProcessErrorType pet,
 
 
 // reason_detail: one of the JK_* - values
-int TaskDriver::KillProcess(TaskTerminationReason reason,int reason_detail)
+int TaskDriver::KillProcess(int reason_detail)
 {
-	Warning("Killing (SIGTERM) %s (pid %ld) [frame %d]%s\n",
+	Warning("Killing (SIGTERM) %s (pid %ld) [frame %d] (%s)\n",
 		pinfo.args.first()->str(),long(pinfo.pid),pinfo.ctsk->frame_no,
-		reason==TTR_Timeout ? " (timeout)" : "");
+		TaskExecutionStatus::JK_String(reason_detail));
 	
 	errno=0;
 	int rv=TermProcess(pinfo.pid);
@@ -286,7 +286,7 @@ int TaskDriver::KillProcess(TaskTerminationReason reason,int reason_detail)
 	if(pinfo.tes.status!=TTR_Unset)
 	{  fprintf(stderr,"OOPS: during kill: reason %d set in pinfo.tes.status.\n",
 		pinfo.tes.status);  }
-	pinfo.tes.status=reason;
+	pinfo.tes.status=TTR_JobTerm;
 	pinfo.tes.signal=reason_detail;
 	
 	return(rv);

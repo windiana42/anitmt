@@ -83,9 +83,7 @@ TaskDriverFactory::~TaskDriverFactory()
 /******************************************************************************/
 
 TaskParams::TaskParams(int *failflag=NULL) : 
-	add_args(failflag),
-	crdir(failflag),
-	wdir(failflag)
+	add_args(failflag)
 {
 	dtype=DTNone;
 	
@@ -103,12 +101,15 @@ TaskParams::~TaskParams()
 /******************************************************************************/
 
 TaskStructBase::TaskStructBase(int *failflag) : 
-	add_args(failflag)
+	add_args(failflag),
+	wdir(failflag)
 {
+	dtype=DTNone;
+	
 	infile=NULL;
 	outfile=NULL;
 	
-	dtype=DTNone;
+	timeout=-1;
 }
 
 TaskStructBase::~TaskStructBase()
@@ -151,6 +152,7 @@ const char *TaskExecutionStatus::JK_String(int jk_value)
 	switch(jk_value)
 	{
 		case JK_UserInterrupt:  return("user interrupt");
+		case JK_Timeout:  return("timeout");
 		// JK_ServerError: rendview does not want to go on for what reason ever
 		case JK_ServerError:  return("rendview error");
 		case JK_FailedToExec:  return("failed to start job");
@@ -166,7 +168,6 @@ const char *TaskExecutionStatus::StatusString()
 	{
 		case TTR_Unset:  return("unspecified");
 		case TTR_Success:  return("success");
-		case TTR_Timeout:  return("timeout");
 		case TTR_ExecFailed:
 			snprintf(tmp,64,"execution failed: %s",JK_String(signal));
 			return(tmp);

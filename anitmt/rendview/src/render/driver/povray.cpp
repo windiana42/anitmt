@@ -80,6 +80,8 @@ int POVRayDriver::ProcessError(ProcessErrorInfo *pei)
 			tmp=StartProcessErrorString(pei,&errno_str);
 			Error("POV:   Error: %s%s\n",tmp,errno_str ? errno_str : "");
 			Error("POV:   Binary: %s\n",rt->rdesc->binpath.str());
+			Error("POV:   Working dir: %s\n",
+				pei->pinfo->tsb->wdir.str() ? pei->pinfo->tsb->wdir.str() : "[cwd]");
 			Error("POV:   Search path:");
 			for(const RefStrList::Node *i=component_db()->GetBinSearchPath(
 				rt->dtype)->first(); i; i=i->next)
@@ -127,13 +129,16 @@ int POVRayDriver::ProcessError(ProcessErrorInfo *pei)
 		for(const RefStrList::Node *i=pei->pinfo->args.first(); i; i=i->next)
 		{  Error(" %s",i->str());  }
 		Error("\n");
+		const char *tmp=pei->pinfo->tsb->wdir.str();
+		Error("POV:   Working dir: %s\n",tmp ? tmp : "[cwd]");
 	}
 	else if(print_cmd==2)
 	{
 		Verbose("POV:   Command:");
 		for(const RefStrList::Node *i=pei->pinfo->args.first(); i; i=i->next)
 		{  Verbose(" %s",i->str());  }
-		Verbose("\n");
+		const char *tmp=pei->pinfo->tsb->wdir.str();
+		Verbose("POV:   Working dir: %s\n",tmp ? tmp : "[cwd]");
 	}
 	
 	return(0);
@@ -221,9 +226,8 @@ int POVRayDriver::Execute(
 	
 	// Set up varous other stuff for program launch: 
 	ProcessBase::ProcMisc pmisc;
-	if(rtp && rtp->crdir)  pmisc.chroot(rtp->crdir);
-	if(rtp && rtp->wdir)   pmisc.wdir(rtp->wdir);
-	// niceval set by TaskDriver. 
+	if(rt->wdir.str())   pmisc.wdir(rt->wdir);
+	// niceval set by TaskDriver; timeout dealt with at TaskDriver. 
 	
 	// Fiddle around with the FDs if needed: 
 	ProcessBase::ProcFDs sp_f;

@@ -611,7 +611,7 @@ void TaskManager::_schedule(TimerInfo *ti)
 		for(TaskDriver *i=joblist.first(); i; i=joblist.next(i))
 		{
 			if(i->pinfo.pid<0)  continue;
-			int rv=i->KillProcess(TTR_JobTerm,
+			int rv=i->KillProcess(
 				(sched_kill_tasks==1) ? JK_UserInterrupt : JK_ServerError);
 			if(!rv)
 			{  ++nkilled;  }
@@ -827,8 +827,9 @@ int TaskManager::_StartProcessing()
 {
 	assert(tasksource()==NULL);  // yes, must be NULL here. 
 	
-	#warning fixme: allow for other task sources
 	const char *ts_name="local";
+	#warning fixme: allow for other task sources
+	//ts_name="LDR";
 	TaskSourceFactory *tsf=component_db->FindSourceFactoryByName(ts_name);
 	
 	// Let TaskSourceFactory do final init: 
@@ -885,7 +886,9 @@ int TaskManager::_StartProcessing()
 	}
 	
 	// Write out useful verbose information: 
-	VerboseSpecial("Okay, beginning to work: njobs=%d (parallel tasks)",njobs);
+	VerboseSpecial("Okay, %s work: njobs=%d (parallel tasks)",
+		(GetTaskSourceType()==TST_Active) ? "waiting for" : "beginning to",
+		njobs);
 	Verbose("  jtype    jmax  nice   timeout  tty\n");
 	for(int i=0; i<_DTLast; i++)
 	{
@@ -935,12 +938,15 @@ int TaskManager::_StartProcessing()
 	starttime=ptu.starttime;
 	Verbose("  starting at (local): %s\n",starttime.PrintTime(1,1));
 	
-	// Do start things up (yes, REALLY now): 
-	int rv=_CheckStartExchange();
-	if(rv==1)
+	if(GetTaskSourceType()==TST_Passive)
 	{
-		Error("Erm... Nothing will be done. I'm bored.\n");
-		return(1);
+		// Do start things up (yes, REALLY now): 
+		int rv=_CheckStartExchange();
+		if(rv==1)
+		{
+			Error("Erm... Nothing will be done. I'm bored.\n");
+			return(1);
+		}
 	}
 	
 	return(0);
@@ -1330,10 +1336,11 @@ int TaskManager::_DealWithNewTask(CompleteTask *ctsk)
 	for(int i=0; i<_DTLast; i++)
 	{
 		TaskParams *tp=NULL;
+		TaskStructBase *tsb=NULL;
 		switch(i)
 		{
-			case DTRender:  tp=ctsk->rtp;  break;
-			case DTFilter:  tp=ctsk->ftp;  break;
+			case DTRender:  tp=ctsk->rtp;  tsb=ctsk->rt;  break;
+			case DTFilter:  tp=ctsk->ftp;  tsb=ctsk->ft;  break;
 			default:  assert(0);  break;
 		}
 		// tp=NULL -> not a `i´ (DTRender/DTFilter) - task. 
@@ -1351,10 +1358,10 @@ int TaskManager::_DealWithNewTask(CompleteTask *ctsk)
 				{  tp->niceval=0;  }
 			}
 		}
-		tp->timeout=(p->timeout<0) ? (-1) : p->timeout;
+		tp->timeout=(p->timeout<=0) ? (-1) : p->timeout;
+		if(tsb->timeout>0 && tp->timeout>tsb->timeout)
+		{  tp->timeout=tsb->timeout;  }  // Another timeout. Take shorter one. 
 		tp->call_setsid=p->call_setsid ? 1 : 0;
-		// crdir
-		// wdir
 	}
 	
 	return(0);
@@ -1484,7 +1491,7 @@ void TaskManager::_PrintDoneInfo(CompleteTask *ctsk)
 		_PrintTaskExecStatus(&ctsk->rtes);
 	}
 	else
-	{  Verbose("  Render task: none\n");  }
+	{  Verbose("  Render task: [none]\n");  }
 	
 	if(ctsk->ft)
 	{
@@ -1496,7 +1503,7 @@ void TaskManager::_PrintDoneInfo(CompleteTask *ctsk)
 		_PrintTaskExecStatus(&ctsk->ftes);
 	}
 	else
-	{  Verbose("  Filter task: none\n");  }
+	{  Verbose("  Filter task: [none]\n");  }
 }
 
 
@@ -1782,7 +1789,7 @@ TaskManager::TaskManager(ComponentDataBase *cdb,int *failflag) :
 		for(int i=0; i<lpf_hist_size; i++)
 		{  last_proc_frames[i]=-1;  }
 	}
-	last_pend_done_frame_no=0;
+	last_pend_done_frame_no=-1;
 	
 	
 	//if(FDBase::SetManager(1))

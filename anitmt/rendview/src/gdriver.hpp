@@ -30,7 +30,6 @@ enum TaskTerminationReason
 {
 	TTR_Unset=-1,  // not yet filled in
 	TTR_Success=0,
-	TTR_Timeout,
 	TTR_ExecFailed,  // error in StartProcess or until execve()
 	TTR_RunFail,  // job exits with non-zero code
 	TTR_ATerm,    // abnormal termination (killed / dumped)
@@ -42,6 +41,7 @@ enum
 	// no symbol may be 0!
 	//-- for TTR_JobTerm --
 	JK_UserInterrupt=1,    // e.g. user pressed ^C. 
+	JK_Timeout,            // well... what was that again??
 	JK_ServerError,        // rendview does not want to go on for what 
 	                       // reason ever
 	//-- for TTR_ExecFailed--
@@ -93,8 +93,6 @@ struct TaskParams
 	int niceval;        // nice value (process priority) (or NoNice)
 	int call_setsid;    // call setsid() (recommended)
 	long timeout;       // render timeout; -1 for none
-	RefString crdir;    // chroot() to this dir before chdir to wdir. 
-	RefString wdir;     // directory to chdir into before starting the renderer
 	
 	_CPP_OPERATORS_FF
 	TaskParams(int *failflag=NULL);
@@ -113,10 +111,12 @@ struct TaskStructBase
 	TaskDriverType dtype;
 	
 	// NOTE!! infile and outfile are DELETED by ~TaskStructBase(). 
-	TaskFile *infile;       // primary input file 
-	TaskFile *outfile;      // primary output file
+	TaskFile *infile;      // primary input file 
+	TaskFile *outfile;     // primary output file
 	RefStrList add_args;   // additional cmd line args
-	//long timeut;           // additional timeout (from server)
+	RefString wdir;        // directory to chdir into before 
+	                       // starting the renderer/filter
+	long timeout;          // additional timeout (from task source)
 	
 	_CPP_OPERATORS_FF
 	TaskStructBase(int *failflag=NULL);
@@ -164,7 +164,7 @@ class TaskDriverFactory :
 		// depends on the driver). 
 		// Return value: 0 -> OK
 		//  any other value -> error & error was written
-		virtual int CheckDesc(RF_DescBase *d) HL_PureVirt(1)
+		virtual int CheckDesc(RF_DescBase *) HL_PureVirt(1)
 		
 		// Create a TaskDriver: 
 		virtual TaskDriver *Create() HL_PureVirt(NULL)
@@ -270,7 +270,7 @@ class TaskDriver :
 		
 		// May also be used by TaskManager: 
 		// reason_detail: one of the JK_* - values
-		int KillProcess(TaskTerminationReason reason,int reason_detail);
+		int KillProcess(int reason_detail);
 		
 		// Used by PSFailedErrorString(): 
 		const char *_ExecFailedError_SyscallName(PSDetail x);

@@ -1,6 +1,6 @@
 # Process this file with autoconf to produce a configure script.
 AC_INIT
-AM_INIT_AUTOMAKE(rendview,0.3.3)
+AM_INIT_AUTOMAKE(rendview,0.3.7)
 AC_CONFIG_SRCDIR([src/rendview.cpp])
 AM_CONFIG_HEADER(config.h)
 
@@ -34,6 +34,7 @@ AC_CONFIG_FILES([ \
 	src/imgfmt/Makefile \
 	src/render/Makefile src/render/driver/Makefile \
 	src/filter/Makefile src/filter/driver/Makefile \
-	src/tsource/Makefile src/tsource/local/Makefile src/tsource/nrp/Makefile \
+	src/tsource/Makefile \
+	src/tsource/local/Makefile src/tsource/ldr/Makefile src/tsource/nrp/Makefile \
 	cfg/Makefile])
 AC_OUTPUT

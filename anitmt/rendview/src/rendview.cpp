@@ -27,10 +27,41 @@ char *prg_name=NULL;
 
 static const char *fti="Failed to initialize %s.\n";
 
+static void _color_setup(int &argc,char **argv,char **envp)
+{
+	int color_forbidden=0;
+	for(int i=1; i<argc; i++)
+	{
+		const char *a=argv[i];
+		if(*a!='-')  continue;
+		++a;  while(*a=='-')  ++a;
+		if(*a!='n')  continue;
+		if(!strcmp(a,"nocolor"))
+		{
+			++color_forbidden;
+			for(int j=i+1; j<argc; j++)
+			{  argv[j-1]=argv[j];  }
+			--i; --argc;
+		}
+	}
+	if(!color_forbidden)
+	{
+		if(GetTerminalSize(fileno(stdout),NULL,NULL)==0)
+		{  do_colored_output_stdout=1;  }
+		if(GetTerminalSize(fileno(stderr),NULL,NULL)==0)
+		{  do_colored_output_stderr=1;  }
+	}
+}
+
 static int MAIN(int argc,char **argv,char **envp)
 {
+	// First, seed the random generator: 
 	srandom(time(NULL)*getpid());
 	
+	// Then, let`s see if we may have color output: 
+	_color_setup(argc,argv,envp);
+	
+	// Okay, then... Here we go...
 	Verbose("Setting up managers: [FD] ");
 	FDManager *fdman=NEW<FDManager>();
 	if(!fdman)
@@ -80,14 +111,18 @@ static int MAIN(int argc,char **argv,char **envp)
 		"have the render program actually generate the frames calculated. "
 		"RendView has sopthistcated job control and allows you to start "
 		"several processes in parallel as well as only processing "
-		"changed/not-yet-done frames.\n"
+		"changed/not-yet-done frames. Further features include resuming "
+		"partly-rendered images, load control and lots of informative "
+		"output.\n"
 		"NOTE: Pressig ^C (SIGINT) on the terminal will tell RendView to "
 		"start no more processes and wait for all current jobs to "
 		"exit; pressing ^C twice will kill all jobs. In either way "
 		"rendview exits cleanly. Pressing ^C three times makes "
 		"RendView abort. SIGTERM acts like two ^C. SIGTSTP (^Z) will "
 		"make RendView stop all tasks and then als stop; SIGCONT (fg or "
-		"bg in bash) makes them continue all again.");
+		"bg in bash) makes them continue all again.\n"
+		"NOTE: COLORED OUTPUT is automatically switched off for non-ttys "
+		"but you can manually switch it off using --nocolor.");
 		// ...as well as only rendering changed frames or resuming operation
 		// ...and later create a film of them...
 	
@@ -165,14 +200,12 @@ static int MAIN(int argc,char **argv,char **envp)
 			Error("Failed to store the command line parameters (%d)\n",rv);
 			fail=1;  break;
 		}
-		
-		if(parman->CheckParams())
-		{  fail=1;  break;  }
 	} while(0);
 	
 	if(!fail && !will_exit) do {
 		
-		// #### go on (if needed)
+		if(parman->CheckParams())
+		{  fail=1;  break;  }
 		
 	} while(0);
 		

@@ -14,7 +14,7 @@
  * 
  */
 
-
+#include <lib/prototypes.hpp>
 #include "tsfactory.hpp"
 #include "../database.hpp"
 
