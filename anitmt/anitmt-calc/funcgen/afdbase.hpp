@@ -400,6 +400,7 @@ namespace funcgen
 
     typedef std::map<std::string, 
 		     Operator_Declaration> operator_declarations_type;
+
     operator_declarations_type operator_declarations;
     Operator_Declaration *current_operator_declaration;
 

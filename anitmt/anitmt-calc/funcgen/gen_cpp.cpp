@@ -1057,7 +1057,7 @@ namespace funcgen
     *impl << "  // ***********************" << std::endl;
     *impl << std::endl;
 
-    operator_declarations_type::iterator op;
+    AFD_Root::operator_declarations_type::iterator op;
     for( op = afd->operator_declarations.begin();
 	 op != afd->operator_declarations.begin(); ++op )
     {
