@@ -153,20 +153,20 @@ static Parameter_Description<double> desc_double[PID::_last_double]=
 	  Default<double>(),    PAT::Needed, POT::Needs_Solver, 
 	  "Duration of the rendered film (seconds)" },
 	{ PID::fps,        {"framesPerSecond","fps"},
-	  Default<double>(),    PAT::Needed, POT::Needs_Solver, 
+	  Default<double>(24.0),PAT::Needed, POT::Needs_Solver, 
 	  "Number of frames per second" }
 };
 
 static Parameter_Description<std::string> desc_string[PID::_last_string]=
 {
 	{ PID::renderer,   {"renderer"},
-	  Default<std::string>(),  PAT::Needed, POT::Simple,
+	  Default<std::string>("povray 3.1"),  PAT::Needed, POT::Simple,
 	  "Name of renderer" },
 	{ PID::name,   {"name"},
-	  Default<std::string>(),  PAT::Needed, POT::Simple,
+	  Default<std::string>("no_name"),  PAT::Needed, POT::Simple,
 	  "Name of Animation" },
 	{ PID::ani_dir,   {"ani_dir"},
-	  Default<std::string>(),  PAT::Needed, POT::Simple,
+	  Default<std::string>("ani/"),  PAT::Needed, POT::Simple,
 	  "Directory where the animation should be placed" }
 };
 
