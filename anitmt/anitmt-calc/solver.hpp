@@ -75,5 +75,22 @@ namespace anitmt{
 
     Diff_Solver( Scalar_Property *d, Scalar_Property *s, Scalar_Property *e );
   };
+
+  // Solver for a start, end and relationerance value
+  class Relation_Solver : public Solver{
+    Scalar_Property &q;		// quotient
+    Scalar_Property &n;		// numerator
+    Scalar_Property &d;		// denominator
+    bool s_q, s_n, s_d;		// indicates wheater a property was solved
+				// while checking a solution
+  public:
+    // Properties call that if they want to validate their results
+    virtual bool prop_solution_ok( Property *ID );
+    // Properties call that if they were solved
+    virtual void prop_was_solved( Property *ID );
+
+    Relation_Solver( Scalar_Property *q, Scalar_Property *n, 
+		     Scalar_Property *d );
+  };
 }
 #endif

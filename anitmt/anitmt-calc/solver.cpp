@@ -92,7 +92,7 @@ namespace anitmt{
 		if( !ve.is_this_ok( res_ve, this ) )
 		  return false; 
 
-		// verify result for differance
+		// verify result for difference
 		if( !d.is_this_ok( res_d, this ) )
 		  return false; 
 
@@ -110,7 +110,7 @@ namespace anitmt{
   }
 
   //**********************************************************
-  // Diff_Solver: Solver for a start, end and differance value
+  // Diff_Solver: Solver for a start, end and difference value
   //**********************************************************
   
   Diff_Solver::Diff_Solver( Scalar_Property *_d, Scalar_Property *_s, 
@@ -144,7 +144,7 @@ namespace anitmt{
       }
     try_id = cur_try_id;
     
-    // differance solved in this try now ?
+    // difference solved in this try now ?
     if( caller == &d )
       {
 	assert( d.s_in_try() );	
@@ -181,7 +181,7 @@ namespace anitmt{
       {
 	assert( s.s_in_try() );	
 
-	// differance value known ?
+	// difference value known ?
 	if( d.s_in_try() )
 	  {
 	    // can calculate end value now:
@@ -197,14 +197,14 @@ namespace anitmt{
 	// end value known ?
 	if( e.s_in_try() )
 	  {
-	    // can calculate differance now:
+	    // can calculate difference now:
 	    values::Scalar res_d = e - s;
 
-	    // verify result for end value
+	    // verify result for difference
 	    if( !d.is_this_ok( res_d, this ) )
 	      return false; 
 
-	    s_d = true; // end value solved
+	    s_d = true; // difference solved
 	  }	    
       }
 
@@ -213,7 +213,7 @@ namespace anitmt{
       {
 	assert( e.s_in_try() );	
 
-	// differance value known ?
+	// difference value known ?
 	if( d.s_in_try() )
 	  {
 	    // can calculate start value now:
@@ -229,7 +229,7 @@ namespace anitmt{
 	// start value known ?
 	if( s.s_in_try() )
 	  {
-	    // can calculate differance now:
+	    // can calculate difference now:
 	    values::Scalar res_d = e - s;
 
 	    // verify result for start value
@@ -237,6 +237,145 @@ namespace anitmt{
 	      return false; 
 
 	    s_d = true; // start value solved
+	  }	    
+      }
+
+    return true;
+  }
+  
+
+  //*******************************************************************
+  // Relation_Solver: solver for a relation and the according to values
+  //*******************************************************************
+  
+  Relation_Solver::Relation_Solver( Scalar_Property *_q, Scalar_Property *_n, 
+			      Scalar_Property *_d ) 
+    : q(*_q), n(*_n), d(*_d){
+    n_props_connected = 3;
+    q.add_Solver( this );
+    n.add_Solver( this );
+    d.add_Solver( this );
+  }
+  
+  // Properties call that if they were solved
+  void Relation_Solver::prop_was_solved( Property *caller ){
+    n_props_available++;
+    
+    // tell the properties that were calculated in the try before that they
+    // may use the result
+    if( s_q  && (caller !=  &q) )  q.use_it( this );
+    if( s_n  && (caller !=  &n) )  n.use_it( this );
+    if( s_d  && (caller !=  &d) )  d.use_it( this );
+  }
+  
+  // Properties call that if they want to validate their results
+  // !!! may be self recursive
+  bool Relation_Solver::prop_solution_ok( Property *caller ){
+    long cur_try_id = caller->get_try_id();
+    if( try_id != cur_try_id )	// is this the first call in try
+      {
+	// reset the check flags that indicate which properties were solved
+	s_q=false;s_n=false;s_d=false;
+      }
+    try_id = cur_try_id;
+    
+    // relation solved in this try now ?
+    if( caller == &q )
+      {
+	assert( q.s_in_try() );	
+
+	// assure quotient doesn't equal zero
+	if( q == 0 ) 
+	  return false;		// avoid division by zero
+
+	// numerator known ?
+	if( n.s_in_try() )
+	  {
+	    // can calculate denominator
+	    values::Scalar res_d = n / q;
+
+	    // verify result for denominator
+	    if( !d.is_this_ok( res_d, this ) )
+	      return false; 
+
+	    s_d = true; // denominator
+	  }	    
+
+	// denominator known ?
+	if( d.s_in_try() )
+	  {
+	    // can calculate numerator now:
+	    values::Scalar res_n = q * d;
+
+	    // verify result for numerator
+	    if( !n.is_this_ok( res_n, this ) )
+	      return false; 
+
+	    s_n = true; // numerator solved
+	  }	    
+      }
+
+    // numerator solved in this try now ?
+    if( caller == &n )
+      {
+	assert( n.s_in_try() );	
+
+	// quotient known ?
+	if( q.s_in_try() )
+	  {
+	    // can calculate denominator now:
+	    values::Scalar res_d = n / q;
+
+	    // verify result for denominator
+	    if( !d.is_this_ok( res_d, this ) )
+	      return false; 
+
+	    s_d = true; // denominator solved
+	  }	    
+
+	// denominator known ?
+	if( d.s_in_try() )
+	  {
+	    // can calculate quotient now:
+	    values::Scalar res_q = n / d;
+
+	    // verify result for quotient
+	    if( !q.is_this_ok( res_q, this ) )
+	      return false; 
+
+	    s_q = true; // quotient solved
+	  }	    
+      }
+
+    // denominator solved in this try now ?
+    if( caller == &d )
+      {
+	assert( d.s_in_try() );	
+
+	// quotient value known ?
+	if( q.s_in_try() )
+	  {
+	    // can calculate numerator now:
+	    values::Scalar res_n = q * d;
+
+	    // verify result for numerator
+	    if( !n.is_this_ok( res_n, this ) )
+	      return false; 
+
+	    s_n = true; // numerator solved
+	  }	    
+
+	// numerator known ?
+	if( n.s_in_try() )
+	  {
+	    // can calculate quotient now:
+	    values::Scalar res_q = n / d;
+
+	    // verify result for numerator
+	    if( !q.is_this_ok( res_q, this ) )
+	      return false; 
+
+	    s_q = true; // numerator solved
 	  }	    
       }
 

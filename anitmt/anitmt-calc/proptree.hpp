@@ -39,21 +39,22 @@ namespace anitmt{
   class Prop_Tree_Node{
     // navigation in tree
     Prop_Tree_Node *parent;	// parent node
-    Prop_Tree_Node *first_child;// first child node
-    Prop_Tree_Node *next;	// next node
     Prop_Tree_Node *prev;	// previous node
+    Prop_Tree_Node *next;	// next node
+    Prop_Tree_Node *first_child;// first child node
+    Prop_Tree_Node *last_child; // last child node
 
     std::string type;		// type of this node
     std::string name;		// name for reference
 
     //************
     // properties
-    typedef std::map<std::string, Property*> properties_type;
+    typedef std::map< std::string, Property* > properties_type;
     properties_type properties;
 
     // priority levels for actions like a transmission of properties to 
     // neighbour nodes or like setting default values
-    typedef std::vector< Priority_Action* > priority_levels_type;
+    typedef std::map< int, Priority_Action* > priority_levels_type;
     priority_levels_type priority_level;
 
     //********
@@ -86,12 +87,14 @@ namespace anitmt{
     class exception_child_type_rejected {};
     class exception_child_type_already_defined {};
     class exception_unknown_property {};
+    class exception_wrong_property_type {};
+    class exception_property_rejected {};
 
     std::string	get_name();	// return name
     std::string get_type();	// return type
     Property *get_property( std::string name );	
 				// return property
-    std::list<std::string> get_properties(); 
+    std::list<std::string> get_properties_names(); 
 				// returns all property names
 
     Prop_Tree_Node *get_child( std::string name );
@@ -116,10 +119,20 @@ namespace anitmt{
     // set property
     template< class T >  
     void set_property( std::string name, T val ) 
-      throw( exception_unknown_property ) {
+      throw( exception_unknown_property,exception_wrong_property_type ) {
 
       if( get_property( name ) != 0 )
-	properties[ name ] = val;
+	{
+	  Type_Property<T> *p = 
+	    dynamic_cast< Type_Property<T>* >( properties[ name ] );
+
+	  if( !p )
+	    throw exception_wrong_property_type();
+
+	  bool accepted = p->set_if_ok( val );
+	  if( !accepted )
+	    throw exception_property_rejected();
+	}
       else
 	throw exception_unknown_property();
     }

@@ -46,14 +46,23 @@ namespace anitmt{
       }
   }
 
+  // operator for output on standard out streams
+  std::ostream &operator << ( std::ostream& os, Property &prop ){
+    return prop.write2stream( os );
+  }
+
   //******************************************************
   // Scalar_Property: container for scalar property values
   //******************************************************
-
+  
   // implicite convertion to double
   Scalar_Property::operator double() const { 
     return get(); 
   }
-
+  
+  // implicite convertion to vect::vector3
+  Vector_Property::operator vect::vector3() const { 
+    return get(); 
+  }
   
 }

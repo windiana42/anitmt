@@ -51,6 +51,8 @@ namespace anitmt{
     Property();
     virtual ~Property();
 
+    virtual std::ostream &write2stream( std::ostream& ) = 0;
+
     //********************************************************************
     // the following functions should only be accessed by class Solver and
     // derived classes
@@ -59,6 +61,8 @@ namespace anitmt{
     long get_try_id() const;	// returns the current try id
     void add_Solver( Solver *solver ); // adds a solver for this property
   };
+
+  std::ostream &operator << ( std::ostream&, Property & );
 
   //***************************************************************
   // Type_Property: container for property values of a certain type
@@ -73,6 +77,8 @@ namespace anitmt{
 
     operator T() const;		// implicite convertion to type (like get())
 
+    virtual std::ostream &write2stream( std::ostream& );
+
     //**********************************************************************
     // the following functions are only used of a graph solution search from
     // the class Solver and derived classes
@@ -84,8 +90,8 @@ namespace anitmt{
     void use_it( Solver *caller );
   };
 
-  template<class T>
-  std::ostream &operator<<( std::ostream &os, const Type_Property<T> &s );
+  //  template<class T>
+  //  std::ostream &operator<<( std::ostream &os, const Type_Property<T> &s );
 
   //******************************************************
   // Scalar_Property: container for scalar property values

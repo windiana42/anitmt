@@ -20,7 +20,7 @@ namespace anitmt{
   // Scal_Linear: moves Objects on a staight flight path
   //**********************************************************
 
-  const std::string Scal_Linear::type_name = "straight";
+  const std::string Scal_Linear::type_name = "linear";
 
   std::string Scal_Linear::get_type_name(){
     return type_name;
@@ -31,6 +31,7 @@ namespace anitmt{
     new Diff_Solver( &d, &v0, &ve );
     new Diff_Solver( &t, &t0, &te );
     new Diff_Solver( &t_f, &t0_f, &te_f );
+    new Relation_Solver( &s, &d, &t );
     // ...
     
     add_property( "startvalue", &v0 );
@@ -45,8 +46,8 @@ namespace anitmt{
     // add_default_value( &s, values::Scalar(0), 5 );
   }
     
-  Scalar_State Scal_Linear::get_return_value( values::Scalar t,
-					      Scalar_State ) {
+  values::Scalar Scal_Linear::get_return_value( values::Scalar t,
+						values::Scalar ) {
     return v0 + s * t;
   }
 

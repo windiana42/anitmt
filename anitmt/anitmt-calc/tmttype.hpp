@@ -16,6 +16,7 @@
 #define __AniTMT_types__
 
 #include "val.hpp"
+#include "vector.hpp"
 
 namespace anitmt{
 
@@ -33,6 +34,7 @@ namespace anitmt{
   class Position  : public values::Vector {
   public:
     Position() : values::Vector() {}
+    Position( vect::vector3 v ) : values::Vector(v) {}
     Position( values::Vector v ) : values::Vector(v) {}
   };
   class Direction : public values::Vector {
@@ -48,15 +50,16 @@ namespace anitmt{
 
   // State types
 
-  class Object_State : public values::Vector {
+  class Object_State : public values::Matrix {
   public:
-    Object_State() : values::Vector() {}
-    Object_State( values::Vector v ) : values::Vector(v) {}
+    Object_State() : values::Matrix() {}
+    Object_State( values::Matrix v ) : values::Matrix(v) {}
   };
 
   class Scalar_State : public values::Scalar {
   public:
     Scalar_State() : values::Scalar() {}
+    Scalar_State( double v ) : values::Scalar(v) {}
     Scalar_State( values::Scalar v ) : values::Scalar(v) {}
   };
 

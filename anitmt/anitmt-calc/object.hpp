@@ -1,5 +1,5 @@
 /*****************************************************************************/
-/**   This file offers the general scalar tree node   			    **/
+/**   This file offers the general object tree node   			    **/
 /*****************************************************************************/
 /**									    **/
 /** Author: Martin Trautmann						    **/
@@ -12,11 +12,11 @@
 /**									    **/
 /*****************************************************************************/
 
-#ifndef __AniTMT_Scalar__
-#define __AniTMT_Scalar__
+#ifndef __AniTMT_Object__
+#define __AniTMT_Object__
 
 namespace anitmt {
-  class Ani_Scalar;
+  class Ani_Obj;
 }
 
 #include "val.hpp"
@@ -28,23 +28,28 @@ namespace anitmt {
 namespace anitmt{
 
   //******************************************************************
-  // Ani_Scalar: Animatable Scalar node 
+  // Ani_Object: Animatable Object node that returns the object state 
   //******************************************************************
-  class Ani_Scalar: public Prop_Tree_Node, 
-		    public Return<Scalar_State>{
+  class Ani_Object: public Prop_Tree_Node, 
+		    public Return< Object_State >{
 
     static const std::string type_name;
 
-    Contain_Return<values::Scalar> s;
+    Contain_Return<values::Matrix> mat;
+    Contain_Return<Position>	   pos;
+    Contain_Return<Direction>      dir;
+    Contain_Return<Up_Vector>      up;
+
+    Vector_Property c;		// rotation center (?piveau? point)
 
     bool try_add_child( Prop_Tree_Node *node );
   public:
     static std::string get_type_name();
 
-    Ani_Scalar( std::string name );
+    Ani_Object( std::string name );
 
-    Scalar_State get_return_value( values::Scalar t, 
-				   Scalar_State m = Scalar_State() );
+    Object_State get_return_value( values::Scalar t, 
+				   Object_State m = Object_State() );
   };
   
 

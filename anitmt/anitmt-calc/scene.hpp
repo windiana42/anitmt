@@ -1,5 +1,5 @@
 /*****************************************************************************/
-/**   This file offers the general scalar tree node   			    **/
+/**   This file offers the general scene tree node   			    **/
 /*****************************************************************************/
 /**									    **/
 /** Author: Martin Trautmann						    **/
@@ -12,11 +12,11 @@
 /**									    **/
 /*****************************************************************************/
 
-#ifndef __AniTMT_Scalar__
-#define __AniTMT_Scalar__
+#ifndef __AniTMT_Scene__
+#define __AniTMT_Scene__
 
 namespace anitmt {
-  class Ani_Scalar;
+  class Ani_Scene;
 }
 
 #include "val.hpp"
@@ -28,26 +28,26 @@ namespace anitmt {
 namespace anitmt{
 
   //******************************************************************
-  // Ani_Scalar: Animatable Scalar node 
+  // Ani_Scene: general Scene node 
   //******************************************************************
-  class Ani_Scalar: public Prop_Tree_Node, 
-		    public Return<Scalar_State>{
+  class Ani_Scene: public Prop_Tree_Node {
 
     static const std::string type_name;
 
-    Contain_Return<values::Scalar> s;
+    String_Property filename;
+    String_Property scene_type;
+
+    Contain_Return< Scalar_State > scalar;
+    Contain_Return< Object_State > object;
 
     bool try_add_child( Prop_Tree_Node *node );
   public:
     static std::string get_type_name();
 
-    Ani_Scalar( std::string name );
-
-    Scalar_State get_return_value( values::Scalar t, 
-				   Scalar_State m = Scalar_State() );
+    Ani_Scene( std::string name );
   };
   
-
+  bool try_add_child( Prop_Tree_Node *node );
 }
 #endif
 

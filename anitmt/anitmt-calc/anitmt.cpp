@@ -4,12 +4,19 @@
 #include "property.hpp"
 #include "solver.hpp"
 #include "move.hpp"
+#include "scene.hpp"
+#include "nodes.hpp"
+#include "save_filled.hpp"
 
 using namespace std;
 using namespace anitmt;
 
 int main()
 {
+  //*********************
+  // property/solver test 
+  //*********************
+
   Scalar_Property *s0 = new Scalar_Property(); // start stretch
   Scalar_Property *se = new Scalar_Property(); // end stretch
   Scalar_Property *s = new Scalar_Property(); // differance stretch
@@ -36,6 +43,26 @@ int main()
     cout << "endspeed:" << *ve << endl;
   if( s->s() )
     cout << "stretch:" << *s << endl;
+
+  //*****************
+  // tree create test
+  //*****************
+
+  make_all_nodes_availible();
+
+  Prop_Tree_Node *tscene = new Ani_Scene("testscene");
+
+  Prop_Tree_Node *tscalar = tscene ->add_child( "scalar", "testval" );
+  Prop_Tree_Node *tlinear = tscalar->add_child( "linear", "testlinear" );
+
+  tscene->set_property( "filename", values::String("test.scene") );
   
+  tlinear->set_property( "starttime",  values::Scalar(0) );
+  tlinear->set_property( "endtime",    values::Scalar(3) );
+  tlinear->set_property( "endvalue",   values::Scalar(2) );
+  tlinear->set_property( "difference", values::Scalar(1) );
+
+  save_filled( "test.out", tscene );
+
   return 0;
 }

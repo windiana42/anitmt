@@ -1,5 +1,5 @@
 /*****************************************************************************/
-/**   This file offers the general scalar tree node   			    **/
+/**   This file offers the general scene tree node   			    **/
 /*****************************************************************************/
 /**									    **/
 /** Author: Martin Trautmann						    **/
@@ -12,41 +12,39 @@
 /**									    **/
 /*****************************************************************************/
 
-#include "scalar.hpp"
-
-#include "solver.hpp"
+#include "scene.hpp"
 
 namespace anitmt{
 
   //******************************************************************
-  // Ani_Scalar: Animatable Scalar node that returns the scalar state 
+  // Ani_Scene: Animatable Scene node that returns the scene state 
   //******************************************************************
 
   // type name identifier as string
-  const std::string Ani_Scalar::type_name = "scalar";
+  const std::string Ani_Scene::type_name = "scene";
 
-  std::string Ani_Scalar::get_type_name(){
+  std::string Ani_Scene::get_type_name(){
     return type_name;
   }
 
-  Ani_Scalar::Ani_Scalar( std::string name ) 
+  Ani_Scene::Ani_Scene( std::string name ) 
     : Prop_Tree_Node( type_name, name ),
-      s(false,false) {
+      scalar(false,false), object(false,false) {
 
+    add_property( "filename", &filename );
+    add_property( "scene_type", &scene_type );
   }
 
-  Scalar_State Ani_Scalar::get_return_value( values::Scalar t, 
-					     Scalar_State ){
-    return s.get_return_value(t);
-  }
+  bool Ani_Scene::try_add_child( Prop_Tree_Node *node ){
 
-  bool Ani_Scalar::try_add_child( Prop_Tree_Node *node ){
-
-    Return<values::Scalar>  *scal = 
-      dynamic_cast< Return<values::Scalar>*  >( node );
+    Return<Scalar_State>  *scal = 
+      dynamic_cast< Return<Scalar_State>*  >( node );
+    Return<Object_State>  *obj = 
+      dynamic_cast< Return<Object_State>*  >( node );
 
     bool res = false;
-    if( scal ) res = res || s.try_add_child( scal );
+    if( scal ) res = res || scalar.try_add_child( scal );
+    if( obj  ) res = res || object.try_add_child( obj );
     
     return res;
   }

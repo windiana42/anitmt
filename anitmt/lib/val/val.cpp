@@ -26,29 +26,35 @@ namespace values{
   //*******
   // Vector
   //*******
-  Vector::operator vect::vector3() const { return x; }
-
-  Vector::Vector() : x(0) {}
-  Vector::Vector( vect::vector3 _x ) : x(_x) {}
+  Vector::Vector() : vect::vector3(0) {}
+  Vector::Vector( vect::vector3 _x ) : vect::vector3(_x) {}
 
   //*******
-  // Vector
+  // String
   //*******
+
+  String::String( std::string s ) : std::string( s ) {}
+  String::String() : std::string() {}
+  
+  //*******
+  // Flag
+  //*******
+
+  Flag::Flag( bool b ) : x( b ) {}
+  Flag::Flag() {}
+  
+  //**********
+  // Operators
+  //**********
 
   Vector operator*( const Scalar s, const Vector v ) {
-    return s.x * v.x;
+    return s.x * v;
   }
   Vector operator*( const Vector v, const Scalar s ) {
-    return s.x * v.x;
+    return s.x * v;
   } 
-  Vector operator+( const Vector v1, const Vector v2 ) {
-    return v1.x + v2.x;
-  }
-  Scalar operator*( const Vector v1, const Vector v2 ) {
-    return dot(v1.x,v2.x);
-  }
 
   Scalar abs( const Vector v ){
-    return v.x.length();
+    return v.length();
   }
 }
