@@ -27,6 +27,7 @@ namespace utl{
   maped_string::operator std::string() const{
     return id2str[id];
   }
+
   maped_string::maped_string( const std::string &s ){
     str2id_type::iterator i = str2id.find( s );
     if( i != str2id.end() )
@@ -38,6 +39,7 @@ namespace utl{
 	id2str[ id ] = s;
       }
   }
+
   maped_string::maped_string( const char *s ){
     str2id_type::iterator i = str2id.find( std::string(s) );
     if( i != str2id.end() )
@@ -49,15 +51,17 @@ namespace utl{
 	id2str[ id ] = std::string(s);
       }
   }
-  maped_string::~maped_string(){}
 
+  maped_string::~maped_string(){}
 
   bool operator == (const maped_string &s1, const maped_string &s2){
     return s1.id == s2.id;
   }
+
   bool operator == (const maped_string &s1, const std::string &s2){
     return std::string(s1) == s2;
   }
+
   bool operator == (const maped_string &s1, const char * s2){
     return std::string(s1) == std::string(s2);
   }
@@ -67,6 +71,7 @@ namespace utl{
     return s1.id < s2.id;
   }
 
+  // output operator
   std::ostream &operator << (std::ostream &os, const maped_string &s){
     os << std::string(s);
     return os;
