@@ -40,9 +40,9 @@ class stringlist : public std::list<std::string>
 		~stringlist()  {  clear();  }
 		
 		stringlist &operator=(const stringlist &sl)
-			{  clear();  _addlist(sl);  return(*this);  }
+			{  clear();  _addlist(sl); return(*this);  }
 		stringlist &operator+=(const stringlist &sl)
-			{  _addlist(sl);  return(*this);  }
+			{  _addlist(sl); return(*this);  }
 		
 		bool is_empty()
 			{  return((begin()==end()) ? true : false);  }

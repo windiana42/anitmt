@@ -1637,21 +1637,22 @@ done
 ac_given_srcdir=$srcdir
 ac_given_INSTALL="$INSTALL"
 
-trap 'rm -fr `echo "Makefile \
-	anitmt-calc/Makefile \
-	lib/Makefile \
-	lib/val/Makefile \
-	lib/utl/Makefile \
-	lib/par/Makefile \
-	lib/include/Makefile \
-	output/Makefile 
-	output/raw/Makefile 
-	output/pov/Makefile
-	test/Makefile \
-	anitmt-calc/parser/Makefile
-        anitmt-view/Makefile
-	anitmt-view/parser/Makefile
-	mkavi/Makefile" | sed "s/:[^ ]*//g"` conftest*; exit 1' 1 2 15
+trap 'rm -fr `echo "Makefile 
+	lib/Makefile 
+	lib/val/Makefile 
+	lib/utl/Makefile 
+	lib/par/Makefile 
+	lib/include/Makefile 
+	anitmt-calc/Makefile 
+	anitmt-calc/parser/Makefile 
+	anitmt-calc/output/Makefile 
+	anitmt-calc/output/lib/Makefile 
+	anitmt-calc/output/raw/Makefile 
+	anitmt-calc/output/pov/Makefile 
+	anitmt-view/Makefile 
+	anitmt-view/parser/Makefile 
+	mkavi/Makefile 
+	test/Makefile " | sed "s/:[^ ]*//g"` conftest*; exit 1' 1 2 15
 EOF
 cat >> $CONFIG_STATUS <<EOF
 
@@ -1743,21 +1744,22 @@ EOF
 
 cat >> $CONFIG_STATUS <<EOF
 
-CONFIG_FILES=\${CONFIG_FILES-"Makefile \
-	anitmt-calc/Makefile \
-	lib/Makefile \
-	lib/val/Makefile \
-	lib/utl/Makefile \
-	lib/par/Makefile \
-	lib/include/Makefile \
-	output/Makefile 
-	output/raw/Makefile 
-	output/pov/Makefile
-	test/Makefile \
-	anitmt-calc/parser/Makefile
-        anitmt-view/Makefile
-	anitmt-view/parser/Makefile
-	mkavi/Makefile"}
+CONFIG_FILES=\${CONFIG_FILES-"Makefile 
+	lib/Makefile 
+	lib/val/Makefile 
+	lib/utl/Makefile 
+	lib/par/Makefile 
+	lib/include/Makefile 
+	anitmt-calc/Makefile 
+	anitmt-calc/parser/Makefile 
+	anitmt-calc/output/Makefile 
+	anitmt-calc/output/lib/Makefile 
+	anitmt-calc/output/raw/Makefile 
+	anitmt-calc/output/pov/Makefile 
+	anitmt-view/Makefile 
+	anitmt-view/parser/Makefile 
+	mkavi/Makefile 
+	test/Makefile "}
 EOF
 cat >> $CONFIG_STATUS <<\EOF
 for ac_file in .. $CONFIG_FILES; do if test "x$ac_file" != x..; then

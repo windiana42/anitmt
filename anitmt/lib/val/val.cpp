@@ -452,26 +452,26 @@ namespace values
 		Vector y(0,1,0);
 		Vector z(0,0,1);
 		
-		x *= mat;
-		y *= mat;
-		z *= mat;
+		x = mat * x;
+		y = mat * y;
+		z = mat * z;
 		
 		return Vector( abs(x), abs(y), abs(z) );
 	}
 
 	//! returns the translation caused by transformation Matrix
-	Vector get_translation_component( const Matrix &mat )
+	Vector get_translate_component( const Matrix &mat )
 	{
 		return mat * Vector(0,0,0);
 	}
 
 	/*! returns the rotations about X,Y and Z axes in radians as vector, 
 	that is caused by Matrix */
-	Vector get_rotation_component( const Matrix &mat )
+	Vector get_rotate_component( const Matrix &mat )
 	{
 		Vector x(1,0,0);
 		Vector y(0,1,0);
-		Vector trans = get_translation_component( mat );
+		Vector trans = get_translate_component( mat );
 		
 		// get rotated vectors
 		Vector x_rot = mat * x - trans; 

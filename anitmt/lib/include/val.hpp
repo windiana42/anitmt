@@ -557,12 +557,12 @@ namespace values
      the z axis that are done to a vector when being multiplied with the 
      Matrix m.
      To reproduce the effect of m: scale, then rotate and finally translate */
-  extern Vector get_rotation_component( const Matrix &mat );
+  extern Vector get_rotate_component( const Matrix &mat );
   /*! returns the position independant
      translation as vector, that is done to a vector when being multipied
      with the Matrix m
      To reproduce the effect of m: scale, then rotate and finally translate */
-  extern Vector get_translation_component( const Matrix &mat );
+  extern Vector get_translate_component( const Matrix &mat );
 
 
 /******************************************************************************/
