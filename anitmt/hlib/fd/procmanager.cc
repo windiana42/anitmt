@@ -1155,10 +1155,12 @@ ProcessManager::ProcessManager(char *const _envp[],int *failflag=NULL) :
 	if(!(zmbchk=InstallTimer(-1,0)))  // alloc timer for zombie check
 	{  --failed;  }
 	
-	if(failflag)
-	{  *failflag+=failed;  return;  }
-	else if(failed)
-	{  ConstructorFailedExit("ProcMan");  }
+	if(failed)
+	{
+		if(failflag)
+		{  *failflag+=failed;  return;  }
+		ConstructorFailedExit("ProcMan");
+	}
 	
 	// init global manager: 
 	#if TESTING

@@ -51,8 +51,8 @@ class ParameterManager : public PAR
 		// This version info must be free'd via free() (NOT LFree()). 
 		// Note that this function returns NULL on malloc() failure. 
 		char *_GenVersionInfo();
-	public:  _CPP_OPERATORS
-		ParameterManager();
+	public:  _CPP_OPERATORS_FF
+		ParameterManager(int *failflag=NULL);
 		virtual ~ParameterManager();
 		
 		// You should call this after having written the parameters and 

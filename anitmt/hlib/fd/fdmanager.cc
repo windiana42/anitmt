@@ -1150,11 +1150,13 @@ FDManager::FDManager(int *failflag=NULL) :
 	
 	//quitval=-1;  <-- set in MainLoop(). 
 	
-	if(failflag)
-	{  *failflag-=failed;  return;  }
-	else if(failed)
-	{  ConstructorFailedExit("FD");  }
-	
+	if(failed)
+	{
+		if(failflag)
+		{  *failflag-=failed;  return;  }
+		ConstructorFailedExit("FD");
+	}
+
 	/*--- DO NOT USE >int failed< BELOW HERE. ---*/
 	
 	// Init global manager: 

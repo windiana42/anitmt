@@ -976,10 +976,12 @@ FDCopyManager::FDCopyManger(int *failflag=NULL) :
 	if(SetManager(1))
 	{  ++failed;  }
 	
-	if(failflag)
-	{  *failflag-=failed;  return;  }
-	else if(failed)
-	{  ConstructorFailedExit("CP");  }
+	if(failed)
+	{
+		if(failflag)
+		{  *failflag-=failed;  return;  }
+		ConstructorFailedExit("CP");
+	}
 	
 	/*--- DO NOT USE >int failed< BELOW HERE. ---*/
 	

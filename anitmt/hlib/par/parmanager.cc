@@ -507,7 +507,7 @@ void ParameterManager::_ClearSection(Section *s,ParameterConsumer *pc)
 }
 
 
-ParameterManager::ParameterManager() : 
+ParameterManager::ParameterManager(int * /*failflag*/) : 
 	pclist(),
 	topsect(/*name=*/NULL)
 {
