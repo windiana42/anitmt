@@ -146,6 +146,15 @@ AC_CHECK_FUNCS([setenv])
 AC_CONFIG_SUBDIRS(hlib rendview)
 
 AC_CONFIG_FILES([ Makefile
+	lib/Makefile
+	lib/flex/Makefile
+	lib/message/Makefile
+	lib/par/Makefile
+	lib/param/Makefile
+	lib/proptree/Makefile
+	lib/solve/Makefile
+	lib/utl/Makefile
+	lib/val/Makefile
 	anitmt-calc/Makefile
 	anitmt-calc/funcgen/Makefile
 	anitmt-calc/functionality/Makefile
@@ -156,15 +165,6 @@ AC_CONFIG_FILES([ Makefile
 	anitmt-calc/output/pov/Makefile
 	anitmt-calc/output/raw/Makefile
 	anitmt-view/Makefile
-	lib/Makefile
-	lib/flex/Makefile
-	lib/message/Makefile
-	lib/par/Makefile
-	lib/param/Makefile
-	lib/proptree/Makefile
-	lib/solve/Makefile
-	lib/utl/Makefile
-	lib/val/Makefile
 	utils/Makefile 
 	utils/mkavi/Makefile 
 	example/Makefile
