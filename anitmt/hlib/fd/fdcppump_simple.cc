@@ -1,5 +1,5 @@
 /*
- * fdcppump_simple.h
+ * fdcppump_simple.cc
  * 
  * Implementation of class FDCopyPump_Simple which works in 
  * cooperation with class FDCopyBase (and thus FDManager). 

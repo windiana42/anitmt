@@ -309,4 +309,3 @@ AC_OUTPUT
 
 # AutoHeader stuff to append: 
 # AH_BOTTOM([#include xyz])
-

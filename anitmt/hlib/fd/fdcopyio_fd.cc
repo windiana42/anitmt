@@ -1,5 +1,5 @@
 /*
- * fdcopyio_fd.h
+ * fdcopyio_fd.cc
  * 
  * Implementation of class FDCopyIO_FD. 
  * 

@@ -20,18 +20,10 @@
 
 // Used constants: 
 const int64_t HTime::conv_fact[HTime::_tslast]=
-#if __GNUC__ < 3
 { 1LL, 1000LL, 1000000LL, 60000000LL, 3600000000LL, 86400000000LL };
-#else                                /* ++--- required... */
-{ 1, 1000, 1000000, 60000000, 3600000000LL, 86400000000 };
-#endif
 
 const int64_t HTime::round_delta[HTime::_tslast]=
-#if __GNUC__ < 3
 { 0LL,  500LL,  500000LL, 30000000LL, 1800000000LL, 43200000000LL };
-#else
-{ 0,  500,  500000, 30000000, 1800000000, 43200000000 };
-#endif
 
 const double HTime::conv_factD[HTime::_tslast]=
 { 1.0, 1000.0, 1000000.0, 60000000.0, 3600000000.0, 86400000000.0 };
