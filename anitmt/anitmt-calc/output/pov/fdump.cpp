@@ -102,7 +102,7 @@ char *Frame_Dump::Node::_Dump_Scalar2Str(char *d,Frame_Dump::Context *ctx)
 		(defined ? "" : "UNDEFINED") << std::endl;  }
 	
 	if(defined)
-	{  d=Double2Str(d,ret.second.val,ctx->ndigits);  }
+	{  d=Double2Str(d,ret.second.get_value(),ctx->ndigits);  }
 	else
 	{
 		for(const char *s=_undefined_str; *s; s++)
@@ -122,8 +122,10 @@ char *Frame_Dump::Node::_Dump_Object2Str(char *d,Frame_Dump::Context *ctx)
 		obj->get_return_value(ctx->t);
 	
 	bool defined=ret.first;
-	bool active=ret.second.active;
-	values::Matrix *mat=&ret.second.mat;
+	bool active=ret.second.is_active();
+	values::Vector translate = ret.second.get_translate();
+	values::Vector rotate = ret.second.get_rotate();
+	values::Vector scale = ret.second.get_scale();
 	
 	if(ctx->verbose>3)  // YES!
 	{  (*ctx->vout) << "object: " << obj->get_name() << 
@@ -188,7 +190,7 @@ char *Frame_Dump::Node::_Dump_Object2Str(char *d,Frame_Dump::Context *ctx)
 		for(const char *s=_scale_str; *s; s++)
 		{  *(d++)=*s;  }
 		*(d++)='=';
-		d=Vector2Str(d,get_scale_component(*mat),ctx->ndigits);
+		d=Vector2Str(d,scale,ctx->ndigits);
 		*(d++)=';';  *(d++)='\n';
 	}
 	
@@ -199,7 +201,7 @@ char *Frame_Dump::Node::_Dump_Object2Str(char *d,Frame_Dump::Context *ctx)
 		for(const char *s=_rot_str; *s; s++)
 		{  *(d++)=*s;  }
 		*(d++)='=';
-		d=Vector2Str(d,get_rotation_component(*mat),ctx->ndigits);
+		d=Vector2Str(d,rotate,ctx->ndigits);
 		*(d++)=';';  *(d++)='\n';
 	}
 	
@@ -210,7 +212,7 @@ char *Frame_Dump::Node::_Dump_Object2Str(char *d,Frame_Dump::Context *ctx)
 		for(const char *s=_trans_str; *s; s++)
 		{  *(d++)=*s;  }
 		*(d++)='=';
-		d=Vector2Str(d,get_translation_component(*mat),ctx->ndigits);
+		d=Vector2Str(d,translate,ctx->ndigits);
 		*(d++)=';';  *(d++)='\n';
 	}
 	

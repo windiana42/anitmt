@@ -52,8 +52,8 @@ namespace anitmt
   public:
     static std::string get_type_name();
 
-    values::String get_filename()  {  return(filename());  }
-    values::String get_scene_type()  {  return(scene_type());  }
+    inline values::String get_filename()  {  return(filename());  }
+    inline values::String get_scene_type()  {  return(scene_type());  }
  
     inline const Contain< Ani_Scalar >& get_scalars() 
     { return scalars; }

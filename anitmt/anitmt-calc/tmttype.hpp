@@ -17,6 +17,7 @@
 
 #include "val.hpp"
 #include "vector.hpp"
+#include "return.hpp"
 
 namespace anitmt{
 
@@ -54,30 +55,61 @@ namespace anitmt{
   // State types
   //************
 
+  //*************
+  // Object_State
+
   class Object_State 
   {
-  public:
-    values::Matrix mat;		// transformation matrix 
+    values::Vector translate,rotate,scale; // transformations
     bool active;
+  public:
+    inline values::Matrix get_matrix();
+    inline values::Vector get_translate();
+    inline values::Vector get_rotate();
+    inline values::Vector get_scale();
+    inline bool is_active();
 
     Object_State() : active(false) {}
-    Object_State( values::Matrix v ) : mat(v), active(true) {}
-    Object_State( values::Matrix v, bool a ) : mat(v), active(a) {}
+    Object_State( values::Vector trans, values::Vector rot, 
+		  values::Vector scale );
+    Object_State( values::Vector trans, values::Vector rot, 
+		  values::Vector scale, bool active );
+    Object_State( values::Matrix v );
+    Object_State( values::Matrix v, bool a );
   };
+
+  //*************
+  // Scalar_State
 
   class Scalar_State 
   {
-  public:
     values::Scalar val;
     bool active;
+  public:
+    inline values::Scalar get_value();
+    inline bool is_active();
 
-    Scalar_State() : active(0) {}
-    Scalar_State( double v ) : val(v), active(1) {}
-    Scalar_State( values::Scalar v ) : val(v), active(1) {}
-    Scalar_State( double v, bool a ) : val(v), active(a) {}
-    Scalar_State( values::Scalar v, bool a ) : val(v), active(a) {}
+    Scalar_State();
+    Scalar_State( double v );
+    Scalar_State( double v, bool a );
+    Scalar_State( values::Scalar v );
+    Scalar_State( values::Scalar v, bool a );
   };
 
+  //*****************
+  // Reference types
+  //*****************
+  /*
+  class Pos_Reference {
+    Return<Position> *node;
+  public:
+    Return<Position> *get_node();
+
+    Node_Reference( Prop_Tree_Node *node )
+  };
+  */
 }
+
+#include "tmttype_inline.cpp"
 
 #endif

@@ -75,7 +75,7 @@ namespace anitmt
 	  
 	  std::pair<bool,Scalar_State> ret = (*scalar)->get_return_value( t );
 	  if( ret.first )
-	    out << "    val " << ret.second.val << ";" << std::endl;
+	    out << "    val " << ret.second.get_value() << ";" << std::endl;
 	  else
 	    out << "    val <undefined>;" << endl;
 	  
@@ -97,13 +97,13 @@ namespace anitmt
 	  std::pair<bool,Object_State> ret = (*object)->get_return_value( t );
 	  if( ret.first )
 	  {
-	    out << "    matrix " << ret.second.mat << ";" << std::endl;
+	    out << "    matrix " << ret.second.get_matrix()<< ";" << std::endl;
 	    out << "    // equals: " << endl;
-	    out << "    scale "     << get_scale_component(ret.second.mat) 
+	    out << "    scale "     << ret.second.get_scale() 
 		<< ";" << std::endl;
-	    out << "    translate " << get_translation_component(ret.second.mat)
+	    out << "    translate " << ret.second.get_translate()
 		<< ";" << std::endl;
-	    out << "    rotate "    << get_rotation_component(ret.second.mat)
+	    out << "    rotate "    << ret.second.get_rotate()
 		<< ";" << std::endl;
 	  }
 	  else
