@@ -37,6 +37,12 @@ scene testscene {
 */
   object testobj
   {
-
+    move_straight test_straight
+    {
+      duration 15;
+      start_pos <0,0,0>;
+      end_pos <1,2,3>;
+      acceleration 0.1;
+    }
   }
 }
