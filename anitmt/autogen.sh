@@ -43,7 +43,7 @@ fi
 # Make Makefile.in(s)
 if test -n "$1" -o ! -f Makefile.in; then
     echo "Creating Makefile.ins.";
-    automake || exit 2;
+    automake -a || exit 2;
 fi
 echo
 echo "Now you may run \"./configure\" to configure the source code,"
