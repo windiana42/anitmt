@@ -1,6 +1,21 @@
 SUBDIRS = lib hlib anitmt-calc rendview utils example
 EXTRA_DIST = BUILD FAQ autogen.sh
 
+# Special make rules building only a subset: 
+# Mainly interesting for developers. 
+# NOTE: _Intentionally_ without dependencies. 
+hlib: FORCE
+	$(MAKE) -C hlib
+rendview: FORCE
+	$(MAKE) -C rendview
+lib: FORCE
+	$(MAKE) -C lib
+utils: FORCE
+	$(MAKE) -C utils
+anitmt-calc: FORCE
+	$(MAKE) -C anitmt-calc
+FORCE:
+
 # Make rules currently used by me (Wolfgang): 
 COLUMNS=$(shell echo \"$$COLUMNS\")
 # CFLAGS="-D__CPLUSPLUS -DTHROW_NIL=\"throw()\""
