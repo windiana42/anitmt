@@ -93,6 +93,9 @@ int ParameterConsumer::DelParam(ParamInfo *pi)
 
 void ParameterConsumer::RecursiveDeleteParams(Section *top=NULL)
 {
+	#warning what to do if the curr_section is about to get removed...? \
+	  at least should document that this sets curr_section=NULL. 
+	curr_section=NULL;
 	parmanager()->RecursiveDeleteParams(this,top);
 }
 

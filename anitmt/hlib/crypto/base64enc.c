@@ -162,7 +162,7 @@ int main(int argc,char **arg)
 		char *obuf=ob;
 		for(;;)
 		{
-			int inlen=(rand()%32)+1;
+			int inlen=(random()%32)+1;
 			if(ibuf+inlen>ibufend)
 			{  inlen=ibufend-ibuf;  }
 			rv=Base64Encode(ibuf,inlen,obuf,ob+OBLEN-obuf,&state,8);

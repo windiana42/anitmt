@@ -108,7 +108,7 @@ struct Data
 {
 	_CPP_OPERATORS_FF
 	int varA,varB;
-	Data(int *ff)  { varA=varB=0; if(!(rand()%10)) --(*ff);  fprintf(stderr,"<C> "); }
+	Data(int *ff)  { varA=varB=0; if(!(random()%10)) --(*ff);  fprintf(stderr,"<C> "); }
 	~Data()  {  fprintf(stderr,"<D> "); }
 };
 

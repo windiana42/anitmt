@@ -190,6 +190,10 @@ class RefString
 		int set(const char *str_to_copy,size_t length)
 			{  _deref();  return(_copy(str_to_copy,&length));  }
 		
+		// This is like set(), bit creating a '\0'-terminated string 
+		// out of the first len bytes of str_to_copy. 
+		int set0(const char *str_to_copy,size_t len);
+		
 		// Like snprintf() on RefString. The passed format string and 
 		// args are formatted into the string. deref() is called before, 
 		// so printf() will not append to the string but act like set().
@@ -205,7 +209,8 @@ class RefString
 		// -1 -> allocation failure (ref now NULL)
 		// The new string is always a '\0'-terminated string without 
 		// size field. 
-		int sprintf(size_t maxlen,const char *fmt,...);
+		int sprintf(size_t maxlen,const char *fmt,...)
+			__attribute__ ((__format__ (__printf__, 3, 4)));
 		
 		/*** STRING MANIPULATION ROUTINES ***/
 		// There are usually two versions of the functions: 

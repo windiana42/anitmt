@@ -105,12 +105,48 @@ int ParameterManager::_RecursiveCheckParams(Section *sect)
 }
 
 
+// Highly internal stuff...
+// Returns new value for `foundstart´. 
+int ParameterManager::_SectHdlTraverseMoveUpLogic(int foundstart,
+	const char **nend,const char *nstart,Section **sect)
+{
+	if(foundstart)  return(1);
+	
+	if(*nend<=nstart)   // Can we iterate sect and nend up?
+	{  foundstart=1;  }
+	const char *nend0=*nend;
+	if(!foundstart)
+	{
+		// Find the name end for one section up: 
+		--(*nend);
+		while(**nend=='-' && *nend>=nstart)  --(*nend);
+		if(*nend<=nstart)
+		{  foundstart=1;  }
+	}
+	if(!foundstart)
+	{
+		//while(**nend!='-' && *nend>=nstart)  --(*nend);
+		//++(*nend);
+		++(*nend);
+		*nend-=strlen((*sect)->name);
+		if(*nend<nstart)
+		{  assert(0);  foundstart=1;  }
+	}
+	if(foundstart)
+	{  *nend=nend0;  }  // restore original value
+	else
+	{  *sect=(*sect)->up;  }  // also move up the secion
+	assert(*sect);
+	
+	return(foundstart);
+}
+
+
 // Call the section handlers on the specified parameter argument. 
 // bot_sect, bot_nend: till where the parameter could be parsed. 
 //   First, bot_sect's section handler will be queried, then the 
-//   handlers of the sections tree up till top_sect or till the 
-//   start of the parameter name is reached (whichever occurs 
-//   first). 
+//   handlers of the sections tree up to the root. The section 
+//   and nend pointers are adjusted the way up. 
 // Return value: 
 //   0 -> parameter was accepted by a section handler
 //  <0 -> section handler returned that error value
@@ -121,7 +157,9 @@ int ParameterManager::FeedSectionHandlers(
 {
 	const char *nend=bot_nend;
 	const char *nstart=pa->name;
-	for(Section *sect=bot_sect; sect; )
+	Section *sect=bot_sect;
+	int foundstart=0;
+	if(bot_sect) for(Section *i=bot_sect;;)
 	{
 		if(sect->sect_hdl)
 		{
@@ -132,28 +170,22 @@ int ParameterManager::FeedSectionHandlers(
 			info.nend=nend;
 			info.bot_sect=bot_sect;
 			info.bot_nend=bot_nend;
-			int rv=sect->sect_hdl->parse(&info);
+			info.top_sect=top_sect;
+			info.top_name=pa->name;
+			info.name_end=pa->name+pa->namelen;
+			int rv=sect->sect_hdl->parse(i,&info);
 			if(rv<=0)
 			{  return(rv);  }
 		}
 		
-		if(sect==top_sect || sect==&topsect)  break;
-		if(nend<=nstart)  break;
+		// Are we at the tree root?
+		if(i==&topsect)  break;
 		
-		// Find the name end for one section up: 
-		--nend;
-		while(*nend=='-' && nend>=nstart)  --nend;
-		if(nend<=nstart)  break;
-		//while(*nend!='-' && nend>=nstart)  --nend;
-		//++nend;
-		++nend;
-		nend-=strlen(sect->name);
-		if(nend<nstart)
-		{  assert(0);  break;  }
+		foundstart=_SectHdlTraverseMoveUpLogic(foundstart,&nend,nstart,&sect);
 		
 		// And go one section up: 
-		sect=sect->up;
-		assert(sect);   // checked against topsect above. 
+		i=i->up;
+		assert(i);   // checked against topsect above. 
 	}
 	
 	return(1);
@@ -397,7 +429,7 @@ void ParameterManager::RecursiveDeleteParams(ParameterConsumer *pc,
 
 
 PAR::Section *ParameterManager::RegisterSection(ParameterConsumer *pc,
-	const char *sect_name,const char *helptext,Section *top=NULL)
+	const char *sect_name,const char *helptext,Section *top)
 {
 	if(!pc)  return(NULL);
 	
@@ -432,13 +464,20 @@ PAR::Section *ParameterManager::RegisterSection(ParameterConsumer *pc,
 		return(s);
 	}
 	
+	/*// Check for name collision: 
+	 * if(single_section && end!=sect_name)
+	 * {  return(NULL);  } */
+	
 	// get next section name: (end="secA-secB-secC")
 	top=s;
 	// must create sub-sections below top (=s). 
 	for(;;)
 	{
 		const char *name=end;
-		while(*end && *end!='-')  ++end;
+		/*if(single_section)
+		 * {  end+=strlen(end);  }
+		 * else*/
+		{  while(*end && *end!='-')  ++end;  }
 		
 		// Need to allocate a subsection of *top with name *name. 
 		Section *ns=NEW2<Section>(name,end-name);
@@ -463,7 +502,8 @@ PAR::Section *ParameterManager::RegisterSection(ParameterConsumer *pc,
 }
 
 
-PAR::Section *ParameterManager::FindSection(const char *name,Section *top)
+PAR::Section *ParameterManager::FindSection(const char *name,Section *top,
+	int tell_section_handler)
 {
 	if(!top)  top=&topsect;
 	if(!name)  return(top);
@@ -471,9 +511,58 @@ PAR::Section *ParameterManager::FindSection(const char *name,Section *top)
 	while(*name=='-')  ++name;
 	if(!(*name))  return(NULL);  // or return(top) ???
 	
+	retry:;
 	const char *end;
-	Section *s=_LookupSection(name,top,&end);
-	return((*end) ? NULL : s);  // correct. 
+	Section *bot_sect=_LookupSection(name,top,&end);
+	if(!(*end))  return(bot_sect);  // correct. 
+	
+	if(tell_section_handler)
+	{
+		// Okay, the bottommost stection which could be parsed is *s. 
+		// Tell section handler of *s and all those above till top. 
+		const char *bot_nend=end;
+		const char *start=name;
+		const char *name_end=name+strlen(name);
+		Section *sect=bot_sect;
+		int foundstart=0;
+		int accepted=0;
+		if(bot_sect) for(Section *i=bot_sect;;)
+		{
+			if(i->sect_hdl)
+			{
+				SPHInfo pinfo;
+				pinfo.arg=NULL;
+				pinfo.sect=sect;
+				pinfo.nend=end;
+				pinfo.bot_sect=bot_sect;
+				pinfo.bot_nend=bot_nend;
+				pinfo.top_sect=top;
+				pinfo.top_name=start;
+				pinfo.name_end=name_end;
+				int rv=i->sect_hdl->parse(i,&pinfo);
+				if(!rv)  accepted=1;
+				if(rv<=0)  break;
+			}
+			
+			// Are we on the top?
+			if(i==&topsect)  break;
+			
+			// Move up e and sect if not at beginning of name: 
+			foundstart=_SectHdlTraverseMoveUpLogic(foundstart,&end,start,&sect);
+			
+			// Go one section up: 
+			i=i->up;
+			assert(i);
+		}
+		
+		if(accepted)
+		{
+			tell_section_handler=0;
+			goto retry;
+		}
+	}
+	
+	return(NULL);
 }
 
 

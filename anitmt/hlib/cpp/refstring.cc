@@ -102,6 +102,19 @@ int RefString::_copy(const char *str_to_copy,const size_t *lenptr)
 }
 
 
+int RefString::set0(const char *str_to_copy,size_t len)
+{
+	_deref();
+	ref=_alloc(len+1,0);
+	if(!ref)  return(-1);
+	// Copy string...
+	char *dest=(char*)(ref+1);
+	memcpy(dest,str_to_copy,len);
+	dest[len]='\0';   // ...and terminate
+	return(0);
+}
+
+
 void RefString::_destroy()
 {
 	//if(ref)  // <- checked by caller

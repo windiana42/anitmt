@@ -173,7 +173,7 @@ int ParameterSource_File::_ReadFile(const char *_file,int allow_recursion)
 		{  special=4;  stype=3;  }
 		if(stype)
 		{
-			if(!isspace(line[special]))
+			if(line[special] && !isspace(line[special]))
 			{  stype=0;  }
 		}
 		if(stype==1 || stype==2)
@@ -210,7 +210,8 @@ int ParameterSource_File::_ReadFile(const char *_file,int allow_recursion)
 				// This must be an immediate subsection of the current 
 				// section (newsect->up==curr_sect). 
 				#warning also allow deeper subsections
-				Section *down=manager->FindSection(sname,curr_sect);
+				Section *down=manager->FindSection(sname,curr_sect,
+					/*tell_section_handler=*/1);
 				if(!down)
 				{  PreprocessorError(PPUnknownSection,&origin,
 					curr_sect,sname);  ++errors;  }

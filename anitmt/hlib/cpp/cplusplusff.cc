@@ -37,6 +37,9 @@ static void *newprepmem=NULL;
 int _NewPrepareMemory(size_t size,void *_ptr=NULL)
 {
 	#if TESTING
+	// If you get the followin error, then one possibility is that 
+	// you simply forgot to use _CPP_OPERATORS_FF in the public part 
+	// of the class to be allocated. 
 	if(newprepmem || newprepsize)
 	{  fprintf(stderr,"Warning memory reserved but not used?! %p, %u\n",
 		newprepmem,newprepsize);  }

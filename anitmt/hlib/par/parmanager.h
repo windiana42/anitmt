@@ -53,7 +53,10 @@ class ParameterManager : public PAR
 		inline void _DelParam(Section *s,ParamInfo *pi);  // del and tell par sources
 		int _RecursiveCheckParams(Section *sect);
 		void _SectionHandlerDetachRecursive(SectionParameterHandler *sph,Section *sect);
+		int _SectHdlTraverseMoveUpLogic(int foundstart,
+			const char **nend,const char *nstart,Section **sect);
 		
+		// Console output functions: 
 		void _RecursivePrintHelp(Section *top,class SimpleIndentConsoleOutput &sico);
 		void _HelpPrintSectionHeader(Section *top,SimpleIndentConsoleOutput &sico);
 		void _HelpPrintParamInfo(ParamInfo *pi,SimpleIndentConsoleOutput &sico);
@@ -104,7 +107,15 @@ class ParameterManager : public PAR
 		// Returns the section with the specified name(s) or NULL 
 		// if it does not exist (leading `-' in name are skipped). 
 		// The name is referring to a section below *top. 
-		Section *FindSection(const char *name,Section *top=NULL);
+		// tell_section_handler: Normally 0 as the section parameter 
+		//   handler does not (have to) know of section lookups. If this 
+		//   is set to 1, the section handler gets called if the section 
+		//   is not found. This is the case if e.g. in a file parameter 
+		//   source a `#section´ statement is found, because subsequent 
+		//   params will not have the section name in the parameter name. 
+		//   Only set to 1 if you know what you are doing. 
+		Section *FindSection(const char *name,Section *top=NULL,
+			int tell_section_handler=0);
 		// Returns the top section: 
 		Section *TopSection()  {  return(&topsect);  }
 		

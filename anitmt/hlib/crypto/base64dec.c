@@ -149,7 +149,7 @@ int main(int argc,char **arg)
 		char *obuf=ob;
 		for(;;)
 		{
-			int inlen=(rand()%33)+1;
+			int inlen=(random()%33)+1;
 			if(ibuf+inlen>ibufend)
 			{  inlen=ibufend-ibuf;  }
 			rv=Base64Decode(ibuf,inlen,obuf,ob+OBLEN-obuf,&state);

@@ -265,7 +265,7 @@ PAR::ParamCopy *ParameterSource::FindParamCopy(ParamInfo *pi)
 //   0 -> OK
 //  CPSAllocFailed,CPSValAllocFailed -> See CopyParam()
 ParameterSource::CopyParamState ParameterSource::_AllocQueueParam(
-	ParamInfo *pi,SectionNode * /*sn*/,ParamCopy **ret)
+	ParamInfo *pi,SectionNode *sn,ParamCopy **ret)
 {
 	if(ret)  *ret=NULL;
 	
@@ -292,6 +292,9 @@ ParameterSource::CopyParamState ParameterSource::_AllocQueueParam(
 			return(CPSValAllocFailed);
 		}
 	}
+	
+	// Finally queue: 
+	sn->pclist.append(pc);
 	
 	if(ret)  *ret=pc;
 	return(CPSSuccess);
@@ -322,12 +325,12 @@ ParameterSource::CopyParamState ParameterSource::_CopyParam(
 	if(crv)
 	{
 		// Damn! Copying failed. 
-		_FreeParamCopy(pc);  pc=NULL;
+		_FreeParamCopy(sn->pclist.dequeue(pc));  pc=NULL;
 		return(CPSCopyingFailed);
 	}
 	
 	// Queue this parameter copy: 
-	sn->pclist.append(pc);
+	//sn->pclist.append(pc);  NO! already done by _AllocQueueParam(). 
 	
 	if(ret)  *ret=pc;
 	return(CPSSuccess);
@@ -532,7 +535,7 @@ void ParameterSource::ParamGetsDeleted(Section *s,ParamInfo *pi)
 	#if TESTING
 	fprintf(stderr,"Aiee: ParamInfo %s (section %s) gets "
 		"deleted while used by source\n",
-		pi->name,s->name);
+		pi->name,s->name ? s->name : "[top]");
 	#endif
 	
 	_RemoveParamCopy(pc,sn);

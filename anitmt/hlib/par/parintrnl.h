@@ -189,6 +189,10 @@ struct PAR  // This serves as a namespace and a base class.
 		                    // could be matched 
 		const char *bot_nend; // till where the name could be matched 
 		                      // (which lead to end_sect).
+		Section *top_sect;  // section which to view top_name relative to
+		const char *top_name;  // name making trouble; = arg->name
+		const char *name_end;  // pointer to the end of the string in 
+		                       // nend/bot_nend/top_name 
 	};
 	
 	struct SpecialHelpItem : LinkedListBase<SpecialHelpItem>

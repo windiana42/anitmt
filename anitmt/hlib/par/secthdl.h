@@ -47,11 +47,35 @@ class SectionParameterHandler : public PAR
 		// section (which could be determined by parsing the parameter name) 
 		// and then the hierarchy up till the top section or till a section 
 		// handler accepts the parameter. 
+		// Parameters: 
+		//   Section* -> which section we're just in, i.e. the function was 
+		//               called while being in this section. This is one of 
+		//               the sections the section handler is attached to. 
+		//   SPHInfo* -> Various info: 
+		//     See parintrnl.h for more info. 
+		//     NOTE: SHPInfo::arg is non-NULL in the regular case when 
+		//           parse() is called due to an unknown parameter. 
+		//           However, e.g. in the file param source, you can 
+		//           specify `#section xyz´, so the parameter in that 
+		//           section can never be handeled correctly by any section 
+		//           handler section `xyz´ could not be found. So, in this 
+		//           case, parse() is called with SHPInfo::arg=NULL. The 
+		//           section handler can the register the section `xyz' and 
+		//           return 0 so that the section in question is no longer 
+		//           unknown. (Note that SHPInfo::top_name is always set.)
+		//     NOTE: The pairs nend/sect, bot_sect/bot_nend, top_sect/top_nend 
+		//           always correspond to each other. HOWEVER, sect does not 
+		//           have to equal the first arg to parse(). sect is moved 
+		//           up in correspondence with the first arg until sect 
+		//           equals top_sect. When that is reached, the name cannot 
+		//           be `moved up´ (as the string begins here) and thus 
+		//           sect is not moved up, too. That's why you have the first 
+		//           arg after all...
 		// Return value: 
 		//   0 -> accept the parameter, parsed it. 
 		//   1 -> parameter was not accepted, go one level up. 
 		//  -1 -> some sort of error; stop here and do not go one level up
-		virtual int parse(SPHInfo *info)
+		virtual int parse(const Section *,SPHInfo *)
 			{  return(1);  }
 		
 		// This gets called twice if help on the section is to be written. 
