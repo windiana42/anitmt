@@ -1,8 +1,15 @@
-# Makefile.am for parser of anitmt adl - animation description language (right?)
+# Makefile.am for parser of anitmt adl - animation description language 
+INCLUDES=			-I$(srcdir)/.. -I$(srcdir)/../../lib/include/
 noinst_LIBRARIES=		libadlparser.a
+check_PROGRAMS=			adltest
 
 libadlparser_a_SOURCES=		scanner.ll \
-				support.hpp
+				support.hpp		support.cpp \
+				parser.hpp		parser.cpp
+
+
+adltest_SOURCES=		adltest.cpp
+adltest_LDADD=			libadlparser.a ../libanitmt.a ../../lib/val/libval.a -lfl
 
 YLWRAP  = $(top_srcdir)/ylwrap
 

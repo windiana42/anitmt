@@ -235,9 +235,13 @@ static void yy_flex_free YY_PROTO(( void * ));
 
 #define yywrap() 1
 #define YY_SKIP_YYWRAP
+
+#define FLEX_DEBUG
 typedef unsigned char YY_CHAR;
 #define yytext_ptr yytext
 #define YY_INTERACTIVE
+
+#define FLEX_DEBUG
 
 #include <FlexLexer.h>
 
@@ -252,39 +256,47 @@ typedef unsigned char YY_CHAR;
 	*yy_cp = '\0'; \
 	yy_c_buf_p = yy_cp;
 
-#define YY_NUM_RULES 14
-#define YY_END_OF_BUFFER 15
-static yyconst short int yy_acclist[38] =
+#define YY_NUM_RULES 20
+#define YY_END_OF_BUFFER 21
+static yyconst short int yy_acclist[82] =
     {   0,
-       15,   14,   14,    6,   14,    4,   14,    5,   14,   10,
-       14,    7,   14,   11,   13,   14,    3,   14,    8,   14,
-        9,   14,   11,   14,   13,   14,    1,   14,    2,   14,
-       13,   11,   13,   11,   12,   13,   13
+       21,   19,   20,    2,   19,   20,    2,   20,   19,   20,
+        8,   19,   20,    6,   19,   20,   13,   19,   20,    7,
+       19,   20,   12,   19,   20,    9,   19,   20,   18,   19,
+       20,    5,   19,   20,   10,   19,   20,   11,   19,   20,
+       16,   19,   20,   16,   19,   20,   16,   19,   20,   16,
+       19,   20,    3,   19,   20,    4,   19,   20,   19,   20,
+       17,   18,   16,   16,   16,    1,   18,   16,   14,   16,
+       16,   16,   16,   16,   14,   17,   18,   16,   16,   15,
+       16
     } ;
 
-static yyconst short int yy_accept[31] =
+static yyconst short int yy_accept[54] =
     {   0,
-        1,    1,    1,    2,    3,    4,    6,    8,   10,   12,
-       14,   17,   19,   21,   23,   25,   27,   29,   31,   31,
-       32,   32,   34,   35,   36,   37,   37,   37,   38,   38
+        1,    1,    1,    2,    4,    7,    9,   11,   14,   17,
+       20,   23,   26,   29,   32,   35,   38,   41,   44,   47,
+       50,   53,   56,   59,   61,   61,   62,   62,   63,   63,
+       64,   65,   65,   66,   67,   67,   68,   69,   70,   71,
+       72,   72,   72,   73,   74,   75,   77,   77,   78,   79,
+       80,   82,   82
     } ;
 
 static yyconst int yy_ec[256] =
     {   0,
+        1,    1,    1,    1,    1,    1,    1,    2,    2,    3,
+        1,    1,    2,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
-        1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
-        1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
-        1,    1,    1,    2,    1,    1,    1,    1,    1,    1,
-        1,    3,    4,    1,    5,    6,    7,    1,    1,    1,
-        1,    1,    1,    1,    1,    1,    1,    8,    9,   10,
-        1,   11,    1,    1,    1,    1,    1,    1,   12,    1,
-        1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
-        1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
-        1,    1,    1,    1,    1,    1,   13,    1,    1,   14,
+        1,    2,    1,    4,    5,    1,    1,    1,    1,    1,
+        1,    6,    7,    8,    9,   10,   11,   12,   12,   12,
+       12,   12,   12,   12,   12,   12,   12,    1,   13,   14,
+        1,   15,    1,    1,   16,   16,   16,   16,   17,   16,
+       16,   16,   16,   16,   16,   16,   16,   16,   16,   16,
+       16,   16,   16,   16,   16,   16,   16,   16,   16,   16,
+        1,    1,    1,    1,   16,    1,   18,   16,   19,   16,
 
-       12,    1,   14,   15,   14,    1,    1,   13,   16,   16,
-        1,   15,    1,    1,    1,   14,   16,    1,    1,    1,
-        1,    1,   17,    1,   18,    1,    1,    1,    1,    1,
+       20,   16,   16,   16,   21,   16,   16,   22,   16,   23,
+       16,   16,   16,   24,   25,   16,   16,   16,   16,   16,
+       16,   16,   26,    1,   27,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
@@ -301,52 +313,67 @@ static yyconst int yy_ec[256] =
         1,    1,    1,    1,    1
     } ;
 
-static yyconst int yy_meta[19] =
+static yyconst int yy_meta[28] =
     {   0,
-        1,    2,    1,    1,    1,    3,    1,    4,    1,    1,
-        1,    5,    6,    7,    1,    6,    1,    1
+        1,    1,    2,    1,    1,    1,    1,    1,    1,    1,
+        1,    3,    1,    1,    1,    3,    3,    3,    3,    3,
+        3,    3,    3,    3,    3,    1,    1
     } ;
 
-static yyconst short int yy_base[34] =
+static yyconst short int yy_base[56] =
     {   0,
-        0,    0,   33,   68,    0,   68,   11,   12,   68,   68,
-       21,   68,   68,   68,    0,   26,   68,   68,   29,   17,
-       14,    0,    0,   68,    9,   34,   16,   32,   68,   48,
-       52,   56,   60
+        0,   67,   71,   73,   73,   73,   24,   73,   58,   73,
+       57,   73,   73,   19,   73,   73,   73,    0,   47,   56,
+       47,   73,   73,    0,   61,   73,   26,   22,   52,    0,
+       40,   44,   15,    0,   32,   26,   41,   73,   38,   36,
+       54,   32,   39,   37,   32,   73,   37,   36,   21,   18,
+        0,   73,   50,   37,   53
     } ;
 
-static yyconst short int yy_def[34] =
+static yyconst short int yy_def[56] =
     {   0,
-       29,    1,   29,   29,   30,   29,   29,   29,   29,   29,
-       29,   29,   29,   29,   31,   32,   29,   29,   30,   32,
-       29,   11,   31,   29,   33,   29,   29,   29,    0,   29,
-       29,   29,   29
+       52,    1,   52,   52,   52,   52,   53,   52,   52,   52,
+       52,   52,   52,   52,   52,   52,   52,   54,   54,   54,
+       54,   52,   52,   55,   53,   52,   53,   52,   52,   54,
+       54,   52,   54,   55,   53,   52,   54,   52,   54,   54,
+       53,   52,   54,   54,   54,   52,   52,   52,   54,   54,
+       54,    0,   52,   52,   52
     } ;
 
-static yyconst short int yy_nxt[87] =
+static yyconst short int yy_nxt[101] =
     {   0,
-        4,    5,    6,    7,    8,    9,   10,   11,   12,   13,
-       14,    4,   15,   16,   15,    4,   17,   18,   20,   20,
-       26,   25,   21,   28,   20,   20,   21,   25,   22,   28,
-       24,   21,   29,   23,   20,   29,   23,   27,   27,   28,
-       29,   28,   29,   29,   29,   28,   29,   28,   19,   29,
-       19,   19,   19,   19,   19,   23,   29,   23,   20,   20,
-       29,   29,   20,   25,   25,   29,   25,    3,   29,   29,
-       29,   29,   29,   29,   29,   29,   29,   29,   29,   29,
-       29,   29,   29,   29,   29,   29
+        4,    5,    6,    7,    4,    8,    9,   10,   11,   12,
+       13,   14,   15,   16,   17,   18,   18,   18,   18,   18,
+       18,   19,   20,   18,   21,   22,   23,   26,   29,   26,
+       28,   29,   39,   28,   40,   26,   35,   36,   47,   30,
+       47,   51,   42,   48,   51,   42,   27,   48,   48,   41,
+       25,   51,   25,   34,   50,   34,   49,   46,   45,   44,
+       43,   38,   37,   36,   26,   33,   32,   31,   28,   28,
+       52,   24,    3,   52,   52,   52,   52,   52,   52,   52,
+       52,   52,   52,   52,   52,   52,   52,   52,   52,   52,
+       52,   52,   52,   52,   52,   52,   52,   52,   52,   52
+
     } ;
 
-static yyconst short int yy_chk[87] =
+static yyconst short int yy_chk[101] =
     {   0,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
-        1,    1,    1,    1,    1,    1,    1,    1,    7,    8,
-       25,   21,   20,   27,    7,    8,   11,   21,   11,   27,
-       19,   16,    3,   11,   11,    0,   11,   26,   26,   28,
-        0,   26,    0,    0,    0,   28,    0,   26,   30,    0,
-       30,   30,   30,   30,   30,   31,    0,   31,   32,   32,
-        0,    0,   32,   33,   33,    0,   33,   29,   29,   29,
-       29,   29,   29,   29,   29,   29,   29,   29,   29,   29,
-       29,   29,   29,   29,   29,   29
+        1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
+        1,    1,    1,    1,    1,    1,    1,    7,   14,   27,
+       14,   28,   33,   28,   33,   35,   27,   36,   42,   54,
+       42,   50,   36,   42,   49,   36,    7,   48,   47,   35,
+       53,   45,   53,   55,   44,   55,   43,   41,   40,   39,
+       37,   32,   31,   29,   25,   21,   20,   19,   11,    9,
+        3,    2,   52,   52,   52,   52,   52,   52,   52,   52,
+       52,   52,   52,   52,   52,   52,   52,   52,   52,   52,
+       52,   52,   52,   52,   52,   52,   52,   52,   52,   52
+
+    } ;
+
+static yyconst short int yy_rule_linenum[20] =
+    {   0,
+       21,   22,   24,   25,   26,   27,   28,   29,   30,   31,
+       32,   33,   34,   35,   36,   40,   44,   48,   54
     } ;
 
 #define REJECT \
@@ -363,8 +390,16 @@ goto find_rule; \
 #define INITIAL 0
 #line 2 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/parser/scanner.ll"
 #include "support.hpp"
-/* Scanner/Lexer for the anitmt scene description language */
-#line 368 "lex.ADL.cc"
+/* Scanner/Lexer for the anitmt scene description language 
+   Copyright Onno Kortmann 
+   License: GNU GPL
+
+   FIXMEs:
+   The ugly typecast into VADLFlexLexer ... is there a better solution?
+   *NEVER* create objects of type ADLFlexLexer!!
+*/
+	
+#line 403 "lex.ADL.cc"
 
 /* Macros after this point can all be overridden by user definitions in
  * section 1.
@@ -483,6 +518,9 @@ YY_MALLOC_DECL
 #endif
 
 #define YY_RULE_SETUP \
+	if ( yyleng > 0 ) \
+		yy_current_buffer->yy_at_bol = \
+				(yytext[yyleng - 1] == '\n'); \
 	YY_USER_ACTION
 
 YY_DECL
@@ -491,10 +529,10 @@ YY_DECL
 	register char *yy_cp, *yy_bp;
 	register int yy_act;
 
-#line 11 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/parser/scanner.ll"
+#line 19 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/parser/scanner.ll"
 
 
-#line 498 "lex.ADL.cc"
+#line 536 "lex.ADL.cc"
 
 	if ( yy_init )
 		{
@@ -533,6 +571,7 @@ YY_DECL
 		yy_bp = yy_cp;
 
 		yy_current_state = yy_start;
+		yy_current_state += YY_AT_BOL();
 		yy_state_ptr = yy_state_buf;
 		*yy_state_ptr++ = yy_current_state;
 yy_match:
@@ -542,14 +581,14 @@ yy_match:
 			while ( yy_chk[yy_base[yy_current_state] + yy_c] != yy_current_state )
 				{
 				yy_current_state = (int) yy_def[yy_current_state];
-				if ( yy_current_state >= 30 )
+				if ( yy_current_state >= 53 )
 					yy_c = yy_meta[(unsigned int) yy_c];
 				}
 			yy_current_state = yy_nxt[yy_base[yy_current_state] + (unsigned int) yy_c];
 			*yy_state_ptr++ = yy_current_state;
 			++yy_cp;
 			}
-		while ( yy_base[yy_current_state] != 68 );
+		while ( yy_base[yy_current_state] != 73 );
 
 yy_find_action:
 		yy_current_state = *--yy_state_ptr;
@@ -582,84 +621,139 @@ find_rule: /* we branch to this label when backing up */
 
 do_action:	/* This label is used only to access EOF actions. */
 
+		if ( yy_flex_debug )
+			{
+			if ( yy_act == 0 )
+				cerr << "--scanner backing up\n";
+			else if ( yy_act < 20 )
+				cerr << "--accepting rule at line " << yy_rule_linenum[yy_act] <<
+				         "(\"" << yytext << "\")\n";
+			else if ( yy_act == 20 )
+				cerr << "--accepting default rule (\"" << yytext << "\")\n";
+			else if ( yy_act == 21 )
+				cerr << "--(end of buffer or a NUL)\n";
+			else
+				cerr << "--EOF (start condition " << YY_START << ")\n";
+			}
 
 		switch ( yy_act )
 	{ /* beginning of action switch */
 case 1:
 YY_RULE_SETUP
-#line 13 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/parser/scanner.ll"
-return (OP_SECTION);
+#line 21 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/parser/scanner.ll"
+; /* Comment ... */
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 14 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/parser/scanner.ll"
-return (CL_SECTION);
+#line 22 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/parser/scanner.ll"
+; /* Whitespace */
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 15 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/parser/scanner.ll"
-return (SEMICOLON);
+#line 24 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/parser/scanner.ll"
+return (OP_SECTION);
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 16 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/parser/scanner.ll"
-return (PLUS);
+#line 25 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/parser/scanner.ll"
+return (CL_SECTION);
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 17 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/parser/scanner.ll"
-return (MINUS);
+#line 26 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/parser/scanner.ll"
+return (SEMICOLON);
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 18 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/parser/scanner.ll"
-return (ASTERISK);
+#line 27 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/parser/scanner.ll"
+return (PLUS);
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 19 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/parser/scanner.ll"
-return (SLASH);
+#line 28 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/parser/scanner.ll"
+return (MINUS);
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 20 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/parser/scanner.ll"
-return (OP_VECTOR);
+#line 29 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/parser/scanner.ll"
+return (ASTERISK);
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 21 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/parser/scanner.ll"
-return (CL_VECTOR);
+#line 30 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/parser/scanner.ll"
+return (SLASH);
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 22 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/parser/scanner.ll"
-return (DOT);
+#line 31 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/parser/scanner.ll"
+return (OP_VECTOR);
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 23 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/parser/scanner.ll"
-return (IDENTIFIER);
+#line 32 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/parser/scanner.ll"
+return (CL_VECTOR);
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 24 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/parser/scanner.ll"
-return (STRING);
+#line 33 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/parser/scanner.ll"
+return (DOT);
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 25 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/parser/scanner.ll"
-{
-                        return (NUMBER);
-}
+#line 34 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/parser/scanner.ll"
+return (COMMA);
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 29 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/parser/scanner.ll"
+#line 35 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/parser/scanner.ll"
+return (N_A);
+	YY_BREAK
+case 15:
+YY_RULE_SETUP
+#line 36 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/parser/scanner.ll"
+{
+	((VADLFlexLexer*)this)->yylval.str=yytext; return (NODE);
+}
+	YY_BREAK
+case 16:
+YY_RULE_SETUP
+#line 40 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/parser/scanner.ll"
+{
+	((VADLFlexLexer*)this)->yylval.str=yytext;
+	return (IDENTIFIER);
+}
+	YY_BREAK
+case 17:
+YY_RULE_SETUP
+#line 44 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/parser/scanner.ll"
+{	/*" this hyphen brings the emacs colorizer back into normal mode :)*/
+	((VADLFlexLexer*)this)->yylval.str=string(yytext+1).substr(0, yyleng-2);
+	return (STRING);
+}
+	YY_BREAK
+case 18:
+YY_RULE_SETUP
+#line 48 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/parser/scanner.ll"
+{
+        ((VADLFlexLexer*)this)->yylval.num=atof(yytext);
+        return (NUMBER);
+}
+	YY_BREAK
+case YY_STATE_EOF(INITIAL):
+#line 53 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/parser/scanner.ll"
+return (END_OF_FILE);
+	YY_BREAK
+case 19:
+YY_RULE_SETUP
+#line 54 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/parser/scanner.ll"
+((VADLFlexLexer*)this)->Warning(string("Invalid character: ")+yytext);
+	YY_BREAK
+case 20:
+YY_RULE_SETUP
+#line 57 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/parser/scanner.ll"
 ECHO;
 	YY_BREAK
-#line 661 "lex.ADL.cc"
-			case YY_STATE_EOF(INITIAL):
-				yyterminate();
+#line 757 "lex.ADL.cc"
 
 	case YY_END_OF_BUFFER:
 		{
@@ -1018,6 +1112,7 @@ yy_state_type yyFlexLexer::yy_get_previous_state()
 	register char *yy_cp;
 
 	yy_current_state = yy_start;
+	yy_current_state += YY_AT_BOL();
 	yy_state_ptr = yy_state_buf;
 	*yy_state_ptr++ = yy_current_state;
 
@@ -1027,7 +1122,7 @@ yy_state_type yyFlexLexer::yy_get_previous_state()
 		while ( yy_chk[yy_base[yy_current_state] + yy_c] != yy_current_state )
 			{
 			yy_current_state = (int) yy_def[yy_current_state];
-			if ( yy_current_state >= 30 )
+			if ( yy_current_state >= 53 )
 				yy_c = yy_meta[(unsigned int) yy_c];
 			}
 		yy_current_state = yy_nxt[yy_base[yy_current_state] + (unsigned int) yy_c];
@@ -1052,11 +1147,11 @@ yy_state_type yyFlexLexer::yy_try_NUL_trans( yy_state_type yy_current_state )
 	while ( yy_chk[yy_base[yy_current_state] + yy_c] != yy_current_state )
 		{
 		yy_current_state = (int) yy_def[yy_current_state];
-		if ( yy_current_state >= 30 )
+		if ( yy_current_state >= 53 )
 			yy_c = yy_meta[(unsigned int) yy_c];
 		}
 	yy_current_state = yy_nxt[yy_base[yy_current_state] + (unsigned int) yy_c];
-	yy_is_jam = (yy_current_state == 29);
+	yy_is_jam = (yy_current_state == 52);
 	if ( ! yy_is_jam )
 		*yy_state_ptr++ = yy_current_state;
 
@@ -1167,7 +1262,8 @@ int yyFlexLexer::yyinput()
 	*yy_c_buf_p = '\0';	/* preserve yytext */
 	yy_hold_char = *++yy_c_buf_p;
 
-	if ( c == '\n' )
+	yy_current_buffer->yy_at_bol = (c == '\n');
+	if ( yy_current_buffer->yy_at_bol )
 		++yylineno;
 
 	return c;
@@ -1462,6 +1558,5 @@ int main()
 	return 0;
 	}
 #endif
-#line 29 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/parser/scanner.ll"
-
+#line 57 "/home/ok/source/anitmt/cvs/anitmt/anitmt-calc/parser/scanner.ll"
 
