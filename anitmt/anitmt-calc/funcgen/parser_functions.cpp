@@ -342,7 +342,7 @@ namespace funcgen
       }
       else
       {
-	msg.error() << "property \"" << name << " already defined";
+	msg.error() << "property \"" << name << "\" already defined";
       }
     }
   }
@@ -360,7 +360,7 @@ namespace funcgen
       }
       else
       {
-	msg.error() << "property \"" << name << " already defined";
+	msg.error() << "property \"" << name << "\" already defined";
       }
     }
   }
@@ -393,7 +393,7 @@ namespace funcgen
       }
       else
       {
-	msg.error() << "operand \"" << name << " already defined";
+	msg.error() << "operand \"" << name << "\" already defined";
       }
     }
   } 
@@ -411,7 +411,7 @@ namespace funcgen
       }
       else
       {
-	msg.error() << "operand \"" << name << " already defined";
+	msg.error() << "operand \"" << name << "\" already defined";
       }
     }
   } 
