@@ -25,11 +25,6 @@
 #include <assert.h>
 
 
-int MyAddrInfo::TCPSocket()
-{
-	return(::socket(AF_INET,SOCK_STREAM,IPPROTO_TCP));
-}
-
 int MyAddrInfo::listen(int sockfd,int backlog)
 {
 	return(::listen(sockfd,backlog));
@@ -61,15 +56,23 @@ int MyAddrInfo::SetAddress(const char *host,int port)
 }
 
 
-RefString MyAddrInfo::GetAddress()
+RefString MyAddrInfo::GetAddress(int with_port)
 {
 	RefString s;
 	if(a.sin_family!=AF_INET)
 	{  s.set("[none]");  }
-	else
+	else if(with_port)
 	{  s.sprintf(0,"%s:%u",
 		inet_ntoa(a.sin_addr),(unsigned int)ntohs(a.sin_port));  }
+	else
+	{  s.set(inet_ntoa(a.sin_addr));  }
 	return(s);
+}
+
+
+int MyAddrInfo::socket()
+{
+	return(::socket(AF_INET,SOCK_STREAM,IPPROTO_TCP));
 }
 
 

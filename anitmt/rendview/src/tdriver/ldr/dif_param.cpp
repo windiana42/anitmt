@@ -66,6 +66,90 @@ int TaskDriverInterfaceFactory_LDR::FinalInit()
 {
 	int failed=0;
 	
+	// Try to resolve the client names: 
+	Verbose("Looking up LDR clients...\n");
+	for(const RefStrList::Node *n=str_clients.first(); n; n=n->next)
+	{
+		const char *name=n->str();
+		if(!name || !(*name))
+		{
+			Warning("Skipping LDR client with NULL name.\n");
+			continue;
+		}
+		ClientParam *cp=NEW<ClientParam>();
+		assert(cp);  // otherwise alloc failure (may abort in CheckParams())
+
+		// See if a port is specified: 
+		// THIS WILL HAVE problems with IPv6...
+		char *pstr=strrchr(name,':');
+		int port=default_port;
+		if(pstr)
+		{
+			char *end;
+			port=(int)strtol(pstr+1,&end,10);
+			if(*end || port<1 || port>=65536)
+			{
+				Warning("Illegal port spec in \"%s\". Defaulting to %d.\n",
+					name,default_port);
+				port=default_port;
+			}
+			// Okay, cut off port: 
+			_CheckAllocFail(cp->name.set0(name,pstr-name));
+		}
+		else
+		{  cp->name=*n;  }
+
+		bool queued=0;
+		do {
+			// Resolve the name: 
+			const char *name=cp->name.str();
+			int rv=cp->addr.SetAddress(name,port);
+			if(rv==-1)
+			{  Error("Failed to resolve host \"%s\": %s\n",
+				name,hstrerror(h_errno));  ++failed;  break;  }
+			else if(rv==-2)
+			{  Error("gethostbyname() did not return AF_INET for \"%s\".\n",
+				name);  ++failed;  break;  }
+			else assert(!rv);
+
+			// Okay, everything went fine; put client params in queue: 
+			cparam.append(cp);
+			queued=1;
+		} while(0);
+		if(!queued)
+		{  delete cp;  cp=NULL;  }
+	}
+
+	// Clear the client list, it's no longer needed: 
+	str_clients.clear();
+	
+	// See if we have clients more than once: 
+	for(ClientParam *cp=cparam.first(); cp; cp=cp->next)
+	{
+		int n_same=0;
+		int n_same_adr=0;
+		for(ClientParam *_i=cp->next; _i; )
+		{
+			ClientParam *i=_i;
+			_i=_i->next;
+			
+			if(!cp->addr.same_address(i->addr))  continue;
+			if(cp->addr.same_port(i->addr))
+			{
+				++n_same;
+				delete cparam.dequeue(i);
+				continue;
+			}
+			++n_same_adr;
+		}
+		if(n_same)
+		{  Warning("Client %s specified %d times. Using only once.\n",
+			cp->addr.GetAddress().str(),n_same+1);  }
+		if(n_same_adr)
+		{  Warning("Client %s specified %d times with different ports.\n",
+			cp->addr.GetAddress(0).str(),n_same_adr+1);  }
+	}
+	
 	if(cparam.is_empty() && !failed)
 	{  Error("No LDR clients specified. (Cannot work.)\n");  ++failed;  }
 	
@@ -84,65 +168,6 @@ int TaskDriverInterfaceFactory_LDR::CheckParams()
 		default_port=DefaultLDRPort;
 		++failed;
 	}
-	
-	// Try to resolve the client names: 
-	if(str_clients.first())
-	{
-		Verbose("Looking up LDR clients...\n");
-		for(const RefStrList::Node *n=str_clients.first(); n; n=n->next)
-		{
-			const char *name=n->str();
-			if(!name || !(*name))
-			{
-				Warning("Skipping LDR client with NULL name.\n");
-				continue;
-			}
-			ClientParam *cp=NEW<ClientParam>();
-			assert(cp);  // otherwise alloc failure (may abort in CheckParams())
-
-			// See if a port is specified: 
-			// THIS WILL HAVE problems with IPv6...
-			char *pstr=strrchr(name,':');
-			int port=default_port;
-			if(pstr)
-			{
-				char *end;
-				port=(int)strtol(pstr,&end,10);
-				if(*end || port<1 || port>=65536)
-				{
-					Warning("Illegal port spec in \"%s\". Defaulting to %d.\n",
-						name,default_port);
-					port=default_port;
-				}
-				// Okay, cut off port: 
-				_CheckAllocFail(cp->name.set0(name,pstr-name));
-			}
-			else
-			{  cp->name=*n;  }
-
-			bool queued=0;
-			do {
-				const char *name=cp->name.str();
-				int rv=cp->addr.SetAddress(name,port);
-				if(rv==-1)
-				{  Error("Failed to resolve host \"%s\": %s\n",
-					name,hstrerror(h_errno));  ++failed;  break;  }
-				else if(rv==-2)
-				{  Error("gethostbyname() did not return AF_INET for \"%s\".\n",
-					name);  ++failed;  break;  }
-				else assert(!rv);
-
-				// Okay, everything went fine; put client params in queue: 
-				cparam.append(cp);
-				queued=1;
-			} while(0);
-			if(!queued)
-			{  delete cp;  cp=NULL;  }
-		}
-	}
-	
-	// Clear the client list, it's no longer needed: 
-	str_clients.clear();
 	
 	return(failed ? 1 : 0);
 }

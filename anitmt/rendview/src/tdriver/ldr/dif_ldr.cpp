@@ -132,9 +132,10 @@ void TaskDriverInterface_LDR::ReallyStartProcessing()
 	#warning allow variable timeout
 	UpdateTimer(tid_connedt_to,10000,0);
 	
-	Verbose("Parallely initiating connections to all clients:\n");
+	Verbose("Simultaniously initiating connections to all clients:\n");
 	
 	int n_connecting=0;
+	int n_connected=0;
 	for(TaskDriverInterfaceFactory_LDR::ClientParam *i=p->cparam.first();
 		i; i=i->next)
 	{
@@ -149,13 +150,17 @@ void TaskDriverInterface_LDR::ReallyStartProcessing()
 			return;
 		}
 		
-		if(c->ConnectTo(i))
+		int rv=c->ConnectTo(i);
+		if(rv<0)
 		{  delete c;  c=NULL;  }
-		else
+		else if(!rv)
 		{  ++n_connecting;  }
+		else if(rv==1)
+		{  ++n_connected;  }
+		#warning MUST CHECK rv=0 / rv=1 !!!!!!!!!!!!!!!!!!!!!!!!!!!
 	}
 	
-	if(!n_connecting)
+	if(!n_connecting && !n_connected)
 	{
 		while(!clientlist.is_empty())
 		{  delete clientlist.popfirst();  }
@@ -165,8 +170,10 @@ void TaskDriverInterface_LDR::ReallyStartProcessing()
 		return;
 	}
 	
-	Verbose("Waiting for %d LDR client connections to establish...\n");
+	Verbose("Connected to %d clients; waiting for %d LDR conns to establish...\n",
+		n_connected,n_connecting);
 	
+Warning("Please don't wait; this is not yet hacked. Press ^C and ignore the assertion.\n");
 }
 
 

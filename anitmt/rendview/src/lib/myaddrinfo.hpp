@@ -32,15 +32,27 @@ class MyAddrInfo
 		MyAddrInfo(int *failflag=NULL);
 		~MyAddrInfo();
 		
-		// Create a TCP socket (using socket(2)): 
-		static int TCPSocket();
-		
 		// Simply calls listen(2): 
 		static int listen(int sockfd,int backlog);
 		
 		// Simply calls close(2): 
 		static int close(int sockfd)
 			{  return(::close(sockfd));  }
+		
+		// *** Compare: ***
+		// Compare address but not port: 
+		inline bool same_address(const MyAddrInfo &b)
+			{  return(a.sin_family==b.a.sin_family && 
+			          a.sin_addr.s_addr==b.a.sin_addr.s_addr);  }
+		// Compare port but not address: 
+		inline bool same_port(const MyAddrInfo &b)
+			{  return(a.sin_family==b.a.sin_family && 
+			          a.sin_port==b.a.sin_port);  }
+		// Compare address and port: 
+		inline bool operator==(const MyAddrInfo &b)
+			{  return(a.sin_family==b.a.sin_family && 
+			          a.sin_addr.s_addr==b.a.sin_addr.s_addr &&
+			          a.sin_port==b.a.sin_port);  }
 		
 		// *** Set address: ***
 		// This is used for bind() so that INADDR_ANY is used. 
@@ -57,14 +69,18 @@ class MyAddrInfo
 		int SetAddress(const char *host,int port);
 		
 		// *** Print Address ***
-		// Get address string: 
-		RefString GetAddress();
+		// Get address string: with_port: include port name?
+		RefString GetAddress(int with_port=1);
 		
 		// Get port number in host order (or -1): 
 		int GetPort()
 			{  return(a.sin_family==AF_INET ? int(ntohs(a.sin_port)) : (-1));  }
 		
 		// *** Actions: ***
+		// Create a TCP socket (using socket(2)) with specified 
+		// address family (AF_INET currently). 
+		int socket();
+		
 		// Calls connect(2) and returns its return value: 
 		// The connect address stored in *this is passed. 
 		int connect(int sockfd);

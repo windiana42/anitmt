@@ -54,15 +54,16 @@ int TaskSourceFactory_LDR::FinalInit()
 		if(failed)  break;
 		failed=1;
 		
+		MyAddrInfo addr;
+		addr.SetPassiveAny(listen_port);
+		
 		// Open socket: 
-		listen_fd=MyAddrInfo::TCPSocket();
+		listen_fd=addr.socket();
 		if(listen_fd<0)
 		{  Error("Failed to open inet socket: %s\n",
 			strerror(errno));  break;  }
 		
 		// Bind socket to port: 
-		MyAddrInfo addr;
-		addr.SetPassiveAny(listen_port);
 		if(addr.bind(listen_fd))
 		{  Error("Failed to bind to port %d: %s\n",addr.GetPort(),
 			strerror(errno));  break;  }

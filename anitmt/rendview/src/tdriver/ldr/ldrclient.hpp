@@ -47,6 +47,10 @@ class LDRClient :
 		// TASK MANAGER INTERFACE via TaskDriverInterface/TaskDriverInterfac_LDR: 
 		
 		// Start connection to passed client. (socket -> nonblock -> connect)
+		// Return value: 
+		//   0 -> connecting...
+		//   1 -> connected successfully without delay
+		//  -1 -> error
 		int ConnectTo(ClientParam *);
 };
 

@@ -36,11 +36,72 @@ int test=TTR_Unset;
 #endif
 
 
-int LDRClient::ConnectTo(ClientParam *)
+#warning do: use getsockopt(2) to read the SO_ERROR \
+option at level  SOL_SOCKET  to  determine  whether \
+connect  completed  successfully (SO_ERROR is zero) 
+
+// Return value: 
+//   0 -> connecting...
+//   1 -> connected successfully without delay
+//  -1 -> error
+int LDRClient::ConnectTo(ClientParam *cp)
 {
-	assert(0);
+	Verbose("  Client %s (%s): ",cp->name.str(),cp->addr.GetAddress().str());
 	
-	return(1);
+	const char *failure="FAILURE\n";
+	
+	int sock=cp->addr.socket();
+	if(sock<0)
+	{
+		Verbose(failure);
+		Error("Failed to create inet socket: %s\n",strerror(errno));
+		return(-1);
+	}
+	
+	int fail=1;
+	int already_connected=0;
+	do {
+		if(SetNonblocking(sock)<0)
+		{
+			Verbose(failure);
+			Error("Failed to set socket non-blocking: %s\n",strerror(errno));
+			break;
+		}
+		
+		int rv;
+		do
+		{  rv=cp->addr.connect(sock);  }
+		while(rv<0 && errno==EINTR);
+		if(rv<0)
+		{
+			if(errno!=EINPROGRESS)
+			{
+				Verbose(failure);
+				Error("Failed to connect to %s: %s\n",
+					cp->addr.GetAddress().str(),strerror(errno));
+				break;
+			}
+			// Okay, must poll for it to see when connection estblishes. 
+			Verbose("[in progress]\n");
+		}
+		else if(!rv)
+		{
+			// Oh! That was fast. We're already connected. 
+			already_connected=1;
+			Verbose("[connected]\n");
+		}
+		else assert(rv<=0);
+		
+		fail=0;
+	} while(0);
+	
+	if(fail)
+	{
+		close(sock);
+		return(-1);
+	}
+	
+	return(already_connected);
 }
 
 
