@@ -122,9 +122,13 @@ namespace message
     position_detail = src.position_detail;
     consultant = src.consultant;
     mtype = src.mtype;
+    // Make sure to terminate: 
+    src.message[src.msg_stream.pcount()]='\0';
+    msg_stream << src.message;
+    #warning If there are no problems with this solution, remove that: [03/2002]
+    #if 0 && defined(WOLFGANG)
     // This is likely to do the opposite of what we want: 
     strcpy( message, src.message );
-    #ifdef WOLFGANG
     fprintf(stderr,"message.cpp:%d: Please report me as bug.\n",__LINE__);
     assert(0);
     // Should be something like that:
@@ -139,6 +143,7 @@ namespace message
   }
 
   // copies itself to another Message stream and disables itself
+  using namespace std;
   void Message_Stream::copy_to( Message_Stream& dest ) 
   {
     dest.enabled = enabled;
@@ -146,15 +151,20 @@ namespace message
     dest.position_detail = position_detail;
     dest.consultant = consultant;
     dest.mtype = mtype;
+    // Make sure to terminate: 
+    message[msg_stream.pcount()]='\0';
+    dest.msg_stream << message;
+    #warning If there are no problems with this solution, remove that: [03/2002]
+    #if 0 && defined(WOLFGANG)
     // This is likely to do the opposite of what we want: 
     strcpy( dest.message, message );
-    #ifdef WOLFGANG
-    fprintf(stderr,"message.cpp:%d: Please report me as bug.\n",__LINE__);
-    assert(0);
+    //fprintf(stderr,"message.cpp:%d: Please report me as bug.\n",__LINE__);
+    //assert(0);
     // Should be something like that:
-    //dest.msg_stream=std::strstream(
-    //    msg_strcpy(dest.message,message,msg_stream.pcount()),
-    //    _Message_Buf_Size-msg_stream.pcount());
+    /*const std::strstream tmp(
+      msg_strcpy(dest.message,message,msg_stream.pcount()),
+      _Message_Buf_Size-msg_stream.pcount());*/
+    //dest.msg_stream=tmp;
     #endif
     dest.no_end = no_end;
 
