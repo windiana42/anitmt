@@ -14,6 +14,8 @@
 
 #include "base_operators.hpp"
 
+#include <assert.h>
+
 namespace funcgen
 {
   std::string type_to_string( op_par_type t )

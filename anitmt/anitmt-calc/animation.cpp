@@ -21,6 +21,8 @@
 
 #include "anitmt.hpp"
 
+#include <assert.h>
+
 namespace proptree
 {
     Semi_Global::Semi_Global( param::Parameter_Manager *parameter_manager, 

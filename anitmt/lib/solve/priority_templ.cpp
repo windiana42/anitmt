@@ -17,6 +17,8 @@
 
 #include "priority.hpp"
 
+#include <assert.h>
+
 namespace solve{
 
   //***************************************************

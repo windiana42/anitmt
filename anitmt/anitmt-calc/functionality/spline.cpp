@@ -17,6 +17,7 @@
 #include <val/val.hpp>
 
 #include <fstream>
+#include <assert.h>
 
 namespace functionality
 {

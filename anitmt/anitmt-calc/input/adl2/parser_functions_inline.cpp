@@ -21,6 +21,7 @@
 #include <val/val.hpp>
 
 #include <string>
+#include <assert.h>
 
 namespace anitmt
 {

@@ -23,6 +23,8 @@
 #include <stdio.h>
 #endif
 
+#include <assert.h>
+
 namespace message
 {
   Null_Position *GLOB::no_position = new Null_Position;

@@ -15,6 +15,7 @@
 #include "afdbase.hpp"
 
 #include <iostream>
+#include <assert.h>
 
 #include "stdextend.hpp"
 

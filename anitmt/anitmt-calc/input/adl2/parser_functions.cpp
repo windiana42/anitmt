@@ -18,6 +18,7 @@
 #include <utl/stdextend.hpp>
 
 #include <stack>
+#include <assert.h>
 
 namespace anitmt
 {

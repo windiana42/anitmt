@@ -15,6 +15,7 @@
 #include "expression.hpp"
 
 #include <functionality/solver.hpp>
+#include <assert.h>
 
 namespace anitmt
 {

@@ -14,6 +14,8 @@
 
 #include "constraint.hpp"
 
+#include <assert.h>
+
 namespace solve
 {
   //***************************************************************************

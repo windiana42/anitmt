@@ -23,6 +23,8 @@
 
 #include "binstr.hpp"
 
+#include <assert.h>
+
 namespace output_io
 {
 

@@ -18,6 +18,7 @@
 #include "operand.hpp"
 
 #include <algorithm>
+#include <assert.h>
 
 namespace solve
 {

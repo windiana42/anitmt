@@ -17,6 +17,8 @@
 
 #include "property.hpp"
 
+#include <assert.h>
+
 namespace proptree
 {
   //****************************************

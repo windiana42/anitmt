@@ -17,6 +17,7 @@
 #include <message/message.hpp>
 #include <utl/stdextend.hpp>
 
+#include <assert.h>
 
 namespace proptree
 {

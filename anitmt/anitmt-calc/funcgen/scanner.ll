@@ -19,6 +19,8 @@
   #include "token.hpp"			// token type
   #include "parsinfo.hpp"		// parser/lexer info
   #include "parser_functions.hpp"	// parser/lexer help functions
+
+  #include <assert.h>
  
   // forward declaration
   inline std::string strip_quotes( std::string text );

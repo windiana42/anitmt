@@ -17,6 +17,8 @@
 
 #include "expression.hpp"
 
+#include <assert.h>
+
 namespace anitmt
 {
   namespace adlparser

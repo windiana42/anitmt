@@ -16,6 +16,7 @@
 #define __anitmt_input_adl_parsinfo_inline_implementation__
 
 #include "parsinfo.hpp"
+#include <assert.h>
 
 namespace anitmt
 {

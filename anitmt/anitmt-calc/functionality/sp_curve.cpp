@@ -18,6 +18,7 @@
 
 #include <fstream>
 #include <iomanip>
+#include <assert.h>
 
 namespace functionality{
 

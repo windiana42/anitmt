@@ -14,6 +14,8 @@
 
 #include "parsinfo.hpp"
 
+#include <assert.h>
+
 namespace anitmt
 {
   namespace adlparser

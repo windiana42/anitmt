@@ -25,6 +25,8 @@
 #include <animation.hpp>
 #include "compif.hpp"
 
+#include <assert.h>
+
 namespace output_io
 {
 

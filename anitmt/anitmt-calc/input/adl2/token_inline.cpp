@@ -20,6 +20,8 @@
 #include "parsinfo.hpp"
 #include "tokens.h"		// a lot of declarations TOK_...
 
+#include <assert.h>
+
 namespace anitmt
 {
   namespace adlparser

@@ -19,6 +19,7 @@
 
 #include <list>
 #include <string>
+#include <assert.h>
 
 #include "stdextend.hpp"
 

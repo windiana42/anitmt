@@ -28,6 +28,7 @@
 #include "recinstr.hpp"
 
 #include <iostream>
+#include <assert.h>
 
 
 namespace output_io

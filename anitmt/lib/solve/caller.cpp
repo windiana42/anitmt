@@ -14,6 +14,8 @@
 
 #include "caller.hpp"
 
+#include <assert.h>
+
 namespace solve{
 
   //************************************************************************

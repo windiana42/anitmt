@@ -17,6 +17,8 @@
 
 #include "reference.hpp"
 
+#include <assert.h>
+
 namespace solve
 {
   //**************************************************************************

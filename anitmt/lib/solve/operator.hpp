@@ -22,6 +22,8 @@
 
 #include "operand.hpp"
 
+#include <assert.h>
+
 namespace solve
 {
   //***************************************************************

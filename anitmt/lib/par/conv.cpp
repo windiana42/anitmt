@@ -38,6 +38,7 @@
 #include <errno.h>
 #include <limits.h>
 #include <iostream>
+#include <assert.h>
 #include "params.hpp"
 
 namespace anitmt

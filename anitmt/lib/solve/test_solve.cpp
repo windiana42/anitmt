@@ -10,6 +10,8 @@
 #include "constraint.hpp"
 #include "reference.hpp"
 
+#include <assert.h>
+
 using namespace std;
 
 namespace solve {
