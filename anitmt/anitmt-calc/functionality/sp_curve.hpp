@@ -78,12 +78,7 @@ namespace functionality
 	max_len(max_l), min_len(min_l), init_point_anz(anz) {}
 
 
-    virtual ~Space_Curve(){
-#ifdef __debug__
-      print_points();
-#endif
-    } 
-
+    virtual ~Space_Curve();
   };
 
   // class for bezier curves

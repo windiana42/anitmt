@@ -100,9 +100,7 @@ namespace functionality{
 	  values::Vector &p2 = it2->pos;
 
 	  // check angle between point triple
-	  double angle = acos(dot((p1-p0),(p2-p1))/(abs(p1-p0)*abs(p2-p1)));
-			 //get_angle( p1 - p0, p2 - p1 );
-//!!! I still have to pay attention to angles greater than 90 degrees
+	  double angle = vec_angle( p1 - p0, p2 - p1 );
 
 	  // is angle to large?
 	  if( angle > max_angle )
