@@ -160,31 +160,32 @@ namespace functionality{
   }
 
   // calculate up-vectors in forward direction
-  void Space_Curve::calc_up_forward( values::Vector start_up ){
+  void Space_Curve::calc_up_forward( values::Vector start_up )
+  {
     if( !init_up )
+    {
+      points.begin()->up = start_up;
+
+      pointtype::iterator it0, it1;
+
+      it0 = it1 = points.begin(); 
+      for( it1++; it1 != points.end(); ++it0, ++it1 )
       {
-	points.begin()->up = start_up;
+	values::Vector v1,v2;
 
-	pointtype::iterator it0, it1;
+	v1 = it0->front;
+	v2 = it1->front;
 
-	it0 = it1 = points.begin(); 
-	for( it1++; it1 != points.end(); ++it0, ++it1 )
-	  {
-	    values::Vector v1,v2;
+	// get the rotation of the front vectors
+	values::Vector axis = cross(v1, v2);
+	double angle = get_rotation_around( v1, v2, axis );
 
-	    v1 = it0->front;
-	    v2 = it1->front;
-
-	    // get the rotation of the front vectors
-	    values::Vector axis = cross(v1, v2);
-	    double angle = get_rotation_around( v1, v2, axis );
-
-	    // do the same rotation with the up vectors
-	    it1->up = mat_rotate_around( axis, angle ) * it0->up;
-	  }
-
-	init_up = true;
+	// do the same rotation with the up vectors
+	it1->up = mat_rotate_around( axis, angle ) * it0->up;
       }
+
+      init_up = true;
+    }
   }
 
   // calculate up-vectors in backward direction
@@ -302,6 +303,13 @@ namespace functionality{
     //return points.last().up;   // last() isn't availible in my gcc version
     return vec_normalize((--points.end())->up);
   }
+
+  Space_Curve::~Space_Curve()
+  {
+#ifdef __debug__
+    print_points();
+#endif
+  } 
 
   /****************/
   /* Bezier_Curve */
