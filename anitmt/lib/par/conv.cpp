@@ -148,7 +148,7 @@ bool String_Value_Converter::Value_Omitted()
 // str is trimmed if necessary. 
 // Return value: true -> OK; no error
 //               false -> error in str; val unchanged. 
-bool String_Value_Converter::Str_To_Value(char *str,bool &val,bool silent=false)
+bool String_Value_Converter::Str_To_Value(char *str,bool &val,bool silent)
 {
 	// trim str: 
 	char tmp[strlen(str)+1];
@@ -173,7 +173,7 @@ bool String_Value_Converter::Str_To_Value(char *str,bool &val,bool silent=false)
 	return(false);
 }
 
-bool String_Value_Converter::Str_To_Value(char *str,int &val,bool silent=false)
+bool String_Value_Converter::Str_To_Value(char *str,int &val,bool silent)
 {
 	// trim str: 
 	char tmp[strlen(str)+1];

@@ -670,7 +670,7 @@ int Animation_Parameters::Parse_Setting(char *arg,char *nextarg)
 // Not set parameters are printed only if print_unset is true. 
 // indent is written at the beginning of every line (if non-NULL). 
 void Animation_Parameters::Print_Parameters(std::ostream &os,
-	const char *indent=NULL,bool print_unset=false)
+	const char *indent,bool print_unset)
 {
 	Do_Print_Parameters<bool>(os,indent,print_unset);
 	Do_Print_Parameters<int>(os,indent,print_unset);
