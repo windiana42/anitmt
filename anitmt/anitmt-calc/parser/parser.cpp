@@ -24,7 +24,7 @@ anitmt::ADLParser::ADLParser(istream &is,
 			     ostream &logs,
 			     bool d) : fl(&is, &logs), dmode(d) {}
 
-Scalar anitmt::ADLParser::ParseScalar() throw () {
+Scalar anitmt::ADLParser::ParseScalar() {
 	ExpectToken(NUMBER);
 	PARSER_DS("SCALAR", fl.yylval.num);
 	Scalar ret=fl.yylval.num;
@@ -33,7 +33,7 @@ Scalar anitmt::ADLParser::ParseScalar() throw () {
 	return ret;
 }
 
-Vector anitmt::ADLParser::ParseVector() throw (EXParser) {
+Vector anitmt::ADLParser::ParseVector() {
 	ConsumeToken(OP_VECTOR);
 	PARSER_DS("VECTOR", "");
 	fl.GetNext();
@@ -47,7 +47,7 @@ Vector anitmt::ADLParser::ParseVector() throw (EXParser) {
 	return ret;
 }
 
-String anitmt::ADLParser::ParseString() throw () {
+String anitmt::ADLParser::ParseString() {
 	ExpectToken(STRING);
 	PARSER_DS("STRING", fl.yylval.str); 
 	String ret=fl.yylval.str;

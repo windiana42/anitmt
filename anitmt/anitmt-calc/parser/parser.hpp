@@ -38,9 +38,9 @@ namespace anitmt {
 		//! Indention for debugging mode
 		unsigned ind;
 
-		values::Scalar ParseScalar() throw ();
-		values::Vector ParseVector() throw (EXParser);
-		values::String ParseString() throw ();
+		values::Scalar ParseScalar();
+		values::Vector ParseVector();
+		values::String ParseString();
 
 		void ExpectToken(const int tok);
 		void ConsumeToken(const int tok);
