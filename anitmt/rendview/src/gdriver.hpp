@@ -125,6 +125,7 @@ struct TaskStructBase
 
 
 class ComponentDataBase;
+class RF_DescBase;
 
 // NOTE: 
 // All TaskDriver-derived classes (RenderDriver, POVRayDriver, ...)
@@ -157,6 +158,13 @@ class TaskDriverFactory :
 			TaskDriverType tdt,
 			int *failflag=NULL);
 		virtual ~TaskDriverFactory();
+		
+		// Check the Render/Filter Desc and set up those fields not 
+		// set up by the desc file (i.e. render resume capability which 
+		// depends on the driver). 
+		// Return value: 0 -> OK
+		//  any other value -> error & error was written
+		virtual int CheckDesc(RF_DescBase *d) HL_PureVirt(1)
 		
 		// Create a TaskDriver: 
 		virtual TaskDriver *Create() HL_PureVirt(NULL)

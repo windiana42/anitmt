@@ -25,6 +25,8 @@ RenderDesc::RenderDesc(int *failflag=NULL) :
 	include_path(failflag)
 {
 	dtype=DTRender;
+	
+	can_resume_render=false;
 }
 
 RenderDesc::~RenderDesc()
@@ -58,6 +60,7 @@ RenderTask::RenderTask(int *failflag) :
 	height=-1;
 	oformat=NULL;
 	//timeout=-1;
+	resume=0;
 }
 
 RenderTask::~RenderTask()

@@ -162,7 +162,7 @@ int POVRayDriver::Execute(
 	{  return(1);  }
 	
 	// What gets called: 
-	// povray +Wwith +Hheight +Iinput +Ooutput 
+	// povray +Wwith +Hheight +-/-C +Iinput +Ooutput 
 	//        +F? +Lpath +Lpath <required_args> <add_args>
 	
 	// Output format:
@@ -188,6 +188,9 @@ int POVRayDriver::Execute(
 	char Wtmp[24],Htmp[24];
 	snprintf(Wtmp,24,"+W%d",rt->width);    if(args.append(Wtmp))  ++failed;
 	snprintf(Htmp,24,"+H%d",rt->height);   if(args.append(Htmp))  ++failed;
+	
+	// Resume? 
+	if(args.append(rt->resume ? "+C" : "-C"))  ++failed;
 	
 	// Input & output: 
 	if(Ifile.sprintf(0,"+I%s",infile.str()))  ++failed;
@@ -288,6 +291,15 @@ POVRayDriver::~POVRayDriver()
 TaskDriver *POVRayDriverFactory::Create()
 {
 	return(NEW1<POVRayDriver>(this));
+}
+
+
+int POVRayDriverFactory::CheckDesc(RF_DescBase *d)
+{
+	assert(d->dtype==DTRender);
+	RenderDesc *rd=(RenderDesc*)d;
+	rd->can_resume_render=true;
+	return(0);
 }
 
 

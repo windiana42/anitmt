@@ -33,6 +33,10 @@ class POVRayDriverFactory :
 		// Return value: 0 -> OK; >0 -> error. 
 		static int init(ComponentDataBase *cdb);
 		
+		// Called to check and set up some fields in the desc; see 
+		// TaskDriver (gdriver.hpp): [overriding virtual]
+		int CheckDesc(RF_DescBase *d);
+		
 		// Create a task driver: 
 		TaskDriver *Create();
 		

@@ -60,6 +60,18 @@ static int MAIN(int argc,char **argv,char **envp)
 		VERSION,      // version string
 		NULL,         // package name
 		"rendview");  // program name
+	parman->SetLicenseInfo(
+		// --lincense--
+		"RendView may be distributed under the terms of the GNU General "
+		"Public License version 2 as published by the Free Software "
+		"Foundation.\n"
+		"This program is provided AS IS with NO WARRANTY OF ANY KIND, "
+		"INCLUDING THE WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS "
+		"FOR A PARTICULAR PURPOSE.\n"
+		"See the GNU GPL for details.",
+		// --author--
+		"RendView (c) 2001--2002 by Wolfgang Wieser.\n"
+		"Bug report instructions: See http://anitmt.sf.net/rendview/");
 	parman->AdditionalHelpText(
 		"RendView is a utility to render (and postprocess) animations. "
 		"While the actual rendering is done by some render application "

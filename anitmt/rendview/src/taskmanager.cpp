@@ -1611,17 +1611,71 @@ int TaskManager::CheckParams()
 }
 
 
+static struct _ParamDescStuff
+{
+	const char *jobs_max_str;
+	const char *nice_str;
+	const char *timeout_str;
+	const char *nice_jitter_str;
+	const char *detach_term_str;
+} _pds[_DTLast]=
+{
+  { // _DTRender: 
+	"max number of simultanious render jobs",
+	"render job nice value",
+	"render job time limit (seconds; -1 for none)",
+	"switch on/off render job nice jitter (change nice value +/- 1 to "
+		"prevent jobs from running completely simultaniously; no effect "
+		"unless -rnice is used)",
+	"disable this to allow terminal to control render process "
+		"(-no-rdetach-term is NOT recommended)"
+  },
+  { // _DTFilter;
+	"max number of simultanious filter jobs",
+	"filter job nice value",
+	"filter job time limit (seconds; -1 for none)",
+	"switch on/off filter job nice jitter (see also -r-nice-jitter)",
+	"terminal control over filter process"
+  }
+};
+
+
+int TaskManager::_SetUpParams(TaskDriverType dtype)
+{
+	switch(dtype)
+	{
+		case DTRender:
+			if(SetSection("r","render parameters"))  return(1);
+			break;
+		case DTFilter:
+			if(SetSection("f","filter parameters"))  return(1);
+			break;
+		default:  assert(0);  break;
+	}
+	
+	DTPrm *p=&prm[dtype];
+	const _ParamDescStuff *s=&_pds[dtype];
+	AddParam("jobs-max",s->jobs_max_str,&p->maxjobs);
+	AddParam("nice",s->nice_str,&p->niceval);
+	AddParam("timeout",s->timeout_str,&p->timeout);
+	AddParam("nice-jitter",s->nice_jitter_str,&p->nice_jitter);
+	AddParam("detach-term",s->detach_term_str,&p->call_setsid);
+	
+	return(0);  // add_failed checked somewhere else
+}
+
+
 // Return value: 0 -> OK; 1 -> error
 int TaskManager::_SetUpParams()
 {
+	if(_SetUpParams(DTRender) ||
+	   _SetUpParams(DTFilter) )
+	{  return(1);  }
+	
 	if(SetSection(NULL))
 	{  return(1);  }
 	
 	AddParam("njobs","number of simultanious jobs",&njobs);
-	AddParam("rjobs-max","max number of simultanious render jobs",
-		&prm[DTRender].maxjobs);
-	AddParam("fjobs-max","max number of simultanious filter jobs",
-		&prm[DTFilter].maxjobs);
 	AddParam("max-failed-in-seq|mfis",
 		"max number of jobs to fail in sequence until giving up "
 		"(0 to disable [NOT recommended])",&max_failed_in_sequence);
@@ -1632,30 +1686,6 @@ int TaskManager::_SetUpParams()
 	AddParam("task-thresh-high",
 		"never store more than this number of tasks in the local task queue",
 		&todo_thresh_high);
-	AddParam("rnice","render job nice value",&prm[DTRender].niceval);
-	AddParam("fnice","filter job nice value",&prm[DTFilter].niceval);
-	AddParam("rtimeout","render job time limit (seconds; -1 for none)",
-		&prm[DTRender].timeout);
-	AddParam("ftimeout","filter job time limit (seconds; -1 for none)",
-		&prm[DTFilter].timeout);
-	AddParam("rnice-jitter","switch on/off render job nice jitter "
-		"(change nice value +/- 1 to prevent jobs from running completely "
-		"simultaniously; no effect unless -rnice is used)",
-		&prm[DTRender].nice_jitter);
-	AddParam("fnice-jitter","filter job nice jitter",
-		&prm[DTFilter].nice_jitter);
-	
-	AddParam("rmute","direct renderer output (stdout) to /dev/null",
-		&mute_renderer);
-	AddParam("rquiet","direct renderer output (stdout & stderr) to "
-		"/dev/null; implies -rmute",
-		&quiet_renderer);
-	
-	AddParam("rdetach-term","disable this to allow terminal to control render"
-		"process (-no-rdetach-term is NOT recommended)",
-		&prm[DTRender].call_setsid);
-	AddParam("fdetach-term","terminal control over filter process",
-		&prm[DTFilter].call_setsid);
 	
 	AddParam("load-poll-msec","load value poll delay",&load_poll_msec);
 	AddParam("load-max","do not start jobs if the system load multiplied "
@@ -1668,6 +1698,14 @@ int TaskManager::_SetUpParams()
 	#warning further params: delay_between_tasks, max_failed_jobs, \
 		dont_fail_on_failed_jobs, launch_if_load_smaller_than, \
 		brutal_on_first_sigint, ignore_sigint, signal_never_abort
+	
+	// Also added to section `r´: 
+	if(SetSection("r"))  return(1);
+	AddParam("mute","direct renderer output (stdout) to /dev/null",
+		&mute_renderer);
+	AddParam("quiet","direct renderer output (stdout & stderr) to "
+		"/dev/null; implies -rmute",
+		&quiet_renderer);
 	
 	return(add_failed ? 1 : 0);
 }

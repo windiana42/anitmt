@@ -12,6 +12,7 @@ LLB = LinkedListBase<>
  | RenderDesc *rdesc; | FilterDesc *fdesc; |
  | width,height;      | ImageFormat;       |
  | ImageFormat;       |                    |
+ | resume             |                    |
  +--------------------+--------------------+
 
  +---------------------------------------+

@@ -181,6 +181,7 @@ class TaskManager :
 		
 		// Initialisation of parameter stuff: 
 		int _SetUpParams();
+		int _SetUpParams(TaskDriverType dtype);
 		
 		// Simply call fdmanager()->Quit(status) and write 
 		void _DoQuit(int status);

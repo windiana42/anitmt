@@ -470,6 +470,11 @@ int ComponentDataBase::CheckParams()
 				continue;
 			}
 			
+			// Give task driver (factory) a chance to check the desc 
+			// and set up some fields...
+			if(tdf->CheckDesc(i))
+			{  continue;  }
+			
 			// Set the factory (that's why we're doing this loop after all): 
 			i->dfactory=tdf;
 		}

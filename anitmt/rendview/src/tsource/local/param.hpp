@@ -52,8 +52,13 @@ class TaskSourceFactory_Local :
 		// Additional args for the renderer: 
 		RefStrList radd_args;
 		
-		// Passed -continue?
+		// Passed -cont/-rcont?
 		bool cont_flag;
+		bool render_resume_flag;
+		ParamInfo *render_resume_pi;
+		
+		// Mainly for testing: use this delay before answering any 
+		// requests: 
 		long response_delay;
 		
 		int _CheckFramePattern(const char *name,RefString *s);

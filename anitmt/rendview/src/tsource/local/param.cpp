@@ -63,10 +63,9 @@ int TaskSourceFactory_Local::FinalInit()
 	if(oformat_string.str())
 	{
 		oformat=component_db()->FindImageFormatByName(oformat_string.str());
-		#warning NEED -list-imgfmt TO LIST IMAGE FORMATS. 
 		if(!oformat)
-		{  Error("Local: Image (output) format \"%s\" not recognized.\n",
-			oformat_string.str());  ++failed;  }
+		{  Error("Local: Image (output) format \"%s\" not recognized "
+			"(try -list-imgfmt).\n",oformat_string.str());  ++failed;  }
 		oformat_string.set(NULL);
 	}
 	
@@ -83,6 +82,19 @@ int TaskSourceFactory_Local::FinalInit()
 	{
 		Error("Local: Unknown render DESC named \"%s\".\n",rdesc_string.str());
 		++failed;
+	}
+	else
+	{
+		// Default: yes, if rdesc supports it: 
+		if(!IsSet(render_resume_pi))
+		{  render_resume_flag=rdesc->can_resume_render;  }
+		if(render_resume_flag && !rdesc->can_resume_render)
+		{
+			Warning("Disabled render resume feature (-rcont) "
+				"(no support by renderer / %s driver)",
+				rdesc->dfactory->DriverName());
+			render_resume_flag=false;
+		}
 	}
 	
 	// Check frame pattern: 
@@ -119,8 +131,11 @@ int TaskSourceFactory_Local::FinalInit()
 		char nf_tmp[24];
 		if(nframes>=0)  snprintf(nf_tmp,24,"%d",nframes);
 		else  strcpy(nf_tmp,"[unlimited]");
-		Verbose("Local task source: jump: %d; nframes: %s; startframe: %d%s\n",
-			fjump,nf_tmp,startframe,cont_flag ? " [cont]" : "");
+		Verbose("Local task source: jump: %d; nframes: %s; startframe: %d\n",
+			fjump,nf_tmp,startframe);
+		Verbose("  Continuing: %s; cont operation: %s\n",
+			cont_flag ? "yes" : "no",
+			render_resume_flag ? "resume (-rcont)" : "re-render (-no-rcont)");
 		Verbose("  Renderer: %s (%s driver); output format: %s (%d bpp)\n",
 			rdesc->name.str(),rdesc->dfactory->DriverName(),
 			oformat->name,oformat->bitspp);
@@ -190,9 +205,19 @@ int TaskSourceFactory_Local::_RegisterParams()
 		"files exist)",&nframes);
 	AddParam("startframe|f0","first frame to process",&startframe);
 	
-	AddParam("continue|cont","continue; don't render frames which have "
-		"already been rendered (i.e. image exists and is newer than input)",
+	AddParam("cont","continue; don't render frames which have "
+		"already been rendered (i.e. image exists and is newer than input) "
+		"or (if -rcont is used) continue rendering of partly rendered image",
 		&cont_flag);
+	render_resume_pi=AddParam("rcont",
+		"resume cont; This switch enables/disables render continue "
+		"feature: If enabled, interrupted files are named *-unfinished "
+		"and rendering resumes at the position where it stopped; "
+		"if disabled, a not-completely rendered frame is deleted and has "
+		"to be rendered completely the next time.\nNOTE: this just selects "
+		"the operation mode; you must use -cont to actuallly continue. "
+		"(Default: yes, if driver supports it)",
+		&render_resume_flag,PNoDefault);
 	
 	AddParam("size|s","size (WWWxHHH) of created images",&size_string);
 	
@@ -253,6 +278,9 @@ TaskSourceFactory_Local::TaskSourceFactory_Local(
 	rdesc=NULL;
 	
 	cont_flag=false;
+	#warning default could be 'yes if supported'
+	render_resume_flag=false;
+	
 	response_delay=0;
 	
 	int failed=0;

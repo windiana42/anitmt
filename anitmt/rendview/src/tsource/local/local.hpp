@@ -49,7 +49,7 @@ class TaskSource_Local :
 		void _ProcessGetTask(TSNotifyInfo *ni);
 		void _ProcessDoneTask(TSNotifyInfo *ni);
 		
-		int _GetNextFiles(RefString *inf,RefString *outf);
+		int _GetNextFiles(RefString *inf,RefString *outf,int *resume_flag);
 		
 		// Update/start rtid timer: 
 		inline void _Start0msecTimer();

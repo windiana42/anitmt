@@ -25,6 +25,9 @@ struct RenderDesc : RF_DescBase
 	RefStrList required_args;   // required args to pass to the renderer 
 	RefStrList include_path;    // [implicit] include path for the renderer 
 	
+	// This is set up by CheckDesc(): 
+	bool can_resume_render;    // can resume rendering a file (POVRay: option "+C")
+	
 	_CPP_OPERATORS_FF
 	RenderDesc(int *failflag=NULL);
 	~RenderDesc();
@@ -37,6 +40,8 @@ struct RenderTask : public TaskStructBase
 	int width;         // width of image to render
 	int height;        // height of image to render
 	const ImageFormat *oformat;  // image output format (static data, do NOT delete)
+	
+	int resume;    // Resume rendering 0/1
 	
 	_CPP_OPERATORS_FF
 	RenderTask(int *failflag=NULL);

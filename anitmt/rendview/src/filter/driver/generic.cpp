@@ -57,6 +57,15 @@ TaskDriver *GenericFilterDriverFactory::Create()
 }
 
 
+int GenericFilterDriverFactory::CheckDesc(RF_DescBase *d)
+{
+	assert(d->dtype==DTFilter);
+	FilterDesc *fd=(FilterDesc*)d;
+	//fd->blah=blah2;
+	return(0);
+}
+
+
 // Called on program start to set up the GenericFilterDriverFactory; 
 // GenericFilterDriverFactory registers at ComponentDataBase. 
 // Return value: 0 -> OK; >0 -> error. 
