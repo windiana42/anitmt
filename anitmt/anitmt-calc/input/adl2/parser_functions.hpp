@@ -18,6 +18,8 @@
 #include <message/message.hpp>
 
 #include "adlparser.hpp"
+#include "token.hpp"
+#include "parsinfo.hpp"
 
 namespace anitmt
 {
@@ -56,16 +58,30 @@ namespace anitmt
     inline message::Message_Consultant *msg_consultant( void *info )
     {return static_cast<adlparser_info*>(info)->msg.get_consultant();}
 
-    inline void set_pos( Property *prop, void *info )
-    {prop->set_position( static_cast<adlparser_info*>(info)->
-			 file_pos.duplicate() );}
-
     // creates new tree node and makes it the current one
     void change_current_child( void *vptr_info, std::string type, 
 			       std::string name="" );
 
     // changes back to the parent tree node
     inline void change_to_parent( void *vptr_info );
+
+    // property declaration
+    inline void prop_declaration_start( Property &prop, void *vptr_info );
+    inline void flag_prop_declaration_finish
+    ( Type_Property<values::Flag> &prop, Token &tok, void *vptr_info );
+    inline void scalar_prop_declaration_finish
+    ( Type_Property<values::Scalar> &prop, Token &tok, void *vptr_info );
+    inline void vector_prop_declaration_finish
+    ( Type_Property<values::Vector> &prop, Token &tok, void *vptr_info );
+    inline void matrix_prop_declaration_finish
+    ( Type_Property<values::Matrix> &prop, Token &tok, void *vptr_info );
+    inline void string_prop_declaration_finish
+    ( Type_Property<values::String> &prop, Token &tok, void *vptr_info );
+
+
+    inline void set_pos( Property *prop, void *info )
+    {prop->set_position( static_cast<adlparser_info*>(info)->
+			 file_pos.duplicate() );}
 
     // tells the lexer to resolve identifiers as properties
     inline void resolve_properties( void *vptr_info );

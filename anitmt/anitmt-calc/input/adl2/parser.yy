@@ -22,6 +22,8 @@
 #include <solve/reference.hpp>
 #include <message/message.hpp>
 
+#include "token.hpp"
+#include "parsinfo.hpp"
 #include "adlparser.hpp"
 
 #include "parser_functions.hpp"
@@ -40,7 +42,7 @@ namespace anitmt
 
 %pure_parser
 
-%token TOK_INVALID_ID TOK_ERROR
+%token TOK_INVALID_ID TOK_ERROR TOK_DUMMY
 // multi character operators
 %token TOK_IS_EQUAL TOK_NOT_EQUAL TOK_MORE_EQUAL TOK_LESS_EQUAL 
 // functions
@@ -68,11 +70,11 @@ namespace anitmt
 %type <vector()> vector_exp 
 %type <matrix()> matrix_exp 
 %type <string()> string_exp 
-%type <op_flag(info)>   op_flag_exp 
+%type <meta_op_flag(info)>   op_flag_exp 
 %type <meta_op_scalar(info)> op_scalar_exp 
-%type <op_vector(info)> op_vector_exp 
-%type <op_matrix(info)> op_matrix_exp 
-%type <op_string(info)> op_string_exp 
+%type <meta_op_vector(info)> op_vector_exp 
+%type <meta_op_matrix(info)> op_matrix_exp 
+%type <meta_op_string(info)> op_string_exp 
 %type <tok()> any_flag_exp 
 %type <tok()> any_scalar_exp 
 %type <tok()> any_vector_exp 
@@ -89,12 +91,13 @@ tree_node_block: /* empty */
 	| tree_node_block statement
 	;
 
-statement: flag_statement ';'
-	 | scalar_statement ';'
+statement: child_declaration
+	 | flag_statement ';'	  
+	 | scalar_statement ';'	 
 	 | vector_statement ';'
 	 | matrix_statement ';'
 	 | string_statement ';'
-	 | child_declaration
+
 	;
 	
 child_declaration: TOK_IDENTIFIER '{'    { change_current_child(info,$1); } 
@@ -105,129 +108,49 @@ child_declaration: TOK_IDENTIFIER '{'    { change_current_child(info,$1); }
 	;
 
 flag_statement: 
-  TOK_PROP_FLAG { set_pos(&$1,info); resolve_references(info); } 
-  any_flag_exp 
- { 
-   if( $3.get_type() == TOK_FLAG )
-   {
-     if( !$1.set_value( $3.flag() ) )
-     {
-       yyerr(info) << "error while setting property " << $1.get_name() << " to "
-	     << $3.flag();
-     }
-   }
-   else 
-   {
-     assert( $3.get_type() == TOK_OP_FLAG );
-     solve::explicite_reference( $1, $3.op_flag(info) ); // establish reference
-   }
-   resolve_properties(info); // resolve properties again
- }
+  TOK_PROP_FLAG { prop_declaration_start($1,info); } 
+  any_flag_exp  { flag_prop_declaration_finish($1,$3,info); }
 	;
-any_flag_exp:     flag_exp {Token res;res.flag() = $1; $$ = res;}
-		| op_flag_exp {Token res;res.set_op_flag($1); $$ = res;}
+any_flag_exp:      flag_exp {$<flag()>$ = $1;}
+		| op_flag_exp {$<meta_op_flag(info)>$ = $1();}
+		| TOK_DUMMY {$$;}
 	;
 
 scalar_statement: 
-  TOK_PROP_SCALAR { set_pos(&$1,info); resolve_references(info); } 
-  any_scalar_exp 
- { 
-   if( $3.get_type() == TOK_SCALAR )
-   {
-     if( !$1.set_value( $3.scalar() ) )
-     {
-       yyerr(info) << "error while setting property " << $1.get_name() << " to "
-	     << $3.scalar();
-     }
-   }
-   else 
-   {
-     assert( $3.get_type() == TOK_OP_SCALAR );
-     // establish reference
-     solve::explicite_reference( $1, $3.op_scalar(info) ); 
-   }
-   resolve_properties(info); // resolve properties again
- }
+  TOK_PROP_SCALAR { prop_declaration_start($1,info); } 
+  any_scalar_exp  { scalar_prop_declaration_finish($1,$3,info); }
 	;
-any_scalar_exp:      scalar_exp {Token res;res.scalar() = $1; $$ = res;}
-		| op_scalar_exp {$<meta_op_scalar(info)>$ = $1;}
+any_scalar_exp:      scalar_exp {$<scalar()>$ = $1;}
+		| op_scalar_exp {$<meta_op_scalar(info)>$ = $1();}
+		| TOK_DUMMY {$$;}
 	;
  
 vector_statement: 
-  TOK_PROP_VECTOR { set_pos(&$1,info); resolve_references(info); } 
-  any_vector_exp 
- { 
-   if( $3.get_type() == TOK_VECTOR )
-   {
-     if( !$1.set_value( $3.vector() ) )
-     {
-       yyerr(info) << "error while setting property " << $1.get_name() << " to "
-	     << $3.vector();
-     }
-   }
-   else 
-   {
-     assert( $3.get_type() == TOK_OP_VECTOR );
-     // establish reference
-     solve::explicite_reference( $1, $3.op_vector(info) ); 
-   }
-   resolve_properties(info); // resolve properties again
- }
+  TOK_PROP_VECTOR { prop_declaration_start($1,info); } 
+  any_vector_exp  { vector_prop_declaration_finish($1,$3,info); } 
 	;
-any_vector_exp:      vector_exp {Token res;res.vector() = $1; $$ = res;}
-		| op_vector_exp {Token res;res.set_op_vector($1); $$ = res;}
+any_vector_exp:      vector_exp {$<vector()>$ = $1;}
+		| op_vector_exp {$<meta_op_vector(info)>$ = $1();}
+		| TOK_DUMMY {$$;}
 	;
  
 matrix_statement: 
-  TOK_PROP_MATRIX { set_pos(&$1,info); resolve_references(info); } 
-  any_matrix_exp 
- { 
-   if( $3.get_type() == TOK_MATRIX )
-   {
-     if( !$1.set_value( $3.matrix() ) )
-     {
-       yyerr(info) << "error while setting property " << $1.get_name() << " to "
-	     << $3.matrix();
-     }
-   }
-   else 
-   {
-     assert( $3.get_type() == TOK_OP_MATRIX );
-     // establish reference
-     solve::explicite_reference( $1, $3.op_matrix(info) ); 
-   }
-   resolve_properties(info); // resolve properties again
- }
+  TOK_PROP_MATRIX { prop_declaration_start($1,info); } 
+  any_matrix_exp  { matrix_prop_declaration_finish($1,$3,info); } 
 	;
-any_matrix_exp:      matrix_exp {Token res;res.matrix() = $1; $$ = res;}
-		| op_matrix_exp {Token res;res.set_op_matrix($1); $$ = res;}
+any_matrix_exp:      matrix_exp {$<matrix()>$ = $1;}
+		| op_matrix_exp {$<meta_op_matrix(info)>$ = $1();}
+		| TOK_DUMMY {$$;}
 	;
 
 string_statement: 
-  TOK_PROP_STRING { set_pos(&$1,info); resolve_references(info); } 
-  any_string_exp 
- { 
-   if( $3.get_type() == TOK_STRING )
-   {
-     if( !$1.set_value( $3.string() ) )
-     {
-       yyerr(info) << "error while setting property " << $1.get_name() << " to "
-	     << $3.string();
-     }
-   }
-   else 
-   {
-     assert( $3.get_type() == TOK_OP_STRING );
-     // establish reference
-     solve::explicite_reference( $1, $3.op_string(info) ); 
-   }
-   resolve_properties(info); // resolve properties again
- }
+  TOK_PROP_STRING { prop_declaration_start($1,info); } 
+  any_string_exp  { string_prop_declaration_finish($1,$3,info); } 
 	;
-any_string_exp:      string_exp {Token res;res.string() = $1; $$ = res;}
-		| op_string_exp {Token res;res.set_op_string($1); $$ = res;}
+any_string_exp:      string_exp {$<string()>$ = $1;}
+		| op_string_exp {$<meta_op_string(info)>$ = $1();}
+		| TOK_DUMMY {$$;}
 	;
-
 
 flag_exp: TOK_FLAG {$$ = $1;}
 	;
@@ -273,7 +196,7 @@ op_scalar_exp: op_scalar_exp '+' op_scalar_exp {$$ = $1() + $3();}
           | TOK_OP_SCALAR {$$ = $1;}
 	;
 
-op_vector_exp: op_vector_exp '+' op_vector_exp {$$ = $1 + $3;} 
+op_vector_exp: op_vector_exp '+' op_vector_exp {$$ = $1() + $3();} 
 	  | '<' op_scalar_exp ',' op_scalar_exp ',' op_scalar_exp '>' 
 	{ /*$$ = values::Vector( $2, $4, $6 ); not supported yet*/ 
 	  yyerr(info) << "vector creation from operands not supported yet!";
@@ -287,14 +210,17 @@ op_string_exp: TOK_OP_STRING {$$ = $1;}
 	;
 
 %%
-    int parse_adl( Prop_Tree_Node *node, adlparser_info *info,
-		   std::string filename )
+    int parse_adl( Prop_Tree_Node *node, message::Message_Consultant *c, 
+		   std::string filename, pass_type pass )
     {
-      if( filename != "" ) info->open_file( filename );
-      info->set_new_tree_node( node );
-      info->id_resolver = &info->res_property;
+      adlparser_info info(c);
+      info.id_resolver = &info.res_property;
 
-      int ret = yyparse( static_cast<void*>(info) );
+      info.open_file( filename );
+      info.set_new_tree_node( node );
+      info.set_pass(pass);
+      int ret = yyparse( static_cast<void*>(&info) );
+      info.close_file();
 
       return ret;
     }

@@ -1,4 +1,4 @@
-INCLUDES=		-I$(srcdir)/../lib/
+INCLUDES=		-I$(srcdir)/../lib/ 
 SUBDIRS=		input output
 noinst_LIBRARIES=	libanitmt.a
 bin_PROGRAMS=		anitmt-calc
@@ -34,7 +34,7 @@ anitmt_calc_LDADD=	libanitmt.a ../lib/val/libval.a  \
 			../lib/message/libmessage.a \
 			../lib/solve/libsolve.a \
 			input/libinput.a \
-			input/adl/libadlparser.a \
+			input/adl2/libadlparser.a \
 			output/raw/librawout.a \
 			output/pov/libpovout.a \
 			output/lib/liboutput.a \

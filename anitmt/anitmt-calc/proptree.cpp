@@ -18,9 +18,9 @@
 #include "animation.hpp"
 #include "save_filled.hpp"
 
-#include "message/message.hpp"
+#include <message/message.hpp>
 
-#include "utl/stdextend.hpp"
+#include <utl/stdextend.hpp>
 
 namespace anitmt{
 
@@ -191,6 +191,7 @@ namespace anitmt{
 	{
   #warning should output better error messages
 	  std::cerr << "invalid reference \"" << whole_ref << "\"" 
+		    << "in last node on this level"
 		    << std::endl;
 	  return 0;
 	}

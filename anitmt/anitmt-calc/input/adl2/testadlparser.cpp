@@ -11,12 +11,23 @@
 int main( int argc, char *argv[] )
 {
   std::string infile = "";
-  std::string outfile = "test_filled_adl.out";
+  std::string outfile1 = "test_filled_adl.out";
+  std::string outfile2 = "final_test_filled_adl.out";
+
   if( argc > 1 ) 
     infile = argv[1];
+  else
+  {
+    std::cout << "Usage:" << std::endl;
+    std::cout << "  testadlparser <infile>" << std::endl;
+    return 0;
+  }
 
   if( argc > 2 )
-    outfile = argv[2];
+    outfile1 = argv[2];
+
+  if( argc > 3 )
+    outfile2 = argv[2];
 
   anitmt::make_all_nodes_available();
 
@@ -27,23 +38,25 @@ int main( int argc, char *argv[] )
 
   anitmt::Animation ani("test", &manager);
 
-  anitmt::adlparser::adlparser_info info( &main_consultant );
-
-  if( infile == "" )
-    info.msg.verbose() << "Enter ADL code:" << std::endl;
 
   try
   {
-    anitmt::adlparser::parse_adl( &ani, &info, infile );
-    anitmt::save_filled( outfile, &ani );
+    anitmt::adlparser::parse_adl( &ani, &main_consultant, infile, 
+				  anitmt::adlparser::pass1 );
+    ani.hierarchy_final_init();
+    anitmt::adlparser::parse_adl( &ani, &main_consultant, infile, 
+				  anitmt::adlparser::pass2 );
+    anitmt::save_filled( outfile1, &ani );
+    ani.pri_sys.invoke_all_Actions();
+    anitmt::save_filled( outfile2, &ani );
   } 
   catch( anitmt::EX e ) 
   {
-    info.msg.error() << "Exception: " << e.get_name();
+    std::cerr << "Exception: " << e.get_name() << std::endl;
   }
   catch(...)
   {
-    info.msg.error() << "Unknown Exception caught";
+    std::cerr << "Unknown Exception caught" << std::endl;
   }
   return 0;
 }

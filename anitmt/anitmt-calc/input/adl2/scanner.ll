@@ -45,20 +45,30 @@
 %option prefix="adlparser_"
 %pointer	// define yytext as pointer (variable length)
 
-%x ML_COMMENT
+%x ML_COMMENT DUMMY_STATEMENT
 
 id	[a-zA-Z_][a-zA_Z0-9_]*(\.[a-zA-Z_][a-zA_Z0-9_]*)*
 scal	(([0-9]+)|([0-9]*\.[0-9]+)([eE][-+]?[0-9]+)?)
 qstring \"([^\"\n]|\\\")*\"
 qstring_err \"([^\"\n]|\\\")*
-%%
 
-"//".*\n  { /* ignore one line comment */ }
-"/*"	  { BEGIN ML_COMMENT; }
-<ML_COMMENT>"*/" { BEGIN 0; /* end of comment */ }
-<ML_COMMENT>"/*" { /* ???count nested comments??? */ }
-<ML_COMMENT>\n { info->file_pos.inc_line(); }
-<ML_COMMENT>.* { /* ingore multiline comment */ }
+%%
+%{
+#undef YY_NO_PUSH_STATE 
+#undef YY_NO_POP_STATE 
+#undef YY_NO_TOP_STATE 
+%}
+
+"//".*\n  { info->file_pos.inc_line(); /* ignore one line comment */ }
+"/*"	  { inc_col(); yy_push_state(ML_COMMENT); }
+<ML_COMMENT>"*/"   { inc_col(); yy_pop_state(); }
+<ML_COMMENT>"/*"   { inc_col(); yy_push_state(ML_COMMENT); /*nested comm.*/ } 
+<ML_COMMENT>\n     { info->file_pos.inc_line(); }
+<ML_COMMENT>[^\n]* { inc_col(); /* ingore multiline comment */ }
+
+<DUMMY_STATEMENT>";"     { unput(';'); BEGIN INITIAL; return TOK_DUMMY; }
+<DUMMY_STATEMENT>\n	 { info->file_pos.inc_line(); }
+<DUMMY_STATEMENT>[^;\n]* { inc_col(); }
 
 " "+	  { inc_col(); }    
 "\t"	  { info->file_pos.tab_inc_column(); } 
@@ -139,6 +149,15 @@ inline message::Message_Stream llverbose( adlparser_info *info,
       msg.verbose( vlevel, message::GLOB::no_position, detail ).copy_to(msg);
 
   return msg;
+}
+
+void yyFlexLexer::dummy_statement_follows() 
+{
+  BEGIN DUMMY_STATEMENT;
+}
+void yyFlexLexer::set_input_stream( std::istream &in ) 
+{
+  yyin = &in;
 }
 
 /* end of lexical analizer */

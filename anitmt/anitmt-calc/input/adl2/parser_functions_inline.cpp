@@ -17,6 +17,8 @@
 
 #include "parser_functions.hpp"
 
+#include <solve/reference.hpp>
+
 namespace anitmt
 {
   namespace adlparser
@@ -79,6 +81,176 @@ namespace anitmt
     {
       adlparser_info *info = static_cast<adlparser_info*>(vptr_info);
       info->tree_node_done();
+    }
+
+    // property declaration
+    inline void prop_declaration_start( Property &prop, void *vptr_info )
+    {
+      adlparser_info *info = static_cast<adlparser_info*>(vptr_info);
+      
+      switch( info->pass )
+      {
+      case pass1: // only parse structure?
+	set_pos( &prop, vptr_info );
+	// don't parse the expression yet
+	info->lexer->dummy_statement_follows();	
+	break;
+      case pass2:
+	resolve_references(info);
+	break;
+      default:
+	assert(0);
+      }
+    }
+    inline void flag_prop_declaration_finish
+    ( Type_Property<values::Flag> &prop, Token &tok, void *vptr_info )
+    {
+      adlparser_info *info = static_cast<adlparser_info*>(vptr_info);
+      switch( info->pass )
+      {
+      case pass1:
+	// do nothing
+	break;
+      case pass2:
+	if( tok.get_type() == TOK_FLAG )
+	{
+	  if( !prop.set_value( tok.flag() ) )
+	  {
+	    yyerr(info) << "error while setting property " << prop.get_name() 
+			<< " to " << tok.flag();
+	  }
+	}
+	else 
+	{
+	  assert( tok.get_type() == TOK_OP_FLAG );
+	  // establish reference
+	  solve::explicite_reference( prop, tok.op_flag(vptr_info) ); 
+	}
+	resolve_properties(info); // resolve properties again
+	break;
+      default:
+	assert(0);
+      }
+    }
+    inline void scalar_prop_declaration_finish
+    ( Type_Property<values::Scalar> &prop, Token &tok, void *vptr_info )
+    {
+      adlparser_info *info = static_cast<adlparser_info*>(vptr_info);
+      switch( info->pass )
+      {
+      case pass1:
+	// do nothing
+	break;
+      case pass2:
+	if( tok.get_type() == TOK_SCALAR )
+	{
+	  if( !prop.set_value( tok.scalar() ) )
+	  {
+	    yyerr(info) << "error while setting property " << prop.get_name() 
+			<< " to " << tok.scalar();
+	  }
+	}
+	else 
+	{
+	  assert( tok.get_type() == TOK_OP_SCALAR );
+	  // establish reference
+	  solve::explicite_reference( prop, tok.op_scalar(vptr_info) ); 
+	}
+	resolve_properties(info); // resolve properties again
+	break;
+      default:
+	assert(0);
+      }
+    }
+    inline void vector_prop_declaration_finish
+    ( Type_Property<values::Vector> &prop, Token &tok, void *vptr_info )
+    {
+      adlparser_info *info = static_cast<adlparser_info*>(vptr_info);
+      switch( info->pass )
+      {
+      case pass1:
+	// do nothing
+	break;
+      case pass2:
+	if( tok.get_type() == TOK_VECTOR )
+	{
+	  if( !prop.set_value( tok.vector() ) )
+	  {
+	    yyerr(info) << "error while setting property " << prop.get_name() 
+			<< " to " << tok.vector();
+	  }
+	}
+	else 
+	{
+	  assert( tok.get_type() == TOK_OP_VECTOR );
+	  // establish reference
+	  solve::explicite_reference( prop, tok.op_vector(vptr_info) ); 
+	}
+	resolve_properties(info); // resolve properties again
+	break;
+      default:
+	assert(0);
+      }
+    }
+    inline void matrix_prop_declaration_finish
+    ( Type_Property<values::Matrix> &prop, Token &tok, void *vptr_info )
+    {
+      adlparser_info *info = static_cast<adlparser_info*>(vptr_info);
+      switch( info->pass )
+      {
+      case pass1:
+	// do nothing
+	break;
+      case pass2:
+	if( tok.get_type() == TOK_MATRIX )
+	{
+	  if( !prop.set_value( tok.matrix() ) )
+	  {
+	    yyerr(info) << "error while setting property " << prop.get_name() 
+			<< " to " << tok.matrix();
+	  }
+	}
+	else 
+	{
+	  assert( tok.get_type() == TOK_OP_MATRIX );
+	  // establish reference
+	  solve::explicite_reference( prop, tok.op_matrix(vptr_info) ); 
+	}
+	resolve_properties(info); // resolve properties again
+	break;
+      default:
+	assert(0);
+      }
+    }
+    inline void string_prop_declaration_finish
+    ( Type_Property<values::String> &prop, Token &tok, void *vptr_info )
+    {
+      adlparser_info *info = static_cast<adlparser_info*>(vptr_info);
+      switch( info->pass )
+      {
+      case pass1:
+	// do nothing
+	break;
+      case pass2:
+	if( tok.get_type() == TOK_STRING )
+	{
+	  if( !prop.set_value( tok.string() ) )
+	  {
+	    yyerr(info) << "error while setting property " << prop.get_name() 
+			<< " to " << tok.string();
+	  }
+	}
+	else 
+	{
+	  assert( tok.get_type() == TOK_OP_STRING );
+	  // establish reference
+	  solve::explicite_reference( prop, tok.op_string(vptr_info) ); 
+	}
+	resolve_properties(info); // resolve properties again
+	break;
+      default:
+	assert(0);
+      }
     }
 
     // tells the lexer to resolve identifiers as properties

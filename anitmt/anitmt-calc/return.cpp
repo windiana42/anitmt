@@ -142,7 +142,7 @@ namespace anitmt
   {
     if( essential_child && ( num_children == 0 ) )
     {
-#warning replace with new error system
+      //!!!#warning replace with new error system
       std::cerr << "essential child is missing!" << std::endl;
     }
 

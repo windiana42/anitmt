@@ -27,6 +27,7 @@ namespace anitmt{
 #include <message/message.hpp>
 
 #include "animation.hpp"
+#include <adl2/adlparser.hpp>
 
 namespace anitmt
 {

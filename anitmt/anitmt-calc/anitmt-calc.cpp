@@ -23,15 +23,15 @@
 #include "animation.hpp"
 #include "nodes.hpp"
 #include "save_filled.hpp"
-#include "input/input.hpp"
-#include "output/output.hpp"
+#include <input/input.hpp>
+#include <output/output.hpp>
 
 #include <par/params.hpp>
 
 // input filters
-#include "input/adl/adlparser.hpp"
+#include <input/adl2/adlparser.hpp>
 // output filters
-#include "output/oformats.hpp"
+#include <output/oformats.hpp>
 /**/
 using namespace anitmt;
 using namespace message;
@@ -86,9 +86,9 @@ int main(int argc,char **argv,char **envp)
     input_type input;
 
     for(stringlist::iterator i=adlfiles.begin(); i!=adlfiles.end(); i++)
-	{
-		input.push_back( new ADL_Input( *i, &ani, &default_msg_consultant ) );
-	}
+      {
+	input.push_back( new ADL_Input( *i, &ani, &default_msg_consultant ) );
+      }
 
     // for all input interfaces
     for( input_type::iterator i = input.begin(); i != input.end(); i++ )
@@ -97,7 +97,7 @@ int main(int argc,char **argv,char **envp)
     }
 
     ani.hierarchy_final_init();	// finish structure initialization
-    output->check_components();
+    //output->check_components(); // needs filename property (moved below)
 
     // for all input interfaces
     for( input_type::iterator i = input.begin(); i != input.end(); i++ )
@@ -110,6 +110,8 @@ int main(int argc,char **argv,char **envp)
     {
       (*i)->insert_values();	// insert concrete values for properties
     }
+
+    output->check_components(); // needs filename property
 
     ani.pri_sys.invoke_all_Actions();
 

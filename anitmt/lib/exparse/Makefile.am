@@ -15,8 +15,8 @@ libexparse_a_SOURCES=	\
 
 check_PROGRAMS=		minicalc
 minicalc_SOURCES=	minicalc.cpp
-minicalc_LDADD=		libexparse.a ../val/libval.a -lstdc++ -lm
-
+minicalc_LDADD=		libexparse.a ../val/libval.a ../message/libmessage.a \
+			-lstdc++ -lm
 
 # YLWRAP  =               $(top_srcdir)/ylwrap
 
