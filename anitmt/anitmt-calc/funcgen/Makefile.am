@@ -6,6 +6,7 @@ CXXFLAGS =		@CXXFLAGS@ -Wno-non-template-friend -DYYDEBUG \
 			-D__CPLUSPLUS -DTHROW_NIL=throw\(\) \
 			-ftemplate-depth-30
 
+BUILT_SOURCES=		scanner.cc parser.cc tokens.h 
 funcgen_SOURCES=	gen_code.hpp gen_code.cpp gen_cpp.cpp gen_cpp.hpp \
 			afdbase.hpp afdbase.cpp parser.yy token.hpp \
 			flexlexer_public.h flexlexer_global.h scanner.ll \
