@@ -37,10 +37,11 @@
  */
 
 #include "params.hpp"
-#include <string.h>
 
-#include "val.hpp"
+#include <string.h>
 #include <assert.h>
+
+#include <val/val.hpp>
 
 namespace anitmt
 {

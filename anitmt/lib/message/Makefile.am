@@ -1,3 +1,4 @@
+INCLUDES=		-I$(srcdir)/..
 CXXFLAGS =		@CXXFLAGS@ -Wno-non-template-friend
 noinst_LIBRARIES=	libmessage.a
 libmessage_a_SOURCES= 	message.hpp message_inline.cpp message.cpp 
