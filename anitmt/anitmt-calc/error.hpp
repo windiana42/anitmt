@@ -26,7 +26,7 @@ namespace anitmt {
     std::string name;
   public:
     inline std::string get_name() { return name; }
-    EX( std::string name );
+    EX(const std::string name );
     virtual ~EX();
   };
 
@@ -46,7 +46,7 @@ namespace anitmt {
   class EX_user_error : public EX {
     Error_Position *pos;
   public:
-    EX_user_error( std::string name, Error_Position *pos );
+    EX_user_error(const std::string name, Error_Position *pos );
   };
 }
 #endif

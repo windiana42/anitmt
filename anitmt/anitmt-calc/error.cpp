@@ -20,7 +20,7 @@ namespace anitmt {
   // EX: general anitmt exception
   //******************************
 
-  EX::EX( std::string n ) : name(n) {}
+  EX::EX(const std::string n ) : name(n) {}
   EX::~EX() {}
 
   //****************************************
@@ -33,7 +33,7 @@ namespace anitmt {
   // EX: general user error
   //******************************
 
-  EX_user_error::EX_user_error( std::string name, Error_Position *p )
+  EX_user_error::EX_user_error(const std::string name, Error_Position *p )
     : EX(name), pos(p) {}
 }
 
