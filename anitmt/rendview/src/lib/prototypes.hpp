@@ -34,6 +34,8 @@
 
 
 class RefString;
+class HTime;
+
 
 struct RVOutputParams
 {
@@ -88,6 +90,10 @@ extern int GetLoadValue();
 
 // Check if a file exists and we have the passed permissions: 
 extern int CheckExistFile(RefString *f,int want_read,int want_write=0);
+
+// Get file length and also modification time if non-NULL. 
+// Returns -1 if stat fails. 
+extern int64_t GetFileLength(const char *path,HTime *mtime);
 
 // Check if the first file is newer than the second one 
 // (both should exist)

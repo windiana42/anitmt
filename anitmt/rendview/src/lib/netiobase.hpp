@@ -80,7 +80,11 @@ class NetworkIOBase :
 		//   0 -> OK
 		//  -1 -> (alloc) failure
 		//  -2 -> failure to open file
-		int _FDCopyStartSendFile(const char *path,u_int64_t filelen);
+		//  -3 -> filelen<0
+		int _FDCopyStartSendFile(const char *path,int64_t filelen);
+		// Start receiving passed file using FDCopyBase etc. 
+		// Retval: See _FDCopyStartSendFile(). 
+		int NetworkIOBase::_FDCopyStartRecvFile(const char *path,int64_t filelen);
 	private:
 		void _DoChangeEvents_Error(int rv);
 		
@@ -138,10 +142,41 @@ class NetworkIOBase :
 			{  return(arr[x/8] & (((unsigned char)1)<<(x%8)));  }
 		
 		// Against aligment problems: Copy a 2-byte integer from src to dest. 
-		inline void _memcpy16(u_int16_t *dest,const char *src)
+		static inline void _memcpy16(u_int16_t *dest,const char *src)
 			{  char *d=(char*)dest;  *(d++)=*(src++);  *d=*src;  }
-		inline void _memcpy16(u_int16_t *dest,const u_int16_t *src)
+		static inline void _memcpy16(u_int16_t *dest,const u_int16_t *src)
 			{  char *d=(char*)dest,*s=(char*)src;  *(d++)=*(s++);  *d=*s;  }
+		
+		// htons/htonl for 64bit integers: 
+		static inline u_int64_t htonll(u_int64_t x)
+		{
+			u_int64_t r;
+			unsigned char *d=((unsigned char*)&r)+7;
+			*(d--)=(x & 0xffU);  x>>=8;
+			*(d--)=(x & 0xffU);  x>>=8;
+			*(d--)=(x & 0xffU);  x>>=8;
+			*(d--)=(x & 0xffU);  x>>=8;
+			*(d--)=(x & 0xffU);  x>>=8;
+			*(d--)=(x & 0xffU);  x>>=8;
+			*(d--)=(x & 0xffU);  x>>=8;
+			*(d  )= x;
+			return(r);
+		}
+		// ntohs/ntohl for 64bit integers: 
+		static inline u_int64_t ntohll(u_int64_t x)
+		{
+			u_int64_t r;
+			unsigned char *s=(unsigned char*)&x;
+			r =u_int64_t(*(s++));  r<<=8;
+			r|=u_int64_t(*(s++));  r<<=8;
+			r|=u_int64_t(*(s++));  r<<=8;
+			r|=u_int64_t(*(s++));  r<<=8;
+			r|=u_int64_t(*(s++));  r<<=8;
+			r|=u_int64_t(*(s++));  r<<=8;
+			r|=u_int64_t(*(s++));  r<<=8;
+			r|=u_int64_t(*(s  ));
+			return(r);
+		}
 };
 
 #endif  /* _RNDV_LIB_NETWORKIOBASE_HPP_ */

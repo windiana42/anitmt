@@ -163,7 +163,7 @@ int NetworkIOBase::_FDCopyStartRecvBuf(char *buf,size_t len)
 
 
 // Start sending passed file using FDCopyBase etc. 
-int NetworkIOBase::_FDCopyStartSendFile(const char *path,u_int64_t filelen)
+int NetworkIOBase::_FDCopyStartSendFile(const char *path,int64_t filelen)
 {
 	assert(out.ioaction==IOA_None);
 	
@@ -175,6 +175,9 @@ int NetworkIOBase::_FDCopyStartSendFile(const char *path,u_int64_t filelen)
 		static char _dummybuf='\0';
 		return(_FDCopyStartSendBuf(&_dummybuf,0));
 	}
+	
+	if(filelen<0)
+	{  return(-3);  }
 	
 	// Open the file: 
 	int fd;
@@ -190,6 +193,7 @@ int NetworkIOBase::_FDCopyStartSendFile(const char *path,u_int64_t filelen)
 		do
 		{  rv=::close(fd);  }
 		while(rv<0 && errno==EINTR);
+		assert(rv>=0);  // Actually never fails, right?
 		return(-1);
 	}
 	if(rv || !send_pollid)
@@ -221,6 +225,73 @@ int NetworkIOBase::_FDCopyStartSendFile(const char *path,u_int64_t filelen)
 	}
 	
 	out.ioaction=IOA_SendingFD;
+	
+	return(0);
+}
+
+// Start receiving passed file using FDCopyBase etc. 
+int NetworkIOBase::_FDCopyStartRecvFile(const char *path,int64_t filelen)
+{
+	assert(in.ioaction==IOA_None);
+	
+	// This is special: We cannot receive a file with size 0 with limit 
+	// because limit=0 is "unlimited". So, for simplicity, we simply 
+	// receive a buffer of size 0: 
+	if(filelen==0)
+	{
+		static char _dummybuf='\0';
+		return(_FDCopyStartRecvBuf(&_dummybuf,0));
+	}
+	
+	if(filelen<0)
+	{  return(-3);  }
+	
+	// Open the file: 
+	int fd;
+	do
+	{  fd=::open(path,O_WRONLY | O_CREAT | O_TRUNC,0666);  }
+	while(fd<0 && errno==EINTR);
+	if(fd<0)  return(-2);
+	
+	PollID recv_pollid=NULL;
+	int rv=PollFD(fd,0,NULL,&recv_pollid);
+	if(rv==-1)
+	{
+		do
+		{  rv=::close(fd);  }
+		while(rv<0 && errno==EINTR);
+		assert(rv>=0);  // Actually never fails, right?
+		return(-1);
+	}
+	if(rv || !recv_pollid)
+	{
+		fprintf(stderr,"OOPS: PollFD failed: %d,%d\n",rv,fd);
+		abort();
+	}
+	
+	in.io_fd->pollid=recv_pollid;
+	assert(!in.io_fd->transferred);  // io params must be reset by copy facility
+	in.pump_fd->limit=filelen;
+	in.pump_fd->io_bufsize=16384;
+	
+	assert(in.io_sock->pollid==pollid);
+	
+	rv=in.pump_fd->SetIO(in.io_sock,in.io_fd);
+	if(rv!=0 && rv!=-1)
+	{
+		fprintf(stderr,"OOPS: in pump->SetIO(fd,fd) returned %d\n",rv);
+		abort();
+	}
+	if(rv)  return(rv);
+	
+	rv=in.pump_fd->Control(FDCopyPump::CC_Start);
+	if(rv!=0)
+	{
+		fprintf(stderr,"OOPS: in pump(fd,fd)->CC_Start returned %d\n",rv);
+		abort();
+	}
+	
+	in.ioaction=IOA_SendingFD;
 	
 	return(0);
 }
@@ -280,6 +351,11 @@ NetworkIOBase::NetworkIOBase(int *failflag) :
 	
 	if(_Construct_FDCopy(&in))   ++failed;
 	if(_Construct_FDCopy(&out))  ++failed;
+	
+	// Hehe... little test suite for htonll and ntohll: 
+	//assert(htonll(0x123456789abcdef0LL)!=0x123456789abcdef0LL);
+	//assert(htonll(ntohll(0x123456789abcdef0LL))==0x123456789abcdef0LL);
+	//assert(0);
 	
 	if(failflag)
 	{  *failflag-=failed;  }

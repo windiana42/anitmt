@@ -62,8 +62,9 @@ int LDRClient::ConnectTo(ClientParam *cp)
 	int sock=cp->addr.socket();
 	if(sock<0)
 	{
+		int errn=errno;
 		Verbose(TDR,failure);
-		Error("Failed to create inet socket: %s\n",strerror(errno));
+		Error("Failed to create inet socket: %s\n",strerror(errn));
 		return(-1);
 	}
 	
@@ -72,8 +73,9 @@ int LDRClient::ConnectTo(ClientParam *cp)
 	do {
 		if(SetNonblocking(sock)<0)
 		{
+			int errn=errno;
 			Verbose(TDR,failure);
-			Error("Failed to set socket non-blocking: %s\n",strerror(errno));
+			Error("Failed to set socket non-blocking: %s\n",strerror(errn));
 			break;
 		}
 		
@@ -85,9 +87,10 @@ int LDRClient::ConnectTo(ClientParam *cp)
 		{
 			if(errno!=EINPROGRESS)
 			{
+				int errn=errno;
 				Verbose(TDR,failure);
 				Error("Failed to connect to %s: %s\n",
-					cp->addr.GetAddress().str(),strerror(errno));
+					cp->addr.GetAddress().str(),strerror(errn));
 				break;
 			}
 			// Okay, must poll for it to see when connection estblishes. 
@@ -172,8 +175,9 @@ int LDRClient::_AtomicSendData(LDRHeader *d)
 	ssize_t wr=write(sock_fd,(char*)d,len);
 	if(wr<0)
 	{
+		int errn=errno;
 		Error("Client %s: Failed to send %u bytes: %s\n",
-			_ClientName().str(),len,strerror(errno));
+			_ClientName().str(),len,strerror(errn));
 		return(-1);
 	}
 	if(size_t(wr)<len)
@@ -191,8 +195,9 @@ ssize_t LDRClient::_AtomicRecvData(LDRHeader *dest,size_t len,size_t min_len)
 	ssize_t rd=read(sock_fd,(char*)dest,len);
 	if(rd<0)
 	{
+		int errn=errno;
 		Error("Client %s: While reading: %s\n",
-			_ClientName().str(),strerror(errno));
+			_ClientName().str(),strerror(errn));
 		return(-1);
 	}
 	else if(!rd)
@@ -544,8 +549,11 @@ void LDRClient::_DoSendQuit(FDBase::FDInfo *fdi)
 			char buf[64];
 			ssize_t rd=read(sock_fd,buf,64);
 			if(rd<0)
-			{  Error("Client %s: During quit (read): %s\n",
-				_ClientName().str(),strerror(errno));  }
+			{
+				int errn=errno;
+				Error("Client %s: During quit (read): %s\n",
+					_ClientName().str(),strerror(errn));
+			}
 			else if(!rd)
 			{  client_disconnected=1;  }
 		}
@@ -798,6 +806,7 @@ int LDRClient::_ParseFileRequest(RespBuf *buf)
 		_ClientName().str(),freq->length,sizeof(LDRFileRequest));  return(-1);  }
 	
 	// Okay, parse file request: 
+	// Of course, only INPUT files may be requested. 
 	CompleteTask *ctsk=tri.scheduled_to_send;
 	tri.req_file_type=ntohs(freq->file_type);
 	tri.req_file_idx=ntohs(freq->file_idx);
@@ -807,12 +816,20 @@ int LDRClient::_ParseFileRequest(RespBuf *buf)
 		case FRFT_None:  break;
 		case FRFT_RenderIn:   legal=(tri.req_file_idx==0 && ctsk->rt);  break;
 		case FRFT_RenderOut:
-			legal=(tri.req_file_idx==0 && (ctsk->rt || ctsk->ft));  break;
-		case FRFT_FilterOut:  legal=(tri.req_file_idx==0 && ctsk->ft);  break;
+			legal=(tri.req_file_idx==0 && ctsk->ft && !ctsk->rt);  break;
+		case FRFT_FilterOut:  /*legal=0*/  break;
 		case FRFT_AddRender:
 			legal=(ctsk->rt && int(tri.req_file_idx)<ctsk->radd.nfiles);  break;
 		case FRFT_AddFilter: 
 			legal=(ctsk->ft && int(tri.req_file_idx)<ctsk->fadd.nfiles);  break;
+	}
+	// Okay, get the file: 
+	TaskFile *tfile=NULL;
+	if(legal)
+	{
+		tfile=GetTaskFileByEntryDesc(/*dir=*/-1,tri.scheduled_to_send,
+			tri.req_file_type,tri.req_file_idx);
+		if(!tfile)  legal=0;
 	}
 	if(!legal)
 	{
@@ -823,7 +840,20 @@ int LDRClient::_ParseFileRequest(RespBuf *buf)
 			ctsk->frame_no);
 		return(-1);
 	}
-		
+	
+	tri.req_tfile=tfile;
+	tri.req_file_size=tfile->FileLength();
+	if(tri.req_file_size<0)
+	{
+		int errn=errno;
+		Error("Client %s: Trying to stat requested file \"%s\": %s [frame %d]\n",
+			_ClientName().str(),tfile->HDPath().str(),
+			tri.req_file_size==-2 ? "no hd path" : strerror(errn),
+			tri.scheduled_to_send->frame_no);
+		return(-1);
+	}
+	
+	
 	tri.task_request_state=TRC_SendFileDownloadH;
 	// cpnotify_outpump_start() will be called. 
 	
@@ -986,14 +1016,13 @@ int LDRClient::cpnotify_outpump_done(FDCopyBase::CopyInfo *cpi)
 				if(cpi->pump->Src()->Type()==FDCopyIO::CPT_FD)
 				{
 					assert(cpi->pump==out.pump_fd && cpi->pump->Src()==out.io_fd);
-					CloseFD(out.io_fd->pollid);
-					// Remove this once it works. 
-					#warning ...##########
-					assert(out.io_fd->pollid==NULL);
+					if(CloseFD(out.io_fd->pollid)<0)
+					{  assert(0);  }  // Actually, this may not fail, right?
 				}
 				
-				tri.task_request_state=TRC_WaitForResponse;
 				fprintf(stderr,"File download completed.\n");
+				tri.task_request_state=TRC_WaitForResponse;
+				tri.req_tfile=NULL;
 			}
 			// This is needed so that cpnotify_outpump_start() won't go mad. 
 			send_buf.content=Cmd_NoCommand;
@@ -1069,6 +1098,7 @@ int LDRClient::cpnotify_outpump_start()
 				pack->task_id=htonl(tri.scheduled_to_send->task_id);
 				pack->file_type=htons(tri.req_file_type);
 				pack->file_idx=htons(tri.req_file_idx);
+				pack->size=htonll(tri.req_file_size);
 				
 				// Okay, make ready to send it: 
 				if(_FDCopyStartSendBuf(pack))  break;
@@ -1092,12 +1122,34 @@ int LDRClient::cpnotify_outpump_start()
 			// Be careful with files of size 0...
 			fprintf(stderr,"TEST IF FILE TRANSFER WORKS for files with size=0\n");
 			
-			//assert(out_active_cmd==Cmd_NoCommand)
-			//int rv=_FDCopyStartSendFile(hdpath(),filelen);
-			//out_active_cmd=Cmd_FileDownload;
+			// If this assert fails, then we're in trouble. 
+			// The stuff should have been set earlier. 
+			assert(tri.req_tfile);
 			
-			fprintf(stderr,">>>> hack on...\n");
-			assert(0);
+			assert(out_active_cmd==Cmd_NoCommand);
+			int rv=_FDCopyStartSendFile(tri.req_tfile->HDPath().str(),
+				tri.req_file_size);
+			static int warned=0;
+			if(!warned)
+			{  fprintf(stderr,"hack code to handle failure. (3)\n");  ++warned;  }
+			if(rv)
+			{
+				if(rv==-1)
+				{  _AllocFailure();  }
+				else if(rv==-2)
+				{
+					int errn=errno;
+					Error("Client %s: Failed to open requested file \"%s\": "
+						"%s [frame %d]\n",
+						_ClientName().str(),tri.req_tfile->HDPath().str(),
+						strerror(errn),tri.scheduled_to_send->frame_no);
+				}
+				else assert(0);  // rv=-3 may not happen here 
+				Error("Cannot handle failure (HACK ME!)\n");
+				assert(0);
+			}
+			
+			out_active_cmd=Cmd_FileDownload;
 		}
 		//else wait for client
 	}
@@ -1151,17 +1203,19 @@ int LDRClient::cpnotify(FDCopyBase::CopyInfo *cpi)
 		(cpi->scode & FDCopyPump::SCLimit) ? "yes" : "no",
 		cpi->err_no,strerror(cpi->err_no));
 	
+	// We are only interested in FINAL codes. 
+	if(!(cpi->scode & FDCopyPump::SCFinal))
+	{  return(0);  }
+	
 	if( ! (cpi->scode & FDCopyPump::SCLimit) )
 	{
 		// SCError and SCEOF; handling probably in cpnotify_inpump() 
 		// and cpnotify_outpump_done(). 
-		Error("cpi->scode=%d. HANDLE ME.\n",cpi->scode);
+		Error("cpi->scode=%x. HANDLE ME.\n",cpi->scode);
+		// NOTE: Also handle case where EOF is reported because 
+		//       we were sending a file which is shorter than expected. 
 		assert(0);  // ##
 	}
-	
-	// We are only interested in FINAL codes. 
-	if(!(cpi->scode & FDCopyPump::SCFinal))
-	{  return(0);  }
 	
 	// NOTE: next_send_cmd in no longer used if auth is done. 
 	assert(next_send_cmd==Cmd_NoCommand);
@@ -1171,7 +1225,7 @@ int LDRClient::cpnotify(FDCopyBase::CopyInfo *cpi)
 		cpnotify_inpump(cpi);
 		// We're always listening to the client. 
 		if(out_active_cmd==Cmd_NoCommand)
-		{  FDChangeEvents(pollid,POLLIN,0);  }
+		{  _DoPollFD(POLLIN,0);  }
 	}
 	else if(cpi->pump==out.pump_s || cpi->pump==out.pump_fd)
 	{
@@ -1203,7 +1257,7 @@ void LDRClient::_KickMe(int do_send_quit)
 		{
 			send_quit_cmd=1;
 			// We don't want to read something NOW. 
-			FDChangeEvents(pollid,POLLOUT,POLLIN);
+			_DoPollFD(POLLOUT,POLLIN);
 			return;
 		}
 		else
@@ -1250,6 +1304,7 @@ LDRClient::LDRClient(TaskDriverInterface_LDR *_tdif,
 	
 	tri.scheduled_to_send=NULL;
 	tri.task_request_state=TRC_None;
+	tri.req_tfile=NULL;
 	
 	c_jobs=0;
 	assigned_jobs=0;

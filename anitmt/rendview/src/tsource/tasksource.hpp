@@ -78,7 +78,7 @@ struct CompleteTask : LinkedListBase<CompleteTask>
 	struct AddFiles
 	{
 		int nfiles;
-		AdditionalFile **file;  // pointer array [nfiles]
+		TaskFile **file;  // pointer array [nfiles]
 	} radd,fadd;
 	
 	// Render and filter task execution status: 

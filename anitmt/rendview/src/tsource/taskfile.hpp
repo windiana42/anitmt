@@ -30,8 +30,8 @@ class TaskFile
 		{
 			FTNone=0,
 			FTImage,   // image like PNG,...  (f0001.png)
-			FTScene,   // render source file (static part one for all scenes (anim.pov))
-			FTFrame    // render source file (the _frame_ scene file (f0001.inc))
+			FTFrame,   // render source file (the _frame_ scene file (f0001.inc))
+			FTAdd,     // additional file (IOTRenderInput or IOTFilterInput)
 		};
 		enum IOType
 		{
@@ -55,6 +55,9 @@ class TaskFile
 		
 		// where it is currently on the hd 
 		RefString hdpath;
+		//RefString basename
+		//int64_t size;   // file size; (-1 if unset/nonexistant)
+		//HTime mtime;    // modification time (invalid if unset/nonexistant)
 		
 		// Do not copy: 
 		void _forbidden();
@@ -72,26 +75,15 @@ class TaskFile
 		RefString HDPath() const
 			{  return(hdpath);  }
 		
+		// Return the length of the base name (right of rightmost '/'). 
+		// Returns 0 if hdpath is unset. 
+		size_t BaseNameLength() const;
+		
+		// Return value: file length or -1 -> stat failed; -2 -> no hdpath
+		int64_t FileLength() const;
 		
 		// THESE FUNCTIONS MUST BE USED WITH CARE: 
 		void SetHDPath(RefString r)   {  hdpath=r;  }
-};
-
-// THIS SHOULD BE MERGED WITH TaskFile. 
-class AdditionalFile
-{
-	public:  _CPP_OPERATORS_FF
-		AdditionalFile(int * /*failflag*/=NULL)  {  size=-1;  mtime.SetInvalid();  }
-		~AdditionalFile()  {}
-		
-		int64_t size;   // file size; (-1 if unset/nonexistant)
-		HTime mtime;    // modification time (invalid if unset/nonexistant)
-		
-		//RefString basename
-		//RefString hdpath
-		
-		// Return the length of the base name (right of rightmost '/'). 
-		size_t BaseNameLength() const  {  return(0);  }
 };
 
 #endif  /* _RNDV_TASKFILECLASS_HPP_ */

@@ -129,8 +129,8 @@ enum  // ConnectionAuthCode
 struct LDRNowConnected : LDRHeader
 {
 	u_int16_t auth_code;  // CAC_*
-	u_int16_t njobs;   // njobs param as passed on startup of client
 	LDRTime starttime;  // when client was started
+	u_int16_t njobs;   // njobs param as passed on startup of client
 	u_int16_t loadval;  // loadavg*100 (0xffff for unknown)
 	// Could pass a bit more like unsuccessful connection attempts, etc. 
 };
@@ -145,9 +145,9 @@ struct LDRQuitNow : LDRHeader
 
 struct LDRFileInfoEntry
 {
+	u_int16_t name_slen;  // length of file name (without '\0')
 	LDRTime mtime;   // in msec since 1970
 	u_int64_t size;    // actally 32 bit would also do it, right?
-	u_int16_t name_slen;  // length of file name (without '\0')
 	uchar name[0];   // Actual file name entry without '\0'. 
 };
 
@@ -155,6 +155,8 @@ struct LDRFileInfoEntry
 
 struct LDRTaskRequest : LDRHeader
 {
+	u_int16_t _padding;
+	
 	u_int32_t frame_no;
 	u_int32_t task_id;   // unique task ID
 	
@@ -202,8 +204,8 @@ enum // TaskResponseCode
 
 struct LDRTaskResponse : LDRHeader
 {
-	u_int32_t task_id;   // unique task ID
 	u_int16_t resp_code;  // one of the TRC_* above
+	u_int32_t task_id;   // unique task ID
 };
 
 
@@ -220,8 +222,8 @@ enum // FileRequestFileType
 
 struct LDRFileRequest : LDRHeader
 {
-	u_int32_t task_id;   // unique task ID
 	u_int16_t file_type;  // FRFT_*
+	u_int32_t task_id;    // unique task ID
 	u_int16_t file_idx;   // for FRFT_Add{Render,Filter}
 };
 
@@ -230,8 +232,9 @@ struct LDRFileDownload : LDRHeader
 	// NOTE: This is just redundancy...
 	// Actually, no pipelining is supported, so the LDRFileDownload is 
 	// just the response to the previous LDRFileRequest. 
-	u_int32_t task_id;   // unique task ID
 	u_int16_t file_type;  // FRFT_*
+	u_int64_t size;       // file size
+	u_int32_t task_id;    // unique task ID
 	u_int16_t file_idx;   // for FRFT_Add{Render,Filter}
 };
 

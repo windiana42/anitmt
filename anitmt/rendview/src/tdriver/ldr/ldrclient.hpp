@@ -68,6 +68,10 @@ class LDRClient :
 			// Which file we will send next: 
 			u_int16_t req_file_type;
 			u_int16_t req_file_idx;
+			// This is the size we told the client in the header; 
+			// this must be the copy limit. 
+			int64_t req_file_size;
+			TaskFile *req_tfile;
 		} tri;  // task request info
 		
 		// Client data: 

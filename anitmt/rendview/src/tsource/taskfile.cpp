@@ -18,6 +18,24 @@
 #include "taskfile.hpp"
 
 
+int64_t TaskFile::FileLength() const
+{
+	#warning "REIMPLEMENT ME!!!"
+	if(!hdpath)
+	{  return(-2);  }
+	return(GetFileLength(hdpath.str(),NULL));
+}
+
+
+size_t TaskFile::BaseNameLength() const
+{
+	if(!hdpath)  return(0);
+	const char *c=hdpath.str();
+	char *ptr=strrchr(c,'/');
+	return(strlen(ptr ? (ptr+1) : c));
+}
+
+
 void TaskFile::_forbidden()
 {
 	fprintf(stderr,"Attempt to copy TaskFile.\n");

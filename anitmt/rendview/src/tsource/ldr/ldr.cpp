@@ -436,7 +436,7 @@ int TaskSource_LDR_ServerConn::_SendChallengeRequest()
 	
 	expect_cmd=Cmd_ChallengeResponse;
 	next_send_cmd=Cmd_NoCommand;
-	FDChangeEvents(pollid,POLLIN,POLLOUT);
+	_DoPollFD(POLLIN,POLLOUT);
 	
 	return(0);
 }
@@ -489,7 +489,7 @@ int TaskSource_LDR_ServerConn::_RecvChallengeResponse()
 	
 	expect_cmd=Cmd_NoCommand;
 	next_send_cmd=Cmd_NowConnected;
-	FDChangeEvents(pollid,POLLOUT,POLLIN);
+	_DoPollFD(POLLOUT,POLLIN);
 	
 	return(0);
 }
@@ -534,7 +534,7 @@ int TaskSource_LDR_ServerConn::_SendNowConnected()
 	// now_conn_auth_code==CAC_Success here. 
 	expect_cmd=Cmd_NoCommand;
 	next_send_cmd=Cmd_NoCommand;
-	FDChangeEvents(pollid,POLLIN,POLLOUT);
+	_DoPollFD(POLLIN,POLLOUT);
 	now_conn_auth_code=0;
 	// out.ioaction, in.ioaction currently IOA_Locked: 
 	out.ioaction=IOA_None;
@@ -658,6 +658,7 @@ int TaskSource_LDR_ServerConn::_ParseTaskRequest(RespBuf *buf)
 	tri.next_action=TRINA_FileReq;
 	tri.req_file_type=FRFT_None;
 	tri.req_file_idx=0;
+	tri.req_tfile=NULL;
 	
 	cpnotify_outpump_start();  // -> send file request
 	
@@ -671,25 +672,25 @@ int TaskSource_LDR_ServerConn::_ParseTaskRequest(RespBuf *buf)
 // assert on wrong size entry (input buffer too small) becuase 
 // this is checked earlier. 
 // Updated buf pointer returned in *buf. 
-int TaskSource_LDR_ServerConn::_GetFileInfoEntries(
+int TaskSource_LDR_ServerConn::_GetFileInfoEntries(TaskFile::IOType iotype,
 	CompleteTask::AddFiles *dest,char **buf,char *bufend,int nent)
 {
 	assert(!dest->nfiles && !dest->file);  // appending currently not supported
 	                                       // (will currently not happen)
-	dest->file=(AdditionalFile**)LMalloc(nent*sizeof(AdditionalFile*));
+	dest->file=(TaskFile**)LMalloc(nent*sizeof(TaskFile*));
 	if(nent && !dest->file)  return(-1);
 	dest->nfiles=nent;
 	// Zero the pointers: 
-	for(AdditionalFile **i=dest->file,**iend=i+nent; i<iend; *(i++)=NULL);
+	for(TaskFile **i=dest->file,**iend=i+nent; i<iend; *(i++)=NULL);
 	
 	char *src=*buf;
 	for(int i=0; i<nent; i++)
 	{
 		assert(src<=bufend-sizeof(LDRFileInfoEntry) && src>=*buf);
 		
-		AdditionalFile *af=NEW<AdditionalFile>();
-		if(!af)  goto allocfail;
-		dest->file[i]=af;
+		TaskFile *tf=NEW2<TaskFile>(TaskFile::FTAdd,iotype);
+		if(!tf)  goto allocfail;
+		dest->file[i]=tf;
 		
 		u_int16_t tmp16;
 		_memcpy16(&tmp16,&((LDRFileInfoEntry*)src)->name_slen);  // alignment issue...
@@ -699,7 +700,7 @@ int TaskSource_LDR_ServerConn::_GetFileInfoEntries(
 		src+=delta;
 		assert(src<=bufend && src>=*buf);
 		
-		int rv=LDRGetFileInfoEntry(af,(LDRFileInfoEntry*)osrc);
+		int rv=LDRGetFileInfoEntry(tf,(LDRFileInfoEntry*)osrc);
 		fprintf(stderr,"implement rv handling NOW\n");
 		assert(0);
 	}
@@ -709,7 +710,7 @@ int TaskSource_LDR_ServerConn::_GetFileInfoEntries(
 	return(0);
 	
 allocfail:;
-	for(AdditionalFile **i=dest->file,**iend=i+nent; i<iend; i++)
+	for(TaskFile **i=dest->file,**iend=i+nent; i<iend; i++)
 	{  DELETE(*i);  }
 	LFree(dest->file);
 	dest->file=NULL;
@@ -921,7 +922,8 @@ int TaskSource_LDR_ServerConn::_ParseTaskRequest_Intrnl(
 				_rtr,frame_no);
 			return(1);
 		}
-		rv=_GetFileInfoEntries(&ctsk->radd,&add_files_ptr,end_ptr,r_n_files);
+		rv=_GetFileInfoEntries(TaskFile::IOTRenderInput,&ctsk->radd,
+			&add_files_ptr,end_ptr,r_n_files);
 		if(rv==-1)
 		{  delete ctsk;  return(-1);  }
 		else assert(rv==0);  // Only rv=0 and rv=-1 known. 
@@ -939,13 +941,43 @@ int TaskSource_LDR_ServerConn::_ParseTaskRequest_Intrnl(
 				_rtr,frame_no);
 			return(1);
 		}
-		rv=_GetFileInfoEntries(&ctsk->fadd,&add_files_ptr,end_ptr,f_n_files);
+		rv=_GetFileInfoEntries(TaskFile::IOTFilterInput,&ctsk->fadd,
+			&add_files_ptr,end_ptr,f_n_files);
 		if(rv==-1)
 		{  delete ctsk;  return(-1);  }
 		else assert(rv==0);  // Only rv=0 and rv=-1 known. 
 	}
 	
-	// MISSING: 
+	#warning these are just quick hacks... (no error checking, too!!)
+	// Assign input and output files. 
+	if(ctsk->rt)
+	{
+		RenderTask *rt=(RenderTask*)ctsk->rt;
+		rt->wdir.set(".");  // error check! ##FIXME
+		RefString infile,outfile;
+		infile.sprintf(0,"f-%08x-%07d.a",ctsk->task_id,ctsk->frame_no);  // error check! ##FIXME
+		outfile.sprintf(0,"f-%08x-%07d.b",ctsk->task_id,ctsk->frame_no);  // error check! ##FIXME
+		rt->infile=NEW2<TaskFile>(TaskFile::FTFrame,
+			TaskFile::IOTRenderInput);  // error check! ##FIXME
+		rt->infile->SetHDPath(infile);
+		rt->outfile=NEW2<TaskFile>(TaskFile::FTImage,
+			TaskFile::IOTRenderOutput);  // error check! ##FIXME
+		rt->outfile->SetHDPath(outfile);
+	}
+	if(ctsk->ft)
+	{
+		FilterTask *ft=(FilterTask*)ctsk->ft;
+		ft->wdir.set(".");  // error check! ##FIXME
+		RefString infile,outfile;
+		infile.sprintf(0,"f-%08x-%07d.b",ctsk->task_id,ctsk->frame_no);  // error check! ##FIXME
+		outfile.sprintf(0,"f-%08x-%07d.c",ctsk->task_id,ctsk->frame_no);  // error check! ##FIXME
+		ft->infile=NEW2<TaskFile>(TaskFile::FTImage,
+			TaskFile::IOTFilterInput);  // error check! ##FIXME
+		ft->infile->SetHDPath(infile);
+		ft->outfile=NEW2<TaskFile>(TaskFile::FTImage,
+			TaskFile::IOTFilterOutput);  // error check! ##FIXME
+		ft->outfile->SetHDPath(outfile);
+	}
 	// infile,outfile,wdir (rt and ft)
 	// additional files
 	
@@ -1013,18 +1045,21 @@ int TaskSource_LDR_ServerConn::_StartSendNextFileRequest()
 	// See which file we request next. 
 	assert(tri.req_file_idx!=0xffff);
 	
+	// Of course, we will NOT request output files. 
 	switch(tri.req_file_type)
 	{  // NOTE: Lots of fall-through logic; be careful!!
 		case FRFT_None:
 			if(tri.ctsk->rt && P()->transfer.render_src)
 			{  tri.req_file_type=FRFT_RenderIn;  tri.req_file_idx=0;  break;  }
 		case FRFT_RenderIn:
-			if( (tri.ctsk->rt && P()->transfer.render_dest && !tri.ctsk->ft) || 
-			    (tri.ctsk->ft && P()->transfer.render_dest && !tri.ctsk->rt) )
+			//if( (tri.ctsk->rt && P()->transfer.render_dest && !tri.ctsk->ft) || 
+			//    (tri.ctsk->ft && P()->transfer.render_dest && !tri.ctsk->rt) )
+			//{  tri.req_file_type=FRFT_RenderOut;  tri.req_file_idx=0;  break;  }
+			if(tri.ctsk->ft && P()->transfer.render_dest && !tri.ctsk->rt)
 			{  tri.req_file_type=FRFT_RenderOut;  tri.req_file_idx=0;  break;  }
 		case FRFT_RenderOut:
-			if(tri.ctsk->ft && P()->transfer.filter_dest)
-			{  tri.req_file_type=FRFT_FilterOut;  tri.req_file_idx=0;  break;  }
+			//if(tri.ctsk->ft && P()->transfer.filter_dest)
+			//{  tri.req_file_type=FRFT_FilterOut;  tri.req_file_idx=0;  break;  }
 		case FRFT_FilterOut:
 			if(tri.ctsk->rt && P()->transfer.additional && tri.ctsk->radd.nfiles)
 			{  tri.req_file_type=FRFT_AddRender;  tri.req_file_idx=0;  break;  }
@@ -1048,6 +1083,15 @@ int TaskSource_LDR_ServerConn::_StartSendNextFileRequest()
 		// All file requests done. 
 		return(1);
 	}
+	
+	// Get the file we're requesting: 
+	TaskFile *tfile=GetTaskFileByEntryDesc(/*dir=*/-1,tri.ctsk,
+		tri.req_file_type,tri.req_file_idx);
+	// NOTE: We may not request a file which is unknown to out CompleteTask. 
+	// If this assert fails, then the chosen req_file_type,req_file_idx is 
+	// illegal because unknown. 
+	assert(tfile);
+	tri.req_tfile=tfile;
 	
 	int fail=1;
 	do {
@@ -1219,7 +1263,7 @@ int TaskSource_LDR_ServerConn::cpnotify_outpump_done(FDCopyBase::CopyInfo *cpi)
 			
 			assert(tri.resp_code==TRC_Accepted && tri.next_action==TRINA_FileReq);
 			// Now, receive files. 
-			tri.next_action=TRINA_FileRecv;
+			tri.next_action=TRINA_FileRecvH;
 			
 			out.ioaction=IOA_None;
 			out_active_cmd=Cmd_NoCommand;
@@ -1348,8 +1392,13 @@ int TaskSource_LDR_ServerConn::cpnotify_inpump(FDCopyBase::CopyInfo *cpi)
 		} break;
 		case Cmd_FileDownload:
 		{
-			if(cpi->pump==in.pump_s)
+			in_active_cmd=Cmd_NoCommand;
+			in.ioaction=IOA_None;
+			
+			if(tri.next_action==TRINA_FileRecvH)
 			{
+				assert(cpi->pump==in.pump_s);  // can be left away
+				
 				// Read in header...
 				LDRFileDownload *pack=(LDRFileDownload*)(recv_buf.data);
 				assert(pack->command==Cmd_FileDownload);  // can be left away
@@ -1375,18 +1424,61 @@ int TaskSource_LDR_ServerConn::cpnotify_inpump(FDCopyBase::CopyInfo *cpi)
 						tri.ctsk->frame_no);
 					_ConnClose(0);  return(1);
 				}
+				u_int64_t _fsize=ntohll(pack->size);
+				int64_t fsize=_fsize;
+				if(u_int64_t(fsize)!=_fsize || fsize<0)
+				{
+					Error("LDR: Received file download header containing "
+						"illegal file size.\n");
+					_ConnClose(0);  return(1);
+				}
 				// Okay, then let's start to receive the file. 
 				// NOTE!!! What to do with files of size 0??
-				//         Simply don't start download?
-				fprintf(stderr,">>>> Implement file download\n");
-				assert(0);
+				fprintf(stderr,"Starting to download file (%s; %lld bytes) "
+					"[HANDLE FILES OF SIZE 0!!]\n",
+					tri.req_tfile->HDPath().str(),fsize);
+				
+				const char *path=tri.req_tfile->HDPath().str();
+				int rv=_FDCopyStartRecvFile(path,fsize);
+				if(rv)
+				{
+					if(rv==-1)  _AllocFailure();
+					else if(rv==-2)
+					{  Error("LDR: Failed to start downloading requested file:\n"
+						"LDR:    While opening \"%s\": %s\n",
+						path,strerror(errno));  }
+					else assert(0);  // rv=-3 (fsize<0) checked above
+					_ConnClose(0);  return(1);
+				}
+				
+				in_active_cmd=Cmd_FileDownload;
+				tri.next_action=TRINA_FileRecvB;
 			}
-			else
+			else if(tri.next_action==TRINA_FileRecvB)
 			{
-				// Read in body. 
-				fprintf(stderr,"??? Implement file download\n");
-				assert(0); 
+				// Read in body (complete). 
+				
+				// If we used the FD->FD pump, we must close the output file. 
+				if(cpi->pump->Dest()->Type()==FDCopyIO::CPT_FD)
+				{
+					assert(cpi->pump==in.pump_fd && cpi->pump->Dest()==in.io_fd);
+					if(CloseFD(in.io_fd->pollid)<0)
+					{
+						int errn=errno;
+						Error("LDR: While closing \"%s\": %s\n",
+							tri.req_tfile->HDPath().str(),strerror(errn));
+						_ConnClose(0);  return(1);
+					}
+				}
+				
+				//fprintf(stderr,"??? Implement file download\n");
+				//assert(0);
+				
+				tri.req_tfile=NULL;
+				tri.next_action=TRINA_FileReq;
+				cpnotify_outpump_start();
 			}
+			else assert(0);
 			
 			recv_buf.content=Cmd_NoCommand;
 		} break;
@@ -1407,17 +1499,17 @@ int TaskSource_LDR_ServerConn::cpnotify(FDCopyBase::CopyInfo *cpi)
 		(cpi->scode & FDCopyPump::SCLimit) ? "yes" : "no",
 		cpi->err_no,strerror(cpi->err_no));
 	
+	// We are only interested in FINAL codes. 
+	if(!(cpi->scode & FDCopyPump::SCFinal))
+	{  return(0);  }
+	
 	if( ! (cpi->scode & FDCopyPump::SCLimit) )
 	{
 		// SCError and SCEOF; handling probably in cpnotify_inpump() 
 		// and cpnotify_outpump_done(). 
-		Error("cpi->scode=%d. HANDLE ME.\n",cpi->scode);
+		Error("cpi->scode=%x. HANDLE ME.\n",cpi->scode);
 		assert(0);  // ##
 	}
-	
-	// We are only interested in FINAL codes. 
-	if(!(cpi->scode & FDCopyPump::SCFinal))
-	{  return(0);  }
 	
 	// This is only used for auth: 
 	assert(next_send_cmd==Cmd_NoCommand);
@@ -1427,7 +1519,7 @@ int TaskSource_LDR_ServerConn::cpnotify(FDCopyBase::CopyInfo *cpi)
 		cpnotify_inpump(cpi);
 		// We're always listening to the server. 
 		if(in_active_cmd==Cmd_NoCommand)
-		{  FDChangeEvents(pollid,POLLIN,0);  }
+		{  _DoPollFD(POLLIN,0);  }
 	}
 	else if(cpi->pump==out.pump_s || cpi->pump==out.pump_fd)
 	{
@@ -1501,6 +1593,7 @@ TaskSource_LDR_ServerConn::TaskSource_LDR_ServerConn(TaskSource_LDR *_back,
 	tri.ctsk=NULL;
 	tri.task_id=0;
 	tri.resp_code=-1;
+	tri.req_tfile=NULL;
 	
 	memset(expect_chresp,0,LDRChallengeLength);
 }

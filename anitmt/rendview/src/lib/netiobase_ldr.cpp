@@ -34,8 +34,39 @@ using namespace LDR;
 static const size_t max_ldr_pack_len=65536;
 
 
+// dir: +1 -> output; -1 -> input; 0 -> both
+// Returns NULL if not available. 
+TaskFile *NetworkIOBase_LDR::GetTaskFileByEntryDesc(int dir,
+	CompleteTask *ctsk,u_int16_t file_type,u_int16_t file_idx)
+{
+	switch(file_type)
+	{
+		case FRFT_RenderIn:
+			if(dir<=0 && ctsk->rt)  return(ctsk->rt->infile);
+			break;
+		case FRFT_RenderOut:
+			if(dir>=0 && ctsk->rt)  return(ctsk->rt->outfile);
+			if(dir<=0 && ctsk->ft)  return(ctsk->ft->infile);
+			break;
+		case FRFT_FilterOut:
+			if(dir>=0 && ctsk->ft)  return(ctsk->ft->outfile);
+			break;
+		case FRFT_AddRender:
+			if(dir<=0 && int(file_idx)<ctsk->radd.nfiles)
+				return(ctsk->radd.file[file_idx]);
+			break;
+		case FRFT_AddFilter:
+			if(dir<=0 && int(file_idx)<ctsk->fadd.nfiles)
+				return(ctsk->fadd.file[file_idx]);
+			break;
+		default:  assert(0);
+	}
+	return(NULL);
+}
+
+
 int NetworkIOBase_LDR::LDRStoreFileInfoEntry(LDR::LDRFileInfoEntry *dest,
-	const AdditionalFile *af)
+	const TaskFile *tf)
 {
 	fprintf(stderr,"Implement me.\n");
 	// BE CAREFUL! *dest is NOT aligned. 
@@ -45,14 +76,14 @@ int NetworkIOBase_LDR::LDRStoreFileInfoEntry(LDR::LDRFileInfoEntry *dest,
 
 
 int NetworkIOBase_LDR::LDRStoreFileInfoEntries(char *destbuf,char *bufend,
-	const CompleteTask::AddFiles *caf,int *err_elem)
+	const CompleteTask::AddFiles *ctf,int *err_elem)
 {
-	for(int i=0; i<caf->nfiles; i++)
+	for(int i=0; i<ctf->nfiles; i++)
 	{
-		const AdditionalFile *af=caf->file[i];
-		char *nextbuf=destbuf+LDRFileInfoEntrySize(af);
+		const TaskFile *tf=ctf->file[i];
+		char *nextbuf=destbuf+LDRFileInfoEntrySize(tf);
 		assert(nextbuf<=bufend);  // buffer MUST be large enough (use LDRSumFileInfoSize())
-		int rv=LDRStoreFileInfoEntry((LDRFileInfoEntry*)destbuf,af);
+		int rv=LDRStoreFileInfoEntry((LDRFileInfoEntry*)destbuf,tf);
 		if(rv)
 		{  *err_elem=i; return(rv);  }
 		destbuf=nextbuf;
@@ -61,7 +92,7 @@ int NetworkIOBase_LDR::LDRStoreFileInfoEntries(char *destbuf,char *bufend,
 }
 
 
-int NetworkIOBase_LDR::LDRGetFileInfoEntry(AdditionalFile *af,
+int NetworkIOBase_LDR::LDRGetFileInfoEntry(TaskFile *tf,
 	LDR::LDRFileInfoEntry *src)
 {
 	fprintf(stderr,"Implement me.\n");

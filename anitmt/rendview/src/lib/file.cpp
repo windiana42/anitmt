@@ -17,6 +17,7 @@
 #include "prototypes.hpp"
 
 #include <hlib/refstring.h>
+#include <hlib/htime.h>
 
 #if HAVE_SYS_STAT_H
 # include <sys/stat.h>
@@ -38,6 +39,23 @@ int CheckExistFile(RefString *f,int want_read,int want_write)
 	if(!access(f->str(),af))
 	{  return(1);  }
 	return(0);
+}
+
+
+// Get file length and also modification time if non-NULL. 
+// Returns -1 if stat fails. 
+int64_t GetFileLength(const char *path,HTime *mtime)
+{
+	struct stat st;
+	if(::stat(path,&st)<0)
+	{
+		if(mtime)
+		{  mtime->SetInvalid();  }
+		return(-1);
+	}
+	if(mtime)
+	{  mtime->SetTimeT(st.st_mtime);  }
+	return(st.st_size);
 }
 
 

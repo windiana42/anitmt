@@ -71,10 +71,11 @@ struct TaskSource_LDR_ServerConn :
 		enum TRINextAction
 		{
 			TRINA_None=0,
-			TRINA_Complete,  // -> tell TaskManager()
-			TRINA_Response,  // send TaskResponse
-			TRINA_FileReq,   // send file request
-			TRINA_FileRecv   // receive file
+			TRINA_Complete,   // -> tell TaskManager()
+			TRINA_Response,   // send TaskResponse
+			TRINA_FileReq,    // send file request
+			TRINA_FileRecvH,  // receive file header
+			TRINA_FileRecvB   // receive file body
 		};
 		struct TaskRequestInfo
 		{
@@ -86,6 +87,7 @@ struct TaskSource_LDR_ServerConn :
 			// Of file request currently active...
 			u_int16_t req_file_type;
 			u_int16_t req_file_idx;
+			TaskFile *req_tfile;
 		} tri;  // task request info
 		
 		int _StartSendNextFileRequest();
@@ -99,8 +101,8 @@ struct TaskSource_LDR_ServerConn :
 		int _HandleReceivedHeader(LDR::LDRHeader *hdr);
 		
 		int _ParseTaskRequest(RespBuf *buf);
-		int _GetFileInfoEntries(CompleteTask::AddFiles *dest,
-			char **buf,char *bufend,int nent);
+		int _GetFileInfoEntries(TaskFile::IOType iotype,
+			CompleteTask::AddFiles *dest,char **buf,char *bufend,int nent);
 		int _ParseTaskRequest_Intrnl(RespBuf *buf,TaskRequestInfo *tri);
 		
 		int _AuthSConnFDNotify(FDInfo *fdi);
