@@ -9,11 +9,12 @@
 
 Content: 
  0. Introduction
- 1. class Scalar
- 2. class Vector
- 3. class Matrix
- 4. class Flag
- 5. class String
+ 1. classes Neutral0 and Neutral1
+ 2. class Scalar
+ 3. class Vector
+ 4. class Matrix
+ 5. class Flag
+ 6. class String
 
 --------------------------------------------------------------------------------
 
@@ -38,7 +39,21 @@ Vector &normalize();             Vector normalize(const Vector &v);
 Vector &trans(double d,int i);   Vector trans(const Vector &v,double d,int i);
 
 
-1. SCALAR
+1. NEUTRAL0, NEUTRAL1
+~~~~~~~~~~~~~~~~~~~~~~
+
+Neutral0 and Neutral1 implement addition and multiplication neutral types. 
+
+You can construct scalars, vectors, matrices and strings with type Neutral0 
+and compare them against Neutral0. (Scalar 0.0 the null vector and the 
+null matrix correspond to Neutral0.) 
+
+You can construct scalars and matrices with type Neutral1 and compare them 
+against Neutral1. (Scalar 1.0 and the identity matrix  correspond to 
+Neutral1.)
+
+
+2. SCALAR
 ~~~~~~~~~~
 
 Scalar implements a single floating point value. 
@@ -79,7 +94,7 @@ Operators:
         operator taking a double argument. 
 
 
-2. VECTOR
+3. VECTOR
 ~~~~~~~~~~
 
 Vector<R> implements a R-dimensional (row) vector. 
@@ -201,7 +216,7 @@ Functions:
            [2]  z  theta
 
 
-3. MATRIX
+4. MATRIX
 ~~~~~~~~~~
 
 Matrix<C,R> implements a RxC-matrix. 
@@ -311,13 +326,13 @@ Functions:
 	To reproduce the effet of m, scale, then rotate and finally translate
 
 
-4. FLAG
+5. FLAG
 ~~~~~~~
 
 Flag implements a simple bool true/false value. 
 
 
-5. STRING
+6. STRING
 ~~~~~~~~~
 
 String implements a simple string and is publically derived 
