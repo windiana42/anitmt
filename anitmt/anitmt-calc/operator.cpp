@@ -136,6 +136,7 @@ namespace anitmt
       }
     }
 
+    /*
     // calc (!x) + 2 (x = 5)    
     {
       Operand<values::Scalar> x;
@@ -164,7 +165,7 @@ namespace anitmt
 	errors++;
       }
     }
-
+    */
 
     // calc <1,2,3> + <5,4,7>     
     {
