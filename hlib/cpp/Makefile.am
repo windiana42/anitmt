@@ -5,10 +5,12 @@ libcpp_a_SOURCES = \
 		refstring.cc refstringw.cc refstringp.cc \
 		refstrlist.cc refstrhash.cc \
 		growbuffer.cc \
+		refnode.cc \
 	cplusplus.h linkedlist.h refstrlist.h refstrhash.h refstring.h \
 		growbuffer.h \
 		defop.h \
-		orderedarray.h cdrecorder.h btree.h binsearch.h notifierlist.h heap.h
+		orderedarray.h cdrecorder.h btree.h binsearch.h notifierlist.h heap.h \
+		refnode.h
 
 check_PROGRAMS = test-btree test-cpp
 test_btree_SOURCES = test-btree.cc

@@ -129,6 +129,13 @@ class PNGWriter
 		// If not specified, no gamma entry will be saved. 
 		int SetGamma(double gamma);
 		
+		// Set palette for PNG_COLOR_TYPE_PALETTE. 
+		// Pass an array of ncolors png_color elements. 
+		// Note: 
+		//   struct png_color
+		//   {  png_byte red,green,blue;  }
+		int SetPalette(png_color *palette,int ncolors);
+		
 		// When called in Opened state, the text chunks are added at the 
 		// beginning before the actual image data; if called in HdrWritten 
 		// state, the text is added after the image data by WriteTail(). 

@@ -29,6 +29,7 @@
 #define _GNU_SOURCE
 #endif
 
+/* Disable __attribute__() if we're not compiling with the GNU compiler. */
 #if !defined(__GNUC__)
 #define __attribute__(x)
 #endif
@@ -213,6 +214,13 @@ typedef struct siginfo
 	int si_signo;   /* signal number */
 } siginfo_t;
 #endif  /* HAVE_SIGINFO_T */
+
+
+#if !defined(HLIB_ATTRIBUTE_CONST_MISSING) || !HLIB_ATTRIBUTE_CONST_MISSING
+#  define HLIB_ATTRIBUTE_CONST __attribute__((__const__))
+#else
+#  define HLIB_ATTRIBUTE_CONST
+#endif
 
 
 /*--------<hack helping in allocation debugging if needed>----------

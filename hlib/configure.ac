@@ -19,7 +19,7 @@
 # Process this file with autoconf to produce a configure script.
 # If you have trouble, use the latest versions. 
 # Things work well with autoconf-2.53 and automake-1.6. 
-AC_INIT(hlib,1.0.0,[<see apropriate header file>])
+AC_INIT(hlib,1.1.0,[<see apropriate header file>])
 # You can pass options to AM_INIT_AUTOMAKE: 
 # AM_INIT_AUTOMAKE([dist-bzip2,...]
 #  dist-bzip2 -> create bzip2-compressed dist tarball. 
@@ -256,6 +256,8 @@ if test "$GXX" = "yes" ; then
 	
 	# Generic optimization flags: 
 	myOPTFLAGS="-Os -fomit-frame-pointer -DHLIB_SIZE_OPT=1"
+	GCC_TRY_CFLAGS(C,"-funit-at-a-time",[myOPTFLAGS="$myOPTFLAGS -funit-at-a-time"])
+	
 	# Additional flags for C / C++ only: 
 	myOPTCFLAGS=""
 	myOPTCXXFLAGS="-fno-rtti -fno-exceptions"
@@ -400,6 +402,16 @@ AC_CHECK_TYPES([siginfo_t],,
 AC_CHECK_TYPES([struct pollfd],,
 	[AC_MSG_WARN([Providing struct pollfd. You seem to lack poll(2)...])],
 	[#include <sys/poll.h>] )
+
+# See if the compiler accepts __attribute__((__const__)) for functions: 
+AC_MSG_CHECKING([for attribute:const])
+  AC_TRY_COMPILE([],
+	[class X {
+		static inline void foo() __attribute__((__const__)) {}
+	 };],
+	[AC_MSG_RESULT([yes])],
+	[AC_MSG_RESULT([no])
+	 AC_DEFINE(HLIB_ATTRIBUTE_CONST_MISSING,,[Defined, if __attribute__((__const__)) not supported])])
 
 ## AC_CHECK_MEMBERS([struct stat.st_blksize])
 

@@ -46,7 +46,7 @@ template<class T>struct MYOP
 	static inline bool ne(T const &a,T const &b)  {  return(a!=b);  }
 	static inline T &ass(T &l,T const &r)  {  return(l=r);  }
 	static const bool pdt=1;
-	static inline size_t size() __attribute__((__const__))
+	static inline size_t size() HLIB_ATTRIBUTE_CONST
 		{  return(sizeof(T));  }
 	
 	inline void ini(T *)  { ++ini_calls; }

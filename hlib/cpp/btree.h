@@ -263,7 +263,7 @@ template<class T,class _OP=HLDefaultOperators_PDT<T> >class HLBTree
 		{
 			int idx;
 			if(tn->_LBI(key,&idx,this))
-			{
+			{  // Exact match. 
 				if(p)  if(tn->down)  *p=_FindLargest(tn->down[idx]);
 				       else if(idx>0)  *p=&tn->elem(idx-1,this);
 				if(n)  if(tn->down)  *n=_FindSmallest(tn->down[idx+1]);
@@ -275,6 +275,27 @@ template<class T,class _OP=HLDefaultOperators_PDT<T> >class HLBTree
 			if(n && !*n && idx<tn->nelem)  *n=&tn->elem(idx,this);
 			return(rv);
 		}
+		
+		#if 0
+		#error "Not yet implemented."
+		template<class K>T *_FindContext(const K &key,Node *tn,
+			T **p,int np,T **n,int nn)
+		{
+			int idx;
+			if(tn->_LBI(key,&idx,this))
+			{  // Exact match. 
+				if(p)  if(tn->down)  *p=_FindLargest(tn->down[idx]);
+				       else if(idx>0)  *p=&tn->elem(idx-1,this);
+				if(n)  if(tn->down)  *n=_FindSmallest(tn->down[idx+1]);
+				       else if(idx+1<tn->nelem)  *n=&tn->elem(idx+1,this);
+				return(&tn->elem(idx,this));
+			}
+			T *rv = tn->down ? _FindContext(key,tn->down[idx],p,n) : NULL;
+			if(p && !*p && idx>0)  *p=&tn->elem(idx-1,this);
+			if(n && !*n && idx<tn->nelem)  *n=&tn->elem(idx,this);
+			return(rv);
+		}
+		#endif
 		
 		// Return value: 
 		// -1,0,1 -> see Store(). 
@@ -435,13 +456,13 @@ template<class T,class _OP=HLDefaultOperators_PDT<T> >class HLBTree
 			return(_HandleUnderflow(tn,idx) ? 2 : 0);
 		}
 		
-		// USed by RemoveSmallest() / RemoveLargest(): 
+		// Used by RemoveSmallest() / RemoveLargest(): 
 		int _RemoveSL(Node *tn,int sl,T *e)
 		{
 			if(tn->down)
 			{
 				int idx = sl<0 ? 0 : tn->nelem;
-				int rv=_RemoveSL(tn->down[idx],sl,e);  if(!rv!=2) return(rv);
+				int rv=_RemoveSL(tn->down[idx],sl,e);  if(rv!=2) return(rv);
 				return(_HandleUnderflow(tn,idx) ? 2 : 0);
 			}
 			int idx = sl<0 ? 0 : (tn->nelem-1);

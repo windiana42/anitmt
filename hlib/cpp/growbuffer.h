@@ -112,8 +112,7 @@ class GrowBuffer
 		// Overwrite buffer with specified string: 
 		// Return value: 
 		//   0 -> OK
-		//  -1 -> allocation failed (only if buffer had to be 
-		//        enlarged)
+		//  -1 -> allocation failed (only if buffer had to be enlarged)
 		int set(const char *str)
 			{  return(set(str,str ? (strlen(str)+1) : 0));  }
 		int set(const char *buf,size_t len);
@@ -122,8 +121,7 @@ class GrowBuffer
 		// append0() will NOT append the trailing '\0'. 
 		// Return value: 
 		//   0 -> OK
-		//  -1 -> allocation failed (only if buffer had to be 
-		//        enlarged)
+		//  -1 -> allocation failed (only if buffer had to be enlarged)
 		int append(const char *str)
 			{  return(append(str,str ? (strlen(str)+1) : 0));  }
 		int append0(const char *str)

@@ -154,6 +154,17 @@ int PNGWriter::SetGamma(double gamma)
 }
 
 
+int PNGWriter::SetPalette(png_color *palette,int ncolors)
+{
+	if(wstate!=WS_Opened)
+	{  return(-4);  }
+	if(setjmp(png_jmpbuf(png_ptr)))
+	{  return(-3);  }
+	png_set_PLTE(png_ptr,info_ptr,palette,ncolors);
+	return(0);
+}
+
+
 int PNGWriter::SetBasicBitOps(int flags)
 {
 	if(wstate!=WS_Opened && wstate!=WS_HdrWritten)

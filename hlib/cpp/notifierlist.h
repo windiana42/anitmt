@@ -48,7 +48,7 @@ template<class T>class NotifyHandler : LinkedListBase< NotifyHandler<T> >
 		// This function must be overridden to catch the notifications. 
 		// Both parameters are passed just as specified at CallNotifiers(). 
 		// NOTE: During this call, the handler may Detach(). 
-		virtual void handlenotify(int ntype,T *ptr) HL_PureVirt(;)
+		virtual void handlenotify(int /*ntype*/,T * /*ptr*/) HL_PureVirt(;)
 		
 		// This gets called for all notify handlers which are attached to 
 		// a notifier list at the time the list gets destroyed. Default 

@@ -30,7 +30,7 @@ template<class T>struct HLDefaultOperators_PDT
 	static const bool pdt=1;
 	
 	// Return object size in bytes. 
-	static inline size_t size() __attribute__((__const__))
+	static inline size_t size() HLIB_ATTRIBUTE_CONST
 		{  return(sizeof(T));  }
 	
 	// For non-plain types (pdt==0), these define the constructor 
@@ -47,9 +47,9 @@ template<class T>struct HLDefaultOperators_PDT
 	//       allows optimization to skip initailizing/cleanup loops. 
 	//       pdt=0 data types, however, are guaranteed to get ini() and 
 	//       clr() called properly. 
-	static inline void ini(T *) __attribute__((__const__)) {}
+	static inline void ini(T *) HLIB_ATTRIBUTE_CONST {}
 	static inline void ini(T *p,T const &a)  {  *p=a;  }
-	static inline void clr(T *) __attribute__((__const__)) {}
+	static inline void clr(T *) HLIB_ATTRIBUTE_CONST {}
 };
 
 // This is the default version for non-plain data types (CDTs): 
@@ -61,7 +61,7 @@ template<class T>struct HLDefaultOperators_CDT
 	static inline bool ne(T const &a,T const &b)  {  return(a!=b);  }
 	static inline T & ass(T &l,T const &r)  {  return(l=r);  }
 	static const bool pdt=0;
-	static inline size_t size() __attribute__((__const__))
+	static inline size_t size() HLIB_ATTRIBUTE_CONST
 		{  return(sizeof(T));  }
 	static inline void ini(T *p)  {  new(p) T();  }
 	static inline void ini(T *p,T const &a)  {  new(p) T(a);  }

@@ -26,7 +26,7 @@
 
 
 /* Verbose mem debug: log every call to malloc, realloc, free and every 
- * mem check loop. (0 -> no; 1 -> only "." on mcheck, 2 -> all */
+ * mem check loop. (0 -> no; 1 -> only "#" on mcheck, 2 -> all */
 #define VERBOSE_MEM_DEBUG 1
 
 
@@ -65,11 +65,11 @@
  * the number of *calls* to LMalloc()/LRealloc()/LFree().  
  */ 
 #ifdef HLIB_DONT_USE_MALLOC_USABLE_SIZE
-#  warning "*****************************************************"
-#  warning "*** No using malloc_usable_size().                ***"
-#  warning "*** Allocation limitation will not work.          ***"
-#  warning "*** Allocation debugging cannot report lost bytes ***"
-#  warning "*****************************************************"
+#  warning "******************************************************"
+#  warning "*** No using malloc_usable_size().                 ***"
+#  warning "*** Allocation limitation will not work.           ***"
+#  warning "*** Allocation debugging cannot report lost bytes. ***"
+#  warning "******************************************************"
 #  define malloc_usable_size(x) 1
 #endif
 
