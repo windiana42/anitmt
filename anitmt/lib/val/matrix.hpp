@@ -182,7 +182,7 @@ public: // work around for the template friend problem
 		
 		#ifndef GCC_HACK
 		// Print matrix to stream: 
-		template<int r,int c>friend ostream& operator<<(ostream& s,const Matrix<r,c> &m);
+		template<int r,int c>friend std::ostream& operator<<(std::ostream& s,const Matrix<r,c> &m);
 		#endif
 };
 
@@ -214,6 +214,13 @@ inline Matrix<4,4>::Matrix(enum MatRotZ,double angle) : x(0)
 inline Matrix<4,4>::Matrix(enum MatScale,double fact,int idx) : x(0)
 {
 	x[idx][idx]=fact;
+}
+
+inline Matrix<4,4>::Matrix(enum MatScale,double fact) : x(0)
+{
+	x[0][0]=fact;
+	x[1][1]=fact;
+	x[2][2]=fact;
 }
 
 inline Matrix<4,4>::Matrix(enum MatScale,const Vector<3> &v) : x(0)
@@ -299,7 +306,7 @@ template<int R,int C>inline bool operator!=(Neutral1,const Matrix<R,C> &a)
 template<int N>inline Matrix<N,N> invert(const Matrix<N,N> &m)
 {  Matrix<N,N> r(Matrix<N,N>::noinit);  r.x.invert(m.x);  return(r);  }
 
-template<int R,int C>inline ostream& operator<<(ostream& s,const Matrix<R,C> &m)
+template<int R,int C>inline std::ostream& operator<<(std::ostream& s,const Matrix<R,C> &m)
 {  return(internal_vect::operator<<(s,m.x));  }
 
 // **** Constructing matrices: ****

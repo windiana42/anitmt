@@ -24,7 +24,7 @@ namespace internal
 {
 
 // Suffix 1 for 1-dim array (vector). 
-ostream& stream_write_array1(ostream& s,const double *x,int n)
+std::ostream& stream_write_array1(std::ostream& s,const double *x,int n)
 {
 	s << "<";
 	if(n>0)

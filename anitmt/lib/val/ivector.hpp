@@ -34,7 +34,7 @@ namespace internal_vect
 namespace internal
 {
 	// Suffix 1 for one-dim array (vector). 
-	extern ostream& stream_write_array1(ostream& s,const double *x,int n);
+	extern std::ostream& stream_write_array1(std::ostream& s,const double *x,int n);
 }
 
 template<int N> class vector
@@ -141,7 +141,7 @@ template<int N> class vector
 		
 		/****************************************************************/
 		
-		template<int n>friend ostream& operator<<(ostream &s,const vector<n> &v);
+		template<int n>friend std::ostream& operator<<(std::ostream &s,const vector<n> &v);
 		
 		template<int r,int c>friend void mult(vector<r> &r,const matrix<r,c> &m,const vector<c> &v);
 		friend void mult(vector<3> &r,const matrix<4,4> &m,const vector<3> &v);
@@ -174,7 +174,7 @@ inline vector<3> &vector<3>::vector_mul(const vector<3> &a,const vector<3> &b)
 	return(*this);
 }
 		
-template<int N> inline ostream& operator<<(ostream &s,const vector<N> &v)
+template<int N> inline std::ostream& operator<<(std::ostream &s,const vector<N> &v)
 {  return(internal::stream_write_array1(s,v.x,N));  }
 
 }  /* end of namespace */

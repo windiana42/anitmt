@@ -171,7 +171,7 @@ public: // work around for the template friend problem
 		Vector<N> &to_rectangular();
 		
 		// Print vector to stream: 
-		template<int n>friend ostream& operator<<(ostream& s,const Vector<n> &v);
+		template<int n>friend std::ostream& operator<<(std::ostream& s,const Vector<n> &v);
 };
 
 template<int N>inline Vector<N> operator+(const Vector<N> &a,const Vector<N> &b)
@@ -246,7 +246,7 @@ template<int N>inline Vector<N> mirror(const Vector<N> &v,int xyz)
 template<int N>inline Vector<N> mirror(const Vector<N> &v)
 	{  Vector<N> r(Vector<N>::noinit);  r.x.neg(v.x);  return(r);  }
 
-template<int N>inline ostream& operator<<(ostream& s,const Vector<N> &v)
+template<int N>inline std::ostream& operator<<(std::ostream& s,const Vector<N> &v)
 {  return(internal_vect::operator<<(s,v.x));  }
 
 // VECTOR CONSTRUCTION: 

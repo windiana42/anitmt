@@ -20,7 +20,7 @@
 #include <stddef.h>
 #include <math.h>
 
-#include <iostream.h>
+#include <iostream>
 
 
 namespace internal_vect
@@ -43,8 +43,8 @@ void mult(vector<3> &r,const matrix<4,4> &m,const vector<3> &v); // special
 template<int R,int C> void mult(vector<R> &r,const matrix<R,C> &m,const vector<C> &v);
 
 // Write vector and matrix to ostream: 
-template<int N> ostream& operator<<(ostream &s,const vector<N> &v);
-template<int R,int C> ostream& operator<<(ostream &s,const matrix<R,C> &m);
+template<int N> std::ostream& operator<<(std::ostream &s,const vector<N> &v);
+template<int R,int C> std::ostream& operator<<(std::ostream &s,const matrix<R,C> &m);
 
 namespace internal
 {

@@ -33,7 +33,7 @@ namespace internal
 #define SUB(array,R,r,c)  array[r*R+c]
 
 // Suffix 2 for 2-dim array (matrix). 
-ostream& stream_write_array2(ostream& s,const double *x,int R,int C)
+std::ostream& stream_write_array2(std::ostream& s,const double *x,int R,int C)
 {
 	static int warned=0;
 	if(!warned)
@@ -219,7 +219,7 @@ void matrix_mul_vect343(double *rv,const double *m,const double *v)
 	if(fabs(tmp-1.0)>0.00001)  // gonna throw the exception, damn!!
 	{
 		#if 1
-		cerr << "*** Matrix*Vector problem??? " << (tmp-1.0) << std::endl;
+		std::cerr << "*** Matrix*Vector problem??? " << (tmp-1.0) << std::endl;
 		#else
 		matrix<4,4> e_mat;
 		vector<3> e_v3;
@@ -229,8 +229,8 @@ void matrix_mul_vect343(double *rv,const double *m,const double *v)
 				e_mat(r,c,SUB(m,4,r,c));
 		for(int i=0; i<3; i++)  e_v3(i,v[i]);
 		for(int i=0; i<3; i++)  e_v4(i,rv[i]);  e_v4(3,tmp);
-		cerr << "OOPS: matrix<4,4> * vector<3> multiplication problem:" << std::endl;
-		cerr << "Vector: " << e_v3 << ";  "
+		std::cerr << "OOPS: matrix<4,4> * vector<3> multiplication problem:" << std::endl;
+		std::cerr << "Vector: " << e_v3 << ";  "
 		        "Result: " << e_v4 << ";  "
 				"Matrix: " << e_mat << std::endl;
 		abort();

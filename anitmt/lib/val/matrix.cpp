@@ -50,6 +50,13 @@ Matrix<4,4>::Matrix(enum MatScale,double fact,int idx) : x(0)
 	x[idx][idx]=fact;
 }
 
+Matrix<4,4>::Matrix(enum MatScale,double fact) : x(0)
+{
+	x[0][0]=fact;
+	x[1][1]=fact;
+	x[2][2]=fact;
+}
+
 Matrix<4,4>::Matrix(enum MatScale,const Vector<3> &v) : x(0)
 {
 	x[0][0]=v[0];

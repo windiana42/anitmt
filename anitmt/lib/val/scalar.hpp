@@ -73,7 +73,7 @@ class Scalar
 		Scalar &operator*=(double a)  {  x*=a;  return(*this);  }
 		Scalar &operator/=(double a)  {  x/=a;  return(*this);  }
 		
-		friend ostream& operator<<(ostream& s,const Scalar &m);
+		friend std::ostream& operator<<(std::ostream& s,const Scalar &m);
 };
 
 // Operators comparing scalars are using epsilon: 
@@ -125,7 +125,7 @@ inline Scalar abs(const Scalar &a)
 inline Scalar sqrt(const Scalar &a)
 	{  return(::sqrt(double(a))); }
 
-inline ostream& operator<<(ostream& s,const Scalar &m)
+inline std::ostream& operator<<(std::ostream& s,const Scalar &m)
 	{  s << m.x;  return(s);  }
 
 }  // namespace end 

@@ -37,7 +37,7 @@ namespace internal_vect
 namespace internal
 {
 	// Suffix 2 for two-dim array (matrix). 
-	extern ostream& stream_write_array2(ostream& s,const double *x,int r,int c);
+	extern std::ostream& stream_write_array2(std::ostream& s,const double *x,int r,int c);
 	
 	// Multiplication of two matrices: 
 	extern void matrix_mul(
@@ -180,7 +180,7 @@ public: // work around for the template friend problem
 		template<int M,int L,int N>friend void mult(matrix<M,L> &r,
 			const matrix<L,N> &a,const matrix<M,N> &b);
 		
-		template<int r,int c>friend ostream& operator<<(ostream &s,const matrix<r,c> &m);
+		template<int r,int c>friend std::ostream& operator<<(std::ostream &s,const matrix<r,c> &m);
 		
 		// Comparing matrices: 
 		// Returns 1, if a is equal to *this (or each component pair does not 
@@ -208,7 +208,7 @@ template<int M,int L,int N> inline
 	{  internal::matrix_mul(r.x[0],M,L,a.x[0],L,N,b.x[0],M,N);  }
 
 template<int R,int C> inline 
-	ostream& operator<<(ostream &s,const matrix<R,C> &m)
+	std::ostream& operator<<(std::ostream &s,const matrix<R,C> &m)
 	{  return(internal::stream_write_array2(s,m.x[0],R,C));  }
 
 }  /* end of namespace */
