@@ -220,12 +220,15 @@ namespace solve
 				  Operand<T> &src, 
 				  proptree::Prop_Tree_Node   *dest_node,
 				  std::string dest_prop );
-  /*
+  
   //!! implement!
   template<class T>
-  void equal_solver( Operand<values::Scalar> &a, 
-		     proptree::Property *prop );
-  */
+  bool equal_solver( Operand<T> &a, proptree::Property *prop );
+  
+  //!! implement!
+  template<class T>
+  bool equal_solver( proptree::Property *prop, Operand<T> &a );
+  
 }
 // force template generation of all used types
 #include "proptree_templ.cpp"

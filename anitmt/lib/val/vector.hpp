@@ -28,6 +28,9 @@ template<int N> Vector<N> cross(const Vector<N> &a,const Vector<N> &b);
 template<int N=3>class Vector
 {
 	private:
+#ifdef GCC_HACK
+public: // work around for the template friend problem
+#endif
 		internal_vect::vector<N> x;
 		enum NoInit { noinit };
 		// This constructor is fast as it does no initialisation: 

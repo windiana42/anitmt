@@ -1,4 +1,5 @@
-include declaration "base_func.afd";
+include declaration "object_base.afd";
+//include declaration "base_func.afd";
 
 // ****************************************************************************
 // ****************************************************************************
@@ -29,8 +30,8 @@ abstract node object_subfunc_base provides object_state
       end_speed;
       duration;
       length;
-      diff_speed;	// difference of the speeds
-      up_norm_roll;	// rotation of the norm up arount the track
+      diff_speed; // difference of the speeds
+      up_norm_roll; // rotation of the norm up arount the track
 
       // orientation
       start_rot_horizontal;
@@ -61,7 +62,7 @@ abstract node object_subfunc_base provides object_state
     {
       // track
       start_pos;
-      start_dir;		// muss Länge=1 sein???
+      start_dir;    // muss Länge=1 sein???
       start_up_norm;
       end_pos;
       end_dir;
@@ -103,25 +104,25 @@ abstract node object_subfunc_base provides object_state
       // orientation
       sum_solver( end_rot_horizontal, diff_rot_horizontal, start_rot_horizontal );
       sum_solver( end_rot_speed_horizontal, diff_rot_speed_horizontal, 
-	start_rot_speed_horizontal );
+  start_rot_speed_horizontal );
       accel_solver(diff_rot_horizontal, duration, rot_acceleration_horizontal, 
-	start_rot_speed_horizontal, end_rot_speed_horizontal);
+  start_rot_speed_horizontal, end_rot_speed_horizontal);
       product_solver(diff_rot_speed_horizontal, rot_acceleration_horizontal, 
-	duration);
+  duration);
 
       sum_solver( end_rot_vertical, diff_rot_vertical, start_rot_vertical );
       sum_solver( end_rot_speed_vertical, diff_rot_speed_vertical, 
-	start_rot_speed_vertical );
+  start_rot_speed_vertical );
       accel_solver(diff_rot_vertical, duration, rot_acceleration_vertical, 
-	start_rot_speed_vertical, end_rot_speed_vertical);
+  start_rot_speed_vertical, end_rot_speed_vertical);
       product_solver(diff_rot_speed_vertical, rot_acceleration_vertical, 
-	duration);
+  duration);
 
       sum_solver( end_rot_roll, diff_rot_roll, start_rot_roll );
       sum_solver( end_rot_speed_roll, diff_rot_speed_roll, 
-	start_rot_speed_roll );
+  start_rot_speed_roll );
       accel_solver(diff_rot_roll, duration, rot_acceleration_roll, 
-	start_rot_speed_roll, end_rot_speed_roll);
+  start_rot_speed_roll, end_rot_speed_roll);
       product_solver(diff_rot_speed_roll, rot_acceleration_roll, duration);
 
 //!!! dummy solvers: !!!
@@ -184,13 +185,13 @@ abstract node object_subfunc_base provides object_state
       push( 40, end_speed, object_state.next.start_speed );
       push( 41, start_speed, object_state.prev.end_speed );
       push( 42, end_rot_speed_horizontal, 
-	object_state.next.start_rot_speed_horizontal );
+  object_state.next.start_rot_speed_horizontal );
       push( 43, start_rot_speed_horizontal, 
-	object_state.prev.end_rot_speed_horizontal );
+  object_state.prev.end_rot_speed_horizontal );
       push( 44, end_rot_speed_vertical, 
-	object_state.next.start_rot_speed_vertical );
+  object_state.next.start_rot_speed_vertical );
       push( 45, start_rot_speed_vertical, 
-	object_state.prev.end_rot_speed_vertical );
+  object_state.prev.end_rot_speed_vertical );
       push( 46, end_rot_speed_roll, object_state.next.start_rot_speed_roll );
       push( 47, start_rot_speed_roll, object_state.prev.end_rot_speed_roll );
 
@@ -244,14 +245,14 @@ node move_straight extends object_subfunc_base
   {
 // track
     resulting position( time _t ) 
-      requires	start_time, start_speed, acceleration, length,
-		start_pos, end_pos
+      requires  start_time, start_speed, acceleration, length,
+    start_pos, end_pos
     {
       scalar x,t,s;
-      t = (_t - [start_time]);		// local time
+      t = (_t - [start_time]);    // local time
       s = [start_speed] * t + 0.5 * [acceleration] * t * t;
       if( [length] )
-        x = s / [length];		// relative stretch
+        x = s / [length];   // relative stretch
       else
         x = 0;
       vector pos = [start_pos] * (1-x) + [end_pos] * x; // linear interpolation
@@ -261,9 +262,9 @@ node move_straight extends object_subfunc_base
       requires start_length, length, start_pos, end_pos
     {
       scalar x,s;
-      s = (_s - [start_length]);	// local stretch
+      s = (_s - [start_length]);  // local stretch
       if( [length] )
-        x = s / [length];		// relative stretch
+        x = s / [length];   // relative stretch
       else
         x = 0;
       vector pos = [start_pos] * (1-x) + [end_pos] * x; // linear interpolation
@@ -284,7 +285,7 @@ node move_straight extends object_subfunc_base
       requires start_time, start_speed, acceleration
     {
       scalar x,t,s;
-      t = (_t - [start_time]);		// local time
+      t = (_t - [start_time]);    // local time
       s = [start_speed] * t + 0.5 * [acceleration] * t * t;
       [return s];
     }
@@ -292,7 +293,7 @@ node move_straight extends object_subfunc_base
       requires start_time, start_speed, acceleration
     {
       scalar t,v;
-      t = (_t - [start_time]);		// local time
+      t = (_t - [start_time]);    // local time
       v = [start_speed] + [acceleration] * t;
       [return v];
     }
@@ -319,34 +320,34 @@ node move_straight extends object_subfunc_base
       requires start_time, start_front, end_front, duration
     {
       scalar x,t;
-      t = (_t - [start_time]);		// local time
+      t = (_t - [start_time]);    // local time
       if( [duration] )
-        x = t / [duration];		// relative state
+        x = t / [duration];   // relative state
       else
         x = 0;
       vector res = [start_front] * (1-x) + [end_front] * x;
       [return res];
     }
     resulting front( stretch _s ) 
-      requires	start_length, acceleration, length, start_speed, duration,
-		start_front, end_front
+      requires  start_length, acceleration, length, start_speed, duration,
+    start_front, end_front
     {
       scalar x,t,s,d;
       s = (_s - [start_length]);
-      if( [acceleration] == 0 )		// is stretch proportional to time
+      if( [acceleration] == 0 )   // is stretch proportional to time
       {
-	if( [length] )
-	  x = s / [length];		// relative stretch
-	else
-	  x = 0;
+  if( [length] )
+    x = s / [length];   // relative stretch
+  else
+    x = 0;
       }
-      else				// else calc time first
+      else        // else calc time first
       {
-	// t = (-v0 + sqrt(v0^2 - 2as)) / a
-	d = sqrt([start_speed]*[start_speed] - 2 * [acceleration] * s);
-	t = (- [start_speed] + d) / [acceleration];
-	if( [duration] )
-	  x = t / [duration];		// relative state
+  // t = (-v0 + sqrt(v0^2 - 2as)) / a
+  d = sqrt([start_speed]*[start_speed] - 2 * [acceleration] * s);
+  t = (- [start_speed] + d) / [acceleration];
+  if( [duration] )
+    x = t / [duration];   // relative state
         else
           x = 0;
       }
@@ -357,9 +358,9 @@ node move_straight extends object_subfunc_base
       requires start_time, start_up_vector, end_up_vector, duration
     {
       scalar x,t;
-      t = (_t - [start_time]);		// local time
+      t = (_t - [start_time]);    // local time
       if( [duration] )
-        x = t / [duration];		// relative state
+        x = t / [duration];   // relative state
       else
         x = 0;
       vector res = [start_up_vector] * (1-x) + [end_up_vector] * x;
@@ -367,25 +368,25 @@ node move_straight extends object_subfunc_base
     }
 
     resulting up_vector( stretch _s ) 
-      requires	start_length, acceleration, length, start_speed, duration,
-		start_up_vector, end_up_vector
+      requires  start_length, acceleration, length, start_speed, duration,
+    start_up_vector, end_up_vector
     {
       scalar x,t,s,d;
       s = (_s - [start_length]);
-      if( [acceleration] == 0 )		// is stretch proportional to time
+      if( [acceleration] == 0 )   // is stretch proportional to time
       {
-	if( [length] )
-	  x = s / [length];		// relative stretch
-	else
-	  x = 0;
+  if( [length] )
+    x = s / [length];   // relative stretch
+  else
+    x = 0;
       }
-      else				// else calc time first
+      else        // else calc time first
       {
-	// t = (-v0 + sqrt(v0^2 - 2as)) / a
-	d = sqrt([start_speed]*[start_speed] - 2 * [acceleration] * s);
-	t = (- [start_speed] + d) / [acceleration];
-	if( [duration] )
-	  x = t / [duration];		// relative state
+  // t = (-v0 + sqrt(v0^2 - 2as)) / a
+  d = sqrt([start_speed]*[start_speed] - 2 * [acceleration] * s);
+  t = (- [start_speed] + d) / [acceleration];
+  if( [duration] )
+    x = t / [duration];   // relative state
         else
           x = 0;
       }
@@ -394,3 +395,6 @@ node move_straight extends object_subfunc_base
     }
   }
 }
+
+
+

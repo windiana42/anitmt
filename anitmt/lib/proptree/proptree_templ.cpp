@@ -156,5 +156,34 @@ namespace solve
 
     return true;
   }
+  template<class T>
+  bool equal_solver( Operand<T> &a, proptree::Property *prop )
+  {
+    Operand<T> *src = dynamic_cast<Operand<T>*>(prop);
+  
+    if( !src ) 
+    {
+      //!!! output better error message !!!
+      a.error() << "incompatible arguments to equal solver";
+      return false;
+    }
+    equal_solver( a, *src );
+    return true;
+  }
+  template<class T>
+  bool equal_solver( proptree::Property *prop, Operand<T> &a )
+  {
+    Operand<T> *src = dynamic_cast<T*>(prop);
+  
+    if( !src ) 
+    {
+      //!!! output better error message !!!
+      a.error() << "incompatible arguments to equal solver";
+      a.caused_error();
+      return false;
+    }
+    equal_solver( *src, a );
+    return true;
+  }
 }
 #endif

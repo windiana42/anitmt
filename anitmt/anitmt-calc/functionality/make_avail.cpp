@@ -13,8 +13,10 @@
 /*****************************************************************************/
 
 #include "base_func.hpp"
-#include "functionality.hpp"
+#include "scene_base.hpp"
+#include "scalar_base.hpp"
 #include "scalar.hpp"
+#include "object_base.hpp"
 #include "object.hpp"
 
 namespace functionality 
@@ -22,8 +24,10 @@ namespace functionality
   void make_nodes_availible()
   {
     make_base_func_nodes_availible();
-    make_functionality_nodes_availible();
+    make_scene_base_nodes_availible();
+    make_scalar_base_nodes_availible();
     make_scalar_nodes_availible();
+    make_object_base_nodes_availible();
     make_object_nodes_availible();
   }
 }

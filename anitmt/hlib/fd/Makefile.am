@@ -8,4 +8,4 @@ libfd_a_SOURCES = \
 		fdmanager.h fdbase.h \
 		procmanager.h intprocbase.h procbase.h 
 #		cpbase.cc cpmanager.cc 
-#		cpbase.h cpmanager.h
+		cpbase.h cpmanager.h

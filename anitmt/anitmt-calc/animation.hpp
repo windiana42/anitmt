@@ -25,7 +25,7 @@
 #include <proptree/property.hpp>
 #include <proptree/proptree.hpp>
 
-#include <functionality/base_func.hpp>
+#include <functionality/scene_base.hpp>
 
 namespace proptree {
   // *****************************************

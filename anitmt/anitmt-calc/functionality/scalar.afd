@@ -1,4 +1,30 @@
+///////////////////////////////////////////////////////////////////////////////
+/*****************************************************************************/
+/*                                                                           */
+/*                                scalar functions                           */
+/*                                                                           */
+/* subfunctions for scalar animations                                        */
+/*                                                                           */
+/* - scalar_subfunction (abstract base type)                                 */
+/* - change (container type for scalars)                                     */
+/* - constant                                                                */
+/* - linear                                                                  */
+/* - accelerated                                                             */
+/*                                                                           */
+/*****************************************************************************/
+///////////////////////////////////////////////////////////////////////////////
+
+
+// ****************************************************************************
+// ****************************************************************************
+// ** dependence
+// ****************************************************************************
+// ****************************************************************************
+
+
 include declaration "base_func.afd";
+include declaration "scalar_base.afd";
+
 
 // ****************************************************************************
 // ****************************************************************************
@@ -6,100 +32,118 @@ include declaration "base_func.afd";
 // ****************************************************************************
 // ****************************************************************************
 
-// ****************************************************************************
-// ** scalar nodes
-// ****************************************************************************
-
 // +--------------------+
 // | scalar_subfunction |
 // +--------------------+
-// Werte
 
+// abstract type for scalar subfunctions 
 abstract node scalar_subfunction extends scalar_base provides scalar_vsa {
+  
   common {
     actions {
-      default( 999, slope_difference, 0 );
+      // times, forward and backward
       push( 10, end_time, scalar_vsa.next.start_time );
       push( 11, start_time, scalar_vsa.prev.end_time );
+      // values, forward and backward
       push( 20, end_value, scalar_vsa.next.start_value );
       push( 21, start_value, scalar_vsa.prev.end_value );
+      // slopes, forward and backward
       push( 30, end_slope, scalar_vsa.next.start_slope );
       push( 31, start_slope, scalar_vsa.prev.end_slope );
     }
   }
-  first scalar_vsa {
-    actions {
-      default(100, start_time, 0 );
-      default(1000, start_value, 0 );
-    }
-  }
 
 }
 
 // +--------+
-// | change |   ????
+// | change |
 // +--------+
-// Werteinterpolationen
 
-// Gültige Subfunktionen:
-//   change; constant; linear; accelerated
-
+// changing values (container for scalar functions)
 node change extends scalar_subfunction {
-//  ...
+  
+  // scalar subfunction provider type 
   contains {
     min1 scalar_vsa ;
   }
   
+  common {
+    solvers {
+      // setting result function parameters
+      equal_solver( start_time, scalar_vsa.value(time).start_param );
+      equal_solver( end_time  , scalar_vsa.value(time).end_param   );
+      equal_solver( start_time, scalar_vsa.slope(time).start_param );
+      equal_solver( end_time  , scalar_vsa.slope(time).end_param   );
+      equal_solver( start_time, scalar_vsa.acceleration(time).start_param );
+      equal_solver( end_time  , scalar_vsa.acceleration(time).end_param   );
+
+      // connection to subfunctions
+      equal_solver ( start_time , first_child.start_time  );
+      equal_solver ( start_value, first_child.start_value );
+      equal_solver ( start_slope, first_child.start_slope );
+      equal_solver ( end_time , last_child.end_time  );      
+      equal_solver ( end_value, last_child.end_value );      
+      equal_solver ( end_slope, last_child.end_slope );      
+    }
+  }
+
+  // result functions using the scalar subfunctions
   provide scalar_vsa {
-    resulting value( time t ) requires child.scalar_vsa.value (time) {
-      [return_res child.scalar_vsa.value (time t)];
+    resulting value( time t ) requires child.scalar_vsa.value ( time ) { 
+      [return_res child.scalar_vsa.value ( time t )];
+    } 
+    resulting slope( time t ) requires child.scalar_vsa.slope ( time ) {
+      [return_res child.scalar_vsa.slope ( time t )];
     }
-    resulting slope( time t ) requires child.scalar_vsa.slope (time) {
-      [return_res child.scalar_vsa.slope (time t)];
-    }
-    resulting acceleration( time t ) requires child.scalar_vsa.acceleration (time) {
-      [return_res child.scalar_vsa.acceleration (time t)];
+    resulting acceleration( time t ) requires child.scalar_vsa.acceleration ( time ) {
+      [return_res child.scalar_vsa.acceleration ( time t )];
     }
   }
 }
 
+// --- MM: work marker! ---
+
 // +----------+
 // | constant |
 // +----------+
-// keine Veränderung
 
-// Gültige Subfunktionen:
-//   keine!
-
-
-
+// constant value
 node constant extends scalar_subfunction {
-//  ...
-
+  
+  // special properties for constant
   properties{
-    scalar value;
+    type scalar {    
+      value;
+      slope;
+      acceleration;
+    }
   }
-
+  
   common {
     solvers {
+      // setting result function parameters
       equal_solver( start_time, scalar_vsa.value(time).start_param );
-      equal_solver( end_time, scalar_vsa.value(time).end_param );
+      equal_solver( end_time  , scalar_vsa.value(time).end_param   );
       equal_solver( start_time, scalar_vsa.slope(time).start_param );
-      equal_solver( end_time, scalar_vsa.slope(time).end_param );
+      equal_solver( end_time  , scalar_vsa.slope(time).end_param   );
       equal_solver( start_time, scalar_vsa.acceleration(time).start_param );
-      equal_solver( end_time, scalar_vsa.acceleration(time).end_param );
+      equal_solver( end_time  , scalar_vsa.acceleration(time).end_param   );
 
-      equal_solver( start_slope, end_slope );
-      equal_solver( start_slope, difference ); // set slopes to zero
+      // solvers for constant
+      difference = 0; 
+      slope_difference = 0; slope = 0;
+      acceleration = 0;
       equal_solver( value, start_value );
       equal_solver( value, end_value );
     }
+    
     actions {
       default(2100, duration, 0 );
       default(2200, start_value, 0 );
     }
   }
 
+  // result functions for constant
   provide scalar_vsa {
     resulting value( time t ) requires value
     {
@@ -119,30 +163,32 @@ node constant extends scalar_subfunction {
 // +--------+
 // | linear |
 // +--------+
-// gleichmäßige Veränderung
 
-// Gültige Subfunktionen:
-//   keine!
-
+// linear change of a value
 node linear extends scalar_subfunction provides scalar_vsa {
-//  ...
 
+  // special properties for linear
   properties{
-    scalar slope;		// changing speed of value
+    type scalar {    
+      slope;
+      acceleration;
+    }
   }
 
   common {
     solvers {
+      // setting result function parameters
       equal_solver( start_time, scalar_vsa.value(time).start_param );
-      equal_solver( end_time, scalar_vsa.value(time).end_param );
+      equal_solver( end_time  , scalar_vsa.value(time).end_param   );
       equal_solver( start_time, scalar_vsa.slope(time).start_param );
-      equal_solver( end_time, scalar_vsa.slope(time).end_param );
+      equal_solver( end_time  , scalar_vsa.slope(time).end_param   );
       equal_solver( start_time, scalar_vsa.acceleration(time).start_param );
-      equal_solver( end_time, scalar_vsa.acceleration(time).end_param );
+      equal_solver( end_time  , scalar_vsa.acceleration(time).end_param   );
 
+      acceleration = 0;
       product_solver( difference, slope, duration );
-      equal_solver( start_slope, slope );
-      equal_solver( end_slope,   slope );
+      equal_solver( slope, start_slope );
+      equal_solver( slope, end_slope   );
     }
     actions {
       default(2000, slope, 0 );
@@ -151,6 +197,7 @@ node linear extends scalar_subfunction provides scalar_vsa {
     }
   }
 
+  // result functions for linear
   provide scalar_vsa {
     resulting value( time t ) requires start_value, start_time, slope
     {
@@ -172,57 +219,63 @@ node linear extends scalar_subfunction provides scalar_vsa {
 // +-------------+
 // | accelerated |
 // +-------------+
-// accelerated value change
 
-// Gültige Subfunktionen:
-//   keine!
-
+// accelerated change of values
 node accelerated extends scalar_subfunction provides scalar_vsa {
-//  ...
 
+  // special properties for accelerated
   properties{
     scalar acceleration;
   }
 
   common {
     solvers {
+      // setting result function parameters
       equal_solver( start_time, scalar_vsa.value(time).start_param );
-      equal_solver( end_time, scalar_vsa.value(time).end_param );
+      equal_solver( end_time  , scalar_vsa.value(time).end_param   );
       equal_solver( start_time, scalar_vsa.slope(time).start_param );
-      equal_solver( end_time, scalar_vsa.slope(time).end_param );
+      equal_solver( end_time  , scalar_vsa.slope(time).end_param   );
       equal_solver( start_time, scalar_vsa.acceleration(time).start_param );
-      equal_solver( end_time, scalar_vsa.acceleration(time).end_param );
+      equal_solver( end_time  , scalar_vsa.acceleration(time).end_param   );
 
+      // acceleration solvers
+      // still wrong (simple solver):
       accel_solver(difference, duration, acceleration, start_slope, end_slope);
+      // correct (better solver): 
+      // accel_solver(difference, duration, acceleration, start_slope, end_slope, slope_difference);
     }
     actions {
-      default(200,  acceleration, 0 );
+      default(200,  acceleration, 0 ); // <-- still wrong better is:
+      // default(200,  slope_difference, 0 );
       default(2000, start_slope, 0 );
       default(2100, duration, 0 );
       default(2200, start_value, 0 );
     }
   }
 
+  // result functions for accelerated
   provide scalar_vsa {
-    resulting value(time abs_t) requires start_value, start_time, start_slope,
-					 acceleration
-
+    resulting value(time abs_t) 
+    requires start_value, start_time, start_slope, acceleration
     {
       scalar t = abs_t - [start_time];
       scalar res = [start_value] + [start_slope]*t + 0.5*[acceleration]*t*t;
       [return res];
     }
-    resulting slope( time abs_t ) requires start_time, start_slope, 
-					   acceleration
+    resulting slope( time abs_t ) 
+    requires start_time, start_slope, acceleration
     {
       scalar t = abs_t - [start_time];
       scalar res = [start_slope] + [acceleration] * t;
       [return res];
     }
-    resulting acceleration( time t ) requires acceleration
+    resulting acceleration( time t ) 
+    requires acceleration
     {
       [return_prop acceleration];
     }
   }
 }
+
+
 

@@ -9,6 +9,7 @@ frames=f%07g.pov
 output=+FT
 ext=tga
 redo=""
+try_again=""
 while test "$1" != ""; do
   if test "$1" = "-w"; then
     shift;
@@ -82,21 +83,25 @@ fi
 echo > image_file_list
 
 for i in $(seq -f $frames $start $jump $end); do
-  try_again=""
-  picture_file=$(basename $i .pov).$ext
+  try_again="";
+  picture_file=$(basename $i .pov).$ext;
   if test "$redo" != ""; then
     if test -e $picture_file; then
-      try_again="-C"
       if identify $picture_file; then
         if test $picture_file -nt $i; then
           continue;
+        else
+	  echo render frame again
         fi
+      else
+        echo continue frame;
+        try_again="+C";
       fi
     fi
   fi
   echo $picture_file >> image_file_list
   echo =====================================================================
-  echo $povray +i $i +w$width +h$height +D $output $params ; 
-  $povray +i $i +w$width +h$height +D $output $params $try_again || exit -5 ; 
+  echo $povray +i $i +w$width +h$height +D $output $try_again $params ; 
+  $povray +i $i +w$width +h$height +D $output $try_again $params || exit -5 ; 
 done  
 

@@ -79,6 +79,9 @@ template<int R> class matrix_column
 template<int C,int R> class matrix
 {
 	private:
+#ifdef GCC_HACK
+public: // work around for the template friend problem
+#endif
 		double x[C][R];
 	public:
 		// Constructor which generates an uninitialized matrix: 

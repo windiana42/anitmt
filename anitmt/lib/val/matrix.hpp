@@ -35,6 +35,9 @@ namespace vect
 template<int C=4,int R=4>class Matrix
 {
 	private:
+#ifdef GCC_HACK
+public: // work around for the template friend problem
+#endif
 		internal_vect::matrix<C,R> x;
 		enum NoInit { noinit };
 		// This constructor is fast as it does no initialisation: 

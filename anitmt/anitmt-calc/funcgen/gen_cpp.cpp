@@ -461,8 +461,8 @@ namespace funcgen
 	    << "( message::Message_Consultant *c )" << std::endl
 	    << "    : " << translator.node_base_type() << "(\"\",\"\",0,c), "
 	    << "/* should never be used */" << std::endl
-	    << "      _tc_next_" << provides << "(0)," << std::endl
-	    << "      _tc_prev_" << provides << "(0)";
+	    << "      _tc_prev_" << provides << "(0)," << std::endl
+	    << "      _tc_next_" << provides << "(0)";
       if( provider_type.serial )	// is serial provider type?
       {				 // ... init start/end-parameter operands
 	for( j  = provider_type.result_types.begin(); 
