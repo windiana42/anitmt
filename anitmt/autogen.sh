@@ -30,6 +30,7 @@ fi
 
 topdir="`pwd`"
 for i in . hlib ; do 
+echo "-----<entering directory $i>-----"
 cd $i
 
 # Make aclocal.m4
