@@ -17,6 +17,7 @@ libfunctionality_a_SOURCES= solver.afd solver.hpp solver.cpp \
 			scalar.afd scalar.hpp scalar.cpp \
 			object_base.afd object_base.hpp object_base.cpp \
 			object.afd object.hpp object.cpp \
+			complex_solver.afd \
 			complex_solver.hpp complex_solver.cpp \
 			sp_curve.hpp sp_curve.cpp \
 			make_avail.cpp make_avail.hpp 

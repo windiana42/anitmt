@@ -18,6 +18,8 @@
 
 #include "anitmt.hpp"
 
+#include <config.h>
+
 namespace proptree
 {
     Semi_Global::Semi_Global( param::Parameter_Manager *parameter_manager, 
@@ -28,9 +30,11 @@ namespace proptree
 
 namespace anitmt{
 
+#if(YYDEBUG)
   namespace adlparser {
     extern int yydebug;
   }
+#endif
 
   // ********************************
   // Animation: Animation root node
@@ -56,11 +60,13 @@ namespace anitmt{
     // register animation tree nodes
     functionality::make_nodes_availible();
 
+#if(YYDEBUG)
     // activate DEBUG function of parser at verbose level 5
     if( GLOB.param.verbose() >= 4 )
     {
       adlparser::yydebug = 1;
     }
+#endif
   }
 
   //! individual final init after hierarchy is set up (Has to call the 

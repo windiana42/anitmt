@@ -8,11 +8,15 @@
 #include <error.hpp>		// for old throw exceptions
 #include <save_filled.hpp>
 
+#include <config.h>
+
+#if(YYDEBUG)
 namespace anitmt{
   namespace adlparser{
     extern int yydebug;
   }
 }
+#endif
 int main( int argc, char *argv[] )
 {
   std::string infile = "";
@@ -35,9 +39,11 @@ int main( int argc, char *argv[] )
   if( argc > 3 )
     outfile2 = argv[3];
 
+#if(YYDEBUG)
   if( argc > 4 )
     if( !strcmp(argv[4],"-d") )
       anitmt::adlparser::yydebug = 1; // output debugging information
+#endif
 
   anitmt::make_all_nodes_available();
 
