@@ -26,8 +26,6 @@ namespace funcgen
     std::ifstream *is = new std::ifstream(filename.c_str());
     if( !(*is) )		// couldn't open file?
     {
-      msg.error(message::GLOB::no_position) 
-	<< "fatal error: couldn't open input file " << filename;
       return false;
     }
 

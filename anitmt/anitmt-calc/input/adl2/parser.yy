@@ -47,7 +47,8 @@
 // Options
 //*********
    
-%pure_parser			// parser may be called recursive
+%pure_parser		// parser may be called recursive
+%expect 7		// expect 7 shift/reduce and 24 reduce/reduce conflicts
 
 //********
 // Tokens
@@ -107,13 +108,13 @@
 
 //********************
 // normal precedences
+// !! value to operand conversion must be last !!
+%nonassoc OP_CONVERTION 
+
 %left '+' '-'
 %left '*' '/'
 //%right '^'
 %nonassoc UMINUS
-
-// !! value to operand conversion must be last !!
-%nonassoc OP_CONVERTION 
 
 // special precedences for simplified cases
 %left left_associated
@@ -139,7 +140,7 @@ statement:
   | vector_statement ';'
   | matrix_statement ';'
   | string_statement ';'
-  | no_statement ';'
+  | no_statement ';'		// causes some bison conficts
   | error ';' %prec lowest_precedence { yyerrok; /* error recovery */ }
 ;
 
@@ -152,15 +153,7 @@ child_declaration:
 
 no_statement:
     TOK_IDENTIFIER	{ yyerr(info,2) << "unknown property " << $1; }
-      any_exp
-;
-
-any_exp:
-    any_flag_exp	{}
-  | any_scalar_exp	{}
-  | any_vector_exp	{}
-  | any_matrix_exp	{}
-  | any_string_exp	{}
+      error 		{ yyerrok; }
 ;
 
 flag_statement: 
@@ -171,7 +164,7 @@ any_flag_exp:
     flag_exp		{ $<flag()>$ = $1; }
   | op_flag_exp		{ $<meta_op_flag(info)>$ = $1(); }
   | receive_dummy_exp	{ $$; }
-  | error		{ yyerr(info,2) << "invalid flag expression"; 
+  | error		{ yyerr(info,2) << "invalid flag expression: operand expected"; 
 			  yyerrok; $$; }
 ;
 
@@ -180,10 +173,10 @@ scalar_statement:
       any_scalar_exp	{ scalar_prop_declaration_finish($1,$3,info); }
 ;
 any_scalar_exp:      
-    scalar_exp		{ $<scalar()>$ = $1; }
-  | op_scalar_exp	{ $<meta_op_scalar(info)>$ = $1(); }
+    scalar_exp 		{ $<scalar()>$ = $1; }
+  | op_scalar_exp 	{ $<meta_op_scalar(info)>$ = $1(); }
   | receive_dummy_exp	{ $$; }
-  | error		{ yyerr(info,2) << "invalid scalar expression"; 
+  | error		{ yyerr(info,2) << "invalid scalar expression: operand expected"; 
 			  yyerrok; $$; }
 ;
  
@@ -195,7 +188,7 @@ any_vector_exp:
     vector_exp		{ $<vector()>$ = $1; }
   | op_vector_exp	{ $<meta_op_vector(info)>$ = $1(); }
   | receive_dummy_exp	{ $$; }
-  | error		{ yyerr(info,2) << "invalid vector expression"; 
+  | error		{ yyerr(info,2) << "invalid vector expression: operand expected"; 
 			  yyerrok; $$; }
 ;
  
@@ -207,7 +200,7 @@ any_matrix_exp:
     matrix_exp		{ $<matrix()>$ = $1; }
   | op_matrix_exp	{ $<meta_op_matrix(info)>$ = $1(); }
   | receive_dummy_exp	{ $$; }
-  | error		{ yyerr(info,2) << "invalid matrix expression"; 
+  | error		{ yyerr(info,2) << "invalid matrix expression: operand expected"; 
 			  yyerrok; $$; }
 ;
  
@@ -219,7 +212,7 @@ any_string_exp:
     string_exp		{ $<string()>$ = $1; }
   | op_string_exp	{ $<meta_op_string(info)>$ = $1(); }
   | receive_dummy_exp	{ $$; }
-  | error		{ yyerr(info,2) << "invalid string expression"; 
+  | error		{ yyerr(info,2) << "invalid string expression: operand expected"; 
 			  yyerrok; $$; }
 ;
  
@@ -276,7 +269,7 @@ op_scalar_exp:
   | '+' op_scalar_exp %prec UMINUS		{ $$ = $2(); }
   | '(' op_scalar_exp ')'			{ $$ = $2(); }
   | TOK_FUNC_SQRT '(' op_scalar_exp ')'		{ $$ = sqrt($3()); }
-  | scalar_exp %prec OP_CONVERTION 
+  | scalar_exp %prec OP_CONVERTION // should be done if nothing else works
       {$$ = solve::const_op($1,msg_consultant(info));}
   | TOK_PROP_SCALAR				{ $$ = $1; } 
   | TOK_OP_SCALAR				{ $$ = $1; }
@@ -312,9 +305,9 @@ receive_dummy_exp:
   | dummy_exp dummy_operator dummy_operator 
 		      { yyerr(info,2)<< "operand expected instead of operator";
  			initialize_lexer(info); yyerrok; }
-  | error %prec lowest_precedence 
-		      { yyerr(info,2) << "operand expected"; 
-			initialize_lexer(info); yyerrok; }
+//  | error %prec lowest_precedence // might be reported by any_..._exp
+//		      { yyerr(info,2) << "operand expected"; 
+//			initialize_lexer(info); yyerrok; }
 ;
 dummy_exp:
     dummy_exp dummy_operator dummy_exp %prec left_associated

@@ -136,6 +136,10 @@ namespace funcgen
 	if( info->open_file(filename, false) ) // is file in this directory?
 	  break;
       }
+      if( i == code_info->include_paths.end() ) // if nowhere found
+      {
+	info->msg.error() << "couldn't open header file " << file;
+      }
       
     }
   }
@@ -740,6 +744,13 @@ namespace funcgen
 		      std::string result_type, std::string parameter_type, 
 		      std::string parameter )
   {
+    // test whether optional provider wasn't specified
+    if( result_type == "" )
+    {
+      result_type = provider;	//!! parameter are used shifted (see parser.yy)
+      provider = "";
+#warning enter current provider type here
+    }
     afd_info *I=static_cast<afd_info*>(info);
     //message::Message_Reporter &msg = I->msg;
     Code_Translator *translator = I->afd->translator;

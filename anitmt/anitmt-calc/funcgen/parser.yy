@@ -77,7 +77,7 @@ namespace funcgen
 %type <u.boolean> opt_max1
 %type <u.boolean> opt_min1
 %type <u.boolean> opt_serial
-%type <string>  opt_res_ref_provider
+%type <string>  opt_second_identifier
 %type <u.exp>  bool_expression
 %type <u.exp>  expression
 %type <u.exp>  expression_list
@@ -455,12 +455,12 @@ result_function_reference:
   | TAFD_child '.' TAFD_IDENTIFIER '.' TAFD_IDENTIFIER '('
     TAFD_IDENTIFIER TAFD_IDENTIFIER ')'
 				{ res_ref_child(info,$3,$5,$7,$8); }
-  | TAFD_this '.' opt_res_ref_provider TAFD_IDENTIFIER '(' 
+  | TAFD_this '.' TAFD_IDENTIFIER opt_second_identifier '(' 
     TAFD_IDENTIFIER TAFD_IDENTIFIER ')'
 				{ res_ref_this(info,$3,$4,$6,$7); }
 ;
-opt_res_ref_provider: /*optional*/ { $$ = ""; }
-  | TAFD_IDENTIFIER '.'		{ $$ = $1; }
+opt_second_identifier: /*optional*/ { $$ = ""; }
+  | '.' TAFD_IDENTIFIER 	    { $$ = $2; }
 ;
 bool_expression:
     expression TAFD_IS_EQUAL expression	  {$$ = bool_expr($1,"==",$3);}
@@ -531,7 +531,10 @@ node_identifier:
     info.set_max_old_positions(MAX_OLD_POSITIONS);
      
     if(!info.open_file( filename )) // did an error occur?
+    {	
+      info.msg.error() << "couldn't open input file " << filename;
       return -1;
+    }
     int ret = yyparse( static_cast<void*>(&info) );
       
     return ret;
