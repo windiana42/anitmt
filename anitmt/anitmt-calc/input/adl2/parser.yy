@@ -318,7 +318,7 @@ receive_dummy_exp:
 ;
 dummy_exp:
     dummy_exp dummy_operator dummy_exp %prec left_associated
-  | TOK_DUMMY_OPERAND '(' dummy_exp ')'
+  | TOK_DUMMY_OPERAND '(' dummy_exp_comma_list ')'
   | '(' dummy_exp ')'
   | '-' TOK_DUMMY_OPERAND %prec highest_precedence
   | '+' TOK_DUMMY_OPERAND %prec highest_precedence

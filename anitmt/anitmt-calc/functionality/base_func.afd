@@ -5,6 +5,7 @@
 // ****************************************************************************
 
 base_types{
+  flag   = values::Flag;
   vector = values::Vector;
   scalar = values::Scalar;
   string = values::String;
@@ -40,6 +41,36 @@ serial type scalar_vsa {
   provides value (time);
   provides slope (time);
   provides acceleration (time);
+}
+
+// ************************
+// vector / point anitmtion
+// ************************
+
+type vector_component {
+// point
+  provides position( time );
+  provides direction( time );
+  provides speed( time );
+// vector
+  provides vector( time ); // same as pos( time );
+}
+
+serial type vector_state {
+// point
+  provides position( time );
+  provides position( stretch );
+  provides direction( time );
+  provides direction( stretch );
+// timing 
+  provides stretch( time );
+  provides speed( time );
+  provides speed( stretch );
+  provides acceleration( time );
+  provides acceleration( stretch );
+// vector
+  provides vector( time );
+  provides vector( stretch );
 }
 
 // ******************
@@ -88,6 +119,17 @@ serial type timing {
   provides acceleration( stretch );
 }
 
+// ****************
+// string anitmtion
+// ****************
+
+type string_component {
+  provides string( time );
+}
+
+serial type string_state {
+  provides string( time );
+}
 
 // ****************************************************************************
 // ****************************************************************************
@@ -117,7 +159,9 @@ node scene provides scene_type {
   }
   contains {
     scalar_component;
+    vector_component;
     object_component;
+    string_component; 
   }
 }
 
@@ -129,7 +173,7 @@ node scene provides scene_type {
 // | scalar_base |
 // +-------------+
 // Werte
-node scalar_base {
+abstract node scalar_base {
   properties {
     type scalar {    
       start_time;  end_time;  duration;
@@ -228,8 +272,8 @@ node object provides object_component, object_state
     resulting translation( time t ) 
       requires center, child.object_state.position( time )
     {
-      vector pos = [child.object_state.position( time t )].second;
-      vector translate = pos - [center];
+      vector position = [child.object_state.position( time t )].second;
+      vector translate = position - [center];
       [return translate];
     }
     resulting rotation( time t ) 

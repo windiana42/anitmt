@@ -1455,7 +1455,7 @@ namespace funcgen
       {
 	*impl << "," << std::endl
 	      << "      " << translator.prop_op(j->first) 
-	      << "( \"" << translator.prop_op(j->first) << "\", this )";
+	      << "( \"" << j->first << "\", this )";
       }
       // init all operands in constructor
       for( j=node.operands.begin(); j!=node.operands.end(); ++j )

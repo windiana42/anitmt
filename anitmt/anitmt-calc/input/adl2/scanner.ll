@@ -49,7 +49,7 @@
 %option prefix="adlparser_"
 %pointer	// define yytext as pointer (variable length)
 
-%x ML_COMMENT DUMMY_STATEMENT
+%x ML_COMMENT DUMMY_STATEMENT DUMMY_ML_COMMENT
 
 id	([a-zA-Z_][a-zA-Z0-9_]*(\.[a-zA-Z_][a-zA-Z0-9_]*)*)
 integer ([0-9]+)
@@ -69,10 +69,15 @@ operand  ({scal}|{qstring}|{id})
 
 "//".*\n  { info->file_pos.inc_line(); /* ignore one line comment */ }
 "/*"	  { inc_col(); yy_push_state(ML_COMMENT); }
-<ML_COMMENT>"*/"   { inc_col(); yy_pop_state(); }
-<ML_COMMENT>"/*"   { inc_col(); yy_push_state(ML_COMMENT); /*nested comm.*/ } 
-<ML_COMMENT>\n     { info->file_pos.inc_line(); }
-<ML_COMMENT>[^\n]* { inc_col(); /* ingore multiline comment */ }
+<ML_COMMENT>{
+  "*/"		{ inc_col(); yy_pop_state(); }
+  "/*"		{ inc_col(); yy_push_state(ML_COMMENT); /*nested?*/ } 
+  \n         	{ info->file_pos.inc_line(); }
+  \r        	{ ; /*ignore DOS specific line end*/ }
+  [^\n\*]* 	{ inc_col(); /* ingore multiline comment */ }
+  [^\n\*]*\n 	{ info->file_pos.inc_line(); /*optimized*/ }
+  .	 	{ inc_col(); /* singel '*' would fail otherwise */ }
+}
 
 <DUMMY_STATEMENT>{
   " "	  	{ inc_col(); }    
@@ -83,6 +88,18 @@ operand  ({scal}|{qstring}|{id})
   {operand}  	{ tok_pos(); return TOK_DUMMY_OPERAND; }
   {operator}	{ tok_pos(); return TOK_DUMMY_OPERATOR; }
   .	   	{ tok_pos(); return yytext[0]; }
+
+  "//".*\n  { info->file_pos.inc_line(); /* ignore one line comment */ }
+  "/*"	    { inc_col(); yy_push_state(DUMMY_ML_COMMENT); }
+}
+<DUMMY_ML_COMMENT>{
+  "*/"		{ inc_col(); yy_pop_state(); }
+  "/*"		{ inc_col(); yy_push_state(DUMMY_ML_COMMENT); /*nested?*/ } 
+  \n         	{ info->file_pos.inc_line(); }
+  \r        	{ ; /*ignore DOS specific line end*/ }
+  [^\n\*]* 	{ inc_col(); /* ingore multiline comment */ }
+  [^\n\*]*\n 	{ info->file_pos.inc_line(); /*optimized*/ }
+  .	 	{ inc_col(); /* singel '*' would fail otherwise */ }
 }
 
 " "+	  { inc_col(); }    

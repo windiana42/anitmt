@@ -18,6 +18,7 @@ abstract node object_subfunc_base provides object_state
 {
   properties
   {
+    flag auto_rotate;
     type scalar
     {
       start_time;
@@ -30,6 +31,31 @@ abstract node object_subfunc_base provides object_state
       length;
       diff_speed;	// difference of the speeds
       up_norm_roll;	// rotation of the norm up arount the track
+
+      // orientation
+      start_rot_horizontal;
+      start_rot_speed_horizontal;
+      end_rot_speed_horizontal;
+      end_rot_horizontal;
+      diff_rot_horizontal;
+      diff_rot_speed_horizontal;
+      rot_acceleration_horizontal;
+
+      start_rot_vertical;
+      start_rot_speed_vertical;
+      end_rot_speed_vertical;
+      end_rot_vertical;
+      diff_rot_vertical;
+      diff_rot_speed_vertical;
+      rot_acceleration_vertical;
+
+      start_rot_roll;
+      start_rot_speed_roll;
+      diff_rot_roll;
+      end_rot_speed_roll;
+      end_rot_roll;
+      diff_rot_speed_roll;
+      rot_acceleration_roll;
     }
     type vector
     {
@@ -69,9 +95,34 @@ abstract node object_subfunc_base provides object_state
       sum_solver( end_pos, diff_pos, start_pos );
       equal_solver( start_dir, direction );
       equal_solver( end_dir, direction );
-
+      
       length = abs( diff_pos );
+
 //!!! a lot missing here !!!
+
+      // orientation
+      sum_solver( end_rot_horizontal, diff_rot_horizontal, start_rot_horizontal );
+      sum_solver( end_rot_speed_horizontal, diff_rot_speed_horizontal, 
+	start_rot_speed_horizontal );
+      accel_solver(diff_rot_horizontal, duration, rot_acceleration_horizontal, 
+	start_rot_speed_horizontal, end_rot_speed_horizontal);
+      product_solver(diff_rot_speed_horizontal, rot_acceleration_horizontal, 
+	duration);
+
+      sum_solver( end_rot_vertical, diff_rot_vertical, start_rot_vertical );
+      sum_solver( end_rot_speed_vertical, diff_rot_speed_vertical, 
+	start_rot_speed_vertical );
+      accel_solver(diff_rot_vertical, duration, rot_acceleration_vertical, 
+	start_rot_speed_vertical, end_rot_speed_vertical);
+      product_solver(diff_rot_speed_vertical, rot_acceleration_vertical, 
+	duration);
+
+      sum_solver( end_rot_roll, diff_rot_roll, start_rot_roll );
+      sum_solver( end_rot_speed_roll, diff_rot_speed_roll, 
+	start_rot_speed_roll );
+      accel_solver(diff_rot_roll, duration, rot_acceleration_roll, 
+	start_rot_speed_roll, end_rot_speed_roll);
+      product_solver(diff_rot_speed_roll, rot_acceleration_roll, duration);
 
 //!!! dummy solvers: !!!
       equal_solver( start_front, end_front );
@@ -122,10 +173,26 @@ abstract node object_subfunc_base provides object_state
       push( 13, start_length, object_state.prev.end_length );
       push( 20, end_pos, object_state.next.start_pos );
       push( 21, start_pos, object_state.prev.end_pos );
+      push( 22, end_rot_horizontal, object_state.next.start_rot_horizontal );
+      push( 23, start_rot_horizontal, object_state.prev.end_rot_horizontal );
+      push( 24, end_rot_vertical, object_state.next.start_rot_vertical );
+      push( 25, start_rot_vertical, object_state.prev.end_rot_vertical );
+      push( 26, end_rot_roll, object_state.next.start_rot_roll );
+      push( 27, start_rot_roll, object_state.prev.end_rot_roll );
       push( 30, end_dir, object_state.next.start_dir );
       push( 31, start_dir, object_state.prev.end_dir );
       push( 40, end_speed, object_state.next.start_speed );
       push( 41, start_speed, object_state.prev.end_speed );
+      push( 42, end_rot_speed_horizontal, 
+	object_state.next.start_rot_speed_horizontal );
+      push( 43, start_rot_speed_horizontal, 
+	object_state.prev.end_rot_speed_horizontal );
+      push( 44, end_rot_speed_vertical, 
+	object_state.next.start_rot_speed_vertical );
+      push( 45, start_rot_speed_vertical, 
+	object_state.prev.end_rot_speed_vertical );
+      push( 46, end_rot_speed_roll, object_state.next.start_rot_speed_roll );
+      push( 47, start_rot_speed_roll, object_state.prev.end_rot_speed_roll );
 
       push( 50, end_up_norm, object_state.next.start_up_norm );
       push( 51, start_up_norm, object_state.prev.end_up_norm );
@@ -143,10 +210,16 @@ abstract node object_subfunc_base provides object_state
       default( 2525, start_up_vector, vector(0,1,0) );
     }
   }
-  first object_state {
-    actions {
+  first object_state 
+  {
+    actions 
+    {
+      default(    1, auto_rotate, flag(1)/*true*/ );
       default(  100, start_time, 0 );
       default(  102, start_length, 0 );
+      default(  400, start_rot_horizontal, 0 );
+      default(  401, start_rot_vertical, 0 );
+      default(  402, start_rot_roll, 0 );
       default(  500, start_up_norm_try, vector(0,1,0) );
       default( 1000, start_pos, vector(0,0,0) );
     }
