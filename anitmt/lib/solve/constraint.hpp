@@ -26,7 +26,7 @@ namespace solve{
 
   class Constraint_Checker : public Operand_Listener
   {
-    Operand<bool> &check;
+    Operand<values::Flag> &check;
 
     //**********************************
     // Virtual Operand_Listener methods
@@ -39,10 +39,10 @@ namespace solve{
     void disconnect( const void *ID );
 
   public:
-    Constraint_Checker( Operand<bool> &op );
+    Constraint_Checker( Operand<values::Flag> &op );
   };
 
-  inline void constraint( Operand<bool> &op )
+  inline void constraint( Operand<values::Flag> &op )
   {
     new Constraint_Checker( op );
   }

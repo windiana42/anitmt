@@ -62,6 +62,9 @@ namespace anitmt
 #warning !!! fixed filename for filled ADL output !!!
     save_filled("expl_filled.out", &ani );
 
+    // store half filled adl when priority level 13.5 is reached
+    save_filled_action( ani.tree_info.priority_system, 13.5, "half_filled.out", &ani );
+
     ani.finish_calculations();
     if( has_errors() ){ report_error_state();return -1; }
 

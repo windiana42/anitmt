@@ -66,5 +66,30 @@ namespace anitmt {
 	write_node( out, cc, 0 );
       }
   }
+
+  //****************
+  // debug function
+  //****************
+
+  void Save_Filled_Action::do_it()
+  {
+    save_filled( filename, root );
+  }
+
+  Save_Filled_Action::Save_Filled_Action
+  ( solve::Priority_System *sys, solve::Priority_System::level_type level, std::string file,
+    Animation *ani )
+    : solve::Priority_Action( sys, level ), filename(file), root(ani)
+  {
+    sys->add_Action( level, this );
+  }
+
+  void save_filled_action( solve::Priority_System *sys, 
+			   solve::Priority_System::level_type level,
+			   std::string filename, Animation *root )
+  {
+    new Save_Filled_Action( sys, level, filename, root );
+  }
+
 }
 

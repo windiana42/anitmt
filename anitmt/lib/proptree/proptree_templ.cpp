@@ -200,7 +200,7 @@ namespace solve
 					    proptree::Prop_Tree_Node 
 					    *dest_node,
 					    std::string dest_prop,
-					    Operand<bool> &condition ) 
+					    Operand<values::Flag> &condition ) 
   {
     if( !dest_node ) return false;
 
@@ -231,7 +231,7 @@ namespace solve
 					    proptree::Prop_Tree_Node *src_node,
 					    std::string src_prop,
 					    Operand<T> &dest,
-					    Operand<bool> &condition ) 
+					    Operand<values::Flag> &condition ) 
   {  
     if( !dest_node ) return false;
 
@@ -260,7 +260,7 @@ namespace solve
 					    Priority_System::level_type level,
 					    Operand<T> &src, 
 					    proptree::Property *dest_prop,
-					    Operand<bool> &condition ) 
+					    Operand<values::Flag> &condition ) 
   {
 #ifdef __DEBUG__
     std::cout << "try to establish push" << std::endl;
@@ -286,7 +286,7 @@ namespace solve
 					    Priority_System::level_type level,
 					    proptree::Property *src_prop, 
 					    Operand<T> &dest,
-					    Operand<bool> &condition ) 
+					    Operand<values::Flag> &condition ) 
   {
 #ifdef __DEBUG__
     std::cout << "try to establish push" << std::endl;

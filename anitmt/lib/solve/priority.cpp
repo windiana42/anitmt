@@ -131,9 +131,9 @@ namespace solve
   {
     std::list< Basic_Operand* >::iterator i;
     for( i = bad_props.begin(); i != bad_props.end(); i++ )
-      {
-	priority_action->insert_Caller_at_Operand( **i );
-      }
+    {
+      priority_action->insert_Caller_at_Operand( **i );
+    }
 
     return true;
   }

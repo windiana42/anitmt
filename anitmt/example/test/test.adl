@@ -2,13 +2,20 @@ scene testscene {
   filename "test.pov";
   scene_type "pov";
   scalar testval {
-    accelerated {
+    if {
+      condition 1 < 2;
       start_time 0;
-      start_slope 0;
-    }
-    separator {
-      condition 1;
-    }
+      then {
+	accelerated {
+	  start_slope 0.1;
+	}
+      }
+      else {
+	linear {
+	  start_value -1;
+	}
+      }
+    }	
     linear testlinear1 {
       start_time 1;
       end_time 3;

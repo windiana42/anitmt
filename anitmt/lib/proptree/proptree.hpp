@@ -131,7 +131,7 @@ namespace proptree
     inline Prop_Tree_Node* get_next()		{ return next; }
     inline Prop_Tree_Node* get_first_child()	{ return first_child; }
     inline Prop_Tree_Node* get_last_child()	{ return last_child; }
-    //Prop_Tree_Node* get_child( int n );	
+    Prop_Tree_Node* get_child( int n );	
 
     //* child access
 
@@ -238,7 +238,8 @@ namespace solve
 					    Operand<T> &src, 
 					    proptree::Prop_Tree_Node
 					    *dest_node,
-					    std::string dest_prop );
+					    std::string dest_prop,
+					    Operand<values::Flag> &condition );
 
   // establishes push connection to operand of foreign tree node
   // ( returnvalue false means: unknown operand )
@@ -248,7 +249,8 @@ namespace solve
 					    proptree::Prop_Tree_Node
 					    *src_node,
 					    Operand<T> &dest, 
-					    std::string dest_prop );
+					    std::string dest_prop,
+					    Operand<values::Flag> &condition );
   
   //!! implement!
   template<class T>

@@ -560,7 +560,8 @@ opt_fail_bool_var: /*optional*/     { $$ = ""; }
   | ',' TAFD_IDENTIFIER 	    { $$ = $2; }
 ;    
 bool_op_expression:
-    '!' bool_op_expression 			{$$ = bool_expr("!",$2);}
+    op_expression	 			{$$ = bool_expr($1);}
+  | '!' bool_op_expression 			{$$ = bool_expr("!",$2);}
   | '(' bool_op_expression ')'		  	{$$ = bool_expr($2);}
   | op_expression TAFD_IS_EQUAL op_expression	{$$ = bool_expr($1,"==",$3);}
   | op_expression TAFD_NOT_EQUAL op_expression  {$$ = bool_expr($1,"!=",$3);}

@@ -129,6 +129,9 @@ namespace funcgen
     virtual std::string first_child() = 0;
     virtual std::string last_child() = 0;
     virtual std::string get_child( int n ) = 0;
+    virtual std::string first_child( std::string child_type ) = 0;
+    virtual std::string last_child( std::string child_type ) = 0;
+    virtual std::string get_child( std::string child_type, int n ) = 0;
     virtual std::string reference_concat_string() = 0;
     virtual std::string operator_class_name( std::string name ) = 0;
 

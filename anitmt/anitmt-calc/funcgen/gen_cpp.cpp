@@ -267,7 +267,19 @@ namespace funcgen
   }
   std::string Cpp_Code_Translator::get_child(int n)
   {
-    return std::string("/*!!!insert child ")/* + n*/ + "!!!*/" ;
+    return std::string("get_child(") + n + ")";
+  }
+  std::string Cpp_Code_Translator::first_child( std::string child_type )
+  {
+    return container_name(child_type) + ".get_first_element()";
+  }
+  std::string Cpp_Code_Translator::last_child( std::string child_type )
+  {
+    return container_name(child_type) + ".get_last_element()";
+  }
+  std::string Cpp_Code_Translator::get_child( std::string child_type, int n)
+  {
+    return container_name(child_type) + ".get_last_element(" + n + ")";
   }
   std::string Cpp_Code_Translator::reference_concat_string()
   {
@@ -627,40 +639,44 @@ namespace funcgen
 		<< j->return_type << "_" << j->parameter_type << ";"
 		<< std::endl;
 	}
+
 	*decl << "    typedef std::map<std::string, "
 	      << "proptree::Basic_Node_Factory< "
 	      << translator.provider_type(provides) <<" >*> "
-	      << "node_factories_type;" << std::endl
-	      << "    static node_factories_type node_factories;" << std::endl
-	      << "  public:" << std::endl
-	      << "    static void add_node_factory( std::string name, "
-	      << "proptree::Basic_Node_Factory< "
-	      << translator.provider_type(provides) <<" >* );" << std::endl
-	      << "    proptree::Prop_Tree_Node *add_child( std::string type, "
-	      << "std::string name, proptree::tree_info *info, "
-	      << "message::Message_Consultant *msg, "
-	      << "proptree::Prop_Tree_Node *already_obj );" << std::endl
-	      << "    // ** result functions **" << std::endl;
+	      << "node_factories_type;" << std::endl;
+	*decl << "    static node_factories_type node_factories;" << std::endl;
 
 	*impl << "  " << translator.serial_container( provides ) << "::"
 	      << "node_factories_type "
 	      << translator.serial_container( provides ) << "::"
 	      << "node_factories;" 
-	      << std::endl
-	      << "  void "
+	      << std::endl;
+
+	*decl << "  public:" << std::endl;
+	*decl << "    static void add_node_factory( std::string name, "
+	      << "proptree::Basic_Node_Factory< "
+	      << translator.provider_type(provides) <<" >* );" << std::endl;
+
+	*impl << "  void "
 	      << translator.serial_container( provides ) << "::"
 	      << "add_node_factory( std::string name, "
 	      << "proptree::Basic_Node_Factory< "
-	      << translator.provider_type(provides) <<" >* nf )" << std::endl
-	      << "  {" << std::endl
-	      << "    node_factories[name] = nf;" << std::endl
-	      << "  }" << std::endl
-	      << std::endl
-	      << "  proptree::Prop_Tree_Node *"
-	      << translator.serial_container( provides ) << "::" << std::endl
-	      << "  add_child( std::string type, std::string name, "
-	      << "proptree::tree_info *info, " << std::endl
-	      << "             message::Message_Consultant *msg, "
+	      << translator.provider_type(provides) <<" >* nf )" << std::endl;
+	*impl << "  {" << std::endl;
+	*impl << "    node_factories[name] = nf;" << std::endl;
+	*impl << "  }" << std::endl;
+	*impl << std::endl;
+
+	*decl << "    proptree::Prop_Tree_Node *add_child( std::string type, "
+	      << "std::string name, proptree::tree_info *info, "
+	      << "message::Message_Consultant *msg, "
+	      << "proptree::Prop_Tree_Node *already_obj );" << std::endl;
+
+	*impl << "  proptree::Prop_Tree_Node *"
+	      << translator.serial_container( provides ) << "::" << std::endl;
+	*impl << "  add_child( std::string type, std::string name, "
+	      << "proptree::tree_info *info, " << std::endl;
+	*impl << "             message::Message_Consultant *msg, "
 	      << "proptree::Prop_Tree_Node *already_obj )" << std::endl
 	      << "  {" << std::endl
 	      << "    node_factories_type::iterator i;" << std::endl
@@ -702,6 +718,40 @@ namespace funcgen
 	      << "// return general prop tree node pointer" << std::endl
 	      << "  }" << std::endl
 	      << std::endl;
+
+	*decl << "  " << translator.provider_type(provides) 
+	      << "* get_first_element();" << std::endl;
+	*impl << "  " << translator.provider_type(provides) << "* "
+	      << translator.serial_container( provides ) << "::"
+	      << "get_first_element()" << std::endl
+	      << "  {" << std::endl 
+	      << "    if( elements_begin() == elements_end() ) return 0;" << std::endl 
+	      << "    else return *elements_begin();" << std::endl 
+	      << "  }" << std::endl;
+	
+	*decl << "    " << translator.provider_type(provides) 
+	      << "* get_last_element();" << std::endl;
+	*impl << "  " << translator.provider_type(provides) << "* "
+	      << translator.serial_container( provides ) << "::"
+	      << "get_last_element()" << std::endl
+	      << "  {" << std::endl 
+	      << "    if( elements_begin() == elements_end() ) return 0;" << std::endl 
+	      << "    else return *(--elements_end());" << std::endl 
+	      << "  }" << std::endl;
+
+	*decl << "    " << translator.provider_type(provides) 
+	      << "* get_element( int n );" << std::endl;
+	*impl << "  " << translator.provider_type(provides) << "* "
+	      << translator.serial_container( provides ) << "::"
+	      << "get_element( int n )" << std::endl
+	      << "  {" << std::endl 
+	      << "    elements_type::iterator i; int z;" << std::endl 
+	      << "    for( i = elements_begin(), z=0; i != elements_end(); ++i, ++z )" << std::endl 
+	      << "      if( z == n ) return *i;" << std::endl 
+	      << "    return 0;" << std::endl 
+	      << "  }" << std::endl;
+
+	*decl << "    // ** result functions **" << std::endl;
 
 	for( j  = provider_type.result_types.begin(); 
 	     j != provider_type.result_types.end(); ++j )

@@ -1381,7 +1381,7 @@ namespace funcgen
     Tree_Node_Type *node = I->afd->current_node;
     assert( node != 0 );
 
-    node->current_reference.add( translator->first_child(),
+    node->current_reference.add( translator->first_child(type),
 				 translator->reference_concat_string() );
   }
   void ref_node_local_child_last( void *info, const std::string &type )
@@ -1392,7 +1392,7 @@ namespace funcgen
     Tree_Node_Type *node = I->afd->current_node;
     assert( node != 0 );
 
-    node->current_reference.add( translator->last_child(),
+    node->current_reference.add( translator->last_child(type),
 				 translator->reference_concat_string() );
   }
   void ref_node_local_child( void *info, const std::string &type, double n )
@@ -1403,7 +1403,7 @@ namespace funcgen
     Tree_Node_Type *node = I->afd->current_node;
     assert( node != 0 );
 
-    node->current_reference.add( translator->get_child(int(n)),
+    node->current_reference.add( translator->get_child(type, int(n)),
 				 translator->reference_concat_string() );
   }
   void ref_node_prev( void *info )

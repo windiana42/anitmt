@@ -22,6 +22,26 @@
 namespace anitmt {
   static const std::string WN_INDENT_STRING = "  ";
   void save_filled( std::string filename, Animation *root );
+
+  //****************
+  // debug function
+  //****************
+
+  class Save_Filled_Action : public solve::Priority_Action {
+    std::string filename;
+    Animation *root;
+  public:
+    virtual void do_it();
+
+    Save_Filled_Action( solve::Priority_System *sys, 
+			solve::Priority_System::level_type level,
+			std::string filename, Animation *root );
+  };
+  
+  void save_filled_action( solve::Priority_System *sys, 
+			   solve::Priority_System::level_type level,
+			   std::string filename, Animation *root );
+
 }
 
 #endif

@@ -69,6 +69,18 @@ namespace proptree
     return ret;
   }
 
+  Prop_Tree_Node* Prop_Tree_Node::get_child( int n )
+  {
+    Prop_Tree_Node *i;
+    int z;
+    for( i = first_child, z=0; i != 0; i = i->next, ++z )
+    {
+      if( z == n )
+	return i;
+    }
+    return 0;
+  }
+
   Prop_Tree_Node *Prop_Tree_Node::get_child( std::string name ){
     Prop_Tree_Node *n;
 

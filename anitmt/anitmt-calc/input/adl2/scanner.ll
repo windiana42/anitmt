@@ -118,6 +118,9 @@ operand  ({scal}|{qstring}|{id})
 ">="	  { tok_pos(); return TOK_MORE_EQUAL; }
 "<="	  { tok_pos(); return TOK_LESS_EQUAL; }
 
+true	  { tok_pos(); yylval->flag() = true;  return TOK_FLAG; }
+false	  { tok_pos(); yylval->flag() = false; return TOK_FLAG; }
+
 sin	  { tok_pos(); return TOK_FUNC_SIN; } /* sin() function keyword */
 sqrt	  { tok_pos(); return TOK_FUNC_SQRT; } /* sqrt() function keyword */
 

@@ -176,12 +176,12 @@ namespace solve{
   {
     Operand<T> &source;
     Operand<T> &destination;
-    Operand<bool> &condition;
+    Operand<values::Flag> &condition;
   public:
     virtual void do_it();
     Condition_Push( Priority_System *sys, Priority_System::level_type level,
 		    Operand<T> &src, Operand<T> &dest, 
-		    Operand<bool> &condition );
+		    Operand<values::Flag> &condition );
   };
 
   
@@ -192,11 +192,11 @@ namespace solve{
 						   level,
 						   Operand<T> &src, 
 						   Operand<T> &dest,
-						   Operand<bool> &condition ) 
+						   Operand<values::Flag> &condition ) 
   {
     new Condition_Push<T>( sys, level, src, dest, condition );
   }
-  
+
   //***************
   // test function
   //***************

@@ -168,7 +168,7 @@ namespace solve{
   Condition_Push<T>::Condition_Push( Priority_System *sys, 
 				     Priority_System::level_type level,
 				     Operand<T> &src, Operand<T> &dest,
-				     Operand<bool> &cond ) 
+				     Operand<values::Flag> &cond ) 
     : Priority_Action( sys, level ), 
       source(src), destination(dest), condition(cond)
   {

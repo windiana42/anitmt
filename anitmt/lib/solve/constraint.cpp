@@ -44,7 +44,7 @@ namespace solve
   //***********************
   // Constructor/Destructor
 
-  Constraint_Checker::Constraint_Checker( Operand<bool> &op )
+  Constraint_Checker::Constraint_Checker( Operand<values::Flag> &op )
     : check(op)
   {
     op.add_listener(this);

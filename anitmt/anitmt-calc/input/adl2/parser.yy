@@ -219,7 +219,13 @@ any_string_exp:
  
 
 flag_exp: 
-    '(' TOK_FLAG ')'				{ $$ = $2; }
+    '(' flag_exp ')'				{ $$ = $2; }
+  | scalar_exp '<' scalar_exp			{ $$ = $1 < $3; } 
+  | scalar_exp '>' scalar_exp			{ $$ = $1 > $3; } 
+  | scalar_exp TOK_LESS_EQUAL scalar_exp	{ $$ = $1 <= $3; } 
+  | scalar_exp TOK_MORE_EQUAL scalar_exp	{ $$ = $1 >= $3; } 
+  | scalar_exp TOK_IS_EQUAL scalar_exp		{ $$ = $1 == $3; } 
+  | scalar_exp TOK_NOT_EQUAL scalar_exp		{ $$ = $1 != $3; } 
   | TOK_FLAG					{ $$ = $1; }
 ;
 
@@ -255,9 +261,15 @@ string_exp:
 ;
 
 op_flag_exp: 
-    '(' TOK_OP_FLAG ')'				{$$ = $2;}
-  | TOK_PROP_FLAG				{$$ = $1;}
-  | TOK_OP_FLAG					{$$ = $1;}
+    '(' op_flag_exp ')'				{ $$ = $2(); }
+  | op_scalar_exp '<' op_scalar_exp		{ $$ = $1() < $3(); } 
+  | op_scalar_exp '>' op_scalar_exp		{ $$ = $1() > $3(); } 
+  | op_scalar_exp TOK_LESS_EQUAL op_scalar_exp	{ $$ = $1() <= $3(); } 
+  | op_scalar_exp TOK_MORE_EQUAL op_scalar_exp	{ $$ = $1() >= $3(); } 
+  | op_scalar_exp TOK_IS_EQUAL op_scalar_exp	{ $$ = $1() == $3(); } 
+  | op_scalar_exp TOK_NOT_EQUAL op_scalar_exp	{ $$ = $1() != $3(); } 
+  | TOK_PROP_FLAG				{ $$ = $1; }
+  | TOK_OP_FLAG					{ $$ = $1; }
 
 ;
 
@@ -312,20 +324,36 @@ receive_dummy_exp:
 ;
 dummy_exp:
     dummy_exp dummy_operator dummy_exp %prec left_associated
+  | dummy_exp '>' dummy_exp %prec left_associated
   | TOK_DUMMY_OPERAND '(' dummy_exp_comma_list ')'
   | '(' dummy_exp ')'
-  | '-' TOK_DUMMY_OPERAND %prec highest_precedence
-  | '+' TOK_DUMMY_OPERAND %prec highest_precedence
-  | '<' dummy_exp_comma_list '>'
+  | '!' dummy_exp %prec highest_precedence
+  | '-' dummy_exp %prec highest_precedence
+  | '+' dummy_exp %prec highest_precedence
+  | '<' reduced_dummy_exp_comma_list '>' 
+  | TOK_DUMMY_OPERAND
+;
+reduced_dummy_exp:
+    reduced_dummy_exp dummy_operator reduced_dummy_exp %prec left_associated
+  | TOK_DUMMY_OPERAND '(' dummy_exp_comma_list ')'
+  | '(' dummy_exp ')'
+  | '!' reduced_dummy_exp %prec highest_precedence
+  | '-' reduced_dummy_exp %prec highest_precedence
+  | '+' reduced_dummy_exp %prec highest_precedence
+  | '<' reduced_dummy_exp_comma_list '>' 
   | TOK_DUMMY_OPERAND
 ;
 dummy_exp_comma_list:
     dummy_exp
   | dummy_exp_comma_list ',' dummy_exp
 ;
+reduced_dummy_exp_comma_list:
+    reduced_dummy_exp
+  | reduced_dummy_exp_comma_list ',' reduced_dummy_exp
+;
 dummy_operator:
     TOK_DUMMY_OPERATOR
-  | '+' | '-' | '*' | '/'
+  | '+' | '-' | '*' | '/' | '<' 
 ;
 %%
     int parse_adl( proptree::Prop_Tree_Node *node, 

@@ -46,6 +46,23 @@ priority_list{				// old values
 
   default_initial;
   
+  // ********************
+  // child-parent pushes
+  // ********************
+
+  cond_push_start_time_from_child;
+  cond_push_start_time_to_child;
+  cond_push_end_time_from_child;
+  cond_push_end_time_to_child;
+  cond_push_start_value_from_child;
+  cond_push_start_value_to_child;
+  cond_push_end_value_from_child;
+  cond_push_end_value_to_child;
+  cond_push_start_slope_from_child;
+  cond_push_start_slope_to_child;
+  cond_push_end_slope_from_child;
+  cond_push_end_slope_to_child;
+
   // *******
   // pushes
   // *******

@@ -17,11 +17,11 @@ operators
     }
     versions
     {
-      boolean operator!( boolean );
-      boolean operator!( scalar );
-      boolean operator!( vector );
-      boolean operator!( matrix );
-      boolean operator!( string );
+      flag operator!( flag );
+      flag operator!( scalar );
+      flag operator!( vector );
+      flag operator!( matrix );
+      flag operator!( string );
     }
   }
 
@@ -240,11 +240,11 @@ operators
     }
     versions
     {
-      boolean operator==( boolean, boolean );
-      boolean operator==( scalar, scalar );
-      boolean operator==( vector, vector );
-      boolean operator==( matrix, matrix );
-      boolean operator==( string, string );
+      flag operator==( flag, flag );
+      flag operator==( scalar, scalar );
+      flag operator==( vector, vector );
+      flag operator==( matrix, matrix );
+      flag operator==( string, string );
     }
   }
 
@@ -259,11 +259,11 @@ operators
     }
     versions
     {
-      boolean operator!=( boolean, boolean );
-      boolean operator!=( scalar, scalar );
-      boolean operator!=( vector, vector );
-      boolean operator!=( matrix, matrix );
-      boolean operator!=( string, string );
+      flag operator!=( flag, flag );
+      flag operator!=( scalar, scalar );
+      flag operator!=( vector, vector );
+      flag operator!=( matrix, matrix );
+      flag operator!=( string, string );
     }
   }
 
@@ -278,11 +278,11 @@ operators
     }
     versions
     {
-      boolean operator<( boolean, boolean );
-      boolean operator<( scalar, scalar );
-      boolean operator<( vector, vector );
-      boolean operator<( matrix, matrix );
-      boolean operator<( string, string );
+      flag operator<( flag, flag );
+      flag operator<( scalar, scalar );
+      flag operator<( vector, vector );
+      flag operator<( matrix, matrix );
+      flag operator<( string, string );
     }
   }
 
@@ -297,11 +297,11 @@ operators
     }
     versions
     {
-      boolean operator>( boolean, boolean );
-      boolean operator>( scalar, scalar );
-      boolean operator>( vector, vector );
-      boolean operator>( matrix, matrix );
-      boolean operator>( string, string );
+      flag operator>( flag, flag );
+      flag operator>( scalar, scalar );
+      flag operator>( vector, vector );
+      flag operator>( matrix, matrix );
+      flag operator>( string, string );
     }
   }
 
@@ -316,11 +316,11 @@ operators
     }
     versions
     {
-      boolean operator<=( boolean, boolean );
-      boolean operator<=( scalar, scalar );
-      boolean operator<=( vector, vector );
-      boolean operator<=( matrix, matrix );
-      boolean operator<=( string, string );
+      flag operator<=( flag, flag );
+      flag operator<=( scalar, scalar );
+      flag operator<=( vector, vector );
+      flag operator<=( matrix, matrix );
+      flag operator<=( string, string );
     }
   }
 
@@ -335,13 +335,11 @@ operators
     }
     versions
     {
-      boolean operator>=( boolean, boolean );
-      boolean operator>=( scalar, scalar );
-      boolean operator>=( vector, vector );
-      boolean operator>=( matrix, matrix );
-      boolean operator>=( string, string );
+      flag operator>=( flag, flag );
+      flag operator>=( scalar, scalar );
+      flag operator>=( vector, vector );
+      flag operator>=( matrix, matrix );
+      flag operator>=( string, string );
     }
   }
-
-
 }
