@@ -8,10 +8,17 @@ the installation should not be done by root.
 
 1. In the source directory, call aclocal, autoconf and automake:
    
-   /home/me/source/anitmt# aclocal
-   /home/me/source/anitmt# autoconf
-   /home/me/source/anitmt# automake
+   /home/me/source/anitmt# aclocal && autoconf && automake
 
+   Then, do the same in the subdir hlib/ 
+   
+   /home/me/source/anitmt# ( cd hlib && aclocal && autoconf && automake )
+   
+   Alternatively, you may simply call the script ./autogen.sh which does all 
+   that for you. Pass option -f to be sure the files are really re-made. 
+   
+   /home/me/source/anitmt# ./autogen.sh
+   
 2. Create the build directory if it is not already there. 
    You may put this directory anywhere but I recomment using a 
    dir called `anitmt-build' at the same level as the anitmt 

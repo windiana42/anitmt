@@ -28,6 +28,10 @@ fi
 # FIXME: Correct argument handling... there's only "-f" now, so that's
 # no problem yet
 
+topdir="`pwd`"
+for i in . hlib ; do 
+cd $i
+
 # Make aclocal.m4
 if test -n "$1" -o ! -f aclocal.m4; then
     echo "Creating aclocal.m4.";
@@ -45,6 +49,10 @@ if test -n "$1" -o ! -f Makefile.in; then
     echo "Creating Makefile.ins.";
     automake -a || exit 2;
 fi
+
+cd "$topdir" 
+done
+
 echo
 echo "Now you may run \"./configure\" to configure the source code,"
 echo "followed by \"make\" to build it."
