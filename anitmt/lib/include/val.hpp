@@ -26,8 +26,7 @@ namespace values
   class String;
   class Flag;
 
-  extern const double epsilon;  // differences less than epsilon are considered
-				// as zero (used for comarisons)
+  extern const double epsilon;  // Max. difference for comparisons. 
   
   // Inline function which computes x*x; often useful if you want to 
   // calculate the square of some non-trivial expression. 
@@ -355,6 +354,11 @@ namespace values
   public:
     enum NullMat { null };
     enum IdentMat { ident };
+    enum MatRotX { matrotx };
+    enum MatRotY { matroty };
+    enum MatRotZ { matrotz };
+    enum MatScale { matscale };
+	
     // Copy constructor: 
     Matrix(const Matrix &m) : Valtype(Valtype::matrix),x(m.x)  {}
     //Matrix(const vect::matrix<3,3> &m) : Valtype(Valtype::matrix),x(m)  {}
@@ -363,6 +367,14 @@ namespace values
     Matrix(IdentMat) : Valtype(Valtype::matrix),x(0)  {}
     // This generates an initialized null matrix. 
     Matrix(NullMat) : Valtype(Valtype::matrix),x()  {  x.set_null(); }
+
+    // You may (of couse) use these functions but the non-member 
+	// functions below (MrotateX(),...) are more convenient. 
+    Matrix(enum MatRotX,double angle);
+    Matrix(enum MatRotY,double angle);
+    Matrix(enum MatRotZ,double angle);
+    Matrix(enum MatScale,double fact,int idx);  // idx unchecked. 
+    Matrix(enum MatScale,const Vector &v);
 
     // Assignment operator 
     Matrix &operator=(const Matrix &m)  {  x=m.x;  return(*this);  }
@@ -419,8 +431,6 @@ namespace values
     Matrix &operator+()  {  return(*this);  }
     Matrix  operator-()  {  Matrix r(noinit);  r.x.neg(x);   return(r);  }
 
-    //#warning missing: rotation, scalation, translation; others in anitmt-0.1.4/lib/parser/matrix.cpp
-
     // Operators comparing matrices (are using epsilon): 
     friend bool operator==(const Matrix &,const Matrix &);
     friend bool operator!=(const Matrix &,const Matrix &);
@@ -474,6 +484,47 @@ namespace values
 
   inline ostream& operator<<(ostream& s,const Matrix &m)
     {  return(vect::operator<<(s,m.x));  }
+
+  // **** Constructing matrices: ****
+  // Scalation (?) matrices: 
+  inline Matrix MscaleX(double fact)  {  return(Matrix(Matrix::matscale,fact,0));  }
+  inline Matrix MscaleY(double fact)  {  return(Matrix(Matrix::matscale,fact,1));  }
+  inline Matrix MscaleZ(double fact)  {  return(Matrix(Matrix::matscale,fact,2));  }
+  inline Matrix Mscale(const Vector &v)  {  return(Matrix(Matrix::matscale,v));  }
+  // Rotation matrices: 
+  inline Matrix MrotateX(double angle)  {  return(Matrix(Matrix::matrotx,angle));  }
+  inline Matrix MrotateY(double angle)  {  return(Matrix(Matrix::matroty,angle));  }
+  inline Matrix MrotateZ(double angle)  {  return(Matrix(Matrix::matrotz,angle));  }
+  // Rotates around x,y and z in this order; angles stored in v: 
+  inline Matrix Mrotate(const Vector &v)
+    {  return(MrotateX(v[0])*MrotateY(v[1])*MrotateZ(v[2]));  }
+
+  // rotates a specified angle around v 
+  extern Matrix Mrotate_around(const Vector &v,double angle);
+  // rotates a vector to another
+  extern Matrix Mrotate_vect_vect(const Vector &from,const Vector &to);
+  // rotates a vector to another by using a sperical rotation with the
+  // horizontal plane defined by the normal vector "up"
+  extern Matrix Mrotate_vect_vect_up(const Vector &from,const Vector &to,
+    const Vector &up);
+  // rotates a vector pair to another
+  // the first vectors of each pair will mach exactly afterwards but the second
+  // may differ in the angle to the first one. They will be in the same plane
+  // then. 
+  extern Matrix Mrotate_pair_pair(
+    const Vector &vect1f,const Vector &vect1u,
+    const Vector &vect2f,const Vector &vect2u);
+  // spherical rotation with the horizontal plane defined through
+  // the normal vector up and the front vector 
+  // the x-coordinate of angles is used for the rotation around front
+  // the y-coordinate of angles is used for the rotation around up
+  // and the z-coordiante specifies the angle to go up from the plane
+  extern Matrix Mrotate_spherical_pair(
+    const Vector &front,const Vector &up,const Vector &angles);
+
+  // get the rotation from v1 to v2 around axis 
+  extern double get_rotation_around(
+  	const Vector &v1,const Vector &v2,const Vector &axis);
 
 
 /******************************************************************************/

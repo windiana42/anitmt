@@ -1,2 +1,2 @@
 EXTRA_DIST=.cvsignore
-SUBDIRS=val utl include 
+SUBDIRS=val utl par include 
