@@ -17,9 +17,9 @@
 
 #include <message/message.hpp>
 
-#include "adlparser.hpp"
 #include "token.hpp"
 #include "parsinfo.hpp"
+#include "adlparser.hpp"
 
 namespace anitmt
 {
@@ -63,7 +63,7 @@ namespace anitmt
 			       std::string name="" );
 
     // changes back to the parent tree node
-    inline void change_to_parent( void *vptr_info );
+    void change_to_parent( void *vptr_info );
 
     // property declaration
     inline void prop_declaration_start( Property &prop, void *vptr_info );

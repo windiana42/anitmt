@@ -12,6 +12,10 @@
 /**									    **/
 /*****************************************************************************/
 
+//***********
+// Codeblock
+//***********
+
 %{
 #include <iostream>
 #include <string>
@@ -26,21 +30,29 @@
 #include "parsinfo.hpp"
 #include "adlparser.hpp"
 
-#include "parser_functions.hpp"
+#include "parser_functions.hpp"	// help functions for the parser
 
-#define YYPARSE_PARAM info
-#define YYLEX_PARAM info
-#define YYLEX_PARAM_TYPE (parser_info&)
+#define YYPARSE_PARAM info	// parameter to the parser (yyparser(void*))
+#define YYLEX_PARAM info	// parameter to the lexer
+#define YYLEX_PARAM_TYPE (parser_info&)	// -> yylex(parser_info &info)
 
-// open namespaces
-namespace anitmt
-{
-  namespace adlparser
+  // open namespaces
+  namespace anitmt
   {
+    namespace adlparser
+    {
 
 %}
 
-%pure_parser
+//*********
+// Options
+//*********
+   
+%pure_parser			// parser may be called recursive
+
+//********
+// Tokens
+//********
 
 %token TOK_INVALID_ID TOK_ERROR TOK_DUMMY
 // multi character operators
@@ -54,11 +66,13 @@ namespace anitmt
 %token <vector()> TOK_VECTOR
 %token <matrix()> TOK_MATRIX
 %token <string()> TOK_STRING
+// operand tokens for creating expression trees
 %token <op_flag(info)>   TOK_OP_FLAG
 %token <op_scalar(info)> TOK_OP_SCALAR
 %token <op_vector(info)> TOK_OP_VECTOR
 %token <op_matrix(info)> TOK_OP_MATRIX
 %token <op_string(info)> TOK_OP_STRING
+// property tokens
 %token <prop_flag()>   TOK_PROP_FLAG
 %token <prop_scalar()> TOK_PROP_SCALAR
 %token <prop_vector()> TOK_PROP_VECTOR
@@ -70,144 +84,187 @@ namespace anitmt
 %type <vector()> vector_exp 
 %type <matrix()> matrix_exp 
 %type <string()> string_exp 
+// meta operands allow assigning without
 %type <meta_op_flag(info)>   op_flag_exp 
 %type <meta_op_scalar(info)> op_scalar_exp 
 %type <meta_op_vector(info)> op_vector_exp 
 %type <meta_op_matrix(info)> op_matrix_exp 
 %type <meta_op_string(info)> op_string_exp 
+// mixed types so it returns simply a token
 %type <tok()> any_flag_exp 
 %type <tok()> any_scalar_exp 
 %type <tok()> any_vector_exp 
 %type <tok()> any_matrix_exp 
 %type <tok()> any_string_exp 
 
+//****************
+// precicion table
+//****************
+
 %left '+' '-'
 %left '*' '/'
+//%right '^'
 %nonassoc UMINUS
+
+// !! value to operand conversion must be last !!
 %nonassoc OP_CONVERTION 
 
+//****************
+// Parser Rules
+//****************
 %%
 tree_node_block: /* empty */
-	| tree_node_block statement
-	;
-
-statement: child_declaration
-	 | flag_statement ';'	  
-	 | scalar_statement ';'	 
-	 | vector_statement ';'
-	 | matrix_statement ';'
-	 | string_statement ';'
-
-	;
-	
-child_declaration: TOK_IDENTIFIER '{'    { change_current_child(info,$1); } 
-		     tree_node_block '}' { change_to_parent(info); }
-	| TOK_IDENTIFIER TOK_IDENTIFIER '{' 
-					 { change_current_child(info,$1,$2);} 
-	    tree_node_block '}' 	 { change_to_parent(info); }
-	;
+  | tree_node_block statement
+;
+    
+statement: 
+    child_declaration
+  | flag_statement ';'	  
+  | scalar_statement ';'	 
+  | vector_statement ';'
+  | matrix_statement ';'
+  | string_statement ';'
+  | error ';'			{ yyerrok; /* error recovery */ }
+;
+  
+child_declaration: 
+    TOK_IDENTIFIER '{'			{ change_current_child(info,$1); } 
+      tree_node_block '}'		{ change_to_parent(info); }
+  | TOK_IDENTIFIER TOK_IDENTIFIER '{'	{ change_current_child(info,$1,$2);} 
+      tree_node_block '}'		{ change_to_parent(info); }
+;
 
 flag_statement: 
-  TOK_PROP_FLAG { prop_declaration_start($1,info); } 
-  any_flag_exp  { flag_prop_declaration_finish($1,$3,info); }
-	;
-any_flag_exp:      flag_exp {$<flag()>$ = $1;}
-		| op_flag_exp {$<meta_op_flag(info)>$ = $1();}
-		| TOK_DUMMY {$$;}
-	;
+    TOK_PROP_FLAG	{ prop_declaration_start($1,info); } 
+      any_flag_exp	{ flag_prop_declaration_finish($1,$3,info); }
+;
+any_flag_exp:      
+    flag_exp		{ $<flag()>$ = $1; }
+  | op_flag_exp		{ $<meta_op_flag(info)>$ = $1(); }
+  | TOK_DUMMY		{ $$; }
+;
 
 scalar_statement: 
-  TOK_PROP_SCALAR { prop_declaration_start($1,info); } 
-  any_scalar_exp  { scalar_prop_declaration_finish($1,$3,info); }
-	;
-any_scalar_exp:      scalar_exp {$<scalar()>$ = $1;}
-		| op_scalar_exp {$<meta_op_scalar(info)>$ = $1();}
-		| TOK_DUMMY {$$;}
-	;
+    TOK_PROP_SCALAR	{ prop_declaration_start($1,info); } 
+      any_scalar_exp	{ scalar_prop_declaration_finish($1,$3,info); }
+;
+any_scalar_exp:      
+    scalar_exp		{ $<scalar()>$ = $1; }
+  | op_scalar_exp	{ $<meta_op_scalar(info)>$ = $1(); }
+  | TOK_DUMMY		{ $$; }
+;
  
 vector_statement: 
-  TOK_PROP_VECTOR { prop_declaration_start($1,info); } 
-  any_vector_exp  { vector_prop_declaration_finish($1,$3,info); } 
-	;
-any_vector_exp:      vector_exp {$<vector()>$ = $1;}
-		| op_vector_exp {$<meta_op_vector(info)>$ = $1();}
-		| TOK_DUMMY {$$;}
-	;
+    TOK_PROP_VECTOR	{ prop_declaration_start($1,info); } 
+      any_vector_exp	{ vector_prop_declaration_finish($1,$3,info); }
+;
+any_vector_exp:      
+    vector_exp		{ $<vector()>$ = $1; }
+  | op_vector_exp	{ $<meta_op_vector(info)>$ = $1(); }
+  | TOK_DUMMY		{ $$; }
+;
  
 matrix_statement: 
-  TOK_PROP_MATRIX { prop_declaration_start($1,info); } 
-  any_matrix_exp  { matrix_prop_declaration_finish($1,$3,info); } 
-	;
-any_matrix_exp:      matrix_exp {$<matrix()>$ = $1;}
-		| op_matrix_exp {$<meta_op_matrix(info)>$ = $1();}
-		| TOK_DUMMY {$$;}
-	;
-
+    TOK_PROP_MATRIX	{ prop_declaration_start($1,info); } 
+      any_matrix_exp	{ matrix_prop_declaration_finish($1,$3,info); }
+;
+any_matrix_exp:      
+    matrix_exp		{ $<matrix()>$ = $1; }
+  | op_matrix_exp	{ $<meta_op_matrix(info)>$ = $1(); }
+  | TOK_DUMMY		{ $$; }
+;
+ 
 string_statement: 
-  TOK_PROP_STRING { prop_declaration_start($1,info); } 
-  any_string_exp  { string_prop_declaration_finish($1,$3,info); } 
-	;
-any_string_exp:      string_exp {$<string()>$ = $1;}
-		| op_string_exp {$<meta_op_string(info)>$ = $1();}
-		| TOK_DUMMY {$$;}
-	;
+    TOK_PROP_STRING	{ prop_declaration_start($1,info); } 
+      any_string_exp	{ string_prop_declaration_finish($1,$3,info); }
+;
+any_string_exp:      
+    string_exp		{ $<string()>$ = $1; }
+  | op_string_exp	{ $<meta_op_string(info)>$ = $1(); }
+  | TOK_DUMMY		{ $$; }
+;
+ 
 
-flag_exp: TOK_FLAG {$$ = $1;}
-	;
-scalar_exp: scalar_exp '+' scalar_exp {$$ = $1 + $3;} 
-	  | scalar_exp '-' scalar_exp {$$ = $1 - $3;}
-	  | scalar_exp '*' scalar_exp {$$ = $1 * $3;}
-  	  | scalar_exp '/' scalar_exp {$$ = $1 / $3;}
-	  | '-' scalar_exp %prec UMINUS {$$ = -$2;}
-	  | '+' scalar_exp %prec UMINUS {$$ = $2;}
-	  | '(' scalar_exp ')' {$$ = $2;}
-	  | TOK_FUNC_SIN '(' scalar_exp ')' {$$ = sin($3);}
-	  | TOK_FUNC_SQRT '(' scalar_exp ')' {$$ = sqrt($3);}
-          | TOK_SCALAR {$$ = $1;}
-	;
+flag_exp: 
+    '(' TOK_FLAG ')'		{ $$ = $2; }
+  | TOK_FLAG			{ $$ = $1; }
+;
 
-vector_exp: vector_exp '+' vector_exp {$$ = $1 + $3;} 
-	  | '<' scalar_exp ',' scalar_exp ',' scalar_exp '>' 
-		{ $$ = values::Vector( $2, $4, $6 ); }
-	  | TOK_VECTOR {$$ = $1;}
-	;
+scalar_exp: 
+    scalar_exp '+' scalar_exp			{ $$ = $1 + $3; } 
+  | scalar_exp '-' scalar_exp			{ $$ = $1 - $3; }
+  | scalar_exp '*' scalar_exp			{ $$ = $1 * $3; }
+  | scalar_exp '/' scalar_exp			{ $$ = $1 / $3; }
+  | '-' scalar_exp %prec UMINUS			{ $$ = -$2; }
+  | '+' scalar_exp %prec UMINUS			{ $$ = $2; }
+  | '(' scalar_exp ')'				{ $$ = $2; }
+  | TOK_FUNC_SIN '(' scalar_exp ')'		{ $$ = sin($3); } 
+  | TOK_FUNC_SQRT '(' scalar_exp ')'		{ $$ = sqrt($3); }
+  | TOK_SCALAR					{ $$ = $1; }
+;
+  
+vector_exp: 
+    vector_exp '+' vector_exp			{ $$ = $1 + $3; } 
+  | '<' scalar_exp ',' scalar_exp ',' scalar_exp '>' 
+				{ $$ = values::Vector( $2, $4, $6 ); }
+  | '(' vector_exp ')'				{ $$ = $2; }
+  | TOK_VECTOR					{ $$ = $1; }
+;
 
-matrix_exp: TOK_MATRIX {$$ = $1;}
-	;
-string_exp: TOK_STRING {$$ = $1;}
-	;
+matrix_exp: 
+    '(' TOK_MATRIX ')'		{ $$ = $2; }
+  | TOK_MATRIX			{ $$ = $1; }
+;
 
+string_exp: 
+    '(' TOK_STRING ')'		{ $$ = $2; }
+  | TOK_STRING			{ $$ = $1; }
+;
 
-op_flag_exp: TOK_OP_FLAG {$$ = $1;}
-	;
+op_flag_exp: 
+    '(' TOK_OP_FLAG ')'		{$$ = $2;}
+  | TOK_PROP_FLAG		{$$ = $1;}
+  | TOK_OP_FLAG			{$$ = $1;}
 
-op_scalar_exp: op_scalar_exp '+' op_scalar_exp {$$ = $1() + $3();} 
-	  | op_scalar_exp '-' op_scalar_exp {$$ = $1() - $3();}
-	  | op_scalar_exp '*' op_scalar_exp {$$ = $1() * $3();}
-  	  | op_scalar_exp '/' op_scalar_exp {$$ = $1() / $3();}
-	  | '-' op_scalar_exp %prec UMINUS  {$$ = -$2();}
-	  | '+' op_scalar_exp %prec UMINUS  {$$ = $2();}
-	  | '(' op_scalar_exp ')' {$$ = $2();}
-	  | TOK_FUNC_SQRT '(' op_scalar_exp ')' {$$ = sqrt($3());}
+;
 
-          | scalar_exp %prec OP_CONVERTION 
-	  {$$ = solve::const_op($1,msg_consultant(info));}
-          | TOK_PROP_SCALAR {$$ = $1;} // implicite convertion from Property
-          | TOK_OP_SCALAR {$$ = $1;}
-	;
+op_scalar_exp: 
+    op_scalar_exp '+' op_scalar_exp		{ $$ = $1() + $3(); } 
+  | op_scalar_exp '-' op_scalar_exp		{ $$ = $1() - $3(); }
+  | op_scalar_exp '*' op_scalar_exp		{ $$ = $1() * $3(); }
+  | op_scalar_exp '/' op_scalar_exp		{ $$ = $1() / $3(); }
+  | '-' op_scalar_exp %prec UMINUS		{ $$ = -$2(); }
+  | '+' op_scalar_exp %prec UMINUS		{ $$ = $2(); }
+  | '(' op_scalar_exp ')'			{ $$ = $2(); }
+  | TOK_FUNC_SQRT '(' op_scalar_exp ')'		{ $$ = sqrt($3()); }
+  | scalar_exp %prec OP_CONVERTION 
+      {$$ = solve::const_op($1,msg_consultant(info));}
+  | TOK_PROP_SCALAR				{ $$ = $1; } 
+  | TOK_OP_SCALAR				{ $$ = $1; }
+;
 
-op_vector_exp: op_vector_exp '+' op_vector_exp {$$ = $1() + $3();} 
-	  | '<' op_scalar_exp ',' op_scalar_exp ',' op_scalar_exp '>' 
-	{ /*$$ = values::Vector( $2, $4, $6 ); not supported yet*/ 
-	  yyerr(info) << "vector creation from operands not supported yet!";
-	  assert(0); }
-	  | TOK_OP_VECTOR {$$ = $1;}
-	;
+op_vector_exp: 
+    op_vector_exp '+' op_vector_exp		{ $$ = $1() + $3(); } 
+  | '<' op_scalar_exp ',' op_scalar_exp ',' op_scalar_exp '>' 
+      { /*$$ = values::Vector( $2, $4, $6 ); not supported yet*/ 
+	yyerr(info) << "vector creation from operands not supported yet!";
+	assert(0); }
+  | '(' TOK_OP_VECTOR ')'			{ $$ = $2; }
+  | TOK_PROP_VECTOR				{ $$ = $1; }
+  | TOK_OP_VECTOR				{ $$ = $1; }
+;
 
-op_matrix_exp: TOK_OP_MATRIX {$$ = $1;}
-	;
-op_string_exp: TOK_OP_STRING {$$ = $1;}
-	;
+op_matrix_exp: 
+    '(' TOK_OP_MATRIX ')'	{$$ = $2;}
+  | TOK_PROP_MATRIX		{$$ = $1;}
+  | TOK_OP_MATRIX		{$$ = $1;}
+;
+
+op_string_exp: 
+    '(' TOK_OP_STRING ')'	{$$ = $2;}
+  | TOK_PROP_STRING		{$$ = $1;}
+  | TOK_OP_STRING		{$$ = $1;}
+;
 
 %%
     int parse_adl( Prop_Tree_Node *node, message::Message_Consultant *c, 
@@ -215,13 +272,13 @@ op_string_exp: TOK_OP_STRING {$$ = $1;}
     {
       adlparser_info info(c);
       info.id_resolver = &info.res_property;
-
+      
       info.open_file( filename );
       info.set_new_tree_node( node );
       info.set_pass(pass);
       int ret = yyparse( static_cast<void*>(&info) );
       info.close_file();
-
+      
       return ret;
     }
 

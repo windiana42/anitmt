@@ -12,9 +12,12 @@
 /**									    **/
 /*****************************************************************************/
 
+#include <stack>
+
 #include "parser_functions.hpp"
 
 #include <utl/stdextend.hpp>
+#include <proptree.hpp>
 
 namespace anitmt
 {
@@ -24,7 +27,53 @@ namespace anitmt
     // functions used by the parser
     //******************************
 
-    long global_numbering = 1;
+    // keeps track of the tree node hierarchy in pass2
+    class Child_Manager{
+      std::stack<Prop_Tree_Node*> last_child; 
+      static Prop_Tree_Node *no_child;
+      bool initialized;
+    public:
+      inline bool is_initialized() { return initialized; }
+
+      void set_root_node( Prop_Tree_Node *node )
+      {
+	last_child.push(node);		// node is parent...
+	last_child.push(no_child);	// ... so add a virtual child
+	initialized = true;
+      }
+
+      Prop_Tree_Node *get_child()
+      {
+	assert( initialized );	// there must be at least a no_child
+
+	Prop_Tree_Node *last = last_child.top(); // get last child
+	last_child.pop();		// remove old child
+	Prop_Tree_Node *new_child;
+	if( last != no_child )
+	{
+	  new_child = last->get_next(); assert( new_child != 0 );
+	}
+	else
+	{
+	  Prop_Tree_Node *parent = last_child.top();
+	  new_child = parent->get_first_child();
+	}
+	last_child.push(new_child);
+	last_child.push(no_child);
+	return new_child;
+      }
+
+      void child_finished()
+      {
+	assert( initialized );	// there must be at least a no_child
+
+	last_child.pop();
+      }
+      Child_Manager() : initialized(false) {}
+    };
+    Prop_Tree_Node *Child_Manager::no_child = 0; // static initialization
+
+    Child_Manager child_manager;
 
     // creates new tree node and makes it the current one
     void change_current_child( void *vptr_info, std::string type, 
@@ -49,27 +98,31 @@ namespace anitmt
 	}
 	break;
       case pass2:
-	if( name == "" ) 
-	{
-	  name = type + global_numbering;
-	  global_numbering++;
-	}
+	// initialized child manager
+	if( !child_manager.is_initialized() ) 
+	  child_manager.set_root_node( info->get_current_tree_node() );
 
-	node = info->get_current_tree_node()->get_child( name );
-	
-	if( node == 0 )
-	{
-	  yyerr(vptr_info) << "internal error: couldn't refind " << type 
-			   << " " << name;
-	}
-	else
-	{
-	  info->set_new_tree_node( node );
-	}	
+	info->set_new_tree_node( child_manager.get_child() );
 	break;
       default:
 	assert(0);
       }
     }
+
+    // changes back to the parent tree node
+    void change_to_parent( void *vptr_info )
+    {
+      adlparser_info *info = static_cast<adlparser_info*>(vptr_info);
+      switch( info->pass )
+      {
+      case pass1:
+	break;
+      case pass2:
+	child_manager.child_finished();
+	break;
+      }
+      info->tree_node_done();
+    }
+
   }
 }

@@ -54,7 +54,7 @@ namespace anitmt
   {
     enum pass_type{pass1,pass2};
 
-    //! parse an adl file from file
+    //! parse an adl file (defined in parser.yy)
     int parse_adl( Prop_Tree_Node *node, message::Message_Consultant *c, 
 		   std::string filename, pass_type pass );
 

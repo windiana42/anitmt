@@ -93,17 +93,28 @@ namespace anitmt{
 
     virtual std::string	get_name();	// return name
     virtual std::string get_type();	// return type
+
+    //* property access
     Property *get_property( std::string name );	
 				// return property (0 = unknown name)
+    // set value of a property 
     enum setp_error{ SP_no_err=0, SP_wrong_property_type,
 		     SP_value_rejected, SP_property_unknown };
     template< class T > 
-    setp_error set_property( std::string name, T val )
-      throw();
-				// set value of a property 
+    setp_error set_property( std::string name, T val ) throw();
+
     std::list<std::string> get_properties_names(); 
 				// returns all property names
 
+    //* node navigation
+    inline Prop_Tree_Node* get_parent()		{ return parent; }
+    inline Prop_Tree_Node* get_prev()		{ return prev; }
+    inline Prop_Tree_Node* get_next()		{ return next; }
+    inline Prop_Tree_Node* get_first_child()	{ return first_child; }
+    inline Prop_Tree_Node* get_last_child()	{ return last_child; }
+    //Prop_Tree_Node* get_child( int n );	
+
+    //* child access
     Prop_Tree_Node *get_child( std::string name );
 				// return child with name
     std::list<Prop_Tree_Node*> get_all_children();

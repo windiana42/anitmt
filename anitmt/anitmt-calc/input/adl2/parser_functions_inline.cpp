@@ -76,13 +76,6 @@ namespace anitmt
     // functions used by the parser
     //******************************
 
-    // changes back to the parent tree node
-    inline void change_to_parent( void *vptr_info )
-    {
-      adlparser_info *info = static_cast<adlparser_info*>(vptr_info);
-      info->tree_node_done();
-    }
-
     // property declaration
     inline void prop_declaration_start( Property &prop, void *vptr_info )
     {

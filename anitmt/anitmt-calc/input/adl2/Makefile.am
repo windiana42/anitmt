@@ -14,8 +14,7 @@ libadlparser_a_SOURCES=	parser.yy tokens.h \
 			flexlexer_public.h flexlexer_global.h scanner.ll 
 
 testadlparser_SOURCES=	testadlparser.cpp 
-testadlparser_LDADD=	libadlparser.a \
-			../../libanitmt.a \
+testadlparser_LDADD=	../../libanitmt.a \
 			../../../lib/val/libval.a \
 			../../../lib/par/libpar.a \
 			../../../lib/utl/libutl.a \
@@ -25,7 +24,9 @@ testadlparser_LDADD=	libadlparser.a \
 			../libinput.a \
 			../../output/lib/liboutput.a \
 			../../output/raw/librawout.a \
-			../../output/pov/libpovout.a 
+			../../output/pov/libpovout.a \
+			libadlparser.a 
+
 #also includes old adl/libadlparser.a for libanitmt
 
 YLWRAP  = 		$(top_srcdir)/ylwrap
