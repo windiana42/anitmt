@@ -91,6 +91,11 @@ class TaskManager :
 		// Padding bits: 
 		int _pad : 13;
 		
+		// Set by parameters, default to values set by program name: 
+		RefString tsource_name;
+		RefString tdinterface_name;
+		RefString opmode_name;
+		
 		long load_poll_msec;   // or -1
 		TimerID tid_load_poll;  // NULL if no load control enabled. 
 		
@@ -169,6 +174,11 @@ class TaskManager :
 		static bool IsPartlyFilteredTask(const CompleteTask *ctsk);
 		
 		// ******** INTERFACE TO TaskDriverInterface ********
+		
+		// Called by interface; the LDR interface calls this when the 
+		// first client was connected successfully, the local interface 
+		// calls this immediately. 
+		void ReallyStartProcessing(int error_occured=0);
 		
 		// Called by TaskDriverInterface becuase a TaskDriver or LDR client 
 		// unregistered 

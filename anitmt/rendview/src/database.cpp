@@ -410,20 +410,26 @@ int ComponentDataBase::PrintSpecialHelp(RefStrList *dest,
 		for(const TaskDriverFactory *i=ift[shi->item_id].drivers.first(); i; 
 			i=ift[shi->item_id].drivers.next(i))
 		{
-			tmp.sprintf(0,"\r2+:%s:",i->DriverName());
+			tmp.sprintf(0,"\r2+:%s: ",i->DriverName());
 			dest->append(tmp);
-			tmp.sprintf(0,"\r4:  %s",i->DriverDesc());
+			tmp.sprintf(0,"\r12:%s",i->DriverDesc());
 			dest->append(tmp);
 		}
+		
+		tmp.set("");
+		dest->append(tmp);
 	}
 	else if(shi->item_id==-1)
 	{
 		// List image formats:
 		RefString tmp;
-		tmp.set("List of knwon image formats: (pbc: bits per channel)");
+		tmp.set("List of knwon image formats: (pbc: bits per channel)\n");
 		dest->append(tmp);
 		
-		tmp.set("\r2:name  bpc  ext");  dest->append(tmp);
+		tmp.set("\r2:"
+			"name  bpc  ext\n"
+			"--------------");
+		dest->append(tmp);
 		
 		for(const ImageFormat *i=iflist.first(); i; i=i->next)
 		{
@@ -431,6 +437,63 @@ int ComponentDataBase::PrintSpecialHelp(RefStrList *dest,
 				i->name,i->bits_p_rgb,i->file_extension);
 			dest->append(tmp);
 		}
+		
+		tmp.set("");
+		dest->append(tmp);
+	}
+	else if(shi->item_id==-2)
+	{
+		// List supported operation formats. 
+		RefString tmp;
+		tmp.set("-opmode is just a shorthand for -tsource and -tdriver.\n"
+			"List of supported operation modes with corresponding "
+			"-tsource and -tdriver values:\n");
+		dest->append(tmp);
+		
+		tmp.set("\r2:"
+			"opmode:      tsource   tdriver\n"
+			"------------------------------\n"
+			"rendview:    local     local\n"
+			"ldrclient:   LDR       local\n"
+			"ldrserver:   local     LDR\n");
+		dest->append(tmp);
+	}
+	else if(shi->item_id==-3)
+	{
+		// List supported task sources: 
+		RefString tmp;
+		tmp.set("List of supported task sources:\n");
+		dest->append(tmp);
+		
+		for(const TaskSourceFactory *i=tsources.first(); i; i=tsources.next(i))
+		{
+			tmp.sprintf(0,"\r2+:%s: ",i->TaskSourceName());
+			dest->append(tmp);
+			tmp.sprintf(0,"\r10:%s",i->TaskSourceDesc());
+			dest->append(tmp);
+		}
+		
+		tmp.set("");
+		dest->append(tmp);
+	}
+	else if(shi->item_id==-4)
+	{
+		// List supported task sources: 
+		RefString tmp;
+		tmp.set("List of supported task driver interfaces:\n");
+		dest->append(tmp);
+		
+		for(const TaskDriverInterfaceFactory *i=tdinterfaces.first(); i; 
+			i=tdinterfaces.next(i))
+		{
+			tmp.sprintf(0,"\r2+:%s: ",i->DriverInterfaceName());
+			dest->append(tmp);
+			tmp.sprintf(0,"\r10:%s",i->DriverInterfaceDesc());
+			dest->append(tmp);
+		}
+		
+		tmp.set("");
+		dest->append(tmp);
 	}
 	else assert(0);
 	
@@ -676,12 +739,33 @@ int ComponentDataBase::_RegisterParams()
 	
 	// Special option to list image formats: 
 	SpecialHelpItem shi;
-	static const char *_list_imgfmt_opt_str="list-imgfmt";
-	static const char *_list_imgfmt_dest_str="list known image formats";
-	shi.optname=_list_imgfmt_opt_str;
-	shi.descr=_list_imgfmt_dest_str;
-	shi.item_id=-1;
-	AddSpecialHelp(&shi);
+	{	static const char *_list_imgfmt_opt_str="list-imgfmt";
+		static const char *_list_imgfmt_dest_str="list known image formats";
+		shi.optname=_list_imgfmt_opt_str;
+		shi.descr=_list_imgfmt_dest_str;
+		shi.item_id=-1;
+	}  AddSpecialHelp(&shi);
+	
+	{	static const char *_list_opmode_opt_str="list-opmode";
+		static const char *_list_opmode_dest_str="list supported operation modes";
+		shi.optname=_list_opmode_opt_str;
+		shi.descr=_list_opmode_dest_str;
+		shi.item_id=-2;
+	}  AddSpecialHelp(&shi);
+	
+	{	static const char *_list_tsource_opt_str="list-tsource";
+		static const char *_list_tsource_dest_str="list supported task sources";
+		shi.optname=_list_tsource_opt_str;
+		shi.descr=_list_tsource_dest_str;
+		shi.item_id=-3;
+	}  AddSpecialHelp(&shi);
+	
+	{	static const char *_list_tdriver_opt_str="list-tdriver";
+		static const char *_list_tdriver_dest_str="list supported task driver interfaces";
+		shi.optname=_list_tdriver_opt_str;
+		shi.descr=_list_tdriver_dest_str;
+		shi.item_id=-4;
+	}  AddSpecialHelp(&shi);
 	
 	if(add_failed)  ++failed;
 	return(failed);

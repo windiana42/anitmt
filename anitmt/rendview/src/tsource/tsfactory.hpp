@@ -55,8 +55,10 @@ class TaskSourceFactory :
 		// Create a TaskSource: 
 		virtual TaskSource *Create() HL_PureVirt(NULL)
 		
-		const char *TaskSourceName()
+		// Get name and description strings: 
+		const char *TaskSourceName() const
 			{  return(ts_name);  }
+		virtual const char *TaskSourceDesc() const HL_PureVirt(NULL)
 };
 
 #endif  /* _RNDV_TASKSOURCEFACTORY_HPP_ */

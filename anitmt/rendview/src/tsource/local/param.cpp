@@ -42,6 +42,13 @@ TaskSource *TaskSourceFactory_Local::Create()
 }
 
 
+const char *TaskSourceFactory_Local::TaskSourceDesc() const
+{
+	return("Local task source is used to process frames on "
+		"your local hard drive.");
+}
+
+
 // Used for errors so that you know which frame info block 
 // it is talking about: 
 const char *TaskSourceFactory_Local::_FrameInfoLocationString(

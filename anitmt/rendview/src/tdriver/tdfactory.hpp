@@ -55,8 +55,10 @@ class TaskDriverInterfaceFactory :
 		// Create a TaskSource: 
 		virtual TaskDriverInterface *Create() HL_PureVirt(NULL)
 		
-		const char *DriverInterfaceName()
+		// Get name and description string: 
+		const char *DriverInterfaceName() const
 			{  return(tdif_name);  }
+		virtual const char *DriverInterfaceDesc() const HL_PureVirt(NULL)
 };
 
 #endif  /* _RNDV_TASKDRIVERINTERFACEFACTORY_HPP_ */

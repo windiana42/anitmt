@@ -137,6 +137,9 @@ class TaskSourceFactory_Local :
 		
 		// Returns NULL only if frame_no is out of range. 
 		const PerFrameTaskInfo *GetPerFrameTaskInfo(int frame_no);
+		
+		// Get description string: 
+		const char *TaskSourceDesc() const;
 };
 
 #endif  /* _RNDV_TSOURCE_LOCALPARS_HPP_ */

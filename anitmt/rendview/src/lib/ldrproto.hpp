@@ -23,6 +23,9 @@ namespace LDR
 
 extern const u_int16_t LDREndMagic;
 
+// Default LDR port (client side): 
+extern const int DefaultLDRPort;
+
 typedef unsigned char uchar;
 
 

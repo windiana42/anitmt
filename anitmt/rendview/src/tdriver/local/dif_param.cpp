@@ -27,6 +27,13 @@
 #define UnsetNegMagic  (-28659)
 
 
+const char *TaskDriverInterfaceFactory_Local::DriverInterfaceDesc() const
+{
+	return("The local task driver executes (render and filter) processes "
+		"on your local computer.");
+}
+
+
 // Create a local TaskDriverInterface (TaskDriverInterface_Local): 
 TaskDriverInterface *TaskDriverInterfaceFactory_Local::Create()
 {

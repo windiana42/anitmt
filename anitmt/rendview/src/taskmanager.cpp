@@ -44,6 +44,19 @@
 /******************************************************************************/
 
 
+static volatile void __CheckAllocFailFailed()
+{
+	Error("Allocation failure.\n");
+	abort();
+}
+
+static inline void _CheckAllocFail(int failed)
+{
+	if(failed)
+	{  __CheckAllocFailFailed();  }
+}
+
+
 // Returns 1 if the passed task is being processed or was processed 
 // by us: 
 inline bool TaskManager::_ProcessedTask(const CompleteTask *ctsk)
@@ -710,21 +723,24 @@ void TaskManager::_DoQuit(int status)
 		Verbose("%s\n",nw ? "" : " [none]");
 	}
 	
-	double rv_cpu=100.0*(ptu_self.stime.GetD(HTime::seconds)+
-		ptu_self.utime.GetD(HTime::seconds)) / elapsed.GetD(HTime::seconds);
-	double ch_cpu=100.0*(ptu_chld.stime.GetD(HTime::seconds)+
-		ptu_chld.utime.GetD(HTime::seconds)) / elapsed.GetD(HTime::seconds);
-	
-	char tmp[48];
-	snprintf(tmp,48,"%s",ptu_self.utime.PrintElapsed());
-	Verbose("  RendView:  %.2f%% CPU  (user: %s; sys: %s)\n",
-		rv_cpu,tmp,ptu_self.stime.PrintElapsed());
-	snprintf(tmp,48,"%s",ptu_chld.utime.PrintElapsed());
-	Verbose("  Jobs:     %.2f%% CPU  (user: %s; sys: %s)\n",
-		ch_cpu,tmp,ptu_chld.stime.PrintElapsed());
-	snprintf(tmp,48,"%s",(ptu_chld.utime+ptu_self.utime).PrintElapsed());
-	Verbose("  Together: %.2f%% CPU  (user: %s; sys: %s)\n",
-		ch_cpu+rv_cpu,tmp,(ptu_chld.stime+ptu_self.stime).PrintElapsed());
+	if(elapsed.GetD(HTime::seconds)>0.2)
+	{
+		double rv_cpu=100.0*(ptu_self.stime.GetD(HTime::seconds)+
+			ptu_self.utime.GetD(HTime::seconds)) / elapsed.GetD(HTime::seconds);
+		double ch_cpu=100.0*(ptu_chld.stime.GetD(HTime::seconds)+
+			ptu_chld.utime.GetD(HTime::seconds)) / elapsed.GetD(HTime::seconds);
+		
+		char tmp[48];
+		snprintf(tmp,48,"%s",ptu_self.utime.PrintElapsed());
+		Verbose("  RendView:  %.2f%% CPU  (user: %s; sys: %s)\n",
+			rv_cpu,tmp,ptu_self.stime.PrintElapsed());
+		snprintf(tmp,48,"%s",ptu_chld.utime.PrintElapsed());
+		Verbose("  Jobs:     %.2f%% CPU  (user: %s; sys: %s)\n",
+			ch_cpu,tmp,ptu_chld.stime.PrintElapsed());
+		snprintf(tmp,48,"%s",(ptu_chld.utime+ptu_self.utime).PrintElapsed());
+		Verbose("  Together: %.2f%% CPU  (user: %s; sys: %s)\n",
+			ch_cpu+rv_cpu,tmp,(ptu_chld.stime+ptu_self.stime).PrintElapsed());
+	}
 	
 	#warning FIXME: more info to come
 	
@@ -742,11 +758,41 @@ int TaskManager::_StartProcessing()
 	assert(tasksource()==NULL);  // yes, must be NULL here. 
 	assert(!interface);
 	
-	const char *tdif_name="local";
-	#warning fixme: allow for other interfaces: 
-	const char *ts_name="local";
-	#warning fixme: allow for other task sources
-	//ts_name="LDR";
+	// Okay, check operation mode: 
+	const char *opmode=opmode_name.str();
+	if(!opmode)  opmode=prg_name;
+	
+	// *NOTE:* FIX HELP TEXT IN database.cpp TOO, 
+	//         IF YOU CHANGE SOMETHING HERE. 
+	
+	int opmode_num=-1;
+	     if(!strcasecmp(opmode,"rendview"))   opmode_num=0;
+	else if(!strcasecmp(opmode,"ldrclient"))  opmode_num=1;
+	else if(!strcasecmp(opmode,"ldrserver"))  opmode_num=2;
+	
+	if(opmode_num<0)
+	{
+		if(opmode_name.str())
+		{  Error("Illegal operation mode \"%s\". Try --list-opmode.\n",
+			opmode_name.str());  return(-1);  }
+		else if(!tsource_name && !tdinterface_name)
+		{
+			Warning("Nonstandard binary name. "
+				"Defaulting to opmode \"rendview\".\n");
+			opmode_num=0;
+		}
+	}
+	
+	// Set tsource and tdif name if not explicitly told otherwise by user: 
+	if(!tsource_name)
+	{  _CheckAllocFail(tsource_name.set((opmode_num==1) ? "LDR" : "local"));  }
+	if(!tdinterface_name)
+	{  _CheckAllocFail(tdinterface_name.set((opmode_num==2) ? "LDR" : "local"));  }
+	
+	
+	const char *tdif_name=tdinterface_name.str();
+	const char *ts_name=tsource_name.str();
+	assert(tdif_name && ts_name);
 	
 	Verbose("Choosing: %s task source; %s task driver (interface)\n",
 		ts_name,tdif_name);
@@ -829,18 +875,33 @@ int TaskManager::_StartProcessing()
 	starttime=ptu.starttime;
 	Verbose("  starting at (local): %s\n",starttime.PrintTime(1,1));
 	
+	// Tell the interface to really start things; this will call 
+	// TaskManager::ReallyStartProcessing(). 
+	interface->ReallyStartProcessing();
+	return(0);
+}
+
+// Called by interface; the LDR interface calls this when the first client 
+// was connected successfully, the local interface calls this immediately. 
+void TaskManager::ReallyStartProcessing(int error_occured)
+{
+	if(error_occured)
+	{
+		fdmanager()->Quit(1);
+		return;
+	}
+	
 	if(GetTaskSourceType()==TST_Passive)
 	{
-		// Do start things up (yes, REALLY now): 
+		// Do start exchange with task source: 
 		int rv=_CheckStartExchange();
 		if(rv==1)
 		{
-			Error("Erm... Nothing will be done. I'm bored.\n");
-			return(1);
+			Warning("Erm... Nothing will be done. I'm bored.\n");
+			fdmanager()->Quit(0);
+			return;
 		}
 	}
-	
-	return(0);
 }
 
 
@@ -1285,6 +1346,19 @@ int TaskManager::_SetUpParams()
 	if(SetSection(NULL))
 	{  return(1);  }
 	
+	AddParam("opmode",
+		"Operation mode; shorthand for -tsource and -tdriver; defaults to "
+		"binary name; use --list-opmode to get possible values",
+		&opmode_name);
+	AddParam("tsource",
+		"task source spec; use --list-tsource to get possible values "
+		"(use if you cannot use -opmode)",
+		&tsource_name);
+	AddParam("tdriver",
+		"task driver spec; use --list-tdriver to get possible values "
+		"(use if you cannot use -opmode)",
+		&tdinterface_name);
+	
 	AddParam("max-failed-in-seq|mfis",
 		"max number of jobs to fail in sequence until giving up "
 		"(0 to disable [NOT recommended])",&max_failed_in_sequence);
@@ -1309,7 +1383,8 @@ TaskManager::TaskManager(ComponentDataBase *cdb,int *failflag) :
 	TaskSourceConsumer(failflag),
 	par::ParameterConsumer_Overloaded(cdb->parmanager(),failflag),
 	starttime(),
-	tasklist_todo(failflag),tasklist_done(failflag)
+	tasklist_todo(failflag),tasklist_done(failflag),
+	tsource_name(failflag),tdinterface_name(failflag),opmode_name(failflag)
 {
 	component_db=cdb;
 	component_db->_SetTaskManager(this);

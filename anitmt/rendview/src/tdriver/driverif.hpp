@@ -55,6 +55,11 @@ class TaskDriverInterface
 		// Use: "Okay, %s work: blah blah"
 		virtual void WriteProcessingInfo(int /*when*/,const char *) HL_PureVirt(;)
 		
+		// Called by TaskMagaer; must call TaskManager::ReallyStartProcessing() 
+		// when the first tasks can be executed (local interface: immediately, 
+		// LDR interface: first client connected). 
+		virtual void ReallyStartProcessing() HL_PureVirt(;)
+		
 		// Isn't that self-explaining? 
 		virtual int AreThereJobsRunning() HL_PureVirt(0)
 		

@@ -443,6 +443,13 @@ void TaskDriverInterface_Local::WriteProcessingInfo(int when,const char *msg)
 }
 
 
+void TaskDriverInterface_Local::ReallyStartProcessing()
+{
+	// Really easy. Not inline because virtual: 
+	component_db()->taskmanager()->ReallyStartProcessing();
+}
+
+
 // These are called by the constructor/destructor of TaskDriver: 
 int TaskDriverInterface_Local::RegisterTaskDriver(TaskDriver *td)
 {

@@ -53,6 +53,9 @@ class TaskSourceFactory_LDR :
 		
 		// Create a TaskSource_LDR: (Call after FinalInit())
 		TaskSource *Create();
+		
+		// Get description string: 
+		const char *TaskSourceDesc() const;
 };
 
 #endif  /* _RNDV_TSOURCE_LDRPARS_HPP_ */

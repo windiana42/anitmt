@@ -69,6 +69,9 @@ class TaskDriverInterfaceFactory_Local :
 		
 		// Create a TaskDriverInterface_Local: (Call after FinalInit())
 		TaskDriverInterface *Create();
+		
+		// Get description string: 
+		const char *DriverInterfaceDesc() const;
 };
 
 #endif  /* _RNDV_TDRIVER_LOCAL_PARS_HPP_ */

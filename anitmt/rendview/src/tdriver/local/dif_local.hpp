@@ -65,6 +65,9 @@ class TaskDriverInterface_Local :
 		// when: 0 -> start; 1 -> end
 		void WriteProcessingInfo(int when,const char *msg);
 		
+		// See TaskDriverInterface for more info on that: 
+		void ReallyStartProcessing();
+		
 		// Isn't that self-explaining? 
 		int AreThereJobsRunning()
 			{  return(!joblist.is_empty());  }

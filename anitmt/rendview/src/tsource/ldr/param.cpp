@@ -22,13 +22,21 @@
 #include <assert.h>
 #include <ctype.h>
 
+#include <lib/ldrproto.hpp>
 
+
+using namespace LDR;
 
 #define UnsetNegMagic  (-29659)
 
-static const int DefaultListenPort=3104;
-
 		
+const char *TaskSourceFactory_LDR::TaskSourceDesc() const
+{
+	return("Use the LDR task source to let rendview act as LDR client "
+		"getting frames to process from an LDR server.");
+}
+
+
 // Create a LDR TaskSource (TaskSource_LDR): 
 TaskSource *TaskSourceFactory_LDR::Create()
 {
@@ -90,7 +98,7 @@ int TaskSourceFactory_LDR::CheckParams()
 	int failed=0;
 	
 	if(listen_port==UnsetNegMagic)
-	{  listen_port=DefaultListenPort;  }
+	{  listen_port=DefaultLDRPort;  }
 	
 	if(listen_port<=0 || listen_port>65535)
 	{
@@ -104,7 +112,8 @@ int TaskSourceFactory_LDR::CheckParams()
 
 int TaskSourceFactory_LDR::_RegisterParams()
 {
-	if(SetSection("L","LDR (Local Distributed Rendering) task source"))
+	if(SetSection("L","LDR (Local Distributed Rendering) task source: "
+		"\"LDR client\" settings:"))
 	{  return(-1);  }
 	
 	AddParam("port","inet port to listen for connections from LDR server",

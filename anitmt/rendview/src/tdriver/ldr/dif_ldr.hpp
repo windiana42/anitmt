@@ -31,6 +31,8 @@ class LDRClient : LinkedListBase<LDRClient>
 	public:  _CPP_OPERATORS_FF
 		LDRClient(int *failflag) {}
 		~LDRClient() {}
+		
+		int ConnectTo(void *)  { return(1); }
 };
 
 class TaskDriverInterface_LDR : 
@@ -50,6 +52,9 @@ class TaskDriverInterface_LDR :
 		// Current number of clients which can be used: 
 		int nclients;
 		
+		// client connect timeout timer: 
+		TimerID tid_connedt_to;
+		
 		void _WriteStartProcInfo(const char *msg);
 		void _WriteEndProcInfo();
 	public:  _CPP_OPERATORS_FF
@@ -65,6 +70,9 @@ class TaskDriverInterface_LDR :
 		// Write processing info; called from StartProcessing(): 
 		// when: 0 -> start; 1 -> end
 		void WriteProcessingInfo(int when,const char *msg);
+		
+		// See TaskDriverInterface for more info on that: 
+		void ReallyStartProcessing();
 		
 		// Isn't that self-explaining? 
 		int AreThereJobsRunning();

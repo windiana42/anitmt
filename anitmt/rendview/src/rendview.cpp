@@ -273,6 +273,8 @@ static int MAIN(int argc,char **argv,char **envp)
 int main(int argc,char **argv,char **envp)
 {
 	prg_name=GetPrgName(argv[0]);
+	if(!prg_name)
+	{  fprintf(stderr,"RendView: argv[0] is NULL. Aborting.\n");  abort();  }
 	
 	int rv=MAIN(argc,argv,envp);
 	

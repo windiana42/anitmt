@@ -52,7 +52,7 @@ class MyAddrInfo
 		// time). port is specified in host order. 
 		// Return value: 
 		//   0 -> OK
-		//  -1 -> gethostbyname() failed 
+		//  -1 -> gethostbyname() failed (see h_errno)
 		//  -2 -> not AF_INET
 		int SetAddress(const char *host,int port);
 		

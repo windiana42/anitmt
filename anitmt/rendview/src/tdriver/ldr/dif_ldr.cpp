@@ -22,6 +22,11 @@
 
 #include <assert.h>
 
+#include <lib/ldrproto.hpp>
+
+using namespace LDR;
+
+
 
 int TaskDriverInterface_LDR::AreThereJobsRunning()
 {
@@ -117,6 +122,53 @@ void TaskDriverInterface_LDR::WriteProcessingInfo(int when,const char *msg)
 }
 
 
+void TaskDriverInterface_LDR::ReallyStartProcessing()
+{
+	// Okey, let's begin. We call TaskManager::ReallyStartProcessing() 
+	// when the first client is connected. 
+	
+	// Start connect timer: 
+	#warning allow variable timeout
+	UpdateTimer(tid_connedt_to,10000,0);
+	
+	Verbose("Parallely initiating connections to all clients:\n");
+	
+	int n_connecting=0;
+	for(TaskDriverInterfaceFactory_LDR::ClientParam *i=p->cparam.first();
+		i; i=i->next)
+	{
+		LDRClient *c=NEW<LDRClient>();
+		if(!c)
+		{
+			while(!clientlist.is_empty())
+			{  delete clientlist.popfirst();  }
+			
+			Error("Failed to set up LDR client representation.\n");
+			component_db()->taskmanager()->ReallyStartProcessing(/*error=*/1);
+			return;
+		}
+		
+		if(c->ConnectTo(i))
+		{  delete c;  c=NULL;  }
+		else
+		{  ++n_connecting;  }
+	}
+	
+	if(!n_connecting)
+	{
+		while(!clientlist.is_empty())
+		{  delete clientlist.popfirst();  }
+		
+		Error("No usable clients left in list. Giving up.\n");
+		component_db()->taskmanager()->ReallyStartProcessing(/*error=*/1);
+		return;
+	}
+	
+	Verbose("Waiting for %d LDR client connections to establish...\n");
+	
+}
+
+
 // These are called by the constructor/destructor of LDRClient: 
 int TaskDriverInterface_LDR::RegisterLDRClient(LDRClient *client)
 {
@@ -161,7 +213,16 @@ TaskDriverInterface_LDR::TaskDriverInterface_LDR(
 	todo_thresh_low=p->thresh_param_low;
 	todo_thresh_high=p->thresh_param_high;
 	
+	int failed=0;
 	
+	tid_connedt_to=InstallTimer(-1,0);
+	if(!tid_connedt_to)  ++failed;
+	
+	
+	if(failflag)
+	{  *failflag-=failed;  }
+	else if(failed)
+	{  ConstructorFailedExit("TaskDriverInterface_LDR");  }
 }
 
 TaskDriverInterface_LDR::~TaskDriverInterface_LDR()
