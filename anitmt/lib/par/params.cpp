@@ -237,7 +237,7 @@ int Animation_Parameters::Parameter_Checks()
 	
 	// Make sure ani_dir ends with "/". 
 	{
-		std::string _ani_dir = ani_dir();	// !! must exist longer than ad !!
+		std::string _ani_dir = ani_dir();
 		const char *ad=_ani_dir.c_str();
 		size_t ad_len=strlen(ad);
 		if(!ad_len)
