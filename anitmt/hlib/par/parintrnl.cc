@@ -62,6 +62,7 @@ PAR::Section::Section(const char *_name,ssize_t namelen,int *failflag) :
 	helptext=NULL;
 	sect_hdl=NULL;
 	up=NULL;
+	flags=0;
 	
 	if(_name)
 	{
@@ -173,6 +174,7 @@ PAR::ParamInfo::ParamInfo(int *failflag)
 	ptype=ParameterType(-1);
 	vhdl=NULL;
 	exclusive_vhdl=0;
+	skip_in_help=0;
 	valptr=NULL;
 	is_set=0;
 	spectype=STNone;

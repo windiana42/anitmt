@@ -376,6 +376,7 @@ PAR::ParamInfo *ParameterManager::AddParam(ParameterConsumer *pc,
 		pi->section=api->section;
 		pi->vhdl=api->hdl;
 		pi->exclusive_vhdl=api->exclusive_hdl;
+		pi->skip_in_help=api->skip_in_help;
 		pi->valptr=api->valptr;
 		pi->is_set=api->has_default ? 1 : 0;
 		pi->spectype=api->spectype;
@@ -437,7 +438,7 @@ void ParameterManager::RecursiveDeleteParams(ParameterConsumer *pc,
 
 
 PAR::Section *ParameterManager::RegisterSection(ParameterConsumer *pc,
-	const char *sect_name,const char *helptext,Section *top)
+	const char *sect_name,const char *helptext,Section *top,int flags)
 {
 	if(!pc)  return(NULL);
 	
@@ -495,6 +496,7 @@ PAR::Section *ParameterManager::RegisterSection(ParameterConsumer *pc,
 		// Queue the new section: 
 		top->sub.append(ns);
 		ns->up=top;
+		ns->flags=flags;
 		
 		top=ns;
 		if(!(*end))  break;

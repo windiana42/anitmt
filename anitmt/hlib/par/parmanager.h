@@ -173,7 +173,8 @@ class ParameterManager : public PAR
 		// else a new section is allocated. 
 		// (Leading `-' skipped.) 
 		Section *RegisterSection(ParameterConsumer *pc,
-			const char *name,const char *helptext=NULL,Section *top=NULL);
+			const char *name,const char *helptext=NULL,Section *top=NULL,
+			int flags=0);
 		
 		// Remove all parameters of the specified parameter consumer 
 		// in and below the section *top. 

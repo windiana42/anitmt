@@ -137,6 +137,12 @@ class ParameterConsumer :
 		// it is silently ignored. 
 		// Note: The help text is formatted automatocally, so you 
 		//       do not have to pass any `\n' and any sort of indention. 
+		// flags: 
+		//   SSkipInHelp -> do not show section and all params below it 
+		//       on the help screen 
+		// NOTE: flags ARE ONLY SET IF the section is newly allocated. 
+		//       Otherwise (section already exists), they are (silently) 
+		//       ignored. 
 		// Return value: 
 		//   0 -> OK
 		//  -1 -> failed (malloc() or top!=NULL but not registered) 
@@ -144,7 +150,7 @@ class ParameterConsumer :
 		// In case of an error, the following parameters get added to the 
 		// previous section. 
 		int SetSection(const char *sect_name,const char *helptext=NULL,
-			Section *top=NULL);
+			Section *top=NULL,int flags=0);
 		
 		// BE SURE TO CALL SetSection() BEFORE ADDING A PARAMETER. 
 		// Add a parameter. This is the basic function; there are 
@@ -196,6 +202,7 @@ class ParameterConsumer :
 		//          handler is deleted as soon as the parameter ceases to 
 		//          exist; if the parameter allocation failed at all, the 
 		//          handler is deleted immediately. 
+		//    PSkipInHelp -> hide that param on help screen 
 		//  - One of the spec types: 
 		//     STNone         (=0 and can be left away)
 		//     STAtLeastOnce  param must be specified at least once

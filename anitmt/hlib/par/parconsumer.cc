@@ -75,6 +75,7 @@ PAR::ParamInfo *ParameterConsumer::AddParam(
 	info.valptr=valptr;
 	info.hdl=hdl;
 	info.exclusive_hdl=(flags & PExclusiveHdl) ? 1 : 0;
+	info.skip_in_help=(flags & PSkipInHelp) ? 1 : 0;
 	info.has_default=!(flags & PNoDefault);
 	info.spectype=PSpecType(flags & _STMask);
 	
@@ -100,10 +101,10 @@ void ParameterConsumer::RecursiveDeleteParams(Section *top=NULL)
 
 
 int ParameterConsumer::SetSection(const char *sect_name,
-	const char *helptext,Section *top)
+	const char *helptext,Section *top,int flags)
 {
 	Section *s=parmanager()->RegisterSection(this,
-		sect_name,helptext,top);
+		sect_name,helptext,top,flags);
 	if(!s)  return(-1);
 	curr_section=s;
 	

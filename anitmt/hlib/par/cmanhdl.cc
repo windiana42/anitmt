@@ -64,6 +64,7 @@ void ParameterManager::_HelpPrintSectionHeader(Section *top,
 void ParameterManager::_HelpPrintParamInfo(ParamInfo *pi,
 	SimpleIndentConsoleOutput &sico)
 {
+	if(pi->skip_in_help)  return;
 	sico("-%s (%s): ",pi->name,ParamTypeString(pi->ptype));
 	int indent=sico.GetIndent();
 	sico.SetIndent(indent+4);
@@ -74,6 +75,8 @@ void ParameterManager::_HelpPrintParamInfo(ParamInfo *pi,
 void ParameterManager::_RecursivePrintHelp(Section *top,
 	SimpleIndentConsoleOutput &sico)
 {
+	if(top->flags & SSkipInHelp)  return;
+	
 	if(top!=&topsect)
 	{  _HelpPrintSectionHeader(top,sico);  }
 	

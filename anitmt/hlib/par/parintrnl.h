@@ -45,10 +45,16 @@ struct PAR  // This serves as a namespace and a base class.
 		PTOptPar        // -[-]ssl[=/usr/local/lib/]
 	};
 	
-	enum
+	enum  // FLAGS FOR AddParam()
 	{
 		PNoDefault=   0x010,  // parameter has no default value
-		PExclusiveHdl=0x020   // handler exclusively for that parameter
+		PExclusiveHdl=0x020,  // handler exclusively for that parameter
+		PSkipInHelp=  0x040   // do not mention that param on the help screen
+	};
+	
+	enum  // FLAGS FOR SetSection()
+	{
+		SSkipInHelp=  0x040   // skip section (and all params below) in help output
 	};
 	
 	enum PSpecType
@@ -98,8 +104,10 @@ struct PAR  // This serves as a namespace and a base class.
 		const char *helptext; // help text (not copied) or NULL. 
 		ParameterType ptype;  // type (see above)
 		ValueHandler *vhdl;   // associated value handler 
-		int exclusive_vhdl;   // vhdl exclusively allocated for this param; free 
+		int exclusive_vhdl:1; // vhdl exclusively allocated for this param; free 
 		                      // on destruction if param
+		int skip_in_help:1;   // PSkipInHelp: skip param in help output 
+		int :(sizeof(int)*8 - 2);   // <-- Use modulo if more than 16 bits. 
 		void *valptr;         // pointer to the original var (as specified 
 		                      // by the ParameterConsume-derived class) 
 		int is_set;           // Value set? AddParam sets this to 1 if there 
@@ -140,6 +148,7 @@ struct PAR  // This serves as a namespace and a base class.
 		const char *helptext;  // or NULL; not copied 
 		SectionParameterHandler *sect_hdl;  // attached section handler or NULL
 		Section *up;   // NULL for topmost section
+		int flags;   // SSkipInHelp, etc. 
 		
 		LinkedList<Section> sub;  // subsections
 		LinkedList<ParamInfo> pilist;  // params of this section 
@@ -172,7 +181,9 @@ struct PAR  // This serves as a namespace and a base class.
 		ParameterType ptype;
 		void *valptr;
 		ValueHandler *hdl;
-		int exclusive_hdl;  // & allocated via new & must be deleted
+		int exclusive_hdl : 1;  // & allocated via new & must be deleted
+		int skip_in_help : 1;
+		int :(sizeof(int)*8 - 2);   // <-- Use modulo if more than 16 bits. 
 		bool has_default;
 		PSpecType spectype;
 	};
