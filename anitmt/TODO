@@ -5,3 +5,11 @@ Martin:
 - optimization of Prop_Tree_Node::get_properties_names()
 - Test functions for anything
 - destruction of operator trees (with constant operands)
+
+Wolfgang:
+- Better POVRay support (yes, done when I can work with anitmt 
+  so that I can effectively test things). 
+- Clean up frame output code (better done when we implement the 
+  new output concept). 
+- Parameter subsystem [...]
+- More to come...
