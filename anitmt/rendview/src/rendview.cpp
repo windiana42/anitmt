@@ -222,11 +222,22 @@ static int MAIN(int argc,char **argv,char **envp)
 }
 
 
+static void abort_handler(int)
+{
+	Error(
+		"The message above describes a bug in RendView.\n"
+		"Please submit a full bug report. (See http://anitmt.sf.net/rendview/)\n");
+	_exit(1);
+}
+
+
 int main(int argc,char **argv,char **envp)
 {
 	prg_name=GetPrgName(argv[0]);
 	if(!prg_name)
 	{  fprintf(stderr,"RendView: argv[0] is NULL. Aborting.\n");  abort();  }
+	
+	InstallSignalHandler(SIGABRT,&abort_handler,0);
 	
 	int rv=MAIN(argc,argv,envp);
 	

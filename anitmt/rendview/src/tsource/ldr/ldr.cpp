@@ -20,10 +20,18 @@
 #include "../taskfile.hpp"
 #include "../../taskmanager.hpp"
 
+#include <string.h>
 #include <assert.h>
 
 using namespace LDR;
 
+#ifndef TESTING
+#define TESTING 1
+#endif
+
+#if TESTING
+#warning TESTING switched on. 
+#endif
 
 
 static void _AllocFailure(int fail=-1)
@@ -39,15 +47,24 @@ static inline long _timeout_ntoh(u_int32_t x)
 }
 
 
+int TaskSource_LDR::TellTaskManagerToGetTask(CompleteTask *ctsk)
+{
+	// Okay, we have to tell the TaskManager to get this task. 
+	Error("implement me.\n");
+	assert(0);
+	return(0);
+}
+
+
 void TaskSource_LDR::ConnClose(TaskSource_LDR_ServerConn *sc,int reason)
 {
 	// Okay, if that was not our server, then everything is okay: 
-	if(!sc->authenticated)
+	if(!sc->Authenticated())
 	{
 		Verbose(TSLLR,"LDR: Closed connection to %s.\n",
 			sc->addr.GetAddress().str());
 		// Hehe... simply delete it: 
-		delete sconn.dequeue(sc);
+		sconn.dequeue(sc)->DeleteMe();
 		return;
 	}
 	assert(reason!=2);  // Auth failure may only happen if !sc->authenticated. 
@@ -56,17 +73,25 @@ void TaskSource_LDR::ConnClose(TaskSource_LDR_ServerConn *sc,int reason)
 	{
 		Verbose(TSLLR,"LDR: Got quit request from server %s.\n",
 			sc->addr.GetAddress().str());
-		#warning This is okay as long as we do not have tasks...?
-		delete sconn.dequeue(sc);
-		return;
+		#warning should warn instead of verbose here if there are still tasks
+	}
+	else
+	{
+		Error("LDR: Unexpected connection close with auth server %s.\n",
+			sc->addr.GetAddress().str());
 	}
 	
-	#warning Is that <unexpected> if reason==1
-	Error("LDR: Unexpected connection close with auth server %s.\n",
-		sc->addr.GetAddress().str());
-	
-	assert(0);  // handle me! kill all tasks,...
+	// Okay, when we are here, what we have to do is basically: 
+	// Get into a state similar to when the program was started. 
+	// Wait for new connections. 
+	// Task manager's action:
+	//    Delete all tasks in todo and done queue. 
+	//    Kill all running tasks (make sure they are deas). 
+	//    Go back to "waiting for work" state. 
+	fprintf(stderr,"IMPORTANT!!! HACK ME (re-start...) ldr.cpp:%d\n",__LINE__);
 	//--> tell task manager. (missing)
+	
+	sconn.dequeue(sc)->DeleteMe();
 }
 
 
@@ -89,7 +114,7 @@ int TaskSource_LDR::fdnotify(FDInfo *fdi)
 		// Okay, we may receive a connection. 
 		TaskSource_LDR_ServerConn *sc=NEW1<TaskSource_LDR_ServerConn>(this);
 		if(sc && sc->Setup(as,&addr))
-		{  delete sc;  sc=NULL;  }
+		{  sc->DeleteMe();  sc=NULL;  }
 		if(!sc)
 		{
 			Error("LDR: Accept failed (alloc failure).\n");
@@ -259,7 +284,9 @@ TaskSource_LDR::~TaskSource_LDR()
 	while(!sconn.is_empty())
 	{
 		TaskSource_LDR_ServerConn *sc=sconn.popfirst();
-		delete sc;
+		//delete sc;   // We can use DeleteMe() here IMO. TaskManager guarantees 
+		             // that there is a HLIB cycle to really delete them. 
+		sc->DeleteMe();
 	}
 	
 	// The listen FD is closed & shut down by the factory. 
@@ -317,7 +344,7 @@ int TaskSource_LDR_ServerConn::_AtomicRecvData(LDRHeader *d,
 	ssize_t rd=read(sock_fd,(char*)d,len);
 	if(rd<0)
 	{
-		Error("LDR: %s: while reading: %s\n",
+		Error("LDR: %s: While reading: %s\n",
 			addr.GetAddress().str(),strerror(errno));
 		return(-1);
 	}
@@ -487,6 +514,8 @@ int TaskSource_LDR_ServerConn::_SendNowConnected()
 		TaskManager *taskman=component_db()->taskmanager();
 		d->njobs=htons(taskman->Get_njobs());
 		HTime2LDRTime(taskman->Get_starttime(),&d->starttime);
+		int lv=::GetLoadValue();
+		d->loadval = (lv>=0 && lv<0xffff) ? htons(lv) : 0xffffU;
 	}
 	
 	// That was the packet. Send it. 
@@ -516,7 +545,8 @@ int TaskSource_LDR_ServerConn::_SendNowConnected()
 
 
 // Header in HOST order. 
-// Return value: see _AuthSConnFDNotify(). 
+// Return value: 
+//  1 -> handeled; -1 -> must call _ConnClose(). 
 int TaskSource_LDR_ServerConn::_HandleReceivedHeader(LDRHeader *hdr)
 {
 	// BE CAREFUL!! hdr ALLOCATED ON THE STACK. 
@@ -527,28 +557,64 @@ int TaskSource_LDR_ServerConn::_HandleReceivedHeader(LDRHeader *hdr)
 	fprintf(stderr,"Received header: >%s< (length=%u)\n",
 		LDRCommandString(recv_cmd),hdr->length);
 	
-	if(recv_cmd==Cmd_TaskRequest)
+	switch(recv_cmd)
 	{
-		// Okay, then let's get the body. 
-		assert(recv_buf.content==Cmd_NoCommand);  // Can that happen?
-		int rv=_StartReadingCommandBody(&recv_buf,hdr);
-		if(rv)
+		case Cmd_TaskRequest:
+		case Cmd_FileDownload:
 		{
-			if(rv==-2)
-			{  Error("LDR: Too long %s packet (header reports %u bytes)\n",
-				LDRCommandString(recv_cmd),hdr->length);  }
-			else _AllocFailure();
-			return(-1);
+			// Okay, then let's get the body. 
+			assert(recv_buf.content==Cmd_NoCommand);  // Can that happen?
+			int rv=_StartReadingCommandBody(&recv_buf,hdr);
+			if(rv)
+			{
+				if(rv==-2)
+				{  Error("LDR: Too long %s packet (header reports %u bytes)\n",
+					LDRCommandString(recv_cmd),hdr->length);  }
+				else _AllocFailure();
+				return(-1);
+			}
+			
+			return(1);
 		}
-		
-		return(1);
+		default:;
 	}
 	
-	Error("LDR: Received unexpected command header %s "
-		"(cmd=%u, length=%u).\n",
+	Error("LDR: Received unexpected command header %s (cmd=%u, length=%u).\n",
 		LDRCommandString(recv_cmd),recv_cmd,hdr->length);
 	
 	return(-1);  // -->  _ConnClose()
+}
+
+
+// How it works: 
+//  _ParseTaskRequest -> cpnotify_outpump_start() [file request]
+//  _TaskRequestComplete() -> TellTaskManagerToGetTask()
+//  TellTaskManagerToGetTask(): schedule get task; later: TaskManagerGotTask()
+//  TaskManagerGotTask() -> cpnotify_outpump_start() [TRC_Accepted]
+//  cpnotify_outpump_done(TaskResponse) -> prepare for next file
+
+
+// Tell TaskManager to get the task: 
+void TaskSource_LDR_ServerConn::_TaskRequestComplete()
+{
+	assert(tri.resp_code==TRC_Accepted && tri.ctsk);
+	
+	tri.next_action=TRINA_Complete;
+	back->TellTaskManagerToGetTask(tri.ctsk);
+}
+
+// Called when the TaskManager finally got the task
+void TaskSource_LDR_ServerConn::TaskManagerGotTask()
+{
+	assert(tri.resp_code==TRC_Accepted && tri.ctsk && 
+	       tri.next_action==TRINA_Complete);
+	
+	// First of all, the TaskManager now has the complete task, so we have 
+	// to set the NULL pointer without deleting/freeing it: 
+	tri.ctsk=NULL;
+	tri.next_action=TRINA_Response;  // Send TaskResponse. 
+	
+	cpnotify_outpump_start();
 }
 
 
@@ -587,7 +653,68 @@ int TaskSource_LDR_ServerConn::_ParseTaskRequest(RespBuf *buf)
 	}
 	
 	assert(tri.resp_code==TRC_Accepted);
+	
+	// Next action: request files from server. 
+	tri.next_action=TRINA_FileReq;
+	tri.req_file_type=FRFT_None;
+	tri.req_file_idx=0;
+	
+	cpnotify_outpump_start();  // -> send file request
+	
 	return(0);
+}
+
+// Read in the next nent LDRFileInfoEntries. 
+// Return value: 
+//   0 -> OL
+//  -1 -> alloc failure
+// assert on wrong size entry (input buffer too small) becuase 
+// this is checked earlier. 
+// Updated buf pointer returned in *buf. 
+int TaskSource_LDR_ServerConn::_GetFileInfoEntries(
+	CompleteTask::AddFiles *dest,char **buf,char *bufend,int nent)
+{
+	assert(!dest->nfiles && !dest->file);  // appending currently not supported
+	                                       // (will currently not happen)
+	dest->file=(AdditionalFile**)LMalloc(nent*sizeof(AdditionalFile*));
+	if(nent && !dest->file)  return(-1);
+	dest->nfiles=nent;
+	// Zero the pointers: 
+	for(AdditionalFile **i=dest->file,**iend=i+nent; i<iend; *(i++)=NULL);
+	
+	char *src=*buf;
+	for(int i=0; i<nent; i++)
+	{
+		assert(src<=bufend-sizeof(LDRFileInfoEntry) && src>=*buf);
+		
+		AdditionalFile *af=NEW<AdditionalFile>();
+		if(!af)  goto allocfail;
+		dest->file[i]=af;
+		
+		u_int16_t tmp16;
+		_memcpy16(&tmp16,&((LDRFileInfoEntry*)src)->name_slen);  // alignment issue...
+		size_t delta=sizeof(LDRFileInfoEntry)+ntohs(tmp16);
+		
+		char *osrc=src;
+		src+=delta;
+		assert(src<=bufend && src>=*buf);
+		
+		int rv=LDRGetFileInfoEntry(af,(LDRFileInfoEntry*)osrc);
+		fprintf(stderr,"implement rv handling NOW\n");
+		assert(0);
+	}
+	
+	// Store updated buffer pointer and return success: 
+	*buf=src;
+	return(0);
+	
+allocfail:;
+	for(AdditionalFile **i=dest->file,**iend=i+nent; i<iend; i++)
+	{  DELETE(*i);  }
+	LFree(dest->file);
+	dest->file=NULL;
+	dest->nfiles=0;
+	return(-1);
 }
 
 // Internally used by _ParseTaskRequest(). 
@@ -605,7 +732,14 @@ int TaskSource_LDR_ServerConn::_ParseTaskRequest_Intrnl(
 	assert(pack->command==Cmd_TaskRequest);  // can be left away
 	
 	size_t len=pack->length;
-	assert(len>=sizeof(LDRHeader));  // can be left away
+	assert(len<=buf->alloc_len);  // must be the case due to reading with data pump
+	assert(len>=sizeof(LDRTaskRequest));  // can be left away
+	if(len<sizeof(LDRTaskRequest))
+	{
+		Error("LDR: Received too short task request (%u bytes, min=%u).\n",
+			len,sizeof(LDRTaskRequest));
+		return(-2);
+	}
 	
 	// We don't need sanity checks for the various lengths here 
 	// becuase there was a packet length check at the beginning 
@@ -622,6 +756,7 @@ int TaskSource_LDR_ServerConn::_ParseTaskRequest_Intrnl(
 	int f_n_files=ntohs(pack->f_n_files);
 	
 	char *ptr=(char*)pack->data;
+	char *end_ptr=ptr+pack->length;
 	int64_t lenaccu=0;   // I'm paranoid here with overflows...
 	
 	char *rdesc_str=ptr;      ptr+=r_desc_slen;      lenaccu+=r_desc_slen;
@@ -629,11 +764,26 @@ int TaskSource_LDR_ServerConn::_ParseTaskRequest_Intrnl(
 	char *r_oformat_str=ptr;  ptr+=r_oformat_slen;   lenaccu+=r_oformat_slen;
 	char *r_add_args=ptr;     ptr+=r_add_args_size;  lenaccu+=r_add_args_size;
 	char *f_add_args=ptr;     ptr+=f_add_args_size;  lenaccu+=f_add_args_size;
+	char *add_files_ptr=ptr;
+	// Walk the additional file list: 
+	{
+		u_int16_t tmp16;
+		for(int i=r_n_files+f_n_files; i; i--)
+		{
+			if(ptr>end_ptr-sizeof(LDRFileInfoEntry) || 
+			   ptr<(char*)pack->data)  goto illegal_size;
+			_memcpy16(&tmp16,&((LDRFileInfoEntry*)ptr)->name_slen);  // alignment issue...
+			size_t delta=sizeof(LDRFileInfoEntry)+ntohs(tmp16);
+			ptr+=delta;  lenaccu+=delta;
+		}
+	}
 	
 	if( int64_t(len) != lenaccu+int64_t(sizeof(LDRTaskRequest)) )
 	{
-		fprintf(stderr,"LDR: Illegal size entries in received task request "
-			"(header: %u; data: %u)\n",len,size_t(lenaccu)+sizeof(LDRTaskRequest));
+		illegal_size:;
+		Error("LDR: Illegal size entries in received task request "
+			"(header: %u; data: >=%u)\n",
+			len,size_t(lenaccu)+sizeof(LDRTaskRequest));
 		return(-2);
 	}
 	assert(int64_t(ptr-(char*)pack->data)==lenaccu);   // "must" be the case (see test above).
@@ -663,15 +813,15 @@ int TaskSource_LDR_ServerConn::_ParseTaskRequest_Intrnl(
 	}
 	
 	// Some more sanity checks: 
-	#warning missing checks with r_n_files, f_n_files
+	#warning missing checks with r_n_files, f_n_files (packet size overflow)
 	if(!rdesc_name && 
-	   (r_oformat_slen || r_add_args_size))
+	   (r_oformat_slen || r_add_args_size || r_n_files))
 	{
 		Error("%s%d] containing unecessary render task info.\n",_rtr,frame_no);
 		return(1);
 	}
 	if(!fdesc_name && 
-	   (f_add_args_size))
+	   (f_add_args_size || f_n_files))
 	{
 		Error("%s%d] containing unecessary filter task info.\n",_rtr,frame_no);
 		return(1);
@@ -757,7 +907,7 @@ int TaskSource_LDR_ServerConn::_ParseTaskRequest_Intrnl(
 		ft->timeout=_timeout_ntoh(pack->f_timeout);
 	}
 	
-	// Okay, and now... let's copy the additional args. 
+	// Okay, and now... let's copy the additional args & required files. 
 	if(rdesc)
 	{
 		int rv=CopyData2StrList(&ctsk->rt->add_args,r_add_args,r_add_args_size);
@@ -771,6 +921,10 @@ int TaskSource_LDR_ServerConn::_ParseTaskRequest_Intrnl(
 				_rtr,frame_no);
 			return(1);
 		}
+		rv=_GetFileInfoEntries(&ctsk->radd,&add_files_ptr,end_ptr,r_n_files);
+		if(rv==-1)
+		{  delete ctsk;  return(-1);  }
+		else assert(rv==0);  // Only rv=0 and rv=-1 known. 
 	}
 	if(fdesc)
 	{
@@ -785,10 +939,15 @@ int TaskSource_LDR_ServerConn::_ParseTaskRequest_Intrnl(
 				_rtr,frame_no);
 			return(1);
 		}
+		rv=_GetFileInfoEntries(&ctsk->fadd,&add_files_ptr,end_ptr,f_n_files);
+		if(rv==-1)
+		{  delete ctsk;  return(-1);  }
+		else assert(rv==0);  // Only rv=0 and rv=-1 known. 
 	}
 	
 	// MISSING: 
 	// infile,outfile,wdir (rt and ft)
+	// additional files
 	
 	#if 1
 	// Okay, dump to the user: 
@@ -797,7 +956,7 @@ int TaskSource_LDR_ServerConn::_ParseTaskRequest_Intrnl(
 		ctsk->frame_no,ctsk->task_id);
 	if(ctsk->rt)
 	{
-		fprintf(stderr,"  Render: %s (%ux%u; timeout=%d; oformat=%s)\n",
+		fprintf(stderr,"  Render: %s (%ux%u; timeout=%ld; oformat=%s)\n",
 			ctsk->rt->rdesc->name.str(),
 			ctsk->rt->width,ctsk->rt->height,ctsk->rt->timeout,
 			  ctsk->rt->oformat->name);
@@ -810,7 +969,7 @@ int TaskSource_LDR_ServerConn::_ParseTaskRequest_Intrnl(
 	{  fprintf(stderr,"  Render: [none]\n");  }
 	if(ctsk->ft)
 	{
-		fprintf(stderr,"  Filter: %s (timeout=%d)\n",
+		fprintf(stderr,"  Filter: %s (timeout=%ld)\n",
 			ctsk->ft->fdesc->name.str(),
 			ctsk->ft->timeout);
 		fprintf(stderr,"    Args:");
@@ -838,6 +997,92 @@ int TaskSource_LDR_ServerConn::_ParseTaskRequest_Intrnl(
 	// Okay, so let's fill in the success code and go on. 
 	tri->resp_code=TRC_Accepted;
 	tri->ctsk=ctsk;
+	tri->next_action=TRINA_None;
+	
+	return(0);
+}
+
+
+// Return value: 
+//   0 -> okay, next request started. 
+//   1 -> 
+int TaskSource_LDR_ServerConn::_StartSendNextFileRequest()
+{
+	assert(tri.ctsk && tri.next_action==TRINA_FileReq);
+	
+	// See which file we request next. 
+	assert(tri.req_file_idx!=0xffff);
+	
+	switch(tri.req_file_type)
+	{  // NOTE: Lots of fall-through logic; be careful!!
+		case FRFT_None:
+			if(tri.ctsk->rt && P()->transfer.render_src)
+			{  tri.req_file_type=FRFT_RenderIn;  tri.req_file_idx=0;  break;  }
+		case FRFT_RenderIn:
+			if( (tri.ctsk->rt && P()->transfer.render_dest && !tri.ctsk->ft) || 
+			    (tri.ctsk->ft && P()->transfer.render_dest && !tri.ctsk->rt) )
+			{  tri.req_file_type=FRFT_RenderOut;  tri.req_file_idx=0;  break;  }
+		case FRFT_RenderOut:
+			if(tri.ctsk->ft && P()->transfer.filter_dest)
+			{  tri.req_file_type=FRFT_FilterOut;  tri.req_file_idx=0;  break;  }
+		case FRFT_FilterOut:
+			if(tri.ctsk->rt && P()->transfer.additional && tri.ctsk->radd.nfiles)
+			{  tri.req_file_type=FRFT_AddRender;  tri.req_file_idx=0;  break;  }
+		case FRFT_AddRender:
+			++tri.req_file_idx;
+			if(tri.ctsk->rt && P()->transfer.additional && 
+			   int(tri.req_file_idx)<tri.ctsk->radd.nfiles)  break;
+			if(tri.ctsk->ft && P()->transfer.additional && tri.ctsk->fadd.nfiles)
+			{  tri.req_file_type=FRFT_AddFilter;  tri.req_file_idx=0;  break;  }
+		case FRFT_AddFilter:
+			++tri.req_file_idx;
+			if(tri.ctsk->ft && P()->transfer.additional && 
+			   int(tri.req_file_idx)<tri.ctsk->fadd.nfiles)  break;
+		//complete fallthrough:
+			tri.req_file_type=FRFT_None;
+			tri.req_file_idx=0xffff;
+	}
+	
+	if(tri.req_file_type==FRFT_None)
+	{
+		// All file requests done. 
+		return(1);
+	}
+	
+	int fail=1;
+	do {
+		assert(send_buf.content==Cmd_NoCommand);
+		if(_ResizeRespBuf(&send_buf,sizeof(LDRFileRequest)))
+		{  break;  }
+		
+		// Compose the packet: 
+		send_buf.content=Cmd_FileRequest;
+		LDRFileRequest *pack=(LDRFileRequest*)(send_buf.data);
+		pack->length=sizeof(LDRFileRequest);  // host order
+		pack->command=Cmd_FileRequest;  // host order
+		pack->task_id=htonl(tri.task_id);
+		pack->file_type=htons(tri.req_file_type);
+		pack->file_idx=htons(tri.req_file_idx);
+		
+		// Okay, make ready to send it: 
+		if(_FDCopyStartSendBuf(pack))  break;
+		
+		#warning "output should be a bit more fancy than %d,%d."
+		Verbose(TSLLR,"LDR: Requesting file %d,%d [frame %d]\n",
+			tri.req_file_type,tri.req_file_idx,tri.ctsk->frame_no);
+		
+		fail=0;
+	} while(0);
+	fprintf(stderr,"hack code to handle failure (2).\n");
+	if(fail)
+	{
+		// Failure. 
+		#warning HANDLE FAILURE. 
+		Error("Cannot handle failure (HACK ME!)\n");
+		assert(0);
+		// NEED also proper return code (probably -1) and must handle it 
+		//      in calling function. 
+	}
 	
 	return(0);
 }
@@ -858,12 +1103,17 @@ int TaskSource_LDR_ServerConn::_AuthSConnFDNotify(FDInfo *fdi)
 		LDRHeader hdr;
 		int rv=_AtomicRecvData(&hdr,sizeof(hdr));
 		if(rv)
-		{  _ConnClose(rv<0 ? 0 : 1);  return(1);  }
+		{  _ConnClose(rv<0 ? 0 : 1);  return(-1);  }
 		
-		return(_HandleReceivedHeader(&hdr));
+		rv=_HandleReceivedHeader(&hdr);
+		if(rv<0)
+		{  _ConnClose(0);  }
+		return(rv);
 	}
 	
-	Error("*** hack on\n");
+	// _AuthSConnFDNotify() is (currently) only called for POLLIN. 
+	// We may NOT reach here. 
+	assert(0);  // If caught: SIMPLE PROGRAMMING ERROR. 
 	_ConnClose(0);
 	return(-1);
 }
@@ -929,9 +1179,8 @@ int TaskSource_LDR_ServerConn::fdnotify2(FDInfo *fdi)
 		}
 		else
 		{
-			Error("LDR: %s: unexpected revents=%d (state %d,%d). Quitting.\n",
-				addr.GetAddress().str(),fdi->revents,
-				expect_cmd,next_send_cmd);
+			Error("LDR: %s: unexpected revents=%d. Quitting.\n",
+				addr.GetAddress().str(),fdi->revents);
 		}
 		_ConnClose(0);
 	}
@@ -940,20 +1189,62 @@ int TaskSource_LDR_ServerConn::fdnotify2(FDInfo *fdi)
 }
 
 
-// Return value: 1 -> called CloseConn(); 0 -> normal
+// Return value: 1 -> called _ConnClose(); 0 -> normal
 int TaskSource_LDR_ServerConn::cpnotify_outpump_done(FDCopyBase::CopyInfo *cpi)
 {
 	// ---------<FIRST PART: HANDLE TERMINATION OF CURRENT REQUEST>---------
-	Error("cpnotify_outpump_done: hack on...\n");
-	assert(0);
+	
+	switch(out_active_cmd)
+	{
+		case Cmd_TaskResponse:
+		{
+			// Okay, finally sent task response. 
+			fprintf(stderr,"TaskResponse sent.\n");
+			
+			// Clean up the stuff...
+			tri.resp_code=-1;  // unset
+			// Note that tri.ctsk should be 0 here if we passed it to the 
+			// process manager. 
+			DELETE(tri.ctsk);
+			//tri.task_id and tri.next_action do not matter. 
+			
+			out.ioaction=IOA_None;
+			out_active_cmd=Cmd_NoCommand;
+			send_buf.content=Cmd_NoCommand;
+		} break;
+		case Cmd_FileRequest:
+		{
+			// Okay, sent file request. 
+			fprintf(stderr,"FileRequest sent.\n");
+			
+			assert(tri.resp_code==TRC_Accepted && tri.next_action==TRINA_FileReq);
+			// Now, receive files. 
+			tri.next_action=TRINA_FileRecv;
+			
+			out.ioaction=IOA_None;
+			out_active_cmd=Cmd_NoCommand;
+			send_buf.content=Cmd_NoCommand;
+		} break;
+		default:
+		{
+			// out_active_cmd==Cmd_FileDownload -> TRINA_FileReq
+			
+			Error("cpnotify_outpump_done: hack on...\n");
+			assert(0);
+			
+			out.ioaction=IOA_None;
+			out_active_cmd=Cmd_NoCommand;
+			send_buf.content=Cmd_NoCommand;
+		} break;
+	}
 	
 	return(0);
 }
 
-// Return value: 1 -> called CloseConn(); 0 -> normal
+// Return value: 1 -> called _ConnClose(); 0 -> normal
 int TaskSource_LDR_ServerConn::cpnotify_outpump_start()
 {
-	if(out.ioaction!=IOA_None)
+	if(out.ioaction!=IOA_None || out_active_cmd!=Cmd_NoCommand)
 	{
 		// This only happens if we're not called from cpnotify() but 
 		// from somewhere else. (Protected by assert() in cpnotify().) 
@@ -965,70 +1256,143 @@ int TaskSource_LDR_ServerConn::cpnotify_outpump_start()
 	// ---------<SECOND PART: LAUNCH NEW REQUEST IF NEEDED>---------
 		
 	// See what we can send...
-	if(tri.resp_code>0)  // Not -1 "unset" and not TRC_Accepted. 
+	if(tri.resp_code>0 ||  // Not -1 "unset" and not TRC_Accepted. 
+	   (tri.resp_code==TRC_Accepted && tri.next_action==TRINA_Response) )
 	{
-		// Okay, we have to refuse the packet. 
-		Error("hack me...NOW!");
-		assert(0);
+		// tri.resp_code>0 
+		//      -> okay, we have to refuse the task. 
+		// tri.resp_code==TRC_Accepted && tri.next_action==TRINA_Response 
+		//      -> accept the task (TRC_Accepted) 
+		int fail=1;
+		do {
+			assert(send_buf.content==Cmd_NoCommand);
+			if(send_buf.alloc_len<sizeof(LDRTaskResponse) && 
+			   _ResizeRespBuf(&send_buf,sizeof(LDRTaskResponse)) )
+			{  break;  }
+			
+			// Compose the packet: 
+			send_buf.content=Cmd_TaskResponse;
+			LDRTaskResponse *pack=(LDRTaskResponse*)(send_buf.data);
+			pack->length=sizeof(LDRTaskResponse);  // host order
+			pack->command=Cmd_TaskResponse;  // host order
+			pack->task_id=htonl(tri.task_id);
+			pack->resp_code=htons(tri.resp_code);
+			
+			// Okay, make ready to send it: 
+			if(_FDCopyStartSendBuf(pack))  break;
+			
+			fail=0;
+		} while(0);
+		fprintf(stderr,"hack code to handle failure (2).\n");
+		if(fail)
+		{
+			// Failure. 
+			#warning HANDLE FAILURE. 
+			Error("Cannot handle failure (HACK ME!)\n");
+			assert(0);
+		}
 	}
+	else if(tri.resp_code==TRC_Accepted && tri.next_action==TRINA_FileReq)
+	{
+		// NO PIPELINING will be supported. You have a fast net and 
+		// thus response time is <1msec. Yes, the box is rendering some 
+		// other frame; we need not get the last 3% speed improvement. 
+		int rv=_StartSendNextFileRequest();
+		switch(rv)
+		{
+			case 1:  _TaskRequestComplete();  break;  // no more file requests
+			case 0:  break;
+			default: assert(0);
+		}
+	}
+	// else: Nothing to do (we're waiting). 
 	
 	return(0);
 }
 
-// Return value: 1 -> called CloseConn(); 0 -> normal
+// Return value: 1 -> called _ConnClose(); 0 -> normal
 int TaskSource_LDR_ServerConn::cpnotify_inpump(FDCopyBase::CopyInfo *cpi)
 {
-	if(in_active_cmd==Cmd_TaskRequest)
+	switch(in_active_cmd)
 	{
-		assert(cpi->pump==in.pump_s);  // can be left away
-		
-		in_active_cmd==Cmd_NoCommand;
-		in.ioaction=IOA_None;
-		
-		if((cpi->scode & FDCopyPump::SCLimit))
+		case Cmd_TaskRequest:
 		{
+			assert(cpi->pump==in.pump_s);  // can be left away
+			
+			in_active_cmd=Cmd_NoCommand;
+			in.ioaction=IOA_None;
+			
 			// NOTE: This looks like something strange but it is an 
 			// internal error if it fails. Because we tell the pump to 
 			// copy exactly LDRHeader->length - sizeof(LDRHeader) bytes 
 			// and if it reports SCLimit here, then they have to be 
 			// there. 
 			#if TESTING
-			if(cpi->pump->Dest()->bufdone+sizeof(LDRHeader)!=
-				((LDRHeader*)recv_buf)->length)
+			FDCopyIO_Buf *_dst=(FDCopyIO_Buf*)(cpi->pump->Dest());
+			if(_dst->bufdone+sizeof(LDRHeader)!=
+			   ((LDRHeader*)(recv_buf.data))->length)
 			{  assert(0);  }
 			#endif
 			
 			int rv=_ParseTaskRequest(&recv_buf);
-			if(rv==0)
-			{
-				//GoOnAcceptTask();
-				Error("Hack on...\n");
-				assert(0);
-			}
-			else if(rv==1)
+			if(rv==1)
 			{  _ConnClose(0);  return(1);  }
 			else if(rv==2)
 			{
 				assert(tri.resp_code>0);
 				cpnotify_outpump_start();
 			}
-			else assert(0);
-		}
-		else
+			else assert(rv==0);
+			
+			recv_buf.content=Cmd_NoCommand;
+		} break;
+		case Cmd_FileDownload:
 		{
-			// #error #warning ### must hack message for different errors (timeout, pollerr, etc)
-			// MUST ALSO CHECK FOR EOF!!
-			Error("LDR: Receiving failed during command %s: %d,%s [<- HACK ME!]\n",
-				LDRCommandString(recv_buf.content),
-				cpi->err_no,strerror(cpi->err_no));
-			// Act correctly (disconnect). 
+			if(cpi->pump==in.pump_s)
+			{
+				// Read in header...
+				LDRFileDownload *pack=(LDRFileDownload*)(recv_buf.data);
+				assert(pack->command==Cmd_FileDownload);  // can be left away
+				if(pack->length!=sizeof(LDRFileDownload))
+				{
+					Error("LDR: Received illegal-sized file download header "
+						"(%u/%u bytes) [frame %d]\n",
+						pack->length,sizeof(LDRFileDownload),
+						tri.ctsk->frame_no);
+					_ConnClose(0);  return(1);
+				}
+				if(ntohl(pack->task_id)!=tri.ctsk->task_id || 
+				   ntohs(pack->file_type)!=tri.req_file_type || 
+				   ntohs(pack->file_idx)!=tri.req_file_idx )
+				{
+					Error("LDR: Received non-matching download header "
+						"(%u,%d,%d / %u,%d,%d) [frame %d]",
+						ntohl(pack->task_id),
+							int(ntohs(pack->file_type)),
+							int(ntohs(pack->file_idx)),
+						tri.ctsk->task_id,
+							int(tri.req_file_type),int(tri.req_file_idx),
+						tri.ctsk->frame_no);
+					_ConnClose(0);  return(1);
+				}
+				// Okay, then let's start to receive the file. 
+				// NOTE!!! What to do with files of size 0??
+				//         Simply don't start download?
+				fprintf(stderr,">>>> Implement file download\n");
+				assert(0);
+			}
+			else
+			{
+				// Read in body. 
+				fprintf(stderr,"??? Implement file download\n");
+				assert(0); 
+			}
+			
+			recv_buf.content=Cmd_NoCommand;
+		} break;
+		default:
+			Error("DONE -> hack on\n");
 			assert(0);
-		}
-	}
-	else
-	{
-		Error("DONE -> hack on\n");
-		assert(0);
 	}
 	
 	return(0);
@@ -1043,6 +1407,14 @@ int TaskSource_LDR_ServerConn::cpnotify(FDCopyBase::CopyInfo *cpi)
 		(cpi->scode & FDCopyPump::SCLimit) ? "yes" : "no",
 		cpi->err_no,strerror(cpi->err_no));
 	
+	if( ! (cpi->scode & FDCopyPump::SCLimit) )
+	{
+		// SCError and SCEOF; handling probably in cpnotify_inpump() 
+		// and cpnotify_outpump_done(). 
+		Error("cpi->scode=%d. HANDLE ME.\n",cpi->scode);
+		assert(0);  // ##
+	}
+	
 	// We are only interested in FINAL codes. 
 	if(!(cpi->scode & FDCopyPump::SCFinal))
 	{  return(0);  }
@@ -1053,15 +1425,19 @@ int TaskSource_LDR_ServerConn::cpnotify(FDCopyBase::CopyInfo *cpi)
 	if(cpi->pump==in.pump_s || cpi->pump==in.pump_fd)
 	{
 		cpnotify_inpump(cpi);
+		// We're always listening to the server. 
+		if(in_active_cmd==Cmd_NoCommand)
+		{  FDChangeEvents(pollid,POLLIN,0);  }
 	}
 	else if(cpi->pump==out.pump_s || cpi->pump==out.pump_fd)
 	{
 		if(!cpnotify_outpump_done(cpi))
 		{
-			assert(out.ioaction!=IOA_None);  // If FDCopyPump is running, we may not be here. 
+			assert(out.ioaction==IOA_None);  // If FDCopyPump is running, we may not be here. 
 			cpnotify_outpump_start();
 		}
 	}
+	else assert(0);
 	
 	return(0);
 }
@@ -1073,15 +1449,19 @@ int TaskSource_LDR_ServerConn::cpnotify(FDCopyBase::CopyInfo *cpi)
 //         2 -> auth failure
 void TaskSource_LDR_ServerConn::_ConnClose(int reason)
 {
+	// We should not call ConnClose() twice. 
+	// This assert is the bug trap for that: 
+	assert(!DeletePending());
+	
 	if(sock_fd>=0)  // Otherwise: Not connected or already disconnected. 
 	{
 		// First, make sure we close down. 
 		PollFDDPtr(pollid,NULL);
 		ShutdownFD(pollid);  // sets pollid=NULL
 		sock_fd=-1;
-		
-		back->ConnClose(this,reason);
 	}
+	
+	back->ConnClose(this,reason);
 }
 
 
@@ -1131,14 +1511,14 @@ TaskSource_LDR_ServerConn::~TaskSource_LDR_ServerConn()
 	
 	if(sock_fd>=0)
 	{
-		fprintf(stderr,"OOPS: still connected to %s\n",
+		Warning("LDR: Still connected to %s; disconnecting.\n",
 			addr.GetAddress().str());
 		ShutdownFD(sock_fd);  pollid=NULL;
 	}
 	
 	if(tri.ctsk)
 	{
-		fprintf(stderr,"OOPS: dangling task [frame %d] left (TaskSource_LDR)\n",
+		Warning("LDR: OOPS... Dangling task [frame %d] left.\n",
 			tri.ctsk->frame_no);
 		DELETE(tri.ctsk);
 	}

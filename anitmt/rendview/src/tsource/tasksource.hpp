@@ -18,6 +18,7 @@
 #define _RNDV_TASKSOURCE_HPP_ 1
 
 #include "../database.hpp"
+#include "taskfile.hpp"
 
 //#include <taskmanager.hpp>
 //#include "tsfactory.hpp"
@@ -71,6 +72,14 @@ struct CompleteTask : LinkedListBase<CompleteTask>
 	// Set up to be NULL by task source. 
 	RenderTaskParams *rtp;   // or NULL
 	FilterTaskParams *ftp;   // or NULL
+	
+	// Additional files needed to render/filter the frame. 
+	// Arrays allocated via LMalloc() and LFree()'d by ~CompleteTask(). 
+	struct AddFiles
+	{
+		int nfiles;
+		AdditionalFile **file;  // pointer array [nfiles]
+	} radd,fadd;
 	
 	// Render and filter task execution status: 
 	TaskExecutionStatus rtes;

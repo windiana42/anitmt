@@ -21,6 +21,8 @@
 #include <ctype.h>
 #include <assert.h>
 
+#include <fcntl.h>
+
 
 #ifndef TESTING
 #define TESTING 1
@@ -98,9 +100,6 @@ int NetworkIOBase::CopyData2StrList(RefStrList *dest,const char *data,
 
 
 // Start sending passed buffer using FDCopyBase etc. 
-// Retval: 
-//   0 -> OK
-//  -1 -> (alloc) failure
 int NetworkIOBase::_FDCopyStartSendBuf(char *buf,size_t len)
 {
 	assert(out.ioaction==IOA_None);
@@ -114,7 +113,7 @@ int NetworkIOBase::_FDCopyStartSendBuf(char *buf,size_t len)
 	int rv=out.pump_s->SetIO(out.io_buf,out.io_sock);
 	if(rv!=0 && rv!=-1)
 	{
-		fprintf(stderr,"OOPS: out pump->SetIO() returned %d\n",rv);
+		fprintf(stderr,"OOPS: out pump->SetIO(buf,fd) returned %d\n",rv);
 		abort();
 	}
 	if(rv)  return(rv);
@@ -122,7 +121,7 @@ int NetworkIOBase::_FDCopyStartSendBuf(char *buf,size_t len)
 	rv=out.pump_s->Control(FDCopyPump::CC_Start);
 	if(rv!=0)
 	{
-		fprintf(stderr,"OOPS: out pump->CC_Start returned %d\n",rv);
+		fprintf(stderr,"OOPS: out pump(buf,fd)->CC_Start returned %d\n",rv);
 		abort();
 	}
 	
@@ -145,7 +144,7 @@ int NetworkIOBase::_FDCopyStartRecvBuf(char *buf,size_t len)
 	int rv=in.pump_s->SetIO(in.io_sock,in.io_buf);
 	if(rv!=0 && rv!=-1)
 	{
-		fprintf(stderr,"OOPS: in pump->SetIO() returned %d\n",rv);
+		fprintf(stderr,"OOPS: in pump->SetIO(fd,buf) returned %d\n",rv);
 		abort();
 	}
 	if(rv)  return(rv);
@@ -153,11 +152,75 @@ int NetworkIOBase::_FDCopyStartRecvBuf(char *buf,size_t len)
 	rv=in.pump_s->Control(FDCopyPump::CC_Start);
 	if(rv!=0)
 	{
-		fprintf(stderr,"OOPS: in pump->CC_Start returned %d\n",rv);
+		fprintf(stderr,"OOPS: in pump(fd,buf)->CC_Start returned %d\n",rv);
 		abort();
 	}
 	
 	in.ioaction=IOA_SendingBuf;
+	
+	return(0);
+}
+
+
+// Start sending passed file using FDCopyBase etc. 
+int NetworkIOBase::_FDCopyStartSendFile(const char *path,u_int64_t filelen)
+{
+	assert(out.ioaction==IOA_None);
+	
+	// This is special: We cannot send a file with size 0 with limit 
+	// because limit=0 is "unlimited". So, for simplicity, we simply 
+	// send a buffer of size 0: 
+	if(filelen==0)
+	{
+		static char _dummybuf='\0';
+		return(_FDCopyStartSendBuf(&_dummybuf,0));
+	}
+	
+	// Open the file: 
+	int fd;
+	do
+	{  fd=::open(path,O_RDONLY);  }
+	while(fd<0 && errno==EINTR);
+	if(fd<0)  return(-2);
+	
+	PollID send_pollid=NULL;
+	int rv=PollFD(fd,0,NULL,&send_pollid);
+	if(rv==-1)
+	{
+		do
+		{  rv=::close(fd);  }
+		while(rv<0 && errno==EINTR);
+		return(-1);
+	}
+	if(rv || !send_pollid)
+	{
+		fprintf(stderr,"OOPS: PollFD failed: %d,%d\n",rv,fd);
+		abort();
+	}
+	
+	out.io_fd->pollid=send_pollid;
+	assert(!out.io_fd->transferred);  // io params must be reset by copy facility
+	out.pump_fd->limit=filelen;
+	out.pump_fd->io_bufsize=16384;
+	
+	assert(out.io_sock->pollid==pollid);
+	
+	rv=out.pump_fd->SetIO(out.io_fd,out.io_sock);
+	if(rv!=0 && rv!=-1)
+	{
+		fprintf(stderr,"OOPS: out pump->SetIO(fd,fd) returned %d\n",rv);
+		abort();
+	}
+	if(rv)  return(rv);
+	
+	rv=out.pump_fd->Control(FDCopyPump::CC_Start);
+	if(rv!=0)
+	{
+		fprintf(stderr,"OOPS: out pump(fd,fd)->CC_Start returned %d\n",rv);
+		abort();
+	}
+	
+	out.ioaction=IOA_SendingFD;
 	
 	return(0);
 }

@@ -102,15 +102,20 @@ CompleteTask::CompleteTask(int * failflag) :
 	assert(!d.any());
 	rt=NULL;   ft=NULL;
 	rtp=NULL;  ftp=NULL;
+	radd.nfiles=0;   fadd.nfiles=0;
+	radd.file=NULL;  fadd.file=NULL;
 }
 
 CompleteTask::~CompleteTask()
 {
 	assert(!d.any());
-	if(rt)   {  delete rt;   rt=NULL;   }
-	if(ft)   {  delete ft;   ft=NULL;   }
-	if(rtp)  {  delete rtp;  rtp=NULL;  }
-	if(ftp)  {  delete ftp;  ftp=NULL;  }
+	DELETE(rt);
+	DELETE(ft);
+	DELETE(rtp);
+	DELETE(ftp);
+	assert(rt==NULL);  // can be removed 
+	LFree(radd.file);  radd.file=NULL;
+	LFree(fadd.file);  fadd.file=NULL;
 }
 
 

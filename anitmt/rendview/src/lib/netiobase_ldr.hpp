@@ -20,6 +20,8 @@
 #include <lib/netiobase.hpp>
 #include <lib/ldrproto.hpp>
 
+#include "../tsource/tasksource.hpp"
+
 
 class NetworkIOBase_LDR : 
 	public NetworkIOBase
@@ -70,6 +72,27 @@ class NetworkIOBase_LDR :
 	public:
 		NetworkIOBase_LDR(int *failflag);
 		~NetworkIOBase_LDR();
+		
+		// Calculate the size of an LDRFileInfoEntry for the passed AdditionalFile. 
+		static inline size_t LDRFileInfoEntrySize(const AdditionalFile *af)
+			{  return(af ? (sizeof(LDR::LDRFileInfoEntry)+af->BaseNameLength()) : 0);  }
+		// Sum up the size of nelem LDRFileInfoEntries for files in *caf. 
+		static size_t LDRSumFileInfoSize(const CompleteTask::AddFiles *caf);
+		
+		// Return value: 0 -> OK; DOCUMENT ME!
+		static int LDRStoreFileInfoEntry(LDR::LDRFileInfoEntry *dest,
+			const AdditionalFile *af);
+		// Return value: 
+		//  0 -> OK
+		// else -> see LDRStoreFileInfoEntry(); in this case, err_elem returns 
+		//         the index of the entry which caused the error. 
+		static int LDRStoreFileInfoEntries(char *destbuf,char *bufend,
+			const CompleteTask::AddFiles *caf,int *err_elem);
+		
+		// The opposite of LDRStoreFileInfoEntry(); be sure that the source 
+		// buffer is long enough. 
+		// Return value: 0 -> OK; DOCUMENT ME!
+		int LDRGetFileInfoEntry(AdditionalFile *af,LDR::LDRFileInfoEntry *src);
 };
 
 #endif  /* _RNDV_LIB_NETWORKIOBASE_LDR_HPP_ */

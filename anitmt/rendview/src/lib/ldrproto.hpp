@@ -44,7 +44,7 @@ typedef unsigned char uchar;
 
 //    -------[LDRTaskRequest]------->
 //   <-------[LDRFileRequest]-------
-//    ----[LDRFileTransmission]----->
+//    ------[LDRFileDownload]------->
 //   <------[LDRTaskResponse]-------
 
 enum LDRCommand
@@ -58,14 +58,14 @@ enum LDRCommand
 	Cmd_NowConnected,     // challenge resp okay, now server -OR-
 	                      // illegal challenge resp or already connected
 	Cmd_TaskRequest,      // please do that task: blahblah...
-	Cmd_TaskRsponse,      // task accepted or refused (e.g. unknown 
+	Cmd_TaskResponse,     // task accepted or refused (e.g. unknown 
 	                      // renderer, filter, image format...)
 	
 	Cmd_FileRequest,      // need files x,y,z
+	Cmd_FileDownload,     // here is file x... (server -> client)
 	
 	Cmd_TaskState,        // working, killed (?)
 	Cmd_TaskDone,         // task done
-	Cmd_FileTransmission, // here is file x...
 	Cmd_SpecialTaskRequest,  // e.g. interrupt, stop, cont
 	
 	_Cmd_LAST   // MUST BE LAST
@@ -131,7 +131,8 @@ struct LDRNowConnected : LDRHeader
 	u_int16_t auth_code;  // CAC_*
 	u_int16_t njobs;   // njobs param as passed on startup of client
 	LDRTime starttime;  // when client was started
-	// Could pass a lot more like unsuccessful connection attempts, etc. 
+	u_int16_t loadval;  // loadavg*100 (0xffff for unknown)
+	// Could pass a bit more like unsuccessful connection attempts, etc. 
 };
 
 
@@ -204,6 +205,36 @@ struct LDRTaskResponse : LDRHeader
 	u_int32_t task_id;   // unique task ID
 	u_int16_t resp_code;  // one of the TRC_* above
 };
+
+
+enum // FileRequestFileType
+{
+	FRFT_None=0,  // illegal
+	FRFT_RenderIn,
+	FRFT_RenderOut,
+	//FRFT_FilterIn,
+	FRFT_FilterOut,
+	FRFT_AddRender,
+	FRFT_AddFilter
+};
+
+struct LDRFileRequest : LDRHeader
+{
+	u_int32_t task_id;   // unique task ID
+	u_int16_t file_type;  // FRFT_*
+	u_int16_t file_idx;   // for FRFT_Add{Render,Filter}
+};
+
+struct LDRFileDownload : LDRHeader
+{
+	// NOTE: This is just redundancy...
+	// Actually, no pipelining is supported, so the LDRFileDownload is 
+	// just the response to the previous LDRFileRequest. 
+	u_int32_t task_id;   // unique task ID
+	u_int16_t file_type;  // FRFT_*
+	u_int16_t file_idx;   // for FRFT_Add{Render,Filter}
+};
+
 
 // If passwd.str() is NULL or has zero length, default password if 
 // specified, otherwise none. (Calls passwd.deref() if no passwd.) 

@@ -167,8 +167,16 @@ class TaskManager :
 		// Initialisation of parameter stuff: 
 		int _SetUpParams();
 		
-		// Simply call fdmanager()->Quit(status) and write 
+		// Simply call fdmanager()->Quit(status) and write info. 
 		void _DoQuit(int status);
+		
+		// This is the code to actually quit. It is three steps: 
+		// Instead of calling fdmanager()->Quit(status), use this function. 
+		// (Read on in taskmanager.cpp.)
+		int _actually_quit_status;
+		int _actually_quit_step;   // 0 -> don't quit; 
+		void _ActuallyQuit(int status);
+		void _DestructCleanup(int real_destructor=0);
 		
 		void _ActOnSignal(int signo,int real_signal);
 		

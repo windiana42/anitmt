@@ -75,6 +75,12 @@ class NetworkIOBase :
 		// Analogon to read buffer: 
 		int _FDCopyStartRecvBuf(char *buf,size_t len);
 		
+		// Start sending passed file using FDCopyBase etc. 
+		// Retval: 
+		//   0 -> OK
+		//  -1 -> (alloc) failure
+		//  -2 -> failure to open file
+		int _FDCopyStartSendFile(const char *path,u_int64_t filelen);
 	private:
 		void _DoChangeEvents_Error(int rv);
 		
@@ -123,6 +129,19 @@ class NetworkIOBase :
 		//   -2 -> format error: last string not terminated by '\0' 
 		static int CopyData2StrList(RefStrList *dest,const char *data,
 			size_t data_len);
+		
+		// In bitarray arr, set bit x: 
+		static void BitarraySBI(unsigned char *arr,int x)
+			{  arr[x/8]|=(((unsigned char)1)<<(x%8));  }
+		// In bitarray arr, return bit x: 
+		static bool BitarrayTST(unsigned char *arr,int x)
+			{  return(arr[x/8] & (((unsigned char)1)<<(x%8)));  }
+		
+		// Against aligment problems: Copy a 2-byte integer from src to dest. 
+		inline void _memcpy16(u_int16_t *dest,const char *src)
+			{  char *d=(char*)dest;  *(d++)=*(src++);  *d=*src;  }
+		inline void _memcpy16(u_int16_t *dest,const u_int16_t *src)
+			{  char *d=(char*)dest,*s=(char*)src;  *(d++)=*(s++);  *d=*s;  }
 };
 
 #endif  /* _RNDV_LIB_NETWORKIOBASE_HPP_ */

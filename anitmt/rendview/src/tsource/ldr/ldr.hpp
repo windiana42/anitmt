@@ -34,78 +34,99 @@ struct TaskSource_LDR_ServerConn :
 	LinkedListBase<TaskSource_LDR_ServerConn>,
 	NetworkIOBase_LDR
 {
-	TaskSource_LDR *back;
-	
-	MyAddrInfo addr;  // server address
-	
-	// This is 1 if that is the authenticated server we are 
-	// taking orders from. (Only sconn.first().) 
-	int authenticated;
-	
-	union
-	{
-		char expect_chresp[LDRChallengeLength];
-		int now_conn_auth_code;
-	};
-	
-	// LDE Commands (host order)
-	LDR::LDRCommand next_send_cmd;
-	LDR::LDRCommand expect_cmd;
-	
-	// This is filled in when we get a task until all 
-	// the file downloading, etc. is done, the task is 
-	// passed to the TaskManager and/or LDRTaskResponse 
-	// is sent to the server. 
-	struct TaskRequestInfo
-	{
-		CompleteTask *ctsk;  // May be NULL if we refuse task. 
-		u_int32_t task_id;
-		int resp_code;   // TaskResponseCode: TRC_* or -1 for "unset"
-	} tri;
-	
-	_CPP_OPERATORS_FF
-	TaskSource_LDR_ServerConn(TaskSource_LDR *back,int *failflag=NULL);
-	~TaskSource_LDR_ServerConn();
-	int Setup(int sock,MyAddrInfo *addr);
-	
-	// Called to close down the connection or if it was closed down. 
-	// reason: 0 -> general / error
-	//         1 -> received Cmd_QuitNow
-	//         2 -> auth failure
-	void _ConnClose(int reason);
-	
-	int _AtomicSendData(LDR::LDRHeader *d);
-	int _AtomicRecvData(LDR::LDRHeader *d,size_t len);
-	
-	// Returns packet length or 0 -> error. 
-	size_t _CheckRespHeader(
-		LDR::LDRHeader *d,size_t read_len,
-		size_t min_len,size_t max_len);
-	
-	// Packet handling: 
-	int _SendChallengeRequest();
-	int _RecvChallengeResponse();
-	int _SendNowConnected();
-	
-	int _HandleReceivedHeader(LDR::LDRHeader *hdr);
-	
-	int _ParseTaskRequest(RespBuf *buf);
-	int _ParseTaskRequest_Intrnl(RespBuf *buf,TaskRequestInfo *tri);
-	
-	int _AuthSConnFDNotify(FDInfo *fdi);
-	
-	int cpnotify_outpump_done(FDCopyBase::CopyInfo *cpi);
-	int cpnotify_outpump_start();
-	int cpnotify_inpump(FDCopyBase::CopyInfo *cpi);
-	
-	// Overriding virtual from FDCopyBase: 
-	int fdnotify2(FDBase::FDInfo *fdi);
-	int cpnotify(FDCopyBase::CopyInfo *cpi);
-	
 	private:
+		TaskSource_LDR *back;
+		
+		union
+		{
+			char expect_chresp[LDRChallengeLength];
+			int now_conn_auth_code;
+		};
+		
+		// LDE Commands (host order)
+		LDR::LDRCommand next_send_cmd;
+		LDR::LDRCommand expect_cmd;
+		
 		inline TaskSourceFactory_LDR *P();
 		inline ComponentDataBase *component_db();
+		
+		// Called to close down the connection or if it was closed down. 
+		// reason: 0 -> general / error
+		//         1 -> received Cmd_QuitNow
+		//         2 -> auth failure
+		void _ConnClose(int reason);
+		
+		int _AtomicSendData(LDR::LDRHeader *d);
+		int _AtomicRecvData(LDR::LDRHeader *d,size_t len);
+		
+		// Returns packet length or 0 -> error. 
+		size_t _CheckRespHeader(
+			LDR::LDRHeader *d,size_t read_len,
+			size_t min_len,size_t max_len);
+		
+		// This is filled in when we get a task until all 
+		// the file downloading, etc. is done, the task is 
+		// passed to the TaskManager and/or LDRTaskResponse 
+		// is sent to the server. 
+		enum TRINextAction
+		{
+			TRINA_None=0,
+			TRINA_Complete,  // -> tell TaskManager()
+			TRINA_Response,  // send TaskResponse
+			TRINA_FileReq,   // send file request
+			TRINA_FileRecv   // receive file
+		};
+		struct TaskRequestInfo
+		{
+			CompleteTask *ctsk;  // May be NULL if we refuse task. 
+			u_int32_t task_id;
+			int resp_code;   // TaskResponseCode: TRC_* or -1 for "unset"
+			// This is only used if resp_code==TRC_Accepted: 
+			TRINextAction next_action;
+			// Of file request currently active...
+			u_int16_t req_file_type;
+			u_int16_t req_file_idx;
+		} tri;  // task request info
+		
+		int _StartSendNextFileRequest();
+		void _TaskRequestComplete();
+		
+		// Packet handling: 
+		int _SendChallengeRequest();
+		int _RecvChallengeResponse();
+		int _SendNowConnected();
+		
+		int _HandleReceivedHeader(LDR::LDRHeader *hdr);
+		
+		int _ParseTaskRequest(RespBuf *buf);
+		int _GetFileInfoEntries(CompleteTask::AddFiles *dest,
+			char **buf,char *bufend,int nent);
+		int _ParseTaskRequest_Intrnl(RespBuf *buf,TaskRequestInfo *tri);
+		
+		int _AuthSConnFDNotify(FDInfo *fdi);
+		
+		int cpnotify_outpump_done(FDCopyBase::CopyInfo *cpi);
+		int cpnotify_outpump_start();
+		int cpnotify_inpump(FDCopyBase::CopyInfo *cpi);
+		
+		// Overriding virtual from FDCopyBase: 
+		int fdnotify2(FDBase::FDInfo *fdi);
+		int cpnotify(FDCopyBase::CopyInfo *cpi);
+	public:  _CPP_OPERATORS_FF
+		TaskSource_LDR_ServerConn(TaskSource_LDR *back,int *failflag=NULL);
+		~TaskSource_LDR_ServerConn();
+		int Setup(int sock,MyAddrInfo *addr);
+		
+		void TaskManagerGotTask();
+		
+		MyAddrInfo addr;  // server address
+		
+		// This is 1 if that is the authenticated server we are 
+		// taking orders from. (Only sconn.first().) 
+		private: int authenticated;
+		public: int Authenticated()  {  return(authenticated);  }
 };
+
 
 class TaskSource_LDR : 
 	public TaskSource,
@@ -161,7 +182,7 @@ class TaskSource_LDR :
 		TaskSource_LDR_ServerConn *GetAuthenticatedServer()
 		{
 			TaskSource_LDR_ServerConn *sc=sconn.first();
-			return((sc && sc->authenticated) ? sc : NULL);
+			return((sc && sc->Authenticated()) ? sc : NULL);
 		}
 		
 		void ServerHasNowAuthenticated(TaskSource_LDR_ServerConn *sc)
@@ -172,6 +193,9 @@ class TaskSource_LDR :
 		
 		// Called by TaskSource_LDR_ServerConn::_ConnClose(). 
 		void ConnClose(TaskSource_LDR_ServerConn *sc,int reason);
+		
+		// Called by TaskSource_LDR_ServerConn: 
+		int TellTaskManagerToGetTask(CompleteTask *ctsk);
 };
 
 #endif  /* _RNDV_TSOURCE_LDR_HPP_ */

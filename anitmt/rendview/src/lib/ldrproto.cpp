@@ -37,15 +37,19 @@ static const char *_command_str[_Cmd_LAST]=
 {
 	"[no command]",
 	"quit",
+	
 	"challenge request",
 	"challenge response",
 	"now connected",
+	
 	"task request",
-	"task refused",
+	"task response",
+	
 	"file request",
+	"file download",
+	
 	"task state",
 	"task done",
-	"file transmission",
 	"special task request"
 };
 

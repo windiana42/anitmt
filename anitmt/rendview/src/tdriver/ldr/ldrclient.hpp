@@ -48,13 +48,27 @@ class LDRClient :
 		LDR::LDRCommand next_send_cmd;
 		LDR::LDRCommand expect_cmd;  // what we expect to get
 		
-		// Task scheduled to be sent to the client or NULL. 
-		// This is set until the task is completely sent (including 
-		// all the files). 
-		CompleteTask *scheduled_to_send;
-		// Stores what has to be sent for task *scheduled_to_send; 
-		// Required file or main task struct. 
-		LDR::LDRCommand task_send_next_cmd;
+		enum TaskRequestState
+		{
+			TRC_None=0,
+			TRC_SendTaskRequest,
+			TRC_WaitForResponse,
+			TRC_SendFileDownloadH,  // header
+			TRC_SendFileDownloadB   // body
+		};
+		struct
+		{
+			// Task scheduled to be sent to the client or NULL. 
+			// This is set until the task is completely sent (including 
+			// all the files). 
+			CompleteTask *scheduled_to_send;
+			// Stores what has to be done next for task *scheduled_to_send; 
+			// Send file or main task struct, etc. 
+			TaskRequestState task_request_state;
+			// Which file we will send next: 
+			u_int16_t req_file_type;
+			u_int16_t req_file_idx;
+		} tri;  // task request info
 		
 		// Client data: 
 		int c_jobs;  // njobs reported by client. 
@@ -79,6 +93,18 @@ class LDRClient :
 		int _DoFinishConnect(FDBase::FDInfo *fdi);
 		int _DoAuthHandshake(FDBase::FDInfo *fdi);
 		void _DoSendQuit(FDBase::FDInfo *fdi);
+		
+		int _HandleReceivedHeader(LDR::LDRHeader *hdr);
+		int _ParseFileRequest(RespBuf *buf);
+		
+		// Called on every error which results in a client disconnect. 
+		void _KickMe(int do_send_quit=0);
+		
+		int _AuthConnFDNotify(FDBase::FDInfo *fdi);
+		
+		int cpnotify_outpump_done(FDCopyBase::CopyInfo *cpi);
+		int cpnotify_outpump_start();
+		int cpnotify_inpump(FDCopyBase::CopyInfo *cpi);
 		
 		// FDBase (contained in FDCopyBase) virtual: 
 		int fdnotify2(FDBase::FDInfo *fdi);
@@ -105,7 +131,7 @@ class LDRClient :
 		// less than c_jobs tasks assigned.). 
 		// That is, SendTaskToClient() can be called. 
 		int CanDoTask()
-		{  return(auth_passed && assigned_jobs<c_jobs && !scheduled_to_send);  }
+		{  return(auth_passed && assigned_jobs<c_jobs && !tri.scheduled_to_send);  }
 		
 		// Actually start sending the passed task to the client. 
 		// Only one task at a time can be sent to the client. 

@@ -145,6 +145,10 @@ void TaskManager::DontStartMoreTasks()
 
 void TaskManager::HandleSuccessfulJob(CompleteTask *ctsk)
 {
+	// Read comment near _ActuallyQuit() for info. 
+	if(_actually_quit_step)
+	{  return;  }
+	
 	// Great, everything went fine. 
 	// Reset this counter: 
 	jobs_failed_in_sequence=0;
@@ -193,6 +197,10 @@ void TaskManager::HandleSuccessfulJob(CompleteTask *ctsk)
 // running_jobs: number of still running jobs; ONLY FOR emergency error handling. 
 void TaskManager::HandleFailedTask(CompleteTask *ctsk,int running_jobs)
 {
+	// Read comment near _ActuallyQuit() for info. 
+	if(_actually_quit_step)
+	{  return;  }
+	
 	// Error info already stored. 
 	
 	#if TEST_TASK_LIST_MEMBERSHIP
@@ -209,7 +217,7 @@ void TaskManager::HandleFailedTask(CompleteTask *ctsk,int running_jobs)
 		if(!running_jobs)
 		{
 			Warning("No more running jobs, QUITTING NOW.\n");
-			fdmanager()->Quit(2);
+			_ActuallyQuit(2);
 		}
 		return;  // necessary! ...
 		// ... because it will be normal that the tasks have 
@@ -244,6 +252,10 @@ void TaskManager::HandleFailedTask(CompleteTask *ctsk,int running_jobs)
 
 int TaskManager::tsnotify(TSNotifyInfo *ni)
 {
+	// Read comment near _ActuallyQuit() for info. 
+	if(_actually_quit_step)
+	{  return(0);  }
+	
 	// Will be just verbose for success codes: 
 	TSWriteError(ni);
 	
@@ -493,9 +505,14 @@ int TaskManager::signotify(const SigInfo *si)
 	if((si->info.si_signo==SIGINT || si->info.si_signo==SIGTERM) && 
 	   abort_on_signal )
 	{
-		fprintf(stderr,"*** Caught fatal SIGINT. Aborting. ***\n");
-			abort();
-		}
+		fprintf(stderr,"*** Caught fatal SIG%s. Aborting. ***\n",
+			si->info.si_signo==SIGTERM ? "TERM" : "INT");
+		abort();
+	}
+	
+	// Read comment near _ActuallyQuit() for info. 
+	if(_actually_quit_step)
+	{  return(0);  }
 	
 	_ActOnSignal(si->info.si_signo,/*real_signal=*/1);
 	return(0);
@@ -603,8 +620,28 @@ void TaskManager::_schedule(TimerInfo *ti)
 {
 	assert(ti->tid==tid0);
 	
+	// Read instructions near _ActuallyQuit() to understand what is 
+	// going on. 
+	if(_actually_quit_step)   // Initially 1. 
+	{
+		fprintf(stderr,"[%d]",_actually_quit_step);
+		switch(_actually_quit_step)
+		{
+			case 1:  break;  // do nothing
+			case 2:  _DestructCleanup();  break;  // do the destructor stuff
+			case 3:  break;  // do nothing
+			case 4:  // Quit now. Really this time. 
+				fdmanager()->Quit(_actually_quit_status);
+				break;
+			default:  assert(0);
+		}
+		++_actually_quit_step;
+		return;
+	}
+	
 	// (This MUST be done here, NOT at the end of the function so 
-	// that other functions can re-enable the timer.) 
+	// that other functions can re-enable the timer -- and NOT 
+	// before the _actually_quit stuff above.)
 	UpdateTimer(tid0,-1,0);  // First, stop timer. 
 	
 	// Okay, let's see what we have to do...
@@ -614,7 +651,7 @@ void TaskManager::_schedule(TimerInfo *ti)
 		// things running: 
 		int rv=_StartProcessing();
 		if(rv)
-		{  fdmanager()->Quit((rv==1) ? 0 : 1);  }
+		{  _ActuallyQuit((rv==1) ? 0 : 1);  }
 		else
 		{
 			// If rv==0, tasksource() MAY not be NULL here: 
@@ -642,7 +679,7 @@ void TaskManager::_schedule(TimerInfo *ti)
 			if(nkilled==0)
 			{
 				Verbose(0," QUITTING\n");
-				fdmanager()->Quit(2);  // QUIT NOW. 
+				_ActuallyQuit(2);  // QUIT NOW. 
 				return;
 			}
 			else
@@ -754,6 +791,10 @@ int TaskManager::timernotify(TimerInfo *ti)
 
 int TaskManager::timeoutnotify(TimeoutInfo *ti)
 {
+	// Read comment near _ActuallyQuit() for info. 
+	if(_actually_quit_step)
+	{  return(0);  }
+	
 	assert(ti->tid==timeout_id);
 	Warning("Execution timeout.\n");
 	Warning("  Timeout time: %s\n",ti->timeout->PrintTime(1));
@@ -771,7 +812,8 @@ static int _int_cmp(const void *a,const void *b)
 	return(*(int*)a - *(int*)b);
 }
 
-// Simply call fdmanager()->Quit(status) and write 
+// Simply call fdmanager()->Quit(status) and write info. 
+// (Actually, _ActuallyQuit() is called...)
 void TaskManager::_DoQuit(int status)
 {
 	VerboseSpecial("Now exiting with status=%s (%d)",
@@ -838,9 +880,25 @@ void TaskManager::_DoQuit(int status)
 	
 	#warning FIXME: more info to come
 	
-	fdmanager()->Quit(status);
+	_ActuallyQuit(status);
 }
 
+
+// This function is to be used instead of fdmanager->Quit(). 
+// This is done to give all the other objects some hlib cycles 
+// (0 msec timer) to clean up correctly (e.g. becuause x->DeleteMe(); 
+// is used rather than delete x;). This works by setting 
+// _actually_quit_step=1 and then runnig the timer a couple of 
+// times and then calling fdmanager->Quit(). 
+// While _actually_quit_step is set, all functions must react like 
+// dead (i.e. do nothing). 
+void TaskManager::_ActuallyQuit(int status)
+{
+	assert(_actually_quit_step==0);  // HUGE bug otherwise
+	_actually_quit_status=status;
+	_actually_quit_step=1;
+	ReSched();
+}
 
 
 // Called via timernotify() after everything has been set up and 
@@ -994,9 +1052,11 @@ int TaskManager::_StartProcessing()
 // was connected successfully, the local interface calls this immediately. 
 void TaskManager::ReallyStartProcessing(int error_occured)
 {
+	assert(!_actually_quit_step);
+	
 	if(error_occured)
 	{
-		fdmanager()->Quit(1);
+		_ActuallyQuit(1);
 		return;
 	}
 	
@@ -1010,7 +1070,7 @@ void TaskManager::ReallyStartProcessing(int error_occured)
 		if(rv==1)
 		{
 			Warning("Erm... Nothing will be done. I'm bored.\n");
-			fdmanager()->Quit(0);
+			_ActuallyQuit(0);
 			return;
 		}
 	}
@@ -1021,6 +1081,10 @@ void TaskManager::ReallyStartProcessing(int error_occured)
 // or because new LDR clients are connected or others disconnect. 
 void TaskManager::CheckStartNewJobs(int njobs_changed)
 {
+	// Read comment near _ActuallyQuit() for info. 
+	if(_actually_quit_step)
+	{  return;  }
+	
 	if(njobs_changed==-1)
 	{
 		// Special case. Called by LDR interface when all clients were 
@@ -1475,6 +1539,10 @@ void TaskManager::_PrintDoneInfo(CompleteTask *ctsk)
 
 int TaskManager::CheckParams()
 {
+	// Read comment near _ActuallyQuit() for info. 
+	if(_actually_quit_step)
+	{  return(0);  }
+	
 	int failed=0;
 	
 	if(max_failed_in_sequence<0)
@@ -1752,32 +1820,49 @@ TaskManager::TaskManager(ComponentDataBase *cdb,int *failflag) :
 }
 
 
+void TaskManager::_DestructCleanup(int real_destructor)
+{
+	if(!real_destructor)
+	{
+		_KillScheduledForStart();
+	}
+	
+	//if(kill_tasks_and_quit_now)
+	{
+		if(!tasklist_todo.is_empty())
+		{  Warning("OOPS: Tasks left in todo queue.\n");  }
+		while(!tasklist_todo.is_empty())
+		{  delete tasklist_todo.popfirst();  }
+		if(!tasklist_done.is_empty())
+		{  Warning("OOPS: Tasks left in done queue.\n");  }
+		while(!tasklist_done.is_empty())
+		{  delete tasklist_done.popfirst();  }
+	}
+	
+	TaskSource *ts=tasksource();
+	UseTaskSource(NULL);
+	DELETE(ts);
+	
+	DELETE(interface);
+}
+
 TaskManager::~TaskManager()
 {
 	CloseFD(dev_null_fd);
 	
+	_DestructCleanup(/*real_destructor=*/1);
+	
 	// Make sure there are no jobs and no tasks left: 
 	assert(!scheduled_for_start);
-	if(kill_tasks_and_quit_now)
-	{
-		while(!tasklist_todo.is_empty())
-		{  delete tasklist_todo.popfirst();  }
-		while(!tasklist_done.is_empty())
-		{  delete tasklist_done.popfirst();  }
-	}
+	
 	assert(tasklist_todo.is_empty());
 	assert(tasklist_done.is_empty());
 	
 	assert(!connected_to_tsource);
 	assert(pending_action==ANone);
 	
-	TaskSource *ts=tasksource();
-	UseTaskSource(NULL);
-	if(ts)
-	{  delete ts;  }
-	
-	if(interface)
-	{  delete interface;  interface=NULL;  }
+	assert(!tasksource());
+	assert(!interface);
 	
 	if(last_proc_frames)  last_proc_frames=(int*)LFree(last_proc_frames);
 }

@@ -34,6 +34,52 @@ using namespace LDR;
 static const size_t max_ldr_pack_len=65536;
 
 
+int NetworkIOBase_LDR::LDRStoreFileInfoEntry(LDR::LDRFileInfoEntry *dest,
+	const AdditionalFile *af)
+{
+	fprintf(stderr,"Implement me.\n");
+	// BE CAREFUL! *dest is NOT aligned. 
+	assert(0);
+	return(-177);
+}
+
+
+int NetworkIOBase_LDR::LDRStoreFileInfoEntries(char *destbuf,char *bufend,
+	const CompleteTask::AddFiles *caf,int *err_elem)
+{
+	for(int i=0; i<caf->nfiles; i++)
+	{
+		const AdditionalFile *af=caf->file[i];
+		char *nextbuf=destbuf+LDRFileInfoEntrySize(af);
+		assert(nextbuf<=bufend);  // buffer MUST be large enough (use LDRSumFileInfoSize())
+		int rv=LDRStoreFileInfoEntry((LDRFileInfoEntry*)destbuf,af);
+		if(rv)
+		{  *err_elem=i; return(rv);  }
+		destbuf=nextbuf;
+	}
+	return(0);
+}
+
+
+int NetworkIOBase_LDR::LDRGetFileInfoEntry(AdditionalFile *af,
+	LDR::LDRFileInfoEntry *src)
+{
+	fprintf(stderr,"Implement me.\n");
+	// BE CAREFUL! *src is NOT aligned. 
+	assert(0);
+	return(-177);
+}
+
+
+size_t NetworkIOBase_LDR::LDRSumFileInfoSize(const CompleteTask::AddFiles *caf)
+{
+	size_t sum=0;
+	for(int i=0; i<caf->nfiles; i++)
+	{  sum+=LDRFileInfoEntrySize(caf->file[i]);  }
+	return(sum);
+}
+
+
 int NetworkIOBase_LDR::_StartReadingCommandBody(RespBuf *dest,LDRHeader *hdr)
 {
 	assert(in_active_cmd==Cmd_NoCommand);
@@ -83,7 +129,8 @@ int NetworkIOBase_LDR::_ResizeRespBuf(NetworkIOBase_LDR::RespBuf *buf,size_t new
 	// remove it. 
 	assert(buf->content==Cmd_NoCommand);
 	
-	if(buf->alloc_len<newlen || newlen*2<buf->alloc_len)
+	if(buf->alloc_len<newlen || 
+	  (newlen*2<buf->alloc_len && buf->alloc_len>2048))
 	{
 		char *oldval=buf->data;
 		buf->data=(char*)LRealloc(buf->data,newlen);

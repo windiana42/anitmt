@@ -19,6 +19,7 @@
 
 #include <lib/prototypes.hpp>
 #include <hlib/refstring.h>
+#include <hlib/htime.h>
 
 
 // Any file used by rendview. 
@@ -76,5 +77,21 @@ class TaskFile
 		void SetHDPath(RefString r)   {  hdpath=r;  }
 };
 
+// THIS SHOULD BE MERGED WITH TaskFile. 
+class AdditionalFile
+{
+	public:  _CPP_OPERATORS_FF
+		AdditionalFile(int * /*failflag*/=NULL)  {  size=-1;  mtime.SetInvalid();  }
+		~AdditionalFile()  {}
+		
+		int64_t size;   // file size; (-1 if unset/nonexistant)
+		HTime mtime;    // modification time (invalid if unset/nonexistant)
+		
+		//RefString basename
+		//RefString hdpath
+		
+		// Return the length of the base name (right of rightmost '/'). 
+		size_t BaseNameLength() const  {  return(0);  }
+};
 
 #endif  /* _RNDV_TASKFILECLASS_HPP_ */
