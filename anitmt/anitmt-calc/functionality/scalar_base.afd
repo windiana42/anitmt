@@ -131,17 +131,16 @@ node scalar extends scalar_base provides scalar_component, scalar_vsa {
     //  equal_solver( start_time, scalar_component.value(time).start_param );
     //  equal_solver( end_time  , scalar_component.value(time).end_param   );
     //}
-  }
 
-  // default start_time and start_value
-  first scalar_vsa {
+    // default start_time and start_value
     actions {
       // MM: the action levels have to be checked !!!
+      // MT: could be moved to first scalar_vsa of subfunctions
       default ( default_first_time, start_time, 0 ); 
       default ( default_first_state, start_value, 0 );
     }
   }
-  
+
   // result functions using the scalar subfunctions
   provide scalar_vsa {
     resulting value ( time t ) requires child.scalar_vsa.value ( time ) { 
