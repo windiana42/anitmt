@@ -85,13 +85,15 @@ class NetworkIOBase :
 		// Start receiving passed file using FDCopyBase etc. 
 		// Retval: See _FDCopyStartSendFile(). 
 		int NetworkIOBase::_FDCopyStartRecvFile(const char *path,int64_t filelen);
+		
+		// Call this to shut down the connection (cancelling all IO jobs): 
+		void _ShutdownConnection();
 	private:
 		void _DoChangeEvents_Error(int rv);
 		
 		// Like constructor and destructor...
 		int _Construct_FDCopy(FDCopy *fdc);
 		void _Destroy_FDCopy(FDCopy *fdc);
-		
 	public:
 		NetworkIOBase(int *faiulflag=NULL);
 		~NetworkIOBase();

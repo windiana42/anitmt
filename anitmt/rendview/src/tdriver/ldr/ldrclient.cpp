@@ -761,26 +761,26 @@ int LDRClient::_HandleReceivedHeader(LDRHeader *hdr)
 	fprintf(stderr,"Client %s: Received header: >%s< (length=%u)\n",
 		_ClientName().str(),LDRCommandString(recv_cmd),hdr->length);
 	
-	if(recv_cmd==Cmd_FileRequest)
+	switch(recv_cmd)
 	{
-		// Okay, then let's get the body. 
-		assert(recv_buf.content==Cmd_NoCommand);  // Can that happen?
-		int rv=_StartReadingCommandBody(&recv_buf,hdr);
-		if(rv)
+		case Cmd_FileRequest:
+		case Cmd_TaskResponse:
 		{
-			if(rv==-2)
-			{  Error("Client %s: Too long %s packet (header reports %u bytes)\n",
-				_ClientName().str(),LDRCommandString(recv_cmd),hdr->length);  }
-			else _AllocFailure();
-			return(-1);
-		}
+			// Okay, then let's get the body. 
+			assert(recv_buf.content==Cmd_NoCommand);  // Can that happen?
+			int rv=_StartReadingCommandBody(&recv_buf,hdr);
+			if(rv)
+			{
+				if(rv==-2)
+				{  Error("Client %s: Too long %s packet (header reports %u bytes)\n",
+					_ClientName().str(),LDRCommandString(recv_cmd),hdr->length);  }
+				else _AllocFailure();
+				return(-1);
+			}
 		
-		return(1);
-	}
-	else if(recv_cmd==Cmd_TaskResponse)
-	{
-		fprintf(stderr,"Implement TaskResponse on server side\n");
-		assert(0);
+			return(1);
+		}
+		default:;
 	}
 	
 	Error("Client %s: Received unexpected command header %s (cmd=%u, length=%u).\n",
@@ -1160,35 +1160,45 @@ int LDRClient::cpnotify_outpump_start()
 // Return value: 1 -> called _KickMe(); 0 -> normal
 int LDRClient::cpnotify_inpump(FDCopyBase::CopyInfo *cpi)
 {
-	if(in_active_cmd==Cmd_FileRequest)
+	switch(in_active_cmd)
 	{
-		assert(cpi->pump==in.pump_s);  // can be left away
-		
-		in_active_cmd=Cmd_NoCommand;
-		in.ioaction=IOA_None;
-		
-		// NOTE: This looks like something strange but it is an 
-		// internal error if it fails. Because we tell the pump to 
-		// copy exactly LDRHeader->length - sizeof(LDRHeader) bytes 
-		// and if it reports SCLimit here, then they have to be 
-		// there. 
-		#if TESTING
-		FDCopyIO_Buf *_dst=(FDCopyIO_Buf*)(cpi->pump->Dest());
-		if(_dst->bufdone+sizeof(LDRHeader)!=
-			((LDRHeader*)(recv_buf.data))->length)
-		{  assert(0);  }
-		#endif
-		
-		int rv=_ParseFileRequest(&recv_buf);
-		if(rv<0)
-		{  _KickMe(0);  return(1);  }
-		assert(rv==0);
-		cpnotify_outpump_start();
-	}
-	else
-	{
-		Error("DONE -> hack on\n");
-		assert(0);
+		case Cmd_FileRequest:
+		{
+			assert(cpi->pump==in.pump_s);  // can be left away
+			
+			in_active_cmd=Cmd_NoCommand;
+			in.ioaction=IOA_None;
+			
+			// NOTE: This looks like something strange but it is an 
+			// internal error if it fails. Because we tell the pump to 
+			// copy exactly LDRHeader->length - sizeof(LDRHeader) bytes 
+			// and if it reports SCLimit here, then they have to be 
+			// there. 
+			#if TESTING
+			FDCopyIO_Buf *_dst=(FDCopyIO_Buf*)(cpi->pump->Dest());
+			if(_dst->bufdone+sizeof(LDRHeader)!=
+				((LDRHeader*)(recv_buf.data))->length)
+			{  assert(0);  }
+			#endif
+			
+			int rv=_ParseFileRequest(&recv_buf);
+			if(rv<0)
+			{  _KickMe(0);  return(1);  }
+			assert(rv==0);
+			
+			recv_buf.content=Cmd_NoCommand;
+			cpnotify_outpump_start();
+		} break;
+		case Cmd_TaskResponse:
+		{
+			Error("Implement task response on server side.\n");
+			assert(0);
+		} break;
+		default:
+			// This is an internal error. Only known packets may be accepted 
+			// in _HandleReceivedHeader(). 
+			Error("DONE -> hack on\n");
+			assert(0);
 	}
 	
 	return(0);
@@ -1197,11 +1207,12 @@ int LDRClient::cpnotify_inpump(FDCopyBase::CopyInfo *cpi)
 
 int LDRClient::cpnotify(FDCopyBase::CopyInfo *cpi)
 {
-	fprintf(stderr,"cpnotify(scode=0x%x (final=%s; limit=%s), err_no=%d (%s))\n",
+	fprintf(stderr,"cpnotify(scode=0x%x (final=%s; limit=%s), err_no=%d (%s), %s)\n",
 		cpi->scode,
 		(cpi->scode & FDCopyPump::SCFinal) ? "yes" : "no",
 		(cpi->scode & FDCopyPump::SCLimit) ? "yes" : "no",
-		cpi->err_no,strerror(cpi->err_no));
+		cpi->err_no,strerror(cpi->err_no),
+		(cpi->pump==in.pump_s || cpi->pump==in.pump_fd) ? "IN" : "OUT");
 	
 	// We are only interested in FINAL codes. 
 	if(!(cpi->scode & FDCopyPump::SCFinal))
@@ -1224,7 +1235,7 @@ int LDRClient::cpnotify(FDCopyBase::CopyInfo *cpi)
 	{
 		cpnotify_inpump(cpi);
 		// We're always listening to the client. 
-		if(out_active_cmd==Cmd_NoCommand)
+		if(in_active_cmd==Cmd_NoCommand)
 		{  _DoPollFD(POLLIN,0);  }
 	}
 	else if(cpi->pump==out.pump_s || cpi->pump==out.pump_fd)
@@ -1261,10 +1272,7 @@ void LDRClient::_KickMe(int do_send_quit)
 			return;
 		}
 		else
-		{
-			ShutdownFD(pollid);
-			sock_fd=-1;
-		}
+		{  _ShutdownConnection();  }
 	}
 	
 	tdif->ClientDisconnected(this);  // This will delete us. 

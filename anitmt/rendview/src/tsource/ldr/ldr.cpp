@@ -249,12 +249,11 @@ long TaskSource_LDR::ConnectRetryMakesSense()
 }
 
 
-TaskSource_NAMESPACE::TaskSourceType TaskSource_LDR::GetTaskSourceType(
-	TaskSourceConsumer *persistent)
+void TaskSource_LDR::SetPersistentConsumer(TaskSourceConsumer *persistent)
 {
-	assert(!cclient || cclient==persistent);
+	// Note: This gets called with persistent=NULL before quit. 
+	assert(!cclient || !persistent || cclient==persistent);
 	cclient=persistent;
-	return(tstype);
 }
 
 

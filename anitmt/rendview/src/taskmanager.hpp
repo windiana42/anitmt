@@ -156,6 +156,7 @@ class TaskManager :
 		// These are called by _schedule(): 
 		int _StartProcessing();   // actually starts things 
 		
+		void _TakeFreshTask(CompleteTask *ctsk);
 		// Do some things with new tasks (set up state & TaskParams): 
 		int _DealWithNewTask(CompleteTask *ctsk);
 		

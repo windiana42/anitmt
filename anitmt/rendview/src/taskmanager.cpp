@@ -250,6 +250,24 @@ void TaskManager::HandleFailedTask(CompleteTask *ctsk,int running_jobs)
 }
 
 
+// Called for a task which was just obtained from the task source. 
+void TaskManager::_TakeFreshTask(CompleteTask *ctsk)
+{
+	assert(ctsk);   // otherwise internal error
+	
+	// Put task into queue (at the END of the queue): 
+	tasklist_todo.append(ctsk);
+	
+	// NOTE: ni->ctsk->state = TaskDone here. Must set up 
+	//       proper value now and set up TaskParams: 
+	interface->DealWithNewTask(ctsk);
+	// This called HandleFailedTask() on error. 
+	
+	// Great. Task queued; now see if we want to start a job. 
+	_CheckStartTasks();
+}
+
+
 int TaskManager::tsnotify(TSNotifyInfo *ni)
 {
 	// Read comment near _ActuallyQuit() for info. 
@@ -333,19 +351,9 @@ int TaskManager::tsnotify(TSNotifyInfo *ni)
 				// Successfully got task. 
 				pending_action=ANone;
 				
-				assert(ni->ctsk);   // otherwise internal error
+				_TakeFreshTask(ni->ctsk);
 				
-				// Put task into queue (at the END of the queue): 
-				tasklist_todo.append(ni->ctsk);
-				
-				// NOTE: ni->ctsk->state = TaskDone here. Must set up 
-				//       proper value now and set up TaskParams: 
-				interface->DealWithNewTask(ni->ctsk);
-				// This called HandleFailedTask() on error. 
-				
-				// Great. Task queued; now see if we want to start a job 
-				// and go on talking to task source: 
-				_CheckStartTasks();
+				// Go on talking to task source: 
 				_TS_GetOrDoneTask();
 			}
 			else if(ni->getstat==GTSWorking)
@@ -500,10 +508,7 @@ int TaskManager::tsnotify(TSNotifyInfo *ni)
 			// this nor must we have send a query. 
 			if(ni->activestat==TASTakeTask)
 			{
-				assert(ni->ctsk);
-				
-				Error("Got task from active task source. Hack on...\n");
-				assert(0);
+				_TakeFreshTask(ni->ctsk);
 			}
 			else assert(0);
 		}  break;
@@ -1278,6 +1283,7 @@ bool TaskManager::_TS_CanDo_DoneTask(CompleteTask **special_done)
 
 bool TaskManager::_TS_CanDo_GetTask(bool can_done)
 {
+	if(GetTaskSourceType()==TST_Active)  return(false);
 	bool can_get=true;
 	     if(dont_start_more_tasks)  can_get=false;
 	else if(schedule_quit || schedule_quit_after)  can_get=false;

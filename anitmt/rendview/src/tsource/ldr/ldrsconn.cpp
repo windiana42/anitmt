@@ -1232,6 +1232,8 @@ int TaskSource_LDR_ServerConn::cpnotify_inpump(FDCopyBase::CopyInfo *cpi)
 			recv_buf.content=Cmd_NoCommand;
 		} break;
 		default:
+			// This is an internal error. Only known packets may be accepted 
+			// in _HandleReceivedHeader(). 
 			Error("DONE -> hack on\n");
 			assert(0);
 	}
@@ -1242,11 +1244,12 @@ int TaskSource_LDR_ServerConn::cpnotify_inpump(FDCopyBase::CopyInfo *cpi)
 
 int TaskSource_LDR_ServerConn::cpnotify(FDCopyBase::CopyInfo *cpi)
 {
-	fprintf(stderr,"cpnotify(scode=0x%x (final=%s; limit=%s), err_no=%d (%s))\n",
+	fprintf(stderr,"cpnotify(scode=0x%x (final=%s; limit=%s), err_no=%d (%s), %s)\n",
 		cpi->scode,
 		(cpi->scode & FDCopyPump::SCFinal) ? "yes" : "no",
 		(cpi->scode & FDCopyPump::SCLimit) ? "yes" : "no",
-		cpi->err_no,strerror(cpi->err_no));
+		cpi->err_no,strerror(cpi->err_no),
+		(cpi->pump==in.pump_s || cpi->pump==in.pump_fd) ? "IN" : "OUT");
 	
 	// We are only interested in FINAL codes. 
 	if(!(cpi->scode & FDCopyPump::SCFinal))
@@ -1296,10 +1299,8 @@ void TaskSource_LDR_ServerConn::_ConnClose(int reason)
 	
 	if(sock_fd>=0)  // Otherwise: Not connected or already disconnected. 
 	{
-		// First, make sure we close down. 
-		PollFDDPtr(pollid,NULL);
-		ShutdownFD(pollid);  // sets pollid=NULL
-		sock_fd=-1;
+		// Make sure we close down. 
+		_ShutdownConnection();
 	}
 	
 	back->ConnClose(this,reason);
@@ -1353,7 +1354,7 @@ TaskSource_LDR_ServerConn::~TaskSource_LDR_ServerConn()
 	
 	if(sock_fd>=0)
 	{
-		Warning("LDR: Still connected to %s; disconnecting.\n",
+		Warning("LDR: Still connected to %s; disconnecting. [OOPS!]\n",
 			addr.GetAddress().str());
 		ShutdownFD(sock_fd);  pollid=NULL;
 	}

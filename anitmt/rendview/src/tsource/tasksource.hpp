@@ -228,10 +228,13 @@ class TaskSource : public TaskSource_NAMESPACE
 		virtual long ConnectRetryMakesSense() HL_PureVirt(-1);
 		
 		// Get TaskSourceType: 
+		TaskSourceType GetTaskSourceType()
+			{  return(tstype);  }
+		
 		// For active task sources, the passed TaskSourceConsumer will 
 		// be persistent and no other TaskSourceConsumer can use it. 
-		virtual TaskSourceType GetTaskSourceType(TaskSourceConsumer * /*persistent*/)
-			{  return(tstype);  }
+		// Does nothing for pssive task sources. 
+		virtual void SetPersistentConsumer(TaskSourceConsumer * /*persistent*/) {}
 };
 
 
@@ -267,8 +270,7 @@ class TaskSourceConsumer : public TaskSource_NAMESPACE
 			{  tsource=NULL;  }
 		
 		// Specify the TaskSource to use: 
-		void UseTaskSource(TaskSource *ts)
-			{  tsource=ts;  }
+		void UseTaskSource(TaskSource *ts);
 		
 		// Get TaskSource pointer... (you should notmally not need 
 		// that but you may i.e. to see if the TaskSource is set). 
@@ -325,7 +327,7 @@ class TaskSourceConsumer : public TaskSource_NAMESPACE
 		
 		// Query TaskSourceType: 
 		TaskSourceType GetTaskSourceType()
-			{  return(tsource->GetTaskSourceType(this));  }
+			{  return(tsource->GetTaskSourceType());  }
 };
 
 #endif  /* _RNDV_TASKSOURCE_HPP_ */

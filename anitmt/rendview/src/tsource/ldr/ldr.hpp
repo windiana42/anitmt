@@ -175,7 +175,7 @@ class TaskSource_LDR :
 		int srcDisconnect(TaskSourceConsumer *);
 		
 		long ConnectRetryMakesSense();
-		TaskSourceType GetTaskSourceType(TaskSourceConsumer *persistent);
+		void SetPersistentConsumer(TaskSourceConsumer *persistent);
 	public: _CPP_OPERATORS_FF
 		TaskSource_LDR(TaskSourceFactory_LDR *,int *failflag=NULL);
 		~TaskSource_LDR();

@@ -22,7 +22,7 @@
 int TaskSource::Connect(TaskSourceConsumer *tsc)
 {
 	if(!tsc)  return(0);
-	if(cclient)  return(1);
+	if(cclient && tstype!=TST_Active)  return(1);
 	
 	return(srcConnect(tsc));
 }
@@ -30,7 +30,7 @@ int TaskSource::Connect(TaskSourceConsumer *tsc)
 int TaskSource::GetTask(TaskSourceConsumer *tsc)
 {
 	if(!tsc)  return(0);
-	if(cclient)  return(1);
+	if(cclient && tstype!=TST_Active)  return(1);
 	
 	return(srcGetTask(tsc));
 }
@@ -38,7 +38,7 @@ int TaskSource::GetTask(TaskSourceConsumer *tsc)
 int TaskSource::DoneTask(TaskSourceConsumer *tsc,CompleteTask *ct)
 {
 	if(!tsc)  return(0);
-	if(cclient)  return(1);
+	if(cclient && tstype!=TST_Active)  return(1);
 	if(!ct)  return(10);
 	
 	return(srcDoneTask(tsc,ct));
@@ -47,7 +47,7 @@ int TaskSource::DoneTask(TaskSourceConsumer *tsc,CompleteTask *ct)
 int TaskSource::Disconnect(TaskSourceConsumer *tsc)
 {
 	if(!tsc)  return(0);
-	if(cclient)  return(1);
+	if(cclient && tstype!=TST_Active)  return(1);
 	
 	return(srcDisconnect(tsc));
 }

@@ -297,6 +297,36 @@ int NetworkIOBase::_FDCopyStartRecvFile(const char *path,int64_t filelen)
 }
 
 
+static inline void _KillControl(FDCopyPump *p)
+{
+	if(p && p->IsActive())
+	{
+		// I think that this will not happen. In case it does, then 
+		// this should not be a problem and the following line should 
+		// be the apropriate action. 
+		assert(0);
+		p->Control(FDCopyPump::CC_Kill);
+	}
+}
+
+void NetworkIOBase::_ShutdownConnection()
+{
+	if(!pollid)  return;
+	
+	// First, cancel all IO jobs...
+	_KillControl(in.pump_s);
+	_KillControl(in.pump_fd);
+	_KillControl(out.pump_s);
+	_KillControl(out.pump_fd);
+	
+	// ...then actually shut down the connection. 
+	PollFDDPtr(pollid,NULL);
+	ShutdownFD(pollid);  // sets pollid=NULL
+	sock_fd=-1;
+}
+
+
+
 // Return value: 0 -> OK; -1 -> alloc failure 
 int NetworkIOBase::_Construct_FDCopy(NetworkIOBase::FDCopy *fdc)
 {
@@ -333,11 +363,35 @@ void NetworkIOBase::_Destroy_FDCopy(NetworkIOBase::FDCopy *fdc)
 {
 	// This is smart becuase it can handle NULL correctly and sets 
 	// the passed parameter to NULL (takes ref to ptr). 
-	DELETE(fdc->io_sock);
-	DELETE(fdc->io_buf);
-	DELETE(fdc->io_fd);
-	DELETE(fdc->pump_s);
-	DELETE(fdc->pump_fd);
+	
+	// This is tricky...
+	// First, we must make sure that the pumps do no longer reference the 
+	// CopyIOs. 
+	//
+	if(fdc->pump_s)
+	{
+		assert(!fdc->pump_s->IsActive());  // _ShutdownConnection() must do that
+		fdc->pump_s->SetIO(NULL,NULL);  // May be done even if pump->is_dead. 
+	}
+	if(fdc->pump_fd)
+	{
+		assert(!fdc->pump_fd->IsActive());  // _ShutdownConnection() must do that
+		fdc->pump_fd->SetIO(NULL,NULL);  // May be done even if pump->is_dead. 
+	}
+	
+	// Then, we delete the pumps: 
+	if(fdc->pump_s)
+	{  fdc->pump_s->persistent=0;   delete fdc->pump_s;   fdc->pump_s=NULL;   }
+	if(fdc->pump_fd)
+	{  fdc->pump_fd->persistent=0;  delete fdc->pump_fd;  fdc->pump_fd=NULL;  }
+	
+	// And finally, we delete the CopyIOs. 
+	if(fdc->io_sock)
+	{  fdc->io_sock->persistent=0;  delete fdc->io_sock;  fdc->io_sock=NULL;  }
+	if(fdc->io_buf)
+	{  fdc->io_buf->persistent=0;   delete fdc->io_buf;   fdc->io_buf=NULL;   }
+	if(fdc->io_fd)
+	{  fdc->io_fd->persistent=0;    delete fdc->io_fd;    fdc->io_fd=NULL;    }
 }
 
 

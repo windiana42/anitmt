@@ -154,3 +154,15 @@ void TaskSourceConsumer::TSWriteError(const TSNotifyInfo *ni)
 		default:  assert(0);  break;
 	}
 }
+
+
+void TaskSourceConsumer::UseTaskSource(TaskSource *ts)
+{
+	// The SetPersistentConsumer() function has to be called for active 
+	// task sources. Passive ones simply ignore it. 
+	if(!ts && tsource)
+	{  tsource->SetPersistentConsumer(NULL);  }
+	tsource=ts;
+	if(tsource)
+	{  tsource->SetPersistentConsumer(this);  }
+}
