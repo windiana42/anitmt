@@ -1202,8 +1202,17 @@ int File_Parser::_Set_Up_Finder(Animation * /*ani*/,Scene_Interface &scene_if)
 	
 	Search_Path_Reset();
 	
-	#warning searchpath...
+	#warning searchpath... (FIXME!!!)
 	Search_Path_Add("/usr/src/povray/povray31/include");
+	Search_Path_Add("/usr/src/film/povray/megapov-install/lib/megapovplus/include");
+	Search_Path_Add("/usr/lib/povray/povray31/include");
+	Search_Path_Add("/usr/lib/povray/include");
+	Search_Path_Add("/usr/local/lib/povray/include");
+	Search_Path_Add("/usr/lib/povray/povray31/include");
+	Search_Path_Add("/usr/local/lib/povray/povray31/include");
+	Search_Path_Add("/usr/lib/povray/megapovplus/include");
+	Search_Path_Add("/usr/local/lib/povray/megapovplus/include");
+	warning() << "Proprietary search path... (FIXME)";
 	
 	verbose(2) << "Token finder initialized. (errors: " << errors << ")";
 	return(errors);
