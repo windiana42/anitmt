@@ -20,7 +20,7 @@
 #include "animation.hpp"
 
 namespace anitmt {
-  static const int WN_INDENT_WIDTH = 2;
+  static const string WN_INDENT_STRING = "  ";
   void save_filled( std::string filename, Animation *root );
 }
 

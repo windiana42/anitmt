@@ -20,7 +20,7 @@ namespace anitmt {
   void write_node( std::ofstream &out, Prop_Tree_Node* node, int indent ){
     int i;
     // write type and name
-    for( i=0; i<indent; i++ ) out << " ";
+    for( i=0; i<indent; i++ ) out << WN_INDENT_STRING;
     out << node->get_type() << " " << node->get_name() << " {" << std::endl;
 
     // write properties
@@ -28,9 +28,17 @@ namespace anitmt {
     std::list<std::string>::iterator cp;
     for( cp = properties.begin(); cp != properties.end(); cp++ )
       {
-	for( i = 0; i < indent+WN_INDENT_WIDTH; i++ ) out << " ";
+	for( i = 0; i <= indent; i++ ) out << WN_INDENT_STRING;
 	out << *cp << " ";	// write property name
-	out << *node->get_property( *cp ) << ';' << std::endl;
+
+	// Write property value
+	// Special handling of string properties ("" around them)
+	Property *p=node->get_property(*cp);
+	bool str_mode=dynamic_cast<String_Property*>(p);
+	if (str_mode) out << '"';
+	out << *p;
+	if (str_mode) out << '"';
+	out << ';' << std::endl;
       }
 
     // write childs recursive
@@ -39,11 +47,11 @@ namespace anitmt {
     for( cc = childs.begin(); cc != childs.end(); cc++ )
       {
 	// recursive call to write child node indented
-	write_node( out, *cc, indent + WN_INDENT_WIDTH );
+	write_node( out, *cc, indent+1);
       }
  
     // write end of block
-    for( i=0; i<indent; i++ ) out << " ";
+    for( i=0; i<indent; i++ ) out << WN_INDENT_STRING;
     out << "}" << std::endl;
   }
 
