@@ -77,28 +77,46 @@ int TaskDriverInterfaceFactory_LDR::FinalInit()
 			continue;
 		}
 		ClientParam *cp=NEW<ClientParam>();
-		assert(cp);  // otherwise alloc failure (may abort in CheckParams())
-
-		// See if a port is specified: 
-		// THIS WILL HAVE problems with IPv6...
-		char *pstr=strrchr(name,':');
+		_CheckAllocFail(!cp);
+		
+		char sep='/';
+		// HOST
+		// HOST/port
+		// HOST/port/passwd
+		// HOST//passwd
+		char *first_sep=strchr(name,sep);
+		char *second_sep=first_sep ? strchr(first_sep+1,sep) : NULL;
+		// See what is specified...
+		char *pass_str = second_sep ? second_sep+1 : NULL;
+		char *port_str = first_sep ? first_sep+1 : NULL;
+		if(port_str+1==pass_str)  port_str=NULL;
+		
+		// Read in port: 
 		int port=default_port;
-		if(pstr)
+		if(port_str)
 		{
 			char *end;
-			port=(int)strtol(pstr+1,&end,10);
-			if(*end || port<1 || port>=65536)
+			port=(int)strtol(port_str,&end,10);
+			if((*end && end!=second_sep) || port<1 || port>=65536)
 			{
-				Warning("Illegal port spec in \"%s\". Defaulting to %d.\n",
-					name,default_port);
+				Warning("Illegal port spec in \"%s\". Defaulting to %d. %s\n",
+					name,default_port,port_str);
 				port=default_port;
 			}
-			// Okay, cut off port: 
-			_CheckAllocFail(cp->name.set0(name,pstr-name));
+		}
+		
+		// Get password (read it in further below): 
+		_CheckAllocFail(cp->password.set(pass_str));
+		
+		// At the end: store name: 
+		if(first_sep)
+		{
+			// Okay, cut off the other things (port, passwd)
+			_CheckAllocFail(cp->name.set0(name,first_sep-name));
 		}
 		else
 		{  cp->name=*n;  }
-
+		
 		bool queued=0;
 		do {
 			// Resolve the name: 
@@ -111,7 +129,15 @@ int TaskDriverInterfaceFactory_LDR::FinalInit()
 			{  Error("gethostbyname() did not return AF_INET for \"%s\".\n",
 				name);  ++failed;  break;  }
 			else assert(!rv);
-
+			
+			// Read in password if needed: 
+			{
+				char tmp[128];
+				snprintf(tmp,128,"Password for client %s (%s): ",
+					cp->name.str(),cp->addr.GetAddress().str());
+				LDRGetPassIfNeeded(&cp->password,tmp,&default_password);
+			}
+			
 			// Okay, everything went fine; put client params in queue: 
 			cparam.append(cp);
 			queued=1;
@@ -232,11 +258,23 @@ int TaskDriverInterfaceFactory_LDR::_RegisterParams()
 	
 	AddParam("clients",
 		"list of client IP addresses and/or host names, optionally with "
-		"port separated via `:´ (e.g. 192.168.10.1:3104)",
+		"port and/or password separated via `/´ "
+		"(host, host/port, host/port/pass, host//pass); password spec: "
+		"password string to use OR \"none\" for none, empty/leave away "
+		"for default, \"prompt\" to ask",
 		&str_clients);
 	AddParam("port",
 		"default LDR port if not specified after client",
 		&default_port);
+	AddParam("password",
+		"default password if not specified after client: password string, "
+		"\"none\" or \"prompt\"",
+		&default_password);
+	
+	AddParam("ctimeout",
+		"connection timeout in _msec_ (time until connection & auth "
+		"must have succeded)",
+		&connect_timeout);
 	
 	AddParam("task-res-min",
 		"try to always have that many task MORE than currently running",
@@ -277,6 +315,7 @@ int TaskDriverInterfaceFactory_LDR::init(ComponentDataBase *cdb)
 TaskDriverInterfaceFactory_LDR::TaskDriverInterfaceFactory_LDR(
 	ComponentDataBase *cdb,int *failflag) : 
 	TaskDriverInterfaceFactory("LDR",cdb,failflag),
+	default_password(failflag),
 	str_clients(failflag),
 	cparam(failflag)
 {
@@ -287,6 +326,8 @@ TaskDriverInterfaceFactory_LDR::TaskDriverInterfaceFactory_LDR(
 	todo_thresh_reserved_max=6;
 	
 	default_port=DefaultLDRPort;
+	
+	connect_timeout=15000;  // 15 seconds
 	
 	for(int i=0; i<_DTLast; i++)
 	{

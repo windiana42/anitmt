@@ -22,9 +22,6 @@
 #include "tsource/tasksource.hpp"
 #include "tdriver/driverif.hpp"
 
-#include <hlib/timeoutmanager.h>
-#include <hlib/timeoutbase.h>
-
 
 class TaskManager : 
 	public FDBase, 

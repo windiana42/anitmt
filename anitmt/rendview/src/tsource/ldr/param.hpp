@@ -36,6 +36,16 @@ class TaskSourceFactory_LDR :
 		// Password required by server to connect. 
 		RefString password;
 		
+		// Param spec string for the flags below. 
+		RefString transfer_spec_str;
+		struct
+		{
+			int render_src : 1;
+			int render_dest : 1;
+			int filter_dest : 1;
+			int additional : 1;
+		} transfer;
+		
 		// Listening socket (managed by TaskSource_LDR, of course)
 		int listen_fd;
 		

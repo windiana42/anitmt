@@ -1739,7 +1739,7 @@ TaskManager::TaskManager(ComponentDataBase *cdb,int *failflag) :
 	{  ++failed;  }
 	
 	// Install timeout node: 
-	timeout_id=IstallTimeout(HTime(HTime::Invalid));
+	timeout_id=InstallTimeout(HTime(HTime::Invalid));
 	if(!timeout_id)  ++failed;
 	
 	if(_SetUpParams())

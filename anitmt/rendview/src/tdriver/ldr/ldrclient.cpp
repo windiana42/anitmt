@@ -246,14 +246,16 @@ int LDRClient::_DoFinishConnect(FDBase::FDInfo *fdi)
 
 
 // Compute a response out of a request and store the whole 
-// response packet in resp_buf. 
+// response packet stored in RespBuf *dest. 
 // Return value: 0 -> OK. 
-int LDRClient::_StoreChallengeResponse(LDRChallengeRequest *d)
+int LDRClient::_StoreChallengeResponse(LDRChallengeRequest *d,RespBuf *dest)
 {
-	if(_ResizeRespBuf(sizeof(LDRChallengeResponse)))
+	if(_ResizeRespBuf(dest,sizeof(LDRChallengeResponse)))
 	{  return(1);  }
 	
-	LDRChallengeResponse *r=(LDRChallengeResponse *)resp_buf;
+	assert(dest->content==Cmd_NoCommand);
+	dest->content=Cmd_ChallengeResponse;
+	LDRChallengeResponse *r=(LDRChallengeResponse *)(dest->data);
 	r->length=sizeof(LDRChallengeResponse);  // STILL IN HOST ORDER
 	r->command=htons(next_send_cmd);
 	
@@ -335,10 +337,10 @@ int LDRClient::_DoAuthHandshake(FDBase::FDInfo *fdi)
 				LDRIDStringLength,d.id_string);
 			
 			// Okay, we have a challenge. Compute the response. 
-			// The response is computed and stored in resp_buf. 
-			next_send_cmd=Cmd_ChallengeResponse;  // DO NOT MOVE
+			// The response is computed and stored in send_buf. 
+			next_send_cmd=Cmd_ChallengeResponse;    // DO NOT MOVE
 			expect_cmd=Cmd_NoCommand;
-			_StoreChallengeResponse(&d);          // DO NOT MOVE
+			_StoreChallengeResponse(&d,&send_buf);  // DO NOT MOVE
 			
 			PollFD(POLLOUT);
 			handeled=1;
@@ -413,14 +415,16 @@ int LDRClient::_DoAuthHandshake(FDBase::FDInfo *fdi)
 	{
 		if(next_send_cmd==Cmd_ChallengeResponse)
 		{
-			assert(resp_buf && resp_buf_alloc_len>=sizeof(LDRChallengeResponse));
+			assert(send_buf.data && send_buf.alloc_len>=sizeof(LDRChallengeResponse));
 			assert(expect_cmd==Cmd_NoCommand);
 			
-			if(_AtomicSendData((LDRHeader *)resp_buf))
+			assert(send_buf.content==Cmd_ChallengeResponse);
+			if(_AtomicSendData((LDRHeader *)(send_buf.data)))
 			{  return(1);  }
 			
 			next_send_cmd=Cmd_NoCommand;
 			expect_cmd=Cmd_NowConnected;
+			send_buf.content=Cmd_NoCommand;
 			
 			PollFD(POLLIN);
 			handeled=1;
@@ -532,6 +536,160 @@ void LDRClient::_DoSendQuit(FDBase::FDInfo *fdi)
 }
 
 
+static inline size_t _SumUpSize(RefStrList *l)
+{
+	size_t len=0;
+	for(const RefStrList::Node *i=l->first(); i; i=i->next)
+	{  len+=(i->len()+1);  }
+	return(len);
+}
+
+// Returns updated dest pointer; copies '\0' at the end. 
+static char *_CopyStrList2Data(char *dest,RefStrList *l)
+{
+	for(const RefStrList::Node *i=l->first(); i; i=i->next)
+	{
+		const char *s=i->str();
+		while( (*(dest++)=*(s++)) );  // The routine that made C famous - ;)
+	}
+	return(dest);
+}
+
+
+// This formats the whole LDRDoTask data into the RespBuf *dest. 
+// Return value: 
+//   0 -> OK complete packet in resp_buf; ready to send it 
+//  -1 -> alloc failure
+int LDRClient::_Create_DoTask_Packet(CompleteTask *ctsk,RespBuf *dest)
+{
+	assert(dest->content==Cmd_NoCommand);
+	
+	RenderTask *rt=ctsk->rt;
+	FilterTask *ft=ctsk->ft;
+	
+	// First, compute the size of the "packet": 
+	size_t totsize=sizeof(LDRDoTask);
+	
+	// All the additional args have to be passed: 
+	size_t r_add_args_size;
+	size_t r_desc_slen,r_oformat_slen;
+	if(rt)
+	{
+		r_add_args_size=_SumUpSize(&rt->add_args);
+		r_desc_slen=rt->rdesc->name.len();
+		r_oformat_slen=strlen(rt->oformat->name);
+	} else {
+		r_add_args_size=0;
+		r_desc_slen=0;
+		r_oformat_slen=0;
+	}
+	totsize+=(r_add_args_size+r_desc_slen+r_oformat_slen);
+	
+	size_t f_add_args_size;
+	size_t f_desc_slen;
+	if(ft)
+	{
+		f_add_args_size=_SumUpSize(&ft->add_args);
+		f_desc_slen=ft->fdesc->name.len();
+	} else {
+		f_add_args_size=0;
+		f_desc_slen=0;
+	}
+	totsize+=(f_add_args_size+f_desc_slen);
+	
+	// Count required files: 
+	#warning need code to pass the required files...
+	int r_n_files=0;
+	int f_n_files=0;
+	// MISSING: totsize += <length of all LDRFileInfoEntries>
+	
+	// Okay, these limits are meant to be never exceeded. 
+	// But we must be sure: 
+	assert(r_desc_slen<=0xffff && r_oformat_slen<=0xffff);
+	assert(f_desc_slen<=0xffff);
+	assert(r_n_files<=0xffff);
+	assert(f_n_files<=0xffff);
+	assert(totsize<0xffffffff);
+	
+	if(_ResizeRespBuf(dest,totsize))
+	{
+		// Alloc failure: 
+		return(-1);
+	}
+	
+	// Actually format the packet: 
+	LDRDoTask *pack=(LDRDoTask *)dest->data;
+	pack->length=htonl(totsize);
+	pack->command=htons(Cmd_TaskRequest);
+	
+	pack->frame_no=htonl(ctsk->frame_no);
+	#warning MISSING: task_id!!
+	pack->task_id=htonl(0);
+	
+	if(rt)
+	{
+		pack->r_width=htons(rt->width);
+		pack->r_height=htons(rt->height);
+		pack->r_timeout = rt->timeout<0 ? 0xffffffffU : htonl(rt->timeout);
+	}
+	else
+	{  pack->r_width=0;  pack->r_height=0;  pack->r_timeout=0;  }
+	pack->r_desc_slen=htons(r_desc_slen);
+	pack->r_add_args_size=htonl(r_add_args_size);
+	pack->r_oformat_slen=htons(r_oformat_slen);
+	
+	if(ft)
+	{  pack->f_timeout = ft->timeout<0 ? 0xffffffffU : htonl(ft->timeout);  }
+	else
+	{  pack->f_timeout=0;  }
+	pack->f_desc_slen=htons(f_desc_slen);
+	pack->f_add_args_size=htonl(f_add_args_size);
+	
+	pack->r_n_files=htons(r_n_files);
+	pack->f_n_files=htons(f_n_files);
+	
+	char *dptr=(char*)(pack->data);
+	if(rt)
+	{
+		strcpy(dptr,rt->rdesc->name.str());  dptr+=r_desc_slen;
+		strcpy(dptr,rt->oformat->name);      dptr+=r_oformat_slen;
+		dptr=_CopyStrList2Data(dptr,&rt->add_args);
+	}
+	if(ft)
+	{
+		strcpy(dptr,ft->fdesc->name.str());  dptr+=f_desc_slen;
+		dptr=_CopyStrList2Data(dptr,&ft->add_args);
+	}
+	
+	#warning MISSING: copy file info!
+	// Take care of alignment issues...
+	
+	// Now, we must be exactly at the end of the buffer: 
+	assert(dptr==dest->data+totsize);
+	
+	dest->content=Cmd_TaskRequest;
+	return(0);
+}
+
+
+int LDRClient::SendTaskToClient(CompleteTask *ctsk)
+{
+	if(!ctsk || (!ctsk->rt && !ctsk->ft))  return(-2);
+	if(!auth_passed)  return(-1);
+	if(assigned_jobs>=c_jobs)  return(2);
+	
+	//if(currently_sending_task_to_client)  <--- MISSING!!
+	//{  return(1);  }
+	
+	#warning ! must make sure that we put back those tasks assigned to a client when it disconnects unexpectedly. 
+	#warning check CanDoTask (&& MISSING -> when we are currently busy sending a task)
+	
+	assert(0);
+	
+	return(0);
+}
+
+
 // Called via TaskDriverInterface_LDR: 
 void LDRClient::fdnotify(FDBase::FDInfo *fdi)
 {
@@ -579,19 +737,30 @@ void LDRClient::fdnotify(FDBase::FDInfo *fdi)
 }
 
 
-int LDRClient::_ResizeRespBuf(size_t newlen)
+void LDRClient::cpnotify(FDCopyBase::CopyInfo *cpi)
 {
-	if(resp_buf_alloc_len<newlen || newlen*2<resp_buf_alloc_len)
+	assert(0);
+}
+
+
+int LDRClient::_ResizeRespBuf(RespBuf *buf,size_t newlen)
+{
+	// This assertion is for implementation security reason. 
+	// If there is a case in which is fails although the code is okay, then 
+	// remove it. 
+	assert(buf->content==Cmd_NoCommand);
+	
+	if(buf->alloc_len<newlen || newlen*2<buf->alloc_len)
 	{
-		char *oldval=resp_buf;
-		resp_buf=(char*)LRealloc(resp_buf,newlen);
-		if(!resp_buf)
+		char *oldval=buf->data;
+		buf->data=(char*)LRealloc(buf->data,newlen);
+		if(!buf->data)
 		{
 			LFree(oldval);
-			resp_buf_alloc_len=0;
+			buf->alloc_len=0;
 			return(1);
 		}
-		resp_buf_alloc_len=newlen;
+		buf->alloc_len=newlen;
 	}
 	return(0);
 }
@@ -620,6 +789,7 @@ LDRClient::LDRClient(TaskDriverInterface_LDR *_tdif,
 	cp=NULL;
 	
 	sock_fd=-1;
+	pollid=NULL;
 	
 	connected_state=0;
 	auth_passed=0;
@@ -629,10 +799,22 @@ LDRClient::LDRClient(TaskDriverInterface_LDR *_tdif,
 	next_send_cmd=Cmd_NoCommand;
 	last_recv_cmd=Cmd_NoCommand;
 	expect_cmd=Cmd_NoCommand;
-	resp_buf_alloc_len=0;
-	resp_buf=NULL;
+	
+	send_buf.alloc_len=0;
+	send_buf.data=NULL;
+	send_buf.content=Cmd_NoCommand;
+	recv_buf.alloc_len=0;
+	recv_buf.data=NULL;
+	recv_buf.content=Cmd_NoCommand;
+	
+	//#error...
+	send_pump.cpid=NULL;
+	send_pump.cmd=Cmd_NoCommand;
+	recv_pump.cpid=NULL;
+	recv_pump.cmd=Cmd_NoCommand;
 	
 	c_jobs=0;
+	assigned_jobs=0;
 	
 	// Register at TaskDriverInterface_LDR (-> task manager): 
 	assert(component_db()->taskmanager());
@@ -649,7 +831,8 @@ LDRClient::~LDRClient()
 {
 	ShutdownFD();  // be sure...
 	
-	resp_buf=(char*)LFree(resp_buf);
+	send_buf.data=(char*)LFree(send_buf.data);
+	recv_buf.data=(char*)LFree(recv_buf.data);
 	
 	// Unrergister at TaskDriverInterface_LDR (-> task manager): 
 	tdif->UnregisterLDRClient(this);

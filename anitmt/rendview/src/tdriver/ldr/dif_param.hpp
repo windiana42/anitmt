@@ -45,8 +45,11 @@ class TaskDriverInterfaceFactory_LDR :
 		int todo_thresh_reserved_min;  // always have this many more tasks than clients
 		int todo_thresh_reserved_max;
 		
-		// Default LDR port (if not specified after client): 
+		// Default LDR port and password (if not specified after client): 
 		int default_port;
+		RefString default_password;
+		
+		long connect_timeout;   // connect(2) timeout in msec; -1 -> none
 		
 		struct DTPrm
 		{

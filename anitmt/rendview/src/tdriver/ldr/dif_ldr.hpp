@@ -30,7 +30,8 @@ class TaskDriverInterfaceFactory_LDR;
 class TaskDriverInterface_LDR : 
 	public TaskDriverInterface,
 	private FDBase,
-	private FDCopyBase
+	private FDCopyBase,
+	private TimeoutBase
 {
 	private:
 		TaskDriverInterfaceFactory_LDR *p;
@@ -47,8 +48,8 @@ class TaskDriverInterface_LDR :
 		
 		void _JobsAddClient(LDRClient *client,int mode);
 		
-		// client connect timeout timer: 
-		TimerID tid_connedt_to;
+		// client connect timeout: 
+		TimeoutID tid_connedt_to;
 		
 		int already_started_processing : 1;  // ReallyStartProcessing() called?
 		int shall_quit : 1;   // Was PleaseQuit() called?
@@ -61,6 +62,10 @@ class TaskDriverInterface_LDR :
 		
 		// FDBase virtuals: 
 		int fdnotify(FDInfo *fdi);
+		// FDCopyBase virtual:
+		int cpnotify(CopyInfo *cpi);
+		// TimeoutBase virtual:
+		int timeoutnotify(TimeoutInfo *ti);
 	public:  _CPP_OPERATORS_FF
 		TaskDriverInterface_LDR(TaskDriverInterfaceFactory_LDR *f,int *failflag=NULL);
 		~TaskDriverInterface_LDR();
@@ -115,6 +120,7 @@ class TaskDriverInterface_LDR :
 		int RegisterLDRClient(LDRClient *client);
 		void UnregisterLDRClient(LDRClient *client);
 		
+		// FD Management: 
 		PollID PollFD_Init(LDRClient *client,int fd);
 		void PollFD(PollID pollid,short events)
 			{  FDBase::PollFD(pollid,events);  }
@@ -122,6 +128,11 @@ class TaskDriverInterface_LDR :
 			{  return(FDBase::ShutdownFD(pollid));  }
 		void UnpollFD(PollID &pollid)
 			{  FDBase::UnpollFD(pollid);  }
+		
+		// FD copy management: 
+		// Used by LDRClient::DoCopyFD2Buf(), LDRClient::DoCopyBuf2FD(): 
+		CopyID DoCopyFdBuf(LDRClient *client,int fd,char *buf,
+			size_t len,int dir);
 		
 		// Called if connect(2) or authentification failed. 
 		// The client gets removed now. 

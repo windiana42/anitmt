@@ -40,7 +40,8 @@ typedef unsigned char uchar;
 //    ----------<connect>----------->
 //   <----[LDRChallengeRequest]-----
 //    ----[LDRChallengeResponse]---->
-// 
+//   <------[LDRNowConnected]-------
+
 
 enum LDRCommand
 {
@@ -117,7 +118,6 @@ enum  // ConnectionAuthCode
 
 // NOTE: In case of error (auth_code != 0), 
 //       the pack is truncated after auth_code. 
-//   the packet is truncated after 
 struct LDRNowConnected : LDRHeader
 {
 	u_int16_t auth_code;  // CAC_*
@@ -130,16 +130,16 @@ struct LDRNowConnected : LDRHeader
 struct LDRQuitNow : LDRHeader
 {
 	// NOTE!! MAY NOT BE LONGER THAN ANY OTHER LDR "PACKET". 
-	//        --EVEN WORSE: it may not comtain data. 
+	//        --EVEN WORSE: it may not contain data. 
 };
 
 
 struct LDRFileInfoEntry
 {
-	u_int64_t mtime;   // in msec since 1970
+	LDRTime mtime;   // in msec since 1970
 	u_int64_t size;    // actally 32 bit would also do it, right?
 	u_int16_t name_slen;  // length of file name (without '\0')
-	uchar name[0];
+	uchar name[0];   // Actual file name entry without '\0'. 
 };
 
 // ALL PASSED STRINGS ARE NOT '\0' - TERMINATED. 
@@ -147,23 +147,44 @@ struct LDRFileInfoEntry
 struct LDRDoTask : LDRHeader
 {
 	u_int32_t frame_no;
-	u_int16_t width,height;   // of image
-	u_int16_t oformat_slen;   // length of oformat string
-	u_int16_t n_files;    // number of LDRFileInfoEntries
-	u_int16_t n_add_args;
+	u_int32_t task_id;   // unique task ID
 	
+	// Render task: 
+	u_int16_t r_width,r_height;   // of image
+	u_int16_t r_desc_slen;    // length of rdesc string (0 -> no render task)
+	u_int32_t r_timeout;   // render timeout (seconds; 0xffffffff to disable)
+	u_int32_t r_add_args_size;  // size of additional args (each \0-terminated)
+	u_int16_t r_oformat_slen;   // length of oformat string
+	
+	// Filter task: 
+	u_int16_t f_desc_slen;    // length of fdesc string (0 -> no filter task)
+	u_int32_t f_timeout;   // render timeout (seconds; 0xffffffff to disable)
+	u_int32_t f_add_args_size;  // size of additional args (each \0-terminated)
+	
+	u_int16_t r_n_files;    // number of LDRFileInfoEntries (only required 
+			// additional files in rdir; NOT render/filter input/output) 
+	u_int16_t f_n_files;    // dito for fdir 
 	
 	uchar data[0];  // More data following: 
-	// unsigned char oformat[oformat_slen]
+	// uchar rdesc[r_desc_slen]
+	// uchar oformat[oformat_slen]
+	// uchar radd_args[r_add_args_size]
+	// uchar fdesc[f_desc_slen]
+	// uchar fadd_args[f_add_args_size]
 	// LDRFileInfoEntry[0]
 	//    mtime,size,name_slen,
 	//    name[name_slen]
 	// LDRFileInfoEntry[1]
 	//    ...
-	// LDRFileInfoEntry[n_files-1]
-	//    ...
-	// additional args
+	// LDRFileInfoEntry[r_n_files+f_n_files-1]
 };
+
+// If passwd.str() is NULL or has zero length, default password if 
+// specified, otherwise none. (Calls passwd.deref() if no passwd.) 
+// Get pass using getpass(prompt) if passwd is "prompt". 
+// If passwd is "none", use no password (-> passwd.deref()). 
+extern void LDRGetPassIfNeeded(RefString *passwd,const char *prompt,
+	RefString *defpass=NULL);
 
 }  // end of namespace LDR
 

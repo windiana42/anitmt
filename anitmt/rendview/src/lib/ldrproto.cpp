@@ -13,9 +13,11 @@
  * 
  */
 
+#include "prototypes.hpp"  /* NEEDED for config.h / VERSION */
 #include "ldrproto.hpp"
 
 #include <hlib/htime.h>
+#include <hlib/refstring.h>
 
 #include <assert.h>
 #include <netinet/in.h>
@@ -105,12 +107,49 @@ void LDRComputeCallengeResponse(LDRChallengeRequest *d,char *resp_buf,
 	for(int i=0; i<17; i++)
 	{
 		#warning Challenge response not yet implemented. 
+		
+		// THIS IS FOR TESTING ONLY: COPY PASSWORD: 
+		strncpy(resp_buf,passwd,LDRChallengeRespLength);
+		
 		// h.Feed(d->challenge,LDRChallengeLength);
 		// h.Feed(passwd,pwl);
 	}
 	// h.Final();
 	// assert(h.hash_len==LDRChallengeRespLength);
 	// h.Get(resp_buf);
+}
+
+
+// If passwd.str() is NULL or has zero length, default password if 
+// specified, otherwise none. (Calls passwd.deref() if no passwd.) 
+// Get pass using getpass(prompt) if passwd is "prompt". 
+// If passwd is "none", use no password (-> passwd.deref()). 
+void LDRGetPassIfNeeded(RefString *passwd,const char *prompt,RefString *defpass)
+{
+	if(defpass && (!passwd->str() || *(passwd->str())=='\0') )
+	{  *passwd=*defpass;  }
+	if(!passwd->str() || *(passwd->str())=='\0')
+	{
+		passwd->deref();
+		return;
+	}
+	
+	// pssword->str() NOT NULL here. 
+	if(!strcmp(passwd->str(),"prompt"))
+	{
+		char *pass=getpass(prompt);
+		if(*pass)
+		{
+			if(passwd->set(pass))
+			{  Error("Allocation failure.\n");  abort();  }
+		}
+		else
+		{  passwd->deref();  }
+	}
+	else if(!strcmp(passwd->str(),"none"))
+	{
+		passwd->deref();
+	}
 }
 
 }  // namespace end

@@ -19,9 +19,9 @@
 #include "tsource/tsfactory.hpp"
 #include "tdriver/tdfactory.hpp"
 
-#include <hlib/timeoutmanager.h>
-#include <hlib/timeoutbase.h>
+#include <hlib/fdmanager.h>
 #include <hlib/cpmanager.h>
+#include <hlib/timeoutmanager.h>
 
 
 char *prg_name=NULL;

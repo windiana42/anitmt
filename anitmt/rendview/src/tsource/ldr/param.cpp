@@ -37,6 +37,13 @@ const char *TaskSourceFactory_LDR::TaskSourceDesc() const
 }
 
 
+/*static void _CheckAlloc(int x)
+{
+	if(x)
+	{  Error("Allocation failure.\n");  abort();  }
+}*/
+
+
 // Create a LDR TaskSource (TaskSource_LDR): 
 TaskSource *TaskSourceFactory_LDR::Create()
 {
@@ -47,6 +54,11 @@ TaskSource *TaskSourceFactory_LDR::Create()
 int TaskSourceFactory_LDR::FinalInit()
 {
 	int failed=0;
+	
+	LDRGetPassIfNeeded(&password,"Enter client password: ",NULL);
+	if(!password.str())
+	{  Warning("LDR client: no server password specified "
+		"(authentificatgion disabled).\n");  }
 	
 	// Okay, LDR task source listenes to port listen_port: 
 	// Actually bind to that port: 
@@ -88,6 +100,15 @@ int TaskSourceFactory_LDR::FinalInit()
 	{
 		Verbose(TSP,"LDR task source: Listening on port %d (procotol version %d)\n",
 			listen_port,LDRProtocolVersion);
+		Verbose(TSP,"  Server authentification (password): %s\n",
+			password.str() ? "enabled" : "disabled");
+		Verbose(TSP,"  Transferring files:\n"
+			"    Render source: %s     Render dest: %s\n"
+			"    Filter dest:   %s     Additional:  %s\n",
+			transfer.render_src  ? "yes" : "no ",
+			transfer.render_dest ? "yes" : "no",
+			transfer.filter_dest ? "yes" : "no ",
+			transfer.additional  ? "yes" : "no");
 	}
 	
 	return(failed ? 1 : 0);
@@ -107,6 +128,59 @@ int TaskSourceFactory_LDR::CheckParams()
 		++failed;
 	}
 	
+	if(transfer_spec_str.str())
+	{
+		const char *s=transfer_spec_str.str();
+		int f_error=0;
+		while(*s)
+		{
+			const char *e=s;
+			int mode=0;
+			while(isalpha(*e))  ++e;
+			
+			if(*e=='+')  mode=1;
+			else if(*e=='-')  /*mode=0*/;
+			else
+			{  ++f_error;  break;  }
+			
+			do {
+				if(e-s==1)
+				{
+				 	if(*s=='a')  {  transfer.additional=mode;  break;  }
+				}
+				else if(e-s==2)
+				{
+					if(*s=='r' && s[1]=='s')
+					{  transfer.render_src=mode;  break;  }
+					else if(*s=='r' && s[1]=='d')
+					{  transfer.render_dest=mode;  break;  }
+					else if(*s=='f' && s[1]=='d')
+					{  transfer.filter_dest=mode;  break;  }
+				}
+				else if(e-s==3)
+				{
+					if(*s=='a' && s[1]=='l' && s[2]=='l')
+					{
+						transfer.additional=mode;
+						transfer.render_src=mode;
+						transfer.render_dest=mode;
+						transfer.filter_dest=mode;
+						break;
+					}
+				}
+				++f_error;  goto breakboth;
+			} while(0);
+			
+			s=e+1;
+		}
+		breakboth:;
+		if(f_error)
+		{
+			Error("Invalid transfer spec \"%s\".\n",transfer_spec_str.str());
+			++failed;
+		}
+	}
+	
 	return(failed ? 1 : 0);
 }
 
@@ -119,6 +193,20 @@ int TaskSourceFactory_LDR::_RegisterParams()
 	
 	AddParam("port","inet port to listen for connections from LDR server",
 		&listen_port);
+	
+	AddParam("transfer","specify which files shall/shall not be tranferred "
+		"from the server to THIS client (files not being transferred are "
+		"assumed to be found on the hd becuase e.g. it is an NFS volume); "
+		"possible files:\n"
+		"  \"a\"   -> additional files   \"rd\" -> render dest\n"
+		"  \"rs\"  -> render source      \"fd\" -> filter dest\n"
+		"  \"all\" -> all files\n"
+		"concatenation using postfix `+' (transfer) and `-' (do not transfer); "
+		"e.g. \"a+rs-rd-fd-\"; (default: \"all+\")",&transfer_spec_str);
+	
+	AddParam("password","password required by the server to be allowed "
+		"to connect to this client; leave away or \"none\" to disable; "
+		"\"prompt\" to prompt for one ",&password);
 	
 	return(add_failed ? (-1) : 0);
 }
@@ -143,11 +231,17 @@ int TaskSourceFactory_LDR::init(ComponentDataBase *cdb)
 TaskSourceFactory_LDR::TaskSourceFactory_LDR(
 	ComponentDataBase *cdb,int *failflag) : 
 	TaskSourceFactory("LDR",cdb,failflag),
-	password(failflag)
+	password(failflag),
+	transfer_spec_str(failflag)
 {
 	listen_fd=-1;
 	
 	listen_port=UnsetNegMagic;
+	
+	transfer.render_src=1;
+	transfer.render_dest=1;
+	transfer.filter_dest=1;
+	transfer.additional=1;
 	
 	int failed=0;
 	

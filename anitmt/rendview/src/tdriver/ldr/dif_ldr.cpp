@@ -126,7 +126,17 @@ int TaskDriverInterface_LDR::TermAllJobs(int reason)
 // Actually launch a job for a task. No check if we may do that. 
 int TaskDriverInterface_LDR::LaunchTask(CompleteTask *ctsk)
 {
-	//SendTaskToClient();
+	// Otherwise GetTaskToStart() has a bug: 
+	assert(ctsk && (ctsk->rt || ctsk->ft));   
+	
+	LDRClient *c=ctsk->d.ldrc;
+	assert(c);  // Otherwise bug near/in GetTaskToStart(). 
+	
+	int rv=c->SendTaskToClient(ctsk);
+	if(rv<0)
+	{
+	}
+	
 	assert(0 && ctsk);
 }
 
@@ -182,7 +192,45 @@ CompleteTask *TaskDriverInterface_LDR::GetTaskToStart(
 	if(tasklist_todo->is_empty())
 	{  return(NULL);  }
 	
-	assert(0 && tasklist_todo && schedule_quit);
+	// Well, that's simple for the LDR task driver: 
+	// Just return the next task if there is a free client. 
+	
+	if(schedule_quit)
+	{  return(NULL);  }
+	
+	// Find free client: 
+	// NOTE: We use an LRU-like method here: We always check the client 
+	//       list first-to-last if a client can do a task. If this client 
+	//       got its task, then this client is re-queued at the end. 
+	LDRClient *free_client=NULL;
+	for(LDRClient *i=clientlist.first(); i; i=i->next)
+	{
+		if(i->CanDoTask())
+		{  free_client=i;  break;  }
+	}
+	
+	if(!free_client)
+	{
+fprintf(stderr,"TaskDriverInterface_LDR: ??? No free client!!!\n");
+		return(NULL);
+	}
+	
+	// Find task to be done: 
+	CompleteTask *startme=NULL;
+	for(CompleteTask *i=tasklist_todo->first(); i; i=i->next)
+	{
+		assert(i->state!=CompleteTask::TaskDone);
+		if(i->d.any())  continue;  // task is currently processed 
+		
+		startme=i;
+		startme->d.ldrc=free_client;   // for LaunchTask() etc. 
+		break;
+	}
+	
+if(!startme)
+{  fprintf(stderr,"TaskDriverInterface_LDR: ??? No task todo!!!\n");  }
+	
+	return(startme);
 }
 
 
@@ -231,11 +279,25 @@ void TaskDriverInterface_LDR::ReallyStartProcessing()
 	// Okey, let's begin. We call TaskManager::ReallyStartProcessing() 
 	// when the first client is connected. 
 	
-	// Start connect timer: 
-	#warning allow variable timeout; hack the timer!!
-	UpdateTimer(tid_connedt_to,10000,0);
+	// Start connect timeout (if needed): 
+	if(p->connect_timeout>0)
+	{
+		HTime curr(HTime::Curr);
+		curr.Add(p->connect_timeout,HTime::msec);
+		UpdateTimeout(tid_connedt_to,&curr);
+	}
+	else
+	{  Warning("Warning: connect timeout disabled.\n");  }
 	
-	Verbose(TDR,"Simultaniously initiating connections to all clients:\n");
+	{
+		char tmp[32];
+		if(p->connect_timeout>0)
+		{  snprintf(tmp,32,"%ld msec",p->connect_timeout);  }
+		else
+		{  strcpy(tmp,"[disabled]");  }
+		Verbose(TDR,"Simultaniously initiating connections to all clients "
+			"(timeout: %s):\n",tmp);
+	}
 	
 	int n_connecting=0;
 	for(TaskDriverInterfaceFactory_LDR::ClientParam *i=p->cparam.first();
@@ -287,6 +349,87 @@ int TaskDriverInterface_LDR::fdnotify(FDInfo *fdi)
 }
 
 
+int TaskDriverInterface_LDR::cpnotify(CopyInfo *cpi)
+{
+	LDRClient *client=(LDRClient*)(cpi->req->dptr);
+	assert(client);
+	
+	client->cpnotify(cpi);
+	
+	return(0);
+}
+
+
+int TaskDriverInterface_LDR::timeoutnotify(TimeoutInfo *ti)
+{
+	int msg_written=0;
+	for(LDRClient *_i=clientlist.first(); _i; )
+	{
+		LDRClient *client=_i;
+		_i=_i->next;
+		
+		if(client->connected_state==0)  continue;  // not connecting & not connected 
+		if(client->auth_passed || client->send_quit_cmd)  continue;
+		
+		if(!msg_written)
+		{  Verbose(TDR,"Connection timeout expired:\n");  msg_written=1;  }
+		
+		// He has do die...
+		Warning("  Timed out during %s: %s\n",
+			client->connected_state==1 ? "connect" : "auth",
+			client->_ClientName().str());
+		if(client->Disconnect())
+		{
+			// Already disconnected: Delete; then destructor will 
+			// unregister it: 
+			delete client;
+		}
+	}
+	
+	return(0);
+}
+
+
+// dir: +1 -> buf -> FD; -1 -> FD -> buf
+FDCopyBase::CopyID TaskDriverInterface_LDR::DoCopyFdBuf(LDRClient *client,
+	int fd,char *buf,size_t len,int dir)
+{
+	CopyRequest req;
+	
+	if(dir<0)  // FD -> buf
+	{
+		req.srcfd=fd;
+		req.destbuf=buf;
+	}
+	else if(dir>0)
+	{
+		req.destfd=fd;
+		req.srcbuf=buf;
+	}
+	else assert(0);  // illegal direction
+	
+	req.len=len;
+	req.dptr=client;
+	
+	#warning might tweak with req.bufxyz
+	#warning disable NAGLE algorithm on network socket
+	
+	// Important flag because we may be using the FD, too. 
+	// (It's a network socket after all and we want to go full duplex!). 
+	req.recv_fdnotify=1;
+	
+	CopyID cpid=FDCopyBase::CopyFD(&req,/*FDBase=*/NULL);
+	if(!cpid)
+	{
+		if(req.errcode==-1)
+		{  return(NULL);  }
+		assert(0);  // The rest are errors which may not happen. 
+	}
+	
+	return(cpid);
+}
+
+
 FDBase::PollID TaskDriverInterface_LDR::PollFD_Init(LDRClient *client,int fd)
 {
 	PollID pollid;
@@ -296,6 +439,7 @@ FDBase::PollID TaskDriverInterface_LDR::PollFD_Init(LDRClient *client,int fd)
 }
 
 
+// Do njobs calculation because there are now more/less clients. 
 // mode: +1 -> add; -1 -> subtract
 void TaskDriverInterface_LDR::_JobsAddClient(LDRClient *client,int mode)
 {
@@ -358,6 +502,7 @@ void TaskDriverInterface_LDR::ClientDisconnected(LDRClient *client)
 {
 	// Oh yes. That is simple. 
 	delete client;
+	#warning ...what about giving back tasks? (or am I missing sth?)
 }
 
 
@@ -414,6 +559,7 @@ TaskDriverInterface_LDR::TaskDriverInterface_LDR(
 	TaskDriverInterface(f->component_db(),failflag),
 	FDBase(failflag),
 	FDCopyBase(failflag),
+	TimeoutBase(failflag),
 	clientlist(failflag)
 {
 	p=f;
@@ -430,7 +576,7 @@ TaskDriverInterface_LDR::TaskDriverInterface_LDR(
 	
 	int failed=0;
 	
-	tid_connedt_to=InstallTimer(-1,0);
+	tid_connedt_to=InstallTimeout(HTime(HTime::Invalid));
 	if(!tid_connedt_to)  ++failed;
 	
 	

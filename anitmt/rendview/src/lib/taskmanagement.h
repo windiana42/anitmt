@@ -15,10 +15,12 @@
 #include <hlib/fdbase.h>
 #include <hlib/procmanager.h>
 #include <hlib/procbase.h>
-#include <hlib/secthdl.h>
+#include <hlib/timeoutmanager.h>
+#include <hlib/timeoutbase.h>
 
 // Parameter management: 
 #include <hlib/parbase.h>
+#include <hlib/secthdl.h>
 
 class TaskManager;
 class TaskSource;
