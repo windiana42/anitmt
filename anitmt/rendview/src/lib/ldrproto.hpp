@@ -165,11 +165,11 @@ struct LDRDoTask : LDRHeader
 			// additional files in rdir; NOT render/filter input/output) 
 	u_int16_t f_n_files;    // dito for fdir 
 	
-	uchar data[0];  // More data following: 
+	uchar data[0];  // More data following: [ORDER: easiest parsable for client]
 	// uchar rdesc[r_desc_slen]
+	// uchar fdesc[f_desc_slen]
 	// uchar oformat[oformat_slen]
 	// uchar radd_args[r_add_args_size]
-	// uchar fdesc[f_desc_slen]
 	// uchar fadd_args[f_add_args_size]
 	// LDRFileInfoEntry[0]
 	//    mtime,size,name_slen,

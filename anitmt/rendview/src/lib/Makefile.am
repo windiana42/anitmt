@@ -7,4 +7,6 @@ libsupport_a_SOURCES = \
 	file.cpp \
 	misc.cpp \
 	myaddrinfo.hpp myaddrinfo.cpp \
-	ldrproto.hpp ldrproto.cpp
+	ldrproto.hpp ldrproto.cpp \
+	netiobase.hpp netiobase.cpp \
+	netiobase_ldr.hpp netiobase_ldr.cpp
