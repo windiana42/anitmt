@@ -56,17 +56,28 @@ namespace anitmt{
 
   class Scene_State {};
 
-  class Object_State : public values::Matrix {
+  class Object_State 
+  {
   public:
-    Object_State() : values::Matrix() {}
-    Object_State( values::Matrix v ) : values::Matrix(v) {}
+    values::Matrix mat;		// transformation matrix 
+    bool active;
+
+    Object_State() : active(false) {}
+    Object_State( values::Matrix v ) : mat(v), active(true) {}
+    Object_State( values::Matrix v, bool a ) : mat(v), active(a) {}
   };
 
-  class Scalar_State : public values::Scalar {
+  class Scalar_State 
+  {
   public:
-    Scalar_State() : values::Scalar() {}
-    Scalar_State( double v ) : values::Scalar(v) {}
-    Scalar_State( values::Scalar v ) : values::Scalar(v) {}
+    values::Scalar val;
+    bool active;
+
+    Scalar_State() : active(0) {}
+    Scalar_State( double v ) : val(v), active(1) {}
+    Scalar_State( values::Scalar v ) : val(v), active(1) {}
+    Scalar_State( double v, bool a ) : val(v), active(a) {}
+    Scalar_State( values::Scalar v, bool a ) : val(v), active(a) {}
   };
 
 }

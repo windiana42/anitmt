@@ -18,6 +18,7 @@
 #include <list>
 #include "val.hpp"
 #include "error.hpp"
+#include "proptree.hpp"
 
 namespace anitmt{
 
@@ -29,14 +30,20 @@ namespace anitmt{
   // Return: interface for tree nodes with a special return type
   //************************************************************
 
-  // exception that this child is able to return a value at specified time
-  class EX_not_active_at_time {};
   // exception that more than one child is added to a unique child container
-  class EX_more_than_one_child {};
+  class EX_more_than_one_child : public EX
+  {
+  public:
+    EX_more_than_one_child() 
+      : EX( "only one child of this type is allowed here") {}
+  };
   // exception that no child was added but was essential
-  class EX_essential_child_missing {};
-  // exception that no child is able to return a value
-  class EX_no_active_child {};
+  class EX_essential_child_missing : public EX
+  {
+  public:
+    EX_essential_child_missing() 
+      : EX( "an essential child is missing" ) {}
+  };
 
   template <class Return_Type>
   class Return {
@@ -57,16 +64,22 @@ namespace anitmt{
     Return<Return_Type> *get_prev( Return_Type type_ID = Return_Type() );
     Return<Return_Type> *get_next( Return_Type type_ID = Return_Type() );
   public:
-    // returns the result at time t of defined return type
-    virtual Return_Type get_return_value( values::Scalar t, 
-					  Return_Type type_ID = Return_Type() )
-      throw( EX_not_active_at_time, EX_user_error ) = 0;
+    //! returns a Prop_Tree_Node pointer of this object
+    inline Prop_Tree_Node *this_node() { return this_node; }
+
+    //! consists of is_active and return_value
+    typedef std::pair<bool,Return_Type> Optional_Return_Type;
+
+    /*! returns the result at time t or false as first element, if not active
+      in at time t */
+    virtual Optional_Return_Type
+    get_return_value( values::Scalar t, Return_Type type_ID = Return_Type() )
+      throw( EX_user_error ) = 0;
 
     //! function that is called after hierarchy was set up for each node
     void hierarchy_final_init( Return_Type type_ID );
 
     Return();
-
   };
 
   //**************************************************************
@@ -83,15 +96,20 @@ namespace anitmt{
     typedef std::list< Return<Return_Type> * > content_type;
     content_type content;
   public:
+    //! returns content elements
+    const content_type &get_content() const { return content; }
 
-    // tries to use the node as element for this container
+    //! tries to use the node as element for this container
     bool try_add_child( Return<Return_Type> *node ) 
       throw( EX_more_than_one_child );
 
-    // returns the result according to children that are active at time t
-    Return_Type get_return_value( values::Scalar t, 
+    //! consists of is_active and return_value
+    typedef std::pair<bool,Return_Type> Optional_Return_Type;
+
+    //! returns the result according to children that are active at time t
+    Optional_Return_Type get_return_value( values::Scalar t, 
 				  Return_Type type_ID = Return_Type() )
-      throw( EX_essential_child_missing, EX_no_active_child, EX_user_error );
+      throw( EX_essential_child_missing, EX_user_error );
 
     //! function that is called after hierarchy was set up for each node
     void hierarchy_final_init( Return_Type type_ID = Return_Type() );

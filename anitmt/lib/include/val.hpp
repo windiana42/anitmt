@@ -176,8 +176,8 @@ namespace values
     friend Vector operator*(const Vector &a,const Matrix &b);
 
     // Unary operators: 
-    Vector &operator+()  {  return(*this);  }
-    Vector  operator-()  {  Vector r(noinit);  r.x.neg(x);   return(r);  }
+    Vector  operator+() const  {  return(*this);  }
+    Vector  operator-() const {  Vector r(noinit);  r.x.neg(x);   return(r);  }
 
     // Operators comparing vectors (are using epsilon): 
     friend bool operator==(const Vector &,const Vector &);
@@ -432,8 +432,8 @@ namespace values
     Matrix &operator-=(const Matrix &b)  {  x.sub(b.x);  return(*this);  }
 
     // Unary operators: 
-    Matrix &operator+()  {  return(*this);  }
-    Matrix  operator-()  {  Matrix r(noinit);  r.x.neg(x);   return(r);  }
+    Matrix operator+() const {  return(*this);  }
+    Matrix operator-() const {  Matrix r(noinit);  r.x.neg(x);   return(r);  }
 
     // Operators comparing matrices (are using epsilon): 
     friend bool operator==(const Matrix &,const Matrix &);

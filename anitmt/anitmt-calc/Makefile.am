@@ -22,6 +22,8 @@ libanitmt_a_SOURCES = 	error.hpp error.cpp\
 			object.hpp object.cpp move.hpp move.cpp \
 			save_filled.hpp save_filled.cpp 
 
-anitmt_calc_SOURCES =	anitmt.cpp
+anitmt_calc_SOURCES =	input.hpp  \
+			output.hpp raw.hpp raw.cpp \
+			anitmt.cpp			
 anitmt_calc_LDADD =	libanitmt.a ../lib/val/libval.a ../lib/par/libpar.a \
 			parser/libadlparser.a

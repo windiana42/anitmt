@@ -87,7 +87,7 @@ namespace anitmt {
     //! insert concrete values for properties
     virtual void insert_values(); 
 
-    ADL_Input( std::string filename );
+    ADL_Input( std::string filename, Animation *ani );
   };
 }
 //-----------------------------------------------------------------------------

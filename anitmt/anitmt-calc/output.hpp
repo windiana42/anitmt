@@ -1,5 +1,5 @@
 /*****************************************************************************/
-/**   This file offers an input interface                       	    **/
+/**   This file offers an output interface                       	    **/
 /*****************************************************************************/
 /**									    **/
 /** Author: Martin Trautmann						    **/
@@ -12,27 +12,27 @@
 /**									    **/
 /*****************************************************************************/
 
-#ifndef __AniTMT_Input_Interface__
-#define __AniTMT_Input_Interface__
+#ifndef __AniTMT_Output_Interface__
+#define __AniTMT_Output_Interface__
 
 #include "animation.hpp"
 
 namespace anitmt
 {
-  class Input_Interface 
+  class Output_Interface 
   {
   protected:
     Animation *ani;
   public:
-    //! create animation tree structure
-    virtual void create_structure() = 0;
-    //! create explicite references 
-    virtual void insert_expl_ref() = 0; 
-    //! insert concrete values for properties
-    virtual void insert_values() = 0; 
-
-    Input_Interface( Animation *a ) : ani(a) {}
-    virtual ~Input_Interface() {}
+    //! init interface (ex: check if scene file exists)
+    virtual void init() throw( EX ) = 0;
+    //! check the components (verify them and copy files)
+    virtual void check_components() throw( EX ) = 0;
+    //! process the resulting animation (ex: integrate it in scene description)
+    virtual void process_results() throw( EX ) = 0; 
+    
+    Output_Interface( Animation *a ) : ani(a) {}
+    virtual ~Output_Interface() {}
   };
 }
 

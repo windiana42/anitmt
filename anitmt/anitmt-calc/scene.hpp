@@ -38,8 +38,10 @@ namespace anitmt{
     String_Property filename;
     String_Property scene_type;
 
-    Contain_Return< Scalar_State > scalar;
-    Contain_Return< Object_State > object;
+    //! all scalar components in the scene 
+    Contain_Return< Scalar_State > scalars;
+    //! all scalar components in the scene 
+    Contain_Return< Object_State > objects;
 
     bool try_add_child( Prop_Tree_Node *node );
 
@@ -47,12 +49,18 @@ namespace anitmt{
     //! function of the return type container
     virtual void final_init();
   public:
+    inline const Contain_Return<Scalar_State>& get_scalars() 
+    { return scalars; }
+    inline const Contain_Return<Object_State>& get_objects() 
+    { return objects; }
+
     static std::string get_type_name();
 
     Ani_Scene( std::string name, Animation *ani );
 
-    Scene_State get_return_value( values::Scalar t, 
-				  Scene_State s = Scene_State() );    
+    Optional_Return_Type get_return_value( values::Scalar t, 
+					   Scene_State s = Scene_State() ) 
+      throw( EX_user_error );    
   };
   
 }

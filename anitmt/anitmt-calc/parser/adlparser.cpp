@@ -158,7 +158,8 @@ void anitmt::ADL_Input::insert_values()
 				// !!! should read/insert property values !!! 
 }
 
-anitmt::ADL_Input::ADL_Input( std::string file ) : filename(file) {}
+anitmt::ADL_Input::ADL_Input( std::string file, Animation *a ) 
+  : Input_Interface(a), filename(file) {}
 
 
 //-----------------------------------------------------------------------------

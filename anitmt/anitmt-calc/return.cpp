@@ -70,7 +70,9 @@ namespace anitmt
 
   // constructor
   template <class Return_Type>
-  Return<Return_Type>::Return() : prev(0), next(0) {}
+  Return<Return_Type>::Return() : prev(0), next(0)
+  {
+  }
 
   //******************************************************************
   // << template <Return_Type> >>
@@ -110,30 +112,35 @@ namespace anitmt
 
   //! returns the result according to children that are active at time t
   template <class Return_Type>
-  Return_Type Contain_Return<Return_Type>::get_return_value( values::Scalar t,
-							     Return_Type ) 
-    throw( EX_essential_child_missing, EX_no_active_child, EX_user_error ) {
-
+  Contain_Return<Return_Type>::Optional_Return_Type 
+  Contain_Return<Return_Type>::get_return_value( values::Scalar t, 
+						 Return_Type ) 
+    throw( EX_essential_child_missing, EX_user_error ) 
+  {
+    /* !!! may be removed here !!! */
     if( essential_child && ( num_children == 0 ) )
       throw EX_essential_child_missing();
+    /* !!! --- !!! */
 
+    Optional_Return_Type ret;
     for( content_type::iterator i = content.begin(); i != content.end(); i++ )
     {
-      try{
-	return (*i)->get_return_value( t );
-      }
-      catch( EX_not_active_at_time ){
-	continue;
-      }
+      ret = (*i)->get_return_value( t );
+
+      if( ret.first ) return ret;
     }
 
-    throw EX_no_active_child();
+    return ret;			// return ret.first = false
   }
 
   //! function that is called after hierarchy was set up for each node
   template <class Return_Type>
   void Contain_Return<Return_Type>::hierarchy_final_init( Return_Type )
   {
+    //!!! should be checked here
+    //if( essential_child && ( num_children == 0 ) )
+    //  throw EX_essential_child_missing();
+
     for( content_type::iterator i = content.begin(); i != content.end(); i++ )
     {
       (*i)->hierarchy_final_init( Return_Type() );

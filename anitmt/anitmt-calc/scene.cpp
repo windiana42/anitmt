@@ -29,7 +29,7 @@ namespace anitmt{
 
   Ani_Scene::Ani_Scene( std::string name, Animation *ani ) 
     : Prop_Tree_Node( type_name, name, ani ),
-      scalar(false,false), object(false,false) {
+      scalars(false,false), objects(false,false) {
 
     add_property( "filename", &filename );
     add_property( "scene_type", &scene_type );
@@ -43,23 +43,25 @@ namespace anitmt{
       dynamic_cast< Return<Object_State>*  >( node );
 
     bool res = false;
-    if( scal ) res = res || scalar.try_add_child( scal );
-    if( obj  ) res = res || object.try_add_child( obj );
+    if( scal ) res = res || scalars.try_add_child( scal );
+    if( obj  ) res = res || objects.try_add_child( obj );
     
     return res;
   }
 
-  Scene_State Ani_Scene::get_return_value( values::Scalar t, 
-					   Scene_State s = Scene_State() ) {
-    return Scene_State();
+  Ani_Scene::Optional_Return_Type Ani_Scene::get_return_value
+  ( values::Scalar t, Scene_State s = Scene_State() ) 
+    throw( EX_user_error )
+  {
+    return Optional_Return_Type( false, Scene_State() ); // return nothing...
   }
 
   //! individual final init after hierarchy is set up (Has to call the 
   //! function of the return type container
   void Ani_Scene::final_init()
   {
-    scalar.hierarchy_final_init();
-    object.hierarchy_final_init();
+    scalars.hierarchy_final_init();
+    objects.hierarchy_final_init();
   }
   
 }

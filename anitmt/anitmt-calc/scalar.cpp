@@ -37,9 +37,10 @@ namespace anitmt{
     
   }
 
-  Scalar_State Ani_Scalar::get_return_value( values::Scalar t, 
-					     Scalar_State )
+  Ani_Scalar::Optional_Return_Type Ani_Scalar::get_return_value
+  ( values::Scalar t, Scalar_State ) throw( EX_user_error )
   {
+    // return the value of my child in any case
     return s.get_return_value(t);
   }
 

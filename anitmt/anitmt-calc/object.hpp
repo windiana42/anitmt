@@ -35,7 +35,6 @@ namespace anitmt{
 
     static const std::string type_name;
 
-    Contain_Return<values::Matrix> mat;
     Contain_Return<Position>	   pos;
     Contain_Return<Direction>      dir;
     Contain_Return<Up_Vector>      up;
@@ -52,8 +51,9 @@ namespace anitmt{
 
     Ani_Object( std::string name, Animation *ani );
 
-    Object_State get_return_value( values::Scalar t, 
-				   Object_State m = Object_State() );
+    Optional_Return_Type get_return_value( values::Scalar t, 
+					   Object_State m = Object_State() )
+      throw( EX_user_error );
   };
   
 

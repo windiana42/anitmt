@@ -109,10 +109,14 @@ namespace anitmt{
 			       6, v0, prev_node, "endvalue" );
   }
     
-  values::Scalar Scal_Linear::get_return_value( values::Scalar t,
-						values::Scalar ) 
+  Scal_Linear::Optional_Return_Type Scal_Linear::get_return_value
+  ( values::Scalar t, values::Scalar ) throw( EX_user_error )
   {
-    return v0() + s() * t;
+    // if not active
+    if( (t > te()) || (t < t0()) ) 
+      return Optional_Return_Type( false, values::Scalar() );
+    // else return result
+    return Optional_Return_Type( true, v0() + s() * (t-t0()) );
   }
 
   bool Scal_Linear::try_add_child( Prop_Tree_Node *node )

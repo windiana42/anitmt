@@ -17,75 +17,87 @@
 #include "nodes.hpp"
 #include "save_filled.hpp"
 #include "input.hpp"
+#include "output.hpp"
 
-#include <adlparser.hpp>
 #include <params.hpp>
-
 #include <fstream>
+
+// input filters
+#include <adlparser.hpp>
+// output filters
+#include "raw.hpp"
 
 using namespace anitmt;
 
 int main(int argc,char **argv,char **envp)
 {
-  // commandline handler of libpar (params.hpp)
-  Command_Line cmd(argc,argv,envp);
+  try
+  {
+    // commandline handler of libpar (params.hpp)
+    Command_Line cmd(argc,argv,envp);
 
-  Animation ani("noname");
-  if(!ani.param.Parse_Command_Line(&cmd) )
-    return -1;
+    Animation ani("noname");
+    if(!ani.param.Parse_Command_Line(&cmd) )
+      return -1;
   
-  if(!cmd.Check_Unused() )
-    return -2;
+    if(!cmd.Check_Unused() )
+      return -2;
 
-  // init animation tree
-  make_all_nodes_available();
+    // !!! memory leak and invariable output format !!!
+    Output_Interface *output = new Raw_Output( &ani ); 
 
-  stringlist adlfiles = ani.param.adl();
-  if( adlfiles.is_empty() )
+    output->init();
+
+    // init animation tree
+    make_all_nodes_available();
+
+    stringlist adlfiles = ani.param.adl();
+    if( adlfiles.is_empty() )
     {
       cerr << "Error: no animation descriptions specified" << endl;
       return -3;
     }
 
-  typedef std::list<Input_Interface*> input_type;
-  input_type input;
+    typedef std::list<Input_Interface*> input_type;
+    input_type input;
 
-  adlfiles.rewind();
-  do
-  { 
-    input.push_back( new ADL_Input( adlfiles.current() ) );
+    adlfiles.rewind();
+    do
+    { 
+      input.push_back( new ADL_Input( adlfiles.current(), &ani ) );
+    } while( adlfiles.next() );
 
-    /*
-    ifstream file( adlfiles.current().c_str() );
-    ADLParser p( file, cout, true);
-    p.ParseTree( &ani );
-    */
-  } while( adlfiles.next() );
+    // for all input interfaces
+    for( input_type::iterator i = input.begin(); i != input.end(); i++ )
+    {
+      (*i)->create_structure(); // let create tree node structure
+    }
 
-  // for all input interfaces
-  for( input_type::iterator i = input.begin(); i != input.end(); i++ )
-  {
-    (*i)->set_animation( &ani ); // set animation
-    (*i)->create_structure();	// let create tree node structure
+    ani.hierarchy_final_init();	// finish structure initialization
+    output->check_components();
+
+    // for all input interfaces
+    for( input_type::iterator i = input.begin(); i != input.end(); i++ )
+    {
+      (*i)->insert_expl_ref(); // insert user references between properties
+    }
+
+    // for all input interfaces
+    for( input_type::iterator i = input.begin(); i != input.end(); i++ )
+    {
+      (*i)->insert_values();	// insert concrete values for properties
+    }
+
+    ani.pri_sys.invoke_all_Actions();
+
+    save_filled("filled.out", &ani);
+
+    output->process_results();
   }
-
-  ani.hierarchy_final_init();	// finish structure initialization
-
-  // for all input interfaces
-  for( input_type::iterator i = input.begin(); i != input.end(); i++ )
+  catch( EX e )
   {
-    (*i)->insert_expl_ref();	// insert user references between properties
+    cout << "Error: " << e.get_name() << endl;
+    return -1;
   }
-
-  // for all input interfaces
-  for( input_type::iterator i = input.begin(); i != input.end(); i++ )
-  {
-    (*i)->insert_values();	// insert concrete values for properties
-  }
-
-  ani.pri_sys.invoke_all_Actions();
-
-  save_filled("filled.out", &ani);
-
   return 0;
 }

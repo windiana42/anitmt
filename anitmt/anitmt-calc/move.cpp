@@ -51,34 +51,21 @@ namespace anitmt{
     add_property( "center", &c );
   }
 
-  //
-  // Function Obj_Move::get_return_value (t, Matrix)
-  //
-  //    returns a Matrix as the object state at time t 
-  //
-  //
-  values::Matrix Obj_Move::get_return_value( values::Scalar t, 
-					     values::Matrix ) 
-  {
-    values::Matrix ret;
-
-    //ret *= values::Matrix::translate( -c );
-    //ret *= values::Matrix::translate( pos.get_return_value(t) );
-    //ret *= values::Matrix::rotate_pair_pair
-    //         ( x, y, dir.get_return_value(t), up.get_return_value(t) );
-
-    return ret;
-  }
-
-  Position Obj_Move::get_return_value( values::Scalar t, Position ) 
+  std::pair<bool, Position> Obj_Move::get_return_value( values::Scalar t, 
+							Position ) 
+    throw( EX_user_error )
   {
     return pos.get_return_value( t );
   }
-  Direction Obj_Move::get_return_value( values::Scalar t, Direction ) 
+  std::pair<bool, Direction> Obj_Move::get_return_value( values::Scalar t, 
+							 Direction ) 
+    throw( EX_user_error )
   {
     return dir.get_return_value( t );
   }
-  Up_Vector Obj_Move::get_return_value( values::Scalar t, Up_Vector ) 
+  std::pair<bool, Up_Vector> Obj_Move::get_return_value( values::Scalar t, 
+							 Up_Vector ) 
+    throw( EX_user_error )
   {
     return up.get_return_value( t );
   }
@@ -144,25 +131,39 @@ namespace anitmt{
     // add_default_value( &a, values::Scalar(0), 3 );
   }
     
-  Position Obj_Move_Straight::get_return_value( values::Scalar t,
-						Position ) 
+  std::pair<bool,Position> Obj_Move_Straight::get_return_value
+  ( values::Scalar t, Position ) throw( EX_user_error )
   {
+    // if not active
+    if( (t > te()) || (t < t0()) ) 
+      return std::pair<bool,Position>( false, Position() );
+
     values::Scalar s_t = v0() * t + 0.5 * a() * t*t;
     values::Scalar rel_pos = s() / s_t;
 
-    return (1-rel_pos)*s0() + rel_pos*se();
+    return std::pair<bool,Position>(true, (1-rel_pos)*s0() + rel_pos*se());
   }
 
-  Direction Obj_Move_Straight::get_return_value( values::Scalar t,
-						 Direction ) 
+  std::pair<bool,Direction> Obj_Move_Straight::get_return_value
+  ( values::Scalar t, Direction ) throw( EX_user_error )
   {
-    return d0() * (1/abs(d0())); // !!! rotations not reguarded
+    // if not active
+    if( (t > te()) || (t < t0()) ) 
+      return std::pair<bool,Direction>( false, Direction() );
+
+    return std::pair<bool,Direction>(true, d0() * (1/abs(d0()))); 
+    // !!! rotations not reguarded
   }
 
-  Up_Vector Obj_Move_Straight::get_return_value( values::Scalar t, 
-						 Up_Vector ) 
+  std::pair<bool,Up_Vector> Obj_Move_Straight::get_return_value
+  ( values::Scalar t, Up_Vector ) throw( EX_user_error )
   {
-    return u0() * (1/abs(u0())); // !!! object rotation not reguarded
+    // if not active
+    if( (t > te()) || (t < t0()) ) 
+      return std::pair<bool,Up_Vector>( false, Up_Vector() );
+
+    return std::pair<bool,Up_Vector>(true, u0() * (1/abs(u0()))); 
+    // !!! object rotation not reguarded
   }
 
   bool Obj_Move_Straight::try_add_child( Prop_Tree_Node *node )
