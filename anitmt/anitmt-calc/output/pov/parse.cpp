@@ -1432,11 +1432,8 @@ int File_Parser::Go(Animation *ani,Scene_Interface &scene_if)
 			#endif
 		}
 		
-		fprintf(stderr,">>>>>>>>>>>>>>>>>>>>\n");
 		av_list.Warn_Unused(warn());
-		fprintf(stderr,"--------------------\n");
 		Warn_Active_Mismatch();
-		fprintf(stderr,"<<<<<<<<<<<<<<<<<<<<\n");
 		
 		// This function writes a verbose message itself: 
 		Setup_Frame_Dump(fdump);
@@ -1717,6 +1714,8 @@ int File_Parser::AValue_List::_Warn_Unused(message::Message_Stream os,tokID type
 	}
 	if(nunused)
 	{  os << " [" << nunused << "]"; }
+	else
+	{  os << message::killmsg;  }
 	return(nunused);
 }
 
@@ -1725,8 +1724,6 @@ int File_Parser::AValue_List::Warn_Unused(message::Message_Stream os)
 	int nunused=0;
 	nunused+=_Warn_Unused(os,taScalar);
 	nunused+=_Warn_Unused(os,taObject);
-	fprintf(stderr,"HEEPPP?!\n");
-	os << "hep?!";
 	if(!nunused)  // <- Make sure no empty "warning:" line appears. 
 	{  os << message::killmsg;  }
 	return(nunused);
