@@ -7,11 +7,11 @@ SUBDIRS = include cpp misc fd crypto compress par
 SUBLIBS = cpp/libcpp.a misc/libmisc.a fd/libfd.a crypto/libcrypto.a \
 	par/libpar.a compress/libcompress.a
 
-noinst_LIBRARIES = libhlib.a
+lib_LIBRARIES = libhlib.a
 libhlib_a_SOURCES = 
 
 EXTRA_DIST = BUILD COPYING.GPL \
-	hlib-config.h.in hconfig.h config.guess config.sub
+	hlib-config.h.in hconfig.h config.guess config.sub hlib.spec
 
 libhlib.a: $(SUBLIBS)
 	@echo "Re-creating libhlib.a..."
