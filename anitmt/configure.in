@@ -51,10 +51,12 @@ fi
 unset need_flex
 
 # Check for gcc version less than 3.0: 
+GCC_LESS_THAN_3="n/a"
 gccvers="$($CXX -v 2>&1 | tail -1)"
 if test "${gccvers/" *"/}" = "gcc" ; then
   # We're actually using gcc, so check version
   # this test is not perfect as it can be tricked using "gcc -Vxyz"
+  GCC_LESS_THAN_3="no"
   echo -n "checking $CXX version... "
   gccvers="${gccvers/"*version "/}"
   echo "$gccvers"
@@ -63,6 +65,7 @@ if test "${gccvers/" *"/}" = "gcc" ; then
 3.0 which has some bugs with templates.])
     AC_MSG_NOTICE([** Activated Workaround **])
 	AC_DEFINE(GCC_HACK,,[Workaround for busgs in gcc<3.0])
+	GCC_LESS_THAN_3="yes"
   fi
 fi
 unset gccvers
@@ -172,3 +175,16 @@ AC_CONFIG_FILES([ Makefile
 	example/circles/Makefile 
 	example/circles/ani/Makefile ])
 AC_OUTPUT
+
+if test "$GCC_LESS_THAN_3" = "yes" ; then
+	case " $CXXFLAGS " in
+		*" -O"?" "*|*" -O "*)
+			echo 
+			echo "You are using a 2.x version of gcc and your CXXFLAGS"
+			echo "contain optimization flags (-O2 etc.)."
+			echo "BEWARE: Builting anitmt takes _ages_. Better upgrade to"
+			echo "        gcc-3.x or do not pass optimization flags."
+			echo 
+			;;
+	esac
+fi
