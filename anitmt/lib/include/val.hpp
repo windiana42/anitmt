@@ -82,6 +82,7 @@ namespace values
 
     // Returns 1, if this scalar is 0 (exactly: if |this->x| <= epsilon )
     bool operator!()  {  return(fabs(x)<=epsilon);  }
+    bool is_null()  {  return(fabs(x)<=epsilon);  }
 
     // addition/subtraction operators: 
     Scalar &operator-=(double a)  {  x-=a;  return(*this);  }
