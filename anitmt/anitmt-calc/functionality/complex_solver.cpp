@@ -1,62 +1,136 @@
-/*****************************************************************************/
-/**   This file offers solver for properties          			    **/
-/*****************************************************************************/
-/**									    **/
-/** Author: Martin Trautmann						    **/
-/**									    **/
-/** EMail:   martintrautmann@gmx.de					    **/
-/**									    **/
-/** License: LGPL - free and without any warranty - read COPYING            **/
-/**									    **/
-/** Package: AniTMT							    **/
-/**									    **/
-/*****************************************************************************/
+// ********************************************
+// generated file by funcgen (www.anitmt.org)
+// requires:
+//   - libmessage
+//   - libval
+//   - libsolve
+//   - libproptree
+// ********************************************
 
-#include <assert.h>
-#include <algorithm>
-
+#include <solve/constraint.hpp>
 #include "complex_solver.hpp"
-#include <solve/solver.hpp>	// basic solvers
-#include "solver.hpp"		// generated solvers and operators
 
-namespace solve{
-  //*********************************************************
-  // Accel_Solver: Solver for a constantly accelerated system
-  //*********************************************************
+namespace functionality
+{
+  // ****************************
+  // help functions
+  // ****************************
 
-  void accel_solver( Operand<values::Scalar> &s, 
-		     Operand<values::Scalar> &t, 
-		     Operand<values::Scalar> &a, 
-		     Operand<values::Scalar> &v0,
-		     Operand<values::Scalar> &ve,
-		     message::Message_Consultant *msgc )
+  template<class T>
+  inline T extract_status( std::pair<bool,T> value, bool &status, 
+			   bool &any_false )
   {
-    //ve = v0 + a*t
-    Operand<values::Scalar> &at = *new Operand<values::Scalar>(msgc);
-    product_solver( at, a, t );	// x = a*t
-    sum_solver( ve, v0, at );	// ve = v0 + x
-
-    //v0 = s/t - 0.5*a*t
-    v0 = s/t - 0.5*a*t;		// this is the only equation without ve
-
-    //s  = 0.5 * (v0+ve) * t
-    Operand<values::Scalar> &v0ve = *new Operand<values::Scalar>(msgc);
-    sum_solver( v0ve, v0, ve );	// v0ve = v0 + ve
-    Operand<values::Scalar> &vt = *new Operand<values::Scalar>(msgc);
-    product_solver( vt, v0ve, t ); // vt = v0ve * t
-    //  s = 0.5 * prod
-    product_solver( s, const_op(values::Scalar(0.5),msgc), vt ); 
-    
-    //ve^2 = v0^2 + 2*a*s  
-    Operand<values::Scalar> &ve2 = *new Operand<values::Scalar>(msgc);
-    Operand<values::Scalar> &v02 = *new Operand<values::Scalar>(msgc);
-    Operand<values::Scalar> &prod = *new Operand<values::Scalar>(msgc);
-    Operand<values::Scalar> &as = *new Operand<values::Scalar>(msgc);
-    product_solver( as, a, s );	// as = a * s
-    product_solver( prod, const_op(values::Scalar(2),msgc), as );
-    square_solver( ve2, ve );	// ve2 = ve^2
-    square_solver( v02, v0 );	// v02 = v0^2
-    sum_solver( ve2, v02, prod ); // ve2 = ve0 + prod
+    status = value.first;
+    any_false |= !value.first;
+    return value.second;
   }
-}  
+  // ****************************
+  // provider type implementation
+  // ****************************
 
+  // *****************
+  // container classes
+
+  // ********************
+  // ********************
+  // solver declartions
+  // ********************
+  // ********************
+
+  _sc_accel_solver::_sc_accel_solver( solve::Operand< scalar >& __op_s, solve::Operand< scalar >& __op_t, solve::Operand< scalar >& __op_a, solve::Operand< scalar >& __op_v0, solve::Operand< scalar >& __op_ve,  message::Message_Consultant* consultant )
+    : message::Message_Reporter(consultant),
+      _op_s(__op_s),
+      _op_t(__op_t),
+      _op_a(__op_a),
+      _op_v0(__op_v0),
+      _op_ve(__op_ve),
+      _op_at( get_consultant() ),
+      _op_v0_ve( get_consultant() ),
+      _op_vt( get_consultant() ),
+      _op_ve2( get_consultant() ),
+      _op_v02( get_consultant() ),
+      _op_prod( get_consultant() ),
+      _op_as( get_consultant() )
+  {
+    product_solver( _op_at, _op_a, _op_t, get_consultant() );
+    sum_solver( _op_ve, _op_v0, _op_at, get_consultant() );
+    _op_v0.assign( _op_s/_op_t-solve::const_op( values::Scalar( 0.5 ), get_consultant() )*_op_a*_op_t );
+    sum_solver( _op_v0_ve, _op_v0, _op_ve, get_consultant() );
+    product_solver( _op_vt, _op_v0_ve, _op_t, get_consultant() );
+    product_solver( _op_s, solve::const_op( values::Scalar( 0.5 ), get_consultant() ), _op_vt, get_consultant() );
+    product_solver( _op_as, _op_a, _op_s, get_consultant() );
+    product_solver( _op_prod, solve::const_op( values::Scalar( 2 ), get_consultant() ), _op_as, get_consultant() );
+    square_solver( _op_ve2, _op_ve, get_consultant() );
+    square_solver( _op_v02, _op_v0, get_consultant() );
+    sum_solver( _op_ve2, _op_v02, _op_prod, get_consultant() );
+  }
+  _sc_accel_solver* accel_solver( solve::Operand< scalar >& __op_s, solve::Operand< scalar >& __op_t, solve::Operand< scalar >& __op_a, solve::Operand< scalar >& __op_v0, solve::Operand< scalar >& __op_ve, message::Message_Consultant *msgc )
+  {
+    return new _sc_accel_solver( __op_s, __op_t, __op_a, __op_v0, __op_ve, msgc );
+  }
+  vector _sc_bezier_solver::get_pos( stretch s )
+  {
+    // *** user code following... line:78 ***
+        
+	int t = test->cooler_wert();
+	return bezier->get_pos( s );
+      
+  }
+  _sc_bezier_solver::_sc_bezier_solver( solve::Operand< vector >& __op_p1, solve::Operand< vector >& __op_p2, solve::Operand< vector >& __op_p3, solve::Operand< vector >& __op_p4, solve::Operand< scalar >& __op_length,  message::Message_Consultant* consultant )
+    : message::Message_Reporter(consultant),
+      _av_get_pos___is_avail( get_consultant() ),
+      _op_p1(__op_p1),
+      _op_p2(__op_p2),
+      _op_p3(__op_p3),
+      _op_p4(__op_p4),
+      _op_length(__op_length)
+  {
+    solve::Multi_And_Operator *m_and;
+    m_and = new solve::Multi_And_Operator( get_consultant() );
+    _av_get_pos___is_avail = m_and->get_result();
+    m_and->add_operand( solve::is_solved(_op_p1) );
+    m_and->add_operand( solve::is_solved(_op_p2) );
+    m_and->add_operand( solve::is_solved(_op_p3) );
+    m_and->add_operand( solve::is_solved(_op_p4) );
+    m_and->add_operand( test->_av_cooler_wert___is_avail );
+    m_and->finish_adding();
+    solve::constraint( _op_length>=solve::const_op( values::Scalar( 0 ), get_consultant() ) );
+    test = test_solver( get_consultant() );
+  }
+  _sc_bezier_solver* bezier_solver( solve::Operand< vector >& __op_p1, solve::Operand< vector >& __op_p2, solve::Operand< vector >& __op_p3, solve::Operand< vector >& __op_p4, solve::Operand< scalar >& __op_length, message::Message_Consultant *msgc )
+  {
+    return new _sc_bezier_solver( __op_p1, __op_p2, __op_p3, __op_p4, __op_length, msgc );
+  }
+  int _sc_test_solver::cooler_wert(  )
+  {
+    // *** user code following... line:30 ***
+        
+	return 3;
+      
+  }
+  _sc_test_solver::_sc_test_solver(  message::Message_Consultant* consultant )
+    : message::Message_Reporter(consultant),
+      _av_cooler_wert___is_avail( get_consultant() )
+  {
+    solve::Multi_And_Operator *m_and;
+    m_and = new solve::Multi_And_Operator( get_consultant() );
+    _av_cooler_wert___is_avail = m_and->get_result();
+    m_and->finish_adding();
+  }
+  _sc_test_solver* test_solver( message::Message_Consultant *msgc )
+  {
+    return new _sc_test_solver( msgc );
+  }
+  // *****************************
+  // *****************************
+  // tree node type implementation
+  // *****************************
+  // *****************************
+
+  // *****************************
+  // make nodes availible 
+  // *****************************
+
+  void make_complex_solver_nodes_availible()  {
+  }
+}

@@ -9,7 +9,7 @@ BUILT_SOURCES=		solver.hpp solver.cpp \
 			scalar.hpp scalar.cpp \
 			object_base.hpp object_base.cpp \
 			object.hpp object.cpp \
-			complex_solver_tst.hpp complex_solver_tst.cpp 
+			complex_solver.hpp complex_solver.cpp 
 libfunctionality_a_SOURCES= solver.afd solver.hpp solver.cpp \
 			base_func.afd base_func.hpp base_func.cpp \
 			scene_base.afd scene_base.hpp scene_base.cpp \
@@ -17,7 +17,6 @@ libfunctionality_a_SOURCES= solver.afd solver.hpp solver.cpp \
 			scalar.afd scalar.hpp scalar.cpp \
 			object_base.afd object_base.hpp object_base.cpp \
 			object.afd object.hpp object.cpp \
-			complex_solver_tst.hpp complex_solver_tst.cpp \
 			complex_solver.hpp complex_solver.cpp \
 			sp_curve.hpp sp_curve.cpp \
 			make_avail.cpp make_avail.hpp 
@@ -109,10 +108,10 @@ solver.hpp: $(srcdir)/solver.afd $(AFD_COMMON)
 	  echo "No funcgen availible, cannot create code.";		    \
 	fi
 
-complex_solver_tst.cpp \
-complex_solver_tst.hpp: $(srcdir)/complex_solver.afd $(AFD_COMMON)
+complex_solver.cpp \
+complex_solver.hpp: $(srcdir)/complex_solver.afd $(AFD_COMMON)
 	@if test -e $(FUNCGEN); then					    \
-	  $(FUNCGEN) -i $(srcdir)/complex_solver.afd -o complex_solver_tst  \
+	  $(FUNCGEN) -i $(srcdir)/complex_solver.afd -o complex_solver      \
 	    -n functionality -I+=$(srcdir)/ $(FUNCGEN_DEBUG); 		    \
 	else								    \
 	  echo "No funcgen availible, cannot create code.";		    \
