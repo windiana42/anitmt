@@ -1,0 +1,17 @@
+#!/bin/sh
+# Use HConfigVars to get some config. 
+# Either use "source HConfigVars" (make sure $1="") or 
+# use HConfigVars VAR
+
+CFLAGS='@CFLAGS@'
+CXXFLAGS='@CXXFLAGS@'
+LDADD='@LDADD@'
+
+case "$1" in
+	"") ;;
+	"CFLAGS")    echo "$CFLAGS" ;;
+	"CXXFLAGS")  echo "$CXXFLAGS" ;;
+	"LDADD")     echo "$LDADD" ;;
+	*)  echo "[unknown]" ;;
+esac
+
