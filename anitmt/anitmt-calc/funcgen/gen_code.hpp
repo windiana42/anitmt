@@ -140,6 +140,8 @@ namespace funcgen
     virtual std::string operand_from_string( std::string ) = 0;
     virtual std::string operand_from_function( std::string name, 
 					       std::string parameters ) = 0;
+    virtual std::string function( std::string function_name,
+				  std::string parameters ) = 0;
     virtual std::string event_code_set( std::string operand, 
 					std::string expression ) = 0;
     virtual std::string event_code_try( std::string operand, 
@@ -156,10 +158,25 @@ namespace funcgen
     virtual std::string solver_function_result( std::string solver, 
 						std::string function, 
 						std::string parameter ) = 0;
+    virtual std::string container_function_value
+    ( std::string container, std::string provider_type, 
+      std::string return_type, std::string parameter_type, 
+      std::string parameter, std::string opt_fail_bool_var ) = 0;
+    virtual std::string container_for_each_element
+    ( std::string element, std::string container, std::string provider_type )
+      = 0;
+    virtual std::string element_function_value
+    ( std::string element, std::string provider_type, std::string return_type,
+      std::string parameter_type, std::string parameter,
+      std::string opt_fail_bool_var ) = 0;
+    virtual std::string container_first_index( std::string container ) = 0;
+    virtual std::string container_last_index( std::string container ) = 0;
+    virtual std::string container_element_function_value
+    ( std::string container, int index, std::string provider_type, 
+      std::string return_type, std::string parameter_type, 
+      std::string parameter, std::string opt_fail_bool_var ) = 0;
 
     Code_Translator( code_gen_info * );
-    virtual std::string function( std::string function_name,
-				  std::string parameters ) = 0;
 
     virtual ~Code_Translator(){}
   };

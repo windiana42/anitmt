@@ -322,8 +322,9 @@ solvers /*todo*/
             return <true/false>; or  
             [[ set <OperandName> = <cpp_expression>; ]]
             [[ try <OperandName> = <cpp_expression>; ]]
-            [[ try_reject <OperandName>, ...; ]]  
-            if( [[ is_operand_solved_by_this_solver ]] ) ...;
+            [[ try_reject <OperandName> | container.<ContainerName> 
+	      | solver.<SolverInstanceName>.<FunctionName>, ...; ]]  
+            ??? if( [[ is_operand_solved_by_this_solver ]] ) ...;
             if( [[ is_solved_in_try(<OperandName>) ]] ) ...;
             if( [[ is_just_solved(<OperandName>) ]] ) ...;
 
@@ -335,15 +336,15 @@ solvers /*todo*/
 	    [[ <ContainerName>.<ReturnType>
 	      (<ParameterType> <Parameter>)[,<failboolvar>] ]]
 	    // for parallel containers:
-	    for( int <Index> = [[ <ContainerName>.first_index ]]; 
-	      <Index> <= [[ <ContainerName>.last_index ]]; ++<Index> )
+	    for( int <Index> = [[ first_index.<ContainerName> ]]; 
+	      <Index> <= [[ last_index.<ContainerName> ]]; ++<Index> )
 	    {
 	      x = [[ <ContainerName>[<Index>].<ReturnType>
 		(<ParameterType> <Parameter>)[,<failboolvar>] ]];
 	    }
 	    [[ for_each <Element> in <ContainerName> ]]
 	    {
-	      x = [[ element(<Element>).<ReturnType>
+	      x = [[ element.<Element>.<ReturnType>
 		(<ParameterType> <Parameter>)[,<failboolvar>] ]];
 	    }
 	    ...
@@ -376,7 +377,7 @@ solvers /*todo*/
     {
       <ReturnType> <FunctionName> ( <Type> <Variable>,... ) 
         [ requires <OperandName> | this.<FunctionName> 
-          | <SolverInstanceName>.<FunctionName> | event.<EventName> 
+          | [solver.]<SolverInstanceName>.<FunctionName> | event.<EventName> 
 	  | group.<EventGroupName> | container.<ContainerName> /*complete*/
 	  | container.<ContainerName>.<ReturnType>(<ParameterType>) 
 	  , ... ]
@@ -391,16 +392,16 @@ solvers /*todo*/
 	[[ <ContainerName>.<ReturnType>
 	   (<ParameterType> <Parameter>)[,<failboolvar>] ]]
 	// for parallel containers:
-	for( int <Index> = [[ <ContainerName>.first_index ]]; 
-	     <Index> <= [[ <ContainerName>.last_index ]]; ++<Index> )
+	for( int <Index> = [[ first_index.<ContainerName> ]]; 
+	  <Index> <= [[ last_index.<ContainerName> ]]; ++<Index> )
 	{
 	  x = [[ <ContainerName>[<Index>].<ReturnType>
-	          (<ParameterType> <Parameter>)[,<failboolvar>] ]];
+	    (<ParameterType> <Parameter>)[,<failboolvar>] ]];
 	}
-        [[ for_each <Element> in <ContainerName> ]]
-        {
-          x = [[ element(<Element>).<ReturnType>
-                (<ParameterType> <Parameter>)[,<failboolvar>] ]];
+	[[ for_each <Element> in <ContainerName> ]]
+	{
+	  x = [[ element.<Element>.<ReturnType>
+	    (<ParameterType> <Parameter>)[,<failboolvar>] ]];
 	}
 
 	[[ return_prop <Propertyname>; ]]

@@ -213,6 +213,14 @@ namespace funcgen
     bool is_variable( std::string name );
     Variable *get_variable( std::string name );
 
+    //*******************
+    // special_variables
+    std::map<std::string,Variable*> special_variables;	// for search
+    std::list<Variable> special_variable_list;		// for sequence
+    std::string current_special_variable_type;
+    bool is_special_variable( std::string name );
+    Variable *get_special_variable( std::string name );
+
     //***********
     // base type
     std::map<std::string,Base_Type> base_types; 

@@ -164,6 +164,10 @@ trial_failed		{ tok_pos(); return TAFD_trial_failed; }
 is_solved_in_try	{ tok_pos(); return TAFD_is_solved_in_try; }
 is_just_solved		{ tok_pos(); return TAFD_is_just_solved; }
 solver			{ tok_pos(); return TAFD_solver; }
+first_index		{ tok_pos(); return TAFD_first_index; }
+last_index		{ tok_pos(); return TAFD_last_index; }
+for_each		{ tok_pos(); return TAFD_for_each; }
+element			{ tok_pos(); return TAFD_element; }
 
 {id}	  { tok_pos(); yylval->string = yytext; return TAFD_IDENTIFIER; }
 

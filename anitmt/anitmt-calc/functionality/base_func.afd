@@ -28,6 +28,8 @@ base_types{
   neutral0 = values::Neutral0;		// neutral element for addition
   neutral1 = values::Neutral1;		// neutral element for multiplication
 
+  nothing = scalar;			// parameter type "void"
+  index = scalar;
   time = scalar;
   value = scalar;
   slope = scalar;

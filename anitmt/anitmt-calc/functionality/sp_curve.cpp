@@ -21,11 +21,11 @@
 namespace functionality{
 
   /***************/
-  /* space_curve */
+  /* Space_Curve */
   /***************/
 
   // debug function
-  void space_curve::print_points(){
+  void Space_Curve::print_points(){
     std::ofstream os("points.out");
 
     double last_s = 0;
@@ -47,18 +47,18 @@ namespace functionality{
       }
   }
 
-  int space_curve::get_point_anz(){
+  int Space_Curve::get_point_anz(){
     return points.size();
   }
 
-  void space_curve::init(){
+  void Space_Curve::init(){
     if( !initialized )
       {
 	// initialize with some points
 	for( int i=0; i < init_point_anz; i++ )
 	  {
 	    double t = double(i) / (init_point_anz-1); // t ranges from 0 to 1
-	    points.push_back( sp_curve_point( t, get_point_pos(t) ) );
+	    points.push_back( Sp_Curve_Point( t, get_point_pos(t) ) );
 	  }
 
 	points.front().stretch = 0;
@@ -83,7 +83,7 @@ namespace functionality{
 	      // insert one more point with t as arithmetical average
 	      // between it and it+1
 	      double t = 0.5*(it0->t + it1->t);
-	      points.insert( it1, sp_curve_point( t, get_point_pos(t) ) );
+	      points.insert( it1, Sp_Curve_Point( t, get_point_pos(t) ) );
 	      continue;
 	    }
 
@@ -118,7 +118,7 @@ namespace functionality{
 	      if( len > min_len )
 		{
 		  t = 0.5*( it1->t + it2->t);
-		  points.insert( it2, sp_curve_point( t, get_point_pos(t) ) );
+		  points.insert( it2, Sp_Curve_Point( t, get_point_pos(t) ) );
 		  nothing_done = false;
 		}
 
@@ -126,7 +126,7 @@ namespace functionality{
 	      if( len > min_len )
 		{
 		  t = 0.5*( it0->t + it1->t);
-		  points.insert( it1, sp_curve_point( t, get_point_pos(t) ) );
+		  points.insert( it1, Sp_Curve_Point( t, get_point_pos(t) ) );
 		  nothing_done = false;
 		}
 
@@ -162,7 +162,7 @@ namespace functionality{
   }
 
   // calculate up-vectors in forward direction
-  void space_curve::calc_up_forward( values::Vector start_up ){
+  void Space_Curve::calc_up_forward( values::Vector start_up ){
     if( !init_up )
       {
 	points.begin()->up = start_up;
@@ -190,7 +190,7 @@ namespace functionality{
   }
 
   // calculate up-vectors in backward direction
-  void space_curve::calc_up_backward( values::Vector end_up ){
+  void Space_Curve::calc_up_backward( values::Vector end_up ){
     if( !init_up )
       {
 	points.rbegin()->up = end_up;
@@ -217,7 +217,7 @@ namespace functionality{
   }
 
   // get position at a certain stretch
-  values::Vector space_curve::get_pos    ( double s ){
+  values::Vector Space_Curve::get_pos    ( double s ){
     // get the point with stretch greater than s
     pointtype::iterator it;
 
@@ -243,7 +243,7 @@ namespace functionality{
   }
 
   // get front-vector at a certain stretch
-  values::Vector space_curve::get_front  ( double s ){
+  values::Vector Space_Curve::get_front  ( double s ){
     // get the point with stretch greater than s
     pointtype::iterator it;
 
@@ -269,7 +269,7 @@ namespace functionality{
   }
 
   // get up-vector at a certain stretch
-  values::Vector space_curve::get_up     ( double s ){
+  values::Vector Space_Curve::get_up     ( double s ){
     // get the point with stretch greater than s
     pointtype::iterator it;
 
@@ -295,21 +295,22 @@ namespace functionality{
   }
 
   // get first up-vector
-  values::Vector space_curve::get_beg_up (){
+  values::Vector Space_Curve::get_beg_up (){
     return points.front().up;
   }
 
   // get last up-vector
-  values::Vector space_curve::get_end_up (){
+  values::Vector Space_Curve::get_end_up (){
     //return points.last().up;   // last() isn't availible in my gcc version
     return (--points.end())->up;
   }
 
   /****************/
-  /* bezier_curve */
+  /* Bezier_Curve */
   /****************/
   
-  values::Vector bezier_curve::get_point_pos( double t ){
+  values::Vector Bezier_Curve::get_point_pos( double t )
+  {
     double mt = 1 - t;
 
     return mt*mt*mt*p0 + 3*mt*mt*t*p1 + 3*mt*t*t*p2 + t*t*t*p3;

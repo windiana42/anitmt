@@ -3,6 +3,8 @@ Makefile
 Makefile.in
 base_func.cpp
 base_func.hpp
+complex_solver.cpp
+complex_solver.hpp
 functionality.cpp
 functionality.hpp
 object.cpp

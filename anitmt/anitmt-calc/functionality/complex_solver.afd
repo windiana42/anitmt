@@ -19,7 +19,15 @@ avoid_recursion adl_complex_solvers;	// avoid recursion of this file
 include declaration "base_func.afd";
 include declaration "solver.afd";
 include header "sp_curve.hpp";
+include header "spline.hpp";
 include header "math.h";
+
+
+
+// point privder type for spline
+type point {
+  provides position( nothing );
+}
 
 /* test /*nested*/ */
 
@@ -41,7 +49,7 @@ solvers
   {
     declarations
     {
-      bezier_curve *bezier;
+      Bezier_Curve *bezier;
     }
     operands
     {
@@ -75,7 +83,7 @@ solvers
 	  vector p4 = [[ p4 ]];
 	  
 	  scalar len_sum = abs(p2-p1) + abs(p3-p2) + abs(p4-p3);
-	  bezier = new bezier_curve( p1, p2, p3, p4,
+	  bezier = new Bezier_Curve( p1, p2, p3, p4,
 	    1./180*values::PI, len_sum/100, len_sum/10000, 10 );
 	  scalar len = bezier->length;
 	  [[ set length_calculated = true; ]]
@@ -113,6 +121,103 @@ solvers
         requires event.points_avail
       {
 	[[ return bezier->get_up( s ); ]]
+      }
+    }
+  }
+  bspline_solver( vector start_pos, vector end_pos, 
+    container.point points, scalar length, 
+    vector start_dir, vector end_dir,
+    vector start_up, vector end_up, scalar up_roll )
+  {
+    declarations
+    {
+      BSpline *spline;
+    }
+    operands
+    {
+      bool length_calculated;
+    }
+    init_operands
+    {
+      constraints 
+      {
+	length >= 0;
+      }
+      solvers
+      {
+      }
+    }
+    init_code
+    {
+    }
+    events
+    {
+      event points_avail requires container.points
+      {
+	test_run 
+	{
+	  std::list<values::Vector> points;
+	  values::Vector p0,p1;
+	  bool first = true;
+	  int idx = 0;
+	  double len_sum = 0,n=0;
+	  [[ for_each point in points ]]
+	  {
+	    p0 = [[ element.point.position(nothing n) ]];
+	    //[[ return_if_fail; ]]
+	    if( did_result_fail ) return false;
+	    if( first )
+	    { 
+	      first = false;
+	    }
+	    else
+	    {
+	      len_sum += abs(p1-p0);
+	      p1 = p0;
+	    }
+
+	    points.push_back( p0 );
+	    idx++;
+	  }
+
+	  spline = new BSpline( points, 
+	    1./180*values::PI, len_sum/100, len_sum/10000, 10 );
+
+	  scalar len = spline->length;
+	  [[ set length_calculated = true; ]]
+	  [[ set length = len; ]]
+	  //[[ set length = spline.get_length(); ]]
+	}
+	reset
+	{
+	  delete spline;
+	}
+      }
+      event reject_length requires length
+      {
+	test_run
+	{
+	  if( ![[ is_solved_in_try(length_calculated) ]] ) 
+	    ;//[[ try_reject container.points; ]]
+	}
+      }
+    }
+    provide
+    {
+      vector get_pos ( stretch s ) 
+        requires event.points_avail
+      {
+	[[ return spline->get_pos( s ); ]]
+      }
+      vector get_dir ( stretch s ) 
+        requires event.points_avail
+      {
+	[[ return spline->get_front( s ); ]]
+      }
+      vector get_up ( stretch s ) 
+        requires event.points_avail
+      {
+	[[ return spline->get_up( s ); ]]
       }
     }
   }

@@ -407,6 +407,61 @@ namespace funcgen
       solver_identifier(solver) + "->" + function + "(" + parameter + ")";
   }
 
+  std::string Cpp_Code_Translator::container_function_value
+  ( std::string container, std::string provider_type, std::string return_type,
+    std::string parameter_type, std::string parameter, 
+    std::string opt_fail_bool_var)
+  {
+    if( opt_fail_bool_var == "" ) opt_fail_bool_var = "did_result_fail";
+    return "extract_status( " + container_name( container ) + "." 
+      + result_function_call( provider_type, return_type, parameter_type, 
+			      parameter ) + ", " + opt_fail_bool_var + 
+      ", did_any_result_fail )";
+  }
+  std::string Cpp_Code_Translator::container_for_each_element
+  ( std::string element, std::string cont, std::string provider_type )
+  {
+    return "\n/*[[ for_each " + element + " in " + cont + " ]]*/\n"
+      "for( " + container( provider_type ) + "::elements_type::iterator"
+      "\n     __cc__element_" + element + " = " + container_name( cont )+ 
+      ".elements_begin();\n     __cc__element_" + element + " != " + 
+      container_name( cont ) + ".elements_end();\n     ++__cc__element_" +
+      element + ")\n";
+  }
+  std::string Cpp_Code_Translator::element_function_value
+  ( std::string element, std::string provider_type, std::string return_type, 
+    std::string parameter_type, std::string parameter, 
+    std::string opt_fail_bool_var )
+  {
+    if( opt_fail_bool_var == "" ) opt_fail_bool_var = "did_result_fail";
+    return "extract_status( (*__cc__element_" + element + ")->" 
+      + result_function_call( provider_type, return_type, parameter_type, 
+			      parameter ) + ", " + opt_fail_bool_var + 
+      ", did_any_result_fail )";
+  }
+  std::string Cpp_Code_Translator::container_first_index
+  ( std::string /*container*/ )
+  {
+    return "0";			// first index is always zero
+  }
+  std::string Cpp_Code_Translator::container_last_index
+  ( std::string container )
+  {
+    return "(" + container_name( container ) + ".get_element_count() - 1)";
+  }
+  std::string Cpp_Code_Translator::container_element_function_value
+  ( std::string container, int index, std::string provider_type, 
+    std::string return_type, std::string parameter_type, std::string parameter,
+    std::string opt_fail_bool_var )
+  {
+    if( opt_fail_bool_var == "" ) opt_fail_bool_var = "did_result_fail";
+    return "extract_status( " + container_name( container ) + 
+      ".get_element(" + index + ")->" 
+      + result_function_call( provider_type, return_type, parameter_type, 
+			      parameter ) + ", " + opt_fail_bool_var + 
+      ", did_any_result_fail )";
+  }
+  
   Cpp_Code_Translator::Cpp_Code_Translator( code_gen_info *info )
     : Code_Translator(info), prefix_priority_label("_pl_"),
       prefix_base_type(""), prefix_provider_type("_pt_"), 
@@ -840,7 +895,7 @@ namespace funcgen
 	      << "  }" << std::endl
 	      << std::endl;
 
-	*decl << "  " << translator.provider_type(provides) 
+	*decl << "    " << translator.provider_type(provides) 
 	      << "* get_first_element();" << std::endl;
 	*impl << "  " << translator.provider_type(provides) << "* "
 	      << translator.serial_container( provides ) << "::"
@@ -863,7 +918,8 @@ namespace funcgen
 	      << "  }" << std::endl;
 
 	*decl << "    " << translator.provider_type(provides) 
-	      << "* get_element( int n );" << std::endl;
+	      << "* get_element( int n );" << std::endl
+	      << "    int get_element_count(); " << std::endl;
 	*impl << "  " << translator.provider_type(provides) << "* "
 	      << translator.serial_container( provides ) << "::"
 	      << "get_element( int n )" << std::endl
@@ -873,7 +929,13 @@ namespace funcgen
 	      << "++i, ++z )" << std::endl 
 	      << "      if( z == n ) return *i;" << std::endl 
 	      << "    return 0;" << std::endl 
-	      << "  }" << std::endl;
+	      << "  }" << std::endl
+	      << "  int " << translator.serial_container(provides) 
+	      << "::get_element_count()" << std::endl
+	      << "  {" << std::endl
+	      << "    return elements.size();" << std::endl
+	      << "  }" << std::endl
+	      << std::endl;
 
 	*decl << "    // ** result functions **" << std::endl;
 
@@ -943,6 +1005,7 @@ namespace funcgen
 	*decl << "    // ** access functions **" << std::endl
 	      << "    elements_type::iterator elements_begin(); " << std::endl
 	      << "    elements_type::iterator elements_end(); " << std::endl
+	      << std::endl
 	      << "    bool elements_empty(); " << std::endl
 	      << "    // ** constructor **" << std::endl
 	      << "    " << translator.serial_container( provides ) 
@@ -1746,10 +1809,10 @@ namespace funcgen
 	  {
 	    *decl << translator.serial_container
 	      ( par->get_container().provider_type ) 
-		  << "&" << par->get_container().name << ", ";
+		  << " &" << par->get_container().name << ", ";
 	    *impl << translator.serial_container
 	      ( par->get_container().provider_type ) 
-		  << "& _" 
+		  << " &_" 
 		  << translator.container_name( par->get_container().name ) 
 		  << ", ";
 	  }
@@ -1757,10 +1820,10 @@ namespace funcgen
 	  {
 	    *decl << translator.container
 	      ( par->get_container().provider_type ) 
-		  << "&" << par->get_container().name << ", ";
+		  << " &" << par->get_container().name << ", ";
 	    *impl << translator.container
 	      ( par->get_container().provider_type ) 
-		  << "& _" 
+		  << " &_" 
 		  << translator.container_name( par->get_container().name ) 
 		  << ", ";
 	  }
@@ -1856,6 +1919,30 @@ namespace funcgen
 	  {
 	    *impl << "    __cc__group" << i << "_event" << j 
 		  << ".add_operand( " << translator.prop_op(*op) << " );"
+		  << std::endl;
+	  }
+	  std::list<std::string>::const_iterator container;
+	  for( container = event->required_containers.begin();
+	       container != event->required_containers.end(); ++container )
+	  {
+	    *impl << "    __cc__group" << i << "_event" << j 
+		  << ".add_operand( " << translator.container_name(*container)
+		  << ".is_avail );"
+		  << std::endl;
+	  }
+	  std::list<Container_Function>::const_iterator container_function;
+	  for( container_function= event->required_container_functions.begin();
+	       container_function != event->required_container_functions.end();
+	       ++container_function )
+	  {
+	    *impl << "    __cc__group" << i << "_event" << j 
+		  << ".add_operand( " 
+		  << translator.container_name(container_function->name)
+		  << "." 
+		  << translator.is_avail( container_function->provider_type,
+					  container_function->return_type,
+					  container_function->parameter_type ) 
+		  << " );"
 		  << std::endl;
 	  }
 	}
@@ -1994,7 +2081,7 @@ namespace funcgen
 	    *decl << "    " 
 		  << translator.serial_container( par->get_container().
 						  provider_type )
-		  << "& " 
+		  << " &" 
 		  << translator.container_name( par->get_container().name ) 
 		  << ";" << std::endl;
 	  }
@@ -2002,7 +2089,7 @@ namespace funcgen
 	  {
 	    *decl << "    " 
 		  << translator.container( par->get_container().provider_type )
-		  << "& " 
+		  << " &" 
 		  << translator.container_name( par->get_container().name ) 
 		  << ";" << std::endl;
 	  }
@@ -2260,10 +2347,11 @@ namespace funcgen
 	  {
 	    *decl << translator.serial_container( par->get_container().
 						  provider_type ) 
-		  << "&" << par->get_container().name << ", ";
+		  << " &" << par->get_container().name << ", ";
 	    *impl << translator.serial_container( par->get_container().
 						  provider_type ) 
-		  << "& _" << translator.container( par->get_container().name )
+		  << " &_" 
+		  << translator.container_name( par->get_container().name )
 		  << ", ";
 	  }
 	  else
@@ -2272,7 +2360,8 @@ namespace funcgen
 		  << "&" << par->get_container().name << ", ";
 	    *impl << translator.container( par->get_container().
 					   provider_type ) 
-		  << "& _" << translator.container( par->get_container().name )
+		  << " &_" 
+		  << translator.container_name( par->get_container().name )
 		  << ", ";
 	  }
 	  break;

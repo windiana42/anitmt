@@ -415,6 +415,44 @@ namespace funcgen
       }
     }
   } 
+  void declare_variable( void *info, const std::string &type, 
+			 const std::string &name )
+  {
+    message::Message_Reporter &msg = static_cast<afd_info*>(info)->msg;
+    Context *context = static_cast<afd_info*>(info)->afd->get_context();
+    if( context )
+    {
+      if( !context->is_variable(name) )
+      {
+	context->variable_list.push_back( Variable(name,type) );
+	context->variables[name] = &context->variable_list.back();
+      }
+      else
+      {
+	msg.error() << "variable \"" << name << "\" already defined";
+      }
+    }
+  }
+  void declare_special_variable( void *info, const std::string &type, 
+				 const std::string &name )
+  {
+    message::Message_Reporter &msg = static_cast<afd_info*>(info)->msg;
+    Context *context = static_cast<afd_info*>(info)->afd->get_context();
+    if( context )
+    {
+      if( !context->is_special_variable(name) )
+      {
+	context->special_variable_list.push_back
+	  ( Variable(name,type) );
+	context->special_variables[name] = 
+	  &context->special_variable_list.back();
+      }
+      else
+      {
+	msg.error() << "variable \"" << name << "\" already defined";
+      }
+    }
+  }
   void declare_container( void *info, const std::string &type, 
 			  const std::string &name )
   {
@@ -1532,7 +1570,7 @@ namespace funcgen
 						&parameter_type )
   {
     afd_info *I=static_cast<afd_info*>(info);
-    //message::Message_Reporter &msg = I->msg;
+    message::Message_Reporter &msg = I->msg;
     AFD_Root *afd = I->afd;
     Event_Solver *solver = afd->current_event_solver;
 
@@ -1547,8 +1585,12 @@ namespace funcgen
 	  solver->current_function_code->
 	    required_container_functions.push_back
 	    ( Container_Function( name,
-				  context->containers[name]->provider_type,
+				  context->get_container(name)->provider_type,
 				  return_type, parameter_type ) );
+	}
+	else
+	{
+	  msg.error() << "`" << name << "' is no container name";
 	}
       }
     }
@@ -1657,13 +1699,158 @@ namespace funcgen
     Code_Translator *translator = I->afd->translator;
     AFD_Root *afd = I->afd;
     Code *code = afd->current_code;
-
+    
     if( code )
     {
       code->code += translator->solver_function_value
 	( solver, function, parameter, opt_fail_bool_var);
     }
   }
+  void user_code_container_function( void *info, std::string container, 
+				     std::string return_type, 
+				     std::string parameter_type, 
+				     std::string parameter, 
+				     std::string opt_fail_bool_var )
+  {
+    afd_info *I=static_cast<afd_info*>(info);
+    message::Message_Reporter &msg = I->msg;
+    Code_Translator *translator = I->afd->translator;
+    AFD_Root *afd = I->afd;
+    Code *code = afd->current_code;
+
+    if( code )
+    {
+      Context *context = afd->get_context();
+      assert( context );
+      if( context->is_container( container ) )
+      {
+	code->code += translator->container_function_value
+	  ( container, context->get_container(container)->provider_type,
+	    return_type, parameter_type, parameter, 
+	    opt_fail_bool_var );
+      }
+      else
+      {
+	msg.error() << "`" << container << "' is no container name";
+      }
+    }
+  }
+  void user_code_container_first_index( void *info, std::string container )
+  {
+    afd_info *I=static_cast<afd_info*>(info);
+    //message::Message_Reporter &msg = I->msg;
+    Code_Translator *translator = I->afd->translator;
+    AFD_Root *afd = I->afd;
+    Code *code = afd->current_code;
+
+    if( code )
+    {
+      code->code += translator->container_first_index( container );
+    }
+  }
+  void user_code_container_last_index( void *info, std::string container )
+  {
+    afd_info *I=static_cast<afd_info*>(info);
+    //message::Message_Reporter &msg = I->msg;
+    Code_Translator *translator = I->afd->translator;
+    AFD_Root *afd = I->afd;
+    Code *code = afd->current_code;
+
+    if( code )
+    {
+      code->code += translator->container_last_index( container );
+    }
+  }
+  void user_code_container_element_function( void *info, std::string container,
+					     double index, 
+					     std::string return_type, 
+					     std::string parameter_type, 
+					     std::string parameter, 
+					     std::string opt_fail_bool_var )
+  {
+    afd_info *I=static_cast<afd_info*>(info);
+    message::Message_Reporter &msg = I->msg;
+    Code_Translator *translator = I->afd->translator;
+    AFD_Root *afd = I->afd;
+    Code *code = afd->current_code;
+
+    if( code )
+    {
+      Context *context = afd->get_context();
+      assert( context );
+      if( context->is_container( container ) )
+      {
+	code->code += translator->container_element_function_value
+	  ( container, int(index), 
+	    context->get_container(container)->provider_type,
+	    return_type, parameter_type, parameter, 
+	    opt_fail_bool_var );
+      }
+      else
+      {
+	msg.error() << "`" << container << "' is no container name";
+      }
+    }
+  }
+  void user_code_for_each_container_element( void *info, std::string element, 
+					     std::string container )
+  {
+    afd_info *I=static_cast<afd_info*>(info);
+    message::Message_Reporter &msg = I->msg;
+    Code_Translator *translator = I->afd->translator;
+    AFD_Root *afd = I->afd;
+    Code *code = afd->current_code;
+
+    if( code )
+    {
+      Context *context = afd->get_context();
+      assert( context );
+      if( context->is_container( container ) )
+      {
+	code->code += translator->container_for_each_element
+	  ( element, container, 
+	    context->get_container(container)->provider_type);
+
+	declare_special_variable
+	  ( info, context->get_container(container)->provider_type, element );
+      }
+      else
+      {
+	msg.error() << "`" << container << "' is no container name";
+      }
+    }
+  }
+  void user_code_element_function( void *info, std::string element, 
+				   std::string return_type, 
+				   std::string parameter_type, 
+				   std::string parameter, 
+				   std::string opt_fail_bool_var )
+  {
+    afd_info *I=static_cast<afd_info*>(info);
+    message::Message_Reporter &msg = I->msg;
+    Code_Translator *translator = I->afd->translator;
+    AFD_Root *afd = I->afd;
+    Code *code = afd->current_code;
+
+    if( code )
+    {
+      Context *context = afd->get_context();
+      assert( context );
+      if( context->is_special_variable( element ) )
+      {
+	code->code += translator->element_function_value
+	  ( element, context->get_special_variable(element)->type,
+	    return_type, parameter_type, parameter, 
+	    opt_fail_bool_var );
+      }
+      else
+      {
+	msg.error() << "`" << element
+		    << "' is no element identifier in a for_each loop";
+      }
+    }
+  }
+
   void user_code_return_prop( void *info, std::string operand )
   {
     afd_info *I=static_cast<afd_info*>(info);
@@ -2114,6 +2301,17 @@ namespace funcgen
       {
 	res_code->code += translator->return_if_fail();
       }
+    }
+  }
+
+  void require_identifier( void *info, std::string id, std::string expect )
+  {
+    if( id != expect )
+    {
+      afd_info *I=static_cast<afd_info*>(info);
+      message::Message_Reporter &msg = I->msg;
+
+      msg.error() << "`" << expect << "' expected instead of `" << id << "'";
     }
   }
 

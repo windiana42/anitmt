@@ -3,12 +3,13 @@ Makefile
 Makefile.in
 aclocal.m4
 anitmt-0.1.9.tar.gz
+autom4te.cache
 config.cache
+config.h
+config.h.in
 config.log
 config.status
 configure
-config.h
-stamp-h.in
 stamp-h
-config.h.in
-autom4te.cache
+stamp-h.in
+stamp-h1

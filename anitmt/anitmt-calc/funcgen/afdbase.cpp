@@ -234,6 +234,23 @@ namespace funcgen
     return 0;
   }
 
+  bool Context::is_special_variable( std::string name )
+  {
+    if( special_variables.find(name) != special_variables.end() )
+      return true;
+    if( parent ) return parent->is_special_variable(name);
+    return false;
+  }
+  Variable *Context::get_special_variable( std::string name )
+  {
+    std::map<std::string,Variable*>::iterator i = special_variables.find(name);
+    if( i != special_variables.end() )
+      return i->second;
+
+    if( parent ) return parent->get_special_variable(name);
+    return 0;
+  }
+
   bool Context::is_base_type( std::string name )
   {
     if( base_types.find(name) != base_types.end() )

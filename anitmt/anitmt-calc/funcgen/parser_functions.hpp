@@ -118,6 +118,8 @@ namespace funcgen
   void declare_operand( void *info, const std::string &name ); 
   void declare_operand( void *info, const std::string &type,
 			const std::string &name );
+  void declare_variable( void *info, const std::string &type, 
+			 const std::string &name );
   void declare_container( void *info, bool serial,
 			  const std::string &type,
 			  const std::string &name );
@@ -251,15 +253,36 @@ namespace funcgen
   void user_code_prop_op( void *info, std::string );
   void user_code_prop_op_try( void *info, std::string );
   void user_code_solver_function( void *info, std::string solver, 
-					  std::string function, 
-					  std::string parameter, 
-					  std::string opt_fail_bool_var );
+				  std::string function, 
+				  std::string parameter, 
+				  std::string opt_fail_bool_var );
+  void user_code_container_function( void *info, std::string container, 
+				     std::string return_type, 
+				     std::string parameter_type, 
+				     std::string parameter, 
+				     std::string opt_fail_bool_var );
+  void user_code_container_first_index( void *info, std::string container );
+  void user_code_container_last_index( void *info, std::string container );
+  void user_code_container_element_function( void *info, std::string container,
+					     double index, 
+					     std::string return_type, 
+					     std::string parameter_type, 
+					     std::string parameter, 
+					     std::string opt_fail_bool_var );
+  void user_code_for_each_container_element( void *info, std::string element, 
+					     std::string container );
+  void user_code_element_function( void *info, std::string element, 
+				   std::string return_type, 
+				   std::string parameter_type, 
+				   std::string parameter, 
+				   std::string opt_fail_bool_var );
+				   
   void user_code_return_prop( void *info, std::string operand );
   void user_code_return( void *info, std::string expression );
   void user_code_return_solver_function( void *info, 
-						 std::string solver, 
-						 std::string function, 
-						 std::string parameter );
+					 std::string solver, 
+					 std::string function, 
+					 std::string parameter );
   void user_code_return_fail( void *info );
   void user_code_return_if_fail( void *info );
 
@@ -291,6 +314,8 @@ namespace funcgen
   void res_ref_finish_return( void *info );
   void res_ref_return_fail( void *info );
   void res_ref_return_if_fail( void *info );
+
+  void require_identifier( void *info, std::string id, std::string expect );
 
   Expression *bool_expr( Expression *exp1, const std::string &op, 
 			 Expression *exp2 );

@@ -21,7 +21,7 @@
 namespace functionality
 {
   // this class is used to store one point of the space curve
-  class sp_curve_point{
+  class Sp_Curve_Point{
   public:
     double		t;	// variable that ranges from 0 to 1
     values::Vector	pos;	// position of this point
@@ -31,12 +31,12 @@ namespace functionality
     values::Vector	front;	// front direction at this point
     values::Vector	up;	// up direction at this point
 
-    sp_curve_point( double it, values::Vector ipos ) : t(it), pos(ipos) {}
+    Sp_Curve_Point( double it, values::Vector ipos ) : t(it), pos(ipos) {}
   };
 
   // virtual class for space curves
-  class space_curve{
-    typedef std::list<sp_curve_point> pointtype;
+  class Space_Curve{
+    typedef std::list<Sp_Curve_Point> pointtype;
     pointtype points;
 
     virtual values::Vector get_point_pos( double t ) = 0;
@@ -73,12 +73,12 @@ namespace functionality
     values::Vector get_beg_up ();
     values::Vector get_end_up ();
 
-    space_curve( double max_a, double max_l, double min_l, int anz) 
+    Space_Curve( double max_a, double max_l, double min_l, int anz) 
       : initialized(false), init_up(false), max_angle(max_a), 
 	max_len(max_l), min_len(min_l), init_point_anz(anz) {}
 
 
-    virtual ~space_curve(){
+    virtual ~Space_Curve(){
 #ifdef __debug__
       print_points();
 #endif
@@ -87,17 +87,17 @@ namespace functionality
   };
 
   // class for bezier curves
-  class bezier_curve : public space_curve{
+  class Bezier_Curve : public Space_Curve{
     values::Vector p0,p1,p2,p3;
 
     values::Vector get_point_pos( double t );
 
   public:
-    bezier_curve( values::Vector point0, values::Vector point1, 
+    Bezier_Curve( values::Vector point0, values::Vector point1, 
 		  values::Vector point2, values::Vector point3,
 		  double max_a = 1./180 *values::PI, double max_l = 1, 
 		  double min_l = .01, int anz = 10 )
-      : space_curve( max_a, max_l, min_l, anz ),
+      : Space_Curve( max_a, max_l, min_l, anz ),
 	p0(point0), p1(point1), p2(point2), p3(point3)	
     {
       init();

@@ -66,7 +66,7 @@ namespace funcgen
 %token TAFD_container TAFD_serial_container TAFD_group TAFD_event TAFD_test_run
 %token TAFD_final TAFD_reset TAFD_set TAFD_try TAFD_try_reject
 %token TAFD_trial_failed TAFD_is_solved_in_try TAFD_is_just_solved TAFD_solver
-
+%token TAFD_first_index TAFD_last_index TAFD_for_each TAFD_element
 // lexer error
 %token TAFD_ERROR 
 // multi character operators
@@ -89,6 +89,7 @@ namespace funcgen
 %type <string> opt_second_identifier
 %type <string> opt_fail_bool_var
 %type <string> opt_identifier
+%type <string> in
 %type <u.exp> op_expression
 %type <u.exp> op_expression_list
 %type <string> Cxx_type_identifier
@@ -815,6 +816,23 @@ test_run_special_command:
   | TAFD_solver '.' TAFD_IDENTIFIER '.' TAFD_IDENTIFIER 
       '(' opt_Cxx_expression_list ')' opt_fail_bool_var
 	{ user_code_solver_function(info,$3,$5,$7,$9); }
+  // serial container functions
+  | TAFD_IDENTIFIER '.' TAFD_IDENTIFIER '(' TAFD_IDENTIFIER TAFD_IDENTIFIER ')'
+      opt_fail_bool_var
+	{ user_code_container_function(info,$1,$3,$5,$6,$8); }
+  // parallel container (loop) functions
+  | TAFD_first_index '.' TAFD_IDENTIFIER
+	{ user_code_container_first_index(info,$3); }
+  | TAFD_last_index '.' TAFD_IDENTIFIER
+	{ user_code_container_last_index(info,$3); }
+  | TAFD_IDENTIFIER '[' TAFD_SCALAR ']' '.' TAFD_IDENTIFIER 
+      '(' TAFD_IDENTIFIER TAFD_IDENTIFIER ')' opt_fail_bool_var
+	{ user_code_container_element_function(info,$1,$3,$6,$8,$9,$11); }
+  | TAFD_for_each TAFD_IDENTIFIER in TAFD_IDENTIFIER
+        { user_code_for_each_container_element(info,$2,$4); }
+  | TAFD_element '.' TAFD_IDENTIFIER '.' TAFD_IDENTIFIER
+      '(' TAFD_IDENTIFIER TAFD_IDENTIFIER ')' opt_fail_bool_var
+	{ user_code_element_function(info,$3,$5,$7,$8,$10); }
 ;
 
 // ********
@@ -906,7 +924,11 @@ event_solver_function_special_command:
 // common rules
 // ***********************************************************
 
-opt_identifier: /*optional*/		{$$="";}
+in:
+    TAFD_IDENTIFIER		{require_identifier(info,$1,"in");$$=$1;}
+;
+
+opt_identifier: /*optional*/	{$$="";}
   | TAFD_IDENTIFIER		
 ;
 

@@ -138,6 +138,22 @@ namespace funcgen
     virtual std::string solver_function_result( std::string solver, 
 						std::string function, 
 						std::string parameter );
+    virtual std::string container_function_value
+    ( std::string container, std::string provider_type, 
+      std::string return_type, std::string parameter_type, 
+      std::string parameter, std::string opt_fail_bool_var );
+    virtual std::string container_for_each_element
+    ( std::string element, std::string container, std::string provider_type );
+    virtual std::string element_function_value
+    ( std::string element, std::string provider_type, std::string return_type,
+      std::string parameter_type, std::string parameter,
+      std::string opt_fail_bool_var );
+    virtual std::string container_first_index( std::string container );
+    virtual std::string container_last_index( std::string container );
+    virtual std::string container_element_function_value
+    ( std::string container, int index, std::string provider_type, 
+      std::string return_type, std::string parameter_type, 
+      std::string parameter, std::string opt_fail_bool_var);    
 
     Cpp_Code_Translator(code_gen_info *);
   };

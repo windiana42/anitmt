@@ -47,7 +47,6 @@ serial type timing {
   provides acceleration( stretch );
 }
 
-
 // ******************
 // object anitmtion
 // ******************
