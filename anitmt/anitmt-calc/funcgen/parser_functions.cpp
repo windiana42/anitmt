@@ -527,7 +527,7 @@ namespace funcgen
     assert(node != 0);
     node->current_solve_code = &node->common;
   }
-  void node_start_first_declaration( void *info, const std::string &type="" )
+  void node_start_first_declaration( void *info, const std::string &type )
   {
     message::Message_Reporter &msg = static_cast<afd_info*>(info)->msg;
     Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;    
@@ -551,7 +551,7 @@ namespace funcgen
       // enter declaration in map and set the current pointer
       node->current_solve_code = &node->first[type];
   } 
-  void node_start_last_declaration( void *info, const std::string &type="" )
+  void node_start_last_declaration( void *info, const std::string &type )
   {
     message::Message_Reporter &msg = static_cast<afd_info*>(info)->msg;
     Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;    
@@ -829,8 +829,8 @@ namespace funcgen
   }
   void node_result_essential_child_result( void *info, 
 					   const std::string &provider, 
-					   const std::string &ret="", 
-					   const std::string &par="" )
+					   const std::string &ret, 
+					   const std::string &par )
   {
     //message::Message_Reporter &msg = static_cast<afd_info*>(info)->msg;
     Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;
@@ -851,8 +851,8 @@ namespace funcgen
     }
   }
   void node_result_essential_result( void *info, const std::string &provider, 
-				     const std::string &ret="", 
-				     const std::string &par="" )
+				     const std::string &ret, 
+				     const std::string &par )
   {
     //message::Message_Reporter &msg = static_cast<afd_info*>(info)->msg;
     Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;
