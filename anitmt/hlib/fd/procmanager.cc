@@ -5,7 +5,7 @@
  * process (task) management which works in cooperation 
  * with classes derived from class ProcessBase. 
  *
- * Copyright (c) 2001 by Wolfgang Wieser (wwieser@gmx.de) 
+ * Copyright (c) 2001 -- 2002 by Wolfgang Wieser (wwieser@gmx.de) 
  * 
  * This file may be distributed and/or modified under the terms of the 
  * GNU General Public License version 2 as published by the Free Software 
@@ -34,6 +34,7 @@
 #include <hlib/fdbase.h>
 #include <hlib/procmanager.h>
 #include <hlib/procbase.h>
+#include <hlib/refstrlist.h>
 
 #define TermKillAlign  0   /* align value for term-kill-timer */
 
@@ -110,6 +111,23 @@ static void _ChildExit(int pipefd,InternalProcessBase::PSDetail exitval,int errn
 }
 
 
+// Highly internal routine for search path check: 
+static int _SPathCheckAccess(char *tmp_binpath,
+	const char *searchdir,const char *binname)
+{
+	// These strcpy()s will not overwrite the buffer due to 
+	// allocation above. 
+	char *dst=tmp_binpath;
+	strcpy(dst,searchdir);
+	dst+=strlen(searchdir);
+	if(*dst!='/')  *(dst++)='/';
+	strcpy(dst,binname);
+	if(!access(tmp_binpath,X_OK))
+	{  return(1);  }
+	return(0);
+}
+
+
 pid_t ProcessManager::StartProcess(ProcessBase *pb,
 	const ProcPath &path,
 	const ProcArgs &args,
@@ -133,12 +151,10 @@ pid_t ProcessManager::StartProcess(ProcessBase *pb,
 	}
 	
 	// Check args and envp and path allocation: 
-	if(path.freearray==2)
-	{  return(-3);  }
-	if(args.freearray==2)
-	{  return(-4);  }
-	if(env.freearray==2)
-	{  return(-5);  }
+	if(path.freearray==2)  return(-3);
+	if(args.freearray==2)  return(-4);
+	if(args.freearray==3)  return(-12);
+	if(env.freearray==2)   return(-5);
 	
 	
 	// Search for binary: 
@@ -146,29 +162,41 @@ pid_t ProcessManager::StartProcess(ProcessBase *pb,
 	if(!path.path)
 	{  return(-6);  }
 	#warning CHROOT NOT SUPPORTED HERE!!!
-	if(path.searchpath && path.path[0]!='/')
+	if(path.path[0]!='/' &&  // not an absolute path 
+	   (path.searchpath || path.plist))
 	{
 		size_t maxlen=0;
-		for(int i=0; path.searchpath[i]; i++)
-		{
-			size_t tmp=strlen(path.searchpath[i]);
-			if(maxlen<tmp)  maxlen=tmp;
-		}
+		// Find longest string in search path: 
+		if(path.searchpath)
+			for(int i=0; path.searchpath[i]; i++)
+			{
+				size_t tmp=strlen(path.searchpath[i]);
+				if(maxlen<tmp)  maxlen=tmp;
+			}
+		if(path.plist)
+			for(const RefStrList::Node *n=path.plist->first(); n; n=n->next)
+			{
+				if(n->stype()!=0)  return(-11);  
+				size_t tmp=n->len();
+				if(maxlen<tmp)  maxlen=tmp;
+			}
+		
 		// We need 2 bytes more: one for a `/' and one for a \0. 
 		binpath=(char*)LMalloc(strlen(path.path)+maxlen+2);
 		if(!binpath)  return(-1);
-		for(int i=0; path.searchpath[i]; i++)
-		{
-			// These strcpy()s will not overwrite the buffer due to 
-			// allocation above. 
-			char *dst=binpath;
-			strcpy(dst,path.searchpath[i]);
-			dst+=strlen(path.searchpath[i]);
-			*(dst++)='/';
-			strcpy(dst,path.path);
-			if(!access(binpath,X_OK))
-			{  goto found;  }
-		}
+		if(path.searchpath)
+			for(int i=0; path.searchpath[i]; i++)
+			{
+				if(_SPathCheckAccess(binpath,path.searchpath[i],path.path))
+				{  goto found;  }
+			}
+		if(path.plist)
+			for(const RefStrList::Node *n=path.plist->first(); n; n=n->next)
+			{
+				if(_SPathCheckAccess(binpath,n->str(),path.path))
+				{  goto found;  }
+			}
+		
 		LFree(binpath);
 		return(-6);
 		found:;

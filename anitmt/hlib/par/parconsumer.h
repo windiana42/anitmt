@@ -34,6 +34,9 @@ class ParameterConsumer :
 		// List of special help oprtions: 
 		LinkedList<SpecialHelpItem> shelp;
 	protected:
+		// Number of times AddParam() / AddSpecialHelp() failed: 
+		int add_failed;
+		
 		// This is called when ParameterManager::CheckParams() is called, 
 		// normally that is when all the parameters are set up and before 
 		// the program actually does its job. 
@@ -116,7 +119,7 @@ class ParameterConsumer :
 		// The first non-NULL help text string for the section is used, 
 		// if a latter SetSection() call supplies a different help text, 
 		// it is silently ignored. 
-		// Note: The help text is formattes automatocally, so you 
+		// Note: The help text is formatted automatocally, so you 
 		//       do not have to pass any `\n' and any sort of indention. 
 		// Return value: 
 		//   0 -> OK

@@ -193,8 +193,6 @@ int ParameterManager::CheckHandleHelpOpts(ParamArg *pa,Section *top_sect)
 	if(pa->atype==ParamArg::Option && 
 	   top_sect==&topsect)
 	{
-		int special=0;
-		
 		// Okay, look up in special help lists: 
 		for(ParameterConsumer *pc=pclist.first(); pc; pc=pc->next)
 		{

@@ -24,6 +24,8 @@
 
 
 class ProcessBase;
+class RefStrList;
+
 
 // This just server as some sort of namespace. 
 struct InternalProcessBase
@@ -137,6 +139,10 @@ struct InternalProcessBase
 			ProcArgs(char *const *_args)  // last: NULL-pointer!
 				{  args=_args;  freearray=0;  }
 			ProcArgs(const char *args0,...);  // NULL-terminated!
+			// Note that the passed arglist must exist as long as the 
+			// ProcArgs exist (i.e. normally until StartProcess() returns).
+			// (arglist may only contain '\0'-terminated RefStrings.)
+			ProcArgs(const RefStrList *arglist);
 			~ProcArgs()
 				{  if(freearray)  args=(char**)LFree((void*)args);  }
 	};
@@ -147,6 +153,7 @@ struct InternalProcessBase
 			const char *path;
 			char *const *searchpath;
 			int freearray;
+			const RefStrList *plist;
 			ProcPath(const ProcPath &)  { }  // don't copy!
 			void operator=(const ProcPath &)  { }
 		public:  _CPP_OPERATORS
@@ -154,12 +161,18 @@ struct InternalProcessBase
 			//       freed by the destructor. Make sure the pointers are 
 			//       valid as long as the class exists. 
 			ProcPath(const char *_path)   // binary located at _path
-				{  path=_path;  freearray=0;  searchpath=NULL;  }
+				{  path=_path;  freearray=0;  searchpath=NULL;  plist=NULL; }
+			// Probably the best way; The passed pathlist is not copied; 
+			// it must exist as long as ProcPath exists (i.e. normally 
+			// until StartProcess() returns).
+			// (pathlist may only contain '\0'-terminated RefStrings.)
+			ProcPath(const char *name,const RefStrList *pathlist)
+				{  path=name;  freearray=0;  searchpath=NULL;  plist=pathlist;  }
 			ProcPath(const char *name,char *const *Searchpath)  // last: NULL-pointer!
-				{  path=name;  freearray=0;  searchpath=Searchpath;  }
+				{  path=name;  freearray=0;  searchpath=Searchpath;  plist=NULL;  }
 			ProcPath(const char *name,const char *path0,...);  // NULL-terminated!
 			~ProcPath()
-				{  if(freearray)  searchpath=(char**)LFree((char*)searchpath);  }
+				{  if(freearray)  searchpath=(char**)LFree((char*)searchpath);  plist=NULL;  }
 	};
 	class ProcFDs
 	{

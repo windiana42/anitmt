@@ -105,11 +105,11 @@ int main(int argc, char *argv[], char *envp[])
     "aniTMT",    // package name
     "funcgen");  // program name
   // Additional help text what funcgen actually does; do NOT put any 
-  // newlines in the text. 
+  // newlines in the text unless you intend to start a new paragraph. 
   parmanager.AdditionalHelpText(
     "funcgen is used to automatically create c++-code from a "
-    "functionality description (.afd). "
-    "It may be used to generate a data tree with calculation facilities"
+    "functionality description (.afd).\n"
+    "It may be used to generate a data tree with calculation facilities."
   );
   
   FuncgenParameters fgpar(&parmanager);

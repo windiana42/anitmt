@@ -29,6 +29,9 @@
 //#include "intprocbase.h"
 #include "procmanager.h"
 
+#include <hlib/refstrlist.h>
+
+
 
 // use environment as passed to ProcessManager(). 
 InternalProcessBase::ProcEnv::ProcEnv()
@@ -117,8 +120,38 @@ InternalProcessBase::ProcArgs::ProcArgs(const char *args0,...)
 }
 
 
+InternalProcessBase::ProcArgs::ProcArgs(const RefStrList *arglist)
+{
+	args=NULL;
+	if(!arglist)
+	{  freearray=2;  return;  }   // StartProcess will detect that. 
+	
+	// Count them...
+	int n=1;
+	for(const RefStrList::Node *i=arglist->first(); i; i=i->next,++n)
+	{
+		if(i->stype()!=0)  // must be '\0'-terminated string
+		{  freearray=3;  return;  }   // StartProcess will detect that. 
+	}
+	const char **xargs=(const char **)LMalloc(n*sizeof(char *));
+	if(!xargs)
+	{  freearray=2;  return;  }   // StartProcess will detect that. 
+	
+	// ...and assign the pointers. 
+	n=0;
+	for(const RefStrList::Node *i=arglist->first(); i; i=i->next,++n)
+	{  xargs[n++]=i->str();  }
+	xargs[n]=NULL;  // important
+	
+	args=(char *const *)xargs;
+	freearray=1;
+}
+
+
+
 InternalProcessBase::ProcPath::ProcPath(const char *name,const char *searchpath0,...)
 {
+	plist=NULL;
 	path=name;
 	
 	// Count them...

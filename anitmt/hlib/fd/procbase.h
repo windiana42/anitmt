@@ -91,7 +91,9 @@ class ProcessBase :
 		//    -7 -> fork() failed (errno is set) 
 		//    -8 -> process limit exceeded (see ProcManager::LimitProcesses())
 		//    -9 -> pipe() failed (errno is set)
-		//   -10 -> fcntl)() on pipe failed (errno is set)
+		//   -10 -> fcntl() on pipe failed (errno is set)
+		//   -11 -> searchpath contains non-'\0'-terminated RefString 
+		//   -12 -> arg list contains non-'\0'-terminated RefString
 		// Note: Other errors (FD stuff failed / execution failed) cannot 
 		//       be returned here; you get them via procnotify(). 
 		pid_t StartProcess(

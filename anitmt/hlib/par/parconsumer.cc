@@ -62,7 +62,12 @@ PAR::ParamInfo *ParameterConsumer::AddParam(
 	info.exclusive_hdl=(flags & PExclusiveHdl) ? 1 : 0;
 	info.has_default=(flags & PNoDefault);
 	info.spectype=PSpecType(flags & _STMask);
-	return(parmanager()->AddParam(this,&info));
+	
+	ParamInfo *pi=parmanager()->AddParam(this,&info);
+	if(!pi)
+	{  ++add_failed;  }
+
+	return(pi);
 }
 
 int ParameterConsumer::DelParam(ParamInfo *pi)
@@ -91,7 +96,10 @@ PAR::Section *ParameterConsumer::FindSection(const char *name,Section *top)
 
 int ParameterConsumer::AddSpecialHelp(SpecialHelpItem *shi)
 {
-	return(parmanager()->AddSpecialHelp(this,shi));
+	int rv=parmanager()->AddSpecialHelp(this,shi);
+	if(rv)
+	{  ++add_failed;  }
+	return(rv);
 }
 
 
@@ -103,6 +111,7 @@ ParameterConsumer::ParameterConsumer(ParameterManager *_manager,
 	
 	manager=_manager;
 	curr_section=NULL;
+	add_failed=0;
 	
 	if(parmanager()->RegisterParameterConsumer(this))
 	{  --failed;  }
