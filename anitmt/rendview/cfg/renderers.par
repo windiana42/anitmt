@@ -27,3 +27,11 @@ searchpath = /usr/bin /usr/local/bin /usr/bin/X11
   inc_path= /usr/lib/povray/include 
 *end
 
+*section povray3.5
+  driver = povray
+  binpath = povray-3.5
+  # Always pass -J to switch jitter off.
+  req_args+= -J #-display :0.0
+  inc_path= /usr/lib/povray-3.5/include 
+*end
+	  
