@@ -10,6 +10,21 @@
 
 /*#warning (Reading config.h)*/
 
+/*--------<hack helping in allocation debugging if needed>----------
+#ifdef __cplusplus
+  extern "C" {
+#endif
+  extern void free(void *);
+  #warning NO LIMIT MALLOC!!!!!!!
+  #define LMalloc malloc
+  static inline void *_LFree(void *p)
+  {  if(p)  free(p);  return(NULL);  }
+  #define LFree  _LFree 
+#ifdef __cplusplus
+  }
+#endif
+--------------------------------------------------------------------*/
+
 #ifndef DirSepChar
 #  define DirSepChar '/'
 #endif

@@ -1148,17 +1148,16 @@ ProcessManager::ProcessManager(char *const _envp[],int *failflag=NULL) :
 	envp=_envp;
 	limitproc=-1;
 	
-	int retval=0;
 	if(SetManager())
-	{  --retval;  }
+	{  --failed;  }
 	if(!(tid=InstallTimer(-1,0)))  // alloc timer node 
-	{  --retval;  }
+	{  --failed;  }
 	if(!(zmbchk=InstallTimer(-1,0)))  // alloc timer for zombie check
-	{  --retval;  }
+	{  --failed;  }
 	
 	if(failflag)
-	{  *failflag+=retval;  return;  }
-	else if(retval)
+	{  *failflag+=failed;  return;  }
+	else if(failed)
 	{  ConstructorFailedExit("ProcMan");  }
 	
 	// init global manager: 

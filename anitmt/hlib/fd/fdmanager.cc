@@ -1085,7 +1085,7 @@ FDManager::FDManager(int *failflag=NULL) :
 	//quitval=-1;  <-- set in MainLoop(). 
 	
 	if(failflag)
-	{  *failflag-=failed;  }
+	{  *failflag-=failed;  return;  }
 	else if(failed)
 	{  ConstructorFailedExit("FD");  }
 	
