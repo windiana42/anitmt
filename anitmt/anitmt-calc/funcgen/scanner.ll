@@ -48,7 +48,7 @@
 
 %x ML_COMMENT COPY_CODE
 
-id		([a-zA-Z_][a-zA_Z0-9_]*)
+id		([a-zA-Z_][a-zA-Z0-9_]*)
 integer 	([0-9]+)
 float   	((({integer}\.)|([0-9]*\.[0-9]+))([eE][-+]?{integer})?)
 scal		({integer}|{float})

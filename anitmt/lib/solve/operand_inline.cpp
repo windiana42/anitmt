@@ -88,11 +88,17 @@ namespace solve
   template<class T>
   void Operand<T>::report_value( Solve_Run_Info *info ) throw()
   {
-    listeners_type::iterator i;    
-    for( i = listeners.begin(); i != listeners.end(); i++ )
+    // check wether operand is already reporting values...
+    if( last_test_run_id != -1 )
+    {
+      last_test_run_id = -1;	// lock this function against recursion
+
+      listeners_type::iterator i;    
+      for( i = listeners.begin(); i != listeners.end(); i++ )
       {
 	(*i)->use_result( this, info );
       }
+    }
   }
 
   template<class T>

@@ -121,8 +121,8 @@ namespace solve
     if( !just_solving )
     {
       just_solving = true;	// solving or removing...
-      if( a.is_solved_in_try( info ) ) a.use_test_value( info ); 
-      if( b.is_solved_in_try( info ) ) b.use_test_value( info );
+      if( (ID!=&a) && a.is_solved_in_try( info ) ) a.use_test_value( info ); 
+      if( (ID!=&b) && b.is_solved_in_try( info ) ) b.use_test_value( info );
       just_solving = false;
     }
   }
@@ -344,8 +344,8 @@ namespace solve
     if( !just_solving )
     {
       just_solving = true;	// solving or removing...
-      if( a.is_solved_in_try( info ) ) a.use_test_value( info ); 
-      if( b.is_solved_in_try( info ) ) b.use_test_value( info );
+      if( (ID!=&a) && a.is_solved_in_try( info ) ) a.use_test_value( info ); 
+      if( (ID!=&b) && b.is_solved_in_try( info ) ) b.use_test_value( info );
       just_solving = false;
     }
   }
@@ -662,9 +662,9 @@ namespace solve
     if( !just_solving )
     {
       just_solving = true;	// solving or removing...
-      if( a.is_solved_in_try( info ) ) a.use_test_value( info ); 
-      if( b.is_solved_in_try( info ) ) b.use_test_value( info );
-      if( c.is_solved_in_try( info ) ) c.use_test_value( info ); 
+      if( (ID!=&a) && a.is_solved_in_try( info ) ) a.use_test_value( info ); 
+      if( (ID!=&b) && b.is_solved_in_try( info ) ) b.use_test_value( info );
+      if( (ID!=&c) && c.is_solved_in_try( info ) ) c.use_test_value( info ); 
       just_solving = false;
     }
   }
