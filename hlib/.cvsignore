@@ -6,6 +6,3 @@ missing
 mkinstalldirs
 install-sh
 depcomp
-aclocal.m4
-configure
-hlib-config.h.in
