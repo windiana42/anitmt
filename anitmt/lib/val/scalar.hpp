@@ -30,6 +30,7 @@ class Scalar
 		Scalar(double i) :        x(i)   {}
 		Scalar() :                x(0.0) {}
 		Scalar(const Scalar &s) : x(s.x) {}
+		~Scalar() {}
 		
 		operator double() const  {  return(x);  }
 		double val() const  {  return(x);  }

@@ -30,6 +30,7 @@ class Flag
 		Flag(const Flag &f) : x(f.x) { }
 		Flag(bool f) : x(f) { }
 		Flag() { }
+		~Flag() { }
 		
 		operator bool() const  {  return(x);  }
 		bool val() const  {  return(x);  }

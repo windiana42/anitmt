@@ -62,6 +62,8 @@ template<int C=4,int R=4>class Matrix
 		// Assignment operator 
 		Matrix<C,R> &operator=(const Matrix<C,R> &m)  {  x=m.x;  return(*this);  }
 		
+		~Matrix()  {}
+		
 		//operator internal_vect::matrix<C,R>() const  {  return(x);  }
 		
 		/************************************/
