@@ -17,7 +17,9 @@
 #include <hlib/prototypes.h>  /* MUST BE FIRST */
 
 #include <string.h>
-#include <stdarg.h>
+#if HAVE_STDARG_H
+#  include <stdarg.h>
+#endif
 
 #include <hlib/refstrlist.h>
 

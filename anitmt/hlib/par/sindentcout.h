@@ -21,7 +21,9 @@
 #ifndef _HLIB_SimpleIndentConsoleOutput_H_
 #define _HLIB_SimpleIndentConsoleOutput_H_ 1
 
-#include <stdarg.h>
+#if HAVE_STDARG_H
+#  include <stdarg.h>
+#endif
 
 
 namespace par

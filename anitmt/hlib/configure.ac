@@ -21,7 +21,8 @@ AC_DEFINE_UNQUOTED(HLIB_BUILD_DATE,["`date || echo unknown`"],\
 
 # Checks for header files.
 AC_HEADER_STDC
-AC_CHECK_HEADERS([errno.h fcntl.h limits.h stddef.h stdlib.h string.h unistd.h signal.h])
+AC_CHECK_HEADERS([stddef.h stdlib.h string.h stdarg.h unistd.h])
+AC_CHECK_HEADERS([errno.h fcntl.h limits.h signal.h])
 AC_CHECK_HEADERS([arpa/inet.h])
 AC_CHECK_HEADERS([sys/ioctl.h sys/poll.h sys/socket.h sys/time.h sys/wait.h sys/resource.h])
 AC_CHECK_HEADERS([netinet/ip_compat.h])

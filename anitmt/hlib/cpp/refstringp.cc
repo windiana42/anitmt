@@ -18,7 +18,9 @@
 #include "refstring.h"
 
 #include <string.h>
-#include <stdarg.h>
+#if HAVE_STDARG_H
+#  include <stdarg.h>
+#endif
 
 #ifndef TESTING
 #define TESTING 1
