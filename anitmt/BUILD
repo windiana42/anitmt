@@ -4,12 +4,10 @@ REQUIREMENTS
 To build AniTMT, you need: 
 
 * gcc:
-  I recommend using the newest gcc version. 
-  AniTMT currently will not build with gcc-3.1 (some minor issue being worked 
-  on by us). 
+  I recommend using the newest gcc version. (I am using gcc-3.2) 
   Building AniTMT using gcc-3.0 or above is generally a good idea since 
   these versions have a lot of template bugs fixed which were present in 
-  earlier versions. (Note flex++ below, too.)
+  earlier versions. 
   However, AniTMT will currently also build using gcc-2.95.x (preferrably 
   2.95.3 or above). 
 
@@ -20,11 +18,9 @@ If you don't have a generated parser from a tar ball you need:
   Some versions in between like 1.33 definitely do NOT work. 
 
 * flex++:
-  Ugh. If you are using gcc-3.0 or above, you will get into trouble 
-  when using flex-2.54a or earlier versions. 
-  Sadly, a new version was not yet released (although the problem 
-  has been there since the early days of a more standard conform 
-  STL in gcc-3)
+  You need flex version 2.5.17 or above. 
+  Any version below that WILL NOT WORK. 
+  Grab new versions at ftp://ftp.uncg.edu/people/wlestes/.
 
 
 BUILDING ANITMT
