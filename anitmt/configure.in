@@ -35,7 +35,6 @@ AC_OUTPUT(
 	lib/par/Makefile
 	lib/param/Makefile
 	lib/flex/Makefile
-	lib/exparse2/Makefile
 	anitmt-calc/Makefile
 	anitmt-calc/input/Makefile
 	anitmt-calc/input/adl2/Makefile
