@@ -21,15 +21,14 @@
 
 #include "../driverif.hpp"
 
-#include <hlib/cpmanager.h>
-#include <hlib/cpbase.h>
+#include <hlib/fdcopybase.h>
+
 
 class TaskDriverInterfaceFactory_LDR;
 
 
 class TaskDriverInterface_LDR : 
 	public TaskDriverInterface,
-	private FDBase,
 	private FDCopyBase,
 	private TimeoutBase
 {
@@ -129,10 +128,13 @@ class TaskDriverInterface_LDR :
 		void UnpollFD(PollID &pollid)
 			{  FDBase::UnpollFD(pollid);  }
 		
+		#if 0
+		#error HACK ME!!
 		// FD copy management: 
 		// Used by LDRClient::DoCopyFD2Buf(), LDRClient::DoCopyBuf2FD(): 
 		CopyID DoCopyFdBuf(LDRClient *client,int fd,char *buf,
 			size_t len,int dir);
+		#endif
 		
 		// Called if connect(2) or authentification failed. 
 		// The client gets removed now. 

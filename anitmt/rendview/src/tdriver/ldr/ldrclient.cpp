@@ -807,11 +807,13 @@ LDRClient::LDRClient(TaskDriverInterface_LDR *_tdif,
 	recv_buf.data=NULL;
 	recv_buf.content=Cmd_NoCommand;
 	
-	//#error...
+	#if 0
+	#error HACK ME...
 	send_pump.cpid=NULL;
 	send_pump.cmd=Cmd_NoCommand;
 	recv_pump.cpid=NULL;
 	recv_pump.cmd=Cmd_NoCommand;
+	#endif
 	
 	c_jobs=0;
 	assigned_jobs=0;

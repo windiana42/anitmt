@@ -22,15 +22,13 @@
 #include <lib/myaddrinfo.hpp>
 #include <lib/ldrproto.hpp>
 
-#include <hlib/cpmanager.h>
-#include <hlib/cpbase.h>
+#include <hlib/fdcopybase.h>
 
 
 class TaskSourceFactory_LDR;
 
 class TaskSource_LDR : 
 	public TaskSource,
-	public FDBase,
 	public FDCopyBase
 {
 	private:

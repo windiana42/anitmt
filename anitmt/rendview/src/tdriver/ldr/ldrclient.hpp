@@ -26,7 +26,6 @@
 // (which is the right hand of TaskManager).  
 // (NOT BY ComponentDataBase). 
 class LDRClient : 
-	public _FDCopyNamespace,
 	public LinkedListBase<LDRClient>
 {
 	friend class TaskDriverInterface_LDR;
@@ -76,12 +75,15 @@ class LDRClient :
 		// Return value: 1 -> alloc failure 
 		inline int _ResizeRespBuf(RespBuf *buf,size_t newlen);
 		
+		#if 0
+		#error HACK ME...
 		struct DataPump
 		{
 			FDCopyBase::CopyID cpid;  // or NULL if inactive
 			LDR::LDRCommand cmd;  // or Cmd_NoCommand if not active
 		};
 		DataPump send_pump,recv_pump;
+		#endif
 		
 		// Client data: 
 		int c_jobs;  // njobs reported by client. 
@@ -106,11 +108,14 @@ class LDRClient :
 		int _DoAuthHandshake(FDBase::FDInfo *fdi);
 		void _DoSendQuit(FDBase::FDInfo *fdi);
 		
+		#if 0
+		#error HACK ME...
 		// Calling TaskDriverInterface_LDR::DoCopyFdBuf(): 
 		CopyID DoCopyFD2Buf(int fd,char *buf,size_t len)
 			{  return(tdif->DoCopyFdBuf(this,fd,buf,len,-1));  }
 		CopyID DoCopyBuf2FD(int fd,const char *buf,size_t len)
 			{  return(tdif->DoCopyFdBuf(this,fd,(char*)buf,len,+1));  }
+		#endif
 		
 		// Called via TaskDriverInterface_LDR: 
 		void fdnotify(FDBase::FDInfo *fdi);

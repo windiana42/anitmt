@@ -351,7 +351,7 @@ int TaskDriverInterface_LDR::fdnotify(FDInfo *fdi)
 
 int TaskDriverInterface_LDR::cpnotify(CopyInfo *cpi)
 {
-	LDRClient *client=(LDRClient*)(cpi->req->dptr);
+	LDRClient *client=(LDRClient*)(cpi->pump->dptr);
 	assert(client);
 	
 	client->cpnotify(cpi);
@@ -390,6 +390,8 @@ int TaskDriverInterface_LDR::timeoutnotify(TimeoutInfo *ti)
 }
 
 
+#if 0
+#error HACK ME...
 // dir: +1 -> buf -> FD; -1 -> FD -> buf
 FDCopyBase::CopyID TaskDriverInterface_LDR::DoCopyFdBuf(LDRClient *client,
 	int fd,char *buf,size_t len,int dir)
@@ -428,6 +430,7 @@ FDCopyBase::CopyID TaskDriverInterface_LDR::DoCopyFdBuf(LDRClient *client,
 	
 	return(cpid);
 }
+#endif
 
 
 FDBase::PollID TaskDriverInterface_LDR::PollFD_Init(LDRClient *client,int fd)
@@ -557,7 +560,6 @@ void TaskDriverInterface_LDR::UnregisterLDRClient(LDRClient *client)
 TaskDriverInterface_LDR::TaskDriverInterface_LDR(
 	TaskDriverInterfaceFactory_LDR *f,int *failflag) : 
 	TaskDriverInterface(f->component_db(),failflag),
-	FDBase(failflag),
 	FDCopyBase(failflag),
 	TimeoutBase(failflag),
 	clientlist(failflag)

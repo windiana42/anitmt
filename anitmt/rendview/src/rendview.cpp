@@ -20,7 +20,6 @@
 #include "tdriver/tdfactory.hpp"
 
 #include <hlib/fdmanager.h>
-#include <hlib/cpmanager.h>
 #include <hlib/timeoutmanager.h>
 
 
@@ -47,7 +46,6 @@ static int MAIN(int argc,char **argv,char **envp)
 	
 	FDManager *fdman=NULL;
 	TimeoutManager *timeoutman=NULL;
-	FDCopyManager *cpman=NULL;
 	ProcessManager *procman=NULL;
 	par::ParameterManager *parman=NULL;
 	ComponentDataBase *cdb=NULL;
@@ -66,11 +64,6 @@ static int MAIN(int argc,char **argv,char **envp)
 		timeoutman=NEW<TimeoutManager>();
 		if(!timeoutman)
 		{  Error(fti,"timeout manager");  break;  }
-		
-		Verbose(BasicInit,"[CP] ");
-		cpman=NEW<FDCopyManager>();
-		if(!cpman)
-		{  Error(fti,"copy manager");  break;  }
 		
 		Verbose(BasicInit,"[process] ");
 		procman=NEW1<ProcessManager>(envp);
@@ -220,7 +213,6 @@ static int MAIN(int argc,char **argv,char **envp)
     if(cdb)         Verbose(BasicInit,"] [CDB");        delete cdb;
     if(parman)      Verbose(BasicInit,"] [parameter");  delete parman;
     if(procman)     Verbose(BasicInit,"] [process");    delete procman;
-    if(cpman)       Verbose(BasicInit,"] [CP");         delete cpman;
     if(timeoutman)  Verbose(BasicInit,"] [timeout");    delete timeoutman;
     if(fdman)    Verbose(BasicInit,"] [FD");            delete fdman;
 	Verbose(BasicInit,"] OK\n");

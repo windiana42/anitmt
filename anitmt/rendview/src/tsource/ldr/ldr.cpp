@@ -540,7 +540,6 @@ long TaskSource_LDR::ConnectRetryMakesSense()
 
 TaskSource_LDR::TaskSource_LDR(TaskSourceFactory_LDR *tsf,int *failflag) : 
 	TaskSource(tsf->component_db(),failflag),
-	FDBase(failflag),
 	FDCopyBase(failflag),
 	sconn(failflag)
 {
