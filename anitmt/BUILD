@@ -69,6 +69,10 @@ the installation should not be done by root.
    with the --help flag. But don't worry, normally everything works 
    fine without supplying any options (unless you don't have some 
    required software installed or your system is somehow non-standard.)
+   
+   NOTE: On slower computers, and especially if you are using gcc-2.95.x, 
+         I highly recommend configuring with --ebable-debug=fast. 
+         (I'm using that most of the time.) 
 
 4. Build anitmt: 
    This is done by simply calling make in the build directory. 
