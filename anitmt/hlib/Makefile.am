@@ -3,9 +3,9 @@ ADDFLAGS=""
 ADDCFLAGS=""
 ADDCXXFLAGS=""
 
-SUBDIRS = include cpp misc fd crypto compress par
+SUBDIRS = include cpp misc fd crypto par
 SUBLIBS = cpp/libcpp.a misc/libmisc.a fd/libfd.a crypto/libcrypto.a \
-	par/libpar.a compress/libcompress.a
+	par/libpar.a 
 
 noinst_LIBRARIES = libhlib.a
 libhlib_a_SOURCES = 

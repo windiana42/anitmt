@@ -514,7 +514,6 @@ AC_CONFIG_FILES([ \
 	par/Makefile \
 	misc/Makefile \
 	crypto/Makefile \
-	compress/Makefile \
 	Makefile])
 #AC_CONFIG_FILES([$srcdir/HConfigVars],[chmod ug+x "$srcdir/HConfigVars"])
 AC_CONFIG_FILES([HConfigVars],[chmod ug+x "HConfigVars"])
