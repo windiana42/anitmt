@@ -57,16 +57,24 @@ First, try using
 bash# make opt
 
 If that fails, you may consider changing your OPTCFLAGS / OPTCXXFLAGS in 
-case the error is related to them. 
+case the error is related to them and re-run configure.
+
+NOTE: Just passing OPTCFLAGS/OPTCXXFLAGS on the command line for make 
+  will not change anything, neither for "make" nor for "make opt". 
+  If you want to pass special flags to make manually, use 
+  "make CFLAGS=... CXXFLAGS=... all" because "make opt" is simply 
+  calling "make CFLAGS=OPTCFLAGS CXXFLAGS=OPTCXXFLAGS all". 
+Note also that you may use ADDFLAGS to pass additional flags to both the 
+C and C++ compiler during "make opt" (but NOT during "make all"). 
+
 Otherwise you are probably in trouble. Make sure you are using the 
 GNU C/C++ compiler (gcc). I am using gcc-3.2, but hlib should also build 
 with any version since gcc-2.95. 
 In case gcc is unavailable you are already using gcc, you may fall back to 
 
-bash# make 
-
-Note that you may use ADDFLAGS to pass additional flags to both the C and C++ 
-compiler during "make opt". 
+bash# make all
+..or..
+bash# make CFLAGS=... CXXFLAGS=... all
 
 Okay, if you have successfully build hlib, run the check programs: 
 If you compiled with any of the make opt, then call 
@@ -102,20 +110,21 @@ could be checked. So, if you have problems and you know how to fix them,
 please drop me an e-mail (check the source code file for the address). 
 
 Supported platforms include: 
+
 * Linux/GNU: 
-   - i[3456]86
-   - alpha
-   - ppc
-   - sparc64
+	- i[3456]86
+	- alpha      (alphaev67-unknown-linux-gnu)  [64 bit]
+	- sparc64    (sparc64-unknown-linux-gnu)    [32 bit (!)]
+	- powerpc    (powerpc-unknown-linux-gnu)
 * FreeBSD:
-   - i[3456]86
-* SunOS (tested: SunOS 5.8): 
-   - sparc (sparc64 should also be ok)
+   - i[3456]86   (i386-unknown-freebsd4.6)
+* SunOS: 
+   - sparc       (sparc-sun-solaris2.8)
 * Cygwin:
-   - i[3456]86
+   - i[3456]86   [untested for 0.9.7, worked with 0.9.6]
 
 SEMI-SUPPORTED platforms include: 
-* ppc-darwin
+* powerpc-darwin     (powerpc-apple-darwin5.5)
   alias MacOS X. 
   [To hell, FreeBSD is a good system, but why did they at Apple have to 
   come up with that tainted derivate? Why couldn't they leave the central 

@@ -60,8 +60,9 @@ if test "$GXX" = "yes" ; then
 	OPTCXXFLAGS="$OPTCXXFLAGS -W -Wall -Wformat -Woverloaded-virtual"
 	
 	AC_MSG_CHECKING([checking GNU C++ version])
-	gccvers="$($CXX -v 2>&1 | fgrep "version")"
-	gccvers="${gccvers/"*version "/}"
+	#gccvers="$($CXX -v 2>&1 | fgrep "version")"
+	#gccvers="${gccvers/"*version "/}"
+	gccvers="$($CXX -v 2>&1 | fgrep "version" | sed -e "s/.*version //")"
 	AC_MSG_RESULT([$gccvers])
 	
 	HLIB_CXXCOMPILER_VERSION="$HLIB_CXXCOMPILER_VERSION $gccvers"
@@ -206,11 +207,11 @@ AC_CHECK_TYPES([ssize_t],,
 
 AC_CHECK_TYPES([socklen_t],,
 	[AC_MSG_WARN([No socklen_t. Uh...])],
-	[#if HAVE_SYS_SOCKET_H
-	 # include <sys/socket.h>
-	 #endif
-	 #if HAVE_SYS_TYPES_H
+	[ #if HAVE_SYS_TYPES_H
 	 # include <sys/types.h>
+	 #endif
+	 #if HAVE_SYS_SOCKET_H
+	 # include <sys/socket.h>
 	 #endif] )
 
 AC_CHECK_TYPES([siginfo_t],,
