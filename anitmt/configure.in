@@ -13,7 +13,8 @@ AC_OUTPUT(
 	lib/Makefile 
 	lib/val/Makefile 
 	lib/utl/Makefile 
-	lib/par/Makefile 
+	lib/par/Makefile
+	lib/message/Makefile 
 	lib/include/Makefile 
 	anitmt-calc/Makefile 
 	anitmt-calc/parser/Makefile 
