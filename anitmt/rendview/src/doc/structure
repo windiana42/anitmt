@@ -1,0 +1,53 @@
+LLB = LinkedListBase<>
+
+
+TaskDriverType  { DTNone, DTRender, DTFilter };
+
+    ,--TaskManager
+    V
+ +-----+---------+-------------+
+ | LLB | FDBase  | ProcessBase |
+ +-----+---------+-------------+
+ |       ==TaskDriver==        |    One TaskDriver per running task; queue held
+ | TaskDriverFactory *f;       |    by TaskManager; Pointer *f to associated
+ |                             |    factory to access settings.
+ |                             |
+ |                             |
+ |#############################|
+ | RenderDriver | FilterDriver |
+ +--------------+--------------+
+ | POVRayDriver | Generic...   |
+ +--------------+--------------+
+
+
+
+    ,--ComponentDataBase
+    V
+ +-----+-----------------------+
+ | LLB | ParameterConsumer_OVL |
+ +-----+-----------------------+
+ |    ==TaskDriverFactory==    |    Contains all static parameters of the task
+ |                             |    driver; can be set via command line.
+ |                             |    [One factory per driver.]
+ |#############################|    Constructor: Registration at ComponentDataBase
+ | POVRayDriverFactory  | ...  |    Destructor: unregistration; called by ComponentDB
+ | <POVRay driver pars> |      |
+ +-----------------------------+
+
+
+ +--------------------------------+
+ |      ==ComponentDataBase==     |    One component data base exists; 
+ | LIST<RenderDesc>;              |    functions to loop up component by name.
+ | LIST<FilterDesc>;              |    Registration of components on program 
+ | LIST<ImageFormat>;             |    start. 
+ | ARRAY/LIST<TaskDriverFactory>; |
+ |                                |
+ +--------------------------------+
+
+
+ +-------------------------+     +-------------------------------------+
+ |     TaskStructBase      |     |             TaskParams              |
+ |#########################|     |#####################################|
+ | RenderTask | FilterTask |     | RenderTaskParams | FilterTaskParams |
+ +------------+------------+     +------------------+------------------+
+

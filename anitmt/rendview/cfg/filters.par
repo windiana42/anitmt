@@ -1,0 +1,10 @@
+# filter description (FilterDesc) [implicit subsection -fd]
+
+# global search poath for the filter binaries
+searchpath = /usr/bin /usr/local/bin
+
+#section invert
+  driver = generic
+  binpath = invert
+#end
+
