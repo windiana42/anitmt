@@ -14,4 +14,4 @@ libpar_a_SOURCES = \
 		parsource.h \
 		srcfile.h srccmd.h \
 		parintrnl.h valhdl.h valuehandler.h \
-		parbase.h
+		parbase.h secthdl.h

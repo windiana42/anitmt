@@ -295,23 +295,7 @@ int ParameterSource_File::ReadFile(const char *file,int allow_recursion,
 
 int ParameterSource_File::Parse(ParamArg *pa,Section *topsect)
 {
-	if(pa->pdone)
-	{  return(1);  }
-	
-	if(!topsect)
-	{  topsect=manager->TopSection();  }
-	
-	ParamInfo *pi=manager->FindParam(pa->name,pa->namelen,topsect);
-	if(!pi)
-	{  ParameterError(PETUnknown,pa,pi/*=NULL*/,topsect);  return(-1);  }
-	
-	// This will copy the param call error handler if necessary 
-	// and warn the user if it will be set more than once. 
-	// Then, parse the value, set the origin... and return !=NULL 
-	// if all that went okay. 
-	ParamCopy *pc=CopyAndParseParam(pi,pa);
-	
-	return(pc ? 0 : (-1));
+	return(FindCopyParseParam(pa,NULL,NULL,topsect));
 }
 
 

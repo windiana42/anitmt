@@ -196,7 +196,7 @@ class ParameterSource :
 		virtual ~ParameterSource();
 		
 		// Get pointer to the parameter manager: 
-		ParameterManager *parmanager()
+		inline ParameterManager *parmanager()
 			{  return(manager);  }
 		
 		// Search a ParamInfo corresponding to a parameter name (with 
@@ -241,7 +241,27 @@ class ParameterSource :
 		// ValueParseError() is called; on error the ParamCopy is destroyed 
 		// again and NULL returned. Otherwise the ParamCopy is returned 
 		// [and the origin is set and the nspec counter increased]. 
-		ParamCopy *CopyAndParseParam(ParamInfo *pi,ParamArg *pa);
+		ParamCopy *CopyParseParam(ParamInfo *pi,ParamArg *pa);
+		
+		// This function will loop up the param and call CopyParseParam() 
+		// on it and/or pass it to the apropriate SectionHandler. 
+		// THIS IS THE PREFERRED METHOD FOR PARAMETER SOURCES. 
+		// The ParamCopy is returned in *ret_pc (or NULL is returned if 
+		// the param was not found / SectionHandler got it), 
+		// the ParamInfo in *ret_pi. (May both be set to NULL.)
+		// Return value: 
+		//   0 -> param arg has pa->pdone set; nothing done
+		//   1 -> okay; SectionHandler accepted param
+		//  -1 -> SectionHandler returned error on param
+		//   2 -> okay; parsed using CopyAndParseParam()
+		//  -2 -> PETUnknown occured; ParameterError() called.
+		//        (Section handlers (if any) did not accept the param.)
+		//  -3 -> argument is a switch (because of `no-´-prefix) but 
+		//        the parameter is not a switch. 
+		//        (ParameterError(PETNotASwitch) was called.)
+		//  -4 -> CopyAndParseParam() returned NULL, 
+		int FindCopyParseParam(ParamArg *arg,ParamCopy **ret_pc,
+			ParamInfo **ret_pi,Section *topsect=NULL);
 		
 		// The parameters in *this overrdide those in *below. 
 		// *below is not changed! 

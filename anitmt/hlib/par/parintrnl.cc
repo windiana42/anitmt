@@ -53,6 +53,7 @@ PAR::Section::Section(const char *_name,ssize_t namelen,int *failflag) :
 	
 	name=NULL;
 	helptext=NULL;
+	sect_hdl=NULL;
 	up=NULL;
 	
 	if(_name)
@@ -86,6 +87,9 @@ PAR::Section::~Section()
 	if(pilist.first())
 	{  fprintf(stderr,"PAR::Section::~Section(): still containing parameters!\n");  }
 	#endif
+	
+	sect_hdl=NULL;
+	up=NULL;
 }
 
 
@@ -194,6 +198,16 @@ PAR::ParamCopy::ParamCopy(int * /*failflag*/=NULL) :
 	info=NULL;
 	copyval=NULL;
 	nspec=0;
+}
+
+
+PAR::SpecialHelpItem::SpecialHelpItem(int * /*failflag*/=NULL) : 
+	LinkedListBase<SpecialHelpItem>()
+{
+	optname=NULL;
+	descr=NULL;
+	helptxt=NULL;
+	item_id=-1;
 }
 
 }  // namespace end 

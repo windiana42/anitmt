@@ -9,8 +9,6 @@ namespace par
 
 class ParameterSource_CmdLine : public ParameterSource
 {
-	private:
-		int _CheckSpecialOpts(ParamArg *pa,Section *topsect);
 	public:  _CPP_OPERATORS_FF
 		ParameterSource_CmdLine(ParameterManager *manager,int *failflag=NULL);
 		~ParameterSource_CmdLine();
@@ -36,17 +34,6 @@ class ParameterSource_CmdLine : public ParameterSource
 		//   2 -> this was a special arg (--version, --help); 
 		//        exit after processing cmd line. 
 		int Parse(ParamArg *pa,Section *topsect=NULL);
-		
-		// Print version string. 
-		// Should return 1. 
-		// (Return 0 to go on parsing the -(-)version arg if 
-		// you intend to use it for something different.)
-		virtual int PrintVersion()
-			{  manager->PrintVersion();  return(1);  }
-		// Print help info for the section *top and below. 
-		// Return value: see PrintVersion(). Normally 1. 
-		virtual int PrintHelp(Section *top)
-			{  manager->PrintHelp(top);  return(1);  }
 };
 
 }  // namespace end 

@@ -19,6 +19,10 @@ class SimpleIndentConsoleOutput
 		
 		int _Print(const char *str,va_list ap);
 		int _GetTermCols(int fd);
+
+		// Do not use these (always use refs/pointers): 
+		SimpleIndentConsoleOutput(const SimpleIndentConsoleOutput &) {}
+		void operator=(const SimpleIndentConsoleOutput &)  {}
 	public:  _CPP_OPERATORS_FF
 		// Constructor sets columns to value obtained via ioctl() or 80 
 		// and lpos=0. 

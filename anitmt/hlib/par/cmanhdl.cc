@@ -8,6 +8,8 @@
 #include "parconsumer.h"
 #include "sindentcout.h"
 
+#include <hlib/refstrlist.h>
+
 
 #ifndef TESTING
 #define TESTING 1
@@ -79,26 +81,49 @@ void ParameterManager::_RecursivePrintHelp(Section *top,
 
 int ParameterManager::PrintHelp(Section *top,FILE *out)
 {
+	SimpleIndentConsoleOutput sico;
+	sico.SetFile(out);
+	
 	if(top==&topsect)
 	{
 		char *version_info=_GenVersionInfo();
 		if(version_info)
 		{
-			fprintf(out,"** This is %s **\n\n",version_info);
+			sico("** This is %s **\n\n",version_info);
 			free(version_info);
 		}
 		
-		fprintf(out,
+		sico(
 			"Standard query options:\n"
 			"  --version: print version string\n"
-			"  --help:    print this help\n"
-			"  --section-help: print help for specified section only\n"
-			"Available parameters:\n");
+			"  --help:    print this help\n");
+		
+		if(!topsect.sub.is_empty())
+		{  sico("  --section-help: print help for specified section only\n");  }
+		
+		// Write out special help options: 
+		int header=0;
+		for(ParameterConsumer *pc=pclist.first(); pc; pc=pc->next)
+		{
+			for(SpecialHelpItem *shi=pc->shelp.first(); shi; shi=shi->next)
+			{
+				if(!header)
+				{
+					sico("Special query options:\n");
+					sico.SetIndent(2);
+					header=1;
+				}
+				
+				sico("-%s: %s\n",shi->optname,shi->descr);
+			}
+		}
+		if(header)
+		{  sico.SetIndent(0);  }
+		
+		// Heading for all the other parameters: 
+		sico("Available parameters:\n");
 	}
 	
-	SimpleIndentConsoleOutput sico;
-	#warning should interprete $COLUMNS when in terminal...
-	sico.SetFile(out);
 	_RecursivePrintHelp(top ? top : &topsect,sico);
 	
 	if(top==&topsect && add_help_text)
@@ -106,7 +131,7 @@ int ParameterManager::PrintHelp(Section *top,FILE *out)
 		sico.SetIndent(0);
 		sico("\n%s\n",add_help_text);
 	}
-	return(1);
+	return(0);
 }
 
 int ParameterManager::PrintVersion(FILE *out)
@@ -114,7 +139,75 @@ int ParameterManager::PrintVersion(FILE *out)
 	char *version_info=_GenVersionInfo();
 	fprintf(out,"%s\n",version_info);  // will write "(null)" if NULL
 	if(version_info)  free(version_info);
-	return(1);
+	return(0);
+}
+
+
+int ParameterManager::PrintSpecialHelp(ParameterConsumer *pc,
+	SpecialHelpItem *shi,FILE *out)
+{
+	SimpleIndentConsoleOutput sico;
+	sico.SetFile(out);
+	
+	if(shi->helptxt)
+	{  sico.Puts(shi->helptxt);  }
+	else
+	{
+		// new stuff: 
+		RefStrList txtlst;
+		pc->PrintSpecialHelp(&txtlst,shi);
+		for(const RefStrList::Node *s=txtlst.first(); s; s=s->next)
+		{
+			if(s->stype()==-1)  continue;   // NULL ref
+			assert(s->stype()==0);   // need '\0'-terminated strings
+			const char *txt=s->str();
+			
+			// Read in indent if passed: 
+			// Format:
+			// "\r"  [mod] indent [colon]
+			// indent value is read in as integer; parsing is stopped at 
+			// first non-digit; if that is a colon ':', it is als skipped. 
+			// mod: '+': add indent 
+			//      '-': subtract indent
+			//       default: set indet
+			// Examples: 
+			// "\r4" "\r+2"  "\r-3:"
+			if(*txt=='\r')
+			{
+				++txt;
+				
+				// Read in mod: 
+				int mod=0;
+				if(*txt=='+')
+				{  mod=+1;  ++txt;  }
+				else if(*txt=='-')
+				{  mod=-1;  ++txt;  }
+				
+				// Read in indent: 
+				char *end;
+				int indent=strtol(txt,&end,10);
+				if(end==txt)  indent=0;
+				txt=end;
+				
+				// Skip optional colon: 
+				if(*txt==':')
+				{  ++txt;  }
+				
+				if(mod)
+				{  sico.AddIndent(indent*mod);  }
+				else
+				{  sico.SetIndent(indent);  }
+			}
+			
+			if(s!=txtlst.first())
+			{  sico.Puts("\n");  }
+			sico.Puts(txt);
+		}
+	}
+	sico.SetIndent(0);
+	sico.Puts("\n");
+	
+	return(0);
 }
 
 

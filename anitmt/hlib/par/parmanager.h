@@ -14,10 +14,6 @@ class ParameterSource;
 // Central point which knows about all parameters. 
 class ParameterManager : public PAR
 {
-	friend class ParameterSource_CmdLine;
-	public:
-		// Static global manager: 
-		//static ParameterManager *manager;
 	private:
 		// List of registered ParameterConsumer: 
 		LinkedList<ParameterConsumer> pclist;
@@ -39,6 +35,7 @@ class ParameterManager : public PAR
 		int _CountParams(Section *top);
 		inline void _DelParam(Section *s,ParamInfo *pi);  // del and tell par sources
 		int _RecursiveCheckParams(Section *sect);
+		void _SectionHandlerDetachRecursive(SectionParameterHandler *sph,Section *sect);
 		
 		void _RecursivePrintHelp(Section *top,class SimpleIndentConsoleOutput &sico);
 		void _HelpPrintSectionHeader(Section *top,SimpleIndentConsoleOutput &sico);
@@ -64,6 +61,20 @@ class ParameterManager : public PAR
 		//  >0 -> errors written; must exit
 		int CheckParams();
 		
+		// Call the section handlers on the specified parameter argument. 
+		// bot_sect, bot_nend: till where the parameter could be parsed. 
+		//   First, bot_sect's section handler will be queried, then the 
+		//   handlers of the sections tree up till top_sect or till the 
+		//   start of the parameter name is reached (whichever occurs 
+		//   first). 
+		// Return value: 
+		//   0 -> parameter was accepted by a section handler
+		//  <0 -> section handler returned that error value
+		//   1 -> parameter was not accepted by any section handler 
+		int FeedSectionHandlers(
+			ParamArg *pa,Section *top_sect,
+			const char *bot_nend,Section *bot_sect);
+		
 		// Returns the section with the specified name(s) or NULL 
 		// if it does not exist (leading `-' in name are skipped). 
 		// The name is referring to a section below *top. 
@@ -75,9 +86,19 @@ class ParameterManager : public PAR
 		// leading `-' in name are skipped). 
 		// The name is referring to a section below *top. 
 		// Returns NULL on failure. 
-		ParamInfo *FindParam(const char *name,size_t namelen,Section *top=NULL);
+		ParamInfo *FindParam(const char *name,size_t namelen,Section *top=NULL)
+			{  return(FindParam(name,namelen,top,NULL,NULL));  }
 		ParamInfo *FindParam(const char *name,Section *top=NULL)
 			{  return(FindParam(name,name ? strlen(name) : 0,top));  }
+		// This is the extended version of the function above. 
+		// It also stores info in ret_endp and ret_sect which is mainly 
+		// intersting in case the patrameter could not be found (return 
+		// value NULL): 
+		// ret_endp: till where sections could be matched
+		// ret_sect: last section that was matched parsing along the 
+		//           parameter name until *ret_endp. 
+		ParamInfo *FindParam(const char *name,size_t namelen,Section *top,
+			const char **ret_endp,Section **ret_sect);
 		
 		// Stores the full section name of the passed section in dest 
 		// of size len (actually len-1 bytes + '\0'). In case len is too 
@@ -124,6 +145,10 @@ class ParameterManager : public PAR
 		int RegisterParameterSource(ParameterSource *psrc);
 		void UnregisterParameterSource(ParameterSource *psrc);
 		
+		// SectionParameterHandler classes use these: 
+		int SectionHandlerAttach(SectionParameterHandler *sph,Section *s);
+		void SectionHandlerDetach(SectionParameterHandler *sph,Section *s);
+		
 		// Write a single parameter back to the comsumer 
 		// (changing the consumer's value). 
 		// Return value: 
@@ -132,12 +157,25 @@ class ParameterManager : public PAR
 		// else -> see ValueHandler::copy().
 		int WriteParam(ParamCopy *pc);
 		
+		// This is called by parameter sources which allow special help options 
+		// (like the command line source). 
+		// Return value: 
+		//  0 -> no special option 
+		//  1 -> pa was a special option and it was handeled 
+		int CheckHandleHelpOpts(ParamArg *pa,Section *top_sect);
+		
+		// See parconsumer.h for detailed info on this. 
+		int AddSpecialHelp(ParameterConsumer *pc,SpecialHelpItem *shi);
+		
 		// This is for the --help and --version args: 
-		// These should return 1. (See srccmd.{h,cc} for details.)
+		// Return values (all funcs): currently unused; should be 0. 
 		virtual int PrintHelp(Section *top,FILE *out=stdout);
 		// PrintVersion writes: "<program_name> (<package>) version <version>"
 		// The package info is left away if it is NULL. 
 		virtual int PrintVersion(FILE *out=stderr);
+		// Used when a special help option is encountered. 
+		virtual int PrintSpecialHelp(ParameterConsumer *pc,
+			SpecialHelpItem *shi,FILE *out=stdout);
 		
 		// You should set the program name, package name and version info 
 		// Using this function: 

@@ -39,83 +39,22 @@ int ParameterSource_CmdLine::ReadCmdLine(CmdLineArgs *cmd,
 }
 
 
-// _topsect may NOT be NULL here: 
-int ParameterSource_CmdLine::_CheckSpecialOpts(ParamArg *pa,Section *topsect)
-{
-	// --version: (only accepted in highmost section)
-	if(pa->atype==ParamArg::Option && 
-	   topsect==manager->TopSection())
-	{
-		if(pa->namelen==7 && 
-		   pa->name[0]=='v' && 
-		   !strncmp(pa->name,"version",pa->namelen))
-		{
-			if(PrintVersion())
-			{
-				#warning set used var??
-				++n_iquery_opts;
-				return(1);
-			}
-		}
-	}
-	
-	// --help: (section help only prints help for the specified section)
-	if(pa->atype==ParamArg::Option && pa->namelen>=4)
-	{
-		// --sect-sect-help
-		if(pa->name>pa->arg.str() &&  // this guarantees that pa->name[-1] is valid, so...
-		   !strcmp(&pa->name[pa->namelen-4]-1,"-help"))  // ...namelen-5 is save here. 
-		{
-			// Must find correct subsection and, if found 
-			// call PrintHelp(). 
-			const char *end=NULL;
-			Section *s=manager->_LookupSection(pa->name,topsect,&end);
-			if(s && end==pa->name+pa->namelen-4)
-			{
-				if(PrintHelp(s))
-				{
-					#warning set used var??
-					
-					++n_iquery_opts;
-					return(1);
-				}
-			}
-		}
-	}
-	
-	return(0);
-}
-
 int ParameterSource_CmdLine::Parse(ParamArg *pa,Section *topsect)
 {
 	if(pa->pdone)
-	{  return(1);  }
+	{  return(0);  }
 	
 	if(!topsect)
 	{  topsect=manager->TopSection();  }
 	
 	// Check for implicit args: 
-	if(_CheckSpecialOpts(pa,topsect))
-	{  return(2);  }
+	if(parmanager()->CheckHandleHelpOpts(pa,topsect))
+	{
+		++n_iquery_opts;
+		return(3);
+	}
 	
-	// Check if this is a "no-xxx" switch: 
-	bool is_switch=(pa->namelen>=3 && !strncmp(pa->name,"no-",3));
-	
-	ParamInfo *pi=manager->FindParam(
-		is_switch ? (pa->name+3) : pa->name,
-		pa->namelen,topsect);
-	if(!pi)
-	{  ParameterError(PETUnknown,pa,pi/*=NULL*/,topsect);  return(-1);  }
-	if(is_switch && pi->ptype!=PTSwitch)
-	{  ParameterError(PETNotASwitch,pa,pi,topsect);  return(-1);  }
-	
-	// This will copy the param call error handler if necessary 
-	// and warn the user if it will be set more than once. 
-	// Then, parse the value, set the origin... and return !=NULL 
-	// if all that went okay. 
-	ParamCopy *pc=CopyAndParseParam(pi,pa);
-	
-	return(pc ? 0 : (-1));
+	return(FindCopyParseParam(pa,NULL,NULL,topsect));
 }
 
 

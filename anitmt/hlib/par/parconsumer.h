@@ -5,6 +5,9 @@
 
 #include "valhdl.h"
 
+
+class RefStrList;
+
 namespace par
 {
 
@@ -27,6 +30,9 @@ class ParameterConsumer :
 	private:
 		Section *curr_section;  // Set by SetSection(). 
 		ParameterManager *manager;
+		
+		// List of special help oprtions: 
+		LinkedList<SpecialHelpItem> shelp;
 	protected:
 		// This is called when ParameterManager::CheckParams() is called, 
 		// normally that is when all the parameters are set up and before 
@@ -48,6 +54,35 @@ class ParameterConsumer :
 		// Error handler called by CheckParam(ParamInfo *pi) in case of an 
 		// error; default implementation writes error to stderr. 
 		virtual void CheckParamError(ParamInfo *pi);
+		
+		// See AddSpecialHelp() for explanation: 
+		// Should print special help as user triggered special help as 
+		// desribed by the passed SpecialHelpItem. 
+		// Store the text to write in the passed string list. 
+		// The items in the string list are written in the order they 
+		// appear in the list; each one is terminated with a newline. 
+		// DO NOT put newlines into the text unless you want to generate 
+		// explici paragraphs (formatting is done automatically). 
+		// Each item of the string list can use a different indention 
+		// value/depth. To change it, you may put a special magic sequence 
+		// at the beginning of any/each string in the list: 
+		// The format is: 
+		// "\r" [mod] indent [":"]
+		// "\r" as the first character indicates that an indent spec is 
+		//      following. 
+		// mod: "+" -> add indent value
+		//      "-" -> subtract indent value
+		//      default: set indent value
+		// indent: indent value to add/subtract/set in decimal notation. 
+		// ":" -> optional colon. The parsing of the indent value is 
+		//      stopped at the first non-digit char; that's where the real 
+		//      beginning of the message is assumed. If this char is a 
+		//      colon, it is also skipped. (Useful e.g. if your message 
+		//      begins with a digit.)
+		// NOTE: You may need #include <hlib/refstrlist.h>. 
+		// Return value: currently unused; use 0. 
+		virtual int PrintSpecialHelp(RefStrList *,const SpecialHelpItem *)
+			{  return(0);  }
 	public:  _CPP_OPERATORS_FF
 		ParameterConsumer(ParameterManager *manager,
 			int *failflag=NULL);
@@ -180,6 +215,32 @@ class ParameterConsumer :
 		// unlocked. 
 		int IsLocked(const ParamInfo *pi) const  {  return(pi->locked);  }
 		void LockParam(ParamInfo *pi,int lock)  {  pi->locked=(lock?1:0);  }
+		
+		// Use this funtion to add special help options, like for example 
+		// --list-oformats which can be used to list available output 
+		// formats. 
+		// Note that the advantage here is that a virtual function 
+		// (PrintSpecialHelp()) is called if you supply NULL as help text and 
+		// thus you can have non-static output (e.g. the output format 
+		// drivers register at runtime). 
+		// You should fill out all elements of the SpecialHelpItem structure 
+		// before calling this function. Note that neiter of the strings 
+		// are copied; they are all assumed static (or at least existing as 
+		// long as the ParameterConsumer *this exists). [The constructor 
+		// sets up the pointers to NULL and the item_id to -1.]
+		// SpecialHelpItem members: 
+		// optname:  name of the option (e.g. list-oformats) 
+		//           NOTE: always absolut (i.e. below global top section)
+		// descr:    short description (e.g. "lists available output formats")
+		// helptxt:  help text or NULL if the virtual function 
+		//           ParameterConsumer::PrintSpecialHelp() shall be called
+		// item_id:  arbitrary value assigned by parameter consumer for easy 
+		//           recognizion in PrintSpecialHelp(). 
+		// Return value: 
+		//  0 -> success
+		// -1 -> allocation failure
+		// -2 -> descr or optname NULL 
+		int AddSpecialHelp(SpecialHelpItem *shi);
 };
 
 }  // namespace end 

@@ -17,6 +17,7 @@ namespace par
 
 class ParameterConsumer;
 struct ValueHandler;
+class SectionParameterHandler;
 
 
 struct PAR  // This serves as a namespace and a base class. 
@@ -122,6 +123,7 @@ struct PAR  // This serves as a namespace and a base class.
 	{
 		const char *name;   // section name (copied)
 		const char *helptext;  // or NULL; not copied 
+		SectionParameterHandler *sect_hdl;  // attached section handler or NULL
 		Section *up;   // NULL for topmost section
 		
 		LinkedList<Section> sub;  // subsections
@@ -158,6 +160,35 @@ struct PAR  // This serves as a namespace and a base class.
 		int exclusive_hdl;  // & allocated via new & must be deleted
 		bool has_default;
 		PSpecType spectype;
+	};
+	
+	struct SPHInfo  // SectionParameterHandler (parse()) info
+	{
+		ParamArg *arg;   // the parameter argument we're talking about
+		Section *sect;   // section we're currently in (i.e. bot_sect
+		                 // or hierarchy above)
+		const char *nend;  // where the matched name ends, i.e. where 
+		                   // the end of sect is in arg->name 
+		Section *bot_sect;  // botton section till where the param 
+		                    // could be matched 
+		const char *bot_nend; // till where the name could be matched 
+		                      // (which lead to end_sect).
+	};
+	
+	struct SpecialHelpItem : LinkedListBase<SpecialHelpItem>
+	{
+		const char *optname;  // name of the option (e.g. [--]list-oformats)
+		const char *descr;    // short description (e.g. "lists available 
+		                      // output formats")
+		const char *helptxt;  // help text or NULL if the virtual function 
+		                      // ParameterConsumer::PrintSpecialHelp() shall 
+		                      // be called
+		int item_id;          // arbitrary value assigned by parameter 
+		                      // consumer for easy recognizion. 
+		
+		_CPP_OPERATORS_FF
+		SpecialHelpItem(int *failflag=NULL);
+		~SpecialHelpItem() { }
 	};
 	
 	enum SpecialOp

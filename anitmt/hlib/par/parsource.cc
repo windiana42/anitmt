@@ -14,8 +14,61 @@
 namespace par
 {
 
+
 // Used by derived classes to actually read in the parameter: 
-PAR::ParamCopy *ParameterSource::CopyAndParseParam(ParamInfo *pi,ParamArg *pa)
+int ParameterSource::FindCopyParseParam(ParamArg *pa,
+	ParamCopy **ret_pc,ParamInfo **ret_pi,Section *topsect)
+{
+	if(ret_pc)  *ret_pc=NULL;
+	if(ret_pi)  *ret_pi=NULL;
+	if(pa->pdone)  return(0);  // correct. 
+	if(!topsect)  topsect=manager->TopSection();
+	
+	// Check if this is a "no-xxx" switch: 
+	bool is_switch=(pa->namelen>=3 && !strncmp(pa->name,"no-",3));
+	
+	const char *p_name=pa->name;
+	size_t p_namelen=pa->namelen;
+	if(is_switch)
+	{  p_name+=3;  p_namelen-=3;  }
+	
+	Section *rsect;
+	const char *rend;
+	ParamInfo *pi=manager->FindParam(p_name,p_namelen,topsect,&rend,&rsect);
+	if(!pi)
+	{
+		// So, the parameter could not be found. 
+		// Well, ask the SectionHandlers if we can: 
+		if(rsect && rend)
+		{
+			int rv=manager->FeedSectionHandlers(pa,topsect,rend,rsect);
+			if(!rv)  return(1);
+			if(rv<0)  return(-1);
+		}
+		
+		// Okay, it's an unknown parameter: 
+		ParameterError(PETUnknown,pa,pi/*=NULL*/,topsect);
+		return(-2);
+	}
+	if(ret_pi)
+	{  *ret_pi=pi;  }
+	if(is_switch && pi->ptype!=PTSwitch)
+	{  ParameterError(PETNotASwitch,pa,pi,topsect);  return(-3);  }
+	
+	// This will copy the param call error handler if necessary 
+	// and warn the user if it will be set more than once. 
+	// Then, parse the value, set the origin... and return !=NULL 
+	// if all that went okay. 
+	ParamCopy *pc=CopyParseParam(pi,pa);
+	if(!pc)  return(-4);
+	if(ret_pc)  *ret_pc=pc;
+	
+	return(2);
+}
+
+
+// Used by FindCopyParseParam(): 
+PAR::ParamCopy *ParameterSource::CopyParseParam(ParamInfo *pi,ParamArg *pa)
 {
 	// This will copy the param call error handler if necessary 
 	// and warn the user if it will be set more than once. 
@@ -65,6 +118,7 @@ int ParameterSource::Override(const ParameterSource *below)
 	}
 	return(errors);
 }
+
 
 // Override call for SectionNode *osn corresponding to *below's 
 // SectionNode *bsn. 

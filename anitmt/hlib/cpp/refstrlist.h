@@ -42,6 +42,10 @@ class RefStrList
 		// where: -1 -> beginning; +1 -> end. 
 		int _insapp(const RefString &ref,int where);
 		int _insapp(const char *str,int where);
+		
+		// Do not use these / explicitly use clear()+append(): 
+		RefStrList(const RefStrList &) {}
+		void operator=(const RefStrList &) {}
 	public:  _CPP_OPERATORS_FF
 		RefStrList(int *failflag=NULL);
 		~RefStrList();

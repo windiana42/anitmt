@@ -5,6 +5,7 @@
 #include "parmanager.h"
 #include "parconsumer.h"
 #include "parsource.h"
+#include "secthdl.h"
 
 #ifndef TESTING
 #define TESTING 1
@@ -85,6 +86,157 @@ int ParameterManager::_RecursiveCheckParams(Section *sect)
 	{  rv+=_RecursiveCheckParams(s);  }
 	
 	return(rv);
+}
+
+
+// Call the section handlers on the specified parameter argument. 
+// bot_sect, bot_nend: till where the parameter could be parsed. 
+//   First, bot_sect's section handler will be queried, then the 
+//   handlers of the sections tree up till top_sect or till the 
+//   start of the parameter name is reached (whichever occurs 
+//   first). 
+// Return value: 
+//   0 -> parameter was accepted by a section handler
+//  <0 -> section handler returned that error value
+//   1 -> parameter was not accepted by any section handler 
+int ParameterManager::FeedSectionHandlers(
+	ParamArg *pa,Section *top_sect,
+	const char *bot_nend,Section *bot_sect)
+{
+	const char *nend=bot_nend;
+	const char *nstart=pa->name;
+	for(Section *sect=bot_sect; sect; )
+	{
+		if(sect->sect_hdl)
+		{
+			// Okay, the section has a section handler. 
+			SPHInfo info;
+			info.arg=pa;
+			info.sect=sect;
+			info.nend=nend;
+			info.bot_sect=bot_sect;
+			info.bot_nend=bot_nend;
+			int rv=sect->sect_hdl->parse(&info);
+			if(rv<=0)
+			{  return(rv);  }
+		}
+		
+		if(sect==top_sect || sect==&topsect)  break;
+		if(nend<=nstart)  break;
+		
+		// Find the name end for one section up: 
+		--nend;
+		while(*nend=='-' && nend>=nstart)  --nend;
+		if(nend<=nstart)  break;
+		//while(*nend!='-' && nend>=nstart)  --nend;
+		//++nend;
+		++nend;
+		nend-=strlen(sect->name);
+		if(nend<nstart)
+		{  assert(0);  break;  }
+		
+		// And go one section up: 
+		sect=sect->up;
+		assert(sect);   // checked against topsect above. 
+	}
+	
+	return(1);
+}
+
+
+// This is called by parameter sources which allow special help options 
+// (like the command line source). 
+// Return value: 
+//  0 -> no special option 
+//  1 -> pa was a special option and it was handeled 
+int ParameterManager::CheckHandleHelpOpts(ParamArg *pa,Section *top_sect)
+{
+	if(!top_sect)  top_sect=&topsect;
+	
+	int special=0;
+	
+	// --version: (only accepted in highmost section)
+	if(pa->atype==ParamArg::Option && 
+	   top_sect==&topsect)
+	{
+		if(pa->namelen==7 && 
+		   pa->name[0]=='v' && 
+		   !strncmp(pa->name,"version",pa->namelen))
+		{
+			PrintVersion();
+			pa->pdone=1;
+			++special;
+		}
+	}
+	
+	// --help: (section help only prints help for the specified section)
+	if(pa->atype==ParamArg::Option && pa->namelen>=4)
+	{
+		// --sect-sect-help
+		if(pa->name>pa->arg.str() &&  // this guarantees that pa->name[-1] is valid, so...
+		   !strcmp(&pa->name[pa->namelen-4]-1,"-help"))  // ...namelen-5 is save here. 
+		{
+			// Must find correct subsection and, if found 
+			// call PrintHelp(). 
+			const char *end=NULL;
+			Section *s=_LookupSection(pa->name,top_sect,&end);
+			if(s && end==pa->name+pa->namelen-4)
+			{
+				PrintHelp(s);
+				pa->pdone=1;
+				++special;
+			}
+		}
+	}
+	
+	// Further special help options (only accepted at top level): 
+	if(pa->atype==ParamArg::Option && 
+	   top_sect==&topsect)
+	{
+		int special=0;
+		
+		// Okay, look up in special help lists: 
+		for(ParameterConsumer *pc=pclist.first(); pc; pc=pc->next)
+		{
+			for(SpecialHelpItem *shi=pc->shelp.first(); shi; shi=shi->next)
+			{
+				if(*shi->optname!=*pa->name)  continue;
+				size_t optlen=strlen(shi->optname);
+				if(optlen!=pa->namelen)  continue;
+				if(strncmp(shi->optname,pa->name,pa->namelen))  continue;
+				// Okay, found it. 
+				PrintSpecialHelp(pc,shi);
+				pa->pdone=1;
+				++special;
+			}
+		}
+	}
+	
+	return(special ? 1 : 0);
+}
+
+
+int ParameterManager::AddSpecialHelp(ParameterConsumer *pc,SpecialHelpItem *shi)
+{
+	// Check it: 
+	if(!shi)  return(0);
+	if(!shi->optname || !shi->descr)  return(-2);
+	
+	// Skip leading `-´ in option name: 
+	while(*shi->optname=='-')
+	{  ++shi->optname;  }
+	if(!(*shi->optname))  return(-2);
+	
+	SpecialHelpItem *s=NEW<SpecialHelpItem>();
+	if(!s)  return(-1);
+	
+	// simply copy all members...
+	*s=*shi;
+	
+	// ...and put into shelp queue: 
+	pc->shelp.append(s);
+	
+	return(0);
 }
 
 
@@ -303,14 +455,20 @@ PAR::Section *ParameterManager::FindSection(const char *name,Section *top)
 
 
 PAR::ParamInfo *ParameterManager::FindParam(const char *name,
-	size_t namelen,Section *top=NULL)
+	size_t namelen,Section *top,const char **ret_endp,Section **ret_sect)
 {
+	if(ret_endp)  *ret_endp=NULL;
+	if(ret_sect)  *ret_sect=NULL;
+	
 	if(!name)  return(NULL);
 	while(*name=='-')  ++name;
 	if(!(*name))  return(NULL);
 	
 	const char *end;
 	Section *s=_LookupSection(name,top ? top : (&topsect),&end);
+	if(ret_endp)  *ret_endp=end;
+	if(ret_sect)  *ret_sect=s;
+	
 	ssize_t endlen=name+namelen-end;
 	if(endlen<=0)  return(NULL);
 	for(ParamInfo *pi=s->pilist.first(); pi; pi=pi->next)
@@ -385,6 +543,47 @@ void ParameterManager::UnregisterParameterSource(ParameterSource *psrc)
 	
 	// The source must be removed from the source list: 
 	psrclist.dequeue(psrc);
+}
+
+
+int ParameterManager::SectionHandlerAttach(SectionParameterHandler *sph,
+	Section *s)
+{
+	if(!sph)  return(0);
+	if(!s)  return(-1);
+	
+	if(!s->sect_hdl)
+	{
+		// Okay, attach: 
+		s->sect_hdl=sph;
+		return(0);
+	}
+	return((s->sect_hdl==sph) ? 0 : -2);
+}
+
+void ParameterManager::SectionHandlerDetach(SectionParameterHandler *sph,
+	Section *s)
+{
+	// NOTE: s=NULL means to detach from all sections sph is attached. 
+	if(s)
+	{
+		if(s->sect_hdl==sph)
+		{  s->sect_hdl=NULL;  }
+		return;
+	}
+	
+	// s=NULL here. 
+	_SectionHandlerDetachRecursive(sph,&topsect);
+}
+
+void ParameterManager::_SectionHandlerDetachRecursive(
+	SectionParameterHandler *sph,Section *sect)
+{
+	if(sect->sect_hdl==sph)
+	{  sect->sect_hdl=NULL;  }
+	
+	for(Section *s=sect->sub.first(); s; s=s->next)
+	{  _SectionHandlerDetachRecursive(sph,s);  }
 }
 
 
