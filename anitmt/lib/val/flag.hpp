@@ -17,7 +17,7 @@
 #ifndef _NS_vect_flag_HPP_
 #define _NS_vect_flag_HPP_ 1
 
-#include <fstream>
+#include <iostream>
 
 namespace vect
 {

@@ -168,9 +168,11 @@ template<int C,int R> class matrix
 			{  internal::matrix_invert_copy(x[0],C,R);  return(*this);  }
 		
 		// Function to multiply the vector v with matrix m, storing the 
+#ifndef GCC_HACK
 		// resulting vector in r. 
 		template<int c,int r>friend void mult(vector<r> &r,const matrix<c,r> &m,const vector<c> &v);
 		friend void mult(vector<3> &r,const matrix<4,4> &m,const vector<3> &v);
+#endif
 		
 		// Matrix multiplication friend: 
 		template<int M,int L,int N>friend void mult(matrix<L,M> &r,
