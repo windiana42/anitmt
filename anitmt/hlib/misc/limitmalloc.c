@@ -30,10 +30,15 @@
  * of pointers is held. For simplicity, this array is of fixed size 
  * and has as many elements as you specify here. 
  */
-#if !defined(HLIB_SIZE_OPT) || (defined(HLIB_SIZE_OPT) && HLIB_SIZE_OPT==0)
+#ifndef AllocDebugging
+# if !defined(HLIB_SIZE_OPT) || (defined(HLIB_SIZE_OPT) && HLIB_SIZE_OPT==0)
+#  define AllocDebugging 16384
+# else
+#  define AllocDebugging 0
+# endif
+#elif AllocDebugging<16
+# undef AllocDebugging
 # define AllocDebugging 16384
-#else
-# define AllocDebugging 0
 #endif
 
 /* NOTE: If you are not using GNU libc and/or do not have 
@@ -193,6 +198,11 @@ void *LRealloc(void *ptr,size_t size)
 #if AllocDebugging
 static void DebugAlloc(void *ptr)
 {
+	static int warned=0;
+	if(!warned)
+	{  fprintf(stderr,"%s: (HLib allocation debugging enabled. "
+		"Chunk limit %d.)\n",prg_name,AllocDebugging);  warned=1;  }
+	
 	int i;
 	if(!ptr)  return;
 	for(i=0; i<nalloc; i++)

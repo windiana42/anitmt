@@ -61,7 +61,7 @@ class HTime
 		static inline long _RoundAddMs(long x)
 			{  return((x<0) ? (x-500) : (x+500));  }
 	public:  _CPP_OPERATORS
-		HTime()  { }
+		HTime()  {  tv.tv_usec=-2000000;  }  // see SetInvalid()
 		HTime(_CurrentTime)  {  SetCurr();  }
 		HTime(_NullTime)  {  tv.tv_sec=0;  tv.tv_usec=0;  }
 		HTime(_InvalidTime)  {  tv.tv_usec=-2000000;  }  // see SetInvalid()
