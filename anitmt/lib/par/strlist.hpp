@@ -44,9 +44,10 @@ class stringlist : public std::list<std::string>
 			{  clear();  _addlist(sl); return(*this);  }
 		stringlist &operator+=(const stringlist &sl)
 			{  _addlist(sl); return(*this);  }
-		
-		bool is_empty()
-			{  return((begin()==end()) ? true : false);  }
+	
+  //          list<> has already an empty() function	
+  //		bool is_empty()
+  //			{  return((begin()==end()) ? true : false);  }
 		
 		// Add an entry at the end of the list: 
 		void add(const std::string &str)  {  push_back(str);  }

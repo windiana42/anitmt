@@ -17,33 +17,21 @@
 
 #include <list>
 #include <val/val.hpp>
-#include "error.hpp"
 #include "proptree.hpp"
 
-namespace anitmt{
+#include <message/message.hpp>
+#include <solve/operand.hpp>
 
+namespace anitmt
+{
   template <class Return_Type>
   class Contain_Return;  
   
+
   //************************************************************
   // << template <Return_Type> >>
   // Return: interface for tree nodes with a special return type
   //************************************************************
-
-  // exception that more than one child is added to a unique child container
-  class EX_more_than_one_child : public EX
-  {
-  public:
-    EX_more_than_one_child() 
-      : EX( "only one child of this type is allowed here") {}
-  };
-  // exception that no child was added but was essential
-  class EX_essential_child_missing : public EX
-  {
-  public:
-    EX_essential_child_missing() 
-      : EX( "an essential child is missing" ) {}
-  };
 
   template <class Return_Type>
   class Return {

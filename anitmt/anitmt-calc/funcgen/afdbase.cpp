@@ -263,37 +263,39 @@ namespace funcgen
     std::cout << "      " << action_code << std::endl;// should include ';'
   }
 
-  void Action_Code::new_action( std::string action, double level )
+  void Action_Code::new_action( std::string action, double level, 
+				Code_Translator *translator )
   {
     // open action call, insert it and store the iterator
     current_action = action_declarations.insert
 	(action_declarations.end(), Action_Declaration());
 
-    current_action->action_code = action + "(" + level;
+    current_action->action_code = translator->open_action( action, level );
   }
 
-  void Action_Code::add_parameter_ref( Property_Reference &ref )
+  void Action_Code::add_parameter_ref( Property_Reference &ref, 
+				       Code_Translator *translator )
   {
-    current_action->action_code += ',';
-    current_action->action_code += ref.code;
+    current_action->action_code += translator->parameter_add( ref.code );
     current_action->essentials.insert( current_action->essentials.end(), 
 				       ref.essentials.begin(),
 				       ref.essentials.end() );
     ref.clear();
   }
 
-  void Action_Code::add_parameter_exp( Expression *exp )
+  void Action_Code::add_parameter_exp( Expression *exp, 
+				       Code_Translator *translator )
   {
-    current_action->action_code += ',';
-    current_action->action_code += exp->expression_code;
+    current_action->action_code 
+      += translator->parameter_add( exp->expression_code );
     current_action->essentials.insert( current_action->essentials.end(), 
 				       exp->essentials.begin(),
 				       exp->essentials.end() );
   }
 
-  void Action_Code::finish_action()
+  void Action_Code::finish_action( Code_Translator *translator )
   {
-    current_action->action_code += ");";
+    current_action->action_code += translator->close_function();
   }
 
   void Action_Code::merge( const Action_Code &ac )

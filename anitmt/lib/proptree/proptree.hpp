@@ -33,7 +33,16 @@ namespace functionality
 
 namespace functionality
 {
-  class tree_info;		// is defined anywhere else
+  //! stores information needed by any tree node
+  class tree_info		
+  {
+    int id_counter;
+  public:
+    solve::Priority_System *priority_system;
+    std::string get_unique_id(); // returns any unique id string
+
+    tree_info(solve::Priority_System *p_sys);
+  };
 
   //************************************************************
   // Prop_Tree_Node: provides tree structure for property groups

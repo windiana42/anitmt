@@ -77,9 +77,9 @@ int main(int argc,char **argv,char **envp)
     make_all_nodes_available();
 
     stringlist adlfiles = ani.param.adl();
-    if( adlfiles.is_empty() )
+    if( adlfiles.empty() )
     {
-      std::cerr << "Error: no animation descriptions specified" << std::endl;
+      msg.error() << "no animation descriptions specified";
       return -3;
     }
 

@@ -43,6 +43,9 @@ namespace funcgen
     virtual std::string provider_type( std::string name );
     virtual std::string node_type( std::string name );
     virtual std::string node_base_type();
+    virtual std::string open_action( std::string action, double level );
+    virtual std::string parameter_add( std::string param );
+    virtual std::string close_function();
     virtual std::string result_function_decl( std::string provider_type,
 					      std::string ret_type, 
 					      std::string par_type );
@@ -62,6 +65,7 @@ namespace funcgen
 				   std::string par_type );
     virtual std::string prop_op( std::string name );
     virtual std::string prop_op_value( std::string name );
+    virtual std::string node_prop( std::string name );
     virtual std::string property_type( std::string name );
     virtual std::string operand_type( std::string name );
     virtual std::string container( std::string provider_type );

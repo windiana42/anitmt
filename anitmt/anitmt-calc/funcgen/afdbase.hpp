@@ -169,10 +169,10 @@ namespace funcgen
     std::list<Action_Declaration> action_declarations;
     std::list<Action_Declaration>::iterator current_action;
 
-    void new_action( std::string name, double level );
-    void add_parameter_ref( Property_Reference &ref );
-    void add_parameter_exp( Expression *ref );
-    void finish_action();
+    void new_action( std::string name, double level, Code_Translator *t );
+    void add_parameter_ref( Property_Reference &ref, Code_Translator *t );
+    void add_parameter_exp( Expression *ref, Code_Translator *t );
+    void finish_action( Code_Translator *t );
     void merge( const Action_Code & );
     void print() const;		// print, just for debug purposes
   };

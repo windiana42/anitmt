@@ -19,7 +19,6 @@ AC_PROG_CXX
 #unset gccvers
 AC_PROG_INSTALL
 AC_PROG_RANLIB
-dnl FIXME: Yacc check seems to be necessary for detection of the "ylwrap" script.
 AC_PROG_YACC
 AM_PROG_LEX
 if test "$LEX" != "flex"; then echo "Warning: You need flex to generate new lexer sources!"; LEX=; fi

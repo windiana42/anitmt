@@ -391,47 +391,56 @@ namespace funcgen
   void node_start_action( void *info, const std::string &name, 
 			  double priority )
   {
-    Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;
+    afd_info *I=static_cast<afd_info*>(info);
+    Code_Translator *translator = I->afd->translator;
+    Tree_Node_Type *node = I->afd->current_node;
     assert(node != 0);
     Solve_System_Code *solve_code = node->current_solve_code;    
 
     if( solve_code )
     {
-      solve_code->actions.new_action(name,priority);
+      solve_code->actions.new_action(name, priority, translator);
     }
   }
   void node_add_action_parameter_ref( void *info )
   {
-    Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;
+    afd_info *I=static_cast<afd_info*>(info);
+    Code_Translator *translator = I->afd->translator;
+    Tree_Node_Type *node = I->afd->current_node;
     assert(node != 0);
     Solve_System_Code *solve_code = node->current_solve_code;    
 
     if( solve_code )
     {
-      solve_code->actions.add_parameter_ref(node->current_reference);
+      solve_code->actions.add_parameter_ref(node->current_reference,
+					    translator);
     }
   }
   void node_add_action_parameter_exp( void *info, Expression *exp )
   {
-    Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;
+    afd_info *I=static_cast<afd_info*>(info);
+    Code_Translator *translator = I->afd->translator;
+    Tree_Node_Type *node = I->afd->current_node;
     assert(node != 0);
     Solve_System_Code *solve_code = node->current_solve_code;    
 
     if( solve_code )
     {
-      solve_code->actions.add_parameter_exp(exp);
+      solve_code->actions.add_parameter_exp(exp,translator);
     }
     delete exp;
   }
   void node_finish_action( void *info )
   {
-    Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;
+    afd_info *I=static_cast<afd_info*>(info);
+    Code_Translator *translator = I->afd->translator;
+    Tree_Node_Type *node = I->afd->current_node;
     assert(node != 0);
     Solve_System_Code *solve_code = node->current_solve_code;    
 
     if( solve_code )
     {
-      solve_code->actions.finish_action();
+      solve_code->actions.finish_action(translator);
     }
   }
 
@@ -715,7 +724,7 @@ namespace funcgen
     Tree_Node_Type *node = I->afd->current_node;
     assert( node != 0 );
 
-    node->current_reference.add_unchecked( translator->prop_op(prop) );
+    node->current_reference.add( translator->node_prop(prop) );
   }
   void ref_start_param( void *info )
   {

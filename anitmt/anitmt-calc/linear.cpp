@@ -14,6 +14,9 @@
 
 #include "linear.hpp"
 
+#include <solve/constraint.hpp>
+#include <solve/operator.hpp>
+
 namespace anitmt{
 
   //**********************************************************

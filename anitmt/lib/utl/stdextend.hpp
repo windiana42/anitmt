@@ -49,6 +49,14 @@ namespace std
   string operator+=( const string &s, values::Vector v );
   string operator+=( const string &s, values::Matrix v );
   //string &operator+=( string, values::String v ); // obsolete
+
+  string to_string( int );
+  string to_string( long );
+  string to_string( double );
+  string to_string( values::Flag v );
+  string to_string( values::Scalar v );
+  string to_string( values::Vector v );
+  string to_string( values::Matrix v );
 }
 #endif
 

@@ -17,7 +17,19 @@
 #include <message/message.hpp>
 #include <utl/stdextend.hpp>
 
-namespace functionality{
+namespace functionality
+{
+  //************************************************************
+  // tree_info: stores information needed by any tree node
+  //************************************************************
+
+  std::string tree_info::get_unique_id()
+  {
+    return to_string(++id_counter);
+  }
+  
+  tree_info::tree_info( solve::Priority_System *sys ) 
+    : id_counter(0), priority_system(sys) {}
 
   //************************************************************
   // Prop_Tree_Node: provides tree structure for property groups
@@ -92,7 +104,7 @@ namespace functionality{
     if( name == "" )
     {
       // create default name
-      name = type + (ani->unique_name_counter++); 
+      name = type + info->get_unique_id(); 
     }
 
     /*
@@ -103,7 +115,6 @@ namespace functionality{
       //err = AC_child_type_unknown; // return error type
       return 0;
     }
-    */
     // create node with factory found
     Prop_Tree_Node *node = i->second->create( name, ani );
 
@@ -127,6 +138,8 @@ namespace functionality{
       return 0;
 
     return node;
+    */
+    return 0;			// just for a while
   }
 
   // returns next part before a given separator or the end of string
@@ -304,7 +317,7 @@ namespace functionality{
 				  message::Message_Consultant *msg_consultant) 
     : message::Message_Reporter( msg_consultant ),
       parent(0), prev(0), next(0), first_child(0), last_child(0),
-      type(t), name(n), pos(message::GLOB::no_position), info(i) {}
+      type_name(t), name(n), pos(message::GLOB::no_position), info(i) {}
 
   Prop_Tree_Node::~Prop_Tree_Node() {}
 

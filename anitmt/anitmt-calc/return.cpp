@@ -17,6 +17,9 @@
 
 #include "return.hpp"
 
+#include <solve/operator.hpp>
+#include <solve/constraint.hpp>
+
 namespace anitmt
 {
   //************************************************************

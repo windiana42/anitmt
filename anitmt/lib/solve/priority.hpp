@@ -153,7 +153,7 @@ namespace solve{
     virtual ~Push_Connection();
   };
 
-  // establishes push connection between two properties
+  // establishes push connection between two operands/properties
   template<class T>
   inline void establish_Push_Connection( Priority_System *sys, 
 					 Priority_System::level_type level,

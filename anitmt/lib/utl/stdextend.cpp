@@ -142,5 +142,63 @@ namespace std
     os << '\0';
     s += append; return s;
   }
+
+  // convert number formats to strings
+  string to_string( int v )
+  {
+    char str[_max_digits];
+    ostrstream os(str, _max_digits );
+    os << v;
+    os << '\0';
+    return str;
+  }
+  string to_string( long v )
+  {
+    char str[_max_digits];
+    ostrstream os(str, _max_digits );
+    os << v;
+    os << '\0';
+    return str;
+  }
+  string to_string( double v )
+  {
+    char str[_max_digits];
+    ostrstream os(str, _max_digits );
+    os << v;
+    os << '\0';
+    return str;
+  }
+  string to_string( values::Flag v )
+  {
+    char str[_max_digits];
+    ostrstream os(str, _max_digits );
+    os << v;
+    os << '\0';
+    return str;
+  }
+  string to_string( values::Scalar v )
+  {
+    char str[_max_digits];
+    ostrstream os(str, _max_digits );
+    os << v;
+    os << '\0';
+    return str;
+  }
+  string to_string( values::Vector v )
+  {
+    char str[_max_digits];
+    ostrstream os(str, _max_digits );
+    os << v;
+    os << '\0';
+    return str;
+  }
+  string to_string( values::Matrix v )
+  {
+    char str[_max_digits];
+    ostrstream os(str, _max_digits );
+    os << v;
+    os << '\0';
+    return str;
+  }
 }
 

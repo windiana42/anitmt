@@ -97,5 +97,55 @@ namespace solve
 
     return true;
   }
+
+  // establishes push connection to property of foreign tree node
+  // ( returnvalue false means: unknown property )
+  template<class T>
+  bool establish_Push_Connection( Priority_System *sys, 
+				  Priority_System::level_type level,
+				  Operand<T> &src, 
+				  functionality::Property *dest_prop ) 
+  {
+#ifdef __DEBUG__
+    std::cout << "try to establish push" << std::endl;
+#endif
+    Operand<T> *dest 
+      = dynamic_cast< Operand<T>* >( dest_prop );
+
+    if( !dest ) return false;
+
+    establish_Push_Connection( sys, level, src, *dest );
+
+#ifdef __DEBUG__
+    std::cout << "push established on level " << level << std::endl;
+#endif
+
+    return true;
+  }
+
+  // establishes push connection to property of foreign tree node
+  // ( returnvalue false means: unknown property )
+  template<class T>
+  bool establish_Push_Connection( Priority_System *sys, 
+				  Priority_System::level_type level,
+				  functionality::Property *src_prop, 
+				  Operand<T> &dest ) 
+  {
+#ifdef __DEBUG__
+    std::cout << "try to establish push" << std::endl;
+#endif
+    Operand<T> *src 
+      = dynamic_cast< Operand<T>* >( src_prop );
+
+    if( !src ) return false;
+
+    establish_Push_Connection( sys, level, *src, dest );
+
+#ifdef __DEBUG__
+    std::cout << "push established on level " << level << std::endl;
+#endif
+
+    return true;
+  }
 }
 #endif

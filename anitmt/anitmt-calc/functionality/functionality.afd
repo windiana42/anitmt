@@ -51,9 +51,9 @@ node scalar_base {
       duration >= 0;
     }
     solvers {
-      addition_solver ( start_time, duration, end_time );
-      addition_solver ( start_value, difference, end_value );
-      addition_solver ( start_slope, slope_difference, end_slope );
+      sum_solver ( start_time, duration, end_time );
+      sum_solver ( start_value, difference, end_value );
+      sum_solver ( start_slope, slope_difference, end_slope );
     }
     actions {
       default( 110, slope_difference, 0 );

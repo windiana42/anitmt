@@ -189,6 +189,22 @@ namespace solve
 				  anitmt::Prop_Tree_Node   *dest_node,
 				  std::string dest_prop );
 
+  // establishes push connection to operand of foreign tree node
+  // ( returnvalue false means: unknown operand )
+  template<class T>
+  bool establish_Push_Connection( Priority_System *sys, 
+				  Priority_System::level_type level,
+				  Operand<T> &src, 
+				  functionality::Property *dest );
+
+  // establishes push connection to operand of foreign tree node
+  // ( returnvalue false means: unknown operand )
+  template<class T>
+  bool establish_Push_Connection( Priority_System *sys, 
+				  Priority_System::level_type level,
+				  functionality::Property *src, 
+				  Operand<T> &dest );
+
 }
 // force template generation of all used types
 #include "proptree_templ.cpp"

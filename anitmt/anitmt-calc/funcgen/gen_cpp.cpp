@@ -46,6 +46,30 @@ namespace funcgen
   {
     return "functionality::Prop_Tree_Node";
   }
+  std::string Cpp_Code_Translator::open_action( std::string action, 
+						double level )
+  {
+    if( action == "push" )
+    {
+      return std::string("solve::establish_Push_Connection( "
+			 "info->priority_system,") + level;
+    }
+    if( action == "default" )
+    {
+      return std::string("solve::establish_Default_Value( "
+			 "info->priority_system,") + level;
+    }
+    // if any other action ??? could also output error ???
+    return "solve::" + action + "( info->priority_system, " + level;
+  }
+  std::string Cpp_Code_Translator::parameter_add( std::string param )
+  {
+    return ", " + param;
+  }
+  std::string Cpp_Code_Translator::close_function()
+  {
+    return ");";
+  }
   std::string Cpp_Code_Translator::result_function_decl
   ( std::string provider_type, std::string ret_type, std::string par_type )
   {
@@ -85,6 +109,10 @@ namespace funcgen
   std::string Cpp_Code_Translator::prop_op_value( std::string name )
   {
     return prefix_prop_op + name + "()";
+  }
+  std::string Cpp_Code_Translator::node_prop( std::string name )
+  {
+    return "get_property( \"" + name + "\" )";
   }
   std::string Cpp_Code_Translator::property_type( std::string name )
   {
@@ -147,23 +175,23 @@ namespace funcgen
   }
   std::string Cpp_Code_Translator::prev()
   {
-    return "prev";
+    return "get_prev()";
   }
   std::string Cpp_Code_Translator::next()
   {
-    return "next";
+    return "get_next()";
   }
   std::string Cpp_Code_Translator::parent()
   {
-    return "parent";
+    return "get_parent()";
   }
   std::string Cpp_Code_Translator::first_child()
   {
-    return "first_child";
+    return "get_first_child()";
   }
   std::string Cpp_Code_Translator::last_child()
   {
-    return "last_child";
+    return "get_last_child()";
   }
   std::string Cpp_Code_Translator::get_child(int n)
   {
@@ -603,7 +631,7 @@ namespace funcgen
 	  bool first = true;
 	  for( j = i->essentials.begin(); j != i->essentials.end(); ++j )
 	  {
-	    *os << (first?first=false,"":", ") << (*j);
+	    *os << (first?first=false,"":" && ") << (*j);
 	  }
 	  *os << " )" << std::endl;
 	  *os << "    {" << std::endl;
@@ -627,7 +655,7 @@ namespace funcgen
 	  bool first = true;
 	  for( j = i->essentials.begin(); j != i->essentials.end(); ++j )
 	  {
-	    *os << (first?first=false,"":", ") << (*j);
+	    *os << (first?first=false,"":" && ") << (*j);
 	  }
 	  *os << " )" << std::endl;
 	  *os << "    {" << std::endl;
@@ -651,7 +679,7 @@ namespace funcgen
 	  bool first = true;
 	  for( j = i->essentials.begin(); j != i->essentials.end(); ++j )
 	  {
-	    *os << (first?first=false,"":", ") << (*j);
+	    *os << (first?first=false,"":" && ") << (*j);
 	  }
 	  *os << " )" << std::endl;
 	  *os << "    {" << std::endl;
@@ -838,8 +866,8 @@ namespace funcgen
 	{
 	  const Result_Type &res_type = o->first;
 	  const Result_Code &res_code = o->second;
-	  *decl << "    virtual " 
-		<< translator.base_type(res_type.return_type) << " "
+	  *decl << "    virtual std::pair<bool," 
+		<< translator.base_type(res_type.return_type) << "> "
 		<< translator.result_function_decl( provides,
 						    res_type.return_type, 
 						    res_type.parameter_type )
@@ -856,7 +884,8 @@ namespace funcgen
 	    continue;
 	  }
 
-	  *impl << "  " << translator.base_type(res_type.return_type) << " "
+	  *impl << "  std::pair<bool," 
+		<< translator.base_type(res_type.return_type) << "> "
 		<< translator.node_type( node_name ) << "::"
 		<< translator.result_function_impl( provides,
 						    res_type.return_type, 
