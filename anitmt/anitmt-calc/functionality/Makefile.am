@@ -10,14 +10,18 @@ BUILT_SOURCES=		solver.hpp solver.cpp \
 			object_base.hpp object_base.cpp \
 			object.hpp object.cpp \
 			complex_solver.hpp complex_solver.cpp 
-libfunctionality_a_SOURCES= solver.afd solver.hpp solver.cpp \
-			base_func.afd base_func.hpp base_func.cpp \
-			scene_base.afd scene_base.hpp scene_base.cpp \
-			scalar_base.afd scalar_base.hpp scalar_base.cpp \
-			scalar.afd scalar.hpp scalar.cpp \
-			object_base.afd object_base.hpp object_base.cpp \
-			object.afd object.hpp object.cpp \
-			complex_solver.afd \
+libfunctionality_a_SOURCES= solver.afd base_func.afd scene_base.afd   \
+			scalar_base.afd scalar.afd  object_base.afd   \
+			object.afd complex_solver.afd \
+			sp_curve.hpp sp_curve.cpp \
+			make_avail.cpp make_avail.hpp 
+nodist_libfunctionality_a_SOURCES= solver.hpp solver.cpp \
+			base_func.hpp base_func.cpp \
+			scene_base.hpp scene_base.cpp \
+			scalar_base.hpp scalar_base.cpp \
+			scalar.hpp scalar.cpp \
+			object_base.hpp object_base.cpp \
+			object.hpp object.cpp \
 			complex_solver.hpp complex_solver.cpp \
 			sp_curve.hpp sp_curve.cpp \
 			make_avail.cpp make_avail.hpp 
