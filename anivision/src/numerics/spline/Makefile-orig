@@ -1,0 +1,25 @@
+
+all: qt-test
+
+run: all
+	./qt-test
+
+clean:
+	rm *.o
+
+qt-test: sl_base.o lspline.o cspline.o test.o qt-test.o
+	gcc lspline.o sl_base.o cspline.o test.o qt-test.o -o qt-test \
+	-lqt-mt -lm -lqtxlib -lnumerics -lhlib \
+	-L/opt/Qt/lib -L../../../mysrc/qtxlib-build/src/ \
+	-L../anivision-build/src/numerics -L../hlib-build
+
+.cc.o:
+	gcc -c -O2 -fno-exceptions -fno-rtti -I. -IQt/ -fmessage-length=120 $<
+
+sl_base.o: sl_base.cc sl_base.h
+lspline.o: lspline.cc lspline.h sl_base.h
+cspline.o: cspline.cc cspline.h sl_base.h
+xspline.o: xspline.cc xspline.h sl_base.h
+
+test.o: test.cc sl_base.h lspline.h cspline.h xspline.h
+qt-test.o: qt-test.cc sl_base.h lspline.h cspline.h xspline.h

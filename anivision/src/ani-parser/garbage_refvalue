@@ -1,0 +1,129 @@
+namespace ANI
+{
+
+// This is just a ref-counting version of Value. 
+// This is the internal part; the external part is RefValue. 
+class _InternalRefValue : private Value
+{
+	friend class RefValue;
+	private:
+		int refcnt;
+		
+		// Reference counting: 
+		inline void _aqref()  {  ++refcnt;  }
+		inline void _deref()  {  if(--refcnt<=0) delete this;  }
+		
+		// Forbidden: 
+		_InternalRefValue &operator=(const _InternalRefValue &);
+		_InternalRefValue(const _InternalRefValue &);
+	public:  // [uses alloc operator of Value]
+		_InternalRefValue() :                 Value()   { refcnt=0; }
+		_InternalRefValue(int v) :            Value(v)  { refcnt=0; }
+		_InternalRefValue(double v) :         Value(v)  { refcnt=0; }
+		_InternalRefValue(const Integer &v) : Value(v)  { refcnt=0; }
+		_InternalRefValue(const Scalar &v) :  Value(v)  { refcnt=0; }
+		_InternalRefValue(const Range &v) :   Value(v)  { refcnt=0; }
+		_InternalRefValue(const Vector &v) :  Value(v)  { refcnt=0; }
+		_InternalRefValue(const Matrix &v) :  Value(v)  { refcnt=0; }
+		_InternalRefValue(const String &v) :  Value(v)  { refcnt=0; }
+		_InternalRefValue(const Value &v) :   Value(v)  { refcnt=0; }
+		~_InternalRefValue();
+		
+		// Return string representation: 
+		String ToString() const
+			{  return(Value::ToString());  }
+}__attribute__((__packed__));
+
+
+class RefValue
+{
+	public:
+		// Special version of the new operator with placement as used 
+		// by ExprValue: 
+		void *operator new(size_t /*size*/,void *ptr)
+			{  return(ptr);  }
+	private:
+		// Pointer to internally used value. 
+		_InternalRefValue *irv;   // [allocated]
+		
+		// Reference counting: 
+		inline void _aqref()  {  if(irv)  irv->_aqref();  }
+		inline void _deref()  {  if(irv)  irv->_deref();  }
+		
+	public:  _CPP_OPERATORS
+		// Null ref: 
+		RefValue(Value::_None)
+			{  irv=NULL;  }
+		// Copy constructor: 
+		RefValue(const RefValue &x)
+			{  irv=x.irv;  _aqref();  }
+		// Construct various values: 
+		RefValue(int v)             { irv=new _InternalRefValue(v); _aqref(); }
+		RefValue(double v)          { irv=new _InternalRefValue(v); _aqref(); }
+		RefValue(const Integer &v)  { irv=new _InternalRefValue(v); _aqref(); }
+		RefValue(const Scalar &v)   { irv=new _InternalRefValue(v); _aqref(); }
+		RefValue(const Range &v)    { irv=new _InternalRefValue(v); _aqref(); }
+		RefValue(const Vector &v)   { irv=new _InternalRefValue(v); _aqref(); }
+		RefValue(const Matrix &v)   { irv=new _InternalRefValue(v); _aqref(); }
+		RefValue(const String &v)   { irv=new _InternalRefValue(v); _aqref(); }
+		RefValue(const Value &v)    { irv=new _InternalRefValue(v); _aqref(); }
+		// Destructor... (dereference)
+		~RefValue()
+			{  _deref();  }
+		
+		// Assignment: reference. 
+		inline RefValue &operator=(const RefValue &x)
+			{  _deref();  irv=x.irv;  _aqref();  return(*this);  }  
+		
+		// Get pointer to internally used value. 
+		// Be careful with it and keep in mind that is may only 
+		// be valid as long as the associated RefValue exists. 
+		Value *GetValuePtr()  {  return(irv);  }
+		const Value *GetValuePtr() const  {  return(irv);  }
+		
+		// Return if this is logically 0 or not. 
+		// THIS IS LIKE AN INVERTED BOOL CONVERSION. 
+		int is_null() const
+			{  return(irv ? irv->is_null() : 2);  }
+		
+		// Return string representation: 
+		String ToString() const;
+}__attribute__((__packed__));
+
+}  // end of namespace ANI
+
+
+*------------------------------------------------------------------------------*
+
+
+namespace ANI
+{
+
+_InternalRefValue &_InternalRefValue::operator=(const _InternalRefValue &)
+{
+	// Forbidden. 
+	assert(0);
+	return(*this);
+}
+
+_InternalRefValue::_InternalRefValue(const _InternalRefValue &) : Value()
+{
+	// Forbidden. 
+	refcnt=0;
+	assert(0);
+}
+
+_InternalRefValue::~_InternalRefValue()
+{
+	assert(refcnt==0);
+}
+
+
+/******************************************************************************/
+
+String RefValue::ToString() const
+{
+	return(irv ? irv->ToString() : String("[POD null]"));
+}
+
+}  // end of namespace ANI
