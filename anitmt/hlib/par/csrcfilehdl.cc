@@ -8,7 +8,7 @@
 namespace par
 {
 
-extern const char *_three_qm;   // "???"
+static const char *_three_qm="???";
 
 
 int ParameterSource_File::FailedFileOp(const char *path,int line,int op)

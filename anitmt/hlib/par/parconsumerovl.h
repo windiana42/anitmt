@@ -15,53 +15,63 @@ class ParameterConsumer_Overloaded : public ParameterConsumer
 		
 		// Adds a PTParameter taking an (unsigned) int/long, 
 		// or double argument. 
-		ParamInfo *AddParam(const char *name,const char *helptext,int *valptr)
+		// See parconsumer.h for meaning of flags. 
+		ParamInfo *AddParam(const char *name,const char *helptext,
+			int *valptr,int flags=0)
 			{  return(ParameterConsumer::AddParam(name,PTParameter,
-				helptext,valptr,default_int_handler));  }
-		ParamInfo *AddParam(const char *name,const char *helptext,unsigned int *valptr)
+				helptext,valptr,default_int_handler,flags));  }
+		ParamInfo *AddParam(const char *name,const char *helptext,
+			unsigned int *valptr,int flags=0)
 			{  return(ParameterConsumer::AddParam(name,PTParameter,
-				helptext,valptr,default_uint_handler));  }
-		ParamInfo *AddParam(const char *name,const char *helptext,long *valptr)
+				helptext,valptr,default_uint_handler,flags));  }
+		ParamInfo *AddParam(const char *name,const char *helptext,
+			long *valptr,int flags=0)
 			{  return(ParameterConsumer::AddParam(name,PTParameter,
-				helptext,valptr,default_long_handler));  }
-		ParamInfo *AddParam(const char *name,const char *helptext,unsigned long *valptr)
+				helptext,valptr,default_long_handler,flags));  }
+		ParamInfo *AddParam(const char *name,const char *helptext,
+			unsigned long *valptr,int flags=0)
 			{  return(ParameterConsumer::AddParam(name,PTParameter,
-				helptext,valptr,default_ulong_handler));  }
-		ParamInfo *AddParam(const char *name,const char *helptext,double *valptr)
+				helptext,valptr,default_ulong_handler,flags));  }
+		ParamInfo *AddParam(const char *name,const char *helptext,
+			double *valptr,int flags=0)
 			{  return(ParameterConsumer::AddParam(name,PTParameter,
-				helptext,valptr,default_double_handler));  }
+				helptext,valptr,default_double_handler,flags));  }
 		
 		// Dito for string (RefString) args: 
-		ParamInfo *AddParam(const char *name,const char *helptext,RefString *valptr)
+		ParamInfo *AddParam(const char *name,const char *helptext,
+			RefString *valptr,int flags=0)
 			{  return(ParameterConsumer::AddParam(name,PTParameter,
-				helptext,valptr,default_string_handler));  }
+				helptext,valptr,default_string_handler,flags));  }
 		
 		// ...and string list (RefStrList) args: 
-		ParamInfo *AddParam(const char *name,const char *helptext,RefStrList *valptr)
+		ParamInfo *AddParam(const char *name,const char *helptext,
+			RefStrList *valptr,int flags=0)
 			{  return(ParameterConsumer::AddParam(name,PTParameter,
-				helptext,valptr,default_stringlist_handler));  }
+				helptext,valptr,default_stringlist_handler,flags));  }
 		
 		// Adds a PTSwitch: 
-		ParamInfo *AddParam(const char *name,const char *helptext,bool *valptr)
+		ParamInfo *AddParam(const char *name,const char *helptext,
+			bool *valptr,int flags=0)
 			{  return(ParameterConsumer::AddParam(name,PTSwitch,
-				helptext,valptr,default_switch_handler));  }
+				helptext,valptr,default_switch_handler,flags));  }
 		
 		// Adds a PTOption: 
-		ParamInfo *AddOpt(const char *name,const char *helptext,int *counter)
+		ParamInfo *AddOpt(const char *name,const char *helptext,
+			int *counter,int flags=0)
 			{  return(ParameterConsumer::AddParam(name,PTOption,
-				helptext,counter,default_option_handler));  }
+				helptext,counter,default_option_handler,flags));  }
 		
 		// Adds an enum: (using an exclusive handler)
 		// NOTE: *map is an array of EnumMapEntries; the last entry of this 
 		//       array MUST have map[].str set to NULL. 
 		typedef EnumValueHandler::MapEntry EnumMapEntry;
-		ParamInfo *AddEnum(const char *name,const char *helptext,int *valptr,
-			const EnumMapEntry *map)
+		ParamInfo *AddEnum(const char *name,const char *helptext,
+			int *valptr,const EnumMapEntry *map,int flags=0)
 		{
 			EnumValueHandler *vhdl=NEW1<EnumValueHandler>(map);
 			if(!vhdl)  return(NULL);
 			return(ParameterConsumer::AddParam(name,PTParameter,
-				helptext,valptr,vhdl,/*exclusive_hdl=*/1));
+				helptext,valptr,vhdl,flags | PExclusiveHdl));
 		}
 };
 

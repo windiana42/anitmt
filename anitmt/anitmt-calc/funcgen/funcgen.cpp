@@ -56,33 +56,22 @@ FuncgenParameters::FuncgenParameters(par::ParameterManager *manager) :
   
   // Then, register the parameters: 
   SetSection(NULL);
-  AddOpt("p|yydebug","enable parser debugging output (LOTS of text)",&yydebug);
-  AddOpt("s|stdebug","dump structure debug output",&stdebug);
+  AddOpt("yydebug|d","enable parser debugging output (LOTS of text)",&yydebug);
+  AddOpt("stdebug|s","dump structure debug output",&stdebug);
   
-  AddParam("i|input","input file",&in_file);
-  AddParam("o|output","output basename",&out_basename);
-  AddParam("n|namespace","namespace",&namesp);
+  AddParam("input|i","input file",&in_file,STExactlyOnce);
+  AddParam("output|o","output basename",&out_basename,STMaxOnce);
+  AddParam("namespace|n","namespace",&namesp,STExactlyOnce);
   AddParam("I","include path (use -I+=path to add a path)",&include_path);
 }
 
 int FuncgenParameters::CheckParams()
 {
   int missing=0;
-  if(!in_file.str())
-  {
-    std::cerr << "No input file specified. Try " << prg_name << 
-    	" --help" << std::endl;
-    return(1);
-  }
-  if(!namesp.str())
-  {
-    std::cerr << "You did not specify the namespace." << std::endl;
-    ++missing;
-  }
   if(!out_basename.str() && in_file.str())
   {
     const char *in=in_file.str();
-    if(strcmp(in+in_file.len()-5,".afd"))
+    if(in_file.len()>4 && strcmp(in+in_file.len()-5,".afd"))
     {
       std::string tmp(in_file,in_file.len()-4);
       out_basename.set(tmp.c_str());  // copies the c_str. 

@@ -31,12 +31,23 @@ class ParameterConsumer :
 		// This is called when ParameterManager::CheckParams() is called, 
 		// normally that is when all the parameters are set up and before 
 		// the program actually does its job. 
+		// First, for every parameter, CheckParam(ParamInfo *) is called, 
+		// then, if no errors occured, CheckParams() is called. 
+		// NOTE that CheckParam(ParamInfo *) in the default implementation 
+		//      checks the spectype (STAtLeastOnce, etc.) so you should 
+		//      consider calling it in case you override the function. 
+		// NOTE: CheckParam(ParamInfo *pi) calls (virtual) CheckParamError() 
+		//      in case of an error. 
 		// Return value: 
 		//   0 -> okay 
 		//   1 -> errors written (must stop)
+		virtual int CheckParam(ParamInfo *pi);
 		virtual int CheckParams()
 			{  return(0);  }
 		
+		// Error handler called by CheckParam(ParamInfo *pi) in case of an 
+		// error; default implementation writes error to stderr. 
+		virtual void CheckParamError(ParamInfo *pi);
 	public:  _CPP_OPERATORS_FF
 		ParameterConsumer(ParameterManager *manager,
 			int *failflag=NULL);
@@ -105,8 +116,8 @@ class ParameterConsumer :
 		//           of table; play around and see what is possible...) 
 		// valptr: pointer to value; the read-in parameter gets stored 
 		//         there. The value should be set up to the default. 
-		//         In case there is no default, pass NoDefault(ptype) 
-		//         instead of ptype. 
+		//         In case there is no default, NoDefault among the 
+		//         flags. 
 		// hdl: a parameter handler for the argument; you normally need 
 		//      only one handler per parameter type (unless, of course, 
 		//      you have different parsers for some enum type, etc). 
@@ -124,12 +135,20 @@ class ParameterConsumer :
 		//  - PTSwitch: must check ParamArg::name (`no-' prefix) if 
 		//       ParamArg::value=NULL.
 		//       (You will normally use the internal parser for this.) 
-		// exclusive_hdl: 
-		//     1 -> handler was allocated using operator new and is used 
-		//          exclusively by this param. This means that the handler 
-		//          is deleted as soon as the parameter ceases to exist; 
-		//          if the parameter allocation failed at all, the handler 
-		//          is deleted immediately. 
+		// flags: OR of following flags: 
+		//  - PNoDefault -> parameter does not have a default value
+		//  - PExclusiveHhl -> handler was allocated using operator new and 
+		//          is used exclusively by this param. This means that the 
+		//          handler is deleted as soon as the parameter ceases to 
+		//          exist; if the parameter allocation failed at all, the 
+		//          handler is deleted immediately. 
+		//  - One of the spec types: 
+		//     STNone         (=0 and can be left away)
+		//     STAtLeastOnce  param must be specified at least once
+		//     STExactlyOnce  param must be specified exactly once
+		//     STMaxOnce      param may not be specified more than once
+		//       Note that the fact that the parameter has a defautl does 
+		//       not count as `specifying the parameter'. 
 		// Return value: 
 		//   NULL -> failed (malloc() or SetSection() not called/failed) 
 		//   else -> handle for the parameter 
@@ -141,9 +160,7 @@ class ParameterConsumer :
 			const char *helptext,   // pass NULL if there is no help text 
 			void *valptr,
 			ValueHandler *hdl,
-			int exclusive_hdl=0);
-		inline ParameterType NoDefault(ParameterType ptype) const
-			{  return(ParameterType(ptype | PTNoDefault));  }
+			int flags=0);
 		
 		// Hardly needed but you can use that to delete a parameter: 
 		// Return value: 

@@ -65,7 +65,7 @@ int ParameterSource::ValueParseError(
 	}
 	
 	RefString ostr=arg->origin.OriginStr();
-	fprintf(stderr,"%s: %s%.*s in %s: %s\n",
+	fprintf(stderr,"%s: %s`%.*s´ in %s: %s\n",
 		prg_name,pps<0 ? "warning: " : "",
 		int(arg->namelen),arg->name,
 		ostr.str(),
@@ -81,7 +81,7 @@ int ParameterSource::WarnAlreadySet(
 {
 	RefString ostr=arg->origin.OriginStr();
 	RefString pstr=pc->porigin.OriginStr();
-	fprintf(stderr,"%s: warning: %.*s in %s previously set in %s\n",
+	fprintf(stderr,"%s: warning: `%.*s´ in %s previously set in %s\n",
 		prg_name,
 		int(arg->namelen),arg->name,
 		ostr.str(),pstr.str());
@@ -144,7 +144,7 @@ int ParameterSource::ParamCopyError(
 	if(cps==ParameterSource::CPSCopyingFailed)
 	{  add_str=_cprv_str(cprv);  }
 	
-	fprintf(stderr,"%s: copying parameter %s: %s%s\n",
+	fprintf(stderr,"%s: copying parameter `%s´: %s%s\n",
 		prg_name,tmp,err_str,add_str);
 	
 	return(0);
@@ -168,7 +168,7 @@ int ParameterSource::ParameterError(
 		(pet<0 || pet>=_PETLast) ? _three_qm : pet_error_str[pet];
 	
 	RefString ostr=arg->origin.OriginStr();
-	fprintf(stderr,"%s: %.*s in %s: %s\n",
+	fprintf(stderr,"%s: `%.*s´ in %s: %s\n",
 		prg_name,
 		int(arg->namelen),arg->name,
 		ostr.str(),

@@ -24,26 +24,44 @@ namespace par
 {
 
 
+int ParameterConsumer::CheckParam(ParamInfo *pi)
+{
+	int complain=0;
+	switch(pi->spectype)
+	{
+		case STNone:  break;
+		case STAtLeastOnce:  complain=(!pi->nspec);    break;
+		case STExactlyOnce:  complain=(pi->nspec!=1);  break;
+		case STMaxOnce:      complain=(pi->nspec>1);   break;
+		default:  complain=1;  break;
+	}
+	if(complain)
+	{  CheckParamError(pi);  }
+	return(complain ? 1 : 0);
+}
+
+
 PAR::ParamInfo *ParameterConsumer::AddParam(
 	const char *name,
 	ParameterType ptype,
 	const char *helptext,
 	void *valptr,
 	ValueHandler *hdl,
-	int exclusive_hdl)
+	int flags)
 {
-	if(!name || !curr_section)
+	if(!name || !curr_section || (flags && flags<5))
 		return(NULL);
 	
 	_AddParInfo info;
 	info.section=curr_section;
 	info.name=name;
 	info.helptext=helptext;
-	info.ptype=ParameterType(ptype & PTTypeMask);
+	info.ptype=ptype;
 	info.valptr=valptr;
 	info.hdl=hdl;
-	info.exclusive_hdl=exclusive_hdl;
-	info.has_default=(ptype & PTNoDefault);
+	info.exclusive_hdl=(flags & PExclusiveHdl) ? 1 : 0;
+	info.has_default=(flags & PNoDefault);
+	info.spectype=PSpecType(flags & _STMask);
 	return(parmanager()->AddParam(this,&info));
 }
 

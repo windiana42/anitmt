@@ -38,6 +38,7 @@ class ParameterManager : public PAR
 		void _ClearSection(Section *s,ParameterConsumer *pc=NULL);
 		int _CountParams(Section *top);
 		inline void _DelParam(Section *s,ParamInfo *pi);  // del and tell par sources
+		int _RecursiveCheckParams(Section *sect);
 		
 		void _RecursivePrintHelp(Section *top,class SimpleIndentConsoleOutput &sico);
 		void _HelpPrintSectionHeader(Section *top,SimpleIndentConsoleOutput &sico);

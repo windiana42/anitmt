@@ -38,7 +38,7 @@ void ParameterManager::_HelpPrintSectionHeader(Section *top,
 		sico("%s\n",top->helptext);
 	}
 	sico.SetIndent(indent+2);
-	sico("Parameters in section `%s\'\n",tmp);
+	sico("Parameters in section `%s´\n",tmp);
 	sico.SetIndent(indent);
 }
 

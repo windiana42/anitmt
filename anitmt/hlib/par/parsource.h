@@ -236,6 +236,13 @@ class ParameterSource :
 		// Returns NULL on failure. 
 		ParamCopy *CopyParamCheck(ParamInfo *pi,const ParamArg *pa);
 		
+		// This will call CopyParamCheck() and if it succeeds, call 
+		// the value parser (from the value handler). On error/warning, 
+		// ValueParseError() is called; on error the ParamCopy is destroyed 
+		// again and NULL returned. Otherwise the ParamCopy is returned 
+		// [and the origin is set and the nspec counter increased]. 
+		ParamCopy *CopyAndParseParam(ParamInfo *pi,ParamArg *pa);
+		
 		// The parameters in *this overrdide those in *below. 
 		// *below is not changed! 
 		// The parameters which are set in *below but not in *this, are 

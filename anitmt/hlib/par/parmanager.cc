@@ -50,18 +50,40 @@ int ParameterManager::_CountParams(Section *top)
 
 // You should call this after having written the parameters and 
 // before actually running the main part of the program. 
-// This calls the CheckParams() of all parameter consumers. 
+// This calls the (Do)CheckParams() of all parameter consumers. 
 // Return value: 
 //   0 -> success
 //  >0 -> errors written; must exit
 int ParameterManager::CheckParams()
 {
-	int rv=0;
-	for(ParameterConsumer *pc=pclist.first(); pc; pc=pc->next)
+	int rv=_RecursiveCheckParams(&topsect);
+	
+	if(!rv)
 	{
-		if(pc->CheckParams())
-		{  ++rv;  }
+		// No error: go through the consumers. 
+		for(ParameterConsumer *pc=pclist.first(); pc; pc=pc->next)
+		{
+			if(pc->CheckParams())
+			{  ++rv;  }
+		}
 	}
+	
+	return(rv);
+}
+
+
+int ParameterManager::_RecursiveCheckParams(Section *sect)
+{
+	int rv=0;
+	
+	// For all parameters in the section: 
+	for(ParamInfo *pi=sect->pilist.first(); pi; pi=pi->next)
+	{  rv+=pi->pc->CheckParam(pi);  }
+	
+	// For all subsections: 
+	for(Section *s=sect->sub.first(); s; s=s->next)
+	{  rv+=_RecursiveCheckParams(s);  }
+	
 	return(rv);
 }
 
@@ -150,6 +172,7 @@ PAR::ParamInfo *ParameterManager::AddParam(ParameterConsumer *pc,
 		pi->exclusive_vhdl=api->exclusive_hdl;
 		pi->valptr=api->valptr;
 		pi->is_set=api->has_default ? 1 : 0;
+		pi->spectype=api->spectype;
 		
 		// Check if one of the names in pi->name is already used: 
 		int failed=0;
@@ -372,8 +395,19 @@ int ParameterManager::WriteParam(ParamCopy *pc)
 	ParamInfo *pi=pc->info;
 	if(pi->locked)  return(1);
 	
-	#warning Always use PAR::SOPCopy when writing params?
-	int rv=pi->vhdl->copy(pi,pi->valptr,pc->copyval,PAR::SOPCopy);
+	int rv=0;
+	if(pc->nspec)
+	{
+		#warning Always use PAR::SOPCopy when writing params?
+		rv=pi->vhdl->copy(pi,pi->valptr,pc->copyval,PAR::SOPCopy);
+		pi->nspec+=pc->nspec;   // sum up
+		++pi->is_set;
+	}
+	#if TESTING
+	else
+	{  fprintf(stderr,"ParameterManager: OOps: WriteParam() shall write "
+		"param %s with nspec=%d\n",pc->info->name,pc->nspec);  }
+	#endif
 	
 	return(rv);
 }

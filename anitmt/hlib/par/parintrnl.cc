@@ -34,7 +34,7 @@ static inline int ABS(int x)
 // Returns static data:
 const char *PAR::ParamTypeString(ParameterType ptype)
 {
-	switch(ParameterType(ptype & PTTypeMask))
+	switch(ptype)
 	{
 		case PTParameter:  return("parameter");
 		case PTSwitch:     return("switch");
@@ -164,8 +164,9 @@ PAR::ParamInfo::ParamInfo(int *failflag)
 	exclusive_vhdl=0;
 	valptr=NULL;
 	is_set=0;
+	spectype=STNone;
 	locked=0;
-	name=NULL;
+	nspec=0;
 	
 	if(failflag)
 	{  *failflag+=failed;  }
@@ -192,6 +193,7 @@ PAR::ParamCopy::ParamCopy(int * /*failflag*/=NULL) :
 {
 	info=NULL;
 	copyval=NULL;
+	nspec=0;
 }
 
 }  // namespace end 

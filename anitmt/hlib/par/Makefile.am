@@ -7,7 +7,7 @@ libpar_a_SOURCES = \
 		parconsumer.cc parmanager.cc \
 		parsource.cc \
 		srcfile.cc srccmd.cc \
-		csrchdl.cc cmanhdl.cc csrcfilehdl.cc \
+		csrchdl.cc cmanhdl.cc csrcfilehdl.cc cconshdl.cc \
 	sindentcout.h \
 		paramarg.h cmdline.h \
 		parconsumer.h parconsumerovl.h parmanager.h \

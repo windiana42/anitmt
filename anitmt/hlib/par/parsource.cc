@@ -14,6 +14,36 @@
 namespace par
 {
 
+// Used by derived classes to actually read in the parameter: 
+PAR::ParamCopy *ParameterSource::CopyAndParseParam(ParamInfo *pi,ParamArg *pa)
+{
+	// This will copy the param call error handler if necessary 
+	// and warn the user if it will be set more than once. 
+	ParamCopy *pc=CopyParamCheck(pi,pa);
+	if(!pc)
+	{  return(NULL);  }
+	
+	// Parse the value: 
+	ParParseState pps=pc->info->vhdl->parse(pi,pc->copyval,pa);
+	// pps: >0 -> errors <0 -> warnings
+	if(pps)  // >0 -> errors <0 -> warnings
+	{  ValueParseError(pps,pa,pc);  }
+	if(pps>0)
+	{
+		_RemoveParamCopy(pc);
+		pc=NULL;
+		return(NULL);
+	}
+	else  // <=0
+	{
+		++pc->nspec;
+		// Set the origin...
+		pc->porigin=pa->origin;    // (RefString gets referenced here.) 
+	}
+	return(pc);
+}
+
+
 int ParameterSource::Override(const ParameterSource *below)
 {
 	int errors=0;
@@ -78,6 +108,8 @@ int ParameterSource::_Override(
 		is_new=1;
 	}
 	assert(opc->info==bpc->info);
+	
+	// Do the overriding: 
 	ValueHandler *vhdl=opc->info->vhdl;
 	#warning support multiple operations 
 	int operation=SOPCopy;
@@ -107,8 +139,11 @@ int ParameterSource::_Override(
 		
 		if(is_new)
 		{  _FreeParamCopy(osn->pclist.dequeue(opc));  }
-		return(errors);
 	}
+	
+	// Sum up: 
+	opc->nspec+=bpc->nspec;
+	
 	return(errors);
 }
 

@@ -26,11 +26,22 @@ struct PAR  // This serves as a namespace and a base class.
 		PTParameter=1,  // fps=17, -fps=17, --fps=17, -fps 17, --fps 17
 		PTSwitch,       // -[-]check, -[-]no-check, -[-]check=[on|yes|true|off|no|false]
 		PTOption,       // -verbose --verbose  (options get counted)
-		PTOptPar,       // -[-]ssl[=/usr/local/lib/]
-		
-		PTTypeMask=0xff,
-		
-		PTNoDefault=0x100  // parameter has no default value
+		PTOptPar        // -[-]ssl[=/usr/local/lib/]
+	};
+	
+	enum
+	{
+		PNoDefault=   0x010,  // parameter has no default value
+		PExclusiveHdl=0x020   // handler exclusively for that parameter
+	};
+	
+	enum PSpecType
+	{
+		STNone=       0x000,  // (parameter system does not check that)
+		STAtLeastOnce=0x100,  // param must be specified at least once
+		STExactlyOnce=0x200,  // param must be specified exactly once
+		STMaxOnce=    0x300,  // param may not be specified more than once
+		_STMask=      0x300
 	};
 	
 	// Returns static data: 
@@ -76,8 +87,12 @@ struct PAR  // This serves as a namespace and a base class.
 		void *valptr;         // pointer to the original var (as specified 
 		                      // by the ParameterConsume-derived class) 
 		int is_set;           // Value set? AddParam sets this to 1 if there 
-		                      // is a default value, else to 0. 
+		                      // is a default value, else to 0. Incremented each 
+		                      // time WriteParam() gets called. 
+		PSpecType spectype;   // see above
 		int locked;           // parameter locked (may not get modified?)
+		int nspec;            // how often the parameter was encountered, 
+		                      // summed up over all sources (default does not count)
 		
 		_CPP_OPERATORS_FF
 		
@@ -121,6 +136,8 @@ struct PAR  // This serves as a namespace and a base class.
 	{
 		ParamInfo *info;
 		void *copyval;    // copy of the value
+		int nspec;    // how often the parameter was encountered in source
+		              // (gets summed up when overridden)
 		
 		// [previous] location of the arg: 
 		ParamArg::Origin porigin;
@@ -140,6 +157,7 @@ struct PAR  // This serves as a namespace and a base class.
 		ValueHandler *hdl;
 		int exclusive_hdl;  // & allocated via new & must be deleted
 		bool has_default;
+		PSpecType spectype;
 	};
 	
 	enum SpecialOp

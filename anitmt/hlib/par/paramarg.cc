@@ -9,7 +9,7 @@
 namespace par
 {
 
-extern const char *_three_qm;  // "???"
+static const char *_three_qm="???";
 
 // Convert origin spec into a RefString: 
 RefString ParamArg::Origin::OriginStr() const
