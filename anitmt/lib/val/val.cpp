@@ -43,6 +43,12 @@ namespace values
   const double epsilon=0.000000001;  // Max. difference for comparisons. 
   
   //*******
+  // Flag
+  //*******
+  const char *_YesNo(bool x)
+  {  return(x ? "yes" : "no");  }
+  
+  //*******
   // Scalar
   //*******
   // (everything inline)

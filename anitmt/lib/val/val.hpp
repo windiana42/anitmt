@@ -66,9 +66,13 @@ namespace values
 
     operator bool() const  {  return(x);  }
     bool val() const  {  return(x);  }
+	
+	friend ostream& operator<<(ostream& s,const Flag &m);
   };
 
-
+  extern const char *_YesNo(bool val);
+  inline ostream& operator<<(ostream& s,const Flag &m)
+    {  s << _YesNo(m.x);  return(s);  }
 /******************************************************************************/
 /*   SCALAR                                                                   */
 /******************************************************************************/
@@ -91,11 +95,6 @@ namespace values
     friend bool operator==(double,const Scalar &);
     friend bool operator!=(double,const Scalar &);
 
-    bool operator==(double a) const  {  return(fabs(a-x)<=epsilon);  }
-    bool operator!=(double a) const  {  return(fabs(a-x)>epsilon);  }
-    bool operator==(const Scalar &a) const  {  return(fabs(a.x-x)<=epsilon);  }
-    bool operator!=(const Scalar &a) const  {  return(fabs(a.x-x)>epsilon);  }
-
     // Returns 1, if this scalar is 0 (exactly: if |this->x| <= epsilon )
     bool operator!() const {  return(fabs(x)<=epsilon);  }
     bool is_null() const {  return(fabs(x)<=epsilon);  }
@@ -107,6 +106,8 @@ namespace values
     // multiplication/division operators: 
     Scalar &operator*=(double a)  {  x*=a;  return(*this);  }
     Scalar &operator/=(double a)  {  x/=a;  return(*this);  }
+	
+	friend ostream& operator<<(ostream& s,const Scalar &m);
   };
   
   // Operators comparing scalars are using epsilon: 
@@ -129,6 +130,9 @@ namespace values
     {  return fabs(a); }
   inline Scalar sqrt(const Scalar &a)
     {  return ::sqrt( double(a) ); }
+  
+  inline ostream& operator<<(ostream& s,const Scalar &m)
+  	{  s << m.x;  return(s);  }
   
 /******************************************************************************/
 /*   VECTOR                                                                   */
