@@ -14,7 +14,7 @@
 
 #include "message.hpp"
 
-#warning "Replace strstream header with a std::stringstream version (GCC 3.0)"
+#warning "test changes to std::stringstream"
 #warning "Check warnings in message_inline.cpp... (about nl)"
 
 #include <config.h>  /* for GCC_HACK */
@@ -64,16 +64,8 @@ namespace message
   //**************************************************************
   // Message streams
 
-  static char *msg_strcpy(char *dest,const char *src,int slen)
-  {
-     assert(slen<_Message_Buf_Size);
-     strncpy(dest,src,slen);
-     return(dest+slen);
-  }
-
   Message_Stream::Message_Stream( _NoInit ni ) 
-    : enabled(false),
-      msg_stream(message,_Message_Buf_Size-1)
+    : enabled(false)
   {
     assert( ni == noinit );
   }
@@ -85,7 +77,7 @@ namespace message
     : enabled(_enabled), 
       pos(p), position_detail(pos_detail), consultant(consult),
       mtype(message_type), 
-      msg_stream(message,_Message_Buf_Size-1),no_end(false) {}
+      msg_stream(),no_end(false) {}
 
   // Actually the source is non-const. But for the outside world, const 
   // is just the right thing here.
@@ -94,15 +86,14 @@ namespace message
       pos(src.pos), position_detail(src.position_detail),
       consultant(src.consultant), 
       mtype(src.mtype), 
-      #ifdef GCC_HACK /* there is a bug in gcc-2.95.x STL... */
-      #define PCOUNT(src) const_cast<std::ostrstream*>(&src.msg_stream)->pcount()
-      msg_stream(msg_strcpy(message,src.message,PCOUNT(src)),
-		 _Message_Buf_Size-1-PCOUNT(src)),
-      #undef PCOUNT
-      #else  // gcc-3 does not have that bug in the STL:
-      msg_stream(msg_strcpy(message,src.message,src.msg_stream.pcount()),
-		 _Message_Buf_Size-1-src.msg_stream.pcount()),
-      #endif
+      //      #ifdef GCC_HACK /* there is a bug in gcc-2.95.x STL... */
+      //      #define PCOUNT(src) const_cast<std::ostringstream*>(&src.msg_stream)->pcount()
+      msg_stream(src.msg_stream.str()),
+      //#undef PCOUNT
+      //#else  // gcc-3 does not have that bug in the STL:
+      //msg_stream(msg_strcpy(message,src.message,src.msg_stream.pcount()),
+      //	 _Message_Buf_Size-1-src.msg_stream.pcount()),
+      //#endif
       no_end(src.no_end)
   {
     Message_Stream *ssrc=const_cast<Message_Stream *>(&src);
@@ -111,9 +102,9 @@ namespace message
 
   Message_Stream::~Message_Stream()
   {
-    msg_stream << '\0';		// add terminator for char[] strings
     if( enabled )
-      consultant->message(mtype, pos, position_detail, message, no_end );
+      consultant->message( mtype, pos, position_detail, msg_stream.str(),
+			   no_end );
   }
 
   // copy operator that disables the source message
@@ -124,20 +115,20 @@ namespace message
     position_detail = src.position_detail;
     consultant = src.consultant;
     mtype = src.mtype;
+    msg_stream.str(src.msg_stream.str());
     // Make sure to terminate: 
-    src.message[src.msg_stream.pcount()]='\0';
-    msg_stream << src.message;
+    //src.message[src.msg_stream.pcount()]='\0';
     #warning If there are no problems with this solution, remove that: [03/2002]
-    #if 0 && defined(WOLFGANG)
+    //#if 0 && defined(WOLFGANG)
     // This is likely to do the opposite of what we want: 
-    strcpy( message, src.message );
-    fprintf(stderr,"message.cpp:%d: Please report me as bug.\n",__LINE__);
-    assert(0);
+    //strcpy( message, src.message );
+    //fprintf(stderr,"message.cpp:%d: Please report me as bug.\n",__LINE__);
+    //assert(0);
     // Should be something like that:
-    //msg_stream=std::strstream(
+    //msg_stream=std::stringstream(
     //    msg_strcpy(message,src.message,src.msg_stream.pcount()),
     //    _Message_Buf_Size-1-src.msg_stream.pcount());
-    #endif
+    //#endif
     no_end = src.no_end;
 
     src.enabled = false;
@@ -154,20 +145,20 @@ namespace message
     dest.consultant = consultant;
     dest.mtype = mtype;
     // Make sure to terminate: 
-    message[msg_stream.pcount()]='\0';
-    dest.msg_stream << message;
+    //message[msg_stream.pcount()]='\0';
+    dest.msg_stream.str( msg_stream.str() );
     #warning If there are no problems with this solution, remove that: [03/2002]
-    #if 0 && defined(WOLFGANG)
+    //#if 0 && defined(WOLFGANG)
     // This is likely to do the opposite of what we want: 
-    strcpy( dest.message, message );
+    //strcpy( dest.message, message );
     //fprintf(stderr,"message.cpp:%d: Please report me as bug.\n",__LINE__);
     //assert(0);
     // Should be something like that:
-    /*const std::strstream tmp(
+    /*const std::stringstream tmp(
       msg_strcpy(dest.message,message,msg_stream.pcount()),
       _Message_Buf_Size-1-msg_stream.pcount());*/
     //dest.msg_stream=tmp;
-    #endif
+    //#endif
     dest.no_end = no_end;
 
     enabled = false;
@@ -241,8 +232,9 @@ namespace message
   //****************
   // File Position
 
-  void File_Position::write2stream(std::ostream &os,
-				   int detail_level) const {
+  void File_Position::write2stream( std::ostream &os,
+				    int detail_level ) const 
+  {
     os << filename << ':';
     if (line> 0 && detail_level > 0) os << line << ':';
     if (column>=0 && detail_level > 1) os << column << ':';

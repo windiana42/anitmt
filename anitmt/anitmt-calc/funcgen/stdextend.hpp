@@ -13,8 +13,6 @@
 /*****************************************************************************/
 
 #include <string>
-#include <strstream>
-#define _max_digits 20
 
 //***********
 // help stuff

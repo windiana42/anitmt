@@ -32,10 +32,7 @@ namespace message
 
 #include <string>
 #include <iostream>
-#include <strstream>
-
-// strstream message buffer size: 
-#define _Message_Buf_Size  1024
+#include <sstream>
 
 namespace message
 {
@@ -215,11 +212,8 @@ namespace message
 
     // message itself
     Message_Type mtype;
-    //!!! real std::string implementation missing !!!
-    //    std::string message;
-    //    std::ostringstream msg_stream;
-    char message[_Message_Buf_Size];
-    std::ostrstream msg_stream;
+
+    std::ostringstream msg_stream;
     
     // If the stream was termianted by noend. 
     bool no_end;

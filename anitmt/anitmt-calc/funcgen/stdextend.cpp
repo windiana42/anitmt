@@ -14,6 +14,8 @@
 
 #include "stdextend.hpp"
 
+#include <sstream>
+
 //***********
 // help stuff
 //***********
@@ -22,77 +24,62 @@ namespace std
   // append number formats to strings
   std::string operator+( const std::string &s, int v )
   {
-    char append[_max_digits];
-    std::ostrstream os(append, _max_digits );
+    std::ostringstream os;
     os << v;
-    os << '\0';
-    return s + append;
+    return s + os.str();
   }
   std::string operator+( const std::string &s, long v )
   {
-    char append[_max_digits];
-    std::ostrstream os(append, _max_digits );
+    std::ostringstream os;
     os << v;
-    os << '\0';
-    return s + append;
+    return s + os.str();
   }
   std::string operator+( const std::string &s, double v )
   {
-    char append[_max_digits];
-    std::ostrstream os(append, _max_digits );
+    std::ostringstream os;
     os << v;
-    os << '\0';
-    return s + append;
+    return s + os.str();
   }
-  // append number formats to strings 
+  // os.str() number formats to strings 
   std::string &operator+=( std::string &s, int v )
   {
-    char append[_max_digits];
-    std::ostrstream os(append, _max_digits );
+    std::ostringstream os;
     os << v;
-    os << '\0';
-    s += append; return s;
+    s += os.str(); 
+    return s;
   }
   std::string &operator+=( std::string &s, long v )
   {
-    char append[_max_digits];
-    std::ostrstream os(append, _max_digits );
+    std::ostringstream os;
     os << v;
-    os << '\0';
-    s += append; return s;
+    s += os.str(); 
+    return s;
   }
   std::string &operator+=( std::string &s, double v )
   {
-    char append[_max_digits];
-    std::ostrstream os(append, _max_digits );
+    std::ostringstream os;
     os << v;
-    os << '\0';
-    s += append; return s;
+    s += os.str(); 
+    return s;
   }
   // convert number formats to strings
   string to_string( int v )
   {
-    char str[_max_digits];
-    ostrstream os(str, _max_digits );
+    ostringstream os;
     os << v;
-    os << '\0';
-    return str;
+    return os.str();
   }
   string to_string( long v )
   {
-    char str[_max_digits];
-    ostrstream os(str, _max_digits );
+    ostringstream os;
     os << v;
-    os << '\0';
-    return str;
+    return os.str();
   }
   string to_string( double v )
   {
-    char str[_max_digits];
-    ostrstream os(str, _max_digits );
+    ostringstream os;
     os << v;
-    os << '\0';
-    return str;
+    return os.str();
   }
 }
 
