@@ -2,9 +2,9 @@
 INCLUDES=		-I$(top_srcdir)/lib 
 
 noinst_LIBRARIES=	libfunctionality.a
-libfunctionality_a_SOURCES= \
+# BUILT_SOURCES=functionality.hpp functionality.cpp 
+libfunctionality_a_SOURCES= functionality.afd \
 			functionality.hpp functionality.cpp 
-EXTRA_DIST= 		functionality.afd
 
 check_PROGRAMS=		test_functionality
 CXXFLAGS =		@CXXFLAGS@ -Wno-non-template-friend -DYYDEBUG \
@@ -18,12 +18,11 @@ test_functionality_LDADD= \
 			../../lib/message/libmessage.a \
 			../../lib/val/libval.a \
 			../../lib/solve/libsolve.a \
-			../../lib/proptree/libproptree.a \
-			-lefence
+			../../lib/proptree/libproptree.a 
 
 FUNCGEN= ../funcgen/funcgen
 
 # exec funcgen...
-$(srcdir)/functionality.cpp \
-$(srcdir)/functionality.hpp: $(srcdir)/functionality.afd $(srcdir)/$(FUNCGEN)
+functionality.cpp \
+functionality.hpp: $(srcdir)/functionality.afd $(FUNCGEN)
 	$(FUNCGEN) $(srcdir)/functionality.afd
