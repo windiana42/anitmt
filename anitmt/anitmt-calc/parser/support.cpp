@@ -41,9 +41,7 @@ string NameOfToken(const int tok) {
 }
 
 //-----------------------------------------------------------------------------
-VADLFlexLexer::VADLFlexLexer(istream *is, ostream *os) {
-	
-}
+VADLFlexLexer::VADLFlexLexer(istream *is, ostream *os) : ADLFlexLexer(is, os) {}
 void VADLFlexLexer::Warning(const string msg) {
 	*yyout << "ADL-Scanner WARNING (line " << yylineno << "): " << msg << '\n';
 }

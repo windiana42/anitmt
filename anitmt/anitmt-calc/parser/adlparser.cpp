@@ -6,8 +6,8 @@ using namespace values;
 #ifdef PARSER_DEBUG
 #define PARSER_DS(section, msg) {					\
 	if (dmode) {							\
-		for (unsigned i=0; i < ind; i++) cerr << ' ';		\
-		cerr << "PARSE_" section ": " << (msg) << '\n';		\
+		for (unsigned i=0; i < ind; i++) logs << ' ';		\
+		logs << "PARSE_" section ": " << (msg) << '\n';		\
                 ind++;							\
 	}								\
 }
@@ -19,7 +19,7 @@ using namespace values;
 
 anitmt::ADLParser::ADLParser(istream &is,
 			     ostream &logs,
-			     bool d) : fl(&is, &logs), dmode(d) {}
+			     bool d) : fl(&is, &logs), dmode(d), logs(logs) {}
 
 Scalar anitmt::ADLParser::ParseScalar() {
 	ExpectToken(NUMBER);

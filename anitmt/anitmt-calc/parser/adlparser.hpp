@@ -43,6 +43,9 @@ namespace anitmt {
 		//! Indention for debugging mode
 		unsigned ind;
 
+		//! Used for debugging purposes only, yet
+		ostream &logs;
+		
 		values::Scalar ParseScalar();
 		values::Vector ParseVector();
 		values::String ParseString();
