@@ -56,8 +56,8 @@ FuncgenParameters::FuncgenParameters(par::ParameterManager *manager) :
   
   // Then, register the parameters: 
   SetSection(NULL);
-  AddOpt("p/yydebug","enable parser debugging output (LOTS of text)",&yydebug);
-  AddOpt("s/stdebug","dump structure debug output",&stdebug);
+  AddOpt("p|yydebug","enable parser debugging output (LOTS of text)",&yydebug);
+  AddOpt("s|stdebug","dump structure debug output",&stdebug);
   
   AddParam("i|input","input file",&in_file);
   AddParam("o|output","output basename",&out_basename);
