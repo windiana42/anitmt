@@ -29,7 +29,7 @@ fi
 # no problem yet
 
 topdir="`pwd`"
-for i in . hlib rendview ; do 
+for i in . ; do 
 test -d $i || continue
 echo "-----<entering directory $i>-----"
 cd $i
