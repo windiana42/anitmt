@@ -18,6 +18,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
 
 // Most is done inline for speed increase. 
 

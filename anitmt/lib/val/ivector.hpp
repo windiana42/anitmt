@@ -40,6 +40,9 @@ namespace internal
 template<int N> class vector
 {
 	private:
+#ifdef GCC_HACK
+	public:
+#endif
 		double x[N];
 	public:
 		// Constructor which generates an uninitialized vector: 
