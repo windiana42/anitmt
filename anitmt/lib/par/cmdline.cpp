@@ -242,8 +242,8 @@ bool Animation_Parameters::Parse_Command_Line(Command_Line *cmd)
 			{
 				cmd->used[i]=strlen(cmd->argv[i]);
 				cmd->quitafter=true;
-				anitmt::Print_Help(cerr);         // on file options...
-				cmd_pars.Print_Help(cerr);  // on parameters
+				anitmt::Print_Help(cout);   // on file options...
+				cmd_pars.Print_Help(cout);  // on parameters
 			}
 			else if(!strcmp(opt,"ovrwarn"))
 			{
