@@ -17,6 +17,10 @@
 #include <stdio.h>
 #include "basicparser.hpp"
 
+#warning "When using message system: remove these two lines."
+#include <iostream>
+using std::cerr;
+
 namespace exparse
 {
 

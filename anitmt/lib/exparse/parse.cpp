@@ -24,6 +24,9 @@
 
 #include <strstream>
 
+#warning "When using message system: remove this line."
+using std::cerr;
+
 #warning Remove me: 
 int bt_quiet=0;   // be quiet (benchmark test) 
 
@@ -286,14 +289,14 @@ void Parser::_ParseExpression(LinkedList<OperatorNode> *exp)
 }
 
 
-#define Use_strstream 1   /* sadly only available for non-C++ scanners */
+#define Use_strstream 1   /* yy_scan_buffer is sadly only available for non-C++ scanners */
 
 int Parser::Parse(const char *expr,ExpressionTree *tree)
 {
 	_ResetParser();
 	
 	#if Use_strstream
-		istrstream expr_stream(expr);
+		std::istrstream expr_stream(expr);
 		yyrestart(&expr_stream);
 	#else
 		size_t expr_len=strlen(expr);

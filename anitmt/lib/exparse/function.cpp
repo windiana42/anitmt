@@ -593,11 +593,11 @@ FunctionState pfi_eq(FunctionArgs *fa)
 	const Value *a=fa->args[0];
 	const Value *b=fa->args[1];
 	if(a->type()==VTScalar && b->type()==VTScalar)
-	{  *fa->result=Flag(values::operator==(a->rscalar(),b->rscalar()));  goto brk;  }
+	{  *fa->result=Flag(a->rscalar()==b->rscalar());  goto brk;  }
 	if(a->type()==VTVector && b->type()==VTVector)
-	{  *fa->result=Flag(values::operator==(a->rvector(),b->rvector()));  goto brk;  }
+	{  *fa->result=Flag(a->rvector()==b->rvector());  goto brk;  }
 	if(a->type()==VTFlag && b->type()==VTFlag)
-	{  *fa->result=Flag(a->rflag() == b->rflag());  goto brk;  }
+	{  *fa->result=Flag(a->rflag()==b->rflag());  goto brk;  }
 	return(FSIllegalArg);
 	brk: return(FSSuccess);
 }
@@ -607,11 +607,11 @@ FunctionState pfi_neq(FunctionArgs *fa)
 	const Value *a=fa->args[0];
 	const Value *b=fa->args[1];
 	if(a->type()==VTScalar && b->type()==VTScalar)
-	{  *fa->result=Flag(values::operator!=(a->rscalar(),b->rscalar()));  goto brk;  }
+	{  *fa->result=Flag(a->rscalar()!=b->rscalar());  goto brk;  }
 	if(a->type()==VTVector && b->type()==VTVector)
-	{  *fa->result=Flag(values::operator!=(a->rvector(),b->rvector()));  goto brk;  }
+	{  *fa->result=Flag(a->rvector()!=b->rvector());  goto brk;  }
 	if(a->type()==VTFlag && b->type()==VTFlag)
-	{  *fa->result=Flag(a->rflag() != b->rflag());  goto brk;  }
+	{  *fa->result=Flag(a->rflag()!=b->rflag());  goto brk;  }
 	return(FSIllegalArg);
 	brk: return(FSSuccess);
 }

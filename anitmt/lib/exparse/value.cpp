@@ -120,7 +120,7 @@ int Value::convert(ValueType vt)
 		case VTScalar:
 			if(vt==VTFlag)  // scalar -> flag
 			{
-				Flag *tmp=new Flag(values::operator==(*val.scal,0.0) ? false : true);
+				Flag *tmp=new Flag((*val.scal==0.0) ? false : true);
 				_set_different_new_val(tmp,VTFlag);
 				return(0);
 			}
