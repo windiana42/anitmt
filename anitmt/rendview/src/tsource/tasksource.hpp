@@ -138,7 +138,8 @@ struct TaskSource_NAMESPACE
 	enum TSTActiveStat
 	{
 		TASNone=0,
-		TASTakeTask   // active task source got task (passed in ctsk)
+		TASTakeTask,   // active task source got task (passed in ctsk)
+		TASRecovering  // lost connection to server; must recover
 	};
 	
 	enum ErrCommand
@@ -169,7 +170,7 @@ struct TaskSource_NAMESPACE
 		TSTActiveStat activestat;
 		
 		// Further data fields: 
-		CompleteTask *ctsk;    // only for TSGetTask
+		CompleteTask *ctsk;    // only for TSGetTask and TASTakeTask
 		
 		// What failed: 
 		ErrCommand cmd;

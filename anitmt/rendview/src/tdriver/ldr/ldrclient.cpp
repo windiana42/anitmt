@@ -742,9 +742,11 @@ int LDRClient::SendTaskToClient(CompleteTask *ctsk)
 	tri.scheduled_to_send=ctsk;
 	tri.task_request_state=TRC_SendTaskRequest;
 	
-	cpnotify_outpump_start();
+	// The job is now assigned to us. 
+	assert(ctsk->d.ldrc==this);   // Otherwise internal error. 
+	++assigned_jobs;
 	
-	#warning ! must make sure that we put back those tasks assigned to a client when it disconnects unexpectedly. 
+	cpnotify_outpump_start();
 	
 	return(0);
 }
@@ -879,8 +881,9 @@ int LDRClient::_ParseTaskResponse(RespBuf *buf)
 	
 	// Okay, parse task response: 
 	int rv=ntohs(fresp->resp_code);
-	Verbose(TDR,"Client %s: Received task reponse %s.\n",
-		LDRTaskResponseString(rv));
+	Verbose(TDR,"Client %s: Received task reponse: %s [frame %d]\n",
+		_ClientName().str(),LDRTaskResponseString(rv),
+		tri.scheduled_to_send->frame_no);
 	switch(rv)
 	{
 		case TRC_Accepted:  // Well, that's cool. 
@@ -893,6 +896,8 @@ int LDRClient::_ParseTaskResponse(RespBuf *buf)
 		case TRC_UnknownROFormat:
 			// What shall we do with this one? 
 			// "Solution" for now: Kick it. 
+			// #### should be handled by tdif->TaskLaunchResult() called 
+			//      below!! ####FIXME###
 			fprintf(stderr,"****** KICKING CLIENT (FIXME!!! 1) *******\n");
 			return(-1);
 			break;
@@ -907,6 +912,9 @@ int LDRClient::_ParseTaskResponse(RespBuf *buf)
 				_ClientName().str(),rv);
 			return(-1);
 	}
+	
+	// Tell task driver interface about it: 
+	tdif->TaskLaunchResult(tri.scheduled_to_send,rv);
 	
 	// cpnotify_outpump_start() will NOT be called. 
 	return(0);

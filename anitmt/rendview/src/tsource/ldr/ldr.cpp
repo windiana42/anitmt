@@ -65,6 +65,7 @@ void TaskSource_LDR::ConnClose(TaskSource_LDR_ServerConn *sc,int reason)
 		return;
 	}
 	assert(reason!=2);  // Auth failure may only happen if !sc->authenticated. 
+	assert(GetAuthenticatedServer()==sc);
 	
 	if(reason==1)
 	{
@@ -81,14 +82,84 @@ void TaskSource_LDR::ConnClose(TaskSource_LDR_ServerConn *sc,int reason)
 	// Okay, when we are here, what we have to do is basically: 
 	// Get into a state similar to when the program was started. 
 	// Wait for new connections. 
-	// Task manager's action:
-	//    Delete all tasks in todo and done queue. 
-	//    Kill all running tasks (make sure they are deas). 
-	//    Go back to "waiting for work" state. 
-	fprintf(stderr,"IMPORTANT!!! HACK ME (re-start...) ldr.cpp:%d\n",__LINE__);
-	//--> tell task manager. (missing)
+	// What is being done: 
+	//   The server is removed. 
+	//   We set the recovering flag. 
+	//   We start the "schedule" timer and call tsnotify(TASRecovering) 
+	//     (with ctsk=NULL) to tell the TaskManager. 
+	//   Task manager's action:
+	//     Report all tasks in todo and done queue as done to us 
+	//       (the task source). 
+	//     Kill all running tasks (make sure they are dead). 
+	//     Go back to "waiting for work" state. 
+	//     Call GetTask (which is normally not allowed for LDR task 
+	//       source) as a special sign that recovery is done. 
+	// We may not accept a server or talk to a server until the 
+	// recovery is done. 
+	
+	// Set recovery flag: 
+	// It is now 2 and gets 1 when we told the TaskManager. 
+	recovering=2;
+	_StartSchedTimer();
+	// This also will report tsnotify(DTSOkay) to the current done task 
+	// (in case a srcDoneTask() is pending). 
 	
 	sconn.dequeue(sc)->DeleteMe();
+}
+
+
+TaskSource_NAMESPACE::DoneTaskStat TaskSource_LDR::_ProcessDoneTask()
+{
+	if(!current_done_task)
+	{  return(DTSOkay);  }
+	
+	TaskSource_LDR_ServerConn *srv=GetAuthenticatedServer();
+	if(srv)
+	{
+		srv->TellServerDoneTask(current_done_task);
+		// This will call TaskReportedDone() when done. 
+		return(DTSWorking);
+	}
+	
+	// NOTE: If we have no server and the task manager reports a task as done 
+	// then this may only happen during recovering. If the task manager 
+	// reports the task as done without a server and not during recovering 
+	// than that is a BUG. 
+	assert(recovering);
+	
+	int hlvl;
+	char tmp[128];
+	snprintf(tmp,128,"LDR: Cannot report frame %d as %s processed "
+		"(lost connection to server).\n",
+		current_done_task->frame_no,
+		TaskManager::Completely_Partly_Not_Processed(current_done_task,&hlvl));
+	if(hlvl)
+	{  Warning(tmp);  }
+	else
+	{  Verbose(TSLLR,tmp);  }
+	
+	// We must delete the CompleteTask (because that's the duty of 
+	// the task source). 
+	DELETE(current_done_task);
+	
+	// We say "okay" here because there is no point in 
+	// returning any error during recovery. 
+	return(DTSOkay);
+}
+
+void TaskSource_LDR::TaskReportedDone(CompleteTask *ctsk)
+{
+	// This is called as a response to TaskSource_LDR_ServerConn::TellServerDoneTask(). 
+	// It means that the server got the information about the done task 
+	// and we may now remove it. 
+	assert(ctsk==current_done_task);
+	assert(pending==ADoneTask);
+	
+	// We must delete the CompleteTask (because that's the duty of 
+	// the task source). 
+	DELETE(current_done_task);
+	
+	_StartSchedTimer();   // -> DTSOkay
 }
 
 
@@ -154,6 +225,9 @@ int TaskSource_LDR::timernotify(TimerInfo *ti)
 				ni.connstat=CSConnected;
 				break;
 			case ADoneTask:
+				ni.donestat=_ProcessDoneTask();
+				// If we return DTSOkay, current_done_task must have been deleted. 
+				assert(ni.donestat!=DTSOkay || !current_done_task);
 				break;
 			case ADisconnect:
 				connected=0;
@@ -173,6 +247,8 @@ int TaskSource_LDR::timernotify(TimerInfo *ti)
 	else assert(active_taketask);
 	
 	// Okay, see if there is a special active thingy to do: 
+	// YES, we must do that even if we're recovering==2 becuase otherwise 
+	//      the task would not be given back correctly...
 	if(active_taketask)
 	{
 		TSNotifyInfo ni;
@@ -185,8 +261,26 @@ int TaskSource_LDR::timernotify(TimerInfo *ti)
 		call_tsnotify(cclient,&ni);
 		
 		// Must tell the server connection that the task was accepted. 
-		assert(sconn.first() && sconn.first()->Authenticated());
-		sconn.first()->TaskManagerGotTask();
+		TaskSource_LDR_ServerConn *srv=GetAuthenticatedServer();
+		if(srv)
+		{  srv->TaskManagerGotTask();  }
+		else assert(recovering==2);
+		// recovering must be 2 (i.e. recovering and the task manager is 
+		// not yet informed) here, otherwise this is a bug and we 
+		// started the schedule timer in order to pass a new task 
+		// although we're already recovering. 
+	}
+	
+	if(recovering==2)
+	{
+		recovering=1;
+		
+		// Must tell server that we lost connection. 
+		TSNotifyInfo ni;
+		ni.action=AActive;
+		ni.activestat=TASRecovering;
+		
+		call_tsnotify(cclient,&ni);
 	}
 	
 	return(0);
@@ -208,8 +302,19 @@ int TaskSource_LDR::srcConnect(TaskSourceConsumer *cons)
 
 int TaskSource_LDR::srcGetTask(TaskSourceConsumer *cons)
 {
+	if(recovering==1)
+	{
+		// This is special. It tells us that the TaskManager has 
+		// finished recovery and is ready for work again. 
+		
+		Verbose(TSLLR,"LDR: Recovery finished. Ready again.\n");
+		recovering=0;
+		return(0);
+	}
+	
 	if(!connected)  return(2);
 	
+	// LDR task source uses tsnotify(TASTakeTask) instead of srcGetTask(). 
 	fprintf(stderr,"OOPS: GetTask called for LDR task source.\n");
 	assert(0);
 	return(-1);  // <-- (invalid code)
@@ -221,9 +326,10 @@ int TaskSource_LDR::srcDoneTask(TaskSourceConsumer *cons,CompleteTask *ct)
 	assert(cclient==cons);
 	if(!connected)  return(2);
 	
+	assert(!current_done_task);
+	current_done_task=ct;
+	
 	pending=ADoneTask;
-#warning done task...
-	fprintf(stderr,"TODO: IMPLEMENT DoneTask for LDR!\n");
 	_StartSchedTimer();
 	return(0);
 }
@@ -238,6 +344,20 @@ int TaskSource_LDR::srcDisconnect(TaskSourceConsumer *cons)
 	pending=ADisconnect;
 	_StartSchedTimer();
 	return(0);
+}
+
+
+void TaskSource_LDR::ServerHasNowAuthenticated(TaskSource_LDR_ServerConn *sc)
+{
+	// In case this assert fails, there is an internal error somewhere else. 
+	// Because we may not accept an auth if there is already another server 
+	// or we are recovering. 
+	TaskSource_LDR_ServerConn *srv=GetAuthenticatedServer();
+	assert((!srv || srv==sc) && !recovering);
+	
+	// Put the authenticated server at the beginning of the list: 
+	sconn.dequeue(sc);
+	sconn.insert(sc);
 }
 
 
@@ -268,7 +388,9 @@ TaskSource_LDR::TaskSource_LDR(TaskSourceFactory_LDR *tsf,int *failflag) :
 	p=tsf;
 	pending=ANone;
 	active_taketask=NULL;
+	current_done_task=NULL;
 	connected=0;
+	recovering=0;
 	
 	int failed=0;
 	
@@ -298,6 +420,7 @@ TaskSource_LDR::~TaskSource_LDR()
 {
 	assert(pending==ANone);
 	assert(!active_taketask);
+	assert(!current_done_task);  // If this fails, simply DELETE() instead. 
 	assert(!connected);
 	
 	// Make sure we disconnect from all servers...

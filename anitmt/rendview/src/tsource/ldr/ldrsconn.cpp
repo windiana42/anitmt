@@ -212,11 +212,13 @@ int TaskSource_LDR_ServerConn::_RecvChallengeResponse()
 			addr.GetAddress().str());
 		authcode=CAC_AuthFailed;
 	}
-	else if(back->GetAuthenticatedServer())
+	else if(back->GetAuthenticatedServer() || back->Recovering())
 	{
-		Warning("LDR: Denying conn to %s (already connected to %s).\n",
+		Warning("LDR: Denying conn to %s (%s%s).\n",
 			addr.GetAddress().str(),
-			back->GetAuthenticatedServer()->addr.GetAddress().str());
+			back->Recovering() ? "currently recovering" : "already connected to ",
+			back->GetAuthenticatedServer() ? 
+				back->GetAuthenticatedServer()->addr.GetAddress().str() : "");
 		authcode=CAC_AlreadyConnected;
 	}
 	else
@@ -1098,6 +1100,11 @@ int TaskSource_LDR_ServerConn::cpnotify_outpump_start()
 			default: assert(0);
 		}
 	}
+	else if(tdi.done_ctsk)
+	{
+		Error("hack on (wanna start output copy request: DoneTask)\n");
+		assert(0);
+	}
 	// else: Nothing to do (we're waiting). 
 	
 	return(0);
@@ -1307,6 +1314,23 @@ void TaskSource_LDR_ServerConn::_ConnClose(int reason)
 }
 
 
+void TaskSource_LDR_ServerConn::TellServerDoneTask(CompleteTask *ctsk)
+{
+	// So, we have to tell the server that the passed task was done. 
+	assert(ctsk);   // may not be NULL here. 
+	// There may not be a further task which waits for getting reported as done. 
+	// This is due to the fact that a task source can always only operate 
+	// on one request. 
+	assert(!tdi.done_ctsk);
+	assert(authenticated && !DeletePending());
+	
+	// Okay, begin with it...
+	tdi.done_ctsk=ctsk;
+	
+	cpnotify_outpump_start();
+}
+
+
 int TaskSource_LDR_ServerConn::Setup(int sock,MyAddrInfo *_addr)
 {
 	if(PollFD(sock,POLLOUT,NULL,&pollid)<0)
@@ -1344,6 +1368,8 @@ TaskSource_LDR_ServerConn::TaskSource_LDR_ServerConn(TaskSource_LDR *_back,
 	tri.task_id=0;
 	tri.resp_code=-1;
 	tri.req_tfile=NULL;
+	
+	tdi.done_ctsk=NULL;
 	
 	memset(expect_chresp,0,LDRChallengeLength);
 }

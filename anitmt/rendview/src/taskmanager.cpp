@@ -268,6 +268,22 @@ void TaskManager::_TakeFreshTask(CompleteTask *ctsk)
 }
 
 
+void TaskManager::PutBackTask(CompleteTask *ctsk)
+{
+	assert(ctsk);   // otherwise internal error
+	// NOTE: ctsk is queued in tasklist_todo (YES!). 
+	
+	// If someone puts back a task, then it may not have a 
+	// task driver or LDR client attached. 
+	assert(!ctsk->d.any());
+	
+	// NOTE: We MAY dequeue or re-queue the passed ctsk here 
+	//       (the caller knows that and has removal-safe loop). 
+	
+fprintf(stderr,"TaskManager::PutBackTask(): ANYTHING TO DO HERE?\n");
+}
+
+
 int TaskManager::tsnotify(TSNotifyInfo *ni)
 {
 	// Read comment near _ActuallyQuit() for info. 
@@ -459,6 +475,14 @@ int TaskManager::tsnotify(TSNotifyInfo *ni)
 				// FIXME: currently, no error can happen. 
 				Error("Please implement me. ABORTING.\n");
 				assert(0);
+				
+				#if 0  // DO THIS BEFORE CALLING GetTask(): 
+				// When recovery is reported to be done, then there may not be any 
+				// tasks left. In case this fails, there is a bug in TaskManager's 
+				// state machinery. 
+				assert(p->component_db()->taskmanager()->GetTaskListTodo()->is_empty());
+				assert(number_of_running_tasks==0);
+				#endif
 			}
 		}  break;
 		case ADisconnect:
@@ -509,6 +533,17 @@ int TaskManager::tsnotify(TSNotifyInfo *ni)
 			if(ni->activestat==TASTakeTask)
 			{
 				_TakeFreshTask(ni->ctsk);
+			}
+			else if(ni->activestat==TASRecovering)
+			{
+				// Bad. We lost connection to the server. 
+				// This means, we must now start recovery and call 
+				// GetTask() when done [which is normally invalid for 
+				// active task sources]. 
+				// Okay, then let's recover: 
+				
+				Error("hack recovery.\n");
+				assert(0);
 			}
 			else assert(0);
 		}  break;
@@ -1229,7 +1264,7 @@ int TaskManager::_CheckStartExchange()
 		{
 			assert(i->state!=CompleteTask::TaskDone);
 			++n_todo;
-			// currently getting processed if(i->td)
+			// currently getting processed if(i->d.any())
 		}
 		if(n_todo<interface->Get_todo_thresh_low())  // NOT <= 
 		{  must_connect=1;  }
@@ -1505,20 +1540,29 @@ void TaskManager::_DoPrintTaskExecuted(TaskParams *tp,TaskStructBase *tsb,
 		binpath,tmpA,tmpB,(tp && tp->call_setsid) ? "no" : "yes");
 }
 
+char *TaskManager::Completely_Partly_Not_Processed(const CompleteTask *ctsk,
+	int *level)
+{
+	if(ctsk->state==CompleteTask::TaskDone)
+	{
+		if(level)  *level=2;
+		return("completely");
+	}
+	if(_ProcessedTask(ctsk) ||         // e.g. rendered but but not filtered
+	   IsPartlyRenderedTask(ctsk) ||
+	   IsPartlyFilteredTask(ctsk) )    // interrupt
+	{
+		if(level)  *level=1;
+		return("partly");
+	}
+	if(level)  *level=0;
+	return("not");
+}
+
 void TaskManager::_PrintDoneInfo(CompleteTask *ctsk)
 {
-	int how_processed;  // 0 -> not; 1 -> partly; 2 -> completely
-	if(ctsk->state==CompleteTask::TaskDone)  how_processed=2;
-	else if(_ProcessedTask(ctsk) ||         // e.g. rendered but but not filtered
-	        IsPartlyRenderedTask(ctsk) ||
-	        IsPartlyFilteredTask(ctsk) )    // interrupt
-	{  how_processed=1;  }
-	else  how_processed=0;
-	
-	static const char *hp_msg[3]={"not","partly","completely"};
-	
 	VerboseSpecial("Reporting task [frame %d] as done (%s processed).",
-		ctsk->frame_no,hp_msg[how_processed]);
+		ctsk->frame_no,Completely_Partly_Not_Processed(ctsk));
 	Verbose(TDR,"  Task state: %s\n",CompleteTask::StateString(ctsk->state));
 	
 	if(ctsk->rt)

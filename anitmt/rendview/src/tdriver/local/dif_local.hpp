@@ -84,7 +84,7 @@ class TaskDriverInterface_Local :
 			LinkedList<CompleteTask> *tasklist_todo,int schedule_quit);
 		
 		// Actually launch a job for a task. No check if we may do that. 
-		// Return value: 0 -> OK; 1,2 -> failed
+		// Return value: 0 -> OK; -1,-2 -> failed
 		int LaunchTask(CompleteTask *ctsk);
 		
 		// signo=STGTSTP/SIGCONT: stop/cont all jobs. 

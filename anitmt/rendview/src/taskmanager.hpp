@@ -132,7 +132,7 @@ class TaskManager :
 		// Dump state for debugging reason. 
 		void _DumpInternalState();
 		
-		inline bool _ProcessedTask(const CompleteTask *ctsk);
+		static inline bool _ProcessedTask(const CompleteTask *ctsk);
 		
 		bool _TS_CanDo_DoneTask(CompleteTask **special_done=NULL);
 		bool _TS_CanDo_GetTask(bool can_done);
@@ -199,6 +199,12 @@ class TaskManager :
 		static bool IsPartlyRenderedTask(const CompleteTask *ctsk);
 		static bool IsPartlyFilteredTask(const CompleteTask *ctsk);
 		
+		// Returns string "completely", "partly" or "not" depending on 
+		// how the task was processed. If non-NULL, level returns the same 
+		// info (2 -> completely, 1 -> partly, 0 -> not processed). 
+		static char *Completely_Partly_Not_Processed(const CompleteTask *ctsk,
+			int *level=NULL);
+		
 		// Needed by NJobsChanged() and LDR task source: 
 		int Get_njobs()
 			{  return(interface->Get_njobs());  }
@@ -221,9 +227,25 @@ class TaskManager :
 		void HandleSuccessfulJob(CompleteTask *ctsk);
 		void HandleFailedTask(CompleteTask *ctsk,int running_jobs);
 		
+		// Tell TaskManager that the passed CompleteTask (which must 
+		// currently be queued in tasklist_todo (not _done, of course) 
+		// has to be done again. TaskManager may wish to put the task 
+		// into the done queue [failed] if that happens too often. 
+		void PutBackTask(CompleteTask *ctsk);
+		
 		// Get /dev/null fd. 
 		int DevNullFD()
 			{  return(dev_null_fd);  }
+		
+		// For TaskDriverInterface only. Be careful with it. 
+		const LinkedList<CompleteTask> *GetTaskListTodo()
+			{  return(&tasklist_todo);  }
 };
+
+inline const LinkedList<CompleteTask> *TaskDriverInterface::GetTaskListTodo()
+	{  return(component_db()->taskmanager()->GetTaskListTodo());  }
+
+inline void TaskDriverInterface::PutBackTask(CompleteTask *ctsk)
+	{  component_db()->taskmanager()->PutBackTask(ctsk);  }
 
 #endif  /* _RNDV_TASKMANAGER_HPP_ */

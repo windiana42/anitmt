@@ -58,7 +58,7 @@ int TaskSourceFactory_LDR::FinalInit()
 	LDRGetPassIfNeeded(&password,"Enter client password: ",NULL);
 	if(!password.str())
 	{  Warning("LDR client: no server password specified "
-		"(authentificatgion disabled).\n");  }
+		"(authentification disabled).\n");  }
 	
 	// Okay, LDR task source listenes to port listen_port: 
 	// Actually bind to that port: 

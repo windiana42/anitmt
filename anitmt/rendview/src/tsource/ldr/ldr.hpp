@@ -93,6 +93,11 @@ struct TaskSource_LDR_ServerConn :
 		int _StartSendNextFileRequest();
 		void _TaskRequestComplete();
 		
+		struct TaskDoneInfo
+		{
+			CompleteTask *done_ctsk;
+		} tdi;  // task done info
+		
 		// Packet handling: 
 		int _SendChallengeRequest();
 		int _RecvChallengeResponse();
@@ -119,15 +124,20 @@ struct TaskSource_LDR_ServerConn :
 		~TaskSource_LDR_ServerConn();
 		int Setup(int sock,MyAddrInfo *addr);
 		
-		// Called after TellTaskManagerToGetTask(): 
-		void TaskManagerGotTask();
-		
 		MyAddrInfo addr;  // server address
 		
 		// This is 1 if that is the authenticated server we are 
 		// taking orders from. (Only sconn.first().) 
 		private: int authenticated;
 		public: int Authenticated()  {  return(authenticated);  }
+		
+		// Called after TellTaskManagerToGetTask(): 
+		void TaskManagerGotTask();
+		
+		// Report passed task as done to the server. 
+		// Do not free it (done by TaskSource_LDR). 
+		void TellServerDoneTask(CompleteTask *ctsk);
+		
 };
 
 
@@ -149,9 +159,18 @@ class TaskSource_LDR :
 		TSAction pending;
 		CompleteTask *active_taketask;
 		
+		// This task is the one srcDoneTask() is currnetly working on. 
+		CompleteTask *current_done_task;
+		
 		// Are we connected? This is just a dummy to ensure 
 		// correct behavior of the other classes...
-		int connected;  // <- to TaskManager, NOT to server. 
+		int connected : 2;  // <- to TaskManager, NOT to server. 
+		
+		// This is 1 if we are recovering, i.e. the time from 
+		// connection close to auth server until we're ready again. 
+		int recovering : 3;
+		
+		int : (sizeof(int)*8-5);  // padding
 		
 		// Struct TaskSource_LDR_ServerConn describing a 
 		// connection to a server. 
@@ -163,6 +182,7 @@ class TaskSource_LDR :
 		inline void _StopSchedTimer()
 			{  UpdateTimer(rtid,-1,0);  }
 		
+		DoneTaskStat _ProcessDoneTask();
 		
 		// overriding virtuals from FDbase: 
 		int timernotify(TimerInfo *);
@@ -187,20 +207,23 @@ class TaskSource_LDR :
 		TaskSource_LDR_ServerConn *GetAuthenticatedServer()
 		{
 			TaskSource_LDR_ServerConn *sc=sconn.first();
-			return((sc && sc->Authenticated()) ? sc : NULL);
+			return((sc && sc->Authenticated() && !sc->DeletePending()) ? sc : NULL);
 		}
 		
-		void ServerHasNowAuthenticated(TaskSource_LDR_ServerConn *sc)
-		{
-			sconn.dequeue(sc);
-			sconn.insert(sc);
-		}
+		// Returns 1 if if we are recovering, i.e. the time from 
+		// connection close to auth server until we're ready again. 
+		int Recovering() const
+			{  return(recovering);  }
+		
+		void ServerHasNowAuthenticated(TaskSource_LDR_ServerConn *sc);
 		
 		// Called by TaskSource_LDR_ServerConn::_ConnClose(). 
 		void ConnClose(TaskSource_LDR_ServerConn *sc,int reason);
 		
 		// Called by TaskSource_LDR_ServerConn: 
 		void TellTaskManagerToGetTask(CompleteTask *ctsk);
+		//   (reponse to TaskSource_LDR_ServerConn::TellServerDoneTask())
+		void TaskReportedDone(CompleteTask *ctsk); 
 };
 
 #endif  /* _RNDV_TSOURCE_LDR_HPP_ */

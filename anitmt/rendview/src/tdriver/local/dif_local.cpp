@@ -153,7 +153,7 @@ int TaskDriverInterface_Local::_DoLaunchTask(CompleteTask *ctsk,TaskDriver **td)
 	{
 		Error("Failed to set up (%s) task driver %s for %s\n",
 			DTypeString(dtype),(*td)->f->DriverName(),d->name.str());
-		return(1);
+		return(-1);
 	}
 	
 	// We "copy" this info as it is needed for error reporting, too. 
@@ -182,7 +182,7 @@ int TaskDriverInterface_Local::_DoLaunchTask(CompleteTask *ctsk,TaskDriver **td)
 			(*td)->pinfo.pid=rv;
 			(*td)->_StartProcess_ErrorPart(errno);  // sets pinfo.ctsk=NULL
 		}
-		return(2);  // IAmDone() was called...
+		return(-2);  // IAmDone() was called...
 	}
 	
 	// This is that we know which TaskDriver does which CompleteTask: 
@@ -196,7 +196,7 @@ int TaskDriverInterface_Local::_DoLaunchTask(CompleteTask *ctsk,TaskDriver **td)
 }
 
 
-// Called by TaskDriver when ever estat/esdetail changed. 
+// Called by TaskDriver whenever estat/esdetail changed. 
 void TaskDriverInterface_Local::StateChanged(TaskDriver *)
 {
 	// This is currently unused. IAmDone() gets called if the state 

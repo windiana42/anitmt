@@ -73,6 +73,9 @@ class TaskDriverInterface_LDR :
 		
 		void _PrintInitConnectMsg(const char *msg);
 		
+		void _HandleFailedLaunch(CompleteTask *ctsk,int resp_code);
+		void _HandleFailedTask(CompleteTask *ctsk,LDRClient *c);
+		
 		// FDBase virtuals: 
 		int fdnotify(FDInfo *fdi);
 		int timernotify(TimerInfo *ti);
@@ -110,7 +113,7 @@ class TaskDriverInterface_LDR :
 			LinkedList<CompleteTask> *tasklist_todo,int schedule_quit);
 		
 		// Actually launch a job for a task. No check if we may do that. 
-		// Return value: 0 -> OK; 1,2 -> failed
+		// Return value: 0 -> OK; -1 [-2] -> failed
 		int LaunchTask(CompleteTask *ctsk);
 		
 		// signo=STGTSTP/SIGCONT: stop/cont all jobs. 
@@ -139,6 +142,9 @@ class TaskDriverInterface_LDR :
 		// Called if we are now connected AND authenticated and 
 		// can do tasks. 
 		void SuccessfullyConnected(LDRClient *client);
+		
+		// See dif_ldr.cpp. 
+		void TaskLaunchResult(CompleteTask *ctsk,int resp_code);
 		
 		// Called when a client disconnected. 
 		void ClientDisconnected(LDRClient *client);

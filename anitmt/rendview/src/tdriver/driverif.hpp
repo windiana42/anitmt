@@ -38,6 +38,13 @@ class TaskDriverInterface
 		
 		void NewTask_SetUpState(CompleteTask *ctsk);
 		
+		// Get the tasklist_todo from the TaskManager. Useful if the 
+		// task driver interface has to search in it if a client dies. 
+		const LinkedList<CompleteTask> *GetTaskListTodo();
+		
+		// See taskmanager.hpp / PutBackTask(). 
+		void PutBackTask(CompleteTask *ctsk);
+		
 	public:  _CPP_OPERATORS_FF
 		TaskDriverInterface(ComponentDataBase *cdb,int *failflag=NULL);
 		virtual ~TaskDriverInterface();
@@ -77,7 +84,7 @@ class TaskDriverInterface
 			LinkedList<CompleteTask> * /*tasklist_todo*/,int /*schedule_quit*/) HL_PureVirt(NULL)
 		
 		// Actually launch a job for a task. No check if we may do that. 
-		// Return value: 0 -> OK; 1,2 -> failed
+		// Return value: 0 -> OK; -1,-2 -> failed
 		virtual int LaunchTask(CompleteTask *) HL_PureVirt(1)
 		
 		// signo=STGTSTP/SIGCONT: stop/cont all jobs. 

@@ -136,6 +136,9 @@ void TaskSourceConsumer::_TSWriteError_Active(const TSNotifyInfo *ni)
 			Verbose(TSR0,"TS: Okay, task source reports task [frame %d].\n",
 				ni->ctsk->frame_no);
 			break;
+		case TASRecovering:
+			Verbose(TSR1,"TS: Bad; lost connection to server; recovering.\n");
+			break;
 		default:  assert(0);  break;
 	}
 }

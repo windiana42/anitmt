@@ -136,22 +136,112 @@ int TaskDriverInterface_LDR::LaunchTask(CompleteTask *ctsk)
 	LDRClient *c=ctsk->d.ldrc;
 	assert(c);  // Otherwise bug near/in GetTaskToStart(). 
 	
+	// Return value: 
+	//  0 -> OK
+	// -1,-2 -> did not start task [will not happen currently]
+	
 	int rv=c->SendTaskToClient(ctsk);
-	if(rv<0)
+	// NOTE: In case there is an error which MAY & DOES happen, then 
+	//       call _HandleFailedLaunch(ctsk,TRC_<to_be_added>) and return(-1). 
+	if(rv)
 	{
-		fprintf(stderr,"SendTaskToClient() failed (rv=%d)\n",rv);
-		//#error fixme #warning
+		// rv=1 -> another task is currently scheduled to be sent
+		// rv=2 -> enough tasks were assigned
+		//   [both may not happen as CanDoTask() was called]
+		// rv=-1 -> !auth_passed [then we may not try to launch a task]
+		// rv=-2 -> nothing to do for task (ctsk->rt=ctsk->ft=NULL or !ctsk)
+		fprintf(stderr,"DifLDR:%d: internal error: rv=%d\n",__LINE__,rv);
 		assert(0);
 	}
-	else if(rv>0)
-	{
-		fprintf(stderr,"SendTaskToClient: rv=%d; Check if that works...\n",rv);
-	}
 	
-	// OOPS!!! May only return if we really started to send the task. 
-	// Must put back task if this fails. 
-	#warning FIXME!!!!!!!!!!!!!!!!!!!!!! #error!! #####
+	// Okay, the task manager now "thinks" that the task is running and 
+	// everything works fine. 
+	// All other failures until we actually get the LDRTaskResponse 
+	// (i.e. client accepted task) are received via TaskLaunchResult(). 
+	
+	// All the ugly stuff (putting back a task, etc) is done by 
+	// TaskLaunchResult() [or later]. 
+	
+	// NOTE: njobs is already incremented here (i.e. >=1). 
+	assert(njobs>0);
+	// (Otherwise we might try to launch more tasks than we may launch 
+	// or even more than we CAN launch. Or how it was expressed originally: 
+	//  ...so that we do not get tasks again.)
+	
+// OOPS!!! May only return if we really started to send the task. 
+// Must put back task if this fails. -> no, TaskLaunchResult() does it. 
+fprintf(stderr,"LaunchTask: njobs=%d (client:%d), nclients=%d [debug]\n",
+	njobs,c->assigned_jobs,nclients);
+	
 	return(0);
+}
+
+
+// This gets called by and after LaunchTask() if launching the task failed 
+// (or was done successfully in case resp_code==0). 
+// This is only called for LAUNCHING the task; i.e. until we get 
+// LDRTaskResponse. If the actual execution of the task (done by client) 
+// failed, ###FIXME### must be called. 
+void TaskDriverInterface_LDR::TaskLaunchResult(CompleteTask *ctsk,
+	int resp_code)
+{
+	if(resp_code)
+	{  _HandleFailedLaunch(ctsk,resp_code);  }
+	else
+	{
+		// So, the client actually accepted the task and will try and execute 
+		// its jobs. 
+		// Seems there is nothing to do now. Just wait...
+fprintf(stderr,"TaskLaunchResult(LDRTaskResponse=success)\n");
+	}
+}
+
+
+// Called until LDRTaskResponse was received. The client could not (try to) 
+// execute a job because an error occured before that. Action: feed task into 
+// a different client. [Also called if connection error, etc. occured.]
+void TaskDriverInterface_LDR::_HandleFailedLaunch(CompleteTask *ctsk,
+	int resp_code)
+{
+	LDRClient *c=ctsk->d.ldrc;
+	assert(c);  // Otherwise bug near/in GetTaskToStart(). 
+	
+	// NOTE: This cannot happend ATM because LDRClient::_ParseTaskResponse() 
+	//       kicks the client if the response code indicates error (!=0). 
+	//       So, if we finally handle the resp codes [unknown renderer,...] 
+	//       here (as we should, called by TaskLaunchResult()), first remove 
+	//       the ugly client kick in _ParseTaskResponse(). 
+	//#warning check that... ######
+	
+	fprintf(stderr,"implement me (resp_code=%d)!\n",resp_code);
+	// Feed task into a different client (do that only XX times). oops...
+	// 1) Client error -> feed different client because this one was kicked
+	// 2) other error (unknown render desc...) -> can use _HandleFailedTask/_HandleTaskTermination() 
+	//      (in the mean time) to make it fail. 
+	assert(0);
+}
+
+
+// Failure on client side during execution of the task. 
+// ##FIXME## MISSING. execution status transferred by client
+void TaskDriverInterface_LDR::_HandleFailedTask(CompleteTask *ctsk,LDRClient *c)
+{
+	assert(c==ctsk->d.ldrc);
+	
+	fprintf(stderr,"implement me.\n");
+	// ## MAYBE change into _HandleTaskTermination -> failed & non-failed 
+	//    (LDRClient will fill in rtes/ftes, right?)
+	
+	assert(0);
+	//TaskExecutionStatus ...
+	// ctsk->{rtes,ftes}=<TaskExecutionStatus transferred by client>
+	
+	// ON FAILURE: 
+	//component_db()->taskmanager()->HandleFailedTask(ctsk,
+	//	/*??????????????------->*/ RunningJobs());
+	
+	// ON SUCCESS: 
+	//component_db()->taskmanager()->HandleSuccessfulJob(ctsk);
 }
 
 
@@ -594,9 +684,44 @@ void TaskDriverInterface_LDR::FailedToConnect(LDRClient *client)
 
 void TaskDriverInterface_LDR::ClientDisconnected(LDRClient *client)
 {
-	// Oh yes. That is simple. 
+	if(!client)  return;
+	
+	// Let's see if the client has tasks. In this case, we must 
+	// "put back" the tasks so that a different client gets them. 
+	if(client->assigned_jobs)
+	{
+		// Note: The one task which might be on the fly (not completely 
+		//       transferred already has d.ldrc set properly and also 
+		//       counts for assigned_jobs. So we do not leave it out here. 
+		for(const CompleteTask *_i=GetTaskListTodo()->first(); _i; )
+		{
+			// This is needed because PutBackTask() may want to re-order or 
+			// dequeue the task. 
+			const CompleteTask *i=_i;
+			_i=_i->next;
+			
+			if(i->d.ldrc!=client)  continue;
+			
+			// Tell the TaskManager. 
+			CompleteTask *ctsk=(CompleteTask*)i;  // <-- cast away the const 
+			ctsk->d.ldrc=NULL;
+			PutBackTask(ctsk);
+			
+			if((--client->assigned_jobs)<=0)  break;
+		}
+		// If this assert fails, there is a bug in assigned task counting: 
+		assert(client->assigned_jobs==0);
+	}
+	#if TESTING
+	// There may not be any CompleteTasks which still reference 
+	// the client. Note that when triggering this bug trap, the reason 
+	// can also be incorrect client->assigned_jobs counting. 
+	for(const CompleteTask *i=GetTaskListTodo()->first(); i; i=i->next)
+	{  assert(i->d.ldrc!=client);  }
+	#endif
+	
+	// Finally, delete client: 
 	client->DeleteMe();
-	#warning ...what about giving back tasks? (or am I missing sth?)
 }
 
 
