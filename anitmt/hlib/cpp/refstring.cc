@@ -115,6 +115,28 @@ int RefString::set0(const char *str_to_copy,size_t len)
 }
 
 
+bool RefString::operator==(const RefString &b) const
+{
+	// First, the fast path: if it is the same ref, then also 
+	// the same string: 
+	if(b.ref==ref)  return(true);
+	// The case that both refs were NULL was dealed with above. 
+	// See if they are of the same type: 
+	int ot=stype();
+	if(ot!=b.stype())  return(false);
+	// Okay, neither ref is NULL here (same type!). 
+	if(ot)   // data string (with size flag)
+	{
+		// Okay, first check size: 
+		size_t ol=_rlength();
+		if(ol!=b._rlength())  return(false);
+		return(!memcmp(_str(),b._str(),ol));
+	}
+	// '\0'-terminated string; no size flag. 
+	return(!strcmp(_str(),b._str()));
+}
+
+
 void RefString::_destroy()
 {
 	//if(ref)  // <- checked by caller

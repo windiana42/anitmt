@@ -69,6 +69,17 @@ extern char *prg_name;
    */
   extern char *GetPrgName(const char *arg0);
 
+/* gettermsize.c: */
+  /* Get the size of a terminal. 
+   * fd: the fd of the teriminal (1 for stdout)
+   * ret_row, ret_col: size is stored here (set to NULL if not needed)
+   * Return value: 0 -> Okay; 
+   *               1 -> not supported on this arch 
+   *              -1 -> ioctl() failed; fd is not a TTY
+   *              -2 -> ioctl() failed, other reason. 
+   */
+  extern int GetTerminalSize(int fd,int *ret_row,int *ret_col);
+  
 /* installsighandler.c: */
   /* Installs signal handler shandler for signal sig. 
    * Returns 0, if all went ok and -1 if sigaction() failed

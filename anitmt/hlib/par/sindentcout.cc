@@ -19,8 +19,6 @@
 #include "sindentcout.h"
 #include <string.h>
 
-#include <sys/ioctl.h>
-
 #ifndef TESTING
 #define TESTING 1
 #endif
@@ -228,19 +226,14 @@ int SimpleIndentConsoleOutput::operator()(const char *str,...)
 
 int SimpleIndentConsoleOutput::_GetTermCols(int fd)
 {
-#ifdef TIOCGWINSZ
-	// Use ioctl: 
-	struct winsize wsz;
-	if(ioctl(fd,TIOCGWINSZ,&wsz))
-	{  return(80);  }
-	
-	int cols=wsz.ws_col;
-	if(cols>1024)  cols=1024;
-	if(cols<10)    cols=10;
-	return(cols);
-#else
+	int cols;
+	if(!GetTerminalSize(fd,NULL,&cols))
+	{
+		if(cols>1024)  cols=1024;
+		if(cols<10)    cols=10;
+		return(cols);
+	}
 	return(80);
-#endif
 }
 
 

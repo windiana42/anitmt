@@ -64,11 +64,16 @@ template<class T> class LinkedList
 		const T *next(const T *p)  const  {  return(p->_LLB::next);  }
 		const T *prev(const T *p)  const  {  return(p->_LLB::prev);  }
 		
-		// Use with care!! Just copied pointer to head and tail of 
+		// Use with care!! Just copies pointer to head and tail of 
 		// list; if you modify one of the lists, the other one 
 		// will get inconsistent if lfirst/llast get modified. 
 		void assign_list(const LinkedList<T> *l)
 		{  lfirst=l->lfirst;  llast=l->llast;  }
+		
+		// This is similar, just that the list pointers are swapped. 
+		void swap_list(LinkedList<T> *l)
+		{  T *tmp=lfirst;  lfirst=l->lfirst;  l->lfirst=tmp;
+		      tmp=llast;   llast= l->llast;   l->llast= tmp;  }
 		
 		// Insert p at the beginning of the list: 
 		void insert(T *p)

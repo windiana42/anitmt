@@ -168,6 +168,14 @@ class RefString
 		int stype() const
 			{  return(ref ? _sflag() : -1);  }
 		
+		// Comparing strings: 
+		bool operator==(const RefString &b) const;
+		bool operator!=(const RefString &b) const
+			{  return(!operator==(b));  }
+		
+		// This is true if this is a NULL-ref: 
+		bool operator!() const  {  return(!ref);  }
+		
 		// Simply dereference the string. This RefString will then 
 		// just contain a NULL pointer (str() will return NULL). 
 		// deref() has the same effect as set(NULL). 

@@ -12,5 +12,6 @@ libmisc_a_SOURCES = \
 		msecelapsed.c msecelapsedr.c \
 		nonblock.c tcpnodelay.c \
 		getprgname.c \
+		gettermsize.c \
 	prototypes.h hlib.h 
 
