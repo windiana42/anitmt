@@ -54,7 +54,8 @@ int main(int argc,char **arg)
 	{
 		cerr << "Entering interactive mode (you may use this program as" << std::endl;
 		cerr << "command line calculator by simply adding expressions on" << std::endl;
-		cerr << "the command line; dont forget to mask them with \'\')." << std::endl;
+		cerr << "the command line; don't forget to mask them with \'\')." << std::endl;
+		cerr << "Enter expressions termianted by newline (don't use `;')." << std::endl;
 		cerr.flush();
 		#warning this is crippled as it uses a fixed-width buffer. FIXME.
 		for(;;)
