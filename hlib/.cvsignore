@@ -6,3 +6,5 @@ missing
 mkinstalldirs
 install-sh
 depcomp
+configure
+aclocal.m4
