@@ -54,20 +54,21 @@ namespace proptree
   // **************************************************************************
 
   template< class Provider_Type, class NT >
-  typename Node_Factory<Provider_Type,NT>::node_return_type 
+  
+  typename Basic_Node_Factory<Provider_Type>::node_return_type 
   Node_Factory<Provider_Type,NT>::
   create( std::string name, tree_info *info, message::Message_Consultant *msg )
     const
   {
     NT *node = new NT( name, info, msg );
-    return node_return_type(node,node);	// return as different types
+    return typename Basic_Node_Factory<Provider_Type>::node_return_type(node,node);	// return as different types
   }
 
   template< class Provider_Type, class NT >
-  typename Node_Factory<Provider_Type,NT>::node_return_type 
+  typename Basic_Node_Factory<Provider_Type>::node_return_type 
   Node_Factory<Provider_Type,NT>::cast( Prop_Tree_Node *prop ) const
   {
-    return node_return_type(dynamic_cast<Provider_Type*>(prop), prop);
+    return typename Basic_Node_Factory<Provider_Type>::node_return_type(dynamic_cast<Provider_Type*>(prop), prop);
   }
 
 }
@@ -117,14 +118,14 @@ namespace solve
 				  std::string src_prop,
 				  Operand<T> &dest ) {
   
-    if( !dest_node ) return false;
+    if( !src_node ) return false;
 
 #ifdef __DEBUG__
     std::cout << "try to establish push" << std::endl;
 #endif
     Operand<T> *src
       = dynamic_cast< Operand<T>* >
-      ( dest_node->get_property( src_prop ) );
+      ( src_node->get_property( src_prop ) );
 
     if( !src ) return false;
 
@@ -233,14 +234,14 @@ namespace solve
 					    Operand<T> &dest,
 					    Operand<values::Flag> &condition ) 
   {  
-    if( !dest_node ) return false;
+    if( !src_node ) return false;
 
 #ifdef __DEBUG__
     std::cout << "try to establish push" << std::endl;
 #endif
     Operand<T> *src
       = dynamic_cast< Operand<T>* >
-      ( dest_node->get_property( src_prop ) );
+      ( src_node->get_property( src_prop ) );
 
     if( !src ) return false;
 

@@ -132,7 +132,7 @@ namespace solve
   Constant<T>::Constant( T val, message::Message_Consultant *msg_consultant )
     : Operand<T>(msg_consultant)
   {
-    delete_without_listener = true; // delete me if last listener disconnects
+    Operand<T>::delete_without_listener = true; // delete me if last listener disconnects
 
     set_value( val );
   }

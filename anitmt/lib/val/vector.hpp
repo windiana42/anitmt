@@ -133,6 +133,7 @@ public: // work around for the template friend problem
 		// This generates a vector initialized to 0. 
 		Vector() : x(0)  {}
 		Vector(Neutral0) : x(0)  {}
+		Vector(Neutral1) : x(0)  { operator[](0)=1; }  // <-- HMMM....?!
 		// If you use these constructors with the wrong number of args you 
 		// will get a linker error. 
 		Vector(double u,double v);   // 2d only
@@ -232,7 +233,7 @@ public: // work around for the template friend problem
 		// Computes the angle between the two passed vectors; the returned 
 		// value is in range 0...PI. 
 		template<int n>friend Scalar vec_angle(const Vector<n> &a,const Vector<n> &b);
-		inline Scalar angle(const Vector<N> &b) const  {  return(vect::angle(*this,b));  }
+		inline Scalar angle(const Vector<N> &b) const  {  return(vect::vec_angle(*this,b));  }
 		
 		// Member rotation functions; result overwrites *this. 
 		// Faster than the non-member functions. 

@@ -31,6 +31,7 @@ class String : public std::string
 		String(std::string s) : std::string(s) { }
 		String(const String &s) : std::string(s) { }
 		String(Neutral0) : std::string() { }
+		String(Neutral1) : std::string("") { }
 		~String() {}
 };
 
