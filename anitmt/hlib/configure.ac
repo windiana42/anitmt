@@ -41,6 +41,5 @@ AC_CONFIG_FILES([include/Makefile \
 	fd/Makefile \
 	par/Makefile \
 	misc/Makefile \
-	crypto/Makefile \
 	Makefile])
 AC_OUTPUT
