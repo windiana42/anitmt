@@ -4,6 +4,8 @@ libfd_a_SOURCES = \
 	htime.cc \
 		fdbase.cc fdmanager.cc \
 		procmanager.cc intprocbase.cc \
+		cpbase.cc \
 	htime.h \
 		fdmanager.h fdbase.h \
 		procmanager.h intprocbase.h procbase.h \
+		cpbase.h cpmanager.h

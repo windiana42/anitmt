@@ -1,54 +1,46 @@
-class FDCopyBase : LinkedListBase<FDCopyBase>
-{
-	friend class FDCopyManager;
-	public:
-		typedef FDCopyManager::CopyInfo CopyInfo;
-		typedef FDCopyManager::StatusCode StatusCode;
-		typedef FDCopyManager::CopyID CopyID;
-		typedef FDCopyManager::CopyRequest CopyRequest;
-		typedef FDCopyManager::copylen_t copylen_t;
-	private:
-		typedef FDCopyManager::MCopyNode MCopyNode;
-		// List of copy requests, managed by FDCopyManager: 
-		LinkedList<struct MCopyNode> rlist;
-	protected:
-		// Called upon variuos conditions (completion of copy 
-		// request / error condition): 
-		// See struct CopyInfo (cpmanager.h) for details. 
-		// Return value: currently ignored; use 0. 
-		virtual int cpnotify(CopyInfo *ci)  {  return(0);  }
-		
-		// Called to notify client on progress made: 
-		// Return value: currently ignored; use 0. 
-		virtual int cpnotify(ProgressInfo *pi)  {  return(0);  }
-	public:  _CPP_OPERATORS_FF
-		FDCopyBase(int *failflag);
-		~FDCopyBase();
-		
-		// Use this to get the FDCopyManager: 
-		inline FDCopyManager *cpmanager()  {  return(FDCopyManager::manager);  }
-		
-		#error need \
-			QueryProgress(CopyInfo *save_here)  \
-			CopyControl(stop/cont/cancel)
-		#error Was macht poll() bei SIGPIPE / EPIPE? - Kommt POLLERR??
-		
-		// Central routine: Give FDCopyManager a copy job: 
-		// CopyRequest: stores all the needed information and tuning 
-		//    parameters for the copy request. 
-		//    NOTE: *req is modified: The iobufsize/thresholds are 
-		//          set to proper values if you did not and the errval 
-		//          is set. If all that went throuh without an error, 
-		//          the CopyRequest structure is copied and stored in 
-		//          a list maintained by FDCopyManager. 
-		// FDBase: Pass a pointer to *this if your class is derived 
-		//    from FDBase. This simply does a PollFD(srcfd/destfd,0) 
-		//    to make sure that the fd is not polled by the calling 
-		//    FDBase-derived class. Make sure that you do NOT poll 
-		//    for the fd you are currently copying!
-		CopyID CopyFD(CopyRequest *req,FDBase *fdb)
-			{  return(cpmanager()->CopyFD(this,req,fdb));  }
-};
+/*
+ * cpbase.cc
+ * 
+ * Implementation of class FDCopyBase, a base class for copying 
+ * from and to file descriptors which works in cooperation 
+ * with class FDCopyManager. 
+ * 
+ * Copyright (c) 2002 by Wolfgang Wieser (wwieser@gmx.de) 
+ * 
+ * This file may be distributed and/or modified under the terms of the 
+ * GNU General Public License version 2 as published by the Free Software 
+ * Foundation. 
+ * 
+ * This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
+ * WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
+ * 
+ */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <signal.h>
+
+#include <sys/socket.h>
+
+#include <hlib/fdmanager.h>
+#include <hlib/fdbase.h>
+#include <hlib/cpmanager.h>
+#include <hlib/cpbase.h>
+
+
+#ifndef TESTING
+#define TESTING 1
+#endif
+
+
+#if TESTING
+#warning TESTING switched on. 
+#warning Using assert()
+#include <assert.h>
+#else
+#define assert(x)
+#endif
 
 
 FDCopyBase::FDCopyBase(int *failflag) :
@@ -68,15 +60,16 @@ FDCopyBase::FDCopyBase(int *failflag) :
 
 FDCopyBase::~FDCopyBase()
 {
-	#warning make sure rlist is empty.
+	// Simply unregister; the server will clean up rlist. 
+	cpmanager()->Unregister(this);
 	
-	manager()->Unregister(this);
+	assert(rlist.is_empty());
 }
 
 
 /******************************************************************************/
 
-CopyRequest();
+FDCopyManager::CopyRequest::CopyRequest(int * /*failflag*/)
 {
 	srcfd=destfd=-1;
 	srcbuf=destbuf=NULL;
@@ -85,6 +78,7 @@ CopyRequest();
 	timeout=-1;
 	
 	dptr=NULL;
+	progress_mask=PAQuery;
 	
 	iobufsize=FDCopyManager::default_iobufsize;
 	low_read_thresh=-1;
@@ -98,7 +92,7 @@ CopyRequest();
 	errcode=0;
 }
 
-~CopyRquest()
+FDCopyManager::CopyRequest::~CopyRequest()
 {
 	// Only cancel the most important fields...
 	srcbuf=destbuf=NULL;
