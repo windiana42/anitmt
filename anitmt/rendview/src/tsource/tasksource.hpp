@@ -32,6 +32,9 @@ struct CompleteTask : LinkedListBase<CompleteTask>
 	// This is set up to TaskDone by the constructor and is returned 
 	// with this state by GetTask. TasmManager sets the apropriate state 
 	// when getting the task. 
+	// This is what to be done next with the tast. (A task which has to 
+	// be rendered and filtered is initially ToBeRendered, then 
+	// ToBeFiltered.) 
 	enum State
 	{
 		TaskDone=0,
@@ -42,7 +45,7 @@ struct CompleteTask : LinkedListBase<CompleteTask>
 	// Returns string representation of State: 
 	static const char *StateString(State s);
 	
-	// If this CompleteTask is currently processed, td is a pointer to 
+	// If this CompleteTask is currently processed, d contains a pointer to 
 	//    the TaskDriver/LDRClient which is currently processing the task. 
 	// If the CompleteTask currently is NOT processed, all of them 
 	//    are NULL and any() returns false. 
@@ -61,7 +64,7 @@ struct CompleteTask : LinkedListBase<CompleteTask>
 	RenderTask *rt;   // or NULL 
 	FilterTask *ft;   // or NULL
 	
-	// Allocated by TaskManager and freed by destructor ~CompleteTask():
+	// Allocated by TaskDriverInterface and freed by destructor ~CompleteTask():
 	// Set up to be NULL by task source. 
 	RenderTaskParams *rtp;   // or NULL
 	FilterTaskParams *ftp;   // or NULL

@@ -5,5 +5,6 @@ libsupport_a_SOURCES = \
 	error.cpp \
 	get_ncpus.cpp get_load.cpp \
 	file.cpp \
+	misc.cpp \
 	myaddrinfo.hpp myaddrinfo.cpp \
 	ldrproto.hpp ldrproto.cpp

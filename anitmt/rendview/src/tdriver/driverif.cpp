@@ -19,6 +19,23 @@
 #include <assert.h>
 
 
+void TaskDriverInterface::NewTask_SetUpState(CompleteTask *ctsk)
+{
+	// First, set up state (is in TaskDone here as gotten from source): 
+	if(ctsk->rt)
+	{  ctsk->state=CompleteTask::ToBeRendered;  }
+	else if(ctsk->ft)
+	{  ctsk->state=CompleteTask::ToBeFiltered;  }
+	else 
+	{
+		// This is an internal error. Task source may not 
+		// return a task without anything to do (i.e. with 
+		// rt and ft set to NULL). 
+		assert(ctsk->rt || ctsk->ft);
+	}
+}
+
+
 TaskDriverInterface::TaskDriverInterface(ComponentDataBase *cdb,int *failflag)
 {
 	_comp_db=cdb;

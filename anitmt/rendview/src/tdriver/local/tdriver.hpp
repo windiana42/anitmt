@@ -88,7 +88,7 @@ struct TaskParams
 	// THIS MUST BE FILLED IN [By Render/FilterTaskParams]: 
 	TaskDriverType dtype;
 	
-	RefStrList add_args;   // additional cmd line args
+	//RefStrList add_args;   // additional cmd line args  [not needed: use task source or render/filter information]
 	int niceval;        // nice value (process priority) (or NoNice)
 	int call_setsid;    // call setsid() (recommended)
 	long timeout;       // render timeout (local); -1 for none

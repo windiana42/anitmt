@@ -35,7 +35,7 @@ class TaskDriverInterface_LDR :
 	private:
 		TaskDriverInterfaceFactory_LDR *p;
 		
-		// Note: all existing LDRClient classes are in this queue: 
+		// Note: All existing LDRClient classes are in this queue: 
 		LinkedList<LDRClient> clientlist;
 		
 		// Current (max) number of jobs: 

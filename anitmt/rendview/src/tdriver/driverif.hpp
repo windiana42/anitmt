@@ -36,6 +36,8 @@ class TaskDriverInterface
 		int todo_thresh_low;
 		int todo_thresh_high;
 		
+		void NewTask_SetUpState(CompleteTask *ctsk);
+		
 	public:  _CPP_OPERATORS_FF
 		TaskDriverInterface(ComponentDataBase *cdb,int *failflag=NULL);
 		virtual ~TaskDriverInterface();

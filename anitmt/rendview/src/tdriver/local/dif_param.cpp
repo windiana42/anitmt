@@ -68,19 +68,7 @@ int TaskDriverInterfaceFactory_Local::FinalInit()
 		{  p->maxjobs=njobs;  }
 		
 		// Convert timeout from seconds to msec: 
-		if(p->timeout<0)
-		{  p->timeout=-1;  }
-		else
-		{
-			long old=p->timeout;
-			p->timeout*=1000;
-			if(p->timeout/1000!=old)
-			{
-				Warning("Integer overflow for timeout %ld seconds. "
-					"Disabled.\n",old);
-				p->timeout=-1;
-			}
-		}
+		ConvertTimeout2MSec(&p->timeout,"local task driver");
 	}
 	
 	// Task queue thresh values: 

@@ -292,18 +292,8 @@ int TaskDriverInterface_Local::DealWithNewTask(CompleteTask *ctsk)
 
 int TaskDriverInterface_Local::_DoDealWithNewTask(CompleteTask *ctsk)
 {
-	// First, set up state (is in TaskDone here as gotten from source): 
-	if(ctsk->rt)
-	{  ctsk->state=CompleteTask::ToBeRendered;  }
-	else if(ctsk->ft)
-	{  ctsk->state=CompleteTask::ToBeFiltered;  }
-	else 
-	{
-		// This is an internal error. Task source may not 
-		// return a task without anything to do (i.e. with 
-		// rt and ft set to NULL). 
-		assert(ctsk->rt || ctsk->ft);
-	}
+	// First, set up ctsk->state: 
+	TaskDriverInterface::NewTask_SetUpState(ctsk);
 	
 	TaskDriverInterfaceFactory_Local::DTPrm *prm=p->prm;
 	
@@ -335,11 +325,10 @@ int TaskDriverInterface_Local::_DoDealWithNewTask(CompleteTask *ctsk)
 	for(int i=0; i<_DTLast; i++)
 	{
 		TaskParams *tp=NULL;
-		TaskStructBase *tsb=NULL;
 		switch(i)
 		{
-			case DTRender:  tp=ctsk->rtp;  tsb=ctsk->rt;  break;
-			case DTFilter:  tp=ctsk->ftp;  tsb=ctsk->ft;  break;
+			case DTRender:  tp=ctsk->rtp;  break;
+			case DTFilter:  tp=ctsk->ftp;  break;
 			default:  assert(0);  break;
 		}
 		// tp=NULL -> not a `i´ (DTRender/DTFilter) - task. 

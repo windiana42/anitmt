@@ -85,8 +85,8 @@ TaskDriverFactory::~TaskDriverFactory()
 
 /******************************************************************************/
 
-TaskParams::TaskParams(int *failflag) : 
-	add_args(failflag)
+TaskParams::TaskParams(int *failflag) /*: 
+	add_args(failflag)*/
 {
 	dtype=DTNone;
 	

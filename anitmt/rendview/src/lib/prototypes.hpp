@@ -118,4 +118,10 @@ extern int RenameFile(RefString *old_name,RefString *new_name,
 //     -2 -> open( failed (see errno)
 extern int OpenIOFile(RefString *file,int dir);
 
+// Convert passed timeout value from seconds to msec. 
+// Writes a warning if the conversion results in integer overflow and 
+// disables the timer in this case. 
+// *which can be used to pass info which timer it is. 
+extern void ConvertTimeout2MSec(long *timeout,const char *which);
+
 #endif  /* _RNDV_LIB_PROTOTYPES_HPP_ */

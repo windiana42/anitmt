@@ -62,12 +62,14 @@ class TaskSourceFactory_Local :
 			RefString rinfpattern;       // render input file name pattern
 			RefString routfpattern;      // render output file name pattern
 			bool render_resume_flag;
+			long rtimeout;               // render timeout (msec; initially seconds)
 			
 			// Filter stuff: 
 			const FilterDesc *fdesc;     // filter to use
 			RefStrList fadd_args;        // additional args for the filter
 			RefString fdir;              // cd into fdir before calling filter
 			RefString foutfpattern;      // filter output file name pattern
+			long ftimeout;               // filter timeout (msec; initially seconds)
 			
 			// NOTE: as long as ii!=NULL, the information in *this 
 			//       was not properly set up from the data in ii. 

@@ -134,7 +134,43 @@ int TaskDriverInterface_LDR::LaunchTask(CompleteTask *ctsk)
 // Called for every new task obtained from TaskSource: 
 int TaskDriverInterface_LDR::DealWithNewTask(CompleteTask *ctsk)
 {
-	assert(0 && ctsk);
+	// First, set up ctsk->state: 
+	TaskDriverInterface::NewTask_SetUpState(ctsk);
+	
+	TaskDriverInterfaceFactory_LDR::DTPrm *prm=p->prm;
+	
+	// ctsk->rtp and ctsk->ftp is NULL here. 
+	
+	// Okay, RenderTask and FilterTask (derived from TaskStructBase) 
+	// are the two structures which are passed from the task source to 
+	// the task driver (interface); {Render,Filter}TaskParams come from 
+	// the TaskDriver(Interface). 
+	// So, we cannot pass {Render,Filter}TaskParams to the LDR client 
+	// but only the TaskStructBase-derived classes. 
+	// Ergo: no need to set up ctsk->rtp, ctsk->ftp. 
+	
+	// However, we must adjust the timeouts in RenderTask/FilterTask. 
+	
+	for(int i=0; i<_DTLast; i++)
+	{
+		TaskStructBase *tsb=NULL;
+		switch(i)
+		{
+			case DTRender:  tsb=ctsk->rt;  break;
+			case DTFilter:  tsb=ctsk->ft;  break;
+			default:  assert(0);  break;
+		}
+		
+		if(!tsb)  continue;
+		
+		TaskDriverInterfaceFactory_LDR::DTPrm *p=&prm[i];
+		
+		if(p->timeout>0 && tsb->timeout>0 && 
+		   p->timeout<tsb->timeout )
+		{  tsb->timeout=p->timeout;  }
+	}
+	
+	return(0);
 }
 
 

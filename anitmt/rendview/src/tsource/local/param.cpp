@@ -22,6 +22,9 @@
 #include <ctype.h>
 
 
+#define UnsetNegMagic  (-985430913)
+
+
 static volatile void __CheckAllocFailFailed()
 {
 	Error("Allocation failure.\n");
@@ -140,7 +143,7 @@ TaskSourceFactory_Local::PerFrameTaskInfo *TaskSourceFactory_Local::
 
 
 // Check if the passed pattern is something containing EXACTLY ONE 
-// %d - modifier, e.g. "%123d" or "%07x". 
+// %d - modifier, e.g. "%123d" or "%07x" or "%03X". 
 int TaskSourceFactory_Local::_CheckFramePattern(
 	RefString *s,const char *name,const PerFrameTaskInfo *fi)
 {
@@ -151,7 +154,7 @@ int TaskSourceFactory_Local::_CheckFramePattern(
 		if(!ptr)  break;
 		++ptr;
 		while(isdigit(*ptr))  ++ptr;
-		if(*ptr!='x' && *ptr!='d')
+		if(*ptr!='x' && *ptr!='d' && *ptr!='X')
 		{  ptr=NULL;  break;  }
 		if(strchr(ptr,'%'))
 		{  ptr=NULL;  break;  }
@@ -355,7 +358,18 @@ void TaskSourceFactory_Local::_VPrintFrameInfo(PerFrameTaskInfo *fi,
 				"resume (-rcont)" : "re-render (-no-rcont)");  }
 		if(!compare_to || fi->rdir!=compare_to->rdir)
 		{  Verbose(TSI,"      Render dir: %s\n",fi->rdir.str() ? fi->rdir.str() : "[cwd]");  }
-		#warning radd_args not dumped. 
+	}
+	#warning radd_args not dumped. 
+	
+	if(!compare_to || 
+	   (fi->rtimeout!=compare_to->rtimeout) )
+	{
+		char tmp[32];
+		if(fi->rtimeout<=0)
+		{  strcpy(tmp,"[none]");  }
+		else
+		{  snprintf(tmp,32,"%ld seconds",fi->rtimeout/1000);  }
+		Verbose(TSI,"      Render timeout: %s\n",tmp);
 	}
 	
 	if(!compare_to || 
@@ -373,7 +387,18 @@ void TaskSourceFactory_Local::_VPrintFrameInfo(PerFrameTaskInfo *fi,
 	{
 		if(!compare_to || fi->fdir!=compare_to->fdir)
 		{  Verbose(TSI,"      Filter dir: %s\n",fi->fdir.str() ? fi->fdir.str() : "[cwd]");  }
-		#warning fadd_args not dumped. 
+	}
+	#warning fadd_args not dumped. 
+	
+	if(!compare_to || 
+	   (fi->ftimeout!=compare_to->ftimeout) )
+	{
+		char tmp[32];
+		if(fi->ftimeout<=0)
+		{  strcpy(tmp,"[none]");  }
+		else
+		{  snprintf(tmp,32,"%ld seconds",fi->ftimeout/1000);  }
+		Verbose(TSI,"      Filter timeout: %s\n",tmp);
 	}
 	
 	if(!compare_to || 
@@ -416,6 +441,21 @@ static void _PathAppendSlashIfNeeded(RefString *s)
 	{  _CheckAllocFail(s->append("/"));  }
 }
 
+static const char *_ltsrt_str="local task source render timeout";
+static const char *_ltsft_str="local task source filter timeout";
+
+// timeout: timeout in SECONDS or -1 or UnsetNegMagic. 
+// master_timeout: override timeout for UnsetNegMagic in MSEC
+// Returned new timeout in timeout in MSEC. 
+static void _FrameBlockTimeoutOverride(long *timeout,TaskDriverType dtype,
+	long master_timeout)
+{
+	if((*timeout)==UnsetNegMagic)
+	{  *timeout=master_timeout;  }  // master_timeout already in msec
+	else
+	{  ConvertTimeout2MSec(timeout,dtype==DTRender ? _ltsrt_str : _ltsft_str);  }
+}
+
 
 int TaskSourceFactory_Local::FinalInit()
 {
@@ -450,6 +490,10 @@ int TaskSourceFactory_Local::FinalInit()
 	// NOTE: master_fi.rinfpattern has default set in constructor. 
 	mfailed+=_CheckFramePattern(&master_fi.rinfpattern,"input",&master_fi);
 	mfailed+=_SetUpAndCheckOutputFramePatterns(&master_fi);
+	
+	// Convert timeout seconds -> msec: 
+	ConvertTimeout2MSec(&master_fi.rtimeout,_ltsrt_str);
+	ConvertTimeout2MSec(&master_fi.ftimeout,_ltsft_str);
 	
 	if(!mfailed)
 	{
@@ -538,6 +582,9 @@ int TaskSourceFactory_Local::FinalInit()
 				// NOTE: fi->next not NULL here (see for() condition). 
 				if(fi->first_frame_no+fi->nframes>fi->next->first_frame_no)
 				{
+					// So they overlap. 
+					// MISSING: See if they are disjunct. 
+					#warning could create three PFBlocks if they are disjunct. 
 					Error("Local: %s: Per-frame info overlaps with %d:%d.\n",
 						_FrameInfoLocationString(fi),
 						fi->next->first_frame_no,fi->next->nframes);
@@ -603,6 +650,11 @@ int TaskSourceFactory_Local::FinalInit()
 			else  _PathAppendSlashIfNeeded(&fi->rdir);
 			if(!fi->fdir)  fi->fdir=master_fi.fdir;
 			else  _PathAppendSlashIfNeeded(&fi->fdir);
+			
+			_FrameBlockTimeoutOverride(&fi->rtimeout,DTRender,
+				master_fi.rtimeout);
+			_FrameBlockTimeoutOverride(&fi->ftimeout,DTFilter,
+				master_fi.ftimeout);
 			
 			// If the first NULL-string is still there, we prepend 
 			// the master params, else we override. 
@@ -941,12 +993,15 @@ int TaskSourceFactory_Local::_RegisterFrameInfoParams(PerFrameTaskInfo *fi,
 	
 	AddParam("rdir","chdir to this directory before calling renderer",
 		fi ? &fi->rdir : NULL,flags);
-	AddParam("rifpattern","render input file pattern (e.g. f%07d.pov) "
-		"(relative to rdir)",
+	AddParam("rifpattern","render input file pattern (e.g. f%07d.pov; "
+		"can use %d,%x,%X) (relative to rdir)",
 		fi ? &fi->rinfpattern : NULL,flags);
-	AddParam("rofpattern","render output file pattern (e.g. f%07d); extension "
-		"added according to output format (relative to rdir)",
+	AddParam("rofpattern","render output file pattern (e.g. f%07d; "
+		"can use %d,%x,%X); extension added according to output "
+		"format (relative to rdir)",
 		fi ? &fi->routfpattern : NULL,flags);
+	AddParam("rtimeout","render job time limit (seconds; -1 for none)",
+		fi ? &fi->rtimeout : NULL,flags);
 	
 	AddParam("filter|fd","filter to use (filter DESC name)",
 		fi ? &fi->ii->fdesc_string : NULL,flags);
@@ -954,9 +1009,11 @@ int TaskSourceFactory_Local::_RegisterFrameInfoParams(PerFrameTaskInfo *fi,
 		fi ? &fi->fadd_args : NULL,flags);
 	AddParam("fdir","chdir to this directory before calling filter",
 		fi ? &fi->fdir : NULL,flags);
-	AddParam("fofpattern","filter output file pattern (e.g. f%07d-f.png) "
-		"(relative to fdir)",
+	AddParam("fofpattern","filter output file pattern (e.g. f%07d-f.png; "
+		"can use %d,%x,%X) (relative to fdir)",
 		fi ? &fi->foutfpattern : NULL,flags);
+	AddParam("ftimeout","filter job time limit (seconds; -1 for none)",
+		fi ? &fi->ftimeout : NULL,flags);
 	
 	if(add_failed)
 	{
@@ -1051,8 +1108,10 @@ TaskSourceFactory_Local::PerFrameTaskInfo::PerFrameTaskInfo(int *failflag) :
 	oformat=NULL;
 	rdesc=NULL;
 	render_resume_flag=true;
+	rtimeout=-1;
 	
 	fdesc=NULL;
+	ftimeout=-1;
 	
 	ii=NEW<PerFrameTaskInfo_Internal>();
 	if(!ii)

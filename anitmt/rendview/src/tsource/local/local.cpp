@@ -384,6 +384,7 @@ void TaskSource_Local::_ProcessGetTask(TSNotifyInfo *ni)
 			rt->width=fi->width;
 			rt->height=fi->height;
 			rt->oformat=fi->oformat;
+			rt->timeout=fi->rtimeout;
 			
 			rt->infile=NEW2<TaskFile>(TaskFile::FTFrame,TaskFile::IOTRenderInput);
 			if(!rt->infile)  break;
@@ -408,6 +409,7 @@ void TaskSource_Local::_ProcessGetTask(TSNotifyInfo *ni)
 			
 			ft->fdesc=fi->fdesc;
 			assert(fi->fdesc);   // Otherwise tobe_filtered may not be set
+			ft->timeout=fi->ftimeout;
 			
 			ft->infile=NEW2<TaskFile>(TaskFile::FTImage,TaskFile::IOTFilterInput);
 			if(!ft->infile)  break;

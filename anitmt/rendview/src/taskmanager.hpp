@@ -66,7 +66,7 @@ class TaskManager :
 		int max_failed_in_sequence;
 		
 		// Important flags whith self-explaining names: 
-		int dont_start_more_tasks : 1;
+		int dont_start_more_tasks : 1;   // USE DontStartMoreTasks(). 
 		int caught_sigint : 3;
 		int abort_on_signal : 1;  // abort on next SIGINT/SIGTERM
 		int schedule_quit : 3;  // 1 -> exit(0); 2 -> exit(1)
@@ -119,6 +119,13 @@ class TaskManager :
 		TSAction tsgod_next_action;  // used by _TS_GetOrDoneTask()
 		int nth_call_to_get_task;  // increased for each call to TSGetTask. 
 		void _TS_GetOrDoneTask();
+		
+		// Use this to set dont_start_more_tasks to 1 (and under some 
+		// circumstances also when it is already 1): 
+		void DontStartMoreTasks();
+		
+		// Dump state for debugging reason. 
+		void _DumpInternalState();
 		
 		inline bool _ProcessedTask(const CompleteTask *ctsk);
 		
