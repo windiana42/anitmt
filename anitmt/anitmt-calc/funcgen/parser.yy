@@ -189,6 +189,8 @@ property_type:
     TAFD_type TAFD_IDENTIFIER 
       { node_start_property_type( info, $2 ); }
       '{' property_names '}'	
+  | TAFD_IDENTIFIER TAFD_IDENTIFIER ';' 
+      { node_declare_property( info, $1, $2 ); }
 ;
 property_names: /*optional*/
   | property_names property_name
@@ -215,6 +217,8 @@ operand_type:
     TAFD_type TAFD_IDENTIFIER 
       { node_start_operand_type( info, $2 ); }
       '{' operand_names '}'	
+  | TAFD_IDENTIFIER TAFD_IDENTIFIER ';' 
+      { node_declare_operand( info, $1, $2 ); }
 ;
 operand_names: /*optional*/
   | operand_names operand_name

@@ -259,12 +259,8 @@ namespace funcgen
 
     //***********
     // properties
-    std::set<std::string> flag_properties;
-    std::set<std::string> scalar_properties;
-    std::set<std::string> vector_properties;
-    std::set<std::string> matrix_properties;
-    std::set<std::string> string_properties;
-    std::set<std::string> *current_properties; // points to the current set
+    std::map<std::string,std::string> properties; // name->type
+    std::string current_property_type;
 
     //***********
     // aliases
@@ -272,12 +268,8 @@ namespace funcgen
     
     //***********
     // operands
-    std::set<std::string> flag_operands;
-    std::set<std::string> scalar_operands;
-    std::set<std::string> vector_operands;
-    std::set<std::string> matrix_operands;
-    std::set<std::string> string_operands;
-    std::set<std::string> *current_operands; // points to the current set
+    std::map<std::string,std::string> operands; // name->type
+    std::string current_operand_type;
 
     //*****************
     // solve relations

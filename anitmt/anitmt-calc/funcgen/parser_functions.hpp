@@ -94,12 +94,16 @@ namespace funcgen
 
   void node_start_property_type( void *info, const std::string &type );
   void node_declare_property( void *info, const std::string &name );
+  void node_declare_property( void *info, const std::string &type,
+			      const std::string &name );
 
   void node_declare_alias( void *info, const std::string &alias, 
 			   const std::string &property );
 
   void node_start_operand_type( void *info, const std::string &type );
   void node_declare_operand( void *info, const std::string &name ); 
+  void node_declare_operand( void *info, const std::string &type,
+			     const std::string &name );
 
   void node_start_common_declaration( void *info );
   void node_start_first_declaration( void *info, const std::string &type="" ); 

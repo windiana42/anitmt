@@ -403,30 +403,13 @@ namespace funcgen
   void Tree_Node_Type::merge( const Tree_Node_Type &src )
   {
     // merge properties
-    flag_properties.insert( src.flag_properties.begin(),
-			    src.flag_properties.end() );
-    scalar_properties.insert( src.scalar_properties.begin(),
-			      src.scalar_properties.end() );
-    vector_properties.insert( src.vector_properties.begin(),
-			      src.vector_properties.end() );
-    matrix_properties.insert( src.matrix_properties.begin(),
-			      src.matrix_properties.end() );
-    string_properties.insert( src.string_properties.begin(),
-			      src.string_properties.end() );
+    properties.insert( src.properties.begin(), src.properties.end() );
+
     // merge aliases
     aliases.insert( aliases.end(), src.aliases.begin(), src.aliases.end() );
 
     // merge operands
-    flag_operands.insert( src.flag_operands.begin(),
-			  src.flag_operands.end() );
-    scalar_operands.insert( src.scalar_operands.begin(),
-			    src.scalar_operands.end() );
-    vector_operands.insert( src.vector_operands.begin(),
-			    src.vector_operands.end() );
-    matrix_operands.insert( src.matrix_operands.begin(),
-			    src.matrix_operands.end() );
-    string_operands.insert( src.string_operands.begin(),
-			    src.string_operands.end() );
+    operands.insert( src.operands.begin(), src.operands.end() );
 
     // merge Solve_System_Code
     common.merge( src.common );
@@ -497,32 +480,10 @@ namespace funcgen
     // properties
     {
       std::cout << "  properties {" << std::endl;
-      std::set<std::string>::const_iterator i;
+      std::map<std::string,std::string>::const_iterator i;
 
-      std::cout << "    type flag {" << std::endl;
-      for( i = flag_properties.begin(); i != flag_properties.end(); i++ )
-	std::cout << "      " << (*i) << ";" << std::endl;
-      std::cout << "    }" << std::endl;
-
-      std::cout << "    type scalar {" << std::endl;
-      for( i = scalar_properties.begin(); i != scalar_properties.end(); i++ )
-	std::cout << "      " << (*i) << ";" << std::endl;
-      std::cout << "    }" << std::endl;
-
-      std::cout << "    type vector {" << std::endl;
-      for( i = vector_properties.begin(); i != vector_properties.end(); i++ )
-      std::cout << "      " << (*i) << ";" << std::endl;
-      std::cout << "    }" << std::endl;
-
-      std::cout << "    type matrix {" << std::endl;
-      for( i = matrix_properties.begin(); i != matrix_properties.end(); i++ )
-	std::cout << "      " << (*i) << ";" << std::endl;
-      std::cout << "    }" << std::endl;
-
-      std::cout << "    type string {" << std::endl;
-      for( i = string_properties.begin(); i != string_properties.end(); i++ )
-	std::cout << "      " << (*i) << ";" << std::endl;
-      std::cout << "    }" << std::endl;
+      for( i = properties.begin(); i != properties.end(); i++ )
+	std::cout << "    " << i->second << " " << i->first << ";" <<std::endl;
 
       std::cout << "  }" << std::endl;
     }
@@ -539,32 +500,10 @@ namespace funcgen
     // operands
     {
       std::cout << "  operands {" << std::endl;
-      std::set<std::string>::const_iterator i;
+      std::map<std::string,std::string>::const_iterator i;
 
-      std::cout << "    type flag {" << std::endl;
-      for( i = flag_operands.begin(); i != flag_operands.end(); i++ )
-	std::cout << "      " << (*i) << ";" << std::endl;
-      std::cout << "    }" << std::endl;
-
-      std::cout << "    type scalar {" << std::endl;
-      for( i = scalar_operands.begin(); i != scalar_operands.end(); i++ )
-	std::cout << "      " << (*i) << ";" << std::endl;
-      std::cout << "    }" << std::endl;
-
-      std::cout << "    type vector {" << std::endl;
-      for( i = vector_operands.begin(); i != vector_operands.end(); i++ )
-      std::cout << "      " << (*i) << ";" << std::endl;
-      std::cout << "    }" << std::endl;
-
-      std::cout << "    type matrix {" << std::endl;
-      for( i = matrix_operands.begin(); i != matrix_operands.end(); i++ )
-	std::cout << "      " << (*i) << ";" << std::endl;
-      std::cout << "    }" << std::endl;
-
-      std::cout << "    type string {" << std::endl;
-      for( i = string_operands.begin(); i != string_operands.end(); i++ )
-	std::cout << "      " << (*i) << ";" << std::endl;
-      std::cout << "    }" << std::endl;
+      for( i = operands.begin(); i != operands.end(); i++ )
+	std::cout << "    " << i->second << " " << i->first << ";" <<std::endl;
 
       std::cout << "  }" << std::endl;
     }

@@ -68,16 +68,21 @@ namespace funcgen
     virtual std::string end_param( std::string provider_type,
 				   std::string ret_type,
 				   std::string par_type ) = 0;
-    virtual std::string property( std::string name ) = 0;
-    virtual std::string property_value( std::string name ) = 0;
+    virtual std::string prop_op( std::string name ) = 0;
+    virtual std::string prop_op_value( std::string name ) = 0;
+    virtual std::string property_type( std::string name ) = 0;
+    virtual std::string operand_type( std::string name ) = 0;
     virtual std::string container( std::string provider_type ) = 0;
     virtual std::string serial_container( std::string provider_type ) = 0;
+    virtual std::string container_name( std::string provider_type ) = 0;
     virtual std::string child_result
     ( std::string provider_type, std::string ret, std::string par_type,
       std::string par ) = 0;
     virtual std::string provided_result
     ( std::string provider_type, std::string ret, std::string par_type,
       std::string par ) = 0;
+    virtual std::string first_init( std::string provider_type ) = 0;
+    virtual std::string last_init( std::string provider_type ) = 0;
 
     virtual ~Code_Translator(){}
   };

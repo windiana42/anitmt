@@ -29,7 +29,7 @@ namespace funcgen
     std::string prefix_base_type; //! prefix for base type names
     std::string prefix_provider_type; //! prefix for provider type names
     std::string prefix_node_type; //! prefix for node types
-    std::string prefix_property; //! prefix for properties and operands
+    std::string prefix_prop_op; //! prefix for properties and operands
     std::string prefix_res_fun; //! prefix for result functions
     std::string prefix_param_range; //! prefix for start_/end_param
     std::string prefix_container_type; //! prefix for container types
@@ -58,16 +58,21 @@ namespace funcgen
     virtual std::string end_param( std::string provider_type,
 				   std::string ret_type,
 				   std::string par_type );
-    virtual std::string property( std::string name );
-    virtual std::string property_value( std::string name );
+    virtual std::string prop_op( std::string name );
+    virtual std::string prop_op_value( std::string name );
+    virtual std::string property_type( std::string name );
+    virtual std::string operand_type( std::string name );
     virtual std::string container( std::string provider_type );
     virtual std::string serial_container( std::string provider_type );
+    virtual std::string container_name( std::string provider_type );
     virtual std::string child_result
     ( std::string provider_type, std::string ret, std::string par_type,
       std::string par );
     virtual std::string provided_result
     ( std::string provider_type, std::string ret, std::string par_type,
       std::string par );
+    virtual std::string first_init( std::string provider_type );
+    virtual std::string last_init( std::string provider_type );
 
     Cpp_Code_Translator();
   };

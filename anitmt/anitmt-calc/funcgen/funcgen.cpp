@@ -44,8 +44,11 @@ int main(int argn, char *argc[])
   funcgen::parse_afd( &afd, &default_msg_consultant, argc[1] );
   std::cout << std::endl;
 
-  //std::cout << "Result: " << std::endl;
-  //afd.print();			// debug print data in structure
+  if( argn >= 3 )
+  {
+    std::cout << "Result: " << std::endl;
+    afd.print();			// debug print data in structure
+  }
 
   funcgen::code_gen_info info("functionality");
   cpp.generate_code( &afd, &info ); // generate C++ Code

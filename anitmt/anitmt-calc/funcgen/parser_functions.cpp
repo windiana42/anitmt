@@ -198,28 +198,28 @@ namespace funcgen
     Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;
     assert(node != 0);
 
-    if( type == "flag" )
-      node->current_properties = &node->flag_properties;
-    else if( type == "scalar" )
-      node->current_properties = &node->scalar_properties;
-    else if( type == "vector" )
-      node->current_properties = &node->vector_properties;
-    else if( type == "matrix" )
-      node->current_properties = &node->matrix_properties;
-    else if( type == "string" )
-      node->current_properties = &node->string_properties;
-    else
+    node->current_property_type = type;
+
+    // ?!? allow only known property types ?!?
+    if( ( type != "flag" ) && ( type != "scalar" ) && ( type != "vector" ) &&
+	( type != "matrix" ) && ( type != "string" ) )
     {
-      msg.error() << "Operand type " << type << " doesn't exist";
-      node->current_properties = 0;
+      msg.error() << "Property type " << type << " doesn't exist";
+      node->current_property_type = "<invalid_type>";
     }
   }
   void node_declare_property( void *info, const std::string &name )
   {
     Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;
     assert(node != 0);
-    if( node->current_properties != 0 )
-      node->current_properties->insert(name);
+    node->properties[name] = node->current_property_type;
+  }
+  void node_declare_property( void *info, const std::string &type,
+			      const std::string &name )
+  {
+    Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;
+    assert(node != 0);
+    node->properties[name] = type;
   }
 
   void node_declare_alias( void *info, const std::string &alias, 
@@ -236,28 +236,20 @@ namespace funcgen
     Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;
     assert(node != 0);
 
-    if( type == "flag" )
-      node->current_operands = &node->flag_operands;
-    else if( type == "scalar" )
-      node->current_operands = &node->scalar_operands;
-    else if( type == "vector" )
-      node->current_operands = &node->vector_operands;
-    else if( type == "matrix" )
-      node->current_operands = &node->matrix_operands;
-    else if( type == "string" )
-      node->current_operands = &node->string_operands;
-    else
-    {
-      msg.error() << "Operand type " << type << " doesn't exist";
-      node->current_operands = 0;
-    }
+    node->current_operand_type = type;
   }
   void node_declare_operand( void *info, const std::string &name )
   {
     Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;
     assert(node != 0);
-    if( node->current_operands != 0 )
-      node->current_operands->insert(name);
+    node->operands[name] = node->current_operand_type;
+  } 
+  void node_declare_operand( void *info, const std::string &type, 
+			     const std::string &name )
+  {
+    Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;
+    assert(node != 0);
+    node->operands[name] = type;
   } 
 
   void node_start_common_declaration( void *info )
@@ -571,7 +563,7 @@ namespace funcgen
       {
 	//!!! check whether property exists !!!
 
-	res_code->code += translator->property_value(prop); 
+	res_code->code += translator->prop_op_value(prop); 
       }
     }    
   }
