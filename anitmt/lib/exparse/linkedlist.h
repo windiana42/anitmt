@@ -29,7 +29,6 @@ template<class T> struct LinkedListBase
 	~LinkedListBase()  { }
 };
 
-#warning !!!!!!!!!!! SUBMIT linkedlist CHANGES TO HLIB !!!!!!!!!!!
 
 template<class T>class LinkedList
 {
