@@ -13,3 +13,7 @@ configure
 stamp-h
 stamp-h.in
 stamp-h1
+missing
+mkinstalldirs
+install-sh
+depcomp
