@@ -99,8 +99,10 @@ class ParameterManager : public PAR
 		//   first). 
 		// Return value: 
 		//   0 -> parameter was accepted by a section handler
+		//   1 -> like 1 but the param must be parsed now (section 
+		//        handler added the param to the system). 
 		//  <0 -> section handler returned that error value
-		//   1 -> parameter was not accepted by any section handler 
+		//   2 -> parameter was not accepted by any section handler 
 		int FeedSectionHandlers(
 			ParamArg *pa,Section *top_sect,
 			const char *bot_nend,Section *bot_sect);

@@ -137,6 +137,7 @@ int POVRayDriver::ProcessError(ProcessErrorInfo *pei)
 		Verbose("POV:   Command:");
 		for(const RefStrList::Node *i=pei->pinfo->args.first(); i; i=i->next)
 		{  Verbose(" %s",i->str());  }
+		Verbose("\n");
 		const char *tmp=pei->pinfo->tsb->wdir.str();
 		Verbose("POV:   Working dir: %s\n",tmp ? tmp : "[cwd]");
 	}

@@ -58,10 +58,18 @@ int ParameterSource::FindCopyParseParam(ParamArg *pa,
 		if(rsect && rend)
 		{
 			int rv=manager->FeedSectionHandlers(pa,topsect,rend,rsect);
-			if(!rv)  return(1);
 			if(rv<0)  return(-1);
+			if(!rv)  return(1);  // Section handler has all done. 
+			if(rv==1)  // Parse param NOW. 
+			{
+				// Okay, section handler accepted it. 
+				// The param should exist now. 
+				pi=manager->FindParam(p_name,p_namelen,topsect,&rend,&rsect);
+			}
 		}
-		
+	}
+	if(!pi)  // if CANNOT BE MERGED. 
+	{
 		// Okay, it's an unknown parameter: 
 		ParameterError(PETUnknown,pa,pi/*=NULL*/,topsect);
 		return(-2);

@@ -1,4 +1,4 @@
-# renderer description (RenderDesc); [implicit subsection -rd]
+# renderer description (RenderDesc); [implicit subsection -ri]
 # This file contains descriptions for all renderers supported by rendview. 
 # 
 # How to edit: 
@@ -15,7 +15,7 @@ searchpath = /usr/bin /usr/local/bin /usr/bin/X11
   binpath = povray
 #  binpath = /tmp/pov_fail_wrapper.sh
   # Always pass -J to switch jitter off. 
-  req_args= -J -display :0.0
+  req_args+= -J #-display :0.0
   inc_path= /usr/lib/povray/include /home/me
 #end
 

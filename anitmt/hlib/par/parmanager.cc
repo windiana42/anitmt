@@ -141,8 +141,10 @@ int ParameterManager::_SectHdlTraverseMoveUpLogic(int foundstart,
 //   and nend pointers are adjusted the way up. 
 // Return value: 
 //   0 -> parameter was accepted by a section handler
+//   1 -> like 1 but the param must be parsed now (section 
+//        handler added the param to the system). 
 //  <0 -> section handler returned that error value
-//   1 -> parameter was not accepted by any section handler 
+//   2 -> parameter was not accepted by any section handler 
 int ParameterManager::FeedSectionHandlers(
 	ParamArg *pa,Section *top_sect,
 	const char *bot_nend,Section *bot_sect)
@@ -166,7 +168,7 @@ int ParameterManager::FeedSectionHandlers(
 			info.top_name=pa->name;
 			info.name_end=pa->name+pa->namelen;
 			int rv=sect->sect_hdl->parse(i,&info);
-			if(rv<=0)
+			if(rv<=1)  // YES!
 			{  return(rv);  }
 		}
 		
@@ -546,8 +548,9 @@ PAR::Section *ParameterManager::FindSection(const char *name,Section *top,
 				pinfo.top_name=start;
 				pinfo.name_end=name_end;
 				int rv=i->sect_hdl->parse(i,&pinfo);
-				if(!rv)  accepted=1;
-				if(rv<=0)  break;
+				if(rv<0)  break;
+				if(rv<=1)   // YES!
+				{  accepted=1;  break;  }
 			}
 			
 			// Are we on the top?

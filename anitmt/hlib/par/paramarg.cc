@@ -170,10 +170,19 @@ ParamArg::ParamArg(const char *par,const RefString &_file,int _line,
 			{  namelen=0;  }
 			else
 			{
-				if(*n=='+' || *n=='-')  assmode=*n;
-				while(n>name && is_trim(*n))  --n;
-				if(!is_trim(*n))  ++n;
-				namelen=n-name;
+				if(*n=='+' || *n=='-')  assmode=*(n--);
+				if(n<name)
+				{  namelen=0;  }
+				else
+				{
+					for(;;n--)
+					{
+						if(!is_trim(*n))
+						{  ++n;  break;  }
+						if(n<=name)  break;
+					}
+					namelen=n-name;
+				}
 			}
 			
 			while(*value && is_trim(*value))  ++value;

@@ -268,7 +268,11 @@ class ParameterSource :
 		// the ParamInfo in *ret_pi. (May both be set to NULL.)
 		// Return value: 
 		//   0 -> param arg has pa->pdone set; nothing done
-		//   1 -> okay; SectionHandler accepted param
+		//   1 -> okay; SectionHandler accepted param and did everything 
+		// NOTE: You cannot determine if section handler returned 
+		//       value 1 (accepted and parse param now)
+		//       This allows the section handler to add params on demand 
+		//       in a completely transparent way. 
 		//  -1 -> SectionHandler returned error on param
 		//   2 -> okay; parsed using CopyAndParseParam()
 		//  -2 -> PETUnknown occured; ParameterError() called.

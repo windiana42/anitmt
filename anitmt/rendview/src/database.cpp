@@ -260,9 +260,9 @@ int ComponentDataBase::parse(const Section *s,PAR::SPHInfo *info)
 		if(ift[i].i_section==s)
 		{  dt=(TaskDriverType)i;  break;  }
 	}
-	if(dt==DTNone)  return(1);
+	if(dt==DTNone)  return(2);
 	
-	if(s!=info->sect)  return(1);
+	if(s!=info->sect)  return(2);
 	
 	// Okay, we're getting info about a new render/filter desc, so 
 	// quickly add the parameters...
@@ -271,7 +271,7 @@ int ComponentDataBase::parse(const Section *s,PAR::SPHInfo *info)
 	size_t xnamelen=0;
 	if(info->arg)
 	{
-		// Okay, this is more trickier, we have to find where the 
+		// Okay, this is more tricky, we have to find where the 
 		// name of the section ends. 
 		int illegal=0;
 		const char *e=NULL;
@@ -348,7 +348,7 @@ int ComponentDataBase::parse(const Section *s,PAR::SPHInfo *info)
 		return(-1);
 	}
 	
-	return(0);  // okay, accepted. 
+	return(1);  // okay, accepted. 
 }
 
 
