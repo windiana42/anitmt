@@ -42,4 +42,3 @@ parser.cc tokens.h:	$(srcdir)/parser.yy
 params.o: params.cpp params.hpp
 #$(CXX) $(INCLUDES) $(CFLAGS) -fno-rtti -c $(srcdir)/params.cpp
 	$(CXXCOMPILE) -fno-rtti -c $(srcdir)/params.cpp -o $@
-
