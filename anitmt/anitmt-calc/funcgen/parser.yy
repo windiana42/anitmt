@@ -83,6 +83,7 @@ namespace funcgen
 
 //********************
 // normal precedences
+%nonassoc '<' '>' TAFD_IS_EQUAL TAFD_NOT_EQUAL TAFD_MORE_EQUAL TAFD_LESS_EQUAL 
 %left '+' '-'
 %left '*' '/'
 %nonassoc UMINUS
@@ -437,7 +438,7 @@ node_identifier:
 ;
 
 %%
-  int parse_afd( AFD_Manager *afd, message::Message_Consultant *c, 
+  int parse_afd( AFD_Root *afd, message::Message_Consultant *c, 
 		 std::string filename )
   {
     afd_info info(afd,c);

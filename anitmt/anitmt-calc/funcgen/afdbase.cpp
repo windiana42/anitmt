@@ -97,11 +97,10 @@ namespace funcgen
   void Provider_Type::print( std::string name ) const
   {
     std::cout << (serial?"serial ":"") << "type " << name << " {" << std::endl;
-    std::map<std::string,Result_Type>::const_iterator i;
+    std::set<Result_Type>::const_iterator i;
     for( i = result_types.begin(); i != result_types.end(); i++ )
-      std::cout << "  provides " << i->second.return_type << "( "
-		<< i->second.parameter_type
-		<< " );" << std::endl;
+      std::cout << "  provides " << i->return_type << "( "
+		<< i->parameter_type << " );" << std::endl;
     std::cout << "}" << std::endl;
   }
 
@@ -362,7 +361,7 @@ namespace funcgen
       for( c = required_children.begin(); c != required_children.end(); c++ )
 	std::cout << (first?first=false,"":", ") 
 		  << "child." << c->first << "." << c->second.return_type 
-		  << "( "	<< c->second.parameter_type;
+		  << "( " << c->second.parameter_type << ")";
     }
 
     // required results
@@ -371,7 +370,7 @@ namespace funcgen
       for( c = required_results.begin(); c != required_results.end(); c++ )
 	std::cout << (first?first=false,"":", ") 
 		  << "this." << c->first << "." << c->second.return_type 
-		  << "( "	<< c->second.parameter_type;
+		  << "( " << c->second.parameter_type << ")";
     }
 
     std::cout << code << std::endl;
@@ -652,7 +651,7 @@ namespace funcgen
     : essentials( ref.essentials ), expression_code(ref.code) {}
 
   //! print, just for debug purposes
-  void AFD_Manager::print() const
+  void AFD_Root::print() const
   {
     //*************
     // base types

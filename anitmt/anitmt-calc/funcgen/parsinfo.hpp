@@ -39,7 +39,7 @@ namespace funcgen
     std::deque<message::Abstract_Position*> old_positions;
     unsigned max_old_positions;
   public:
-    afd_info( AFD_Manager *afd, message::Message_Consultant *consultant );
+    afd_info( AFD_Root *afd, message::Message_Consultant *consultant );
     ~afd_info();
 
     // open file to be read by the lexer
@@ -54,7 +54,7 @@ namespace funcgen
 
     message::Message_Reporter msg;	// this offers message streams
     funcgen_FlexLexer *lexer;		// lexical analyzer / scanner
-    AFD_Manager *afd;			// manages all afd related data
+    AFD_Root *afd;			// manages all afd related data
 
     int tab_len;
     message::File_Position file_pos;

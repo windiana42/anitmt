@@ -14,7 +14,9 @@
 
 #include "parser_functions.hpp"
 
+#include <assert.h>
 #include "stdextend.hpp"
+
 
 namespace funcgen
 {
@@ -24,10 +26,42 @@ namespace funcgen
 
   void start_code_block( void *info )
   {
-    static_cast<afd_info*>(info)->lexer->goto_code_copy_mode();
+    afd_info *I=static_cast<afd_info*>(info);
+    I->lexer->goto_code_copy_mode();
+
+    message::Message_Reporter &msg = I->msg;
+    Tree_Node_Type *node = I->afd->current_node;
+    assert(node != 0);
+    Provided_Results *provided = node->current_provided_results;
+    if( provided )
+    {
+      Result_Code *res_code = provided->current_result_code;
+
+      if( res_code )		// in valid result code?
+      {
+	// !?! C++-Code specific !?!
+	res_code->code += "\n{\n"; 
+	res_code->start_src_line = I->file_pos.get_line();
+	res_code->start_src_column = I->file_pos.get_column();
+      }
+    }    
   }
   void finish_code_block( void *info )
   {
+    message::Message_Reporter &msg = static_cast<afd_info*>(info)->msg;
+    Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;
+    assert(node != 0);
+    Provided_Results *provided = node->current_provided_results;
+    if( provided )
+    {
+      Result_Code *res_code = provided->current_result_code;
+
+      if( res_code )		// in valid result code?
+      {
+	// !?! C++-Code specific !?!
+	res_code->code += "\n}\n"; 
+      }
+    }    
   }
   void continue_code_mode( void *info )
   {
@@ -35,7 +69,23 @@ namespace funcgen
   }
 
   // for lexer
-  void copy_code_line( char *line, int len ) {}
+  void copy_code_line( afd_info *info, char *line, int len ) 
+  {
+    message::Message_Reporter &msg = info->msg;
+    Tree_Node_Type *node = info->afd->current_node;
+    assert(node != 0);
+    Provided_Results *provided = node->current_provided_results;
+    if( provided )
+    {
+      Result_Code *res_code = provided->current_result_code;
+
+      if( res_code )		// in valid result code?
+      {
+	// !?! C++-Code specific !?!
+	res_code->code += line; 
+      }
+    }    
+  }
   void code_block_escape( afd_info *info ) {}
 
   //******************************************
@@ -44,27 +94,28 @@ namespace funcgen
   void declare_base_type( void *info, const std::string &name, 
 			  const std::string &type )
   {
-    AFD_Manager *afd = static_cast<afd_info*>(info)->afd;
+    AFD_Root *afd = static_cast<afd_info*>(info)->afd;
     afd->base_types[name] = Base_Type(type);
   }
 
   void declare_base_type_structure( void *info, const std::string &name )
   {
-    AFD_Manager *afd = static_cast<afd_info*>(info)->afd;
+    AFD_Root *afd = static_cast<afd_info*>(info)->afd;
     afd->current_base_type = &afd->base_types[name];
   }
   
   void base_type_structure_element( void *info, const std::string &type, 
 				    const std::string &name )
   {
-    AFD_Manager *afd = static_cast<afd_info*>(info)->afd;
+    AFD_Root *afd = static_cast<afd_info*>(info)->afd;
+    assert( afd->current_base_type != 0 );
     afd->current_base_type->add_element(type,name);
   }
 
   void start_provider_type_declaration( void *info, bool serial,
 					const std::string &name )
   {
-    AFD_Manager *afd = static_cast<afd_info*>(info)->afd;
+    AFD_Root *afd = static_cast<afd_info*>(info)->afd;
     afd->current_type = &afd->types[name];
     afd->current_type->serial = serial;
   }
@@ -73,29 +124,30 @@ namespace funcgen
 				 const std::string &par )
   {
     message::Message_Reporter &msg = static_cast<afd_info*>(info)->msg;
-    AFD_Manager *afd = static_cast<afd_info*>(info)->afd;
-    std::map<std::string,Result_Type>::iterator i;
-    i = afd->current_type->result_types.find( ret );
+    AFD_Root *afd = static_cast<afd_info*>(info)->afd;
+    assert( afd->current_type != 0 );
+
+    std::set<Result_Type>::iterator i;
+    i = afd->current_type->result_types.find( Result_Type(ret,par) );
     if( i != afd->current_type->result_types.end() )
     {
       msg.error() << "result type " << ret << " is already provided";
     }
     else
-      afd->current_type->result_types.insert
-	( std::pair<std::string,Result_Type>(ret,Result_Type(ret,par)) );
+      afd->current_type->result_types.insert( Result_Type(ret,par) );
   }
 
   void start_node_declaration( void *infoptr, const std::string &name )
   {
     afd_info *info = static_cast<afd_info*>(infoptr);
-    AFD_Manager *afd = info->afd;
+    AFD_Root *afd = info->afd;
     afd->current_node = &afd->nodes[name];
     afd->current_node->pos = info->file_pos.duplicate();
   }
   void node_extends( void *infoptr, const std::string &node )
   {
     afd_info *info = static_cast<afd_info*>(infoptr);
-    AFD_Manager *afd = info->afd;
+    AFD_Root *afd = info->afd;
 
     // search node
     std::map<std::string,Tree_Node_Type>::iterator i;
@@ -105,13 +157,20 @@ namespace funcgen
       info->msg.error() << "Node " << node << " to extend doesen't exist";
     else
     {
-      afd->current_node->merge( i->second ); // merge with node to extend
+      assert(afd->current_node != 0);
+      if( &(i->second) == afd->current_node )
+	info->msg.error() << "recursive inheritance of node " << node 
+			  << " not allowed";
+      else
+      {
+	afd->current_node->merge( i->second ); // merge with node to extend
+      }
     }
   }
   void node_provides( void *infoptr, const std::string &type )
   {
     afd_info *info = static_cast<afd_info*>(infoptr);
-    AFD_Manager *afd = info->afd;
+    AFD_Root *afd = info->afd;
     
     // check if provider type exists
     std::map<std::string,Provider_Type>::iterator i;
@@ -120,6 +179,7 @@ namespace funcgen
       info->msg.error() << "Provided type " << type << " doesn't exist";
     else
     {
+      assert(afd->current_node != 0);
       // insert provided type
       afd->current_node->provided_results[type];
     }
@@ -129,6 +189,7 @@ namespace funcgen
   {
     message::Message_Reporter &msg = static_cast<afd_info*>(info)->msg;
     Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;
+    assert(node != 0);
 
     if( type == "flag" )
       node->current_properties = &node->flag_properties;
@@ -149,6 +210,7 @@ namespace funcgen
   void node_declare_property( void *info, const std::string &name )
   {
     Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;
+    assert(node != 0);
     if( node->current_properties != 0 )
       node->current_properties->insert(name);
   }
@@ -157,6 +219,7 @@ namespace funcgen
 			   const std::string &property )
   {
     Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;
+    assert(node != 0);
     node->aliases.push_back(Alias(alias,property));
   }
 
@@ -164,6 +227,7 @@ namespace funcgen
   {
     message::Message_Reporter &msg = static_cast<afd_info*>(info)->msg;
     Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;
+    assert(node != 0);
 
     if( type == "flag" )
       node->current_operands = &node->flag_operands;
@@ -184,6 +248,7 @@ namespace funcgen
   void node_declare_operand( void *info, const std::string &name )
   {
     Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;
+    assert(node != 0);
     if( node->current_operands != 0 )
       node->current_operands->insert(name);
   } 
@@ -191,12 +256,14 @@ namespace funcgen
   void node_start_common_declaration( void *info )
   {
     Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;
+    assert(node != 0);
     node->current_solve_code = &node->common;
   }
   void node_start_first_declaration( void *info, const std::string &type="" )
   {
     message::Message_Reporter &msg = static_cast<afd_info*>(info)->msg;
     Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;    
+    assert(node != 0);
     if( type != "" )
     {
       std::map<std::string,Solve_System_Code>::iterator i;
@@ -220,6 +287,7 @@ namespace funcgen
   {
     message::Message_Reporter &msg = static_cast<afd_info*>(info)->msg;
     Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;    
+    assert(node != 0);
     if( type != "" )
     {
       std::map<std::string,Solve_System_Code>::iterator i;
@@ -242,8 +310,9 @@ namespace funcgen
 
   void node_solve_constraint( void *info, const Expression *exp  )
   {
-    Solve_System_Code *solve_code = 
-      static_cast<afd_info*>(info)->afd->current_node->current_solve_code;    
+    Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;    
+    assert(node != 0);
+    Solve_System_Code *solve_code = node->current_solve_code;    
 
     if( solve_code )
     {
@@ -254,8 +323,9 @@ namespace funcgen
 
   void node_start_solver( void *info, const std::string &solver )
   {
-    Solve_System_Code *solve_code = 
-      static_cast<afd_info*>(info)->afd->current_node->current_solve_code;    
+    Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;    
+    assert(node != 0);
+    Solve_System_Code *solve_code = node->current_solve_code;    
 
     if( solve_code )
     {
@@ -265,6 +335,7 @@ namespace funcgen
   void node_add_solver_parameter( void *info )
   {
     Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;
+    assert(node != 0);
     Solve_System_Code *solve_code = node->current_solve_code;    
 
     if( solve_code )
@@ -274,8 +345,9 @@ namespace funcgen
   } // from reference
   void node_finish_solver( void *info )
   {
-    Solve_System_Code *solve_code = 
-      static_cast<afd_info*>(info)->afd->current_node->current_solve_code;    
+    Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;
+    assert(node != 0);
+    Solve_System_Code *solve_code = node->current_solve_code;    
 
     if( solve_code )
     {
@@ -286,6 +358,7 @@ namespace funcgen
 			      Expression *exp )
   {
     Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;
+    assert(node != 0);
     Solve_System_Code *solve_code = node->current_solve_code;    
 
     if( solve_code )
@@ -298,8 +371,9 @@ namespace funcgen
   void node_start_action( void *info, const std::string &name, 
 			  double priority )
   {
-    Solve_System_Code *solve_code = 
-      static_cast<afd_info*>(info)->afd->current_node->current_solve_code;    
+    Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;
+    assert(node != 0);
+    Solve_System_Code *solve_code = node->current_solve_code;    
 
     if( solve_code )
     {
@@ -309,6 +383,7 @@ namespace funcgen
   void node_add_action_parameter_ref( void *info )
   {
     Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;
+    assert(node != 0);
     Solve_System_Code *solve_code = node->current_solve_code;    
 
     if( solve_code )
@@ -319,6 +394,7 @@ namespace funcgen
   void node_add_action_parameter_exp( void *info, Expression *exp )
   {
     Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;
+    assert(node != 0);
     Solve_System_Code *solve_code = node->current_solve_code;    
 
     if( solve_code )
@@ -329,8 +405,9 @@ namespace funcgen
   }
   void node_finish_action( void *info )
   {
-    Solve_System_Code *solve_code = 
-      static_cast<afd_info*>(info)->afd->current_node->current_solve_code;    
+    Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;
+    assert(node != 0);
+    Solve_System_Code *solve_code = node->current_solve_code;    
 
     if( solve_code )
     {
@@ -342,52 +419,194 @@ namespace funcgen
 		      const std::string &type )
   {
     Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;
-    node->child_containers.insert( Child_Container( max1,min1,type ) );
+    if( node )
+    {
+      node->child_containers.insert( Child_Container( max1,min1,type ) );
+    }
   }
 
   void node_start_provide( void *info, const std::string &type )
   {
-    AFD_Manager *afd = static_cast<afd_info*>(info)->afd;
+    message::Message_Reporter &msg = static_cast<afd_info*>(info)->msg;
+    AFD_Root *afd = static_cast<afd_info*>(info)->afd;
+    Tree_Node_Type *node = afd->current_node;
+    assert(node != 0);
+
+    if( node )
+    {
+      // search provided results object
+      std::map<std::string, Provided_Results>::iterator i;
+      i = node->provided_results.find( type );
+      if( i != node->provided_results.end() ) // was it found?
+      {
+	node->current_provided_results = &(i->second);
+				// get the pointer to the provided results code
+	node->current_provided_result_type = &afd->types[type];
+				// get the pointer to the provider type
+      }
+      else			// provided type not found?
+      {
+	msg.error() << "Type " << type << " is not provided by this node type";
+	node->current_provided_results = 0;
+      }
+    }
   }
 
   void node_start_result_code( void *info, const std::string &ret_type, 
 			       const std::string &par_type, 
 			       const std::string &par_name )
   {
-    AFD_Manager *afd = static_cast<afd_info*>(info)->afd;
-  }
+    message::Message_Reporter &msg = static_cast<afd_info*>(info)->msg;
+    Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;
+    assert(node != 0);
+    Provided_Results *provided = node->current_provided_results;
 
+    if( provided )		// is in valid provide section
+    {
+      Result_Type res_type(ret_type,par_type);
+      //check whether this result function is part of current provider type
+      std::set<Result_Type>::iterator i;
+      i = node->current_provided_result_type->result_types.find( res_type );
+      if( i != node->current_provided_result_type->result_types.end() )
+      {				// was it found?
+	//start result function
+	provided->current_result_code =
+	  &provided->results[res_type];
+	provided->current_result_code->defined = true;
+	provided->current_result_code->parameter = par_name;
+      }
+      else
+      {				
+	msg.error() << "Result function " << ret_type << "( " << par_type 
+		    << " ) is not part of the current provider type";
+	provided->current_result_code = 0;
+      }
+    }
+  }
   void node_result_essential_prop( void *info, const std::string &property )
   {
-    AFD_Manager *afd = static_cast<afd_info*>(info)->afd;
+    message::Message_Reporter &msg = static_cast<afd_info*>(info)->msg;
+    Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;
+    assert(node != 0);
+    Provided_Results *provided = node->current_provided_results;
+    if( provided )
+    {
+      Result_Code *res_code = provided->current_result_code;
+
+      if( res_code )		// in valid result code?
+      {
+	//!!! check whether property exists !!!
+ 
+	// insert required property
+	res_code->required_properties.push_back( property );
+      }
+    }
   }
   void node_result_essential_child_result( void *info, 
 					   const std::string &provider, 
 					   const std::string &ret="", 
 					   const std::string &par="" )
   {
-    AFD_Manager *afd = static_cast<afd_info*>(info)->afd;
+    message::Message_Reporter &msg = static_cast<afd_info*>(info)->msg;
+    Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;
+    assert(node != 0);
+    Provided_Results *provided = node->current_provided_results;
+    if( provided )
+    {
+      Result_Code *res_code = provided->current_result_code;
+
+      if( res_code )		// in valid result code?
+      {
+	//!!! check whether result function of child exists exists !!!
+
+	// insert required child result function
+	res_code->required_children.push_back
+	  (std::pair<std::string,Result_Type>(provider,Result_Type(ret,par)));
+      }
+    }
   }
   void node_result_essential_result( void *info, const std::string &provider, 
 				     const std::string &ret="", 
 				     const std::string &par="" )
   {
-    AFD_Manager *afd = static_cast<afd_info*>(info)->afd;
+    message::Message_Reporter &msg = static_cast<afd_info*>(info)->msg;
+    Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;
+    assert(node != 0);
+    Provided_Results *provided = node->current_provided_results;
+    if( provided )
+    {
+      Result_Code *res_code = provided->current_result_code;
+
+      if( res_code )		// in valid result code?
+      {
+	//!!! check whether result function exists exists !!!
+
+	// insert required child result function
+	res_code->required_results.push_back
+	  (std::pair<std::string,Result_Type>(provider,Result_Type(ret,par)));
+      }
+    }
   }
 
   void res_ref_property( void *info, std::string prop )
   {
-    
+    message::Message_Reporter &msg = static_cast<afd_info*>(info)->msg;
+    Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;
+    assert(node != 0);
+    Provided_Results *provided = node->current_provided_results;
+    if( provided )
+    {
+      Result_Code *res_code = provided->current_result_code;
+
+      if( res_code )		// in valid result code?
+      {
+	//!!! check whether property exists !!!
+
+	res_code->code += prop + "()"; // !?! C++-Code specific !?!
+      }
+    }    
   }
   void res_ref_child( void *info, std::string provider, 
 		      std::string result_type, std::string parameter )
   {
+    message::Message_Reporter &msg = static_cast<afd_info*>(info)->msg;
+    Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;
+    assert(node != 0);
+    Provided_Results *provided = node->current_provided_results;
+    if( provided )
+    {
+      Result_Code *res_code = provided->current_result_code;
 
+      if( res_code )		// in valid result code?
+      {
+	//!!! check whether result function of child exists exists !!!
+
+	// !?! C++-Code specific !?!
+	res_code->code += "serial_container_" + provider + "->get_result("
+	  + result_type + "," + parameter + ")"; 
+      }
+    }    
   }
   void res_ref_this( void *info, std::string provider, 
 		      std::string result_type, std::string parameter )
   {
+    message::Message_Reporter &msg = static_cast<afd_info*>(info)->msg;
+    Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;
+    assert(node != 0);
+    Provided_Results *provided = node->current_provided_results;
+    if( provided )
+    {
+      Result_Code *res_code = provided->current_result_code;
 
+      if( res_code )		// in valid result code?
+      {
+	//!!! check whether result function of child exists exists !!!
+
+	// !?! C++-Code specific !?!
+	res_code->code += "prov_" + provider + "::get_result("
+	  + result_type + "," + parameter + ")"; 
+      }
+    }    
   }
 
   Expression *bool_expr( Expression *exp1, 
@@ -403,6 +622,7 @@ namespace funcgen
   Expression *expr_from_ref( void *info )
   {
     Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;
+    assert( node != 0 );
     Expression *res = new Expression( node->current_reference );
     node->current_reference.clear();
     return res;
@@ -448,6 +668,7 @@ namespace funcgen
   {
     message::Message_Reporter &msg = static_cast<afd_info*>(info)->msg;
     Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;
+    assert( node != 0 );
     
     node->current_reference.add_unchecked( name );
   }
@@ -455,6 +676,7 @@ namespace funcgen
   {
     message::Message_Reporter &msg = static_cast<afd_info*>(info)->msg;
     Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;
+    assert( node != 0 );
 
     node->current_reference.add_unchecked( prop );
   }
@@ -462,14 +684,18 @@ namespace funcgen
   {
     message::Message_Reporter &msg = static_cast<afd_info*>(info)->msg;
     Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;
+    assert( node != 0 );
 
+    //!?! C++-Code specific !!!
     node->current_reference.add_unchecked( "start_param" );
   }
   void ref_end_param( void *info )
   {
     message::Message_Reporter &msg = static_cast<afd_info*>(info)->msg;
     Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;
+    assert( node != 0 );
 
+    //!?! C++-Code specific !!!
     node->current_reference.add_unchecked( "end_param" );
   }
   void ref_provider_type( void *info, const std::string &provider_type, 
@@ -478,87 +704,110 @@ namespace funcgen
   {
     message::Message_Reporter &msg = static_cast<afd_info*>(info)->msg;
     Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;
+    assert( node != 0 );
 
-    //!!! an C-Code anpassen... !!!
+    //!?! C++-Code specific !!!
     node->current_reference.add_unchecked
-      ( provider_type + '.' + ret_type + '(' + par_type + ')' );
+      ( provider_type + "::get_param(" + ret_type + ',' + par_type + ')' );
   }
 
   void ref_node_local_prev( void *info )
   {
     message::Message_Reporter &msg = static_cast<afd_info*>(info)->msg;
     Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;
+    assert( node != 0 );
 
+    //!?! C++-Code specific !!!
     node->current_reference.add( "prev" );
   }
   void ref_node_local_next( void *info )
   {
     message::Message_Reporter &msg = static_cast<afd_info*>(info)->msg;
     Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;
+    assert( node != 0 );
 
+    //!?! C++-Code specific !!!
     node->current_reference.add( "next" );
   }
   void ref_node_local_child_first( void *info, const std::string &type )
   {
     message::Message_Reporter &msg = static_cast<afd_info*>(info)->msg;
     Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;
+    assert( node != 0 );
 
+    //!?! C++-Code specific !!!
     node->current_reference.add( "first_child" );
   }
   void ref_node_local_child_last( void *info, const std::string &type )
   {
     message::Message_Reporter &msg = static_cast<afd_info*>(info)->msg;
     Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;
+    assert( node != 0 );
 
+    //!?! C++-Code specific !!!
     node->current_reference.add( "last_child" );
   }
   void ref_node_local_child( void *info, const std::string &type, double n )
   {
     message::Message_Reporter &msg = static_cast<afd_info*>(info)->msg;
     Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;
+    assert( node != 0 );
 
+    //!?! C++-Code specific !!!
     node->current_reference.add( std::string("get_child(") + n + ")" );
   }
   void ref_node_prev( void *info )
   {
     message::Message_Reporter &msg = static_cast<afd_info*>(info)->msg;
     Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;
+    assert( node != 0 );
 
+    //!?! C++-Code specific !!!
     node->current_reference.add( "prev" );
   }
   void ref_node_next( void *info )
   {
     message::Message_Reporter &msg = static_cast<afd_info*>(info)->msg;
     Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;
+    assert( node != 0 );
 
+    //!?! C++-Code specific !!!
     node->current_reference.add( "next" );
   }
   void ref_node_parent( void *info )
   {
     message::Message_Reporter &msg = static_cast<afd_info*>(info)->msg;
     Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;
+    assert( node != 0 );
 
+    //!?! C++-Code specific !!!
     node->current_reference.add( "parent" );
   }
   void ref_node_first_child( void *info )
   {
     message::Message_Reporter &msg = static_cast<afd_info*>(info)->msg;
     Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;
+    assert( node != 0 );
 
+    //!?! C++-Code specific !!!
     node->current_reference.add( "first_child" );
   }
   void ref_node_last_child( void *info )
   {
     message::Message_Reporter &msg = static_cast<afd_info*>(info)->msg;
     Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;
+    assert( node != 0 );
 
+    //!?! C++-Code specific !!!
     node->current_reference.add( "last_child" );
   }
   void ref_node_child( void *info, double n )
   {
     message::Message_Reporter &msg = static_cast<afd_info*>(info)->msg;
     Tree_Node_Type *node = static_cast<afd_info*>(info)->afd->current_node;
+    assert( node != 0 );
 
+    //!?! C++-Code specific !!!
     node->current_reference.add( std::string("get_child(") + n + ")" );
   }
 

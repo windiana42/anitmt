@@ -60,7 +60,7 @@ namespace funcgen
   void continue_code_mode( void *info );
 
   // for lexer
-  void copy_code_line( char *line, int len );
+  void copy_code_line( afd_info *info, char *line, int len );
   void code_block_escape( afd_info *info );
 
   //! returns a message object for reporting things to the user

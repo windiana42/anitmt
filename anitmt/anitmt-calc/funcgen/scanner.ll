@@ -136,7 +136,9 @@ false		{ tok_pos(); return TAFD_false; }
 <COPY_CODE>"["	{ tok_pos(); code_block_escape(info); yy_pop_state(); 
 		  return yytext[0]; }
 <COPY_CODE>"}"	{ unput('}'); yy_pop_state(); return TAFD_CODE; }
-<COPY_CODE>[^\n\t\[}]+ { inc_col(); copy_code_line( yytext, yyleng ); }
+<COPY_CODE>[^\n\t\[}]+ 	{inc_col(); copy_code_line( info, yytext, yyleng ); }
+<COPY_CODE>[^\n\t\[}]+"\n" 	{ info->file_pos.inc_line(); 
+				  copy_code_line( info, yytext,yyleng ); }
 
 
 %%

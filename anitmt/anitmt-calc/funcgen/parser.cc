@@ -92,16 +92,16 @@ static const char yytranslate[] = {     0,
      2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
      2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
      2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-     2,     2,     2,     2,     2,     2,     2,     2,     2,    59,
-    60,    51,    49,    58,    50,    61,    52,     2,     2,     2,
-     2,     2,     2,     2,     2,     2,     2,     2,    54,    65,
-    57,    64,     2,     2,     2,     2,     2,     2,     2,     2,
+     2,     2,     2,     2,     2,     2,     2,     2,     2,    61,
+    62,    53,    51,    60,    52,    63,    54,     2,     2,     2,
+     2,     2,     2,     2,     2,     2,     2,     2,    56,    49,
+    59,    50,     2,     2,     2,     2,     2,     2,     2,     2,
      2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
      2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-    62,     2,    63,     2,     2,     2,     2,     2,     2,     2,
+    64,     2,    65,     2,     2,     2,     2,     2,     2,     2,
      2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
      2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-     2,     2,    55,     2,    56,     2,     2,     2,     2,     2,
+     2,     2,    57,     2,    58,     2,     2,     2,     2,     2,
      2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
      2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
      2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
@@ -119,7 +119,7 @@ static const char yytranslate[] = {     0,
     17,    18,    19,    20,    21,    22,    23,    24,    25,    26,
     27,    28,    29,    30,    31,    32,    33,    34,    35,    36,
     37,    38,    39,    40,    41,    42,    43,    44,    45,    46,
-    47,    48,    53
+    47,    48,    55
 };
 
 #if YYDEBUG != 0
@@ -146,87 +146,87 @@ static const short yyprhs[] = {     0,
 
 static const short yyrhs[] = {    -1,
     66,    67,     0,    68,     0,    69,     0,    76,     0,    81,
-     0,     3,     4,    48,    54,     0,     5,    55,    70,    56,
-     0,     0,    70,    71,     0,    46,    57,    73,    54,     0,
-     0,    46,    57,    55,    72,    74,    56,    54,     0,    46,
-     0,    73,    44,    46,     0,    75,     0,    74,    58,    75,
-     0,    46,    46,     0,     0,    78,     7,    46,    77,    55,
-    79,    56,     0,     0,     6,     0,     0,    79,    80,     0,
-     9,    46,    59,    46,    60,    54,     0,     0,     8,    46,
-    82,    83,    85,    55,    88,    56,     0,     0,    10,    84,
-     0,    46,     0,    84,    58,    46,     0,     0,     9,    86,
-     0,    87,     0,    86,    58,    87,     0,    46,     0,     0,
+     0,     3,     4,    48,    56,     0,     5,    57,    70,    58,
+     0,     0,    70,    71,     0,    46,    59,    73,    56,     0,
+     0,    46,    59,    57,    72,    74,    58,    56,     0,    46,
+     0,    73,    44,    46,     0,    75,     0,    74,    60,    75,
+     0,    46,    46,     0,     0,    78,     7,    46,    77,    57,
+    79,    58,     0,     0,     6,     0,     0,    79,    80,     0,
+     9,    46,    61,    46,    62,    56,     0,     0,     8,    46,
+    82,    83,    85,    57,    88,    58,     0,     0,    10,    84,
+     0,    46,     0,    84,    60,    46,     0,     0,     9,    86,
+     0,    87,     0,    86,    60,    87,     0,    46,     0,     0,
     88,    89,     0,    90,     0,    96,     0,    99,     0,   105,
      0,   107,     0,   109,     0,   132,     0,   137,     0,    11,
-    55,    91,    56,     0,     0,    91,    92,     0,     0,     7,
-    46,    93,    55,    94,    56,     0,     0,    94,    95,     0,
-    46,    54,     0,    12,    55,    97,    56,     0,     0,    97,
-    98,     0,    46,    57,    46,    54,     0,    13,    55,   100,
-    56,     0,     0,   100,   101,     0,     0,     7,    46,   102,
-    55,   103,    56,     0,     0,   103,   104,     0,    46,    54,
-     0,     0,    14,   106,    55,   112,    56,     0,     0,    29,
-   111,   108,    55,   112,    56,     0,     0,    30,   111,   110,
-    55,   112,    56,     0,     0,    46,     0,     0,   112,   113,
-     0,   114,     0,   117,     0,   122,     0,    15,    55,   115,
-    56,     0,     0,   115,   116,     0,   151,    54,     0,    16,
-    55,   118,    56,     0,     0,   118,   119,     0,     0,    46,
-   120,    59,   121,    60,    54,     0,    46,    57,   152,    54,
-     0,   153,     0,   121,    58,   153,     0,    17,    55,   123,
-    56,     0,     0,   123,   124,     0,     0,     0,    19,    59,
-   130,    58,   125,   153,    58,   126,   152,    60,    54,     0,
-     0,     0,    18,    59,   130,    58,   127,   153,    58,   128,
-   153,    60,    54,     0,     0,    46,    59,   130,    58,   129,
-   131,    60,    54,     0,    47,     0,   153,     0,   131,    58,
-   153,     0,    20,    55,   133,    56,     0,     0,   133,   134,
-     0,   135,   136,    46,    54,     0,     0,    21,     0,     0,
-    22,     0,     0,    23,    46,   138,    55,   139,    56,     0,
-     0,   139,   140,     0,     0,    24,    46,    59,    46,    46,
-    60,   141,   142,    55,   145,    56,     0,     0,    25,   143,
-     0,   144,     0,   143,   144,     0,    46,     0,    32,    61,
-    46,     0,    32,    61,    46,    61,    46,    59,    46,    60,
-     0,    26,    61,    46,     0,    26,    61,    46,    59,    46,
-    60,     0,    26,    61,    46,    61,    46,    59,    46,    60,
+    57,    91,    58,     0,     0,    91,    92,     0,     0,     7,
+    46,    93,    57,    94,    58,     0,     0,    94,    95,     0,
+    46,    56,     0,    12,    57,    97,    58,     0,     0,    97,
+    98,     0,    46,    59,    46,    56,     0,    13,    57,   100,
+    58,     0,     0,   100,   101,     0,     0,     7,    46,   102,
+    57,   103,    58,     0,     0,   103,   104,     0,    46,    56,
+     0,     0,    14,   106,    57,   112,    58,     0,     0,    29,
+   111,   108,    57,   112,    58,     0,     0,    30,   111,   110,
+    57,   112,    58,     0,     0,    46,     0,     0,   112,   113,
+     0,   114,     0,   117,     0,   122,     0,    15,    57,   115,
+    58,     0,     0,   115,   116,     0,   151,    56,     0,    16,
+    57,   118,    58,     0,     0,   118,   119,     0,     0,    46,
+   120,    61,   121,    62,    56,     0,    46,    59,   152,    56,
+     0,   153,     0,   121,    60,   153,     0,    17,    57,   123,
+    58,     0,     0,   123,   124,     0,     0,     0,    19,    61,
+   130,    60,   125,   153,    60,   126,   152,    62,    56,     0,
+     0,     0,    18,    61,   130,    60,   127,   153,    60,   128,
+   153,    62,    56,     0,     0,    46,    61,   130,    60,   129,
+   131,    62,    56,     0,    47,     0,   153,     0,   131,    60,
+   153,     0,    20,    57,   133,    58,     0,     0,   133,   134,
+     0,   135,   136,    46,    56,     0,     0,    21,     0,     0,
+    22,     0,     0,    23,    46,   138,    57,   139,    58,     0,
+     0,   139,   140,     0,     0,    24,    46,    61,    46,    46,
+    62,   141,   142,    57,   145,    58,     0,     0,    25,   143,
+     0,   144,     0,   143,   144,     0,    46,     0,    32,    63,
+    46,     0,    32,    63,    46,    63,    46,    61,    46,    62,
+     0,    26,    63,    46,     0,    26,    63,    46,    61,    46,
+    62,     0,    26,    63,    46,    63,    46,    61,    46,    62,
      0,     0,   146,   147,     0,     0,   147,   148,     0,    45,
-     0,    62,   149,    63,     0,    62,    47,    63,     0,    62,
-     1,    63,     0,    46,     0,    32,    61,    46,    61,    46,
-    59,    46,    60,     0,    26,    61,   150,    46,    59,    46,
-    60,     0,     0,    46,    61,     0,   152,    40,   152,     0,
+     0,    64,   149,    65,     0,    64,    47,    65,     0,    64,
+     1,    65,     0,    46,     0,    32,    63,    46,    63,    46,
+    61,    46,    62,     0,    26,    63,   150,    46,    61,    46,
+    62,     0,     0,    46,    63,     0,   152,    40,   152,     0,
    152,    41,   152,     0,   152,    42,   152,     0,   152,    43,
-   152,     0,   152,    64,   152,     0,   152,    65,   152,     0,
-   153,     0,    47,     0,    59,   152,    60,     0,   152,    49,
-   152,     0,   152,    50,   152,     0,   152,    51,   152,     0,
-   152,    52,   152,     0,    46,    59,   152,    60,     0,    46,
-     0,   155,    61,    46,     0,   154,    61,    35,     0,   154,
-    61,    36,     0,    46,    61,    46,    59,    46,    60,     0,
-   156,     0,   157,     0,   155,    61,   157,     0,   154,    61,
-    27,     0,   154,    61,    28,     0,    32,    61,    46,    61,
-    29,     0,    32,    61,    46,    61,    30,     0,    32,    61,
-    46,    62,    47,    63,     0,    27,     0,    28,     0,    31,
-     0,    33,     0,    34,     0,    32,    62,    47,    63,     0
+   152,     0,   152,    50,   152,     0,   152,    49,   152,     0,
+   153,     0,    47,     0,    61,   152,    62,     0,   152,    51,
+   152,     0,   152,    52,   152,     0,   152,    53,   152,     0,
+   152,    54,   152,     0,    46,    61,   152,    62,     0,    46,
+     0,   155,    63,    46,     0,   154,    63,    35,     0,   154,
+    63,    36,     0,    46,    63,    46,    61,    46,    62,     0,
+   156,     0,   157,     0,   155,    63,   157,     0,   154,    63,
+    27,     0,   154,    63,    28,     0,    32,    63,    46,    63,
+    29,     0,    32,    63,    46,    63,    30,     0,    32,    63,
+    46,    64,    47,    65,     0,    27,     0,    28,     0,    31,
+     0,    33,     0,    34,     0,    32,    64,    47,    65,     0
 };
 
 #endif
 
 #if YYDEBUG != 0
 static const short yyrline[] = { 0,
-    94,    96,    98,   100,   101,   102,   104,   107,   110,   111,
-   113,   116,   118,   120,   122,   124,   126,   128,   133,   136,
-   138,   139,   141,   142,   144,   148,   151,   153,   154,   156,
-   158,   160,   161,   163,   164,   166,   169,   170,   172,   174,
-   175,   176,   177,   178,   179,   180,   182,   185,   186,   187,
-   190,   192,   193,   195,   198,   201,   202,   204,   208,   211,
-   212,   213,   216,   218,   219,   221,   224,   227,   229,   232,
-   234,   237,   239,   240,   242,   243,   245,   247,   248,   250,
-   253,   254,   256,   259,   262,   263,   265,   268,   270,   272,
-   275,   278,   281,   282,   284,   287,   289,   292,   294,   296,
-   299,   301,   304,   307,   308,   312,   315,   316,   318,   322,
-   323,   325,   326,   328,   331,   333,   334,   336,   339,   341,
-   342,   344,   346,   348,   351,   353,   355,   357,   359,   362,
-   363,   365,   366,   368,   370,   371,   372,   374,   376,   378,
-   381,   382,   384,   386,   387,   388,   389,   390,   392,   394,
-   395,   396,   397,   398,   399,   400,   402,   406,   408,   409,
-   411,   415,   417,   418,   420,   422,   423,   425,   427,   430,
-   432,   433,   434,   435,   436
+    95,    97,    99,   101,   102,   103,   105,   108,   111,   112,
+   114,   117,   119,   121,   123,   125,   127,   129,   134,   137,
+   139,   140,   142,   143,   145,   149,   152,   154,   155,   157,
+   159,   161,   162,   164,   165,   167,   170,   171,   173,   175,
+   176,   177,   178,   179,   180,   181,   183,   186,   187,   188,
+   191,   193,   194,   196,   199,   202,   203,   205,   209,   212,
+   213,   214,   217,   219,   220,   222,   225,   228,   230,   233,
+   235,   238,   240,   241,   243,   244,   246,   248,   249,   251,
+   254,   255,   257,   260,   263,   264,   266,   269,   271,   273,
+   276,   279,   282,   283,   285,   288,   290,   293,   295,   297,
+   300,   302,   305,   308,   309,   313,   316,   317,   319,   323,
+   324,   326,   327,   329,   332,   334,   335,   337,   340,   342,
+   343,   345,   347,   349,   352,   354,   356,   358,   360,   363,
+   364,   366,   367,   369,   371,   372,   373,   375,   377,   379,
+   382,   383,   385,   387,   388,   389,   390,   391,   393,   395,
+   396,   397,   398,   399,   400,   401,   403,   407,   409,   410,
+   412,   416,   418,   419,   421,   423,   424,   426,   428,   431,
+   433,   434,   435,   436,   437
 };
 #endif
 
@@ -242,8 +242,8 @@ static const char * const yytname[] = {   "$","error","$undefined.","TAFD_includ
 "TAFD_first_child","TAFD_last_child","TAFD_start_param","TAFD_end_param","TAFD_true",
 "TAFD_false","TAFD_ERROR","TAFD_IS_EQUAL","TAFD_NOT_EQUAL","TAFD_MORE_EQUAL",
 "TAFD_LESS_EQUAL","TAFD_NS_CONCAT","TAFD_CODE","TAFD_IDENTIFIER","TAFD_SCALAR",
-"TAFD_QSTRING","'+'","'-'","'*'","'/'","UMINUS","';'","'{'","'}'","'='","','",
-"'('","')'","'.'","'['","']'","'>'","'<'","statements","statement","include_declaration",
+"TAFD_QSTRING","'<'","'>'","'+'","'-'","'*'","'/'","UMINUS","';'","'{'","'}'",
+"'='","','","'('","')'","'.'","'['","']'","statements","statement","include_declaration",
 "base_types_declaration","base_type_statements","base_type_statement","@1","CXX_identifier",
 "base_type_structure","base_type_structure_element","type_declaration","@2",
 "opt_serial","provider_type_statements","provider_type_statement","node_declaration",
@@ -330,7 +330,7 @@ static const short yydefact[] = {     1,
      0,     0,     0,    83,     0,     0,     0,     0,     0,     0,
      0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
      0,     0,    54,    66,     0,     0,     0,     0,   151,   143,
-   144,   145,   146,   152,   153,   154,   155,   147,   148,   165,
+   144,   145,   146,   148,   147,   152,   153,   154,   155,   165,
    166,   159,   160,     0,   158,   164,     0,     0,   103,     0,
      0,     0,     0,     0,     0,   175,   156,     0,    89,   157,
      0,    90,    98,    95,   101,   118,   167,   168,     0,     0,
@@ -359,126 +359,128 @@ static const short yydefgoto[] = {     1,
 };
 
 static const short yypact[] = {-32768,
-   132,     1,   -39,-32768,   -33,-32768,-32768,-32768,-32768,    40,
--32768,    20,-32768,-32768,    38,    50,   -42,    81,-32768,-32768,
-    52,-32768,-32768,    51,   109,    78,   -35,-32768,    91,   136,
-   108,-32768,-32768,-32768,     5,   147,-32768,   137,-32768,-32768,
-    -3,   148,   150,-32768,-32768,   136,    43,   151,-32768,-32768,
-   152,    13,-32768,-32768,-32768,   144,   145,   146,-32768,   149,
-   156,   157,   157,-32768,-32768,-32768,-32768,-32768,-32768,-32768,
--32768,-32768,-32768,   153,-32768,   154,   148,-32768,-32768,-32768,
-   155,-32768,-32768,-32768,-32768,-32768,   159,-32768,-32768,    -6,
-    21,    -4,-32768,   -11,   160,   161,   162,   163,   165,-32768,
--32768,   164,-32768,-32768,   167,-32768,-32768,    -8,-32768,-32768,
--32768,   184,-32768,-32768,-32768,   166,-32768,   168,-32768,   169,
-   170,   171,-32768,-32768,-32768,-32768,-32768,-32768,   172,   -12,
-     2,     6,-32768,   173,   175,   176,-32768,-32768,-32768,   178,
-   181,-32768,-32768,-32768,-32768,-32768,-32768,-32768,    47,    39,
-    46,-32768,   174,    54,    59,-32768,-32768,-32768,    97,-32768,
--32768,    37,-32768,-32768,    80,-32768,   180,    79,-32768,   177,
-   179,-32768,-32768,   182,-32768,-32768,   183,   185,   186,-32768,
--32768,   189,   187,-32768,-32768,   192,-32768,-32768,   190,   196,
-    80,   191,   101,-32768,    80,    80,    80,    80,    80,    80,
-    80,    80,    80,    80,    89,    55,    80,   188,   201,   201,
-   201,   203,-32768,-32768,   122,   193,   105,   194,-32768,   129,
-   129,   129,   129,   134,   134,-32768,-32768,   129,   129,-32768,
--32768,-32768,-32768,   195,-32768,-32768,   121,   114,-32768,   197,
-   200,   202,   199,   158,   204,-32768,-32768,   206,-32768,   205,
-    76,-32768,-32768,-32768,-32768,-32768,-32768,-32768,   198,   207,
-   114,   208,   114,   114,   114,   225,-32768,-32768,-32768,-32768,
-   210,   211,   104,-32768,    44,   209,-32768,-32768,   114,   216,
-   212,   213,-32768,    44,-32768,-32768,   114,    80,-32768,-32768,
-   217,   219,-32768,   215,-32768,   218,   117,   115,   214,-32768,
-   -21,   222,   223,   226,   233,   234,-32768,    14,-32768,-32768,
--32768,   221,   224,   227,   228,   229,   231,-32768,   230,   232,
--32768,   236,   238,-32768,   239,   241,-32768,-32768,   237,   240,
-   235,   242,   243,-32768,-32768,-32768,   244,   248,   252,   246,
-   247,   253,-32768,   249,-32768,   254,-32768
+   170,    13,   -30,-32768,   -26,-32768,-32768,-32768,-32768,    51,
+-32768,    32,-32768,-32768,    43,    52,   -37,   112,-32768,-32768,
+    69,-32768,-32768,    80,   130,   109,    44,-32768,   111,   123,
+   117,-32768,-32768,-32768,    12,   131,-32768,   135,-32768,-32768,
+    -4,   137,   150,-32768,-32768,   123,    -1,   151,-32768,-32768,
+   152,    28,-32768,-32768,-32768,   142,   143,   144,-32768,   145,
+   157,   158,   158,-32768,-32768,-32768,-32768,-32768,-32768,-32768,
+-32768,-32768,-32768,   146,-32768,   149,   137,-32768,-32768,-32768,
+   153,-32768,-32768,-32768,-32768,-32768,   162,-32768,-32768,    -6,
+    23,    -5,-32768,    -7,   154,   155,   156,   147,   168,-32768,
+-32768,   159,-32768,-32768,   169,-32768,-32768,    -9,-32768,-32768,
+-32768,   184,-32768,-32768,-32768,   161,-32768,   173,-32768,   163,
+   164,   165,-32768,-32768,-32768,-32768,-32768,-32768,   177,    -8,
+     8,    47,-32768,   167,   171,   172,-32768,-32768,-32768,   174,
+   179,-32768,-32768,-32768,-32768,-32768,-32768,-32768,    45,    24,
+    29,-32768,   175,    37,    38,-32768,-32768,-32768,   -60,-32768,
+-32768,    41,-32768,-32768,    66,-32768,   176,   101,-32768,   178,
+   180,-32768,-32768,   181,-32768,-32768,   183,   185,   186,-32768,
+-32768,   182,   189,-32768,-32768,   192,-32768,-32768,   187,   188,
+    66,   191,    94,-32768,    66,    66,    66,    66,    66,    66,
+    66,    66,    66,    66,    97,    83,    66,   190,   195,   195,
+   195,   193,-32768,-32768,   122,   166,   106,   194,-32768,    67,
+    67,    67,    67,    67,    67,   134,   134,-32768,-32768,-32768,
+-32768,-32768,-32768,   196,-32768,-32768,   128,   103,-32768,   197,
+   198,   199,   200,   160,   202,-32768,-32768,   204,-32768,   201,
+    78,-32768,-32768,-32768,-32768,-32768,-32768,-32768,   203,   205,
+   103,   207,   103,   103,   103,   209,-32768,-32768,-32768,-32768,
+   206,   210,   105,-32768,    39,   208,-32768,-32768,   103,   213,
+   211,   212,-32768,    39,-32768,-32768,   103,    66,-32768,-32768,
+   215,   225,-32768,   214,-32768,   216,   110,    46,   217,-32768,
+    10,   220,   221,   227,   233,   235,-32768,    14,-32768,-32768,
+-32768,   222,   224,   226,   218,   219,   223,-32768,   228,   229,
+-32768,   242,   243,-32768,   244,   245,-32768,-32768,   230,   234,
+   232,   251,   236,-32768,-32768,-32768,   237,   254,   255,   241,
+   246,   257,-32768,   247,-32768,   238,-32768
 };
 
 static const short yypgoto[] = {-32768,
--32768,-32768,-32768,-32768,-32768,-32768,-32768,-32768,   130,-32768,
+-32768,-32768,-32768,-32768,-32768,-32768,-32768,-32768,   139,-32768,
 -32768,-32768,-32768,-32768,-32768,-32768,-32768,-32768,-32768,-32768,
-   255,-32768,-32768,-32768,-32768,-32768,-32768,-32768,-32768,-32768,
+   258,-32768,-32768,-32768,-32768,-32768,-32768,-32768,-32768,-32768,
 -32768,-32768,-32768,-32768,-32768,-32768,-32768,-32768,-32768,-32768,
--32768,-32768,-32768,-32768,   245,    75,-32768,-32768,-32768,-32768,
+-32768,-32768,-32768,-32768,   248,    77,-32768,-32768,-32768,-32768,
 -32768,-32768,-32768,-32768,-32768,-32768,-32768,-32768,-32768,-32768,
--32768,-32768,-32768,   -19,-32768,-32768,-32768,-32768,-32768,-32768,
--32768,-32768,-32768,-32768,-32768,-32768,-32768,   -75,-32768,-32768,
--32768,-32768,-32768,-32768,-32768,  -165,  -236,-32768,-32768,-32768,
-    16
+-32768,-32768,-32768,   -17,-32768,-32768,-32768,-32768,-32768,-32768,
+-32768,-32768,-32768,-32768,-32768,-32768,-32768,   -58,-32768,-32768,
+-32768,-32768,-32768,-32768,-32768,  -165,  -220,-32768,-32768,-32768,
+    48
 };
 
 
-#define	YYLAST		309
+#define	YYLAST		311
 
 
 static const short yytable[] = {   193,
-    99,   252,   105,    21,    12,    48,   120,   121,   122,   109,
-    33,   141,    14,    22,   315,    13,   120,   121,   122,    34,
-   120,   121,   122,   307,   269,   217,   271,   272,   274,   220,
+    99,   105,   189,   190,    48,   120,   121,   122,    21,    56,
+    57,    58,    59,   109,   315,   141,    12,   252,    60,    14,
+    22,    61,   120,   121,   122,   217,    13,    62,    63,   220,
    221,   222,   223,   224,   225,   226,   227,   228,   229,   316,
-   308,   237,   289,   142,   110,   317,    15,   123,    43,   100,
-   296,   106,    49,    56,    57,    58,    59,   144,    44,   318,
-   319,   145,    60,   177,   178,    61,   102,    16,    76,   281,
-    77,    62,    63,   156,   157,   282,   103,   158,   159,   160,
-   161,   156,   157,    19,   174,   158,   234,   160,   161,   283,
-    24,   179,   162,   163,   175,   191,    28,   192,    64,   183,
-   235,   180,   164,    20,   186,   165,   156,   157,    27,   184,
-   158,   159,   160,   161,   187,   230,   231,    30,   195,   196,
-   197,   198,   297,   232,   233,   162,   163,   199,   200,   201,
-   202,   346,    32,   261,     2,   262,     3,     4,   165,     5,
-   156,   157,   203,   204,   158,   159,   160,   161,    36,   199,
-   200,   201,   202,   199,   200,   201,   202,   189,   190,   250,
-   219,   279,    40,   280,   247,   199,   200,   201,   202,   199,
-   200,   201,   202,   304,   249,   305,   303,   199,   200,   201,
-   202,    37,   244,   245,   201,   202,   257,   258,   131,   132,
-   241,   242,    45,    51,    46,    54,    74,    75,    78,    79,
-    80,    83,    84,    82,    98,   128,    89,    88,   293,    93,
-   117,    87,   119,   135,   113,   114,   115,   140,     0,   133,
-   118,   236,   116,   137,   138,   139,   153,   146,   147,     0,
-   148,   152,   182,   194,   212,   215,   218,   205,   207,   206,
-   213,   209,   216,   210,   211,   214,   238,   239,   243,   275,
-   259,   260,   248,   347,   253,   246,   190,   254,   256,   255,
-   267,   270,   298,   286,   299,   192,   268,   277,   278,   290,
-   300,   312,   291,   292,   306,   310,   311,   302,   313,   314,
-   321,   329,   322,   330,   331,   323,   333,   337,     0,   325,
-   324,   326,   327,   340,   328,   336,   334,   341,   344,   335,
-    55,     0,   339,   338,   342,     0,   343,    86,   345
+   269,   237,   271,   272,   274,   317,   177,   178,   123,   142,
+   110,   100,   106,    49,   307,    43,    64,    15,   289,   318,
+   319,   120,   121,   122,   281,   144,   296,    44,   102,   174,
+   282,   156,   157,   308,   179,   158,   159,   160,   161,    16,
+   103,   175,   183,   186,   283,    76,   180,    77,    19,    33,
+   162,   163,   156,   157,   184,   187,   158,   159,   160,   161,
+    34,   191,   164,   192,   145,   165,   304,    20,   305,   156,
+   157,   162,   163,   158,   234,   160,   161,   201,   202,   203,
+   204,    24,   297,   230,   231,    28,   165,    27,   235,   156,
+   157,   232,   233,   158,   159,   160,   161,   261,    30,   262,
+   195,   196,   197,   198,   201,   202,   203,   204,   250,   199,
+   200,   201,   202,   203,   204,   219,   201,   202,   203,   204,
+   201,   202,   203,   204,   279,    32,   280,   247,    37,   346,
+    36,   303,     2,    40,     3,     4,    45,     5,   201,   202,
+   203,   204,    51,   249,   244,   245,   203,   204,   257,   258,
+   131,   132,   241,   242,    46,    54,    74,    75,    78,    79,
+    80,    82,    83,    84,    88,   128,    87,    98,   116,    93,
+   113,   114,   115,   117,   119,    89,   133,   118,   135,   137,
+   138,   139,   140,   146,   153,   293,   147,   212,   148,   152,
+   246,   194,   215,   275,   216,   182,   218,   347,   243,   207,
+   205,   239,   206,   209,   213,   210,   211,   214,   259,   260,
+   238,     0,     0,   236,   248,     0,   253,   254,   255,   190,
+   298,   256,   270,   192,   286,   277,   268,   267,   290,   278,
+   299,   300,   312,   291,   292,   310,   311,   302,   313,   306,
+   314,   325,   324,   321,   322,   326,   323,   329,   330,   331,
+   333,   334,   327,   328,   336,   335,   337,   339,   338,   340,
+   341,   342,   344,    55,     0,     0,     0,   343,   345,     0,
+    86
 };
 
 static const short yycheck[] = {   165,
-     7,   238,     7,    46,     4,     9,    15,    16,    17,    21,
-    46,    24,    46,    56,     1,    55,    15,    16,    17,    55,
-    15,    16,    17,    45,   261,   191,   263,   264,   265,   195,
+     7,     7,    63,    64,     9,    15,    16,    17,    46,    11,
+    12,    13,    14,    21,     1,    24,     4,   238,    20,    46,
+    58,    23,    15,    16,    17,   191,    57,    29,    30,   195,
    196,   197,   198,   199,   200,   201,   202,   203,   204,    26,
-    62,   207,   279,    56,    56,    32,     7,    56,    44,    56,
-   287,    56,    56,    11,    12,    13,    14,    56,    54,    46,
-    47,    56,    20,    18,    19,    23,    46,    48,    56,    26,
-    58,    29,    30,    27,    28,    32,    56,    31,    32,    33,
-    34,    27,    28,    46,    46,    31,    32,    33,    34,    46,
-    10,    46,    46,    47,    56,    59,    46,    61,    56,    46,
-    46,    56,    56,    54,    46,    59,    27,    28,    57,    56,
-    31,    32,    33,    34,    56,    27,    28,     9,    40,    41,
-    42,    43,   288,    35,    36,    46,    47,    49,    50,    51,
-    52,     0,    55,    58,     3,    60,     5,     6,    59,     8,
-    27,    28,    64,    65,    31,    32,    33,    34,    58,    49,
-    50,    51,    52,    49,    50,    51,    52,    61,    62,    46,
-    60,    58,    55,    60,    60,    49,    50,    51,    52,    49,
-    50,    51,    52,    59,    54,    61,    60,    49,    50,    51,
-    52,    46,    61,    62,    51,    52,    29,    30,   114,   115,
-   210,   211,    46,    46,    58,    46,    46,    46,    55,    55,
-    55,    46,    46,    55,    46,    22,    77,    54,   284,    55,
-    46,    59,    46,    46,    55,    55,    55,    46,    -1,    54,
-    57,   206,    60,    55,    55,    55,    46,    55,    54,    -1,
-    55,    54,    59,    54,    46,    46,    46,    61,    57,    61,
-    54,    59,    47,    59,    59,    54,    59,    47,    46,    25,
-    47,    46,    59,     0,    58,    63,    62,    58,    60,    58,
-    63,    54,    46,    55,    46,    61,    60,    58,    58,    54,
-    56,    46,    61,    61,    61,    54,    54,    60,    46,    46,
-    60,    46,    59,    46,    46,    59,    46,    46,    -1,    61,
-    63,    61,    63,    46,    63,    61,    60,    46,    46,    60,
-    46,    -1,    59,    61,    59,    -1,    60,    63,    60
+   261,   207,   263,   264,   265,    32,    18,    19,    58,    58,
+    58,    58,    58,    58,    45,    44,    58,     7,   279,    46,
+    47,    15,    16,    17,    26,    58,   287,    56,    46,    46,
+    32,    27,    28,    64,    46,    31,    32,    33,    34,    48,
+    58,    58,    46,    46,    46,    58,    58,    60,    46,    46,
+    46,    47,    27,    28,    58,    58,    31,    32,    33,    34,
+    57,    61,    58,    63,    58,    61,    61,    56,    63,    27,
+    28,    46,    47,    31,    32,    33,    34,    51,    52,    53,
+    54,    10,   288,    27,    28,    46,    61,    59,    46,    27,
+    28,    35,    36,    31,    32,    33,    34,    60,     9,    62,
+    40,    41,    42,    43,    51,    52,    53,    54,    46,    49,
+    50,    51,    52,    53,    54,    62,    51,    52,    53,    54,
+    51,    52,    53,    54,    60,    57,    62,    62,    46,     0,
+    60,    62,     3,    57,     5,     6,    46,     8,    51,    52,
+    53,    54,    46,    56,    63,    64,    53,    54,    29,    30,
+   114,   115,   210,   211,    60,    46,    46,    46,    57,    57,
+    57,    57,    46,    46,    56,    22,    61,    46,    62,    57,
+    57,    57,    57,    46,    46,    77,    56,    59,    46,    57,
+    57,    57,    46,    57,    46,   284,    56,    46,    57,    56,
+    65,    56,    46,    25,    47,    61,    46,     0,    46,    59,
+    63,    47,    63,    61,    56,    61,    61,    56,    47,    46,
+    61,    -1,    -1,   206,    61,    -1,    60,    60,    60,    64,
+    46,    62,    56,    63,    57,    60,    62,    65,    56,    60,
+    46,    58,    46,    63,    63,    56,    56,    62,    46,    63,
+    46,    63,    65,    62,    61,    63,    61,    46,    46,    46,
+    46,    62,    65,    65,    63,    62,    46,    61,    63,    46,
+    46,    61,    46,    46,    -1,    -1,    -1,    62,    62,    -1,
+    63
 };
 #define YYPURE 1
 
@@ -1037,369 +1039,369 @@ yyreduce:
   switch (yyn) {
 
 case 11:
-#line 115 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 116 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 { declare_base_type( info, yyvsp[-3].string, yyvsp[-1].string ); ;
     break;}
 case 12:
-#line 117 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 118 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 { declare_base_type_structure( info, yyvsp[-2].string ); ;
     break;}
 case 14:
-#line 121 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 122 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 {yyval.string = yyvsp[0].string;
     break;}
 case 15:
-#line 122 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 123 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 {yyval.string = yyvsp[-2].string + "::" + yyvsp[0].string;
     break;}
 case 18:
-#line 130 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 131 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 { base_type_structure_element( info, yyvsp[-1].string, yyvsp[0].string ); ;
     break;}
 case 19:
-#line 135 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 136 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 { start_provider_type_declaration( info, yyvsp[-2].u.boolean, yyvsp[0].string ); ;
     break;}
 case 21:
-#line 138 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 139 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 { yyval.u.boolean = false; ;
     break;}
 case 22:
-#line 139 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 140 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 { yyval.u.boolean = true; ;
     break;}
 case 25:
-#line 146 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 147 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 { add_provided_result_type( info, yyvsp[-4].string, yyvsp[-2].string ); ;
     break;}
 case 26:
-#line 150 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 151 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 { start_node_declaration( info, yyvsp[0].string ); ;
     break;}
 case 30:
-#line 157 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
-{ node_extends( info, yyvsp[0].string ); ;
-    break;}
-case 31:
 #line 158 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 { node_extends( info, yyvsp[0].string ); ;
     break;}
+case 31:
+#line 159 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+{ node_extends( info, yyvsp[0].string ); ;
+    break;}
 case 36:
-#line 167 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 168 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 { node_provides( info, yyvsp[0].string ); ;
     break;}
 case 50:
-#line 189 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 190 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 { node_start_property_type( info, yyvsp[0].string ); ;
     break;}
 case 54:
-#line 196 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 197 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 { node_declare_property( info, yyvsp[-1].string ); ;
     break;}
 case 58:
-#line 206 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 207 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 { node_declare_alias( info, yyvsp[-3].string, yyvsp[-1].string ); ;
     break;}
 case 62:
-#line 215 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 216 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 { node_start_operand_type( info, yyvsp[0].string ); ;
     break;}
 case 66:
-#line 222 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 223 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 { node_declare_operand( info, yyvsp[-1].string ); ;
     break;}
 case 67:
-#line 226 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 227 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 { node_start_common_declaration( info ); ;
     break;}
 case 69:
-#line 231 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 232 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 { node_start_first_declaration( info, yyvsp[0].string ); ;
     break;}
 case 71:
-#line 236 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 237 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 { node_start_last_declaration( info, yyvsp[0].string ); ;
     break;}
 case 73:
-#line 239 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 240 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 {yyval.string = "";;
     break;}
 case 74:
-#line 240 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 241 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 {yyval.string = yyvsp[0].string;;
     break;}
 case 83:
-#line 257 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 258 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 { node_solve_constraint( info, yyvsp[-1].u.exp ); ;
     break;}
 case 87:
-#line 267 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 268 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 { node_start_solver( info, yyvsp[0].string ); ;
     break;}
 case 88:
-#line 269 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 270 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 { node_finish_solver( info ); ;
     break;}
 case 89:
-#line 270 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 271 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 { node_solve_expression( info,yyvsp[-3].string,yyvsp[-1].u.exp ); ;
     break;}
 case 90:
-#line 274 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 275 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 { node_add_solver_parameter( info ); ;
     break;}
 case 91:
-#line 276 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 277 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 { node_add_solver_parameter( info ); ;
     break;}
 case 95:
-#line 286 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 287 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 { node_start_action( info, "default", yyvsp[-1].u.scalar ); ;
     break;}
 case 96:
-#line 288 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 289 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 { node_add_action_parameter_ref( info ); ;
     break;}
 case 97:
-#line 290 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 291 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 { node_add_action_parameter_exp( info, yyvsp[-2].u.exp );
 	node_finish_action( info ); ;
     break;}
 case 98:
-#line 293 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 294 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 { node_start_action( info, "push", yyvsp[-1].u.scalar ); ;
     break;}
 case 99:
-#line 295 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 296 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 { node_add_action_parameter_ref( info ); ;
     break;}
 case 100:
-#line 297 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 298 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 { node_add_action_parameter_ref( info ); // store second parameter
 	node_finish_action( info ); ;
     break;}
 case 101:
-#line 300 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 301 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 { node_start_action( info, yyvsp[-3].string, yyvsp[-1].u.scalar ); ;
     break;}
 case 102:
-#line 302 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 303 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 { node_finish_action( info ); ;
     break;}
 case 105:
-#line 309 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 310 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 { node_add_action_parameter_ref( info ); ;
     break;}
 case 109:
-#line 320 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 321 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 { node_contains( info, yyvsp[-3].u.boolean, yyvsp[-2].u.boolean, yyvsp[-1].string ); ;
     break;}
 case 110:
-#line 322 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 323 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 {yyval.u.boolean = false; ;
     break;}
 case 111:
-#line 323 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 324 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 {yyval.u.boolean = true; ;
     break;}
 case 112:
-#line 325 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 326 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 {yyval.u.boolean = false; ;
     break;}
 case 113:
-#line 326 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 327 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 {yyval.u.boolean = true; ;
     break;}
 case 114:
-#line 330 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 331 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 { node_start_provide( info, yyvsp[0].string ); ;
     break;}
 case 118:
-#line 338 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 339 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 { node_start_result_code( info, yyvsp[-4].string, yyvsp[-2].string, yyvsp[-1].string ); ;
     break;}
 case 124:
-#line 350 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 351 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 { node_result_essential_prop( info, yyvsp[0].string ); ;
     break;}
 case 125:
-#line 352 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 353 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 { node_result_essential_child_result( info, yyvsp[0].string ); ;
     break;}
 case 126:
-#line 354 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 355 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 { node_result_essential_child_result( info, yyvsp[-5].string, yyvsp[-3].string, yyvsp[-1].string ); ;
     break;}
 case 127:
-#line 356 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 357 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 { node_result_essential_result( info, yyvsp[0].string ); ;
     break;}
 case 128:
-#line 358 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 359 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 { node_result_essential_result( info, "", yyvsp[-3].string, yyvsp[-1].string ); ;
     break;}
 case 129:
-#line 360 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 361 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 { node_result_essential_result( info, yyvsp[-5].string, yyvsp[-3].string, yyvsp[-1].string ); ;
     break;}
 case 130:
-#line 363 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 364 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 { start_code_block(info); ;
     break;}
 case 131:
-#line 363 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 364 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 { finish_code_block(info); ;
     break;}
 case 135:
-#line 370 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 371 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 { /*insert here*/ continue_code_mode(info); ;
     break;}
 case 136:
-#line 371 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
-{ continue_code_mode(info); ;
-    break;}
-case 137:
 #line 372 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 { continue_code_mode(info); ;
     break;}
+case 137:
+#line 373 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+{ continue_code_mode(info); ;
+    break;}
 case 138:
-#line 375 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 376 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 { res_ref_property(info,yyvsp[0].string); ;
     break;}
 case 139:
-#line 377 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 378 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 { res_ref_child(info,yyvsp[-5].string,yyvsp[-3].string,yyvsp[-1].string); ;
     break;}
 case 140:
-#line 379 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 380 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 { res_ref_this(info,yyvsp[-4].string,yyvsp[-3].string,yyvsp[-1].string); ;
     break;}
 case 141:
-#line 381 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 382 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 { yyval.string = ""; ;
     break;}
 case 142:
-#line 382 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 383 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 { yyval.string = yyvsp[-1].string; ;
     break;}
 case 143:
-#line 385 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 386 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 {yyval.u.exp = bool_expr(yyvsp[-2].u.exp,"==",yyvsp[0].u.exp);;
     break;}
 case 144:
-#line 386 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 387 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 {yyval.u.exp = bool_expr(yyvsp[-2].u.exp,"!=",yyvsp[0].u.exp);;
     break;}
 case 145:
-#line 387 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 388 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 {yyval.u.exp = bool_expr(yyvsp[-2].u.exp,">=",yyvsp[0].u.exp);;
     break;}
 case 146:
-#line 388 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 389 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 {yyval.u.exp = bool_expr(yyvsp[-2].u.exp,"<=",yyvsp[0].u.exp);;
     break;}
 case 147:
-#line 389 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 390 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 {yyval.u.exp = bool_expr(yyvsp[-2].u.exp,">",yyvsp[0].u.exp);;
     break;}
 case 148:
-#line 390 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 391 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 {yyval.u.exp = bool_expr(yyvsp[-2].u.exp,"<",yyvsp[0].u.exp);;
     break;}
 case 149:
-#line 393 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 394 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 {yyval.u.exp = expr_from_ref(info);;
     break;}
 case 150:
-#line 394 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 395 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 {yyval.u.exp = expr_scalar(yyvsp[0].u.scalar);;
     break;}
 case 151:
-#line 395 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 396 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 {yyval.u.exp = expr(yyvsp[-1].u.exp);;
     break;}
 case 152:
-#line 396 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 397 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 {yyval.u.exp = expr(yyvsp[-2].u.exp,"+",yyvsp[0].u.exp);;
     break;}
 case 153:
-#line 397 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 398 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 {yyval.u.exp = expr(yyvsp[-2].u.exp,"-",yyvsp[0].u.exp);;
     break;}
 case 154:
-#line 398 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 399 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 {yyval.u.exp = expr(yyvsp[-2].u.exp,"*",yyvsp[0].u.exp);;
     break;}
 case 155:
-#line 399 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 400 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 {yyval.u.exp = expr(yyvsp[-2].u.exp,"/",yyvsp[0].u.exp);;
     break;}
 case 156:
-#line 400 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 401 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 {yyval.u.exp = expr_function(yyvsp[-3].string,yyvsp[-1].u.exp);;
     break;}
 case 157:
-#line 404 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 405 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 { ref_prop_or_op(info, yyvsp[0].string); ;
     break;}
 case 158:
-#line 406 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 407 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 { ref_node_prop(info,yyvsp[0].string); ;
     break;}
 case 159:
-#line 408 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 409 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 { ref_start_param(info); ;
     break;}
 case 160:
-#line 409 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 410 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 { ref_end_param(info); ;
     break;}
 case 161:
-#line 413 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 414 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 { ref_provider_type(info,yyvsp[-5].string,yyvsp[-3].string,yyvsp[-1].string); ;
     break;}
 case 165:
-#line 421 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 422 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 { ref_node_local_prev(info); ;
     break;}
 case 166:
-#line 422 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 423 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 { ref_node_local_next(info); ;
     break;}
 case 167:
-#line 424 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 425 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 { ref_node_local_child_first(info,yyvsp[-2].string); ;
     break;}
 case 168:
-#line 426 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 427 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 { ref_node_local_child_last(info,yyvsp[-2].string); ;
     break;}
 case 169:
-#line 428 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 429 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 { ref_node_local_child(info,yyvsp[-3].string,yyvsp[-1].u.scalar); ;
     break;}
 case 170:
-#line 431 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 432 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 { ref_node_prev(info); ;
     break;}
 case 171:
-#line 432 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 433 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 { ref_node_next(info); ;
     break;}
 case 172:
-#line 433 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 434 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 { ref_node_parent(info); ;
     break;}
 case 173:
-#line 434 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 435 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 { ref_node_first_child(info); ;
     break;}
 case 174:
-#line 435 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 436 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 { ref_node_last_child(info); ;
     break;}
 case 175:
-#line 436 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 437 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 { ref_node_child(info, yyvsp[-1].u.scalar); ;
     break;}
 }
@@ -1628,9 +1630,9 @@ yyerrhandle:
 #endif    
   return 1;
 }
-#line 439 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
+#line 440 "/home/martin/Programmieren/sourceforge/anitmt/anitmt-calc/funcgen/./parser.yy"
 
-  int parse_afd( AFD_Manager *afd, message::Message_Consultant *c, 
+  int parse_afd( AFD_Root *afd, message::Message_Consultant *c, 
 		 std::string filename )
   {
     afd_info info(afd,c);

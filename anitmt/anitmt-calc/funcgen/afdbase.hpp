@@ -39,7 +39,7 @@ namespace funcgen
   class Bool_Expression;
   class Expression;
   class Tree_Node_Type;
-  class AFD_Manager;
+  class AFD_Root;
 
   class Base_Type
   {
@@ -75,7 +75,7 @@ namespace funcgen
   class Provider_Type
   {
   public:
-    std::map<std::string,Result_Type> result_types;
+    std::set<Result_Type> result_types;
     bool serial;
 
     // special functions for identification
@@ -189,14 +189,16 @@ namespace funcgen
   class Result_Code
   {
   public:
-    bool defined;		// is this code was already defined
+    bool defined;		// is this code already defined
     std::string parameter;	// parameter name
     std::list<std::string> required_properties; 
     std::list< std::pair<std::string,Result_Type> > required_children; 
     std::list< std::pair<std::string,Result_Type> > required_results; 
 
     int start_src_line;		// source line where this code starts
+    int start_src_column;	// source column where this code starts
     std::string code;		// source code
+
     void print( const Result_Type &type ) const; 
 				// print, just for debug purposes
   };
@@ -205,6 +207,7 @@ namespace funcgen
   {
   public:
     std::map<Result_Type, Result_Code> results;
+    Result_Code *current_result_code;
     void print() const;		// print, just for debug purposes
   };
 
@@ -277,7 +280,8 @@ namespace funcgen
     //*************
     // result code
     std::map<std::string, Provided_Results> provided_results;
-    Result_Code *current_result_code;
+    Provided_Results *current_provided_results;
+    Provider_Type *current_provided_result_type;
 
     //**********************
     // general help classes
@@ -291,7 +295,7 @@ namespace funcgen
   };
 
   // stores all information of afd files
-  class AFD_Manager
+  class AFD_Root
   {
   public:
     std::map<std::string, Base_Type> base_types;
@@ -301,7 +305,7 @@ namespace funcgen
     std::map<std::string, Tree_Node_Type> nodes;
     Tree_Node_Type *current_node;
 
-    //AFD_Manager(){}
+    //AFD_Root(){}
     void print() const;		// print, just for debug purposes
   };
 

@@ -18,7 +18,7 @@
 
 namespace funcgen
 {
-  int parse_afd( AFD_Manager *afd, message::Message_Consultant *c, 
+  int parse_afd( AFD_Root *afd, message::Message_Consultant *c, 
 		 std::string filename );
   extern int yydebug;
 }
@@ -35,7 +35,7 @@ int main(int argn, char *argc[])
   message::Stream_Message_Handler msg_handler(std::cerr,std::cout,std::cout);
   message::Message_Manager manager(&msg_handler);
   message::Message_Consultant default_msg_consultant(&manager, 0);
-  funcgen::AFD_Manager afd;
+  funcgen::AFD_Root afd;
   
   std::cout << "Parsing " << argc[1] << "..." << std::endl;
   funcgen::parse_afd( &afd, &default_msg_consultant, argc[1] );

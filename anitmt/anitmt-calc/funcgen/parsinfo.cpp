@@ -47,10 +47,10 @@ namespace funcgen
     lexer_uses_file_stream = false;
   }
 
-  afd_info::afd_info( AFD_Manager *afd_manager, 
+  afd_info::afd_info( AFD_Root *AFD_Root, 
 		      message::Message_Consultant *consultant )
     : old_positions(10), max_old_positions(10),
-      msg(consultant), lexer(new funcgen_FlexLexer(&cin)), afd(afd_manager),
+      msg(consultant), lexer(new funcgen_FlexLexer(&cin)), afd(AFD_Root),
       lexer_uses_file_stream( false )
   {
     lexer->info = this;
