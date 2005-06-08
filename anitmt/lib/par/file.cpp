@@ -6,7 +6,7 @@
  * This is a part of the aniTMT animation project. 
  * 
  * Copyright (c) 2001 by Wolfgang Wieser
- * Bugs, suggestions to wwieser@gmx.de. 
+ * Bugs, suggestions to > wwieser -a- gmx -*- de <. 
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose and without fee is hereby granted,

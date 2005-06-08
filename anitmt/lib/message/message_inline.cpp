@@ -4,7 +4,7 @@
 /**									    **/
 /** Authors: Martin Trautmann, Wolfgang Wieser				    **/
 /**									    **/
-/** EMail:   martintrautmann@gmx.de, wwieser@gmx.de			    **/
+/** EMail:   martintrautmann@gmx.de, > wwieser -a- gmx -*- de <			    **/
 /**									    **/
 /** License: LGPL - free and without any warranty - read COPYING            **/
 /**									    **/

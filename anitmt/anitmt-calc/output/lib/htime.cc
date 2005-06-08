@@ -3,7 +3,7 @@
  * 
  * Implementation of methods supporting class HTime. 
  * 
- * Copyright (c) 2001 by Wolfgang Wieser (wwieser@gmx.de) 
+ * Copyright (c) 2001 by Wolfgang Wieser > wwieser -a- gmx -*- de < 
  * 
  * This file may be distributed and/or modified under the terms of the 
  * GNU General Public License version 2 as published by the Free Software 

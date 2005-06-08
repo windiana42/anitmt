@@ -5,7 +5,7 @@
  * Have a look at vector.hpp as this will probably be what you are 
  * looking for. 
  * 
- * Copyright (c) 2000--2002 by Wolfgang Wieser (wwieser@gmx.de) 
+ * Copyright (c) 2000--2002 by Wolfgang Wieser > wwieser -a- gmx -*- de < 
  * 
  * This file may be distributed and/or modified under the terms of the 
  * GNU General Public License version 2 as published by the Free Software 

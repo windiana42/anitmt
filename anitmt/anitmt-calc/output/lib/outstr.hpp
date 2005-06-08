@@ -4,7 +4,7 @@
  * Output stream wrapper/interface. 
  * 
  * Copyright (c) 2001 by Wolfgang Wieser
- * Bugs to wwieser@gmx.de
+ * Bugs to > wwieser -a- gmx -*- de <
  * 
  * This is a part of the aniTMT animation project. 
  * 

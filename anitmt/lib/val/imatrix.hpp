@@ -4,7 +4,7 @@
  * Header file containing an internally used matrix template. 
  * Quite likely, you are looking for matrix.hpp...
  *
- * Copyright (c) 2000--2002 by Wolfgang Wieser (wwieser@gmx.de) 
+ * Copyright (c) 2000--2002 by Wolfgang Wieser > wwieser -a- gmx -*- de < 
  * 
  * This file may be distributed and/or modified under the terms of the 
  * GNU General Public License version 2 as published by the Free Software 
