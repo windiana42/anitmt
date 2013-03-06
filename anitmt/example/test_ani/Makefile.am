@@ -1,3 +1,3 @@
 # Animation directory
-exampledir = $(pkgdatadir)/example/test/test_ani/
-example_DATA=
+examplesubdir = $(pkgdatadir)/example/test/test_ani/
+examplesub_DATA=.cvsignore

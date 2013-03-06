@@ -1,3 +1,3 @@
 # Animation directory
 exampledir = $(pkgdatadir)/example/myrobot/ani/
-example_DATA=
+example_DATA=.cvsignore
