@@ -2,20 +2,23 @@
 %define  rel     %{?CUSTOM_RELEASE} %{!?CUSTOM_RELEASE:%RELEASE}
 
 Name: anitmt
-Version: 0.2.1
+Version: 0.2.2
 Release: %rel
 
 Summary: AniTMT is an Animation System for generating films with povray
-Copyright: GPL
+License: GPL
 Group: Productivity/Graphics/Visualization/Raytracers
 Vendor: Martin Trautmann <martintrautmann@gmx.de>
 Packager: Martin Trautmann <martintrautmann@gmx.de>
-Url: http://anitmt.sourceforge.net/
+Url: http://sourceforge.net/project/anitmt
 
-Source: ftp://download.sourceforge.net/pub/sourceforge/anitmt/%name-%version.tar.gz
+Source: http://heanet.dl.sourceforge.net/project/anitmt/AniTMT/%version/%name-%version.tar.gz
 
 Prefix: %_prefix
 BuildRoot: %_tmppath/%name-%version-root
+
+Requires: hlib
+BuildRequires: hlib bison flex
 
 %description
 AniTMT is an Animation System for generating films with povray
@@ -49,9 +52,9 @@ rm -rf $RPM_BUILD_ROOT
 %files
 %defattr(-,root,root,755)
 %doc AUTHORS COPYING COPYING.GPL COPYING.LGPL README NEWS ChangeLog TODO FAQ
-%prefix/bin/*
-%prefix/lib/*
-%prefix/share/anitmt/example/
+%{_bindir}/*
+%{_libdir}/*
+%{_datadir}/anitmt/example/
 
 #%changelog
 #* first version
