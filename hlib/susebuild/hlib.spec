@@ -69,7 +69,6 @@ rm -rf $RPM_BUILD_ROOT
 %package devel
 Summary: HLib is a general purpose library. This package includes development files.
 Group: System/Libraries/
-Provides: %{name}-devel
 
 %description devel
 HLib is a general-purpose library for POSIX and POSIX-like operating systems
@@ -95,12 +94,14 @@ following addons:
 %files
 %defattr(-,root,root,755)
 %doc AUTHORS COPYING COPYING.GPL README NEWS ChangeLog BUILD
-%{_libdir}/*
+%prefix/lib/*
 
 %files devel
+%defattr(-,root,root,755)
+%doc AUTHORS COPYING COPYING.GPL README NEWS ChangeLog BUILD
 %prefix/include/hlib/
-%{_bindir}/hlib_config
-%{_datadir}/%name/
+%prefix/bin/hlib_config
+%prefix/share/hlib/
 
 #%changelog
 #* first version
