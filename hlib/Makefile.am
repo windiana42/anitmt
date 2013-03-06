@@ -11,10 +11,14 @@ lib_LIBRARIES = libhlib.a
 libhlib_a_SOURCES = 
 
 EXTRA_DIST = BUILD COPYING.GPL \
-	hlib-config.h.in hconfig.h config.guess config.sub hlib.spec
+	hlib-config.h.in hlib_config.in hconfig.h config.guess config.sub hlib.spec
 
+#put HConfigVars in /usr/share/hlib/ for example
 hlibinstalldir=$(datadir)/hlib/
-hlibinstall_DATA=HConfigVars
+hlibinstall_SCRIPTS=HConfigVars
+
+#put hlib_config in path
+bin_SCRIPTS=hlib_config
 
 libhlib.a: $(SUBLIBS)
 	@echo "Re-creating libhlib.a..."

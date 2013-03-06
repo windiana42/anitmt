@@ -19,7 +19,7 @@
 # Process this file with autoconf to produce a configure script.
 # If you have trouble, use the latest versions. 
 # Things work well with autoconf-2.53 and automake-1.6. 
-AC_INIT(hlib,1.1.1,[<see apropriate header file>])
+AC_INIT(hlib,1.1.1,cpp/btree.h)
 # You can pass options to AM_INIT_AUTOMAKE: 
 # AM_INIT_AUTOMAKE([dist-bzip2,...]
 #  dist-bzip2 -> create bzip2-compressed dist tarball. 
@@ -205,8 +205,9 @@ CPP_TRY_FINAL_FLAGS([-fno-exceptions])
 if test "$GXX" = "yes" ; then
 	HLIB_CXXCOMPILER_VERSION="GCC:"
 	
-	# We use gcc and NOT g++: 
-	CXX="${CXX/"g++"/gcc}"
+	# this doesn't work any more due to this: https://issues.apache.org/ooo/show_bug.cgi?id=34676
+	## We use gcc and NOT g++: 
+	#CXX="${CXX/"g++"/gcc}"
 	
 	# Make sure that we get rid of the horrible default "-g -O2":
 	# See above for more info...
@@ -530,6 +531,7 @@ AC_CONFIG_FILES([ \
 	Makefile])
 #AC_CONFIG_FILES([$srcdir/HConfigVars],[chmod ug+x "$srcdir/HConfigVars"])
 AC_CONFIG_FILES([HConfigVars],[chmod ug+x "HConfigVars"])
+AC_CONFIG_FILES([hlib_config],[chmod ug+x "hlib_config"])
 
 # Finally do it: 
 AC_OUTPUT
