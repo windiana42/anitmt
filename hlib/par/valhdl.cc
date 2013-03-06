@@ -19,7 +19,7 @@
 #include <string.h>
 
 namespace par  {
-namespace internal  {
+  //namespace internal  {
 
 // Allocation wrappers for ValueHandler::print(): 
 char *ValueHandler::stralloc(size_t len)
@@ -54,4 +54,5 @@ size_t ValueHandler::cpsize()
 	return(0);
 }
 
-} }   // end of namespaces par and internal
+  //} // end of namespace internal
+}   // end of namespace par

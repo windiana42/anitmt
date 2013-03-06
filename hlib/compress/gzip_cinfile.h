@@ -21,7 +21,7 @@
 
 #if HAVE_ZLIB_H
 // This avoids including zlib.h here: 
-typedef void * gzFile;
+typedef struct gzFile_s* gzFile;
 #endif
 
 

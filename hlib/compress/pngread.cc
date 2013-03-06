@@ -210,7 +210,7 @@ int PNGReader::SetBasicBitOps(int flags,int sane)
 	if(flags & PNGR_GrayExpand)
 	{
 		if(!sane || (color_type==PNG_COLOR_TYPE_GRAY && bit_depth<8))
-		{  png_set_gray_1_2_4_to_8(png_ptr);  }
+		{  png_set_expand_gray_1_2_4_to_8(png_ptr);  }
 	}
 	if(flags & PNGR_AddAlphaIfAvail)
 	{
