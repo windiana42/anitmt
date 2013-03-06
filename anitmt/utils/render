@@ -135,6 +135,7 @@ for i in $(seq -f $frames $start $jump $end); do
   echo =====================================================================
   echo $povray +I$i +w$width +h$height +D $output $try_again $params ; 
   $povray +I$i +w$width +h$height +D $output $try_again $params || exit -5 ; 
+  usleep 100000;
 done  
 
 exit 0;

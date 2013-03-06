@@ -20,6 +20,7 @@ $ANITMT test.ini
 cd test_ani/
 $RENDER -w 192 -h 144
 $TGA2AVI -f 5 -e 150
+echo $MKAVI -f 5 -e 150 -o film-cram.avi
 $MKAVI -f 5 -e 150 -o film-cram.avi
 cd ../../
 

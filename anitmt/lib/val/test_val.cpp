@@ -264,19 +264,19 @@ int main()
 	cerr << "Track ";
 	for(int t=1; t<10; t++)
 	{
-		vect::Matrix<10,10> t;
+		vect::Matrix<10,10> t2;
 		double s=0.0;
 		for(int i=0; i<10; i++)
 		{
 			for(int j=0; j<10; j++)
 			{
 				double v=rand()/10000.0;
-				t[i][j]=v;
+				t2[i][j]=v;
 				if(i==j)
 				{  s+=v;  }
 			}
 		}
-		if(Scalar(s)!=t.track() || Scalar(s)!=mat_track(t))
+		if(Scalar(s)!=t2.track() || Scalar(s)!=mat_track(t2))
 		{  cerr << "*** ERROR in track()\n";  }
 		else
 		{  cerr << ".";  }
