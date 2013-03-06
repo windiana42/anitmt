@@ -87,11 +87,11 @@ int TaskDriverInterfaceFactory_LDR::FinalInit()
 		// HOST/port
 		// HOST/port/passwd
 		// HOST//passwd
-		char *first_sep=strchr(name,sep);
-		char *second_sep=first_sep ? strchr(first_sep+1,sep) : NULL;
+		const char *first_sep=strchr(name,sep);
+		const char *second_sep=first_sep ? strchr(first_sep+1,sep) : NULL;
 		// See what is specified...
-		char *pass_str = second_sep ? second_sep+1 : NULL;
-		char *port_str = first_sep ? first_sep+1 : NULL;
+		const char *pass_str = second_sep ? second_sep+1 : NULL;
+		const char *port_str = first_sep ? first_sep+1 : NULL;
 		if(port_str+1==pass_str)  port_str=NULL;
 		
 		// Read in port: 

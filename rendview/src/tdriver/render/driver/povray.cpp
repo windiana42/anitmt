@@ -51,7 +51,7 @@ int POVRayDriver::ProcessError(ProcessErrorInfo *pei)
 		else if(rt->rdesc->binpath.str())
 		{
 			prg_name=rt->rdesc->binpath.str();
-			char *tmp=strrchr(prg_name,'/');
+			const char *tmp=strrchr(prg_name,'/');
 			if(tmp)  prg_name=tmp+1;
 		}
 	}
@@ -122,7 +122,7 @@ int POVRayDriver::InspectTaskDoneCode(PInfo *pinfo)
 		char *old_name=NULL;
 		size_t old_name_len=0;
 		size_t base_len=0;
-		char *lastdot=strrchr(outfile,'.');
+		const char *lastdot=strrchr(outfile,'.');
 		if(!lastdot)  goto rename_okay;
 		
 		old_name_len=strlen(outfile)+i_end+2;

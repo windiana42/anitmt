@@ -2,11 +2,11 @@
 %define  rel     %{?CUSTOM_RELEASE} %{!?CUSTOM_RELEASE:%RELEASE}
 
 Name: rendview
-Version: 0.7.1a
+Version: 0.7.2
 Release: %rel
 
 Summary: RendView is a utility to have films rendered.
-Copyright: GPL
+License: GPL
 Group: Productivity/Graphics/Visualization/Raytracers
 Vendor: Wolfgang Wieser <wwieser AT gmx DOT de>
 Packager: Martin Trautmann <martintrautmann@gmx.de>

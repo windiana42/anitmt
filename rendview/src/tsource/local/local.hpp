@@ -88,7 +88,7 @@ class TaskSource_Local :
 		int _GetNextFrameToProcess(FrameToProcessInfo *ftpi);
 		
 		// Return value: 0 -> OK; -1 -> alloc failure; -2 -> GetTaskFile() failed. 
-		int TaskSource_Local::_SetUpAddTaskFiles(CompleteTask::AddFiles *af,
+		int _SetUpAddTaskFiles(CompleteTask::AddFiles *af,
 			const RefStrList *flist,TaskFile::IOType iotype,int frame_no);
 		
 		// Check additional files and see if the frame has to be re-processed. 

@@ -1,6 +1,6 @@
 # Process this file with autoconf to produce a configure script.
 AC_INIT
-AM_INIT_AUTOMAKE(rendview,0.7.1a)
+AM_INIT_AUTOMAKE(rendview,0.7.2)
 AC_CONFIG_SRCDIR([src/rendview.cpp])
 AM_CONFIG_HEADER(config.h)
 
@@ -20,35 +20,41 @@ AC_ARG_WITH(hlib,AC_HELP_STRING([--with-hlib],[path to hlib build directory]),
 		hlib_build_dir="$withval" 
 	fi ])
 AC_MSG_CHECKING([for hlib])
-hlibdir=""
-checkdirs="./hlib ./hlib-* ../hlib ../hlib-*"
-if test "$hlib_build_dir" != "<unset>" ; then
-	checkdirs="$hlib_build_dir $hlib_build_dir/hlib $hlib_build_dir/.."
-fi
-hlibversion="none"
-for i in $checkdirs ; do
-  test -x "$i/HConfigVars" || continue
-  hlibversion="$($i/HConfigVars VERSION)"
-  case "x$hlibversion" in
-    x1.0.0)  hlibdir="$i" ; break ;;
-  esac
-done
-if test "x$hlibdir" = "x" ; then
-	AC_MSG_RESULT([failed])
-	AC_MSG_ERROR([Unable to find hlib (need: 1.0.0, found: $hlibversion). Giving up.])
+hlib_config_script=hlib_config
+hlib_LDADD=""
+if which hlib_config > /dev/null 2>&1; then
+	hlib_LDADD="-lhlib"
 else
-	AC_MSG_RESULT([$hlibdir, version $hlibversion])
-fi
+	checkdirs="./hlib ./hlib-* ../hlib ../hlib-*"
+	if test "$hlib_build_dir" != "<unset>" ; then
+		checkdirs="$hlib_build_dir $hlib_build_dir/hlib $hlib_build_dir/.."
+	fi
+	hlibversion="none"
+	for i in $checkdirs ; do
+	  echo $i/HConfigVars
+	  cat $i/HConfigVars
+	  test -x "$i/HConfigVars" || continue
+	  hlibversion="$($i/HConfigVars VERSION)"
+	  case "x$hlibversion" in
+	    x1.1.1)  hlibdir="$i" ; break ;;
+	  esac
+	done
+	if test "x$hlibdir" = "x" ; then
+		AC_MSG_RESULT([failed])
+		AC_MSG_ERROR([Unable to find hlib (need: 1.1.1, found: $hlibversion). Giving up.])
+	else
+		AC_MSG_RESULT([$hlibdir, version $hlibversion])
+	fi
+	
+	#AC_SUBST(hlibdir)
+	if test "$hlibdir" != "./hlib" -a "$hlibdir" != "hlib" ; then
+		test -e "hlib" && rm "hlib"
+		ln -s "$hlibdir" "hlib"
+	fi
 
-#AC_SUBST(hlibdir)
-if test "$hlibdir" != "./hlib" -a "$hlibdir" != "hlib" ; then
-	test -e "hlib" && rm "hlib"
-	ln -s "$hlibdir" "hlib"
+	hlib_config_script="$hlibdir/HConfigVars"
+	hlib_LDADD="$hlibdir/libhlib.a"
 fi
-
-# Set hlib's compiler: 
-CC="$($hlibdir/HConfigVars CC)"
-CXX="$($hlibdir/HConfigVars CXX)"
 
 # Checks for header files. HLIB already does a lot of these checks, some 
 # are repeated here. 
@@ -109,10 +115,16 @@ AC_CHECK_HEADERS([readline/readline.h readline/history.h],,
 
 # Set hlib's CFLAGS and CXXFLAGS: 
 # This must be done at the end bcause of $(ADDFLAGS). 
-CFLAGS="$($hlibdir/HConfigVars CFLAGS)"
-CXXFLAGS="$($hlibdir/HConfigVars CXXFLAGS)"
+CFLAGS="$($hlib_config_script CFLAGS)"
+CXXFLAGS="$($hlib_config_script CXXFLAGS)"
+CC="$($hlib_config_script CC)"
+CXX="$($hlib_config_script CXX)"
+export LIBS="$LIBS $hlib_LDADD";
+echo "CC = $CC"
+echo "CXX = $CXX"
 echo "CFLAGS = $CFLAGS"
 echo "CXXFLAGS = $CXXFLAGS"
+echo "LIBS = $LIBS"
 
 # Finally write files: 
 AC_CONFIG_FILES([ \

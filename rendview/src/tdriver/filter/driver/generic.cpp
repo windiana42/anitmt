@@ -38,7 +38,7 @@ int GenericFilterDriver::ProcessError(ProcessErrorInfo *pei)
 		else if(ft->fdesc->binpath.str())
 		{
 			prg_name=ft->fdesc->binpath.str();
-			char *tmp=strrchr(prg_name,'/');
+			const char *tmp=strrchr(prg_name,'/');
 			if(tmp)  prg_name=tmp+1;
 		}
 	}

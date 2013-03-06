@@ -7,7 +7,6 @@ rendview_SOURCES = rendview.cpp \
 	database.hpp database.cpp \
 	taskmanager.cpp taskmanager.hpp 
 rendview_LDADD = \
-	$(top_builddir)/hlib/libhlib.a \
 	lib/libsupport.a \
 	tdriver/local/libtdif_local.a \
 	tdriver/libtdriver.a \
@@ -26,5 +25,4 @@ rendview_LDADD = \
 	tsource/libtsource.a \
 	imgfmt/libimgfmt.a \
 	admin/libadmin.a \
-	lib/libsupport.a \
-	$(top_builddir)/hlib/libhlib.a 	
+	lib/libsupport.a 	
