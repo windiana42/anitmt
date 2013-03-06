@@ -20,6 +20,8 @@ AC_ARG_WITH(hlib,AC_HELP_STRING([--with-hlib],[path to hlib build directory]),
 		hlib_build_dir="$withval" 
 	fi ])
 AC_MSG_CHECKING([for hlib])
+# anitmt uses a different way to search for a preinstalled hlib library; Consider using the same
+# or combining both approaches
 hlib_config_script=hlib_config
 hlib_LDADD=""
 if which hlib_config > /dev/null 2>&1; then

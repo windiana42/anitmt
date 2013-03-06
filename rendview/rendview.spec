@@ -12,7 +12,7 @@ Vendor: Wolfgang Wieser <wwieser AT gmx DOT de>
 Packager: Martin Trautmann <martintrautmann@gmx.de>
 Url: http://www.cip.physik.uni-muenchen.de/~wwieser/ 
 
-Source: ftp://download.sourceforge.net/pub/sourceforge/anitmt/%name-%version.tar.gz
+Source: http://heanet.dl.sourceforge.net/project/anitmt/%name/%version/%name-%version.tar.gz
 
 Prefix: %_prefix
 BuildRoot: %_tmppath/%name-%version-root

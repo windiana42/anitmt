@@ -14,6 +14,7 @@ To build RendView, you need:
   Installing the RPM should work. Otherwise, please make sure the executable 
   hlib_config is reachable from the PATH and 
   libhlib is installed as a library such that -lhlib will work
+  attention: compiler parameters will be used from hlib as provided by hlib_config
 
 
 BUILDING RENDVIEW
