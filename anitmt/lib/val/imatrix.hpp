@@ -209,10 +209,10 @@ public: // work around for the template friend problem
 #ifndef GCC_HACK
 		// Function to multiply the vector v with matrix m, storing the 
 		// resulting vector in r. 
-		template<int r,int c>friend void mult_mv(vector<r> &r,const matrix<r,c> &m,const vector<c> &v);
+		template<int r,int c>friend void mult_mv(vector<r> &rpar,const matrix<r,c> &m,const vector<c> &v);
 		friend void mult_mv(vector<3> &r,const matrix<4,4> &m,const vector<3> &v);
 		#ifndef LIBVAL_DISABLE__VEC_MUL_MAT
-		template<int r,int c>friend void mult_vm(vector<c> &r,const matrix<r,c> &m,const vector<r> &v);
+		template<int r,int c>friend void mult_vm(vector<c> &rpar,const matrix<r,c> &m,const vector<r> &v);
 		friend void mult_vm(vector<3> &r,const matrix<4,4> &m,const vector<3> &v);
 		#endif
 #endif

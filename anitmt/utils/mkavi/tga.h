@@ -20,7 +20,7 @@
 #ifndef TGA_INCLUDED
 #define TGA_INCLUDED
 
-#include <iostream.h>
+//#include <iostream>
 #include <assert.h>
 #include "image.h"
 

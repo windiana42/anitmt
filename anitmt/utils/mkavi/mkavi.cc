@@ -22,6 +22,8 @@
 
 #include <strings.h>
 #include <assert.h>
+#include <iostream>
+#include <stdlib.h>
 
 // iostream has pissed me off, we will use open(2)
 extern "C" {
@@ -39,6 +41,11 @@ extern "C" {
 #include "patchlevel.h"
 
 #include <string>
+
+using std::cerr;
+using std::cout;
+using std::endl;
+
 // search %0nd and replace with the number
 std::string num_in_string( std::string str, int num ){
   std::string::size_type p1 = str.find("%0");

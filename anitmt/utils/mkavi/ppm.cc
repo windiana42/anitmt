@@ -16,11 +16,16 @@
  */
 
 
-#include <iostream.h>
 #include "ppm.h"
+
+#include <iostream>
+using std::cerr;
+using std::cout;
+using std::endl;
 
 // How many types of IO can we use in one program??
 extern "C" {
+#include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>

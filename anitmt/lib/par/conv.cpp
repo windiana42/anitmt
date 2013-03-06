@@ -39,6 +39,8 @@
 #include <limits.h>
 #include <iostream>
 #include <assert.h>
+#include <string.h>
+#include <stdlib.h>
 #include "params.hpp"
 
 namespace anitmt

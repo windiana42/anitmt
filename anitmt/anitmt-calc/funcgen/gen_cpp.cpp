@@ -1394,6 +1394,19 @@ namespace funcgen
       *decl << " >" << std::endl;
       *decl << "  {" << std::endl;
       *decl << "  public:" << std::endl;
+      // using declarations for providing inherited functions of template parents
+      *decl << "    typedef solve::" 
+	    << op_decl.basic_operator->get_real_name()
+	    << "< T_Result";
+      for( i=1; i <= op_decl_operands; ++i )
+      {
+        *decl << ", T_Operand" << i;
+      }
+      *decl << " > Super;" << std::endl;
+      *decl << "    using Super::init;" << std::endl;
+      *decl << "    using Super::error;" << std::endl;
+
+      // constructor:
       *decl << "    " << translator.operator_class_name(op_name) 
 	    << "( ";
       for( i=1; i <= op_decl_operands; ++i )

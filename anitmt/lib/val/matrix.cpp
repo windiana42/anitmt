@@ -21,6 +21,7 @@ namespace vect
 {
 
 #ifndef GCC_HACK
+template< >
 Matrix<4,4>::Matrix(enum MatRotX,double angle) : x(0)
 {
 	double sina=sin(angle);
@@ -29,6 +30,7 @@ Matrix<4,4>::Matrix(enum MatRotX,double angle) : x(0)
 	x[2][1]=sina;  x[2][2]= cosa;
 }
 
+template< >
 Matrix<4,4>::Matrix(enum MatRotY,double angle) : x(0)
 {
 	double sina=sin(angle);
@@ -37,6 +39,7 @@ Matrix<4,4>::Matrix(enum MatRotY,double angle) : x(0)
 	x[2][0]=-sina;  x[2][2]= cosa;
 }
 
+template< >
 Matrix<4,4>::Matrix(enum MatRotZ,double angle) : x(0)
 {
 	double sina=sin(angle);
@@ -45,11 +48,13 @@ Matrix<4,4>::Matrix(enum MatRotZ,double angle) : x(0)
 	x[1][0]= sina;  x[1][1]= cosa;
 }
 
+template< >
 Matrix<4,4>::Matrix(enum MatScale,double fact,int idx) : x(0)
 {
 	x[idx][idx]=fact;
 }
 
+template< >
 Matrix<4,4>::Matrix(enum MatScale,double fact) : x(0)
 {
 	x[0][0]=fact;
@@ -57,6 +62,7 @@ Matrix<4,4>::Matrix(enum MatScale,double fact) : x(0)
 	x[2][2]=fact;
 }
 
+template< >
 Matrix<4,4>::Matrix(enum MatScale,const Vector<3> &v) : x(0)
 {
 	x[0][0]=v[0];
@@ -64,11 +70,13 @@ Matrix<4,4>::Matrix(enum MatScale,const Vector<3> &v) : x(0)
 	x[2][2]=v[2];
 }
 
+template< >
 Matrix<4,4>::Matrix(enum MatTrans,double delta,int idx) : x(0)
 {
 	x[idx][3]=delta;
 }
 
+template< >
 Matrix<4,4>::Matrix(enum MatTrans,const Vector<3> &v) : x(0)
 {
 	x[0][3]=v[0];
@@ -76,6 +84,7 @@ Matrix<4,4>::Matrix(enum MatTrans,const Vector<3> &v) : x(0)
 	x[2][3]=v[2];
 }
 
+template< >
 Matrix<4,4>::Matrix(enum MatColVec,const Vector<3> &c1,
 	const Vector<3> &c2,const Vector<3> &c3) : x()
 {
@@ -87,6 +96,7 @@ Matrix<4,4>::Matrix(enum MatColVec,const Vector<3> &c1,
 	x[3][3]=1.0;
 }
 
+template< >
 Matrix<4,4>::Matrix(enum MatRowVec,const Vector<3> &r1,
 	const Vector<3> &r2,const Vector<3> &r3) : x()
 {
@@ -98,6 +108,7 @@ Matrix<4,4>::Matrix(enum MatRowVec,const Vector<3> &r1,
 	x[3][3]=1.0;
 }
 
+template< >
 Matrix<4,4>::Matrix(MatColVec,const Vector<4> &c0,
 	const Vector<4> &c1,const Vector<4> &c2,const Vector<4> &c3) : x()
 {
@@ -105,6 +116,7 @@ Matrix<4,4>::Matrix(MatColVec,const Vector<4> &c0,
 	{  x[i][0]=c0[i];  x[i][1]=c1[i];  x[i][2]=c2[i];  x[i][3]=c3[i];  }
 }
 
+template< >
 Matrix<4,4>::Matrix(MatRowVec,const Vector<4> &r0,
 	const Vector<4> &r1,const Vector<4> &r2,const Vector<4> &r3) : x()
 {

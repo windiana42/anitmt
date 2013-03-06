@@ -206,7 +206,7 @@ namespace solve
 
   //! connects another operand as a solution source
   template<class T>
-  Operand<T>::Operand<T>( Operand<T> &src ) throw()
+  Operand<T>::Operand( Operand<T> &src ) throw()
     : message::Message_Reporter(src.get_consultant()),
       solved(false), last_test_run_id(-1), delete_without_listener(false)
       

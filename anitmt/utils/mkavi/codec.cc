@@ -16,12 +16,12 @@
  */
 
 
-#include <iostream.h>
+#include <iostream>
 #include <assert.h>
 #include "codec.h"
-extern "C" {
-#include "string.h"
-}
+#include <string.h>
+
+using namespace std;
 
 codec::codec()
 {

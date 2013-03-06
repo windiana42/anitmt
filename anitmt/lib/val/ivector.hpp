@@ -147,7 +147,7 @@ template<int N> class vector
 		template<int n>friend std::ostream& operator<<(std::ostream &s,const vector<n> &v);
 		
 		// Multiply matrix*vector (normal) and vector*matrix: 
-		template<int r,int c>friend void mult_mv(vector<r> &r,const matrix<r,c> &m,const vector<c> &v);
+		template<int r,int c>friend void mult_mv(vector<r> &rpar,const matrix<r,c> &m,const vector<c> &v);
 		friend void mult_mv(vector<3> &r,const matrix<4,4> &m,const vector<3> &v);
 		#ifndef LIBVAL_DISABLE__VEC_MUL_MAT
 		template<int r,int c>friend void mult_vm(vector<c> &r,const matrix<r,c> &m,const vector<r> &v);
@@ -174,6 +174,7 @@ template<int N> inline double angle(const vector<N> &a,const vector<N> &b)
 {  return(acos(scalar_mul(a,b)/sqrt(a.abs2()*b.abs2())));  }
 
 // Vector multiplication is currently only implemented for 3d-vectors. 
+template< >
 inline vector<3> &vector<3>::vector_mul(const vector<3> &a,const vector<3> &b)
 {
 	x[0] = a.x[1]*b.x[2] - a.x[2]*b.x[1];

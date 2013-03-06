@@ -36,6 +36,7 @@
  */
 
 #include "params.hpp"
+#include <string.h>
 
 #ifndef VERSION
 #warning "VERSION not defined."

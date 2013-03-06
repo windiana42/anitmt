@@ -278,12 +278,16 @@ public: // work around for the template friend problem
 
 
 // VECTOR CONSTRUCTION: 
+template< >
 inline Vector<2>::Vector(double _0,double _1) : x(/*no init*/)
 	{  x[0]=_0;  x[1]=_1;  }
+template< >
 inline Vector<3>::Vector(double _0,double _1,double _2) : x(/*no init*/)
 	{  x[0]=_0;  x[1]=_1;  x[2]=_2;  }
+template< >
 inline Vector<4>::Vector(double _0,double _1,double _2,double _3) : x(/*no init*/)
 	{  x[0]=_0;  x[1]=_1;  x[2]=_2;  x[3]=_3;  }
+template< >
 inline Vector<5>::Vector(double _0,double _1,double _2,double _3,double _4) : x(/*no init*/)
 	{  x[0]=_0;  x[1]=_1;  x[2]=_2;  x[3]=_3;  x[4]=_4;  }
 
@@ -291,6 +295,7 @@ inline Vector<5>::Vector(double _0,double _1,double _2,double _3,double _4) : x(
 
 inline Vector<3> cross(const Vector<3> &a,const Vector<3> &b)
 	{  Vector<3> r(Vector<3>::noinit);  r.x.vector_mul(a.x,b.x);  return(r);  }
+template< >
 inline Vector<3> &Vector<3>::cross(const Vector<3> &b)
 	{  Vector<3> tmp(vect::cross(*this,b));  this->operator=(tmp);  return(*this);  }
 

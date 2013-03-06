@@ -16,9 +16,11 @@
  */
 
 
-#include <iostream.h>
+#include <iostream>
 #include <assert.h>
 #include "chunk.h"
+
+using namespace std;
 
 long stdIO::seek(long off, int whence)
 {

@@ -4,12 +4,15 @@ REQUIREMENTS
 To build AniTMT, you need: 
 
 * gcc:
-  I recommend using the newest gcc version. (I am using gcc-3.2) 
-  Building AniTMT using gcc-3.0 or above is generally a good idea since 
-  these versions have a lot of template bugs fixed which were present in 
-  earlier versions. 
-  However, AniTMT will currently also build using gcc-2.95.x (preferrably 
-  2.95.3 or above). 
+  tested with version 4.7.1
+  If you see any problems with later versions, please email windiana@users.sf.net
+
+* hlib:
+  this is also provided on the AniTMT website www.anitmt.de and in the CVS of 
+  sf.net/projects/anitmt: http://anitmt.cvs.sf.net/viewvc/anitmt/
+  
+  Installing the RPM should work. There is a way to fallback to local search for 
+  the library but this wasn't tested lately.
 
 If you don't have a generated parser from a tar ball you need: 
 
@@ -21,7 +24,6 @@ If you don't have a generated parser from a tar ball you need:
   You need flex version 2.5.17 or above. 
   Any version below that WILL NOT WORK. 
   Grab new versions at ftp://ftp.uncg.edu/people/wlestes/.
-
 
 BUILDING ANITMT
 ---------------
@@ -35,13 +37,6 @@ the installation should not be done by root.
    
    /home/me/source/anitmt# aclocal && autoconf && autoheader && automake
 
-   Then, do the same in the subdirs hlib/ and rendview/. 
-   
-   /home/me/source/anitmt# ( cd hlib && aclocal && autoconf && \
-                             autoheader && automake )
-   /home/me/source/anitmt# ( cd rendview && aclocal && autoconf && \
-                             autoheader && automake )
-   
    Alternatively, you may simply call the script ./autogen.sh which does all 
    that for you. Pass option -f to be sure the files are really re-made. 
    (autogen.sh will NOT run configure for you.) 

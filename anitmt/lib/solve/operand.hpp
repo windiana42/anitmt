@@ -230,6 +230,7 @@ namespace solve
   class Constant : public Operand<T> 
   {
   public:
+    using Operand<T>::set_value;
     Constant( T val, message::Message_Consultant *msg_consultant );
   };
 

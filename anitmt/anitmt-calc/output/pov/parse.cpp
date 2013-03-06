@@ -164,8 +164,8 @@ inline bool is_pp_command(const Find_String::RV *rv)
 
 struct File_Parser::Sub_Parser : public message::Message_Reporter
 {
-	typedef File_Parser::Position File_Parser::Sub_Parser::Position;
-	typedef File_Parser::Object_Flags File_Parser::Sub_Parser::Object_Flags;
+	typedef File_Parser::Position Position;
+	typedef File_Parser::Object_Flags Object_Flags;
 	
 	File_Parser *fp;
 	Current_Context *cc;

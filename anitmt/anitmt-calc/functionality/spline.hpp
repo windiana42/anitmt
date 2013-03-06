@@ -27,8 +27,8 @@ namespace functionality
   class Spline : public Space_Curve
   {
   public:
-    Spline::Spline( std::list<values::Vector> control_points,
-		    double max_a, double max_l, double min_l, int anz );
+    Spline( std::list<values::Vector> control_points,
+	    double max_a, double max_l, double min_l, int anz );
 
   private:
     std::vector<values::Vector> control_points;
@@ -47,9 +47,9 @@ namespace functionality
   class Matrix_Spline : public Spline
   {
   protected:
-    Matrix_Spline::Matrix_Spline( std::list<values::Vector> control_points,
-				  double max_a, double max_l, double min_l, 
-				  int anz );
+    Matrix_Spline( std::list<values::Vector> control_points,
+		   double max_a, double max_l, double min_l, 
+		   int anz );
     values::Matrix matrix;
   private:
     virtual values::Vector get_local_point_pos( double t,
@@ -63,16 +63,16 @@ namespace functionality
   class BSpline : public Matrix_Spline
   {
   public:
-    BSpline::BSpline( std::list<values::Vector> control_points,
-		      double max_a, double max_l, double min_l, int anz );
+    BSpline( std::list<values::Vector> control_points,
+	     double max_a, double max_l, double min_l, int anz );
   };
 
   // class for bspline
   class CRSpline : public Matrix_Spline
   {
   public:
-    CRSpline::CRSpline( std::list<values::Vector> control_points,
-			double max_a, double max_l, double min_l, int anz );
+    CRSpline( std::list<values::Vector> control_points,
+	      double max_a, double max_l, double min_l, int anz );
   };
 }
 

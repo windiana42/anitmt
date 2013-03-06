@@ -30,7 +30,7 @@ struct indextype{
 
 class codec {
   public:
-	codec::codec();
+	codec();
 	virtual int need_prescan();
 	virtual void start(chunkstream *, int w, int h, int nframes);
 	virtual void prescan(image *, int framenum);
@@ -95,7 +95,7 @@ class rgb24 : public codec {
 
 class cram16 : public codec {
   public:
-	cram16::cram16();
+	cram16();
 
 	char *type_str() { return "msvc"; }
 	chunk *strf() { return new cram16_strf(this->cs, this->w, this->h); }

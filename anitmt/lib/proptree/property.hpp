@@ -95,6 +95,9 @@ namespace proptree
 					  public solve::Operand<T>
   {
   public:	
+    using solve::Operand<T>::is_solved;
+    using solve::Operand<T>::get_value;
+    using solve::Operand<T>::error;
     //******************
     // member operators
 

@@ -42,9 +42,9 @@
 #define tok_pos() ( {info->store_pos(); info->file_pos.inc_column( yyleng ); \
 		    info->store_pos();} )
 
+  inline int yywrap() { return 1; }
 %}
 
-%option noyywrap
 %option c++
 %option prefix="adlparser_"
 %pointer	// define yytext as pointer (variable length)

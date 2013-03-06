@@ -19,7 +19,7 @@
 #ifndef PPM_INCLUDED
 #define PPM_INCLUDED
 
-#include <iostream.h>
+//#include <iostream>
 #include <assert.h>
 #include "image.h"
 

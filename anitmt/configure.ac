@@ -1,5 +1,5 @@
 # Process this file with autoconf to produce a configure script.
-AC_INIT(anitmt, 0.2.1, anitmt@theofel.de)
+AC_INIT(anitmt, 0.2.2, anitmt@theofel.de)
 AM_INIT_AUTOMAKE
 AC_CONFIG_SRCDIR([anitmt-calc/anitmt-calc.cpp])
 AM_CONFIG_HEADER(config.h)
@@ -163,7 +163,7 @@ else
 	  test -x "$i/HConfigVars" || continue
 	  hlibversion="$($i/HConfigVars VERSION)"
 	  case "x$hlibversion" in
-	    x1.0.0)  hlibdir="$i" ; break ;;
+	    x1.1.1)  hlibdir="$i" ; break ;;
 	  esac
 	done
 	if test "x$hlibdir" = "x" ; then

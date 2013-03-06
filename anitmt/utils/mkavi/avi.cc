@@ -18,7 +18,7 @@
 char *vendor_str = 
 "AVI created by ANITMT, the best tool for POVray animations  ";
 
-#include <iostream.h>
+//#include <iostream>
 #include <string.h>
 #include <assert.h>
 

@@ -52,6 +52,7 @@ Vector<3> vec_rotate_z(const Vector<3> &v,double theta)
 
 // Rotation member functions: faster than the functions above, 
 // but they change *this. 
+template< >
 Vector<3> &Vector<3>::rotate_x(double theta)
 {
 	double sinval=sin(theta),cosval=cos(theta);
@@ -61,6 +62,7 @@ Vector<3> &Vector<3>::rotate_x(double theta)
 	return(*this);
 }
 
+template< >
 Vector<3> &Vector<3>::rotate_y(double theta)
 {
 	double sinval=sin(theta),cosval=cos(theta);
@@ -70,6 +72,7 @@ Vector<3> &Vector<3>::rotate_y(double theta)
 	return(*this);
 }
 
+template< >
 Vector<3> &Vector<3>::rotate_z(double theta)
 {
 	double sinval=sin(theta),cosval=cos(theta);
@@ -105,6 +108,7 @@ Vector<3> vec_to_rectangular(const Vector<3> &v)
 	return(r);
 }
 
+template< >
 Vector<3> &Vector<3>::to_spherical()
 {
 	double tmpx=abs();
@@ -115,6 +119,7 @@ Vector<3> &Vector<3>::to_spherical()
 	return(*this);
 }
 
+template< >
 Vector<3> &Vector<3>::to_rectangular()
 {
 	double tmpy=x[0]*sin(x[2]);  // r*sin(theta)

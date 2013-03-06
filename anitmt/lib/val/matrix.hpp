@@ -19,6 +19,8 @@
 
 #include "vector.hpp"
 
+#define GCC_HACK
+
 namespace vect
 {
 
@@ -291,6 +293,7 @@ public: // work around for the template friend problem
 };
 
 #ifdef GCC_HACK
+template< >
 inline Matrix<4,4>::Matrix(enum MatRotX,double angle) : x(0)
 {
 	double sina=sin(angle);
@@ -299,6 +302,7 @@ inline Matrix<4,4>::Matrix(enum MatRotX,double angle) : x(0)
 	x[2][1]=sina;  x[2][2]= cosa;
 }
 
+template< >
 inline Matrix<4,4>::Matrix(enum MatRotY,double angle) : x(0)
 {
 	double sina=sin(angle);
@@ -307,6 +311,7 @@ inline Matrix<4,4>::Matrix(enum MatRotY,double angle) : x(0)
 	x[2][0]=-sina;  x[2][2]= cosa;
 }
 
+template< >
 inline Matrix<4,4>::Matrix(enum MatRotZ,double angle) : x(0)
 {
 	double sina=sin(angle);
@@ -315,11 +320,13 @@ inline Matrix<4,4>::Matrix(enum MatRotZ,double angle) : x(0)
 	x[1][0]= sina;  x[1][1]= cosa;
 }
 
+template< >
 inline Matrix<4,4>::Matrix(enum MatScale,double fact,int idx) : x(0)
 {
 	x[idx][idx]=fact;
 }
 
+template< >
 inline Matrix<4,4>::Matrix(enum MatScale,double fact) : x(0)
 {
 	x[0][0]=fact;
@@ -327,6 +334,7 @@ inline Matrix<4,4>::Matrix(enum MatScale,double fact) : x(0)
 	x[2][2]=fact;
 }
 
+template< >
 inline Matrix<4,4>::Matrix(enum MatScale,const Vector<3> &v) : x(0)
 {
 	x[0][0]=v[0];
@@ -334,11 +342,13 @@ inline Matrix<4,4>::Matrix(enum MatScale,const Vector<3> &v) : x(0)
 	x[2][2]=v[2];
 }
 
+template< >
 inline Matrix<4,4>::Matrix(enum MatTrans,double delta,int idx) : x(0)
 {
 	x[idx][3]=delta;
 }
 
+template< >
 inline Matrix<4,4>::Matrix(enum MatTrans,const Vector<3> &v) : x(0)
 {
 	x[0][3]=v[0];
@@ -346,6 +356,7 @@ inline Matrix<4,4>::Matrix(enum MatTrans,const Vector<3> &v) : x(0)
 	x[2][3]=v[2];
 }
 
+template< >
 inline Matrix<4,4>::Matrix(enum MatColVec,const Vector<3> &c0,
 	const Vector<3> &c1,const Vector<3> &c2) : x()
 {
@@ -357,6 +368,7 @@ inline Matrix<4,4>::Matrix(enum MatColVec,const Vector<3> &c0,
 	x[3][3]=1.0;
 }
 
+template< >
 inline Matrix<4,4>::Matrix(enum MatRowVec,const Vector<3> &r0,
 	const Vector<3> &r1,const Vector<3> &r2) : x()
 {
@@ -368,6 +380,7 @@ inline Matrix<4,4>::Matrix(enum MatRowVec,const Vector<3> &r0,
 	x[3][3]=1.0;
 }
 
+template< >
 inline Matrix<4,4>::Matrix(MatColVec,const Vector<4> &c0,
 	const Vector<4> &c1,const Vector<4> &c2,const Vector<4> &c3) : x()
 {
@@ -375,6 +388,7 @@ inline Matrix<4,4>::Matrix(MatColVec,const Vector<4> &c0,
 	{  x[i][0]=c0[i];  x[i][1]=c1[i];  x[i][2]=c2[i];  x[i][3]=c3[i];  }
 }
 
+template< >
 inline Matrix<4,4>::Matrix(MatRowVec,const Vector<4> &r0,
 	const Vector<4> &r1,const Vector<4> &r2,const Vector<4> &r3) : x()
 {
