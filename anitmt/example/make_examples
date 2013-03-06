@@ -18,7 +18,7 @@ MKAVI=mkavi
 cd test/
 $ANITMT test.ini
 cd test_ani/
-$RENDER -w 192 -h 144
+$RENDER -w 192 -h 144 -d
 $TGA2AVI -f 5 -e 150
 echo $MKAVI -f 5 -e 150 -o film-cram.avi
 $MKAVI -f 5 -e 150 -o film-cram.avi
@@ -27,7 +27,7 @@ cd ../../
 cd myrobot/
 ../$top_builddir/anitmt-calc/anitmt-calc myrobot.ini
 cd ani/
-$RENDER -w 400 -h 300
+$RENDER -w 400 -h 300 -d
 $TGA2AVI -f 24 -e 336
 $MKAVI -f 24 -e 336 -o film-cram.avi
 cd ../../
@@ -35,9 +35,11 @@ cd ../../
 cd circles/
 ../$top_builddir/anitmt-calc/anitmt-calc circles.ini
 cd ani/
-$RENDER -w 96 -h 72
+$RENDER -w 96 -h 72 -d
 $TGA2AVI -f 24 -e 336
 $MKAVI -f 24 -e 336 -o film-cram.avi
 cd ../../
+
+echo "please have a look at example/xxx/ani/film-cram.avi"
 
 exit 0
