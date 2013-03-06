@@ -19,7 +19,7 @@
 # Process this file with autoconf to produce a configure script.
 # If you have trouble, use the latest versions. 
 # Things work well with autoconf-2.53 and automake-1.6. 
-AC_INIT(hlib,1.1.0,[<see apropriate header file>])
+AC_INIT(hlib,1.1.1,[<see apropriate header file>])
 # You can pass options to AM_INIT_AUTOMAKE: 
 # AM_INIT_AUTOMAKE([dist-bzip2,...]
 #  dist-bzip2 -> create bzip2-compressed dist tarball. 

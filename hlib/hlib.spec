@@ -2,15 +2,14 @@
 %define  rel     %{?CUSTOM_RELEASE} %{!?CUSTOM_RELEASE:%RELEASE}
 
 Name: hlib
-Version: 1.0.0
+Version: 1.1.1
 Release: %rel
 
 Summary: HLib is a general purpose library 
-Copyright: GPL
+License: GPL
 Group: System/Libraries/
-Vendor: Martin Trautmann <martintrautmann@gmx.de>
 Packager: Martin Trautmann <martintrautmann@gmx.de>
-Author: Wolfgang Wieser <wwieser@gmx.de>
+Vendor: Wolfgang Wieser <wwieser@gmx.de>
 Url: http://www.cip.physik.uni-muenchen.de/~wwieser/lib/hlib/ 
 
 Source: http://www.cip.physik.uni-muenchen.de/~wwieser/lib/hlib/%name-%version.tar.gz
@@ -68,7 +67,7 @@ rm -rf $RPM_BUILD_ROOT
 %files
 %defattr(-,root,root,755)
 %doc AUTHORS COPYING COPYING.GPL README NEWS ChangeLog BUILD
-%prefix/lib/*
+%_libdir/*
 %prefix/include/hlib/
 
 #%changelog
