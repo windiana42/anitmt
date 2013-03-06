@@ -13,6 +13,9 @@ libhlib_a_SOURCES =
 EXTRA_DIST = BUILD COPYING.GPL \
 	hlib-config.h.in hconfig.h config.guess config.sub hlib.spec
 
+hlibinstalldir=$(datadir)/hlib/
+hlibinstall_DATA=HConfigVars
+
 libhlib.a: $(SUBLIBS)
 	@echo "Re-creating libhlib.a..."
 	@objs="" ; for i in $(SUBDIRS) ; do \

@@ -67,8 +67,9 @@ rm -rf $RPM_BUILD_ROOT
 %files
 %defattr(-,root,root,755)
 %doc AUTHORS COPYING COPYING.GPL README NEWS ChangeLog BUILD
-%_libdir/*
+%{_libdir}/*
 %prefix/include/hlib/
+%{_datadir}/%name/*
 
 #%changelog
 #* first version
