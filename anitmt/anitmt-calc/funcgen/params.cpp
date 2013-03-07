@@ -67,5 +67,5 @@ FuncgenParameters::~FuncgenParameters()
 
 
 // Holds the name of the program: 
-char *prg_name=NULL;  // Set early in main(). 
+const char *prg_name=NULL;  // Set early in main(). 
 

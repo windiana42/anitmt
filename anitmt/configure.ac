@@ -1,5 +1,5 @@
 # Process this file with autoconf to produce a configure script.
-AC_INIT(anitmt, 0.2.2, anitmt@theofel.de)
+AC_INIT(anitmt, 0.2.3, anitmt@theofel.de)
 AM_INIT_AUTOMAKE
 AC_CONFIG_SRCDIR([anitmt-calc/anitmt-calc.cpp])
 AM_CONFIG_HEADER(config.h)
@@ -132,60 +132,9 @@ AC_CHECK_LIB([m],[sqrt])
 # FIXME: Replace `main' with a function in `-lstdc':
 #AC_CHECK_LIB([stdc], [main])
 
-##------------------------------------------------
-# Okay; we need hlib, so check for hlib-config: 
-hlib_build_dir="<unset>"
-AC_ARG_WITH(hlib,AC_HELP_STRING([--with-hlib],[path to hlib build directory]),
-	[if test "$withval" = "no" ; then 
-		AC_MSG_ERROR([Cannot switch off use of hlib, AniTMT depends on it.])
-	elif test "$withval" != "yes"; then
-		hlib_build_dir="$withval" 
-	fi ])
-
-# check for installed version of hlib
-INSTALLED_HLIB="no";
-AC_CHECK_LIB([hlib], [msec_elapsed], INSTALLED_HLIB="yes")
-
-if test "$hlib_build_dir" == "<unset>" && test "$INSTALLED_HLIB" == "yes"; then
-	# use installed hlib version if installed and no --with-hlib specified
-	USE_INSTALLED_HLIB="yes";
-	AC_MSG_NOTICE([using installed hlib version (specifying --with-hlib may change this)])
-else
-	USE_INSTALLED_HLIB="no";
-	AC_MSG_CHECKING([for hlib])
-	hlibdir=""
-	checkdirs="./hlib ./hlib-* ../hlib ../hlib-*"
-	if test "$hlib_build_dir" != "<unset>" ; then
-		checkdirs="$hlib_build_dir $hlib_build_dir/hlib $hlib_build_dir/.."
-	fi
-	hlibversion="none"
-	for i in $checkdirs ; do
-	  test -x "$i/HConfigVars" || continue
-	  hlibversion="$($i/HConfigVars VERSION)"
-	  case "x$hlibversion" in
-	    x1.1.1)  hlibdir="$i" ; break ;;
-	  esac
-	done
-	if test "x$hlibdir" = "x" ; then
-		AC_MSG_RESULT([failed])
-		AC_MSG_ERROR([Unable to find hlib (need: 1.0.0, found: $hlibversion). Giving up.])
-	else
-		AC_MSG_RESULT([$hlibdir, version $hlibversion])
-	fi
-	
-	#AC_SUBST(hlibdir)
-	if test "$hlibdir" != "./hlib" -a "$hlibdir" != "hlib" ; then
-		test -e "hlib" && rm "hlib";
-		ln -s "$hlibdir" "hlib";
-	fi
-	##------------------------------------------------
-fi
-# define USE_INSTALLED_HLIB conditional for Makefile.am files
-AM_CONDITIONAL([USE_INSTALLED_HLIB], [test $USE_INSTALLED_HLIB = "yes"] )
-
 # Checks for header files.
 AC_HEADER_STDC
-AC_CHECK_HEADERS([errno.h limits.h malloc.h memory.h stddef.h stdlib.h string.h])
+AC_CHECK_HEADERS([errno.h limits.h malloc.h memory.h stddef.h stdlib.h stdarg.h string.h])
 AC_CHECK_HEADERS([strings.h sys/time.h unistd.h inttypes.h stdint.h sys/stat.h])
 AC_CHECK_HEADERS([memory.h inttypes.h])
 
@@ -223,6 +172,10 @@ AC_CONFIG_FILES([ Makefile
 	lib/solve/Makefile
 	lib/utl/Makefile
 	lib/val/Makefile
+	lib/hlib/Makefile
+	lib/hlib/par/Makefile
+	lib/hlib/cpp/Makefile
+	lib/hlib/misc/Makefile
 	anitmt-calc/Makefile
 	anitmt-calc/funcgen/Makefile
 	anitmt-calc/functionality/Makefile

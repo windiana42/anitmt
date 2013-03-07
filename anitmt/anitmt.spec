@@ -2,7 +2,7 @@
 %define  rel     %{?CUSTOM_RELEASE} %{!?CUSTOM_RELEASE:%RELEASE}
 
 Name: anitmt
-Version: 0.2.2
+Version: 0.2.3
 Release: %rel
 
 Summary: AniTMT is an Animation System for generating films with povray
@@ -17,8 +17,7 @@ Source: http://heanet.dl.sourceforge.net/project/anitmt/AniTMT/%version/%name-%v
 Prefix: %_prefix
 BuildRoot: %_tmppath/%name-%version-root
 
-Requires: hlib
-BuildRequires: hlib hlib-devel gcc-c++ bison flex
+BuildRequires: gcc-c++ bison flex
 
 %description
 AniTMT is an Animation System for generating films with povray

@@ -54,7 +54,7 @@ rm -rf $RPM_BUILD_ROOT
 %doc AUTHORS COPYING COPYING.GPL COPYING.LGPL README NEWS ChangeLog TODO FAQ
 %{_bindir}/*
 %prefix/lib/*
-%{_datadir}/anitmt/example/
+%prefix/share/anitmt/
 
 #%changelog
 #* first version

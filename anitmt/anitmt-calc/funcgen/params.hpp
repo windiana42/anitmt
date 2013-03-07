@@ -16,7 +16,7 @@
 #define _ANITMT_FUNCGEN_FUNCGEN_HPP_ 1
 
 // Parameter system: 
-#include <hlib/parbase.h>
+#include <hlib/par/parbase.h>
 // Our config. Must be included after hlib/parbase.h. 
 #include <config.h>
 

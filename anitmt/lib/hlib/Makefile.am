@@ -1,0 +1,2 @@
+SUBDIRS=		misc cpp par 
+EXTRA_DIST=		COPYING COPYING.GPL AUTHORS hconfig.h	
