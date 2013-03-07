@@ -59,9 +59,10 @@ test_functionality_LDADD= \
 
 FUNCGEN=../funcgen/funcgen
 #FUNCGEN_DEBUG=-d -s
-FUNCGEN_CODE=$(srcdir)/../funcgen/gen_cpp.cpp
+#FUNCGEN_CODE=$(srcdir)/../funcgen/gen_cpp.cpp
 
-AFD_COMMON=$(FUNCGEN) $(srcdir)/base_func.afd 
+AFD_COMMON=$(srcdir)/base_func.afd 
+#AFD_COMMON=$(FUNCGEN) $(srcdir)/base_func.afd 
 
 # exec funcgen...
 base_func.cpp \
