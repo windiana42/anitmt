@@ -16,6 +16,7 @@
 #define __myavi__
 
 #include <stdio.h>
+#include <string.h>
 
 #include "common.h"
 #include "mytga.h"

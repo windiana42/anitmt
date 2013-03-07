@@ -35,12 +35,13 @@ size_t Get_Preferred_IO_Size(int fd)
 	struct stat st;
 	if(!fstat(fd,&st))
 	{
-		if(st.st_blksize>32768)  // won't make too large buffers
-		{  return(32768);  }
-		else if(st.st_blksize<1024)  // and won't make too small buffers
-		{  return(1024);  }
-		else
-		{  return(st.st_blksize);  }
+		return 4096;
+		// if(st.st_blksize>32768)  // won't make too large buffers
+		// {  return(32768);  }
+		// else if(st.st_blksize<1024)  // and won't make too small buffers
+		// {  return(1024);  }
+		// else
+		// {  return(st.st_blksize);  }
 	}
 	// fstat() failed. Use default: 
 	return(4096);
