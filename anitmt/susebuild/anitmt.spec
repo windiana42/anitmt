@@ -53,7 +53,7 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(-,root,root,755)
 %doc AUTHORS COPYING COPYING.GPL COPYING.LGPL README NEWS ChangeLog TODO FAQ
 %{_bindir}/*
-%{_libdir}/*
+%prefix/lib/*
 %{_datadir}/anitmt/example/
 
 #%changelog
