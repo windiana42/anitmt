@@ -7,13 +7,6 @@ To build AniTMT, you need:
   tested with version 4.7.1
   If you see any problems with later versions, please email windiana@users.sf.net
 
-* hlib:
-  this is also provided on the AniTMT website www.anitmt.de and in the CVS of 
-  sf.net/projects/anitmt: http://anitmt.cvs.sf.net/viewvc/anitmt/
-  
-  Installing the RPM should work. There is a way to fallback to local search for 
-  the library but this wasn't tested lately.
-
 If you don't have a generated parser from a tar ball you need: 
 
 * bison: 
