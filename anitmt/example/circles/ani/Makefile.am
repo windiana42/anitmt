@@ -1,5 +1,5 @@
 # Animation directory
 exampledir = $(pkgdatadir)/example/circles/ani/
-example_DATA=.cvsignore
+example_DATA=dummy
 
-EXTRA_DIST=.cvsignore
+EXTRA_DIST=dummy
