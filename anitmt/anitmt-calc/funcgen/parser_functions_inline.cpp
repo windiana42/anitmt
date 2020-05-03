@@ -29,11 +29,9 @@ namespace funcgen
   // interfaces to lexer
   // **********************
 
-  _INLINE_ int yylex( Token *lvalp, void *vinfo )
+  _INLINE_ int yylex( Token *lvalp, void *mode, afd_info *info )
   {
-    afd_info *info = static_cast<afd_info*> (vinfo);
-    info->lexer->yylval = lvalp; // lvalue variable to return token value
-    return info->lexer->yylex();
+    return info->lexer->yylex(lvalp, mode, info);
   }
 
   //******************************

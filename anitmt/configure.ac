@@ -35,6 +35,7 @@ if test "$need_flex" = "y" ; then
     fstatus="n"
     case "$flexvers" in
       [[3-9]].*)  fstatus="y" ;;
+      2.[[6-9]].*)  fstatus="y" ;;
       2.[[1-4]].*)  fstatus="n" ;;
       2.5.[[2-9]][[0-9]])  fstatus="y" ;;
       2.5.17|2.5.18|2.5.19)  fstatus="y" ;;
@@ -164,7 +165,6 @@ AC_CHECK_FUNCS([setenv])
 
 AC_CONFIG_FILES([ Makefile
 	lib/Makefile
-	lib/flex/Makefile
 	lib/message/Makefile
 	lib/par/Makefile
 	lib/param/Makefile

@@ -16,6 +16,7 @@
 
 #include <sstream>
 
+/* not Needed for C++11 any more:
 namespace std
 {
   //*****************************************************************
@@ -162,4 +163,4 @@ namespace std
     return os.str();
   }
 }
-
+*/

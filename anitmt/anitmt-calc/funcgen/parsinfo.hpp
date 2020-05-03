@@ -28,6 +28,8 @@ class funcgen_FlexLexer;	// lexer prototype
 
 namespace funcgen
 {
+  class myFlex; // forward declaration (defined in parser_functions.hpp)
+
   //**********************************************************
   // afd_info: stores information for parser and lexer
   //**********************************************************
@@ -52,7 +54,7 @@ namespace funcgen
     // only for manipulation from yylex() and yyparse()
 
     message::Message_Reporter msg;	// this offers message streams
-    funcgen_FlexLexer *lexer;		// lexical analyzer / scanner
+    myFlex *lexer;		// lexical analyzer / scanner
     AFD_Root *afd;			// manages all afd related data
 
     int tab_len;

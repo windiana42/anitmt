@@ -47,6 +47,12 @@ namespace funcgen
    
 %pure_parser			// parser may be called recursive
 
+// The following options are needed for newer newer bison versions that
+// do not support #define YYLEX_PARAM & Co any more
+%lex-param   {void *mode}     
+%parse-param {void *mode}
+%param       {funcgen::afd_info *info}
+
 // ********
 // Tokens
 // ********
@@ -1278,7 +1284,7 @@ cxx_complex_identifier: /* C++ Identifier like values::value.x->y.z */
 ;
 cxx_expression:
     cxx_complex_identifier		  {$$ = $1;}
-  | TAFD_SCALAR				  {$$ = to_string($1);}
+  | TAFD_SCALAR				  {$$ = std::to_string($1);}
   | TAFD_true				  {$$ = "true";}
   | TAFD_false				  {$$ = "false";}
   | '(' cxx_expression ')'		  {$$ = '(' + $2 + ')';}
@@ -1378,7 +1384,7 @@ cxx_code_statement:
       info.msg.error() << "couldn't open input file " << filename;
       return -1;
     }
-    int ret = yyparse( static_cast<void*>(&info) );
+    int ret = yyparse((void*)0, &info );
       
     return ret;
   }

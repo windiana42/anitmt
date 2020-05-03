@@ -15,22 +15,24 @@
 %{
   #include <message/message.hpp>
 
+  #include "parser_functions.hpp"	// parser/lexer help functions
   #include "tokens.h"			// token values
   #include "token.hpp"			// token type
   #include "parsinfo.hpp"		// parser/lexer info
-  #include "parser_functions.hpp"	// parser/lexer help functions
 
   #include <assert.h>
  
   // forward declaration
   inline std::string strip_quotes( std::string text );
 
-#define YYLEX_PARAM info
-#define YYLEX_PARAM_TYPE (afd_info&)
+  // replaced by %lex-param & co in parser.yy
+  // #define YYLEX_PARAM info
+  // #define YYLEX_PARAM_TYPE (funcgen::afd_info&)
+  #define YY_DECL int funcgen::myFlex::yylex( funcgen::Token *yylval, void *mode, funcgen::afd_info *info )
 
-  inline message::Message_Stream llerr( afd_info *info );
-  inline message::Message_Stream llwarn ( afd_info *info );
-  inline message::Message_Stream llverbose( afd_info *info, 
+  inline message::Message_Stream llerr( funcgen::afd_info *info );
+  inline message::Message_Stream llwarn ( funcgen::afd_info *info );
+  inline message::Message_Stream llverbose( funcgen::afd_info *info, 
 					    bool with_position=true, 
 					    int vlevel=1, int detail=2 );
 
@@ -230,7 +232,7 @@ std::string strip_quotes( std::string text )
 #undef tok_pos
 #undef inc_col
 
-inline message::Message_Stream llerr( afd_info *info )
+inline message::Message_Stream llerr( funcgen::afd_info *info )
 { 
   
   message::Message_Stream msg(message::noinit);
@@ -238,14 +240,14 @@ inline message::Message_Stream llerr( afd_info *info )
   return msg;
 }
 
-inline message::Message_Stream llwarn( afd_info *info )
+inline message::Message_Stream llwarn( funcgen::afd_info *info )
 {
   message::Message_Stream msg(message::noinit);
   info->msg.warn( &info->file_pos ).copy_to(msg);
   return msg;
 }
 
-inline message::Message_Stream llverbose( afd_info *info, 
+inline message::Message_Stream llverbose( funcgen::afd_info *info, 
 					  bool with_position, 
 					  int vlevel, int detail )
 {
@@ -259,28 +261,7 @@ inline message::Message_Stream llverbose( afd_info *info,
   return msg;
 }
 
-//******************
-// public functions
-//******************
-
-void yyFlexLexer::goto_initial_state() 
-{
-  BEGIN INITIAL;
+int get_copy_code() {
+  return COPY_CODE;
 }
-
-void yyFlexLexer::goto_code_copy_mode()
-{
-  yy_push_state(COPY_CODE);
-}
-
-void yyFlexLexer::finish_mode()
-{
-  yy_pop_state();
-}
-
-void yyFlexLexer::set_input_stream( std::istream &in ) 
-{
-  yyin = &in;
-}
-
 /* end of lexical analizer */

@@ -13,6 +13,7 @@
 /*****************************************************************************/
 
 #include "parsinfo.hpp"
+#include "parser_functions.hpp"
 
 namespace funcgen
 {
@@ -47,7 +48,7 @@ namespace funcgen
     if( in_files.empty() )
     {
       lexer_uses_file_stream = false;
-      lexer->set_input_stream( cin );
+      lexer->set_input_stream( std::cin );
       ret = true;
     }
     else
@@ -64,10 +65,10 @@ namespace funcgen
   afd_info::afd_info( AFD_Root *AFD_Root, 
 		      message::Message_Consultant *consultant )
     : old_positions(10), max_old_positions(10),
-      msg(consultant), lexer(new funcgen_FlexLexer(&cin)), afd(AFD_Root),
+      msg(consultant), lexer(new myFlex(&std::cin)), afd(AFD_Root),
       lexer_uses_file_stream( false )
   {
-    lexer->info = this;
+    //lexer->info = this;
     file_pos.set_filename("standard input");
     msg.set_msg_default_position( &file_pos ); // set default message position
   }

@@ -29,13 +29,25 @@ namespace funcgen
   // **********************
   
   // define token type for parser
-#define YYSTYPE Token
-  
-#define YYPARSE_PARAM info	// parameter to the parser (yyparser(void*))
-#define YYLEX_PARAM info	// parameter to the lexer
-#define YYLEX_PARAM_TYPE (afd_info&) // -> yylex(afd_info &info)
-  int yylex( Token *lvalp, void *info );
+  #define YYSTYPE Token
 
+  // replaced by %lex-param & co in parser.yy
+  //#define YYPARSE_PARAM info	// parameter to the parser (yyparser(void*))
+  //#define YYLEX_PARAM info	// parameter to the lexer
+  //#define YYLEX_PARAM_TYPE (afd_info&) // -> yylex(afd_info &info)
+  int yylex( Token *lvalp, void *mode, afd_info *info );
+
+  class myFlex : public funcgen_FlexLexer {
+  public:
+    myFlex( std::istream *in );
+    int yylex( funcgen::Token *yylval, void *mode, funcgen::afd_info *info );
+
+    void goto_initial_state();
+    void goto_code_copy_mode();
+    void finish_mode();
+    void set_input_stream( std::istream &in ); 
+  };
+  
   //*************************
   // interfaces to messages
   //*************************
@@ -50,7 +62,7 @@ namespace funcgen
 
 
   // redefine error output
-#define yyerror( s ) ( yyerr(info) << s, 1 )
+  #define yyerror( mode, info,  s ) ( yyerr(info) << s, 1 )
 
   //****************************************
   // functions used by the parser or lexer

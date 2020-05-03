@@ -28,11 +28,12 @@ namespace std
   std::string &operator+=( std::string &s, long v );
   std::string &operator+=( std::string &s, double v );
 
+/* not needed any more for C++11
   string to_string( int );
   string to_string( long );
   string to_string( double );
+*/
 
   string to_upper( std::string );
   bool starts_with( std::string str, std::string cmp );
 }
-

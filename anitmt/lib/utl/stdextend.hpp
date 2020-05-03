@@ -23,6 +23,7 @@
 
 #include <val/val.hpp>
 
+/* not Needed for C++11 any more:
 namespace std
 {
 
@@ -58,5 +59,6 @@ namespace std
   string to_string( values::Vector v );
   string to_string( values::Matrix v );
 }
+*/
 #endif
 

@@ -17,6 +17,7 @@
 #include <message/message.hpp>
 #include <utl/stdextend.hpp>
 
+#include <string>
 #include <assert.h>
 
 namespace proptree
@@ -27,7 +28,7 @@ namespace proptree
 
   std::string tree_info::get_unique_id()
   {
-    return std::to_string(++id_counter);
+    return std::to_string(int(++id_counter));
   }
   
   tree_info::tree_info( solve::Priority_System *sys, Semi_Global *glob ) 

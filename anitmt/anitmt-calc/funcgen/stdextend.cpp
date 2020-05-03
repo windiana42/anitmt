@@ -63,6 +63,7 @@ namespace std
     s += os.str(); 
     return s;
   }
+/* not needed any more for C++11
   // convert number formats to strings
   string to_string( int v )
   {
@@ -82,6 +83,7 @@ namespace std
     os << v;
     return os.str();
   }
+*/
 
   string to_upper( std::string str )
   {
@@ -97,4 +99,3 @@ namespace std
     return str.find(cmp) == 0;
   }
 }
-

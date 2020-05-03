@@ -2922,4 +2922,30 @@ namespace funcgen
     AFD_Root *afd = static_cast<afd_info*>(info)->afd;
     afd->string_list.push_back( id );
   }
+  // **********************
+  // interfaces to lexer
+  // **********************
+  myFlex::myFlex(std::istream *in)
+    : funcgen_FlexLexer(in)
+  {
+  }
+  void myFlex::goto_initial_state() 
+  {
+    yy_load_buffer_state(  );
+  }
+
+  int get_copy_code(); // forward declaration for scanner.cc/scanner.ll function
+  void myFlex::goto_code_copy_mode()
+  {
+    yy_push_state(get_copy_code());
+  }
+    
+  void myFlex::finish_mode()
+  {
+    yy_pop_state();
+  }
+  void myFlex::set_input_stream( std::istream &in ) 
+  {
+    yyrestart(in);
+  }
 }
