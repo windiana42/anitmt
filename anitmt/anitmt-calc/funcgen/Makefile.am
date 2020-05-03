@@ -3,7 +3,7 @@ INCLUDES=		-I$(top_srcdir)/lib -I$(top_srcdir)/lib/flex \
 			-I$(top_srcdir)
 
 bin_PROGRAMS=		funcgen
-AM_CXXFLAGS =		-Wno-non-template-friend -ftemplate-depth-30
+AM_CXXFLAGS =		-Wno-non-template-friend -ftemplate-depth-40
 
 BUILT_SOURCES=		scanner.cc parser.cc tokens.h 
 CLEANFILES=		$(BUILT_SOURCES)

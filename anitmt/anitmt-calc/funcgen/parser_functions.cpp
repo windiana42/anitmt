@@ -17,6 +17,9 @@
 #include <assert.h>
 #include "stdextend.hpp"
 
+// forward declarations for scanner.cc/scanner.ll functions
+int get_code_copy_mode(); 
+void funcgen_goto_initial_state(/*in-out*/int &yy_start);
 
 namespace funcgen
 {
@@ -2931,13 +2934,12 @@ namespace funcgen
   }
   void myFlex::goto_initial_state() 
   {
-    yy_load_buffer_state(  );
+    funcgen_goto_initial_state(/*in-out*/yy_start);
   }
 
-  int get_copy_code(); // forward declaration for scanner.cc/scanner.ll function
   void myFlex::goto_code_copy_mode()
   {
-    yy_push_state(get_copy_code());
+    yy_push_state(::get_code_copy_mode());
   }
     
   void myFlex::finish_mode()

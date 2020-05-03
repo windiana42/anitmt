@@ -13,6 +13,7 @@
 /*****************************************************************************/
 
 #include "parsinfo.hpp"
+#include "parser_functions.hpp"
 
 #include <assert.h>
 
@@ -37,7 +38,7 @@ namespace anitmt
     void adlparser_info::close_file()
     {
       lexer_uses_file_stream = false;
-      lexer->set_input_stream( cin );
+      lexer->set_input_stream( std::cin );
       in_file.close();
     }
 
@@ -47,19 +48,17 @@ namespace anitmt
       file_pos.set_filename( filename );
       if( lexer ) delete lexer;
       
-      lexer = new adlparser_FlexLexer(&in);      
-      lexer->info = this;
+      lexer = new myFlex(&in);      
       lexer_uses_file_stream = false;
     }
 
     adlparser_info::adlparser_info( message::Message_Consultant *consultant )
       : old_positions(10), max_old_positions(10),
-	msg(consultant), lexer(new adlparser_FlexLexer(&cin)), 
+	msg(consultant), lexer(new myFlex(&std::cin)), 
 	pass(pass1), id_resolver(0), 
 	res_reference( this ), res_property( this ),
 	lexer_uses_file_stream( false )
     {
-      lexer->info = this;
       file_pos.set_filename("standard input");
     }
     adlparser_info::~adlparser_info()

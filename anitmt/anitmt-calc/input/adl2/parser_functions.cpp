@@ -22,6 +22,12 @@
 #include <stack>
 #include <assert.h>
 
+#include <tokens.h>
+
+// forward declarations for scanner.cc/scanner.ll functions
+void adlparser_goto_initial_state(/*in-out*/int &yy_start);
+void adlparser_dummy_statement_follows(/*in-out*/int &yy_start);
+
 namespace anitmt
 {
   namespace adlparser
@@ -359,5 +365,26 @@ namespace anitmt
       }
     }
 
+    // **********************
+    // interfaces to lexer
+    // **********************
+    myFlex::myFlex(std::istream *in)
+      : adlparser_FlexLexer(in)
+    {
+    }
+    void myFlex::goto_initial_state() 
+    {
+      adlparser_goto_initial_state(/*in-out*/yy_start);
+    }
+
+    void myFlex::dummy_statement_follows() 
+    {
+      adlparser_dummy_statement_follows(/*in-out*/yy_start);
+    }
+    
+    void myFlex::set_input_stream( std::istream &in ) 
+    {
+      yyrestart(in);
+    }
   }
 }

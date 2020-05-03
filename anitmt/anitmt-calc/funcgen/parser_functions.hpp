@@ -29,7 +29,7 @@ namespace funcgen
   // **********************
   
   // define token type for parser
-  #define YYSTYPE Token
+#define YYSTYPE Token
 
   // replaced by %lex-param & co in parser.yy
   //#define YYPARSE_PARAM info	// parameter to the parser (yyparser(void*))

@@ -14,6 +14,7 @@
 
 #include "token.hpp"
 
+#include "parser_functions.hpp"	// parser/lexer help functions
 #include "tokens.h"		// a lot of declarations TOK_...
 #include <assert.h>
 

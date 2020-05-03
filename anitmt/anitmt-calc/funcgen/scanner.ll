@@ -261,7 +261,22 @@ inline message::Message_Stream llverbose( funcgen::afd_info *info,
   return msg;
 }
 
-int get_copy_code() {
+void funcgen_goto_initial_state(/*in-out*/int &yy_start) 
+{
+  BEGIN(INITIAL);
+}
+
+int get_code_copy_mode()
+{
   return COPY_CODE;
 }
+
+int funcgen_FlexLexer::yylex() {
+  assert(false); // this should never be called
+}
+
+int funcgen_FlexLexer::yywrap() {
+  return ::yywrap();
+}
+
 /* end of lexical analizer */

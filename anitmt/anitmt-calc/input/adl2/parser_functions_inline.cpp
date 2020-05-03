@@ -37,11 +37,9 @@ namespace anitmt
     // interfaces to lexer
     //**********************
 
-    _INLINE_ int yylex( Token *lvalp, void *vinfo )
+    _INLINE_ int yylex( Token *lvalp, void *mode, adlparser_info *info )
     {
-      adlparser_info *info = static_cast<adlparser_info*> (vinfo);
-      info->lexer->yylval = lvalp; // lvalue variable to return token value
-      return info->lexer->yylex();
+      return info->lexer->yylex(lvalp, mode, info);
     }
 
     //******************************

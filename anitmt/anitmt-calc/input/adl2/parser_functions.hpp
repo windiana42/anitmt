@@ -33,10 +33,21 @@ namespace anitmt
     // define token type for parser
 #define YYSTYPE Token
 
-#define YYPARSE_PARAM info	// parameter to the parser (yyparser(void*))
-#define YYLEX_PARAM info	// parameter to the lexer
-#define YYLEX_PARAM_TYPE (parser_info&)	// -> yylex(parser_info &info)
-    int yylex( Token *lvalp, void *info );
+    // replaced by %lex-param & co in parser.yy
+    //#define YYPARSE_PARAM info	// parameter to the parser (yyparser(void*))
+    //#define YYLEX_PARAM info	// parameter to the lexer
+    //#define YYLEX_PARAM_TYPE (parser_info&)	// -> yylex(parser_info &info)
+    int yylex( Token *lvalp, void *mode, adlparser_info *info );
+
+    class myFlex : public adlparser_FlexLexer {
+    public:
+      myFlex( std::istream *in );
+      int yylex( Token *yylval, void *mode, adlparser_info *info );
+
+      void goto_initial_state();	/* forces the lexer to go to INITIAL state */
+      void dummy_statement_follows();	/* tells the lexer to parse a dummy statement*/
+      void set_input_stream( std::istream &in ); /* resets the input stream */
+    };
 
     //*************************
     // interfaces to messages
@@ -52,7 +63,7 @@ namespace anitmt
 
 
     // redefine error output
-#define yyerror( s ) ( yyerr(info) << s, 1 )
+#define yyerror( mode, info, s ) ( yyerr(info) << s, 1 )
 
     //******************************
     // functions used by the parser

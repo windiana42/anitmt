@@ -55,6 +55,12 @@
 %pure_parser		// parser may be called recursive
 //%expect 79		// expect 7 shift/reduce and 27 reduce/reduce conflicts
 
+// The following options are needed for newer newer bison versions that
+// do not support #define YYLEX_PARAM & Co any more
+%lex-param   {void *mode}     
+%parse-param {void *mode}
+%param       {anitmt::adlparser::adlparser_info *info}
+
 // ********
 // Tokens
 // ********
@@ -854,7 +860,7 @@ dummy_operator:
       info.open_file( filename );
       info.set_new_tree_node( node );
       info.set_pass(pass);
-      int ret = yyparse( static_cast<void*>(&info) );
+      int ret = yyparse((void*)0, &info );
       info.close_file();
       
       return ret;

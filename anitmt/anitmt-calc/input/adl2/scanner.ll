@@ -18,20 +18,24 @@
 
   #include "adlparser.hpp"		// token type and parser info
 
+  #include "parser_functions.hpp"	// parser/lexer help functions
+  #include "token.hpp"			// Token class
   #include "tokens.h"			// token values
  
   // forward declaration
-  inline Token get_identifier( char *s, adlparser_info *info );
+  inline anitmt::adlparser::Token get_identifier( char *s, anitmt::adlparser::adlparser_info *info );
   inline std::string strip_quotes( std::string text );
 
 #define YYSTYPE adlparser::Token
 
-#define YYLEX_PARAM info
-#define YYLEX_PARAM_TYPE (parser_info&)
+  // replaced by %lex-param & co in parser.yy
+  //#define YYLEX_PARAM info
+  //#define YYLEX_PARAM_TYPE (parser_info&)
+  #define YY_DECL int anitmt::adlparser::myFlex::yylex( anitmt::adlparser::Token *yylval, void *mode, anitmt::adlparser::adlparser_info *info )
 
-  inline message::Message_Stream llerr( adlparser_info *info );
-  inline message::Message_Stream llwarn ( adlparser_info *info );
-  inline message::Message_Stream llverbose( adlparser_info *info, 
+  inline message::Message_Stream llerr( anitmt::adlparser::adlparser_info *info );
+  inline message::Message_Stream llwarn ( anitmt::adlparser::adlparser_info *info );
+  inline message::Message_Stream llverbose( anitmt::adlparser::adlparser_info *info, 
 					    bool with_position=true, 
 					    int vlevel=1, int detail=2 );
 
@@ -84,7 +88,7 @@ operand  ({scal}|{qstring}|{id})
   "\t"	  	{ info->file_pos.tab_inc_column(); } 
   "\n"	  	{ info->file_pos.inc_line(); }
   "\r"	  	{ ; /*ignore DOS specific line end*/ }
-  ";"   	{ BEGIN INITIAL; tok_pos(); return yytext[0]; }
+  ";"   	{ BEGIN(INITIAL); tok_pos(); return yytext[0]; }
   {operand}  	{ tok_pos(); return TOK_DUMMY_OPERAND; }
   {operator}	{ tok_pos(); return TOK_DUMMY_OPERATOR; }
   .	   	{ tok_pos(); return yytext[0]; }
@@ -184,9 +188,9 @@ vec_translate		{ tok_pos(); return TOK_FUNC_vec_translate; }
 %%
 // asks all id_resolver defined in info, whether they may resolve the 
 // identifier. In case they don't it returns TOK_INVALID_ID 
-inline Token get_identifier( char *s,adlparser_info *info )
+inline anitmt::adlparser::Token get_identifier( char *s,anitmt::adlparser::adlparser_info *info )
 {
-  Token tok; 
+  anitmt::adlparser::Token tok; 
   if( info->id_resolver ) tok = info->id_resolver->get_identifier(s); 
   // if resolver didn't know what the string means?
   if( tok.get_type() == TOK_INVALID_ID )
@@ -212,7 +216,7 @@ std::string strip_quotes( std::string text )
 #undef tok_pos
 #undef inc_col
 
-inline message::Message_Stream llerr( adlparser_info *info )
+inline message::Message_Stream llerr( anitmt::adlparser::adlparser_info *info )
 { 
   
   message::Message_Stream msg(message::noinit);
@@ -220,14 +224,14 @@ inline message::Message_Stream llerr( adlparser_info *info )
   return msg;
 }
 
-inline message::Message_Stream llwarn( adlparser_info *info )
+inline message::Message_Stream llwarn( anitmt::adlparser::adlparser_info *info )
 {
   message::Message_Stream msg(message::noinit);
   info->msg.warn( &info->file_pos ).copy_to(msg);
   return msg;
 }
 
-inline message::Message_Stream llverbose( adlparser_info *info, 
+inline message::Message_Stream llverbose( anitmt::adlparser::adlparser_info *info, 
 					  bool with_position, 
 					  int vlevel, int detail )
 {
@@ -241,17 +245,21 @@ inline message::Message_Stream llverbose( adlparser_info *info,
   return msg;
 }
 
-void yyFlexLexer::goto_initial_state() 
+void adlparser_goto_initial_state(/*in-out*/int &yy_start) 
 {
-  BEGIN INITIAL;
-}
-void yyFlexLexer::dummy_statement_follows() 
-{
-  BEGIN DUMMY_STATEMENT;
-}
-void yyFlexLexer::set_input_stream( std::istream &in ) 
-{
-  yyin = &in;
+  BEGIN(INITIAL);
 }
 
+void adlparser_dummy_statement_follows(/*in-out*/int &yy_start) 
+{
+  BEGIN(DUMMY_STATEMENT);
+}
+
+int adlparser_FlexLexer::yylex() {
+  assert(false); // this should never be called
+}
+
+int adlparser_FlexLexer::yywrap() {
+  return ::yywrap();
+}
 /* end of lexical analizer */

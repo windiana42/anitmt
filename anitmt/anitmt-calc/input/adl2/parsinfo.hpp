@@ -33,6 +33,8 @@ namespace anitmt
 {
   namespace adlparser
   {
+    class myFlex; // forward declaration from parser_functions.hpp
+    
     //**********************************************************
     // Identifier_Resolver: resolves indentifiers for the lexer
     //**********************************************************
@@ -91,7 +93,7 @@ namespace anitmt
       // only for manipulation from yylex() and yyparse()
 
       message::Message_Reporter msg;	// this offers message streams
-      adlparser_FlexLexer *lexer;	// lexical analyzer / scanner
+      myFlex *lexer;	// lexical analyzer / scanner
       pass_type pass;			// 1 : parse only structure
 					// 2 : parse everything
       
