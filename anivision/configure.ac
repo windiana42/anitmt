@@ -31,6 +31,7 @@ if test "$need_flex" = "y" ; then
     fstatus="n"
     case "$flexvers" in
       [[3-9]].*)  fstatus="y" ;;
+      2.[[6-9]].*)  fstatus="y" ;;
       2.[[1-4]].*)  fstatus="n" ;;
       2.5.[[4-9]]*)  fstatus="y" ;;
       2.5.3[[1-9]])  fstatus="y" ;;
