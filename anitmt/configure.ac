@@ -1,5 +1,5 @@
 # Process this file with autoconf to produce a configure script.
-AC_INIT(anitmt, 0.2.3, anitmt@theofel.de)
+AC_INIT(anitmt, 0.2.4, anitmt@theofel.de)
 AM_INIT_AUTOMAKE
 AC_CONFIG_SRCDIR([anitmt-calc/anitmt-calc.cpp])
 AM_CONFIG_HEADER(config.h)

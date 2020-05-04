@@ -2,6 +2,7 @@
 *.pov
 *.avi
 *.inc
+/circles/ani/*.ttf
 image_file_list
 unfilled.out
 expl_filled.out

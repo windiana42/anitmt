@@ -1,8 +1,9 @@
 %define  RELEASE 1
 %define  rel     %{?CUSTOM_RELEASE} %{!?CUSTOM_RELEASE:%RELEASE}
+%define  debug_package %{nil}
 
 Name: anitmt
-Version: 0.2.3
+Version: 0.2.4
 Release: %rel
 
 Summary: AniTMT is an Animation System for generating films with povray
@@ -12,7 +13,7 @@ Vendor: Martin Trautmann <martintrautmann@gmx.de>
 Packager: Martin Trautmann <martintrautmann@gmx.de>
 Url: http://sourceforge.net/project/anitmt
 
-Source: http://heanet.dl.sourceforge.net/project/anitmt/AniTMT/%version/%name-%version.tar.gz
+Source: https://master.dl.sourceforge.net/project/anitmt/AniTMT/%version/%name-%version.tar.gz
 
 Prefix: %_prefix
 BuildRoot: %_tmppath/%name-%version-root
