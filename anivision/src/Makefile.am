@@ -29,6 +29,6 @@ anivision_LDADD = \
 	numerics/libnumerics.a \
 	$(top_builddir)/hlib/libhlib.a \
 	\
-	$(top_builddir)/anitmt-build/anitmt-calc/libanitmt-static.a \
+	$(top_builddir)/anitmt-build/anitmt-calc/.libs/libanitmt.a \
 	\
 	-lstdc++ 
