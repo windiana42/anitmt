@@ -73,7 +73,7 @@ pushd anivision
    ./autogen.sh
    mkdir build
    cd build
-   ../configure --with-hlib="$(pwd)/../../hlib/build" --with-anitmt-build="$(pwd)/../../hlib/build"
+   ../configure --with-hlib="$(pwd)/../../hlib/build" --with-anitmt-build="$(pwd)/../../anitmt/build"
    make -j4
    make install
    cd -
