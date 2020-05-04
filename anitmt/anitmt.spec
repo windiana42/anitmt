@@ -7,7 +7,7 @@ Version: 0.2.4
 Release: %rel
 
 Summary: AniTMT is an Animation System for generating films with povray
-License: GPL
+License: GPL-2.0-only
 Group: Productivity/Graphics/Visualization/Raytracers
 Vendor: Martin Trautmann <martintrautmann@gmx.de>
 Packager: Martin Trautmann <martintrautmann@gmx.de>
@@ -33,7 +33,7 @@ AniTMT is an Animation System for generating films with povray
 if [ ! -x configure ]; then
 	CFLAGS="$RPM_OPT_FLAGS" CXXFLAGS="$RPM_OPT_FLAGS" ./autogen.sh $ARCH_FLAGS --prefix=%prefix
 fi
-CFLAGS="$RPM_OPT_FLAGS" CXXFLAGS="$RPM_OPT_FLAGS" ./configure --enable-debug="no" $ARCH_FLAGS --prefix=%prefix
+CFLAGS="$RPM_OPT_FLAGS" CXXFLAGS="$RPM_OPT_FLAGS" ./configure --enable-debug="no" $ARCH_FLAGS --prefix=%prefix --libdir=$RPM_BUILD_ROOT%{_libdir}
 
 if [ -n "$SMP" ]; then
 	make -j$SMP "MAKE=make -j$SMP"
