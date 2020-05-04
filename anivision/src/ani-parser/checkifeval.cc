@@ -187,7 +187,7 @@ int TNDeclarator::CheckIfEvaluable(CheckIfEvalInfo *ci)
 	
 	// This is non-recursively, so this check tests if the 
 	// decl has an initializer or not: 
-	if(decltype==DT_Initialize)
+	if(decl_type==DT_Initialize)
 	{
 		assert(assfunc);  // Only needed if DT_Initialize. 
 		fail+=down.last()->CheckIfEvaluable(ci);

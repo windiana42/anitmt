@@ -26,6 +26,9 @@ typedef ANI::TNLocation yyltype;
 
 /* Include tokens and def for YYSTYPE, YYLTYPE: */
 #include <ani-parser/treenode.h>
+namespace ANI{
+  class Ani_Parser; // forward declaration from ani_parser.h needed by generated grammer.hh
+}
 #include <ani-parser/grammar.hh>
 
 

@@ -157,7 +157,7 @@ TNLocation TNCompoundStmt::GetLocationRange() const
 
 TNLocation TNDeclarator::GetLocationRange() const
 {
-	switch(decltype)
+	switch(decl_type)
 	{
 		case DT_None:  assert(0);  break;
 		case DT_Name:

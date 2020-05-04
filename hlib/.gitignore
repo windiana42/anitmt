@@ -1,0 +1,16 @@
+Makefile.in
+/aclocal.m4
+/autom4te.cache/
+/build/
+/config.guess
+/config.h.in
+/config.sub
+/configure
+/install-sh
+/ltmain.sh
+/test-driver
+/compile
+/depcomp
+/missing
+/hlib-config.h.in
+*~

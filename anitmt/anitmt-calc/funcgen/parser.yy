@@ -45,7 +45,7 @@ namespace funcgen
 // Options
 // *********
    
-%pure_parser			// parser may be called recursive
+%pure-parser			// parser may be called recursive
 
 // The following options are needed for newer newer bison versions that
 // do not support #define YYLEX_PARAM & Co any more

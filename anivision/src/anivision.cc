@@ -234,8 +234,9 @@ int main(int argc,char **argv,char **envp)
 	fprintf(stderr,"%s: %sLMalloc: used=%u/%d, peak=%u/%d (%u/%u/%u)%s\n",
 		prg_name,
 		lmu.curr_used ? "*** " : "",
-		lmu.curr_used,lmu.used_chunks,lmu.max_used,lmu.max_used_chunks,
-		lmu.malloc_calls,lmu.realloc_calls,lmu.free_calls,
+		(unsigned)lmu.curr_used,(int)lmu.used_chunks,
+		(unsigned)lmu.max_used,(int)lmu.max_used_chunks,
+		(unsigned)lmu.malloc_calls,(unsigned)lmu.realloc_calls,(unsigned)lmu.free_calls,
 		lmu.curr_used ? " ***" : "");
 	
 	if(lmu.curr_used || lmu.used_chunks)

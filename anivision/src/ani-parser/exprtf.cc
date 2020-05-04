@@ -1901,7 +1901,7 @@ int TNDeclarator::DoExprTF(TFInfo *ti,TreeNode ** /*update_tn*/)
 	++ti->n_nodes_visited;
 	// We need to get the ani scope. And thus, we must get down to 
 	// the tree leaf. 
-	if(decltype!=DT_Initialize)
+	if(decl_type!=DT_Initialize)
 	{
 		// NOTE: Due to constant folding at the beginning there is no 
 		//       need to look at the expression in DT_Array. 
@@ -1909,22 +1909,22 @@ int TNDeclarator::DoExprTF(TFInfo *ti,TreeNode ** /*update_tn*/)
 		// core/fixinctype.cc). 
 		// (This assert is just here to make sure to detect it here 
 		// once the other code is changed.) 
-		if(decltype==DT_Array && down.first()!=down.last())
+		if(decl_type==DT_Array && down.first()!=down.last())
 		{  assert(((TNExpression*)down.last())->ExprType()==TNE_Value);  }
 		
 		// We need to have an evalfunc even if there is no 
 		// initializer (because we then need prototype value 
 		// setup): 
-		if(decltype==DT_Name)
+		if(decl_type==DT_Name)
 		{
 			TreeNode *walker=this;
 			for(; walker->parent()->NType()==TN_Declarator;
 				walker=walker->parent());
-			if(((TNDeclarator*)walker)->decltype!=DT_Initialize)
+			if(((TNDeclarator*)walker)->decl_type!=DT_Initialize)
 			{
 				//fprintf(stderr,"DECL: %s  walker: %d (%d)\n",
 				//	((TNIdentifier*)down.first())->CompleteStr().str(),
-				//	((TNDeclarator*)walker)->decltype,DT_Initialize);
+				//	((TNDeclarator*)walker)->decl_type,DT_Initialize);
 				TNIdentifier *our_idf=(TNIdentifier*)down.first();
 				assert(our_idf->NType()==TN_Identifier);
 				TNDeclarator *top_decl=(TNDeclarator*)walker;

@@ -60,7 +60,7 @@ inline SplineBoundaryCondition operator|(
 class SplineBase
 {
 	public:
-		static const double tval_eps=1.0e-7;
+		static constexpr double tval_eps=1.0e-7;
 		
 		// TVALS_DIST to be passed to Create() functions for splines. 
 		// NOTE: Using tvals=NULL or tvals=TVALS_DIST will change the 

@@ -190,7 +190,7 @@ TreeNode *TNCompoundStmt::CloneTree()
 TreeNode *TNDeclarator::CloneTree()
 {
 	TNDeclarator *tn=new TNDeclarator(NULL);
-	tn->decltype=decltype;
+	tn->decl_type=decl_type;
 	assert(!evalfunc && !assfunc);
 	return(_CloneChildren(tn));
 }

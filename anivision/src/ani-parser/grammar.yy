@@ -26,13 +26,15 @@
 
 // void yyerror (char const *msg);                 /* Yacc parsers.  */
 // void yyerror (YYLTYPE *locp, char const *msg);  /* GLR parsers.   */
-	   
-#define YYLEX_PARAM (((Ani_Parser*)_ap)->lsb)
-#define YYPARSE_PARAM _ap   /* Ani_Parser */
+
+// replaced by %lex-param & Co
+//#define YYLEX_PARAM (((Ani_Parser*)_ap)->lsb)
+//#define YYPARSE_PARAM _ap   /* Ani_Parser */
+
 #define YYERROR_VERBOSE 1
 /* Special hack to get Ani_Parser in the error handler. */
 #undef yyerror
-#define yyerror(msg)  Ani_error(msg,_ap)   /* SPECIAL HACK */
+#define yyerror(yylloc, _ap, mode, msg)  Ani_error(msg,_ap)   /* SPECIAL HACK */
 
 /* Something is wrong with bison-1.875's __attribute__((__unused__)) */
 /* for a label: it misses a semicolon at the end. DIRTY FIX: */
@@ -47,18 +49,24 @@
 namespace ANI
 {
 
-static int yylex(YYSTYPE *lvalp,YYLTYPE *llocp,void *fsc);
+int yylex(YYSTYPE *lvalp,YYLTYPE *llocp,void *mode, ANI::Ani_Parser *fsc);
 // static void yyerror(const char *s);
 void Ani_error(const char *s,void *_ap);  /* SPECIAL HACK */
 
 %}
 
-%pure_parser
+%pure-parser
 %defines
 %name-prefix="Ani_"
 %output="grammar.cc"
 %locations
 %error-verbose
+
+// The following options are needed for newer newer bison versions that
+// do not support #define YYLEX_PARAM & Co any more
+%lex-param   {void *mode}     
+%parse-param {void *mode}
+%param       {ANI::Ani_Parser *_ap}
 
 /* Expect 1 shift/reduce conflict -- it's the dangling else and */
 /* (IMO) resolved correctly (shift the else). */
@@ -202,7 +210,7 @@ void Ani_error(const char *s,void *_ap);  /* SPECIAL HACK */
 
 %left TS_OROR
 %left TS_ANDAND
-%left TS_EQ TS_NEQ "!="
+%left TS_EQ TS_NEQ
 %left TS_LE TS_GE '<' TS_G '>'
 
 %left '+' '-'
@@ -295,7 +303,7 @@ literal:
 identifier:
 	  TS_IDENTIFIER
 		{
-			TNIdentifierSimple *ids=((Ani_Parser*)_ap)->_AllocIdentifier(@1,$1);
+			TNIdentifierSimple *ids=_ap->_AllocIdentifier(@1,$1);
 			$$=ids;
 		}
 ;
@@ -327,7 +335,7 @@ builtin_name_raw:
 builtin_name:
 	  builtin_name_raw
 		{
-			TNIdentifierSimple *ids=((Ani_Parser*)_ap)->
+			TNIdentifierSimple *ids=_ap->
 				_AllocIdentifier(@1,(char*)($1),/*const_char_arg=*/1);
 			$$=new TNIdentifier(ids);
 		}
@@ -392,7 +400,7 @@ primary_expr:
 	| '(' expr ')'  {  $$=$2;  }
 	| TS_NULL
 		{
-			TNIdentifierSimple *ids=((Ani_Parser*)_ap)->
+			TNIdentifierSimple *ids=_ap->
 				_AllocIdentifier(@1,"NULL",/*const_char_arg=*/1);
 			$$=new TNExpression(new TNIdentifier(ids));
 		}
@@ -905,12 +913,12 @@ function_def_nonstatic:
 		{
 			TNTypeSpecifier *rtype=new TNTypeSpecifier(@1,
 				TNTypeSpecifier::VoidType);
-			$$=((Ani_Parser*)_ap)->_CreateFunctionDef($1,rtype,$6,
+			$$=_ap->_CreateFunctionDef($1,rtype,$6,
 				0,TNLocation(),$5,@5,$3);
 		}
 	| type_name name_notabs '(' fdef_decl_list ')' function_mod compound_stmt
 		{
-			$$=((Ani_Parser*)_ap)->_CreateFunctionDef($2,$1,$7,
+			$$=_ap->_CreateFunctionDef($2,$1,$7,
 				0,TNLocation(),$6,@6,$4);
 		}
 	| type_name array_spec name_notabs '(' fdef_decl_list ')' function_mod 
@@ -920,7 +928,7 @@ function_def_nonstatic:
 			TreeNode *tn=$2;  /* = TNTypeSpecifier */
 			while(!tn->down.is_empty())  tn=tn->down.first();
 			tn->AddChild($1);
-			$$=((Ani_Parser*)_ap)->_CreateFunctionDef($3,$2,$8,
+			$$=_ap->_CreateFunctionDef($3,$2,$8,
 				0,TNLocation(),$7,@7,$5);
 		}
 ;
@@ -1114,11 +1122,11 @@ pov_exprlist_ne:
 
 pov_expr:
 	{
-		((Ani_Parser*)_ap)->lsb->SetMainStartCond(LexerScannerBase::SC_ANI);
+		_ap->lsb->SetMainStartCond(LexerScannerBase::SC_ANI);
 	}
 	expr
 	{
-		((Ani_Parser*)_ap)->lsb->SetMainStartCond(LexerScannerBase::SC_POV);
+		_ap->lsb->SetMainStartCond(LexerScannerBase::SC_POV);
 		
 		$$=new POV::PTNExpression($2);
 	}
@@ -1257,10 +1265,9 @@ STARTEXPR:
 
 %%
 
-static int yylex(YYSTYPE *lvalp,YYLTYPE *llocp,void *_lsb)
+int yylex(YYSTYPE *lvalp,YYLTYPE *llocp,void *mode, ANI::Ani_Parser *parser)
 {
-	LexerScannerBase *lsb=(LexerScannerBase*)_lsb;
-	return(lsb->YYLex(lvalp,llocp));
+	return(parser->lsb->YYLex(lvalp,llocp));
 }
 
 
@@ -1348,7 +1355,7 @@ void Ani_error(const char *s,void *_ap)  /* SPECIAL HACK */
 int Ani_Parser::_YYParse()
 {
 	_set_root=NULL;
-	int rv=yyparse(this);
+	int rv=yyparse((void*)0, this);
 	
 	/* Free all those nodes which were left laying around */
 	/* when errors occured.                               */

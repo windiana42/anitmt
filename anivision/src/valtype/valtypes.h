@@ -112,7 +112,7 @@ class String;
 struct ValueBase : public ValueNamespace
 {
 	// Default epsilon value: 
-	static const double default_eps=1.0e-10;
+	static constexpr double default_eps=1.0e-10;
 	
 	// fabs() version used by value types: 
 	static inline double fabs(double x)

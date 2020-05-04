@@ -72,13 +72,13 @@ class CCIF_Factory_AniTMT : public CCIF_Factory
 		~CCIF_Factory_AniTMT();
 		
 		// Get message consultant / tree info: 
-		message::Message_Consultant *GetMessageConsultant() const
+		message::Message_Consultant *GetMessageConsultant() 
 			{  return(&msg_consultant);  }
-		proptree::tree_info *GetTreeInfo() const
+		proptree::tree_info *GetTreeInfo()
 			{  return(&pt_tree_info);  }
-		solve::Priority_System *GetPrioritySystem() const
+		solve::Priority_System *GetPrioritySystem() 
 			{  return(&priority_system);  }
-		proptree::Semi_Global *GetGlobalInfo() const
+		proptree::Semi_Global *GetGlobalInfo()
 			{  return(&semi_global);  }
 		
 		// Return string with scope name hierarchy. 

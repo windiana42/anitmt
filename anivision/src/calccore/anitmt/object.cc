@@ -74,7 +74,7 @@ int CCObject::_Pass1PropertyDeclaration(ADTNScopeEntry *scent,
 		
 		ANI::ExprValueType evt;
 		val.GetExprValueType(&evt);
-		Value::CompleteType *pod_evt=evt.PODType();
+		const Value::CompleteType *pod_evt=evt.PODType();
 		
 		bool set_val_rv=0;
 		bool can_cast=0;
@@ -90,7 +90,7 @@ int CCObject::_Pass1PropertyDeclaration(ADTNScopeEntry *scent,
 				else if(pod_evt && pod_evt->type==Value::VTInteger)
 				{  v=val.GetPODInt();  can_cast=1;  }
 				if(can_cast)
-				{  set_val_rv=dynamic_cast<proptree::Type_Property<values::Scalar>*>(
+				{  set_val_rv=static_cast<proptree::Type_Property<values::Scalar>*>(
 					prop)->set_value(v);  }
 			}	break;
 			case values::Valtype::vector:
@@ -104,7 +104,7 @@ int CCObject::_Pass1PropertyDeclaration(ADTNScopeEntry *scent,
 					values::Vector v;
 					for(int i=0; i<3; i++)
 						v[i]=(*tmp_v)[i];
-					set_val_rv=dynamic_cast<proptree::Type_Property<values::Vector>*>(
+					set_val_rv=static_cast<proptree::Type_Property<values::Vector>*>(
 						prop)->set_value(v);
 				}
 				expected_type="vector";  // 3
@@ -123,7 +123,7 @@ assert(0);
 			{
 				expected_type="flag";
 				values::Flag v=!val.is_null();
-				set_val_rv=dynamic_cast<proptree::Type_Property<values::Flag>*>(
+				set_val_rv=static_cast<proptree::Type_Property<values::Flag>*>(
 					prop)->set_value(v);
 				can_cast=1;
 			}	break;

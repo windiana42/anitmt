@@ -1138,10 +1138,10 @@ class TNDeclarator : public TreeNode
 			DT_None=0,   // may not happen
 			DT_Name,     // name declarator (lowest decl level in tree)
 			DT_Array,    // array declarator
-			DT_Initialize,  // initialize (=assign value)
+			DT_Initialize  // initialize (=assign value)
 		};
 	private:
-		DeclType decltype;
+		DeclType decl_type;
 	public:
 		// Evaluation function; set during type fixup. 
 		EvalFunc *evalfunc;
@@ -1155,17 +1155,17 @@ class TNDeclarator : public TreeNode
 	public:
 		// Construct DT_Name declarator: 
 		TNDeclarator(TNIdentifier *id) : TreeNode(TN_Declarator),
-			decltype(DT_Name)
+			decl_type(DT_Name)
 			{  assfunc=NULL;  evalfunc=NULL;  if(id) AddChild(id);  }
 		// Construct DT_Array or DT_Initialize declarator: 
 		TNDeclarator(TNDeclarator *dec,DeclType dt,TNExpression *expr=NULL) : 
-			TreeNode(TN_Declarator),decltype(dt)
+			TreeNode(TN_Declarator),decl_type(dt)
 			{  assfunc=NULL;  evalfunc=NULL;  AddChild(dec);
 				if(expr) AddChild(expr);  }
 		~TNDeclarator();
 		
 		DeclType GetDeclType() const
-			{  return(decltype);  }
+			{  return(decl_type);  }
 		
 		// [overriding virtuals]
 		void DumpTree(StringTreeDump *d);

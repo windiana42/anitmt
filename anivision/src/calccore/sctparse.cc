@@ -70,7 +70,7 @@ ScopeTreeParser::Entry::Entry(const Entry &e)
 	expr_id=e.expr_id;
 	nents=e.nents;
 	alloc_ents=e.alloc_ents;
-	scent=(SCEnt*)LMalloc(alloc_ents*sizeof(SCEnt));
+	scent=(SCEnt*)LMalloc(alloc_ents*sizeof(SCEnt)); // 
 	for(int i=0; i<nents; i++)
 		scent[i]=e.scent[i];
 }

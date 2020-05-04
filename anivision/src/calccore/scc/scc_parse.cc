@@ -116,88 +116,111 @@ SCC_ScopeTreeParser::SCC_ScopeTreeParser() :
 {
 	fprintf(stdout,"SCC: Initializing grammar...");  fflush(stdout);
 	
-	// Empty scope: 
-	DefineScope(SC_empty,&( EntryList() ));
+	// Empty scope:
+	EntryList sc_empty;
+	DefineScope(SC_empty,&( sc_empty )); // content will be moved 
+
+	EntryList sc_move(
+			  Entry::Scope(TID_pos)+SCEnt(TID_curve,SC_curve));
+	sc_move,
+	  Entry::Scope(TID_front)+SCEnt(TID_curve,SC_curve)+SCEnt(TID_speed,SC_move_front_speed),
+	  Entry::Expr(TID_front_mode,TY_String),
+	  Entry::Scope(TID_up)+SCEnt(TID_curve,SC_curve)+SCEnt(TID_gravity,SC_move_up_gravity),
+	  Entry::Expr(TID_up_mode,TY_String);
 	
-	DefineScope(SC_move,&(
-		Entry::Scope(TID_pos)
-			+SCEnt(TID_curve,SC_curve),
-		Entry::Scope(TID_front)
-			+SCEnt(TID_curve,SC_curve)
-			+SCEnt(TID_speed,SC_move_front_speed),
-		Entry::Expr(TID_front_mode,TY_String),
-		Entry::Scope(TID_up)
-			+SCEnt(TID_curve,SC_curve)
-			+SCEnt(TID_gravity,SC_move_up_gravity),
-		Entry::Expr(TID_up_mode,TY_String) ));
+	DefineScope(SC_move,&( sc_move )); // content will be moved
 	
-	DefineScope(SC_move_front_speed,&( EntryList() ));
+	EntryList sc_move_front_speed;
+	DefineScope(SC_move_front_speed,&( sc_move_front_speed )); // content will be moved
+
+	EntryList sc_move_up_gravity(Entry::Expr(TID_force_up,TY_Vector3));
+	sc_move_up_gravity,
+	  Entry::Expr(TID_force_center,TY_Vector3),
+	  Entry::Expr(TID_accel_scale,TY_Scalar);
+	DefineScope(SC_move_up_gravity,&( sc_move_up_gravity )); // content will be moved
+
+        EntryList sc_curve(Entry::Scope(TID_pos)
+			   +SCEnt(TID_fixed,SC_fixed3)
+			   +SCEnt(TID_lspline,SC_lspline3)
+			   +SCEnt(TID_cspline,SC_cspline3)
+			   +SCEnt(TID_function,SC_function3));
+        sc_curve,
+	  Entry::Expr(TID_dt,TY_Scalar),
+	  Entry::Expr(TID_t,TY_Range),
+	  Entry::Scope(TID_length)
+	  +SCEnt(TID_none,SC_empty)
+	  +SCEnt(TID_lspline,SC_lspline_xt)
+	  +SCEnt(TID_cspline,SC_cspline_xt),
+	  Entry::Scope(TID_speed)
+	  +SCEnt(TID_none,SC_empty)
+	  +SCEnt(TID_constant,SC_empty)
+	  +SCEnt(TID_lspline,SC_lspline_vt)
+	  +SCEnt(TID_cspline,SC_cspline_vt);
+  
+	DefineScope(SC_curve,&( sc_curve )); // content will be moved
+
+	EntryList sc_fixed3( Entry::Expr(TID_pos,TY_Vector3) );
+		   
+	DefineScope(SC_fixed3,&( sc_fixed3 ) ); // content will be moved
+
+	EntryList sc_lspline(Entry::Expr(TID_pts,TY_VectorArray));
+
+	sc_lspline,
+	  Entry::Expr(TID_pts_t,TY_VectorArray),
+	  Entry::Expr(TID_addpts,TY_String),
+	  Entry::Expr(TID_tvals,TY_StringOrScalarArray);
 	
-	DefineScope(SC_move_up_gravity,&(
-		Entry::Expr(TID_force_up,TY_Vector3),
-		Entry::Expr(TID_force_center,TY_Vector3),
-		Entry::Expr(TID_accel_scale,TY_Scalar) ));
+	DefineScope(SC_lspline,&( sc_lspline )); // content will be moved
+
+	EntryList sc_lspline3(Entry::Expr(TID_pts,TY_Vector3Array));
+
+	sc_lspline3,
+	  Entry::Expr(TID_pts_t,TY_Vector4Array),
+	  Entry::Expr(TID_addpts,TY_String),
+	  Entry::Expr(TID_tvals,TY_StringOrScalarArray);
 	
-	DefineScope(SC_curve,&(
-		Entry::Scope(TID_pos)
-			+SCEnt(TID_fixed,SC_fixed3)
-			+SCEnt(TID_lspline,SC_lspline3)
-			+SCEnt(TID_cspline,SC_cspline3)
-			+SCEnt(TID_function,SC_function3),
-		Entry::Expr(TID_dt,TY_Scalar),
-		Entry::Expr(TID_t,TY_Range),
-		Entry::Scope(TID_length)
-			+SCEnt(TID_none,SC_empty)
-			+SCEnt(TID_lspline,SC_lspline_xt)
-			+SCEnt(TID_cspline,SC_cspline_xt),
-		Entry::Scope(TID_speed)
-			+SCEnt(TID_none,SC_empty)
-			+SCEnt(TID_constant,SC_empty)
-			+SCEnt(TID_lspline,SC_lspline_vt)
-			+SCEnt(TID_cspline,SC_cspline_vt) ));
+	DefineScope(SC_lspline3,&( sc_lspline3 )); // content will be moved
+
+	EntryList sc_lspline_vt( Entry::Expr(TID_pts_vt,TY_Vector2Array) );
+		   
+	DefineScope(SC_lspline_vt,&( sc_lspline_vt ) ); // content will be moved
+
+	EntryList sc_lspline_xt( Entry::Expr(TID_pts_xt,TY_Vector2Array) );
+		   
+	DefineScope(SC_lspline_xt,&( sc_lspline_xt ) ); // content will be moved
+
+	EntryList sc_cspline(Entry::Expr(TID_pts,TY_VectorArray));
+
+	sc_cspline,
+	  Entry::Expr(TID_pts_t,TY_VectorArray),
+	  Entry::Expr(TID_addpts,TY_String),
+	  Entry::Expr(TID_tvals,TY_StringOrScalarArray);
 	
-	DefineScope(SC_fixed3,&(
-		EntryList( Entry::Expr(TID_pos,TY_Vector3) ) ));
+	DefineScope(SC_cspline,&( sc_cspline )); // content will be moved
+
+	EntryList sc_cspline3(Entry::Expr(TID_pts,TY_Vector3Array));
+
+	sc_cspline3,
+	  Entry::Expr(TID_pts_t,TY_Vector4Array),
+	  Entry::Expr(TID_addpts,TY_String),
+	  Entry::Expr(TID_tvals,TY_StringOrScalarArray);
 	
-	DefineScope(SC_lspline,&(
-		Entry::Expr(TID_pts,TY_VectorArray),
-		Entry::Expr(TID_pts_t,TY_VectorArray),
-		Entry::Expr(TID_addpts,TY_String),
-		Entry::Expr(TID_tvals,TY_StringOrScalarArray) ));
+	DefineScope(SC_cspline3,&( sc_cspline3 )); // content will be moved
+
+	EntryList sc_cspline_vt( Entry::Expr(TID_pts_vt,TY_Vector2Array) );
 	
-	DefineScope(SC_lspline3,&(
-		Entry::Expr(TID_pts,TY_Vector3Array),
-		Entry::Expr(TID_pts_t,TY_Vector4Array),
-		Entry::Expr(TID_addpts,TY_String),
-		Entry::Expr(TID_tvals,TY_StringOrScalarArray) ));
+	DefineScope(SC_cspline_vt,&( sc_cspline_vt ) ); // content will be moved
+
+	EntryList sc_scpline_xt( Entry::Expr(TID_pts_xt,TY_Vector2Array) );
 	
-	DefineScope(SC_lspline_vt,&(
-		EntryList( Entry::Expr(TID_pts_vt,TY_Vector2Array) ) ));
+	DefineScope(SC_cspline_xt,&( sc_scpline_xt ) ); // content will be moved
+
+	EntryList sc_function3(Entry::Expr(TID_pos,TY_Vector3));
+
+	sc_function3,
+	  Entry::Expr(TID_t,TY_Range);
 	
-	DefineScope(SC_lspline_xt,&(
-		EntryList( Entry::Expr(TID_pts_xt,TY_Vector2Array) ) ));
-	
-	DefineScope(SC_cspline,&(
-		Entry::Expr(TID_pts,TY_VectorArray),
-		Entry::Expr(TID_pts_t,TY_VectorArray),
-		Entry::Expr(TID_addpts,TY_String),
-		Entry::Expr(TID_tvals,TY_StringOrScalarArray) ));
-	
-	DefineScope(SC_cspline3,&(
-		Entry::Expr(TID_pts,TY_Vector3Array),
-		Entry::Expr(TID_pts_t,TY_Vector4Array),
-		Entry::Expr(TID_addpts,TY_String),
-		Entry::Expr(TID_tvals,TY_StringOrScalarArray) ));
-	
-	DefineScope(SC_cspline_vt,&(
-		EntryList( Entry::Expr(TID_pts_vt,TY_Vector2Array) ) ));
-	
-	DefineScope(SC_cspline_xt,&(
-		EntryList( Entry::Expr(TID_pts_xt,TY_Vector2Array) ) ));
-	
-	DefineScope(SC_function3,&(
-		Entry::Expr(TID_pos,TY_Vector3),
-		Entry::Expr(TID_t,TY_Range) ));
+	DefineScope(SC_function3,&( sc_function3 )); // content will be moved
 	
 	int rv=InitGrammar();
 	if(rv)

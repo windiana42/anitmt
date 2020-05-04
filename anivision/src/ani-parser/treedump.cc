@@ -612,7 +612,7 @@ void TNCompoundStmt::DumpTree(StringTreeDump *d)
 
 void TNDeclarator::DumpTree(StringTreeDump *d)
 {
-	switch(decltype)
+	switch(decl_type)
 	{
 		case DT_None:  assert(0);  break;
 		case DT_Name:

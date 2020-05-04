@@ -46,7 +46,7 @@ static int _init_done=_Init();
 void ValAllocPrintStat()
 {
 	printf("ValAlloc statistics: Counts: alloc=%d, free=%d, delta=%d\n",
-		alloc_cnt,free_cnt,alloc_cnt-free_cnt);
+	       (int)alloc_cnt,(int)free_cnt,(int)(alloc_cnt-free_cnt));
 	for(int i=0; i<MAXSTATSIZE/STATDIV; i++)
 	{
 		if(!alloc_counter[i])  continue;
@@ -61,8 +61,9 @@ void ValAllocPrintStat()
 		"(%u/%u/%u)%s\n",
 		prg_name,
 		lmu.curr_used ? "*** " : "",
-		lmu.curr_used,lmu.used_chunks,lmu.max_used,lmu.max_used_chunks,
-		lmu.malloc_calls,lmu.realloc_calls,lmu.free_calls,
+		(unsigned)lmu.curr_used,(int)lmu.used_chunks,(unsigned)lmu.max_used,
+		(int)lmu.max_used_chunks,
+		(unsigned)lmu.malloc_calls,(unsigned)lmu.realloc_calls,(unsigned)lmu.free_calls,
 		lmu.curr_used ? " ***" : "");
 }
 

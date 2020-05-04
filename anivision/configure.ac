@@ -76,7 +76,7 @@ AC_ARG_WITH(hlib,AC_HELP_STRING([--with-hlib],[path to hlib build directory]),
 	fi ])
 AC_MSG_CHECKING([for hlib])
 hlibdir=""
-checkdirs="./hlib ./hlib-* ../hlib ../hlib-*"
+checkdirs="./hlib ./hlib-* ../hlib ../hlib-* ../../hlib ../../hlib-*"
 if test "$hlib_build_dir" != "<unset>" ; then
 	checkdirs="$hlib_build_dir $hlib_build_dir/hlib $hlib_build_dir/.."
 fi
@@ -85,12 +85,12 @@ for i in $checkdirs ; do
   test -x "$i/HConfigVars" || continue
   hlibversion="$($i/HConfigVars VERSION)"
   case "x$hlibversion" in
-    x1.0.0)  hlibdir="$i" ; break ;;
+    x[[1-9]].*)  hlibdir="$i" ; break ;;
   esac
 done
 if test "x$hlibdir" = "x" ; then
 	AC_MSG_RESULT([failed])
-	AC_MSG_ERROR([Unable to find hlib (need: 1.0.0, found: $hlibversion). Giving up.])
+	AC_MSG_ERROR([Unable to find hlib (need: >=1.0.0, found: $hlibversion). Giving up.])
 else
 	AC_MSG_RESULT([$hlibdir, version $hlibversion])
 fi

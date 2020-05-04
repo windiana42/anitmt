@@ -420,7 +420,7 @@ class AniScopeBase : public ANI::AniGlue_ScopeBase
 		// Return value: 
 		//  0 -> OK
 		// -2 -> AniScope lookup failure. 
-		int AniScopeBase::GetBasicDeclType(ANI::TNTypeSpecifier *tspec,
+		int GetBasicDeclType(ANI::TNTypeSpecifier *tspec,
 			ANI::ExprValueType *evt);
 		
 		// Internally used by the following function: 

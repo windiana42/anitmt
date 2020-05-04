@@ -29,7 +29,8 @@ namespace ANI
 
 class Ani_Parser
 {
-	friend int Ani_parse(void*);
+	friend int Ani_parse(void *mode, Ani_Parser *_ap);
+	friend int yylex(YYSTYPE *lvalp,YYLTYPE *llocp,void *mode, Ani_Parser *parser);
 	friend void Ani_error(const char *s,void *_fp);
 	private:
 		LexerScannerBase *lsb;
