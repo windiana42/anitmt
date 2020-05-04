@@ -25,7 +25,7 @@ $MKAVI -f 5 -e 150 -o film-cram.avi
 cd ../../
 
 cd myrobot/
-../$top_builddir/anitmt-calc/anitmt-calc myrobot.ini
+$ANITMT myrobot.ini
 cd ani/
 $RENDER -w 400 -h 300 -d
 $TGA2AVI -f 24 -e 336
@@ -33,11 +33,15 @@ $MKAVI -f 24 -e 336 -o film-cram.avi
 cd ../../
 
 cd circles/
-../$top_builddir/anitmt-calc/anitmt-calc circles.ini
+$ANITMT circles.ini
+#$ANITMT circles24.ini  # use this for a nicer film
 cd ani/
 $RENDER -w 96 -h 72 -d
-$TGA2AVI -f 24 -e 336
-$MKAVI -f 24 -e 336 -o film-cram.avi
+#$RENDER -w 800 -h 600 -d  # use this for a nicer film
+$TGA2AVI -f 24 -e 14
+#$TGA2AVI -f 24 -e 336  # use this for a nicer film (might require a lot of disk space though)
+$MKAVI -f 24 -e 14 -o film-cram.avi
+#$MKAVI -f 24 -e 336 -o film-cram.avi  # use this for a nicer film
 cd ../../
 
 echo "please have a look at example/xxx/ani/film-cram.avi"

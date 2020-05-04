@@ -1,0 +1,10 @@
+*.tga
+*.pov
+*.avi
+*.inc
+image_file_list
+unfilled.out
+expl_filled.out
+filled.out
+half_filled.out
+
