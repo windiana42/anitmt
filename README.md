@@ -21,6 +21,8 @@ expressions in an imparative style.
 
 ## Demo videos AniTMT
 
+[![circles](/doc/imgs/circles.jpg)](http://youtu.be/kqSyDJFjLyk)
+
 ## Demo videos with older version of AniTMT
 
 [![flight_camera](/doc/imgs/flight_camera.jpg)](http://youtu.be/bpzJQJiBTDc)
@@ -30,6 +32,13 @@ expressions in an imparative style.
 [![gotime](/doc/imgs/gotime.jpg)](http://youtu.be/Os3Z28F0_6I)
 [![lego](/doc/imgs/lego.jpg)](http://youtu.be/NzevFstjBl8)
 [![nuts](/doc/imgs/nuts.jpg)](http://youtu.be/JZdZi4oEnKA)
+
+The old version has a less meta-programmed description language. However,
+after finishing the really cool new meta programming description (in fact we
+generate the code that generates code for generating scene descriptions that
+generate images) nobody put much energy into developing the animation language
+that makes use of all the generating power.
+[see solver description example](/anitmt/anitmt-calc/functionality/scalar.afd).
 
 ## Install
 
@@ -98,6 +107,18 @@ cd anivision/examples/
    ./make_examples
 cd -
 ```
+
+### Creating better compressed movies
+
+The AniTMT Examples use tga2avi and mkavi for converting images to
+videos. These days, much better tools exist as open source software. Here, one
+example:
+
+`ffmpeg -framerate 25 -i f%07d.tga -c:v libx264 -profile:v high -crf 20
+-pix_fmt yuv420p output.mp4` [taken from here](https://askubuntu.com/questions/610903/how-can-i-create-a-video-file-from-a-set-of-jpg-images)
+
+If you are a fan of free video codes, please send me another example
+and I will put it here as well.
 
 ## Build and install without root permissions (replace <user> or full prefix directory)
 
