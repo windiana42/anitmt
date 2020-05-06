@@ -28,6 +28,11 @@ AniTMT is an Animation System for generating films with povray
 #perl -pi -e 's|\${prefix}|%prefix|' README
 #perl -pi -e 's|PREFIX|%prefix|' doc/FAQ
 
+%configure
+# remove rpath from dynamic libraries despite installing to %RPM_BUILD_ROOT%
+sed -i 's|^hardcode_libdir_flag_spec=.*|hardcode_libdir_flag_spec=""|g' libtool
+sed -i 's|^runpath_var=LD_RUN_PATH|runpath_var=DIE_RPATH_DIE|g' libtool
+
 %build
 
 if [ ! -x configure ]; then
@@ -54,7 +59,7 @@ rm -rf $RPM_BUILD_ROOT
 %doc AUTHORS COPYING COPYING.GPL COPYING.LGPL README NEWS ChangeLog TODO FAQ
 %{_bindir}/*
 %{_libdir}/*
-%{_datadir}/anitmt/example/
+%{_datadir}/anitmt/
 
 #%changelog
 #* first version

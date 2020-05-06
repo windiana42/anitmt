@@ -163,6 +163,20 @@ AC_CHECK_FUNCS([dup2 gettimeofday stat])
 AC_CHECK_FUNCS([memmove memset strcasecmp strchr strerror strrchr strtol strtoul])
 AC_CHECK_FUNCS([setenv])
 
+# by Marcelo Magallon <mmagallo@efis.ucr.ac.cr>
+# Turn around -rpath problem with libtool 1.0c
+# This define should be improbable enough to not conflict with anything
+case ${host} in
+  *-pc-linux-gnu)
+    ls -l libtool config.status
+    AC_MSG_RESULT([Fixing libtool for -rpath problems.])
+    sed -i 's/^hardcode_libdir_flag_spec.*$'/'hardcode_libdir_flag_spec=" -D__LIBTOOL_IS_A_FOOL__ "/' libtool
+    sed -i 's/^hardcode_libdir_flag_spec.*$'/'hardcode_libdir_flag_spec=" -D__LIBTOOL_IS_A_FOOL__ "/' config.status
+    ls -l libtool config.status
+  ;;
+esac
+
+
 AC_CONFIG_FILES([ Makefile
 	lib/Makefile
 	lib/message/Makefile
@@ -210,3 +224,18 @@ if test "$GCC_LESS_THAN_3" = "yes" ; then
 			;;
 	esac
 fi
+
+# by Marcelo Magallon <mmagallo@efis.ucr.ac.cr>
+# Turn around -rpath problem with libtool 1.0c
+# This define should be improbable enough to not conflict with anything
+case ${host} in
+  *-pc-linux-gnu)
+    ls -l libtool config.status
+    AC_MSG_RESULT([Fixing libtool for -rpath problems..])
+    sed -i 's/^hardcode_libdir_flag_spec.*$'/'hardcode_libdir_flag_spec=" -D__LIBTOOL_IS_A_FOOL__ "/' libtool
+    sed -i 's/^hardcode_libdir_flag_spec.*$'/'hardcode_libdir_flag_spec=" -D__LIBTOOL_IS_A_FOOL__ "/' config.status
+    ls -l libtool config.status
+  ;;
+esac
+
+
