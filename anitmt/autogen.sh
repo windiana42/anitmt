@@ -6,9 +6,29 @@
 #
 # Command line arguments:
 # (none) - create files as necessary
-# (-f) - recreate all files (a bit like autoreconf, but not really :) 
+# (-f|--force) - recreate all files (a bit like autoreconf, but not really :) 
+# (-r|--fix-makefile-rpath) - fix problem in aclocal/automake to allow disabling
+#                             rpath in binaries/libraries (needed by non-root rpmbuild)
 
+FORCE=false
+RPATH=""
 
+for i in "$@"
+do
+case $i in
+    -f|--force)
+    FORCE=true
+    ;;
+    -r=*|--fix-automake-rpath=*)
+    RPATH="${i#*=}"
+    shift # past argument=value
+    ;;
+    *)
+    # unknown option
+    echo "### WARNING ### $0: unrecognized argument: $i"
+    ;;
+esac
+done
 
 # check for aclocal, autoconf and automake
 NEEDED="aclocal autoconf autoheader automake"
@@ -25,9 +45,6 @@ else
     printf "\nOk. All neccessary tools are available.\n\n";
 fi
 
-# FIXME: Correct argument handling... there's only "-f" now, so that's
-# no problem yet
-
 topdir="`pwd`"
 for i in . ; do 
 test -d $i || continue
@@ -35,13 +52,17 @@ echo "-----<entering directory $i>-----"
 cd $i
 
 # Make aclocal.m4
-if test -n "$1" -o ! -f aclocal.m4; then
+if $FORCE || ! test -f aclocal.m4; then
     echo "Creating aclocal.m4.";
     aclocal || exit 2;
+    if test -n "$RPATH"; then
+	echo "Fixing rpath issue in aclocal.m4"
+	sed -i 's/_LT_TAGVAR(hardcode_libdir_flag_spec, $1)='\''$wl-rpath $wl$libdir/_LT_TAGVAR(hardcode_libdir_flag_spec, $1)='\''/' aclocal.m4
+    fi
 fi
 
 # Make configure
-if test -n "$1" -o ! -f configure; then
+if $FORCE || ! test -f configure; then
     echo "Creating configure.";
     autoconf || exit 2;
 fi
@@ -50,17 +71,20 @@ fi
 libtoolize --force --copy || exit 2
 
 # Make config.h.in
-if test -n "$1" -o ! -f config.h.in; then
+if $FORCE || ! test -f config.h.in; then
     echo "Creating config.h.in.";
     autoheader || exit 2
 fi
 
 # Make Makefile.in(s)
-if test -n "$1" -o ! -f Makefile.in; then
+if $FORCE || ! test -f Makefile.in; then
     echo "Creating Makefile.ins.";
     automake -a || exit 2;
+    if test -n "$RPATH"; then
+        echo "Fixing rpath issue in Makefile.in files"
+        find -name Makefile.in -exec sed -i 's| -rpath $(libdir)| -rpath '"$RPATH"'|g' {} \;  
+    fi
 fi
-
 
 cd "$topdir" 
 echo

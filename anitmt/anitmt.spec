@@ -18,7 +18,7 @@ Source: https://master.dl.sourceforge.net/project/anitmt/AniTMT/%version/%name-%
 Prefix: %_prefix
 BuildRoot: %_tmppath/%name-%version-root
 
-BuildRequires: gcc-c++ bison flex
+BuildRequires: gcc-c++ bison flex automake autoconf libtool
 
 %description
 AniTMT is an Animation System for generating films with povray
@@ -28,16 +28,9 @@ AniTMT is an Animation System for generating films with povray
 #perl -pi -e 's|\${prefix}|%prefix|' README
 #perl -pi -e 's|PREFIX|%prefix|' doc/FAQ
 
-%configure
-# remove rpath from dynamic libraries despite installing to %RPM_BUILD_ROOT%
-sed -i 's|^hardcode_libdir_flag_spec=.*|hardcode_libdir_flag_spec=""|g' libtool
-sed -i 's|^runpath_var=LD_RUN_PATH|runpath_var=DIE_RPATH_DIE|g' libtool
-
 %build
 
-if [ ! -x configure ]; then
-	CFLAGS="$RPM_OPT_FLAGS" CXXFLAGS="$RPM_OPT_FLAGS" ./autogen.sh $ARCH_FLAGS --prefix=%prefix
-fi
+CFLAGS="$RPM_OPT_FLAGS" CXXFLAGS="$RPM_OPT_FLAGS" ./autogen.sh -f --fix-automake-rpath=%{_libdir} $ARCH_FLAGS --prefix=%prefix
 CFLAGS="$RPM_OPT_FLAGS" CXXFLAGS="$RPM_OPT_FLAGS" ./configure --enable-debug="no" $ARCH_FLAGS --prefix=%prefix --libdir=$RPM_BUILD_ROOT%{_libdir}
 
 if [ -n "$SMP" ]; then
