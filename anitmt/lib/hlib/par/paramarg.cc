@@ -46,7 +46,7 @@ RefString ParamArg::Origin::OriginStr() const
 			str.sprintf(0,"[environ]");
 			break;
 		default:
-			str.sprintf(0,_three_qm);
+			str.sprintf(0,"%s",_three_qm);
 			break;
 	}
 	return(str);

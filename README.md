@@ -142,6 +142,27 @@ cd anivision/examples/
 cd -
 ```
 
+## Cross-compiling anitmt for Windows with a Linux Machine
+
+Cross-compiling windows executables from linux generally works. Look in /usr
+how your system compilier is called and replace `x86_64-suse-linux` in my
+example (https://www.gnu.org/savannah-checkouts/gnu/autoconf/manual/autoconf-2.69/html_node/Specifying-Target-Triplets.html#Specifying-Target-Triplets).
+
+```bash
+pushd anitmt
+   ./autogen.sh
+   mkdir build-windows
+   cd build-windows
+   ../configure --prefix=/usr/x86_64-w64-mingw32 --host=x86_64-w64-mingw32 --build=x86_64-suse-linux --target=x86_64-suse-linux
+   make -j4
+   cd -
+popd
+```
+
+This will produce build-windows/anitmt-calc/anitmt-calc-static and some error
+messages since producing shared library versions fails. libtool seems to be
+incompatible with cross-compiling to Windows.
+
 
 ## Known Problems
 

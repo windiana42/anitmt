@@ -31,7 +31,7 @@ AniTMT is an Animation System for generating films with povray
 %build
 
 CFLAGS="$RPM_OPT_FLAGS" CXXFLAGS="$RPM_OPT_FLAGS" ./autogen.sh -f --fix-automake-rpath=%{_libdir} $ARCH_FLAGS --prefix=%prefix
-CFLAGS="$RPM_OPT_FLAGS" CXXFLAGS="$RPM_OPT_FLAGS" ./configure --enable-debug="no" $ARCH_FLAGS --prefix=%prefix --libdir=$RPM_BUILD_ROOT%{_libdir}
+CFLAGS="$RPM_OPT_FLAGS" CXXFLAGS="$RPM_OPT_FLAGS -ffat-lto-objects" ./configure --enable-debug="no" $ARCH_FLAGS --prefix=%prefix --libdir=$RPM_BUILD_ROOT%{_libdir}
 
 if [ -n "$SMP" ]; then
 	make -j$SMP "MAKE=make -j$SMP"
